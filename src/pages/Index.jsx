@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import FeatherIcon from "feather-icons-react";
 import {
@@ -22,7 +22,37 @@ import {
 import Top_doctors from "../componets/Top_doctors";
 import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
 
+const BASE_URL = "http://192.168.1.46:5000/api";
+
 export default function Index() {
+  const [doctorCount, setDoctorCount] = useState(0);
+  const fetchDoctorCount = async () => {
+    try {
+      const response = await fetch(
+        `${BASE_URL}/V1/appointment/doctorDropdown`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!response.ok) {
+        const doctorData = await response.json();
+        console.log("Doctors API Response:", doctorData);
+        throw new Error("Failed to fetch doctor count");
+      }
+      const data = await response.json();
+      setDoctorCount(data.data.length);
+    } catch (error) {
+      console.error("Error fetching doctor count:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchDoctorCount();
+  }, []);
+
   // Live Chat Data
   const [inputValue, setInputValue] = useState("");
   const handleInputChange = (event) => {
@@ -86,7 +116,8 @@ export default function Index() {
                         </div>
                         <div className="count-detail">
                           <h3>
-                            <span className="counter mr-5">178</span>Doctors
+                            <span className="counter mr-5">{doctorCount}</span>
+                            Doctors
                           </h3>
                           <p>Available Doctors</p>
                         </div>

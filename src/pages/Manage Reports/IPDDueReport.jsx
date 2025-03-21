@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-
+import '../../styles/styles.css'; // Add this import at the top
 const IPDDueReport = () => {
   // State for form inputs
   const [fromDate, setFromDate] = useState('');

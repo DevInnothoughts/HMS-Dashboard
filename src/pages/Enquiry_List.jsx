@@ -11,18 +11,23 @@ import {
   Button,
   Spinner,
 } from "react-bootstrap";
-import NavBarR from "../componets/NavbarR";
-
-const BASE_URL = "http://192.168.90.109:5000/api";
+import NavBarA from "../componets/NavbarA";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { FilterMatchMode } from "primereact/api";
+import "../styles/styles.css"; // Add this import at the top
+const BASE_URL = "http://192.168.1.46:5000/api";
 
 export default function EnquiryList() {
   const [enquiries, setEnquiries] = useState([]);
   const [filteredEnquiries, setFilteredEnquiries] = useState([]);
   const [searchTerm, setSearchTerm] = useState(""); // State for search term
   const [loading, setLoading] = useState(false);
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
-
+  const [fromDate, setFromDate] = useState(null);
+  const [toDate, setToDate] = useState(null);
+  const [filters1, setFilters1] = useState({
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+  });
   // Fetch enquiries data
   const fetchEnquiriesData = async (withFilters = false) => {
     setLoading(true);
@@ -87,79 +92,233 @@ export default function EnquiryList() {
     const filteredData = enquiries.filter((enquiry) =>
       Object.values(enquiry).some(
         (field) =>
-          typeof field === "string" &&
-          field.toLowerCase().includes(value)
+          typeof field === "string" && field.toLowerCase().includes(value)
       )
     );
 
     setFilteredEnquiries(filteredData); // Update filtered data
   };
 
+  // DatePicker for From Date
+  // const handleFromDateChange = (date) => {
+  //   if (date) {
+  //     const formattedDate = date.toISOString().split("T")[0]; // Format to YYYY-MM-DD
+  //     console.log("Selected From Date:", formattedDate); // Debugging log
+  //     setFromDate(formattedDate);
+  //     // Optionally, reset toDate if it's before fromDate
+  //     if (toDate && new Date(formattedDate) > new Date(toDate)) {
+  //       setToDate(null); // Reset toDate if it's before fromDate
+  //     }
+  //   }
+  // };
+
+  // DatePicker for To Date
+  // const handleToDateChange = (date) => {
+  //   if (date) {
+  //     const formattedDate = date.toISOString().split("T")[0]; // Format to YYYY-MM-DD
+  //     console.log("Selected To Date:", formattedDate); // Debugging log
+  //     setToDate(formattedDate);
+  //   }
+  // };
+
   const renderHeader = () => (
     <div
-      className="d-flex justify-content-between align-items-center"
       style={{
         border: "2px solid #4dd0e1",
         textAlign: "center",
-        borderRadius: "8px",
-        padding: "10px",
+        borderRadius: "12px",
+        padding: "15px",
         backgroundColor: "#e0f7fa",
-        fontWeight: "bold",
-        color: "#006064",
+        boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
       }}
     >
-      {/* Left Section */}
-      <div className="d-flex align-items-center">
-        <Form.Group
-          className="d-flex align-items-center pe-3 mb-0"
-          style={{ gap: "30px" }}
-        >
-          {/* <Form.Label>Search</Form.Label> */}
-          <InputGroup>
-            <Form.Control
-              type="search"
-              value={searchTerm}
-              onChange={handleSearchChange} // Handle live search
-              placeholder="Global Search"
-            />
-          </InputGroup>
-        </Form.Group>
-      </div>
-
-      {/* Right Section */}
       <div
-        className="d-flex align-items-center"
         style={{
-          gap: "15px",
-          border: "2px solid #4dd0e1",
-          textAlign: "center",
-          borderRadius: "8px",
-          padding: "10px",
-          backgroundColor: "#e0f7fa",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: "20px",
         }}
       >
-        <Form.Group className="pe-3 mb-0">
-          From Date
-          <Form.Control
-            type="date"
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-          />
-        </Form.Group>
-        <Form.Group className="pe-3 mb-0">
-          To Date
-          <Form.Control
-            type="date"
-            value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-          />
-        </Form.Group>
-        <Button
-          variant="primary"
-          onClick={() => fetchEnquiriesData(true)} // Fetch data with filters
+        {/* Global Search Section */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "30px",
+          }}
         >
-          Refresh Data
-        </Button>
+          <Form.Group
+            style={{
+              display: "flex",
+              alignItems: "center",
+              margin: 0,
+            }}
+          >
+            <InputGroup>
+              <Form.Control
+                type="search"
+                value={filters1.global.value || ""}
+                onChange={(e) =>
+                  setFilters1({
+                    global: {
+                      value: e.target.value,
+                      matchMode: FilterMatchMode.CONTAINS,
+                    },
+                  })
+                }
+                placeholder="Global Search"
+                style={{
+                  borderRadius: "8px",
+                  border: "2px solid #4dd0e1",
+                  padding: "8px 12px",
+                  width: "250px",
+                  fontSize: "14px",
+                  transition: "all 0.3s ease",
+                }}
+              />
+            </InputGroup>
+          </Form.Group>
+        </div>
+
+        {/* Date Picker Section */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "15px",
+            border: "2px solid #4dd0e1",
+            borderRadius: "12px",
+            padding: "15px",
+            backgroundColor: "#f5fcfd",
+          }}
+        >
+          <div
+            style={{
+              margin: 0,
+              position: "relative",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "14px",
+                fontWeight: "500",
+                color: "#00838f",
+                marginBottom: "5px",
+              }}
+            >
+              From Date
+            </div>
+            <DatePicker
+              selected={fromDate ? new Date(fromDate + "T00:00:00") : null}
+              onChange={(date) => {
+                if (date) {
+                  // Adjust for timezone offset
+                  const localDate = new Date(
+                    date.getTime() - date.getTimezoneOffset() * 60000
+                  );
+                  const formattedDate = localDate.toISOString().split("T")[0];
+                  setFromDate(formattedDate);
+                  console.log("From Date Selected:", formattedDate);
+                } else {
+                  setFromDate(null);
+                }
+              }}
+              dateFormat="dd-MM-yyyy"
+              placeholderText="Select from date"
+              customInput={
+                <Form.Control
+                  style={{
+                    borderRadius: "8px",
+                    border: "2px solid #4dd0e1",
+                    padding: "8px 12px",
+                    width: "160px",
+                    fontSize: "14px",
+                    cursor: "pointer",
+                    backgroundColor: "white",
+                    transition: "all 0.3s ease",
+                  }}
+                />
+              }
+            />
+          </div>
+
+          <div
+            style={{
+              margin: 0,
+              position: "relative",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "14px",
+                fontWeight: "500",
+                color: "#00838f",
+                marginBottom: "5px",
+              }}
+            >
+              To Date
+            </div>
+            <DatePicker
+              selected={toDate ? new Date(toDate + "T00:00:00") : null}
+              onChange={(date) => {
+                if (date) {
+                  // Adjust for timezone offset
+                  const localDate = new Date(
+                    date.getTime() - date.getTimezoneOffset() * 60000
+                  );
+                  const formattedDate = localDate.toISOString().split("T")[0];
+                  setToDate(formattedDate);
+                  console.log("To Date Selected:", formattedDate);
+                } else {
+                  setToDate(null);
+                }
+              }}
+              dateFormat="dd-MM-yyyy"
+              placeholderText="Select to date"
+              minDate={fromDate ? new Date(fromDate + "T00:00:00") : null}
+              customInput={
+                <Form.Control
+                  style={{
+                    borderRadius: "8px",
+                    border: "2px solid #4dd0e1",
+                    padding: "8px 12px",
+                    width: "160px",
+                    fontSize: "14px",
+                    cursor: "pointer",
+                    backgroundColor: "white",
+                    transition: "all 0.3s ease",
+                  }}
+                />
+              }
+            />
+          </div>
+
+          <Button
+            variant="primary"
+            onClick={() => fetchEnquiriesData(true)}
+            style={{
+              backgroundColor: "#00bcd4",
+              border: "none",
+              borderRadius: "8px",
+              padding: "8px 20px",
+              fontSize: "14px",
+              fontWeight: "500",
+              color: "white",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              marginTop: "20px",
+              ":hover": {
+                backgroundColor: "#00acc1",
+                transform: "translateY(-1px)",
+                boxShadow: "0 4px 8px rgba(0,0,0,0.15)",
+              },
+            }}
+          >
+            Refresh Data
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -176,7 +335,7 @@ export default function EnquiryList() {
         padding: "20px",
       }}
     >
-      <NavBarR pagename="Enquiry List" />
+      <NavBarA pagename="Enquiry List" />
       <div className="theme-body">
         <Container fluid>
           <Row>
@@ -187,7 +346,7 @@ export default function EnquiryList() {
                   boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
                   borderColor: "#00bcd4",
                   background: "white",
-                  border: "1px solid #00bcd4",
+                  border: "4px solid #00bcd4",
                 }}
               >
                 <Card.Body>
@@ -206,6 +365,14 @@ export default function EnquiryList() {
                       paginator
                       rows={10}
                       header={header}
+                      globalFilter={filters1.global.value} // Add this line to apply global filter
+                      globalFilterFields={[
+                        "date",
+                        "patient_name",
+                        "patient_phone",
+                        "patient_location",
+                        "FDE_Name",
+                      ]}
                       responsiveLayout="scroll"
                       className="p-datatable-customers"
                       rowClassName={(rowData, { rowIndex }) => ({

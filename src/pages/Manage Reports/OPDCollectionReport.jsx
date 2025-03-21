@@ -5,7 +5,6 @@ import {
   Col,
   Card,
   Container,
-  Table,
   Form,
   Button,
 } from "react-bootstrap";
@@ -45,10 +44,10 @@ const OPDCollectionReport = () => {
     <div
       className="themebody-wrap"
       style={{
-        padding: "20px",
         background: "linear-gradient(to right, #e0f7fa, #80deea)",
         fontFamily: "'Poppins', Arial, sans-serif",
         minHeight: "100vh",
+        padding: "20px",
       }}
     >
       {/* Breadcrumb */}
@@ -64,6 +63,7 @@ const OPDCollectionReport = () => {
                   boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
                   borderColor: "#00bcd4",
                   background: "white",
+                  border: "1px solid #00bcd4",
                 }}
               >
                 <Card.Header
@@ -87,22 +87,11 @@ const OPDCollectionReport = () => {
                     <Row className="align-items-end">
                       <Col md={3}>
                         <Form.Group controlId="fromDate">
-                          <Form.Label
-                            style={{ fontWeight: "bold", color: "#006064" }}
-                          >
-                            From Date
-                          </Form.Label>
+                          <Form.Label>From Date</Form.Label>
                           <Form.Control
                             type="date"
                             value={fromDate}
                             onChange={(e) => setFromDate(e.target.value)}
-                            style={{
-                              border: "2px solid #4dd0e1",
-                              textAlign: "center",
-                              borderRadius: "8px",
-                              padding: "10px",
-                              backgroundColor: "#e0f7fa",
-                            }}
                           />
                         </Form.Group>
                       </Col>
@@ -113,13 +102,6 @@ const OPDCollectionReport = () => {
                             type="date"
                             value={toDate}
                             onChange={(e) => setToDate(e.target.value)}
-                            style={{
-                              border: "2px solid #4dd0e1",
-                              textAlign: "center",
-                              borderRadius: "8px",
-                              padding: "10px",
-                              backgroundColor: "#e0f7fa",
-                            }}
                           />
                         </Form.Group>
                       </Col>
@@ -128,24 +110,6 @@ const OPDCollectionReport = () => {
                           variant="primary"
                           onClick={handleFindClick}
                           className="w-100"
-                          style={{
-                            marginTop: "20px",
-                            height: "40px",
-                            width: "100px",
-                            backgroundColor: "#00acc1",
-                            borderColor: "#00bcd4",
-                            color: "white",
-                            cursor: "pointer",
-                            borderRadius: "8px",
-                            transition: "0.3s all",
-                            fontWeight: "bold",
-                          }}
-                          onMouseOver={(e) => {
-                            e.target.style.backgroundColor = "#007c91";
-                          }}
-                          onMouseOut={(e) => {
-                            e.target.style.backgroundColor = "#00acc1";
-                          }}
                         >
                           Find
                         </Button>
@@ -157,63 +121,29 @@ const OPDCollectionReport = () => {
                   {/* OPD Collection Table */}
                   <table
                     className="table table-bordered mt-4"
-                    style={{
-                      border: "1px solid #4dd0e1",
-                      marginTop: "20px",
-                      width: "100%",
-                      background: "white",
-                      borderRadius: "8px",
-                      overflow: "hidden",
-                    }}
+                    style={{ textAlign: "center" }}
                   >
-                    <thead
-                      className="thead-light"
-                      style={{
-                        background:
-                          "linear-gradient(to right, #00acc1, #007c91)",
-                        color: "white",
-                        fontSize: "16px",
-                      }}
-                    >
+                    <thead className="thead-light">
                       <tr>
-                        <th style={{ textAlign: "center" }}>Date</th>
-                        <th style={{ textAlign: "center" }}>Patient</th>
+                        <th>Date</th>
+                        <th>Patient</th>
                         <th style={{ textAlign: "center" }}>Amount (Rs)</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredData.length > 0 ? (
                         filteredData.map((entry, index) => (
-                          <tr key={index}
-                          style={{
-                            backgroundColor:
-                              index % 2 === 0 ? "#e0f7fa" : "white",
-                            transition: "background-color 0.3s ease",
-                          }}
-                          onMouseOver={(e) => {
-                            e.target.style.backgroundColor = "#b2ebf2";
-                          }}
-                          onMouseOut={(e) => {
-                            e.target.style.backgroundColor =
-                              index % 2 === 0 ? "#e0f7fa" : "white";
-                          }}
-                          >
-                            <td
-                            style={{ padding: "10px", textAlign: "center" }}
-                            >{entry.date}</td>
-                            <td
-                            style={{ padding: "10px", textAlign: "center" }}
-                            >{entry.patient}</td>
-                            <td
-                            style={{ padding: "10px", textAlign: "center" }}
-                            >{entry.amount}</td>
+                          <tr key={index}>
+                            <td>{entry.date}</td>
+                            <td>{entry.patient}</td>
+                            <td style={{ textAlign: "center" }}>
+                              {entry.amount}
+                            </td>
                           </tr>
                         ))
                       ) : (
                         <tr>
-                          <td colSpan="3" className="text-center"
-                           style={{ textAlign: "center", padding: "10px" }}
-                           >
+                          <td colSpan="3" className="text-center">
                             No records found for the selected date range.
                           </td>
                         </tr>

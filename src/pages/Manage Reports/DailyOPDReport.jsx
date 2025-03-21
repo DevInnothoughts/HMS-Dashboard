@@ -37,8 +37,9 @@ const DailyOPDReport = () => {
       className="themebody-wrap"
       style={{
         padding: "20px",
-        backgroundColor: "#e0f7fa",
-        fontFamily: "Arial, sans-serif",
+        background: "linear-gradient(to right, #e0f7fa, #80deea)",
+        fontFamily: "'Poppins', Arial, sans-serif",
+        minHeight: "100vh",
       }}
     >
       <PageBreadcrumb pagename="Daily OPD Report" />
@@ -48,20 +49,25 @@ const DailyOPDReport = () => {
             <Card
               className="shadow-sm"
               style={{
-                borderRadius: "10px",
-                boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
-                borderColor: "#90caf9",
+                borderRadius: "12px",
+                boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
+                borderColor: "#00bcd4",
+                background: "white",
+                border: "4px solid #00bcd4",
               }}
             >
               <Card.Header
                 className="text-center"
                 style={{
                   fontWeight: "bold",
-                  fontSize: "20px",
-                  color: "#01579b",
+                  // fontSize: "20px",
+                  // color: "#01579b",
                   backgroundColor: "#e3f2fd",
                   borderBottom: "2px solid #0288d1",
                   padding: "1rem",
+                  background: "linear-gradient(to right, #00acc1, #007c91)",
+                  color: "white",
+                  fontSize: "16px",
                 }}
               >
                 DAILY OPD REPORT 20-01-2025
@@ -98,7 +104,7 @@ const DailyOPDReport = () => {
                     ))}
                   </tbody>
                 </Table>
-<br />
+                <br />
                 {/* OPD Details */}
                 <Table
                   bordered
@@ -136,7 +142,7 @@ const DailyOPDReport = () => {
                     ))}
                   </tbody>
                 </Table>
-<br />
+                <br />
                 {/* Test Details */}
                 <Table
                   bordered
@@ -168,7 +174,7 @@ const DailyOPDReport = () => {
                     ))}
                   </tbody>
                 </Table>
-<br />
+                <br />
                 {/* Collection Details */}
                 <Table
                   bordered
@@ -214,7 +220,7 @@ const DailyOPDReport = () => {
               >
                 <Button
                   variant="primary"
-                  style={{border: "none" }}
+                  style={{ border: "none" }}
                   onClick={handlePrint}
                 >
                   Print Report

@@ -11,8 +11,9 @@ import {
 } from "react-bootstrap";
 import PageBreadcrumb from "../componets/PageBreadcrumb";
 import { Link } from "react-router-dom";
+import logo from "../assets/images/3.png";
 
-const BASE_URL = "http://192.168.90.166:5000/api";
+const BASE_URL = "http://192.168.1.46:5000/api";
 
 const InvoiceList = () => {
   const [invoices, setInvoices] = useState([]);
@@ -223,6 +224,160 @@ const InvoiceList = () => {
     setShowSuccessPopup(false);
   };
 
+  const handlePrint = (invoice) => {
+    if (!invoice || typeof invoice !== "object" || !invoice.invoice_id) {
+      console.error("Error: Invoice data is missing", invoice);
+      toast.error("Invoice data is missing or incomplete.");
+      return;
+    }
+
+    const printWindow = window.open("", "_blank", "width=900,height=900");
+
+    // Convert clinic logo to Base64
+    const getBase64Image = (imgUrl) => {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL("image/png"));
+        };
+        img.src = imgUrl;
+      });
+    };
+
+    getBase64Image(logo).then((mainLogo) => {
+      const printContent = `
+    <html>
+      <head>
+        <title>Invoice - ${invoice.invoice_id}</title>
+        <style>
+          body { font-family: Arial, sans-serif; font-size: 12px; margin: 30px; }
+          .container { border: 1px solid #ccc; padding: 20px; border-radius: 10px; background: white; }
+          .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 2px solid #2b9163; }
+          .header img { width: 170px; }
+          .clinic-info { text-align: right; font-size: 14px; font-weight: bold; }
+          .title { text-align: center; font-size: 16px; font-weight: bold; margin-top: 10px; }
+          .section-title { font-size: 14px; font-weight: bold; border-bottom: 1px solid #2b9163; margin-bottom: 5px; padding-bottom: 3px; color: #2b9163; }
+          .details-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+          .details-table td { padding: 6px; font-size: 12px; }
+          .details-table td:first-child { font-weight: bold; width: 25%; }
+          .summary-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; border: 1px solid #000; }
+          .summary-table th, .summary-table td { padding: 8px; border: 1px solid black; font-size: 12px; }
+          .total-row { font-weight: bold; font-size: 14px; }
+          .footer { text-align: center; font-size: 12px; color: grey; margin-top: 20px; }
+          .btn-container { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
+          .print-btn, .docuclip-btn { display: inline-block; padding: 10px 20px; font-size: 14px; font-weight: bold; border: none; border-radius: 5px; cursor: pointer; }
+          .print-btn { 
+            background-color: #2b9163;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 20px;
+          }
+            .print-btn:hover {
+              background-color:rgb(35, 141, 93);
+              transform: translateY(-1px);
+              box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            }
+
+          @media print { .btn-container { display: none; } }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <img src="${mainLogo}" alt="Healing Hands Clinic">
+            <div class="clinic-info">
+              Healing Hands Clinic <br>
+              Ground Floor, Millenium Star Extension, Adjacent to Ruby Hall Entrance Gate, Dhole Patil Road, 411001.
+            </div>
+          </div>
+
+          <table class="details-table">
+            <tr><td>Bill No:</td><td>${
+              invoice.invoice_id
+            }</td><td>Bill Date:</td><td>${invoice.creation_date}</td></tr>
+            <tr><td>Patient Name:</td><td>${
+              invoice.patientName
+            }</td><td>Gender / Age:</td><td>${invoice.gender} / ${
+        invoice.age
+      }</td></tr>
+            <tr><td>Admission No:</td><td>${
+              invoice.admission_no
+            }</td><td>Bed Category:</td><td>${
+        invoice.bedCategory || "N/A"
+      }</td></tr>
+            <tr><td>Doctor Name:</td><td>${
+              invoice.consultantName
+            }</td><td>Surgeon Name:</td><td>${invoice.surgeonName}</td></tr>
+            <tr><td>Admission Date & Time:</td><td>${invoice.admission_date} ${
+        invoice.admissiontime
+      }</td><td>Discharge Date & Time:</td><td>${invoice.discharge_date} ${
+        invoice.dischargetime
+      }</td></tr>
+          </table>
+
+          <div class="title">FINAL BILL</div>
+
+          <div class="section-title">Itemized Details</div>
+          <table class="summary-table">
+            <tr><th>Items/Services</th><th>Amount (INR)</th></tr>
+            ${invoice.dynamicRows
+              .map(
+                (row) => `<tr><td>${row.label}</td><td>${row.value}</td></tr>`
+              )
+              .join("")}
+          </table>
+
+          <div class="section-title">Account Summary</div>
+          <table class="summary-table">
+            <tr><th>Heading</th><th>Amount (INR)</th></tr>
+            <tr><td>Total</td><td>${invoice.Sub_Total}</td></tr>
+            <tr><td>Discount</td><td>${invoice.discount || "0.00"}</td></tr>
+          </table>
+
+          <table class="details-table">
+            <tr><td><strong>Total</strong></td><td>${
+              invoice.Sub_Total
+            }</td><td><strong>Please Pay</strong></td><td>${
+        invoice.payable_amt
+      }</td></tr>
+          </table>
+
+          <div class="btn-container">
+            <button variant="primary" class="print-btn" onclick="window.print()">Print</button>
+          </div>
+
+          <div class="footer">
+            <hr>
+            For queries call 7774099753 | For Emergency SMS 7774053187
+            <br>
+            &copy;2025 <a target="_blank" href="http://www.innothoughts.com/" style="color:grey;">Innothoughts System Pvt. Ltd</a>
+          </div>
+        </div>
+      </body>
+    </html>
+    `;
+
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+
+      setTimeout(() => {
+        printWindow.print();
+      }, 1000);
+    });
+  };
 
   return (
     <div
@@ -247,7 +402,6 @@ const InvoiceList = () => {
                 border: "1px solid #00bcd4",
               }}
             >
-              
               <Card.Body>
                 <div className="d-flex justify-content-between mb-3">
                   <h5>Invoice List</h5>
@@ -285,7 +439,12 @@ const InvoiceList = () => {
                           <td>{invoice.due_amt}</td>
                           <td>
                             <Link>
-                              <Button variant="info" size="sm" className="me-2">
+                              <Button
+                                variant="info"
+                                size="sm"
+                                className="me-2"
+                                onClick={() => handlePrint(invoice)}
+                              >
                                 Print
                               </Button>
                             </Link>

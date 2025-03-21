@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import PageBreadcrumb from "../../componets/PageBreadcrumb";
 import { Row, Col, Card, Container, Form } from "react-bootstrap";
 import SimpleBar from "simplebar-react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 const BillingReport = () => {
   const [fromDate, setFromDate] = useState("");
@@ -45,7 +47,7 @@ const BillingReport = () => {
         minHeight: "100vh",
       }}
     >
-      <PageBreadcrumb pagename="Enquiry Data Report" />
+      <PageBreadcrumb pagename="Billing Report" />
 
       <SimpleBar className="theme-body common-dash">
         <Container fluid>
@@ -57,6 +59,7 @@ const BillingReport = () => {
                   boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
                   borderColor: "#00bcd4",
                   background: "white",
+                  border: "4px solid #00bcd4",
                 }}
               >
                 <Card.Header
@@ -78,43 +81,29 @@ const BillingReport = () => {
                     <Row className="align-items-end">
                       <Col md={3}>
                         <Form.Group className="mb-3">
-                          <Form.Label
-                            style={{ fontWeight: "bold", color: "#006064" }}
-                          >
-                            From Date
+                          <Form.Label>
+                            <b>From Date</b>
                           </Form.Label>
-                          <Form.Control
-                            type="date"
-                            value={fromDate}
-                            onChange={(e) => setFromDate(e.target.value)}
-                            style={{
-                              border: "2px solid #4dd0e1",
-                              textAlign: "center",
-                              borderRadius: "8px",
-                              padding: "10px",
-                              backgroundColor: "#e0f7fa",
-                            }}
+                          <DatePicker
+                            selected={fromDate}
+                            onChange={(date) => setFromDate(date)}
+                            dateFormat="dd/MM/yyyy"
+                            className="form-control"
+                            placeholderText="Select From Date"
                           />
                         </Form.Group>
                       </Col>
                       <Col md={3}>
                         <Form.Group className="mb-3">
-                          <Form.Label
-                            style={{ fontWeight: "bold", color: "#006064" }}
-                          >
-                            To Date
+                          <Form.Label>
+                            <b>To Date</b>
                           </Form.Label>
-                          <Form.Control
-                            type="date"
-                            value={toDate}
-                            onChange={(e) => setToDate(e.target.value)}
-                            style={{
-                              border: "2px solid #4dd0e1",
-                              textAlign: "center",
-                              borderRadius: "8px",
-                              padding: "10px",
-                              backgroundColor: "#e0f7fa",
-                            }}
+                          <DatePicker
+                            selected={toDate}
+                            onChange={(date) => setToDate(date)}
+                            dateFormat="dd/MM/yyyy"
+                            className="form-control"
+                            placeholderText="Select To Date"
                           />
                         </Form.Group>
                       </Col>
@@ -124,9 +113,9 @@ const BillingReport = () => {
                             className="btn btn-primary"
                             type="submit"
                             style={{
-                              marginTop: "20px",
-                              height: "40px",
-                              width: "100px",
+                              marginTop: "30px",
+                              height: "50px",
+                              width: "50%",
                               backgroundColor: "#00acc1",
                               borderColor: "#00bcd4",
                               color: "white",
@@ -166,12 +155,13 @@ const BillingReport = () => {
                           "linear-gradient(to right, #00acc1, #007c91)",
                         color: "white",
                         fontSize: "16px",
+                        textAlign: "center",
                       }}
                     >
                       <tr>
-                        <th style={{ textAlign: "center" }}>Date</th>
-                        <th style={{ textAlign: "center" }}>Patient</th>
-                        <th style={{ textAlign: "center" }}>Amount (Rs)</th>
+                        <th>Date</th>
+                        <th>Patient</th>
+                        <th>Amount (Rs)</th>
                         <th style={{ textAlign: "center" }}>Status</th>
                       </tr>
                     </thead>

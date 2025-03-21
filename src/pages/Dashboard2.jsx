@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import FeatherIcon from "feather-icons-react";
 import { Row, Col, Card, Table, Container } from "react-bootstrap";
@@ -10,13 +10,105 @@ import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
 import { Fancybox } from "@fancyapps/ui";
 import "@fancyapps/ui/dist/fancybox/fancybox.css";
 
+const CustomPagination = ({ currentPage, totalPages, onPageChange }) => {
+  return (
+    <div className="d-flex justify-content-center align-items-center mt-3 gap-2">
+      <button
+        className="btn btn-link p-0"
+        onClick={() => onPageChange(1)}
+        disabled={currentPage === 1}
+      >
+        «
+      </button>
+
+      <button
+        className="btn btn-link p-0"
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+      >
+        ‹
+      </button>
+
+      <span
+        className="px-2"
+        style={{
+          backgroundColor: "#e9ecef",
+          padding: "2px 8px",
+          borderRadius: "4px",
+        }}
+      >
+        {currentPage}
+      </span>
+
+      <button
+        className="btn btn-link p-0"
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+      >
+        ›
+      </button>
+
+      <button
+        className="btn btn-link p-0"
+        onClick={() => onPageChange(totalPages)}
+        disabled={currentPage === totalPages}
+      >
+        »
+      </button>
+
+      <span className="ms-2">
+        Showing {(currentPage - 1) * appointmentsPerPage + 1} to{" "}
+        {Math.min(currentPage * appointmentsPerPage, totalItems)} of{" "}
+        {totalItems}
+      </span>
+    </div>
+  );
+};
+
 export default function Dashboard2() {
+  const [appointments, setAppointments] = useState([]);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const appointmentsPerPage = 5;
+  const BASE_URL = "http://192.168.1.46:5000/api";
+
+  // Function to fetch today's appointments
+  const fetchTodayAppointments = async (page) => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `${BASE_URL}/V1/appointment/listappointments?page=${page}&limit=${appointmentsPerPage}`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch appointments");
+      }
+      const data = await response.json();
+      setAppointments(data.data || []);
+      setTotalItems(data.total);
+      setTotalPages(Math.ceil(data.total / appointmentsPerPage));
+    } catch (error) {
+      console.error("Error fetching appointments:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     Fancybox.bind('[data-fancybox="gallery"]', {});
+    fetchTodayAppointments(1);
     return () => {
       Fancybox.destroy();
     };
   }, []);
+
+  // Handle page change
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    fetchTodayAppointments(page);
+  };
+
   return (
     <div className="themebody-wrap">
       {/* Breadcrumb Start */}
@@ -80,71 +172,74 @@ export default function Dashboard2() {
             <Col xxl={4} md={6}>
               <Card>
                 <Card.Header>
-                  <h4>Notifications</h4>
+                  <h4>Today's Appointments</h4>
                 </Card.Header>
-                <Card.Body>
-                  <ul className="docnoti-list">
-                    <li>
-                      <div className="media">
-                        <img
-                          className="rounded-50 w-40"
-                          src={IMAGE_URLS["avtar/1.jpg"]}
-                          alt=""
-                        />
-                        <div className="media-body">
-                          <h6>Dr. Anna Send you Photo</h6>
-                          <span className="text-light">10, Feb ,2023</span>
-                        </div>
-                        <div className="badge badge-primary">10:15 Pm</div>
-                      </div>
-                    </li>
-                    <li>
-                      <div className="media">
-                        <img
-                          className="rounded-50 w-40"
-                          src={IMAGE_URLS["avtar/2.jpg"]}
-                          alt=""
-                        />
-                        <div className="media-body">
-                          <h6>Dr. Anna Send you Photo</h6>
-                          <span className="text-light">05, March ,2023</span>
-                        </div>
-                        <div className="badge badge-primary">09:20 Pm</div>
-                      </div>
-                    </li>
-                    <li>
-                      <div className="media">
-                        <img
-                          className="rounded-50 w-40"
-                          src={IMAGE_URLS["avtar/3.jpg"]}
-                          alt=""
-                        />
-                        <div className="media-body">
-                          <h6>Dr. Anna Send you Photo</h6>
-                          <span className="text-light">01, Jan ,2023</span>
-                        </div>
-                        <div className="badge badge-primary">03:40 Pm</div>
-                      </div>
-                    </li>
-                    <li>
-                      <div className="media">
-                        <img
-                          className="rounded-50 w-40"
-                          src={IMAGE_URLS["avtar/4.jpg"]}
-                          alt=""
-                        />
-                        <div className="media-body">
-                          <h6>Dr. Anna Send you Photo</h6>
-                          <span className="text-light">25, Feb ,2023</span>
-                        </div>
-                        <div className="badge badge-primary">05:26 Am </div>
-                      </div>
-                    </li>
-                  </ul>
+                <Card.Body className="p-0">
+                  <div
+                    className="table-responsive"
+                    style={{ height: "400px", overflowY: "auto" }}
+                  >
+                    <Table className="table-borderless mb-0">
+                      <thead
+                        style={{
+                          position: "sticky",
+                          top: 0,
+                          background: "white",
+                          zIndex: 1,
+                        }}
+                      >
+                        <tr>
+                          <th className="px-3 py-2">Patient Name</th>
+                          <th className="px-3 py-2">Time</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {loading ? (
+                          <tr>
+                            <td colSpan="2" className="text-center py-3">
+                              Loading...
+                            </td>
+                          </tr>
+                        ) : appointments.length > 0 ? (
+                          appointments.map((appointment, index) => (
+                            <tr key={index}>
+                              <td className="px-3 py-2">
+                                <div className="d-flex align-items-center">
+                                  <span>{appointment.patientName}</span>
+                                </div>
+                              </td>
+                              <td className="px-3 py-2">
+                                {appointment.appointmentTime}
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="2" className="text-center py-3">
+                              No appointments for today
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </Table>
+                  </div>
+
+                  {totalPages > 1 && (
+                    <div className="p-3 border-top">
+                      <CustomPagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={handlePageChange}
+                      />
+                    </div>
+                  )}
                 </Card.Body>
                 <div className="card-footer">
-                  <Link className="btn btn-primary d-block mx-auto btn-lg">
-                    See All Notification
+                  <Link
+                    to="/appointment-list"
+                    className="btn btn-primary d-block mx-auto"
+                  >
+                    View All Appointments
                   </Link>
                 </div>
               </Card>

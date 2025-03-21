@@ -3,7 +3,6 @@ import { FilterMatchMode } from "primereact/api";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import FeatherIcon from "feather-icons-react";
-import { Link } from "react-router-dom";
 import {
   Container,
   Row,
@@ -15,14 +14,19 @@ import {
   Modal,
 } from "react-bootstrap";
 import PageBreadcrumb from "../componets/PageBreadcrumb";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import "../styles/styles.css"; // Add this import at the top
+import { toast } from "react-hot-toast";
 
-export const BASE_URL = "http://192.168.90.135:5000/api"; // Update your API base URL here
+export const BASE_URL = "http://192.168.1.46:5000/api"; // Update your API base URL here
 
 export default function Call_logs() {
   const [CallLogs, setCallLogs] = useState([]);
   const [formData, setFormData] = useState({
     doctor_id: "",
     doctorName: "",
+    date: new Date().toISOString().split("T")[0],
   });
   const [doctors, setDoctors] = useState([]); // Doctors list
   const [fdeList, setFdeList] = useState([]); // FDE list
@@ -32,105 +36,121 @@ export default function Call_logs() {
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
   const [loading, setLoading] = useState(false); // Loading state
-
   const [showNoteModal, setShowNoteModal] = useState(false); // Modal state for showing note
   const [selectedNote, setSelectedNote] = useState(""); // Selected note content
   const [showEnquiryModal, setShowEnquiryModal] = useState(false); // Modal state for Enquiry
   const [selectedCallLog, setSelectedCallLog] = useState(null); // Selected call log for Enquiry
+  const [timeSlots, setTimeSlots] = useState([]); // Add this state for time slots
+  const [selectedDate, setSelectedDate] = useState(null); // Add this state for the modal
+  const [enquiries, setEnquiries] = useState([]);
 
   function formatDate(date) {
-    const year = date.getFullYear(); // Get the full year (e.g., 2025)
-    const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed, so add 1 and pad with 0 if needed
-    const day = String(date.getDate()).padStart(2, "0"); // Pad day with 0 if needed
-
-    return `${year}-${month}-${day}`; // Combine into yyyy-mm-dd format
+    return new Date(date); // Return a Date object
   }
-  const [fromDate, setFromDate] = useState(formatDate(new Date()));
-  const [toDate, setToDate] = useState(formatDate(new Date()));
+
+  const [fromDate, setFromDate] = useState(new Date()); // Initialize with Date object
+  const [toDate, setToDate] = useState(new Date()); // Initialize with Date object
 
   const handleAddAppointmentClick = (rowData) => {
+    const today = new Date();
+    console.log("Opening Add Appointment Modal with details:", {
+      date: formatDate(today),
+      caller_no: rowData.caller_no,
+      callTime: rowData.call_time,
+      note: rowData.note,
+    });
+
     setFormData({
-      date: rowData.call_date || "", // Populate with relevant fields
-      doctorName: "", // Add doctor name if applicable
-      patientName: rowData.caller_no || "", // Use caller_no for example
-      mobileNumber: rowData.destination_no || "",
+      date: formatDate(today),
+      doctor_id: "",
+      doctorName: "",
+      patientName: "",
+      caller_no: rowData.caller_no || "",
       appointmentTime: rowData.call_time || "",
-      fdeName: "", // Add FDE name if applicable
+      FDE_Name: "",
       note: rowData.note || "",
     });
-    setShowAddModal(true); // Open the modal
+    setShowAddModal(true);
   };
 
   // State to handle the enquiry form fields
   const [enquiryForm, setEnquiryForm] = useState({
-    callBackDate: "",
-    enquiryType: "",
-    patientName: "",
-    mobileNumber: "",
-    fdeName: "",
+    call_date: "",
+    enquirytype: "",
+    patient_name: "",
+    caller_no: "",
+    FDE_Name: "",
     note: "",
   });
   // Function to format date to yyyy-MM-dd
+  // const formatToApiDate = (date) => {
+  //   if (!date) return "";
+  //   const [day, month, year] = date.split("-");
+  //   return `${year}-${month}-${day}`; // Return formatted date as yyyy-MM-dd
+  // };
+
   const formatToApiDate = (date) => {
-    if (!date) return "";
-    const [day, month, year] = date.split("-");
-    return `${year}-${month}-${day}`; // Return formatted date as yyyy-MM-dd
+    // Ensure the date is a valid Date object
+    const validDate = date instanceof Date ? date : new Date(date);
+
+    if (isNaN(validDate)) {
+      console.error("Invalid date:", date);
+      return null;
+    }
+
+    const day = String(validDate.getDate()).padStart(2, "0");
+    const month = String(validDate.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed
+    const year = validDate.getFullYear();
+
+    return `${day}/${month}/${year}`;
   };
 
   // Fetch the call logs data from API
   const fetchCallLogsData = async () => {
-    setLoading(true); // Show loader
-
+    setLoading(true);
     try {
       const url = new URL(`${BASE_URL}/V1/ivrdata/listIvrdata`);
       const params = {
-        from: formatToApiDate(fromDate), // Format the from date
-        to: formatToApiDate(toDate), // Format the to date
+        from: formatToApiDate(fromDate),
+        to: formatToApiDate(toDate),
       };
 
-      // Add parameters to URL
       Object.keys(params).forEach((key) => {
         if (params[key]) url.searchParams.append(key, params[key]);
       });
 
-      console.log("Request URL:", url.toString()); // Check the final request URL
+      console.log("Fetching data from:", url.toString());
 
       const response = await fetch(url, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
+        cache: "no-store", // Prevent caching
       });
 
       const data = await response.json();
-      console.log("API Response:", data); // Log the full response
+      console.log("Fetch Response:", data);
 
-      if (response.ok) {
-        setCallLogs(data.data || []); // Ensure it's an array and update state
+      if (response.ok && data.data) {
+        setCallLogs(data.data);
       } else {
-        console.error(
-          "Error fetching call logs:",
-          data.message || "Unknown error"
-        );
-        setCallLogs([]); // Reset call logs on error
+        console.error("Error in response:", data);
+        toast.error(data.message || "Failed to fetch call logs");
       }
     } catch (error) {
-      console.error("Network or Server Error:", error.message);
-      setCallLogs([]); // Reset call logs on error
+      console.error("Error fetching call logs:", error);
+      toast.error("Failed to load call logs");
     } finally {
-      setLoading(false); // Hide loader
+      setLoading(false);
     }
   };
 
-  // Call this effect whenever fromDate or toDate changes
-  // useEffect(() => {
-  //   fetchCallLogsData();
-  // }, [fromDate, toDate]); // Dependency array ensures the effect runs when dates change
-
   const fetchDropdownData = async () => {
     try {
-      const doctorResponse = await fetch(
-        `${BASE_URL}/V1/ivrdata/doctor_dropdown`,
+      // Fetch FDE list
+      const fdeResponse = await fetch(
+        `${BASE_URL}/V1/appointment/fdeDropdown`,
         {
           method: "GET",
           headers: {
@@ -139,56 +159,28 @@ export default function Call_logs() {
         }
       );
 
-      if (doctorResponse.ok) {
-        const doctorData = await doctorResponse.json();
-        console.log("Doctors API Response:", doctorData); // Debug API response
-        setDoctors(Array.isArray(doctorData.data) ? doctorData.data : []);
-      } else {
-        console.error("Failed to fetch doctors:", doctorResponse.statusText);
-      }
-      //   } catch (error) {
-      //     console.error("Error fetching doctors:", error.message);
-      //   }
-      // };
-
-      // Fetch FDE List
-      const fdeResponse = await fetch(`${BASE_URL}/V1/ivrdata/fde_dropdown`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      // Fetch doctors list - Fix the endpoint
+      const doctorResponse = await fetch(
+        `${BASE_URL}/V1/appointment/doctorDropdown`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (fdeResponse.ok) {
         const fdeData = await fdeResponse.json();
-        console.log("FDE API Response:", fdeData);
-        setFdeList(Array.isArray(fdeData.data) ? fdeData.data : []);
-      } else {
-        console.error("Failed to fetch FDE list:", fdeResponse.statusText);
+        setFdeList(fdeData.data || []);
       }
 
-      // Fetch Enquiry Types
-      const enquiryTypeResponse = await fetch(
-        `${BASE_URL}/V1/ivrdata/enquiry_dropdown`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (enquiryTypeResponse.ok) {
-        const enquiryTypeData = await enquiryTypeResponse.json();
-        setEnquiryTypes(enquiryTypeData); // Update state for enquiry types
-      } else {
-        console.error(
-          "Failed to fetch enquiry types:",
-          enquiryTypeResponse.statusText
-        );
+      if (doctorResponse.ok) {
+        const doctorData = await doctorResponse.json();
+        setDoctors(doctorData.data || []); // Set doctors state instead of enquiryTypes
       }
     } catch (error) {
-      console.error("Error fetching dropdown data:", error.message);
+      console.error("Error fetching dropdown data:", error);
     }
   };
 
@@ -202,11 +194,50 @@ export default function Call_logs() {
   }, [doctors]);
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    const { name, value, type, checked } = e.target;
+    const newValue = type === "checkbox" ? checked : value;
+
+    // Add logging for doctor selection
+    if (name === "doctor_id") {
+      const selectedDoctor = doctors.find((doc) => doc.doctor_id === value);
+      console.log("Doctor Selection Changed:", {
+        selectedID: value,
+        doctorName: selectedDoctor ? selectedDoctor.name : "No doctor selected",
+        allDoctors: doctors,
+      });
+
+      // Update both doctor_id and doctorName in formData
+      setFormData((prev) => ({
+        ...prev,
+        doctor_id: value,
+        doctorName: selectedDoctor ? selectedDoctor.name : "",
+      }));
+      return; // Return early since we've handled the state update
+    }
+
+    // Existing FDE logging
+    if (name === "FDE_Name") {
+      const selectedFDE = fdeList.find((fde) => fde.FDEID === value);
+      console.log("FDE Selection Changed:", {
+        selectedID: value,
+        selectedFDE: selectedFDE,
+        FDEName: selectedFDE ? selectedFDE.FDEName : "No FDE selected",
+      });
+
+      // Update both FDE_Name and fdeName in formData
+      setFormData((prev) => ({
+        ...prev,
+        FDE_Name: value,
+        fdeName: selectedFDE ? selectedFDE.FDEName : "",
+      }));
+      return; // Return early since we've handled the state update
+    }
+
+    // Handle all other form fields
+    setFormData((prev) => ({
+      ...prev,
+      [name]: newValue,
+    }));
   };
 
   // Handle Add Appointment Submission
@@ -219,33 +250,194 @@ export default function Call_logs() {
   };
   // Enquiry form input change handler
   const handleEnquiryInputChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
+    const newValue = type === "checkbox" ? checked : value;
+
+    // Existing FDE logging
+    if (name === "FDE_Name") {
+      const selectedFDE = fdeList.find((fde) => fde.FDEID === value);
+      console.log("FDE Selection Changed:", {
+        selectedID: value,
+        selectedFDE: selectedFDE,
+        FDEName: selectedFDE ? selectedFDE.FDEName : "No FDE selected",
+      });
+
+      // Update both FDE_Name and fdeName in formData
+      setEnquiryForm((prev) => ({
+        ...prev,
+        FDE_Name: value,
+        fdeName: selectedFDE ? selectedFDE.FDEName : "",
+      }));
+      return; // Return early since we've handled the state update
+    }
+
     setEnquiryForm({
       ...enquiryForm,
-      [name]: value,
+      [name]: newValue,
     });
   };
 
-  // Handle submitting the enquiry form
-  const handleEnquirySubmit = (e) => {
-    e.preventDefault();
-    // You can perform further actions here, like sending the enquiry data to the server
-    console.log("Enquiry Submitted:", enquiryForm);
-    setShowEnquiryModal(false); // Close the modal after submission
+  const handleEnquirySubmit = async () => {
+    // Get the selected FDE's name
+    const selectedFDE = fdeList.find(
+      (fde) => fde.FDEID === enquiryForm.FDE_Name
+    );
+    const fdeName = selectedFDE ? selectedFDE.FDEName : "Not selected";
+
+    // Get the selected doctor's name
+    const selectedDoctor = doctors.find(
+      (doc) => doc.doctor_id === formData.doctor_id
+    );
+    const doctorName = selectedDoctor ? selectedDoctor.name : "Not selected";
+
+    // Log the enquiry details
+    console.log("Adding New Enquiry:", {
+      enquiryDetails: {
+        date: enquiryForm.date,
+        enquiryType: enquiryForm.enquirytype,
+        patientName: enquiryForm.patient_name,
+        mobileNumber: selectedCallLog?.caller_no,
+        FDE_Name: {
+          id: enquiryForm.fdeId,
+          name: enquiryForm.FDE_Name,
+        },
+        doctorName: {
+          id: formData.doctor_id,
+          name: doctorName,
+        },
+        note: enquiryForm.note,
+      },
+    });
+
+    try {
+      const response = await fetch(`${BASE_URL}/V1/enquiry/addEnquiry`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          date: enquiryForm.date,
+          time: enquiryForm.time,
+          fde_id: enquiryForm.FDE_Name,
+          enquirytype: enquiryForm.enquirytype,
+          patient_name: enquiryForm.patient_name,
+          patient_phone: enquiryForm.caller_no,
+          FDE_Name: enquiryForm.FDE_Name,
+          note: enquiryForm.note,
+        }),
+      });
+
+      const responseData = await response.json();
+      console.log("Server Response:", responseData);
+
+      if (response.ok) {
+        toast.success("Enquiry added successfully");
+        setShowEnquiryModal(false);
+        fetchEnquiries();
+        // Reset form
+        setEnquiryForm({
+          date: "",
+          time: "",
+          FDE_Name: "",
+          enquirytype: "",
+          patient_name: "",
+          caller_no: "",
+          note: "",
+        });
+      } else {
+        toast.error("Failed to add enquiry");
+      }
+    } catch (error) {
+      console.error("Error adding enquiry:", error);
+      toast.error("Error adding enquiry");
+    }
   };
 
   // Enquiry modal handler
   const handleEnquiryClick = (callLog) => {
-    setSelectedCallLog(callLog); // Set the selected call log for enquiry
-    setShowEnquiryModal(true); // Show the enquiry modal
+    console.log("Opening Enquiry Modal with details:", {
+      callLogId: callLog.ivr_id,
+      caller_no: callLog.caller_no,
+      date: formatDate(new Date()),
+      note: callLog.note,
+    });
+
+    const today = new Date();
+    setSelectedCallLog(callLog);
+    setSelectedDate(today);
+    setEnquiryForm((prev) => ({
+      ...prev,
+      date: formatDate(today),
+      caller_no: callLog.caller_no || "",
+      note: callLog.note || "",
+    }));
+    setShowEnquiryModal(true);
   };
 
   // Handle showing the note
-  const handleNoteClick = (note) => {
-    setSelectedNote(note); // Set the selected note
-    setShowNoteModal(true); // Show the note modal
+  const handleNoteClick = (note, rowData) => {
+    console.log("Opening note modal with call log:", rowData);
+    setSelectedCallLog(rowData);
+    setFormData((prev) => ({
+      ...prev,
+      note: note || "",
+    }));
+    setShowNoteModal(true);
   };
 
+  const handleSaveNote = async () => {
+    if (!selectedCallLog || !selectedCallLog.ivr_id) {
+      toast.error("Error: IVR ID is missing.");
+      return;
+    }
+
+    if (!formData.note || formData.note.trim() === "") {
+      toast.error("Error: Note cannot be empty.");
+      return;
+    }
+
+    try {
+      const payload = {
+        ivr_id: selectedCallLog.ivr_id,
+        note: formData.note.trim(),
+      };
+
+      console.log("Sending Request to API:", payload);
+
+      const response = await fetch(
+        `${BASE_URL}/V1/ivrdata/editNote/${selectedCallLog.ivr_id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const responseData = await response.json();
+      console.log("Server Response:", responseData);
+
+      // Check if the update was successful
+      if (response.ok && responseData.statusCode === 200) {
+        // Update the CallLogs state with the new note
+        setCallLogs((prevLogs) =>
+          prevLogs.map((log) =>
+            log.ivr_id === selectedCallLog.ivr_id
+              ? { ...log, note: formData.note.trim() } // Update the note for the specific log
+              : log
+          )
+        );
+
+        // Close the modal and show a success message
+        setShowNoteModal(false);
+        toast.success("Note updated successfully");
+      } else {
+        toast.error(responseData.data?.message || "Failed to update note");
+      }
+    } catch (error) {
+      console.error("Error updating note:", error);
+      toast.error("An error occurred while updating the note");
+    }
+  };
   // Actions template for the DataTable
   const actionBodyTemplate = (rowData) => (
     <div className="cart-action" style={{ display: "flex", gap: "5px" }}>
@@ -288,7 +480,7 @@ export default function Call_logs() {
       </Button>
       <Button
         variant="btn"
-        onClick={() => handleNoteClick(rowData.note)}
+        onClick={() => handleNoteClick(rowData.note, rowData)}
         className="note-btn"
         title="View Notes" // Tooltip text on hover
         style={{
@@ -306,66 +498,461 @@ export default function Call_logs() {
     </div>
   );
 
-  // Header content with search and refresh button
   const renderHeader = () => (
     <div
-      className="d-flex justify-content-between align-items-center"
       style={{
+        border: "2px solid #4dd0e1",
+        textAlign: "center",
+        borderRadius: "12px",
         padding: "15px",
         backgroundColor: "#e0f7fa",
-        borderRadius: "8px 8px 0 0",
-        border: "1px solid #90caf9",
-        borderBottom: "none",
+        boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
       }}
     >
-      {/* Left Section */}
-      <div className="d-flex align-items-center" style={{ gap: "30px" }}>
-        <Form.Group className="d-flex align-items-center pe-3 mb-0">
-          {/* <Form.Label>Search</Form.Label> */}
-          <InputGroup>
-            <Form.Control
-              type="search"
-              value={filters1.global.value || ""}
-              onChange={(e) =>
-                setFilters1({
-                  global: {
-                    value: e.target.value,
-                    matchMode: FilterMatchMode.CONTAINS,
-                  },
-                })
-              }
-              placeholder="Global Search"
-            />
-          </InputGroup>
-        </Form.Group>
-      </div>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: "20px",
+        }}
+      >
+        {/* Global Search Section */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "30px",
+          }}
+        >
+          <Form.Group
+            style={{
+              display: "flex",
+              alignItems: "center",
+              margin: 0,
+            }}
+          >
+            <InputGroup>
+              <Form.Control
+                type="search"
+                value={filters1.global.value || ""}
+                onChange={(e) =>
+                  setFilters1({
+                    global: {
+                      value: e.target.value,
+                      matchMode: FilterMatchMode.CONTAINS,
+                    },
+                  })
+                }
+                placeholder="Global Search"
+                style={{
+                  borderRadius: "8px",
+                  border: "2px solid #4dd0e1",
+                  padding: "8px 12px",
+                  width: "250px",
+                  fontSize: "14px",
+                  transition: "all 0.3s ease",
+                }}
+              />
+            </InputGroup>
+          </Form.Group>
+        </div>
 
-      {/* Right Section */}
-      <div className="d-flex align-items-center" style={{ gap: "15px" }}>
-        <Form.Group className="pe-3 mb-0">
-          From Date
-          <Form.Control
-            type="date"
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-          />
-        </Form.Group>
-        <Form.Group className="pe-3 mb-0">
-          To Date
-          <Form.Control
-            type="date"
-            value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-          />
-        </Form.Group>
-        <Button variant="primary" onClick={fetchCallLogsData}>
-          Refresh Data
-        </Button>
+        {/* Date Picker Section */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "15px",
+            border: "2px solid #4dd0e1",
+            borderRadius: "12px",
+            padding: "15px",
+            backgroundColor: "#f5fcfd",
+          }}
+        >
+          <div
+            style={{
+              margin: 0,
+              position: "relative",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "14px",
+                fontWeight: "500",
+                color: "#00838f",
+                marginBottom: "5px",
+              }}
+            >
+              From Date
+            </div>
+            <DatePicker
+              selected={fromDate} // Pass the Date object directly
+              onChange={(date) => {
+                setFromDate(date); // Set the Date object directly
+                console.log("From Date Selected:", date);
+              }}
+              dateFormat="dd/MM/yyyy"
+              placeholderText="Select from date"
+              maxDate={new Date()}
+              customInput={
+                <Form.Control
+                  style={{
+                    borderRadius: "8px",
+                    border: "2px solid #4dd0e1",
+                    padding: "8px 12px",
+                    width: "160px",
+                    fontSize: "14px",
+                    cursor: "pointer",
+                    backgroundColor: "white",
+                    transition: "all 0.3s ease",
+                  }}
+                />
+              }
+            />
+            {/* <DatePicker
+              selected={fromDate ? new Date(fromDate) : null}
+              onChange={(date) => {
+                const formattedDate = date
+                  ? date.toISOString().split("T")[0]
+                  : "";
+                setFromDate(formattedDate);
+                console.log("From Date Selected:", formattedDate);
+              }}
+              dateFormat="dd/MM/yyyy"
+              placeholderText="Select from date"
+              maxDate={new Date()}
+              customInput={
+                <Form.Control
+                  style={{
+                    borderRadius: "8px",
+                    border: "2px solid #4dd0e1",
+                    padding: "8px 12px",
+                    width: "160px",
+                    fontSize: "14px",
+                    cursor: "pointer",
+                    backgroundColor: "white",
+                    transition: "all 0.3s ease",
+                  }}
+                />
+              }
+              popperClassName="custom-popper"
+              popperPlacement="bottom-start"
+              popperModifiers={[
+                {
+                  name: "offset",
+                  options: {
+                    offset: [0, 8],
+                  },
+                },
+              ]}
+            /> */}
+          </div>
+
+          <div
+            style={{
+              margin: 0,
+              position: "relative",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "14px",
+                fontWeight: "500",
+                color: "#00838f",
+                marginBottom: "5px",
+              }}
+            >
+              To Date
+            </div>
+            <DatePicker
+              selected={toDate ? new Date(toDate) : null}
+              onChange={(date) => {
+                const formattedDate = date
+                  ? date.toISOString().split("T")[0]
+                  : "";
+                setToDate(formattedDate);
+                console.log("To Date Selected:", formattedDate);
+              }}
+              dateFormat="dd/MM/yyyy"
+              placeholderText="Select to date"
+              minDate={fromDate ? new Date(fromDate) : null}
+              customInput={
+                <Form.Control
+                  style={{
+                    borderRadius: "8px",
+                    border: "2px solid #4dd0e1",
+                    padding: "8px 12px",
+                    width: "160px",
+                    fontSize: "14px",
+                    cursor: "pointer",
+                    backgroundColor: "white",
+                    transition: "all 0.3s ease",
+                  }}
+                />
+              }
+              popperClassName="custom-popper"
+              popperPlacement="bottom-start"
+              popperModifiers={[
+                {
+                  name: "offset",
+                  options: {
+                    offset: [0, 8],
+                  },
+                },
+              ]}
+            />
+          </div>
+
+          <Button
+            variant="primary"
+            onClick={() => fetchCallLogsData(true)}
+            style={{
+              backgroundColor: "#00bcd4",
+              border: "none",
+              borderRadius: "8px",
+              padding: "8px 20px",
+              fontSize: "14px",
+              fontWeight: "500",
+              color: "white",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              marginTop: "20px",
+              ":hover": {
+                backgroundColor: "#00acc1",
+                transform: "translateY(-1px)",
+                boxShadow: "0 4px 8px rgba(0,0,0,0.15)",
+              },
+            }}
+          >
+            Refresh Data
+          </Button>
+        </div>
       </div>
     </div>
   );
 
-  const header = renderHeader();
+  // Update the time slots when the date changes
+  const handleDateChange = (date) => {
+    handleInputChange({
+      target: {
+        name: "date",
+        value: date ? date.toISOString().split("T")[0] : "",
+      },
+    });
+    // Regenerate time slots when the date changes
+    setTimeSlots(generateTimeSlots());
+  };
+
+  const generateTimeSlots = () => {
+    const slots = [];
+    const startTime = new Date();
+    const endTime = new Date();
+    endTime.setHours(23, 45, 0);
+
+    // Check if the selected date is today
+    const isToday = formData.date === new Date().toISOString().split("T")[0];
+
+    if (isToday) {
+      startTime.setHours(
+        new Date().getHours(),
+        Math.ceil(new Date().getMinutes() / 15) * 15,
+        0
+      );
+    } else {
+      startTime.setHours(7, 0, 0);
+    }
+
+    while (startTime <= endTime) {
+      const timeString = startTime.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
+      slots.push(timeString);
+      startTime.setMinutes(startTime.getMinutes() + 15);
+    }
+
+    return slots;
+  };
+
+  // Use useEffect to generate initial time slots
+  useEffect(() => {
+    setTimeSlots(generateTimeSlots());
+  }, [formData.date]); // Regenerate when date changes
+
+  const handleSubmit = async (saveType) => {
+    // Get the selected FDE's name from the fdeList
+    const selectedFDE = fdeList.find((fde) => fde.FDEID === formData.FDE_Name);
+    const fdeName = selectedFDE ? selectedFDE.FDEName : "";
+
+    // Get the selected doctor's name from the doctors list
+    const selectedDoctor = doctors.find(
+      (doc) => doc.doctor_id === formData.doctor_id
+    );
+    const doctorName = selectedDoctor ? selectedDoctor.name : "";
+
+    // Log the exact fields that match the backend
+    console.log("Submitting Appointment Details:", {
+      FDE_Name: formData.FDE_Name,
+      fdeId: formData.fdeId || null, // Send null if empty
+      appointmentTime: formData.appointmentTime,
+      patient_phone: formData.caller_no,
+      date: formData.date,
+      doctorName: formData.doctorName,
+      doctor_id: formData.doctor_id,
+      note: formData.note,
+      patientName: formData.patientName,
+    });
+
+    const payload = {
+      FDE_Name: formData.FDE_Name,
+      fdeId: formData.fdeId || null, // Send null if empty
+      appointmentTime: formData.appointmentTime,
+      patient_phone: formData.caller_no,
+      date: formData.date,
+      doctorName: formData.doctorName,
+      doctor_id: formData.doctor_id,
+      note: formData.note,
+      patientName: formData.patientName,
+    };
+
+    try {
+      console.log("Sending request to backend...", payload);
+
+      const response = await fetch(
+        `${BASE_URL}/V1/appointment/addAppointment`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      // Handle the response as needed
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const responseData = await response.json();
+      console.log("Appointment added successfully:", responseData);
+      toast.success("Appointment booked successfully");
+      setShowAddModal(false);
+    } catch (error) {
+      console.error("Error adding appointment:", error.message);
+      toast.error("Failed to book appointment. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddEnquirySubmit = async () => {
+    // Ensure required fields are present
+    if (
+      !formData.date ||
+      !formData.patient_name ||
+      !formData.patient_phone ||
+      !formData.enquirytype
+    ) {
+      alert(
+        "Please fill in all required fields: Date, Patient Name, Contact Number, Enquiry Type."
+      );
+      return;
+    }
+
+    // Format the payload correctly
+    const payload = {
+      date: formData.date, // Ensure this is in 'YYYY-MM-DD' format
+      doctor_id: formData.doctor_id || null, // Send null if empty
+      patient_name: formData.patient_name,
+      patient_phone: formData.patient_phone,
+      enquirytype: formData.enquirytype,
+      fdeId: formData.fdeId || null, // Send null if empty
+      FDE_Name: formData.FDE_Name || null, // Send null if empty
+      note: formData.note || "",
+    };
+
+    try {
+      console.log(
+        "🚀 Sending Enquiry Request:",
+        JSON.stringify(payload, null, 2)
+      );
+
+      const response = await fetch(`${BASE_URL}/V1/enquiry/addEnquiry`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const responseData = await response.json();
+      if (!response.ok) {
+        throw new Error(
+          `Error: ${response.status} - ${responseData.message || "Bad Request"}`
+        );
+      }
+
+      console.log("✅ Enquiry Added Successfully:", responseData);
+      alert("Enquiry added successfully!");
+
+      // Clear form and refresh data
+      setFormData({
+        date: "",
+        doctor_id: "",
+        patient_name: "",
+        patient_phone: "",
+        enquirytype: "",
+        FDE_Name: "",
+        fdeId: "",
+        note: "",
+      });
+
+      setShowEnquiryModal(false);
+    } catch (error) {
+      console.error("❌ Error adding enquiry:", error.message);
+      alert(`Failed to add enquiry: ${error.message}`);
+    }
+  };
+
+  useEffect(() => {
+    console.log("FDE List:", fdeList);
+    console.log("Enquiry Types:", enquiryTypes);
+    console.log("Form Data:", formData);
+  }, [fdeList, enquiryTypes, formData]);
+
+  // Update the handleAddEnquiryClick function
+  const handleAddEnquiryClick = () => {
+    const today = new Date();
+    setFormData((prev) => ({
+      ...prev,
+      date: today.toISOString().split("T")[0], // Set today's date in YYYY-MM-DD format
+      time: today.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      }),
+    }));
+    setSelectedDate(today); // For the DatePicker component
+    setShowAddModal(true);
+  };
+
+  const fetchEnquiries = async () => {
+    try {
+      const response = await fetch(`${BASE_URL}/V1/enquiry/listEnquiry`);
+      if (response.ok) {
+        const data = await response.json();
+        setEnquiries(data.data || []);
+      } else {
+        console.error("Failed to fetch enquiries");
+      }
+    } catch (error) {
+      console.error("Error fetching enquiries:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchEnquiries();
+  }, []);
 
   return (
     <>
@@ -385,7 +972,15 @@ export default function Call_logs() {
           <Container fluid>
             <Row>
               <Col>
-                <Card>
+                <Card
+                  style={{
+                    borderRadius: "12px",
+                    boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
+                    borderColor: "#00bcd4",
+                    background: "white",
+                    border: "4px solid #00bcd4",
+                  }}
+                >
                   <Card.Body>
                     <Row className="Product_list">
                       <DataTable
@@ -393,7 +988,7 @@ export default function Call_logs() {
                         paginator
                         rows={10}
                         filters={filters1}
-                        header={header}
+                        header={renderHeader}
                         loading={loading}
                         globalFilterFields={[
                           "ivr_id",
@@ -414,10 +1009,12 @@ export default function Call_logs() {
                         responsiveLayout="scroll"
                         className="p-datatable-customers"
                         style={{
-                          borderCollapse: "collapse", // Ensure consistent borders
+                          border: "1px solid #4dd0e1",
+                          marginTop: "20px",
                           width: "100%",
-                          border: "1px solid #90caf9",
+                          background: "white",
                           borderRadius: "8px",
+                          overflow: "hidden",
                         }}
                       >
                         <Column
@@ -573,14 +1170,24 @@ export default function Call_logs() {
           <Form onSubmit={handleAddAppointment}>
             <Row>
               {/* Date */}
-              <Col md={6} className="mb-4">
-                <Form.Group className="mb-3">
+              <Col md={6}>
+                <Form.Group>
                   <Form.Label>Date</Form.Label>
-                  <Form.Control
-                    type="date"
-                    name="date"
-                    value={formData.date}
-                    onChange={handleInputChange}
+                  <DatePicker
+                    selected={
+                      formData.date ? new Date(formData.date) : new Date()
+                    }
+                    onChange={(date) => {
+                      if (date) {
+                        handleDateChange(date);
+                      } else {
+                        console.error("Invalid date selected");
+                      }
+                    }}
+                    className="form-control"
+                    dateFormat="dd/MM/yyyy"
+                    placeholderText="Select Date"
+                    minDate={new Date()}
                   />
                 </Form.Group>
               </Col>
@@ -588,15 +1195,15 @@ export default function Call_logs() {
                 <Form.Group className="mb-20">
                   <Form.Label>Doctor Name</Form.Label>
                   <Form.Select
-                    name="doctorId"
-                    value={formData.doctorId}
+                    name="doctorName"
+                    value={formData.doctorName}
                     onChange={handleInputChange}
                   >
                     <option value="">Select a Doctor</option>
                     {doctors && doctors.length > 0 ? (
                       doctors.map((doctor) => (
-                        <option key={doctor.doctor_id} value={doctor.doctor_id}>
-                          {doctor.name}
+                        <option key={doctor.doctor_id} value={doctor.name}>
+                          {doctor.doctor_id} - {doctor.name}
                         </option>
                       ))
                     ) : (
@@ -624,39 +1231,54 @@ export default function Call_logs() {
                   <Form.Label>Mobile Number</Form.Label>
                   <Form.Control
                     type="text"
-                    name="mobileNumber"
+                    name="caller_no"
                     placeholder="Mobile Number"
-                    value={formData.mobileNumber}
-                    onChange={handleInputChange}
+                    value={formData.caller_no}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Update both fields in formData
+                      handleInputChange({
+                        target: {
+                          name: "caller_no",
+                          value: value,
+                        },
+                      });
+                    }}
                   />
                 </Form.Group>
               </Col>
 
               <Col md={6}>
-                <Form.Group className="mb-20">
+                <Form.Group>
                   <Form.Label>Appointment Time</Form.Label>
-                  <Form.Control
-                    type="time"
+                  <Form.Select
                     name="appointmentTime"
                     value={formData.appointmentTime}
                     onChange={handleInputChange}
-                  />
+                  >
+                    <option value="">Select Time</option>
+                    {timeSlots.map((time, index) => (
+                      <option key={index} value={time}>
+                        {time}
+                      </option>
+                    ))}
+                  </Form.Select>
                 </Form.Group>
               </Col>
               <Col md={6}>
                 <Form.Group className="mb-20">
                   <Form.Label>FDE Name</Form.Label>
                   <Form.Select
-                    name="fdeId"
-                    value={formData.fdeId}
+                    name="FDE_Name"
+                    value={formData.FDE_Name}
                     onChange={handleInputChange}
                   >
                     <option value="">Select FDE Name</option>
                     {fdeList &&
                       fdeList.length > 0 &&
                       fdeList.map((fde) => (
-                        <option key={fde.FDEID} value={fde.FDEID}>
-                          {fde.FDEName}
+                        <option key={fde.FDEID} value={fde.FDEName}>
+                          {fde.FDEID} - {fde.FDEName}
                         </option>
                       ))}
                   </Form.Select>
@@ -675,9 +1297,34 @@ export default function Call_logs() {
                 </Form.Group>
               </Col>
               <div className="d-flex justify-content-center">
-                <Button type="submit" className="btn btn-primary">
-                  Add Appointment
-                </Button>
+                <Col className="text-end">
+                  <button
+                    type="button"
+                    className="btn btn-primary me-2"
+                    onClick={() => handleSubmit("save")}
+                  >
+                    Book Appointment
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-danger"
+                    onClick={() => {
+                      setShowAddModal(false);
+                      setFormData({
+                        date: "",
+                        doctor_id: "",
+                        name: "",
+                        phone: "",
+                        appointmentTime: "",
+                        FDE_Name: "",
+                        fdeId: "",
+                        note: "",
+                      });
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </Col>
               </div>
             </Row>
           </Form>
@@ -690,17 +1337,28 @@ export default function Call_logs() {
         size="lg"
       >
         <Modal.Header closeButton>
-          <Modal.Title>Add Note</Modal.Title>
+          <Modal.Title>Edit Note</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {/* Display the selected note content */}
-          <div>
-            <p>{selectedNote || "No note available"}</p>
-          </div>
+          {/* Replace the static note display with an editable input field */}
+          <Form.Control
+            as="textarea"
+            rows={5}
+            name="note"
+            value={formData.note || ""}
+            onChange={handleInputChange}
+            placeholder="Enter note"
+          />
         </Modal.Body>
         <Modal.Footer>
+          <Button
+            variant="primary"
+            onClick={handleSaveNote} // Ensure this is correctly calling the function
+          >
+            Save
+          </Button>
           <Button variant="secondary" onClick={() => setShowNoteModal(false)}>
-            Add Note
+            Cancel
           </Button>
         </Modal.Footer>
       </Modal>
@@ -720,36 +1378,60 @@ export default function Call_logs() {
             <p>Enquiry for Call Log ID: {selectedCallLog?.ivr_id}</p>
             {/* Enquiry Form */}
             <Form onSubmit={handleEnquirySubmit}>
+              <br />
               <Row>
                 <Col md={6}>
-                  <Form.Group>
+                  <Form.Group className="mb-3">
                     <Form.Label>Call Back Date</Form.Label>
-                    <Form.Control
-                      type="date"
-                      name="callBackDate"
-                      value={enquiryForm.callBackDate}
-                      onChange={handleEnquiryInputChange}
+                    <DatePicker
+                      selected={selectedDate}
+                      onChange={(date) => {
+                        setSelectedDate(date);
+                        setEnquiryForm((prev) => ({
+                          ...prev,
+                          date: formatDate(date),
+                        }));
+                      }}
+                      dateFormat="dd/MM/yyyy"
+                      className="form-control"
+                      placeholderText="Select date"
+                      value={enquiryForm.date}
+                      minDate={new Date()} // Optional: if you want to prevent past dates
                     />
                   </Form.Group>
                 </Col>
                 <Col md={6}>
-                  <Form.Group>
+                  {/* Enquiry Type */}
+                  <Form.Group className="mb-3">
                     <Form.Label>Enquiry Type</Form.Label>
                     <Form.Select
-                      name="enquiryType"
+                      name="enquirytype"
+                      value={enquiryForm.enquirytype}
                       onChange={handleEnquiryInputChange}
-                      value={enquiryForm.enquiryType}
-                      disabled={loading} // Disable the dropdown if loading
+                      required
                     >
                       <option value="">Select Enquiry Type</option>
-                      {/* Render Enquiry Type options dynamically */}
-                      {enquiryTypes &&
-                        enquiryTypes.length > 0 &&
-                        enquiryTypes.map((type) => (
-                          <option key={type.id} value={type.id}>
-                            {type.name}
-                          </option>
-                        ))}
+                      {[
+                        "Call for Refund Amount",
+                        "Wrong Enquiry or Spam Call",
+                        "Enquiry for Test Charges",
+                        "Accounts Department",
+                        "Call for Another Branches",
+                        "Call for IPD Doctors",
+                        "Call for Assistant Doctors",
+                        "Call Regarding Job Vacancy",
+                        "Appointment Consultation",
+                        "Online Consultation",
+                        "SX Cost Enquiry",
+                        "Call for Lab Test Enquiry",
+                        "Medicines Availability at Pharmacy",
+                        "Patient is Coming Late for Appointment",
+                        "Insurance Related Queries",
+                      ].map((type) => (
+                        <option key={type} value={type}>
+                          {type}
+                        </option>
+                      ))}
                     </Form.Select>
                   </Form.Group>
                 </Col>
@@ -760,41 +1442,39 @@ export default function Call_logs() {
                     <Form.Label>Patient Name</Form.Label>
                     <Form.Control
                       type="text"
-                      name="patientName"
-                      value={enquiryForm.patientName}
+                      name="patient_name"
+                      value={enquiryForm.patient_name}
                       onChange={handleEnquiryInputChange}
                       placeholder="Enter Patient Name"
                     />
                   </Form.Group>
                 </Col>
                 <Col md={6}>
-                  <Form.Group>
+                  <Form.Group className="mb-20">
                     <Form.Label>Mobile Number</Form.Label>
                     <Form.Control
                       type="text"
-                      name="mobileNumber"
-                      value={enquiryForm.mobileNumber}
-                      onChange={handleEnquiryInputChange}
-                      placeholder="Enter Mobile Number"
+                      name="caller_no"
+                      placeholder="Mobile Number"
+                      value={selectedCallLog?.caller_no}
+                      onChange={handleInputChange}
                     />
                   </Form.Group>
                 </Col>
-              </Row>
-              <Row>
                 <Col md={6}>
                   <Form.Group className="mb-20">
                     <Form.Label>FDE Name</Form.Label>
                     <Form.Select
-                      name="fdeId"
-                      value={formData.fdeId}
-                      onChange={handleInputChange}
+                      name="FDE_Name"
+                      value={enquiryForm.FDE_Name}
+                      onChange={handleEnquiryInputChange}
                     >
                       <option value="">Select FDE Name</option>
                       {fdeList &&
                         fdeList.length > 0 &&
                         fdeList.map((fde) => (
-                          <option key={fde.FDEID} value={fde.FDEID}>
-                            {fde.FDEName}
+                          <option key={fde.FDEID} value={fde.FDEName}>
+                            {fde.FDEID} - {fde.FDEName}
                           </option>
                         ))}
                     </Form.Select>
@@ -806,7 +1486,7 @@ export default function Call_logs() {
                     <Form.Control
                       as="textarea"
                       name="note"
-                      value={enquiryForm.note}
+                      value={formData.note}
                       onChange={handleEnquiryInputChange}
                       rows={3}
                       placeholder="Enter Note"
@@ -814,9 +1494,35 @@ export default function Call_logs() {
                   </Form.Group>
                 </Col>
               </Row>
-              <Button variant="primary" type="submit">
-                Add Enquiry
-              </Button>
+              <div className="d-flex justify-content-center">
+                <Col className="text-end">
+                  <button
+                    type="button"
+                    className="btn btn-primary me-2"
+                    onClick={handleEnquirySubmit}
+                  >
+                    Add Enquiry
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-danger"
+                    onClick={() => {
+                      setShowEnquiryModal(false);
+                      setEnquiryForm({
+                        date: "",
+                        enquirytype: "",
+                        patient_name: "",
+                        caller_no: "",
+                        FDE_Name: "",
+                        fdeId: "",
+                        note: "",
+                      });
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </Col>
+              </div>
             </Form>
           </div>
         </Modal.Body>

@@ -40,3 +40,25 @@
 .read-the-docs {
   color: #888;
 }
+
+.green-row {
+  background-color: #0f0 !important;
+}
+
+.red-row {
+  background-color: #f00 !important;
+}
+
+.blue-row {
+  background-color: #00f !important;
+  color: white;
+}
+
+.gray-row {
+  background-color: #555 !important;
+  color: white;
+}
+
+.default-row {
+  background-color: #fff !important;
+}

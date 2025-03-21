@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Container } from "react-bootstrap";
 import {
   FaClock,
@@ -12,6 +12,7 @@ export default function NavBarR() {
   const [time, setTime] = useState(new Date().toLocaleTimeString());
   const today = new Date();
   const formattedDate = today.toLocaleDateString();
+  const location = useLocation();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -21,45 +22,68 @@ export default function NavBarR() {
   }, []);
 
   return (
-    <div
-      className="navbar-container"
-      style={{ width: "auto", maxWidth: "100%" }}
-    >
+    <div className="navbar-container">
       <Container fluid>
         <div className="navbar-content">
           {/* Breadcrumb Navigation */}
           <nav className="breadcrumb-nav">
-            <Link to="/">Dashboard</Link>
-            <span>/</span>
-            <Link to="/appointment-list" className="hover-link">
-              <span className="link-text">Appointment List</span>
-              <FaClipboardList className="icon-hover" />
+            <Link 
+              to="/" 
+              className={`nav-link ${location.pathname === "/" ? "active" : ""}`}
+            >
+              <span className="nav-icon">🏠</span>
+              Dashboard
             </Link>
-            <span>/</span>
-            <Link to="/add-appointment" className="hover-link">
-              <span className="link-text">Add Appointment</span>
-              <FaPlusCircle className="icon-hover" />
+            <span className="separator">•</span>
+            <Link 
+              to="/appointment-list" 
+              className={`nav-link ${location.pathname === "/appointment-list" ? "active" : ""}`}
+            >
+              <span className="nav-icon">📋</span>
+              Appointment List
             </Link>
-            <span>/</span>
-            <Link to="/enquiry-list" className="hover-link">
-              <span className="link-text">Enquiry List</span>
-              <FaClipboardList className="icon-hover" />
+            <span className="separator">•</span>
+            <Link 
+              to="/receipt-list" 
+              className={`nav-link ${location.pathname === "/receipt-list" ? "active" : ""}`}
+            >
+              <span className="nav-icon">📋</span>
+              Receipt List
             </Link>
-            <span>/</span>
-            <Link to="/add-enquiry" className="hover-link">
-              <span className="link-text">Add Enquiry</span>
-              <FaPlusCircle className="icon-hover" />
+            <span className="separator">•</span>
+            <Link 
+              to="/add-appointment" 
+              className={`nav-link ${location.pathname === "/add-appointment" ? "active" : ""}`}
+            >
+              <span className="nav-icon">➕</span>
+              Add Appointment
+            </Link>
+            <span className="separator">•</span>
+            <Link 
+              to="/enquiry-list" 
+              className={`nav-link ${location.pathname === "/enquiry-list" ? "active" : ""}`}
+            >
+              <span className="nav-icon">📝</span>
+              Enquiry List
+            </Link>
+            <span className="separator">•</span>
+            <Link 
+              to="/add-enquiry" 
+              className={`nav-link ${location.pathname === "/add-enquiry" ? "active" : ""}`}
+            >
+              <span className="nav-icon">✏️</span>
+              Add Enquiry
             </Link>
           </nav>
 
           {/* Right Section: Time & Date */}
           <div className="date-time">
             <div className="time-box">
-              <FaClock />
+              <i className="fa fa-clock-o pulse"></i>
               {time}
             </div>
             <div className="date-box">
-              <FaCalendarAlt />
+              <i className="fa fa-calendar"></i>
               {formattedDate}
             </div>
           </div>
@@ -70,76 +94,64 @@ export default function NavBarR() {
       <style>
         {`
           .navbar-container {
-            background: linear-gradient(to right, #64b5f6, #e3f2fd);
-            padding: 14px 20px;
-            border-radius: 8px;
-            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-            width: auto;
-            max-width: 100%;
+            background: linear-gradient(135deg, #ffffff 0%, #f0f4f8 100%);
+            padding: 15px 12px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
           }
 
           .navbar-content {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
           }
 
           .breadcrumb-nav {
             display: flex;
-            gap: 16px;
-            font-weight: 625;
-            font-size: 15px;
-            color: #000;
             align-items: center;
-          }
-
-          .breadcrumb-nav a {
-            text-decoration: none;
-            color: #000;
-            transition: color 0.3s ease-in-out;
-            display: flex;
-            align-items: center;
+            flex-wrap: wrap;
             gap: 8px;
-            position: relative;
+            font-weight: 500;
+            font-size: 14px;
           }
 
-          .breadcrumb-nav a:hover {
-            color: #333;
-            text-decoration: underline;
-          }
-
-          .breadcrumb-nav span {
-            margin: 1 2px;
-          }
-
-          .hover-link {
+          .nav-link {
             display: flex;
             align-items: center;
-            position: relative;
-            width: 140px;
-            justify-content: center;
+            gap: 6px;
+            text-decoration: none;
+            color: #2c3e50;
+            padding: 8px 14px;
+            border-radius: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: transparent;
           }
 
-          .link-text {
-            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
-            position: absolute;
+          .nav-icon {
+            font-size: 16px;
+            opacity: 0.8;
           }
 
-          .icon-hover {
-            opacity: 0;
-            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
-            position: absolute;
-            transform: scale(0.8); /* Initially smaller */
+          .nav-link:hover {
+            background-color: #ffffff;
+            color: #1a73e8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
           }
 
-          .hover-link:hover .link-text {
-            opacity: 0;
-            transform: scale(0.8);
+          .nav-link:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
           }
 
-          .hover-link:hover .icon-hover {
-            opacity: 1;
-            transform: scale(1); /* Back to normal size */
+          .separator {
+            color: #94a3b8;
+            font-size: 12px;
+            margin: 0 4px;
           }
 
           .date-time {
@@ -151,13 +163,106 @@ export default function NavBarR() {
             display: flex;
             align-items: center;
             gap: 8px;
-            background: rgba(255, 255, 255, 0.7);
-            padding: 8px 14px;
-            border-radius: 6px;
+            background: #ffffff;
+            padding: 10px 16px;
+            border-radius: 12px;
             font-weight: 600;
-            font-size: 18px;
-            color: #000;
-            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+            font-size: 14px;
+            color: #1e293b;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+          }
+
+          .time-box:hover, .date-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+          }
+
+          .time-box i, .date-box i {
+            font-size: 16px;
+            color: #3b82f6;
+          }
+
+          .pulse {
+            animation: pulse 2s infinite;
+          }
+
+          @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+          }
+
+          @media (max-width: 768px) {
+            .navbar-content {
+              flex-direction: column;
+              align-items: stretch;
+            }
+            
+            .breadcrumb-nav {
+              justify-content: center;
+              gap: 6px;
+            }
+            
+            .nav-link {
+              padding: 6px 10px;
+              font-size: 13px;
+            }
+            
+            .date-time {
+              justify-content: center;
+              flex-wrap: wrap;
+            }
+
+            .time-box, .date-box {
+              padding: 8px 12px;
+              font-size: 13px;
+            }
+          }
+
+          @media (max-width: 480px) {
+            .nav-icon {
+              display: none;
+            }
+            
+            .nav-link {
+              padding: 4px 8px;
+              font-size: 12px;
+            }
+          }
+
+          .nav-link.active {
+            background-color: #ffffff;
+            color: #1a73e8;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            position: relative;
+          }
+
+          .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            height: 3px;
+            background-color: #1a73e8;
+            border-radius: 2px;
+          }
+
+          .nav-link.active .nav-icon {
+            opacity: 1;
+          }
+
+          .nav-link.active:hover {
+            transform: none;
+          }
+
+          @media (max-width: 768px) {
+            .nav-link.active::after {
+              width: 60%;
+            }
           }
         `}
       </style>

@@ -10,6 +10,7 @@ import {
 } from "react-bootstrap";
 import PageBreadcrumb from "../../componets/PageBreadcrumb";
 import SimpleBar from "simplebar-react";
+import '../../styles/styles.css'; // Add this import at the top
 
 const OPDCollectionReport = () => {
   const [fromDate, setFromDate] = useState("");
@@ -62,7 +63,15 @@ const OPDCollectionReport = () => {
   );
 
   return (
-    <div className="themebody-wrap">
+    <div
+      className="themebody-wrap"
+      style={{
+        background: "linear-gradient(to right, #e0f7fa, #80deea)",
+        fontFamily: "'Poppins', Arial, sans-serif",
+        minHeight: "100vh",
+        padding: "20px",
+      }}
+    >
       {/* Breadcrumb */}
       <PageBreadcrumb pagename="OPD+IPD Collection" />
 
@@ -70,8 +79,27 @@ const OPDCollectionReport = () => {
         <Container fluid>
           <Row>
             <Col md={12}>
-              <Card>
-                <Card.Header>
+              <Card
+                style={{
+                  borderRadius: "12px",
+                  boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
+                  borderColor: "#00bcd4",
+                  background: "white",
+                  border: "4px solid #00bcd4",
+                }}
+              >
+                <Card.Header
+                  className="text-center"
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: "22px",
+                    color: "#006064",
+                    background: "linear-gradient(to right, #4dd0e1, #00acc1)",
+                    borderBottom: "3px solid #00bcd4",
+                    padding: "1rem",
+                    backgroundColor: "white",
+                  }}
+                >
                   <h4>OPD+IPD COLLECTION</h4>
                 </Card.Header>
                 <Card.Body>
@@ -112,7 +140,14 @@ const OPDCollectionReport = () => {
                   <br />
                   <br />
                   {/* Collection Data Table */}
-                  <Table striped bordered hover responsive className="mt-4">
+                  <Table
+                    striped
+                    bordered
+                    hover
+                    responsive
+                    className="mt-4"
+                    style={{ textAlign: "center" }}
+                  >
                     <thead>
                       <tr>
                         <th>Sr No</th>
@@ -124,7 +159,7 @@ const OPDCollectionReport = () => {
                         <th>OPD Cheque</th>
                         <th>IPD Cheque</th>
                         <th>OPD Online</th>
-                        <th>IPD Online</th>
+                        <th style={{ textAlign: "center" }}>IPD Online</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -139,7 +174,9 @@ const OPDCollectionReport = () => {
                           <td>{data.opdCheque}</td>
                           <td>{data.ipdCheque}</td>
                           <td>{data.opdOnline}</td>
-                          <td>{data.ipdOnline}</td>
+                          <td style={{ textAlign: "center" }}>
+                            {data.ipdOnline}
+                          </td>
                         </tr>
                       ))}
                       <tr className="total-row">
@@ -153,7 +190,9 @@ const OPDCollectionReport = () => {
                         <td>{totals.opdCheque}</td>
                         <td>{totals.ipdCheque}</td>
                         <td>{totals.opdOnline}</td>
-                        <td>{totals.ipdOnline}</td>
+                        <td style={{ textAlign: "center" }}>
+                          {totals.ipdOnline}
+                        </td>
                       </tr>
                     </tbody>
                   </Table>

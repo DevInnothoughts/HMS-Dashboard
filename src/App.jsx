@@ -7,7 +7,18 @@ import {
   useLocation,
   Navigate,
 } from "react-router-dom";
+// import DischargeCard from "./pages/DischargeCard"
+import ReceiptList from "./pages/ReceiptList";
 
+import Patient from "./pages/Doctor_Panel/Patient";
+import Personal from "./pages/Doctor_Panel/Personal";
+import PatientHistory from "./pages/Doctor_Panel/PatientHistory";
+import Diagnosis from "./pages/Doctor_Panel/Diagnosis";
+import FollowUp from "./pages/Doctor_Panel/FollowUp";
+import OtherTests from "./pages/Doctor_Panel/OtherTests";
+import OpdPrescription from "./pages/Doctor_Panel/OpdPrescription";
+import Surgery from "./pages/Doctor_Panel/Surgery";
+import DischargeCard from "./pages/Doctor_Panel/DischargeCard";
 
 import Index from "./pages/Index";
 import Dashboard2 from "./pages/Dashboard2";
@@ -56,6 +67,7 @@ import Add_payment from "./pages/Add_payment";
 import Invoice from "./pages/Invoice";
 import Event_management from "./pages/Event_management";
 
+import AppointmentConversion from "./pages/Manage Reports/AppointmentConversion";
 import DailyOPDReport from "./pages/Manage Reports/DailyOPDReport";
 import BirthdayAlert from "./pages/Manage Reports/BirthdayAlert";
 import BillingReport from "./pages/Manage Reports/BillingReports";
@@ -72,6 +84,9 @@ import InsuranceDueReport from "./pages/Manage Reports/InsuranceDueReport";
 import OPDIPDCollection from "./pages/Manage Reports/OPDIPDCollection";
 import OPDIPDCollGraph from "./pages/Manage Reports/OPDIPDCollGraph";
 import OPDReceiptsReport from "./pages/Manage Reports/OPDReceiptsReport";
+
+import DiagnosisReport from "./pages/Doctor_Panel/Manage Reports/DiagnosisReport";
+import OpdSurgeryReport from "./pages/Doctor_Panel/Manage Reports/OpdSurgeryReport";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -157,8 +172,21 @@ function AppContent() {
         sidebarEnabled && <Sidebar />}
 
       <Routes>
-
         <Route exact path="/" element={<Index />} />
+        {/* <Route exact path="/dischargecard" element={<DischargeCard />} /> */}
+
+        <Route exact path="/receipt-list" element={<ReceiptList />} />
+
+        <Route exact path="/patient" element={<Patient />} />
+        <Route exact path="/personal" element={<Personal />} />
+        <Route exact path="/patientHistory" element={<PatientHistory />} />
+        <Route exact path="/diagnosis" element={<Diagnosis />} />
+        <Route path="/follow-up" element={<FollowUp />} />
+        <Route exact path="/otherTests" element={<OtherTests />} />
+        <Route exact path="/opdPrescription" element={<OpdPrescription />} />
+        <Route exact path="/surgery" element={<Surgery />} />
+        <Route exact path="/dischargeCard" element={<DischargeCard />} />
+
         <Route exact path="/doctor-dashboard" element={<Dashboard2 />} />
         <Route exact path="/patient-dashboard" element={<Dashboard3 />} />
 
@@ -219,6 +247,11 @@ function AppContent() {
 
         <Route exact path="/dailyOPDReport" element={<DailyOPDReport />} />
         <Route exact path="/birthdayAlert" element={<BirthdayAlert />} />
+        <Route
+          exact
+          path="/appointmentConversion"
+          element={<AppointmentConversion />}
+        />
 
         <Route exact path="/billingReport" element={<BillingReport />} />
         <Route
@@ -265,6 +298,13 @@ function AppContent() {
           exact
           path="/oPDReceiptsReport"
           element={<OPDReceiptsReport />}
+        />
+
+        <Route exact path="/diagnosis-report" element={<DiagnosisReport />} />
+        <Route
+          exact
+          path="/opd-surgery-report"
+          element={<OpdSurgeryReport />}
         />
 
         <Route exact path="/login" element={<Login />} />

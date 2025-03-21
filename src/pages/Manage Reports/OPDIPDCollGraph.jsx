@@ -11,6 +11,7 @@ import {
   Legend,
 } from "chart.js";
 import { Card, Form, FormGroup, Button, Row, Col } from "react-bootstrap"; // Make sure to install react-bootstrap
+import '../../styles/styles.css'; // Add this import at the top
 
 // Register chart elements
 ChartJS.register(
