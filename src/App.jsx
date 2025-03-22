@@ -409,7 +409,7 @@ export default function App() {
       <Loader />
       {/* Loader End */}
 
-      <BrowserRouter basename="/bootstrapreact/medixo/">
+      <BrowserRouter basename="/hms/">
         <SidebarProvider>
           <AppContent />
         </SidebarProvider>
