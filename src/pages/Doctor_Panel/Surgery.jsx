@@ -37,7 +37,7 @@ const Surgery = () => {
   const [previousRecordDate, setPreviousRecordDate] = useState("");
   const [isOtherSpecifyDisabled, setIsOtherSpecifyDisabled] = useState(false);
 
-  const BASE_URL = "http://192.168.1.46:5000/api";
+  const BASE_URL = "http://194.195.117.79:5000/api";
 
   // Update the API endpoints constants
   const API_ENDPOINTS = {

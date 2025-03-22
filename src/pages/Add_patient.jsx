@@ -43,7 +43,7 @@ const generateUID = () => {
   return `${Date.now()}`;
 };
 
-const BASE_URL = "http://192.168.1.46:5000/api"; // Update your API base URL here
+const BASE_URL = "http://194.195.117.79:5000/api"; // Update your API base URL here
 
 export default function Add_Patient() {
   const [formData, setFormData] = useState({

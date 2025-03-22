@@ -72,7 +72,7 @@ export default function Dashboard2() {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const appointmentsPerPage = 5;
-  const BASE_URL = "http://192.168.1.46:5000/api";
+  const BASE_URL = "http://194.195.117.79:5000/api";
 
   // Function to fetch today's appointments
   const fetchTodayAppointments = async (page) => {

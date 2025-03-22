@@ -26,7 +26,7 @@ import DatePicker from "react-datepicker";
 import NavBarP from "../componets/NavbarP";
 import logo from "../assets/images/3.png";
 
-const BASE_URL = "http://192.168.1.46:5000/api"; // Update your API base URL here
+const BASE_URL = "http://194.195.117.79:5000/api"; // Update your API base URL here
 
 const formatDate = (dateString) => {
   if (!dateString) return "";

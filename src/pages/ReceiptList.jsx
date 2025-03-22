@@ -23,7 +23,7 @@ import labLogo from "../assets/images/1.png";
 import pharmacyLogo from "../assets/images/2.png";
 import receiptLogo from "../assets/images/4.png";
 // import receiptLogo from "../assets/images/4.png";
-const BASE_URL = "http://192.168.1.46:5000/api";
+const BASE_URL = "http://194.195.117.79:5000/api";
 
 export default function ReceiptList() {
   const [receipts, setReceipts] = useState([]);

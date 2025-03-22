@@ -24,7 +24,7 @@ import pharmacyLogo from "../assets/images/2.png";
 import receiptLogo from "../assets/images/4.png";
 import moment from "moment";
 
-const BASE_URL = "http://192.168.1.46:5000/api"; // Update your API base URL here
+const BASE_URL = "http://194.195.117.79:5000/api"; // Update your API base URL here
 
 export default function Appointment_list() {
   const [appointments, setAppointments] = useState([]);

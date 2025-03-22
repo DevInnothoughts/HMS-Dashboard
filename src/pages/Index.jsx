@@ -22,7 +22,7 @@ import {
 import Top_doctors from "../componets/Top_doctors";
 import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
 
-const BASE_URL = "http://192.168.1.46:5000/api";
+const BASE_URL = "http://194.195.117.79:5000/api";
 
 export default function Index() {
   const [doctorCount, setDoctorCount] = useState(0);
