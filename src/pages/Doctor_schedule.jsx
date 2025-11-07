@@ -15,7 +15,7 @@ import {
 } from "react-bootstrap";
 import PageBreadcrumb from "../componets/PageBreadcrumb";
 
-const BASE_URL = "http://194.195.117.79:5000/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 export default function DoctorSchedule() {
   const [appointmentData, setAppointmentData] = useState([]);

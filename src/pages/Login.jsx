@@ -6,7 +6,7 @@ import eyeIcon from "/src/assets/images/Eye/view.png";
 import eyeSlashIcon from "/src/assets/images/Eye/invisible.png";
 import logo from "/src/assets/images/logo/icon-logo.png";
 
-const BASE_URL = "http://194.195.117.79:5000/api"; // Update with your backend API base URL
+const BASE_URL = "http://194.195.117.79:5100/api"; // Update with your backend API base URL
 
 export default function Login() {
   const navigate = useNavigate();

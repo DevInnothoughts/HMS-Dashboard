@@ -13,7 +13,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://194.195.117.79:5000/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 export default function OpdPrescription() {
   const [formData, setFormData] = useState({
