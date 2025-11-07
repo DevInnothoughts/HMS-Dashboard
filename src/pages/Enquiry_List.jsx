@@ -17,6 +17,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { FilterMatchMode } from "primereact/api";
 import "../styles/styles.css"; // Add this import at the top
 const BASE_URL = "http://194.195.117.79:5000/api";
+import moment from "moment";
 
 export default function EnquiryList() {
   const [enquiries, setEnquiries] = useState([]);
@@ -66,6 +67,7 @@ export default function EnquiryList() {
         const result = Array.isArray(data.data) ? data.data : [];
         setEnquiries(result);
         setFilteredEnquiries(result); // Initialize filtered data
+        console.log("Enquires API Response:", data); // Debug API response
       } else {
         console.error(
           "Error fetching enquiries:",
@@ -401,6 +403,7 @@ export default function EnquiryList() {
                       <Column
                         field="srNo"
                         header="Sr. No"
+                        body={(rowData, { rowIndex }) => rowIndex + 1}
                         sortable
                         style={{
                           border: "1px solid #90caf9",
@@ -412,6 +415,9 @@ export default function EnquiryList() {
                         field="date"
                         header="Date"
                         sortable
+                        body={(rowData) =>
+                          moment(rowData.date).format("DD-MM-YYYY")
+                        }
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",

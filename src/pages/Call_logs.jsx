@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import moment from "moment";
 import { FilterMatchMode } from "primereact/api";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
@@ -733,14 +734,14 @@ export default function Call_logs() {
     </div>
   );
 
-  // Update the time slots when the date changes
   const handleDateChange = (date) => {
     handleInputChange({
       target: {
         name: "date",
-        value: date ? date.toISOString().split("T")[0] : "",
+        value: moment(date).format("DD-MM-YYYY"), // Ensures correct format
       },
     });
+
     // Regenerate time slots when the date changes
     setTimeSlots(generateTimeSlots());
   };
@@ -799,7 +800,7 @@ export default function Call_logs() {
       fdeId: formData.fdeId || null, // Send null if empty
       appointmentTime: formData.appointmentTime,
       patient_phone: formData.caller_no,
-      date: formData.date,
+      date: moment(formData.date).format("DD-MM-YYYY"),
       doctorName: formData.doctorName,
       doctor_id: formData.doctor_id,
       note: formData.note,
@@ -811,7 +812,7 @@ export default function Call_logs() {
       fdeId: formData.fdeId || null, // Send null if empty
       appointmentTime: formData.appointmentTime,
       patient_phone: formData.caller_no,
-      date: formData.date,
+      date: moment(formData.date).format("DD-MM-YYYY"), // Converts to "DD-MM-YYYY"
       doctorName: formData.doctorName,
       doctor_id: formData.doctor_id,
       note: formData.note,
@@ -863,7 +864,7 @@ export default function Call_logs() {
 
     // Format the payload correctly
     const payload = {
-      date: formData.date, // Ensure this is in 'YYYY-MM-DD' format
+      date: moment(formData.date).format("DD-MM-YYYY"), // Converts to "DD-MM-YYYY"
       doctor_id: formData.doctor_id || null, // Send null if empty
       patient_name: formData.patient_name,
       patient_phone: formData.patient_phone,
@@ -1185,7 +1186,7 @@ export default function Call_logs() {
                       }
                     }}
                     className="form-control"
-                    dateFormat="dd/MM/yyyy"
+                    dateFormat="dd-MM-yyyy"
                     placeholderText="Select Date"
                     minDate={new Date()}
                   />
@@ -1392,7 +1393,7 @@ export default function Call_logs() {
                           date: formatDate(date),
                         }));
                       }}
-                      dateFormat="dd/MM/yyyy"
+                      dateFormat="dd-MM-yyyy"
                       className="form-control"
                       placeholderText="Select date"
                       value={enquiryForm.date}

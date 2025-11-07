@@ -27,6 +27,7 @@ import moment from "moment";
 const BASE_URL = "http://194.195.117.79:5000/api"; // Update your API base URL here
 
 export default function Appointment_list() {
+  const location = "demo";
   const [appointments, setAppointments] = useState([]);
   const [appointment, setAppointmentdata] = useState([]); // Appointment data state
   const [doctors, setDoctors] = useState([]); // Doctors list
@@ -392,7 +393,7 @@ export default function Appointment_list() {
 
       console.log("Final API Dates:", formattedFromDate, formattedToDate);
 
-      const url = `${BASE_URL}/V1/appointment/listAppointments?from=${formattedFromDate}&to=${formattedToDate}`;
+      const url = `${BASE_URL}/V1/appointment/listAppointments?from=${formattedFromDate}&to=${formattedToDate}&location=${location}`;
 
       const response = await fetch(url, {
         method: "GET",
@@ -603,11 +604,10 @@ export default function Appointment_list() {
 
       try {
         const confirmResponse = await fetch(
-          `${BASE_URL}/V1/appointment/confirmAppointment/${appointment_id}`,
+          `${BASE_URL}/V1/appointment/confirmAppointment?appId=${appointment_id}&location=${location}`,
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ confirmAppointment: 1 }),
           }
         );
 
@@ -617,7 +617,7 @@ export default function Appointment_list() {
           const confirmTime = new Date().toLocaleTimeString("en-US", {
             hour: "2-digit",
             minute: "2-digit",
-            hour12: true,
+            hour12: false,
           });
 
           setAppointments((prevAppointments) =>
@@ -645,11 +645,10 @@ export default function Appointment_list() {
 
       try {
         const historyResponse = await fetch(
-          `${BASE_URL}/V1/appointment/updateHistoryChk/${appointment_id}`,
+          `${BASE_URL}/V1/appointment/updateHistoryChk?appId=${appointment_id}&location=${location}`,
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ historychk: 3 }),
           }
         );
 
@@ -677,11 +676,10 @@ export default function Appointment_list() {
 
       try {
         const executiveResponse = await fetch(
-          `${BASE_URL}/V1/appointment/updateExecutionChk/${appointment_id}`,
+          `${BASE_URL}/V1/appointment/updateExecutionChk?appId=${appointment_id}&location=${location}`,
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ executivechk: 1 }),
           }
         );
 
@@ -711,16 +709,15 @@ export default function Appointment_list() {
 
       try {
         const consultationResponse = await fetch(
-          `${BASE_URL}/V1/appointment/updateConsultationChk/${appointment_id}`,
+          `${BASE_URL}/V1/appointment/updateConsultationChk?appId=${appointment_id}&location=${location}`,
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ consultationchk: 2 }),
           }
         );
 
         if (consultationResponse.ok) {
-          const data = await consultationResponse.json();
+          //const data = await consultationResponse.json();
           setRowColors((prevColors) => ({
             ...prevColors,
             [appointment_id]: "purple",
@@ -773,6 +770,7 @@ export default function Appointment_list() {
     //     alert("An error occurred while processing receipts. Please try again.");
     //   }
     // };
+
     const getProcessColor = (process) => {
       // 1. Destructure relevant properties from rowData
       const { ConfirmPatient, historychk, executivechk, consultationchk } =
@@ -823,9 +821,11 @@ export default function Appointment_list() {
       <div
         className="cart-action"
         style={{
-          backgroundColor: getProcessColor(), // backgroundColor: rowColors[rowData.appointment_id] || "", // Set background color dynamically
+          backgroundColor: getProcessColor(),
           margin: "5px",
           display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
           gap: "5px",
           border: "3px solid #ccc",
           padding: "10px",
@@ -833,203 +833,210 @@ export default function Appointment_list() {
           transition: "background-color 0.3s ease",
         }}
       >
-        {/* Buttons */}
-        <Link
-          title="Edit"
-          style={{
-            width: "35px",
-            height: "35px",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            borderRadius: "50%",
-            padding: "0",
-            border: "2px solid #ddd",
-            margin: "2px",
-            pointerEvents: rowData.ConfirmPatient === 1 ? "none" : "auto",
-            opacity: rowData.ConfirmPatient === 1 ? 0.5 : 1,
-          }}
-          onClick={() => {
-            setSelectedAppointment(rowData);
-            setShowEditModal(true);
-          }}
-          disabled={rowData.ConfirmPatient === 1}
-        >
-          <FeatherIcon icon="edit" className="w-18" />
-        </Link>
+        {/* Edit Button */}
+        {rowData.confirm_time == 0 && (
+          <button
+            title="Edit"
+            style={{
+              width: "35px",
+              height: "35px",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              borderRadius: "50%",
+              border: "2px solid #ddd",
+              margin: "2px",
+              background: "none",
+              cursor: rowData.confirm_time != 0 ? "not-allowed" : "pointer",
+              opacity: rowData.confirm_time != 0 ? 0 : 1,
+            }}
+            onClick={() => {
+              setSelectedAppointment(rowData);
+              setShowEditModal(true);
+            }}
+            disabled={rowData.confirm_time != 0}
+          >
+            <FeatherIcon icon="edit" className="w-18" />
+          </button>
+        )}
 
-        <Link
-          className="delete text-danger"
-          title="Cancel"
-          style={{
-            width: "35px",
-            height: "35px",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            borderRadius: "50%",
-            padding: "0",
-            border: "1px solid #ddd",
-            margin: "2px",
-            pointerEvents: rowData.ConfirmPatient === 1 ? "none" : "auto",
-            opacity: rowData.ConfirmPatient === 1 ? 0.5 : 1,
-          }}
-          onClick={() => openDeleteModal(rowData.appointment_id)}
-          disabled={rowData.ConfirmPatient === 1}
-        >
-          <FeatherIcon icon="trash-2" className="w-18" />
-        </Link>
+        {/* Delete Button */}
+        {rowData.confirm_time == 0 && (
+          <button
+            title="Cancel"
+            style={{
+              width: "35px",
+              height: "35px",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              borderRadius: "50%",
+              border: "1px solid #ddd",
+              margin: "2px",
+              background: "none",
+              cursor: rowData.confirm_time != 0 ? "not-allowed" : "pointer",
+              opacity: rowData.confirm_time != 0 ? 0.5 : 1,
+            }}
+            onClick={() => openDeleteModal(rowData.appointment_id)}
+            disabled={rowData.confirm_time != 0}
+          >
+            <FeatherIcon icon="trash-2" className="w-18 text-danger" />
+          </button>
+        )}
 
-        <Link
-          className="appointment"
-          title="Confirm"
-          style={{
-            width: "35px",
-            height: "35px",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            borderRadius: "50%",
-            padding: "0",
-            border: "1px solid #ddd",
-            margin: "2px",
-            pointerEvents: rowData.ConfirmPatient === 1 ? "none" : "auto",
-            opacity: rowData.ConfirmPatient === 1 ? 0.5 : 1,
-          }}
-          onClick={() => handleConfirmClick(rowData.appointment_id)}
-          disabled={rowData.ConfirmPatient === 1}
-        >
-          <FeatherIcon icon="check" className="w-18" />
-        </Link>
+        {/* Confirm Button */}
+        {rowData.confirm_time == 0 && (
+          <button
+            title="Confirm"
+            style={{
+              width: "35px",
+              height: "35px",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              borderRadius: "50%",
+              border: "1px solid #ddd",
+              margin: "2px",
+              background: "none",
+              cursor: rowData.confirm_time != 0 ? "not-allowed" : "pointer",
+              opacity: rowData.confirm_time != 0 ? 0 : 1,
+            }}
+            onClick={() => handleConfirmClick(rowData.appointment_id)}
+            disabled={rowData.confirm_time != 0}
+          >
+            <FeatherIcon icon="check" className="w-18" />
+          </button>
+        )}
 
-        <Link
-          className="history"
-          title="History"
-          style={{
-            width: "35px",
-            height: "35px",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            borderRadius: "50%",
-            padding: "0",
-            border: "1px solid #ddd",
-            margin: "2px",
-            pointerEvents:
-              rowData.ConfirmPatient !== 1 || rowData.historychk === 3
-                ? "none"
-                : "auto", // Disable interaction when button is disabled
-            opacity:
-              rowData.ConfirmPatient === 1 && rowData.historychk !== 3
-                ? 1
-                : 0.5,
-          }}
-          onClick={() => handleHistoryClick()}
-          disabled={rowData.ConfirmPatient !== 1 || rowData.historychk === 3}
-        >
-          <FeatherIcon icon="clock" className="w-18" />
-        </Link>
+        {/* History Button */}
+        {rowData.confirm_time != 0 && (
+          <button
+            title="History"
+            style={{
+              width: "35px",
+              height: "35px",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              borderRadius: "50%",
+              border: "1px solid #ddd",
+              margin: "2px",
+              background: "none",
+              cursor: rowData.historychk === 3 ? "not-allowed" : "pointer",
+              opacity: rowData.historychk !== 3 ? 1 : 0.5,
+            }}
+            onClick={handleHistoryClick}
+            disabled={rowData.historychk === 3}
+          >
+            <FeatherIcon icon="clock" className="w-18" />
+          </button>
+        )}
 
-        <Link
-          className="appointment"
-          title="Execution"
-          style={{
-            width: "35px",
-            height: "35px",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            borderRadius: "50%",
-            padding: "0",
-            border: "1px solid #ddd",
-            margin: "2px",
-            pointerEvents:
+        {/* Execution Button */}
+        {rowData.confirm_time != 0 && (
+          <button
+            title="Execution"
+            style={{
+              width: "35px",
+              height: "35px",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              borderRadius: "50%",
+              border: "1px solid #ddd",
+              margin: "2px",
+              background: "none",
+              cursor:
+                rowData.historychk !== 3 ||
+                rowData.executivechk === 1 ||
+                rowData.executivechk === 4
+                  ? "not-allowed"
+                  : "pointer",
+              opacity:
+                rowData.historychk === 3 &&
+                rowData.executivechk !== 4 &&
+                rowData.executivechk !== 1
+                  ? 1
+                  : 0.5,
+            }}
+            onClick={handleExecutionClick}
+            disabled={
               rowData.historychk !== 3 ||
               rowData.executivechk === 1 ||
               rowData.executivechk === 4
-                ? "none"
-                : "auto",
-            opacity:
-              rowData.historychk === 3 ||
-              rowData.executivechk !== 4 ||
-              rowData.executivechk !== 1
-                ? 1
-                : 0.5,
-          }}
-          onClick={handleExecutionClick}
-          disabled={
-            rowData.historychk !== 3 ||
-            rowData.executivechk === 1 ||
-            rowData.executivechk === 4
-          }
-        >
-          <FeatherIcon icon="list" className="w-18" />
-        </Link>
+            }
+          >
+            <FeatherIcon icon="list" className="w-18" />
+          </button>
+        )}
 
-        <Link
-          className="consultation"
-          title="Consultation"
-          style={{
-            width: "35px",
-            height: "35px",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            borderRadius: "50%",
-            padding: "0",
-            border: "1px solid #ddd",
-            margin: "2px",
-            pointerEvents:
+        {/* Consultation Button */}
+        {rowData.confirm_time != 0 && (
+          <button
+            title="Consultation"
+            style={{
+              width: "35px",
+              height: "35px",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              borderRadius: "50%",
+              border: "1px solid #ddd",
+              margin: "2px",
+              background: "none",
+              cursor:
+                rowData.executivechk !== 1 || rowData.consultationchk === 2
+                  ? "not-allowed"
+                  : "pointer",
+              opacity:
+                rowData.consultationchk === 2 &&
+                rowData.executivechk !== 4 &&
+                rowData.executivechk === 1
+                  ? 1
+                  : 0.5,
+            }}
+            onClick={handleConsultationClick}
+            disabled={
               rowData.executivechk !== 1 || rowData.consultationchk === 2
-                ? "none"
-                : "auto",
-            opacity:
-              rowData.consultationchk !== 2 ||
-              rowData.executivechk === 4 ||
-              rowData.executivechk === 1
-                ? 0.5
-                : 1,
-          }}
-          onClick={handleConsultationClick}
-          disabled={rowData.executivechk !== 1 || rowData.consultationchk === 2}
-        >
-          <FeatherIcon icon="user-check" className="w-18" />
-        </Link>
+            }
+          >
+            <FeatherIcon icon="user-check" className="w-18" />
+          </button>
+        )}
 
-        <Link
-          className="receipts"
-          title="Receipts"
-          style={{
-            width: "35px",
-            height: "35px",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            borderRadius: "50%",
-            padding: "0",
-            border: "1px solid #ddd",
-            margin: "2px",
-            pointerEvents: rowData.consultationchk !== 2 ? "none" : "auto",
-            opacity: rowData.consultationchk === 2 ? 1 : 0.5,
-          }}
-          disabled={rowData.consultationchk !== 2}
-          onClick={() => {
-            setSelectedAppointment(rowData);
-            setShowReceiptModal(true);
-            // Find the matching doctor from the list
-            const selectedDoctor = doctors.find(
-              (doc) => doc.name === rowData?.doctorName
-            );
-
-            setFormData((prevFormData) => ({
-              ...prevFormData,
-              doctor_id: selectedDoctor ? selectedDoctor.doctor_id : "", // Prefill with doctor_id if found
-            }));
-            //handleReceiptsClick();
-          }}
-        >
-          <FeatherIcon icon="file-text" className="w-18" />
-        </Link>
+        {/* Receipts Button */}
+        {rowData.confirm_time != 0 && (
+          <button
+            title="Receipts"
+            style={{
+              width: "35px",
+              height: "35px",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              borderRadius: "50%",
+              border: "1px solid #ddd",
+              margin: "2px",
+              background: "none",
+              cursor: rowData.consultationchk !== 2 ? "not-allowed" : "pointer",
+              opacity: rowData.consultationchk === 2 ? 1 : 0.5,
+            }}
+            disabled={rowData.consultationchk !== 2}
+            onClick={() => {
+              setSelectedAppointment(rowData);
+              setShowReceiptModal(true);
+              const selectedDoctor = doctors.find(
+                (doc) => doc.name === rowData?.doctorName
+              );
+              setFormData((prevFormData) => ({
+                ...prevFormData,
+                doctor_id: selectedDoctor ? selectedDoctor.doctor_id : "",
+              }));
+            }}
+          >
+            <FeatherIcon icon="file-text" className="w-18" />
+          </button>
+        )}
       </div>
     );
   };
@@ -1362,9 +1369,12 @@ export default function Appointment_list() {
       const finalAmount = Math.max(0, totalAmountSum - totalDiscountSum);
 
       for (const receipt of receipts) {
+        const formattedDate = moment(formData.receipt_date).format(
+          "DD-MM-YYYY"
+        );
         const receiptData = {
           receipt_id: receipt.receipt_id || "",
-          receipt_date: new Date().toISOString().split("T")[0],
+          receipt_date: formattedDate,
           patient_id: selectedAppointment.patient_id,
           appointment_id: selectedAppointment.appointment_id,
           doctor_id: receipt.doctor_id,
@@ -2145,7 +2155,49 @@ export default function Appointment_list() {
         ) : (
           <>
             <Modal.Header closeButton>
-              <Modal.Title>Add Receipt</Modal.Title>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "20px",
+                  width: "100%",
+                }}
+              >
+                <Modal.Title>Add Receipt</Modal.Title>
+                <div
+                  style={{
+                    marginLeft: "auto",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontWeight: "500",
+                      marginRight: "10px",
+                      color: "#007bff",
+                    }}
+                  >
+                    Select Date:
+                  </span>
+                  <DatePicker
+                    selected={formData.receipt_date}
+                    onChange={(date) =>
+                      setFormData((prev) => ({ ...prev, receipt_date: date }))
+                    }
+                    dateFormat="dd-MM-yyyy"
+                    placeholderText="DD-MM-YYYY"
+                    className="form-control"
+                    style={{
+                      borderRadius: "8px",
+                      border: "1px solid #007bff",
+                      padding: "8px 12px",
+                      fontSize: "14px",
+                      cursor: "pointer",
+                    }}
+                  />
+                </div>
+              </div>
             </Modal.Header>
             <Modal.Body>
               {selectedAppointment && (
@@ -2505,13 +2557,13 @@ export default function Appointment_list() {
                         "appointment_id",
                         // "date",
                         "appointment_timestamp",
-                        "appointmentTime",
+                        "appointment_time",
                         "confirm_time",
                         "patient_type",
-                        "patientName",
+                        "patient_name",
                         "patient_phone",
                         "type",
-                        "doctorName",
+                        "doctor_name",
                         "FDE_Name",
                         "note",
                         // "patient_id",
@@ -2521,20 +2573,20 @@ export default function Appointment_list() {
                       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
                       responsiveLayout="scroll"
                       className="p-datatable-customers"
-                      rowClassName={(rowData, { rowIndex }) => ({
-                        style: {
-                          backgroundColor:
-                            rowIndex % 2 === 0 ? "#e0f7fa" : "white", // Alternating colors
-                          transition: "background-color 0.3s ease",
-                        },
-                        onMouseOver: (e) => {
-                          e.currentTarget.style.backgroundColor = "#b2ebf2"; // Hover effect
-                        },
-                        onMouseOut: (e) => {
-                          e.currentTarget.style.backgroundColor =
-                            rowIndex % 2 === 0 ? "#e0f7fa" : "white"; // Revert on mouse out
-                        },
-                      })}
+                      // rowClassName={(rowData, { rowIndex }) => ({
+                      //   style: {
+                      //     backgroundColor:
+                      //       rowIndex % 2 === 0 ? "#e0f7fa" : "white", // Alternating colors
+                      //     transition: "background-color 0.3s ease",
+                      //   },
+                      //   onMouseOver: (e) => {
+                      //     e.currentTarget.style.backgroundColor = "#b2ebf2"; // Hover effect
+                      //   },
+                      //   onMouseOut: (e) => {
+                      //     e.currentTarget.style.backgroundColor =
+                      //       rowIndex % 2 === 0 ? "#e0f7fa" : "white"; // Revert on mouse out
+                      //   },
+                      // })}
                       style={{
                         border: "1px solid #4dd0e1", // Add a visible border
                         marginTop: "-10px", // Slightly reduce top margin
@@ -2561,6 +2613,11 @@ export default function Appointment_list() {
                         field="appointment_timestamp" // Directly use the formatted date from the backend
                         header="Date"
                         sortable
+                        body={(rowData) => {
+                          const date = new Date(rowData.appointment_timestamp);
+                          // Format to DD-MM-YYYY
+                          return date.toLocaleDateString("en-GB");
+                        }}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -2569,7 +2626,7 @@ export default function Appointment_list() {
                       />
 
                       <Column
-                        field="appointmentTime"
+                        field="appointment_time"
                         header="Appo.Time"
                         sortable
                         style={{
@@ -2599,7 +2656,7 @@ export default function Appointment_list() {
                         }}
                       />
                       <Column
-                        field="patientName"
+                        field="patient_name"
                         header="Patient Name"
                         sortable
                         style={{
@@ -2619,7 +2676,7 @@ export default function Appointment_list() {
                         }}
                       />
                       <Column
-                        field="doctorName"
+                        field="doctor_name"
                         header="Doctor Details"
                         // body={(rowData) =>
                         //   `${rowData.doctorName}`

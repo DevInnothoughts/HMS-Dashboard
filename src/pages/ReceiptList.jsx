@@ -82,9 +82,9 @@ export default function ReceiptList() {
   // Format date to YYYY-MM-DD
   const formatToDDMMYYYY = (date) => {
     let d = new Date(date);
-    return `${String(d.getDate()).padStart(2, "0")}/${String(
+    return `${String(d.getDate()).padStart(2, "0")}-${String(
       d.getMonth() + 1
-    ).padStart(2, "0")}/${d.getFullYear()}`;
+    ).padStart(2, "0")}-${d.getFullYear()}`;
   };
 
   const formatToYYYYMMDD = (date) => {
@@ -805,9 +805,9 @@ export default function ReceiptList() {
                         field="receipt_date"
                         header="Date"
                         sortable
-                        body={(rowData) =>
-                          formatToDDMMYYYY(new Date(rowData.receipt_date))
-                        }
+                        // body={(rowData) =>
+                        //   formatToDDMMYYYY(new Date(rowData.receipt_date))
+                        // }
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -838,6 +838,24 @@ export default function ReceiptList() {
                         field="doctorName"
                         header="Doctor"
                         sortable
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                        }}
+                      />
+                      <Column
+                        field="totalamt"
+                        header="Total Amount"
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                        }}
+                      />
+                      <Column
+                        field="discountamt"
+                        header="Discount Amount"
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",

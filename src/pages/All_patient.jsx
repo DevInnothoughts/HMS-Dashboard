@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import moment from "moment";
 import { FilterMatchMode } from "primereact/api";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
@@ -26,7 +27,7 @@ import DatePicker from "react-datepicker";
 import NavBarP from "../componets/NavbarP";
 import logo from "../assets/images/3.png";
 
-const BASE_URL = "http://194.195.117.79:5000/api"; // Update your API base URL here
+const BASE_URL = "http://localhost:5000/api"; // Update your API base URL here
 
 const formatDate = (dateString) => {
   if (!dateString) return "";
@@ -36,6 +37,7 @@ const formatDate = (dateString) => {
 };
 
 export default function All_patient() {
+  const location = "demo";
   const [patients, setPatients] = useState([]);
   const [fdeList, setFdeList] = useState([]); // FDE list
   const [doctors, setDoctors] = useState([]); // Doctors list
@@ -65,7 +67,6 @@ export default function All_patient() {
     pincode: "",
     blood_group: "",
     identity: "",
-    identityNumber: "",
     birth_date: "",
     age: "",
     occupation: "",
@@ -179,7 +180,7 @@ export default function All_patient() {
   const fetchDropdownData = async () => {
     try {
       const doctorResponse = await fetch(
-        `${BASE_URL}/V1/appointment/doctorDropdown`,
+        `${BASE_URL}/V1/appointment/doctorDropdown?location=${location}`,
         {
           method: "GET",
           headers: {
@@ -202,7 +203,7 @@ export default function All_patient() {
 
       // Fetch FDE List
       const fdeResponse = await fetch(
-        `${BASE_URL}/V1/appointment/fdeDropdown`,
+        `${BASE_URL}/V1/appointment/fdeDropdown?location=${location}`,
         {
           method: "GET",
           headers: {
@@ -230,7 +231,7 @@ export default function All_patient() {
   // Function to format date to yyyy-MM-dd
   const formatToApiDate = (date) => {
     if (!date) return "";
-    const [day, month, year] = date.split("-");
+    const [day, month, year] = date.split("/");
     return `${day}-${month}-${year}`; // Return formatted date as yyyy-MM-dd
   };
 
@@ -362,8 +363,32 @@ export default function All_patient() {
   //   return age;
   // };
 
+  // Add this function to calculate age from birth date
+  const calculateAge = (birthDate) => {
+    if (!birthDate) return "";
+
+    const today = new Date();
+    const birth = new Date(birthDate);
+
+    if (isNaN(birth.getTime())) return "";
+
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birth.getDate())
+    ) {
+      age--;
+    }
+
+    // Prevent negative ages for future dates
+    return age < 0 ? 0 : age;
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    console.log("Input Change:", name, value);
 
     // Ensure only numbers for phone, alternateNo, and identityNumber
     if (["phone", "mobile_2", "identityNumber"].includes(name)) {
@@ -391,24 +416,20 @@ export default function All_patient() {
       }
 
       if (name === "birth_date") {
-        // Ensure the input is a valid date in DD-MM-YYYY format
-        const formattedDate = value.replace(/[^0-9/-]/g, "").substring(0, 10);
+        // Ensure valid date format (DD/MM/YYYY)
+        const formattedDate = new Date(value).toISOString().split("T")[0];
+        const age = calculateAge(formattedDate); // Calculate age
 
-        if (/^\d{2}-\d{2}-\d{4}$/.test(formattedDate)) {
-          const age = calculateAge(formattedDate);
-          setFormData((prev) => ({
-            ...prev,
-            birth_date: formattedDate,
-            age: age || prev.age,
-          }));
-        } else {
-          console.error(
-            "Invalid birth_date format. Expected DD-MM-YYYY. Received:",
-            value
-          );
-        }
+        console.log("Formatted Birth Date:", formattedDate, "Age:", age);
+
+        setFormData((prev) => ({
+          ...prev,
+          birth_date: formattedDate,
+          age: age || prev.age, // Update age dynamically
+        }));
       } else {
-        setFormData((prev) => ({ ...prev, [name]: value }));
+        name !== "identityNumber" &&
+          setFormData((prev) => ({ ...prev, [name]: value }));
       }
       return {
         ...prevState,
@@ -428,19 +449,18 @@ export default function All_patient() {
   // Fetch patients data
   const fetchPatientsData = async () => {
     setLoading(true);
+    let formattedFromDate = formatToApiDate(fromDate); // Format the from date
+    let formattedToDate = formatToApiDate(toDate); // Format the to date
+    console.log(
+      "Fetching patients from",
+      formattedFromDate,
+      "to",
+      formattedToDate
+    );
     try {
-      const url = new URL(`${BASE_URL}/V1/patient/listPatient`);
-      const params = {
-        from: formatToApiDate(fromDate), // Format the from date
-        to: formatToApiDate(toDate), // Format the to date
-      };
-
-      // Add parameters to URL
-      Object.keys(params).forEach((key) => {
-        if (params[key]) url.searchParams.append(key, params[key]);
-      });
-
-      console.log("Request URL:", url.toString()); // Check the final request URL
+      const url = new URL(
+        `${BASE_URL}/V1/patient/listPatient?from=${formattedFromDate}&to=${formattedToDate}&location=${location}`
+      );
 
       const response = await fetch(url, {
         method: "GET",
@@ -473,88 +493,73 @@ export default function All_patient() {
     );
   }, []);
 
-  // Utility to calculate age
-  const calculateAge = (birthDate) => {
-    if (!birthDate) return "";
-    const [day, month, year] = birthDate.split("-");
-    const birthDateObj = new Date(year, month - 1, day);
-    if (isNaN(birthDateObj.getTime())) return "";
-    const today = new Date();
-    let age = today.getFullYear() - birthDateObj.getFullYear();
-    const monthDiff = today.getMonth() - birthDateObj.getMonth();
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < birthDateObj.getDate())
-    ) {
-      age--;
-    }
-    return age;
-  };
-
   useEffect(() => {
-    if (!selectedPatient) return; // Early return if no patient selected
+    if (selectedPatient) {
+      console.log("Selected Ptient Data:", selectedPatient);
+      // Ensure birth_date is valid before processing
+      const birthDateString = selectedPatient.birth_date || "";
+      let formattedBirthDate = "";
 
-    console.log("Selected Patient Data:", selectedPatient);
-
-    // Ensure birth_date is valid before processing
-    const birthDateString = selectedPatient.birth_date || "";
-    let formattedBirthDate = "";
-
-    if (birthDateString) {
-      const dateParts = birthDateString.split("/");
-      if (dateParts.length === 3) {
-        const [day, month, year] = dateParts;
-        formattedBirthDate = `${year}-${month}-${day}`;
-      } else {
-        console.error("Invalid birth_date format:", birthDateString);
+      if (birthDateString) {
+        try {
+          const [day, month, year] = birthDateString.split("/");
+          formattedBirthDate = `${year}-${month}-${day}`;
+        } catch (error) {
+          console.error("Error formatting birth date:", error);
+          formattedBirthDate = ""; // Avoids breaking UI
+        }
       }
+
+      if (selectedPatient) {
+        const workPatternsArray = (setSelectedPatient.specific_work || "")
+          .split(",")
+          .map((pattern) => pattern.trim());
+      }
+
+      setFormData({
+        Uid_no: selectedPatient.uid || "",
+        date: formatDate(selectedPatient.date) || "",
+        prefix: selectedPatient.prefix || "",
+        name: selectedPatient.name || "",
+        patient_type: selectedPatient.patient_type || false,
+        email: selectedPatient.email || "",
+        address: selectedPatient.address || "",
+        // country: selectedPatient.country || "",
+        // state: selectedPatient.state || "",
+        // city: selectedPatient.city || "",
+        sex: selectedPatient.sex || "",
+        phone: selectedPatient.phone || "",
+        mobile_2: selectedPatient.mobile_2 || "",
+        pincode: selectedPatient.pincode || "",
+        blood_group: selectedPatient.blood_group || "",
+        identity: selectedPatient.identity || "",
+        identityNumber: selectedPatient.identityNumber || "",
+        birth_date: selectedPatient.birth_date || "",
+        age: selectedPatient.birth_date
+          ? calculateAge(selectedPatient.birth_date)
+          : "",
+        occupation: selectedPatient.occupation || "",
+        companyname: selectedPatient.companyname || "",
+        specific_work: selectedPatient.specific_work || false,
+        reference_type: selectedPatient.reference_type,
+      });
+
+      const workPatternsArray = (selectedPatient.specific_work || "")
+        .split(",")
+        .map((pattern) => pattern.trim());
+
+      setWorkPatterns({
+        Sedentary: workPatternsArray.includes("Sedentary"),
+        Travelling: workPatternsArray.includes("Travelling"),
+        "Strenuous (Physical Activity)": workPatternsArray.includes(
+          "Strenuous (Physical Activity)"
+        ),
+        "Mentally Stressful": workPatternsArray.includes("Mentally Stressful"),
+      });
+
+      console.log("formatted Birth Date:", formattedBirthDate);
     }
-
-    // Validate and calculate age only if birth_date is valid
-    const age = formattedBirthDate ? calculateAge(formattedBirthDate) : "";
-
-    // Prevent re-renders if data hasn't changed
-    setFormData((prevData) => ({
-      ...prevData,
-      Uid_no: selectedPatient.uid || "",
-      date: formatDate(selectedPatient.date) || "",
-      prefix: selectedPatient.prefix || "",
-      name: selectedPatient.name || "",
-      patient_type: selectedPatient.patient_type || false,
-      email: selectedPatient.email || "",
-      address: selectedPatient.address || "",
-      sex: selectedPatient.sex || "",
-      phone: selectedPatient.phone || "",
-      mobile_2: selectedPatient.mobile_2 || "",
-      pincode: selectedPatient.pincode || "",
-      blood_group: selectedPatient.blood_group || "",
-      identity: selectedPatient.identity || "",
-      identityNumber: selectedPatient.identityNumber || "",
-      birth_date: formattedBirthDate,
-      age,
-      occupation: selectedPatient.occupation || "",
-      companyname: selectedPatient.companyname || "",
-      specific_work: selectedPatient.specific_work || false,
-      reference_type: selectedPatient.reference_type,
-    }));
-
-    // Handle work patterns safely
-    const workPatternsArray = (selectedPatient.specific_work || "")
-      .split(",")
-      .map((pattern) => pattern.trim());
-
-    setWorkPatterns({
-      Sedentary: workPatternsArray.includes("Sedentary"),
-      Travelling: workPatternsArray.includes("Travelling"),
-      "Strenuous (Physical Activity)": workPatternsArray.includes(
-        "Strenuous (Physical Activity)"
-      ),
-      "Mentally Stressful": workPatternsArray.includes("Mentally Stressful"),
-    });
-
-    console.log("Formatted Birth Date:", formattedBirthDate);
-  }, [selectedPatient]);
-  // Runs whenever `selectedPatient` changes
+  }, [selectedPatient]); // Runs whenever `selectedPatient` changes
 
   // const handleSetCountry = (value) => {
   //   setCountry(value);
@@ -664,14 +669,6 @@ export default function All_patient() {
     setShowEditPatientModal(true);
   };
 
-  const convertToDisplayDate = (dateString) => {
-    if (!dateString || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
-      return dateString; // Return as is if not a valid YYYY-MM-DD date
-    }
-    const [year, month, day] = dateString.split("-");
-    return `${day}-${month}-${year}`; // Convert to DD-MM-YYYY
-  };
-
   const handleSaveChanges = async (e) => {
     e.preventDefault();
     if (!selectedPatient) {
@@ -742,11 +739,10 @@ export default function All_patient() {
     console.log("Reference Type:", reference_type);
     console.log("Reference:", ref);
 
-    // Format date for API (DD/MM/YYYY or DD-MM-YYYY to YYYY-MM-DD)
     const formatDateForAPI = (dateString) => {
       if (!dateString) return null;
-      const [day, month, year] = dateString.split("-");
-      return `${day}-${month}-${year}`; // Convert to DD-MM-YYYY
+      const [day, month, year] = dateString.split("/");
+      return `${year}-${month}-${day}`; // Convert to API format YYYY-MM-DD
     };
 
     // Convert workPatterns into a comma-separated string
@@ -757,19 +753,18 @@ export default function All_patient() {
 
     const updatedPatientData = {
       ...formData,
-      date: formatDateForAPI(formData.date),
-      birth_date: formatDateForAPI(formData.birth_date),
-      age: calculateAge(formData.birth_date),
+      date: formData.date || "",
+      birth_date: formData.birth_date,
+      age: formData.birth_date,
       specific_work: specificWork,
       reference_type,
       ref,
     };
 
     console.log("Updated Patient Data:", updatedPatientData);
-
     try {
       const response = await fetch(
-        `${BASE_URL}/V1/patient/${selectedPatient.phone}`,
+        `${BASE_URL}/V1/patient?patient_id=${selectedPatient.patient_id}&location=${location}`,
         {
           method: "PUT",
           headers: {
@@ -779,35 +774,28 @@ export default function All_patient() {
         }
       );
 
-      const responseData = await response.json(); // ✅ Parse response JSON once
+      const responseData = await response.json(); // ✅ Fetch response JSON only once
 
-      if (response.ok && responseData?.data) {
+      if (response.ok) {
         toast.success("Patient information updated successfully");
 
-        // Update the patient in state
+        // Update the patient in state without refreshing
         setPatients((prevPatients) =>
           prevPatients.map((p) =>
             p.phone === selectedPatient.phone
-              ? { ...p, ...responseData.data }
+              ? { ...p, ...responseData.data } // ✅ Use the received data correctly
               : p
           )
         );
 
-        // Update selectedPatient and formData with the formatted birthdate
-        setSelectedPatient(responseData.data);
-        setFormData({
-          ...responseData.data,
-          birth_date: convertToDisplayDate(responseData.data.birth_date),
-          age: calculateAge(convertToDisplayDate(responseData.data.birth_date)),
-        });
-
-        // Close the modal if needed
+        // Close the modal and reset state
         setShowEditPatientModal(false);
+        setSelectedPatient(null);
+        setFormData({});
       } else {
         toast.error(responseData.message || "Failed to update patient");
       }
     } catch (error) {
-      console.error("Error updating patient:", error);
       toast.error("Network error. Please try again.");
     }
   };
@@ -865,6 +853,8 @@ export default function All_patient() {
     const selectedFDE = fdeList.find((fde) => fde.FDEID === formData.FDE_Name);
     const fdeName = selectedFDE ? selectedFDE.FDEName : "";
 
+    const formattedDate = moment(formData.date).format("DD-MM-YYYY"); // Format date before sending
+
     // Get the selected doctor's name from the doctors list
     const selectedDoctor = doctors.find(
       (doc) => doc.doctor_id === formData.doctor_id
@@ -882,7 +872,7 @@ export default function All_patient() {
     });
 
     const payload = {
-      date: formData.date,
+      date: formattedDate,
       doctor_id: formData.doctor_id,
       doctorName: formData.doctorName,
       patientName: formData.name,
@@ -1109,7 +1099,7 @@ export default function All_patient() {
             <div class="row">
               <div class="col">
                 <table class="details-table">   
-                  <tr><td>Reg No:</td><td>${patient.uid}</td></tr>
+                  <tr><td>Reg No:</td><td>${patient.Uid_no}</td></tr>
                   <tr><td>Name:</td><td>${patient.name}</td></tr>
                   <tr><td>Gender:</td><td>${patient.sex}</td></tr>
                   <tr><td>DOB (Age):</td><td>${patient.birth_date} (${
@@ -2089,7 +2079,7 @@ export default function All_patient() {
             />
           </div>
 
-          {/* <Button
+          <Button
             variant="primary"
             onClick={() => fetchPatientsData(true)}
             style={{
@@ -2112,7 +2102,7 @@ export default function All_patient() {
             }}
           >
             Refresh Data
-          </Button> */}
+          </Button>
         </div>
       </div>
     </div>
@@ -2163,36 +2153,59 @@ export default function All_patient() {
   const timeSlots = generateTimeSlots();
 
   const handleDateChange = (date) => {
-    if (date) {
-      const formattedDate = formatDate(date);
-      console.log("Formatted Date:", formattedDate);
-      // Check if date is valid
-      handleInputChange({
-        target: {
-          name: "date",
-          value: date.toISOString().split("T")[0],
-        },
-      });
-      if (name === "birth_date") {
-        const formattedDate = formatDate(value);
-        const calculatedAge = calculateAge(formattedDate);
-        console.log("Birth Date Changed:", {
-          originalValue: value,
-          formattedDate: formattedDate,
-          calculatedAge: calculatedAge,
-        });
-
-        setFormData((prevState) => ({
-          ...prevState,
-          [name]: formattedDate,
-          age: calculatedAge,
-        }));
-      }
-      // Regenerate time slots when the date changes
-      setTimeSlots(generateTimeSlots());
-    } else {
-      console.error("Invalid date selected"); // Log error for invalid date
+    if (!date) {
+      console.error("Invalid date selected");
+      return;
     }
+
+    const formattedDate = formatDate(date);
+    console.log("Formatted Date:", formattedDate);
+
+    setFormData((prevState) => {
+      if (prevState.date === formattedDate) return prevState; // Prevent redundant updates
+      return {
+        ...prevState,
+        date: formattedDate,
+      };
+    });
+
+    handleInputChange({
+      target: {
+        name: "date",
+        value: date.toISOString().split("T")[0], // Ensures the date format is consistent
+      },
+    });
+
+    if (name === "birth_date") {
+      const calculatedAge = calculateAge(formattedDate);
+
+      setFormData((prevState) => {
+        if (
+          prevState.birth_date === formattedDate &&
+          prevState.age === calculatedAge
+        )
+          return prevState; // Prevent unnecessary updates
+
+        return {
+          ...prevState,
+          birth_date: formattedDate,
+          age: calculatedAge,
+        };
+      });
+
+      console.log("Birth Date Changed:", {
+        formattedDate,
+        calculatedAge,
+      });
+    }
+
+    // Prevent unnecessary regeneration of time slots
+    setTimeSlots((prevSlots) => {
+      const newSlots = generateTimeSlots();
+      return JSON.stringify(prevSlots) !== JSON.stringify(newSlots)
+        ? newSlots
+        : prevSlots;
+    });
   };
 
   // Update the parseDate function to be more robust
@@ -2275,7 +2288,7 @@ export default function All_patient() {
                     {doctors && doctors.length > 0 ? (
                       doctors.map((doctor) => (
                         <option key={doctor.doctor_id} value={doctor.name}>
-                          {doctor.doctor_id} - {doctor.name}
+                          {doctor.name}
                         </option>
                       ))
                     ) : (
@@ -2341,7 +2354,7 @@ export default function All_patient() {
                       fdeList.length > 0 &&
                       fdeList.map((fde) => (
                         <option key={fde.FDEID} value={fde.FDEName}>
-                          {fde.FDEID} - {fde.FDEName}
+                          {fde.FDEName}
                         </option>
                       ))}
                   </Form.Select>
@@ -2716,31 +2729,20 @@ export default function All_patient() {
                     id="birth_date"
                     selected={
                       formData?.birth_date
-                        ? (() => {
-                            const [day, month, year] =
-                              formData.birth_date.split("-");
-                            if (day && month && year) {
-                              const parsedDate = new Date(year, month - 1, day); // Convert to Date
-                              return isNaN(parsedDate.getTime())
-                                ? null
-                                : parsedDate;
-                            }
-                            return null;
-                          })()
+                        ? new Date(formData.birth_date)
                         : null
                     }
                     onChange={(date) => {
-                      if (date) {
-                        const formattedDate = date
-                          .toLocaleDateString("en-GB")
-                          .replace(/\//g, "-"); // Convert to DD-MM-YYYY
-                        handleInputChange({
-                          target: {
-                            name: "birth_date",
-                            value: formattedDate,
-                          },
-                        });
-                      }
+                      if (!date) return; // Prevent null values from breaking
+
+                      // const formattedDate = formatDate(date);
+
+                      handleInputChange({
+                        target: {
+                          name: "birth_date",
+                          value: date,
+                        },
+                      });
                     }}
                     className="form-control"
                     dateFormat="dd-MM-yyyy"
@@ -2749,7 +2751,6 @@ export default function All_patient() {
                     showYearDropdown
                     dropdownMode="select"
                     maxDate={new Date()}
-                    style={{ width: "100%" }}
                     popperClassName="custom-datepicker-popper"
                   />
                 </Form.Group>
@@ -2929,7 +2930,6 @@ export default function All_patient() {
                 address: "",
                 pincode: "",
                 identity: "",
-                identity: "",
                 occupation: "",
                 companyname: "",
                 Sedentary: false,
@@ -2998,7 +2998,7 @@ export default function All_patient() {
                       filters={filters1}
                       header={header}
                       globalFilterFields={[
-                        "uid",
+                        "Uid_no",
                         "name",
                         "date",
                         "age",
@@ -3035,7 +3035,7 @@ export default function All_patient() {
                       }}
                     >
                       <Column
-                        field="uid"
+                        field="Uid_no"
                         header="UID"
                         sortable
                         style={{
@@ -3048,6 +3048,11 @@ export default function All_patient() {
                         field="date"
                         header="Date"
                         sortable
+                        body={(rowData) => {
+                          const date = new Date(rowData.date);
+                          // Format to DD-MM-YYYY
+                          return date.toLocaleDateString("en-GB");
+                        }}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
