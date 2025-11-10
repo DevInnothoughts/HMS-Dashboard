@@ -48,8 +48,8 @@ export default function NavBarI() {
             </Link>
             <span className="separator">•</span>
             <Link 
-              to="/invoices/add" 
-              className={`nav-link ${location.pathname === "/invoices/add" ? "active" : ""}`}
+              to="/invoice/add" 
+              className={`nav-link ${location.pathname === "/invoice/add" ? "active" : ""}`}
             >
               <span className="nav-icon">➕</span>
               Add Invoice

@@ -405,7 +405,7 @@ const InvoiceList = () => {
               <Card.Body>
                 <div className="d-flex justify-content-between mb-3">
                   <h5>Invoice List</h5>
-                  <Link to="/add-invoice">
+                  <Link to="/invoice/add">
                     <Button variant="primary">Add New Invoice</Button>
                   </Link>
                 </div>

@@ -14,10 +14,10 @@ import {
   Button,
   Modal,
 } from "react-bootstrap";
-import PageBreadcrumb from "../componets/PageBreadcrumb";
+import PageBreadcrumb from "../../components/PageBreadcrumb";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import "../styles/styles.css"; // Add this import at the top
+import "../../styles/styles.css"; // Add this import at the top
 import { toast } from "react-hot-toast";
 
 export const BASE_URL = "http://194.195.117.79:5100/api"; // Update your API base URL here
