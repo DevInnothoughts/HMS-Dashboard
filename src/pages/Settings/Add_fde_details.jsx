@@ -5,7 +5,7 @@ import SimpleBar from "simplebar-react";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import { Password } from "primereact/password";
 
-export default function Add_company_details() {
+export default function Add_fde_details() {
   const [Fdedata, setFdedata] = useState([]);
   const [formData, setFormData] = useState({
     fdeName: "",

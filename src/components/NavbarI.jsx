@@ -40,16 +40,16 @@ export default function NavBarI() {
             </Link>
             <span className="separator">•</span>
             <Link 
-              to="/invoice-list" 
-              className={`nav-link ${location.pathname === "/invoice-list" ? "active" : ""}`}
+              to="/invoices" 
+              className={`nav-link ${location.pathname === "/invoices" ? "active" : ""}`}
             >
               <span className="nav-icon">📋</span>
               Invoice List
             </Link>
             <span className="separator">•</span>
             <Link 
-              to="/add-invoice" 
-              className={`nav-link ${location.pathname === "/add-invoice" ? "active" : ""}`}
+              to="/invoices/add" 
+              className={`nav-link ${location.pathname === "/invoices/add" ? "active" : ""}`}
             >
               <span className="nav-icon">➕</span>
               Add Invoice

@@ -4,7 +4,7 @@ import { Row, Col, Card, Form, Container } from "react-bootstrap";
 import SimpleBar from "simplebar-react";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 
-export default function Add_doctor() {
+export default function Add_locations() {
   const [Doctordata, setDoctordata] = useState([]);
   const [formData, setFormData] = useState({
     locationName: "",
