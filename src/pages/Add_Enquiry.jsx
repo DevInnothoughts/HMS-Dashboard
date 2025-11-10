@@ -8,10 +8,10 @@ import {
   Button,
   Spinner,
 } from "react-bootstrap";
-import NavBarA from "../componets/NavbarA";
+import NavBarA from "../../components/NavbarA";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import "../styles/styles.css"; // Add this import at the top
+import "../../styles/styles.css"; // Add this import at the top
 
 // Country code options
 const getCountryCode = (patient_phone) => {

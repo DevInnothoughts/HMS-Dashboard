@@ -47,7 +47,7 @@ export default function Sidebar() {
             <Link to="/doctor-schedule">Doctor Schedule</Link>
           </li>
           <li>
-            <Link to="/patient-dashboard">Patient Dashboard</Link>
+            <Link to="/dashboard3">Patient Dashboard</Link>
           </li>
         </ul>
       </li>

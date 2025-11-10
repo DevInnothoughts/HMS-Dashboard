@@ -236,7 +236,7 @@ export default function Dashboard2() {
                 </Card.Body>
                 <div className="card-footer">
                   <Link
-                    to="/appointment-list"
+                    to="/appointments"
                     className="btn btn-primary d-block mx-auto"
                   >
                     View All Appointments
