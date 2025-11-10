@@ -1,6 +1,6 @@
 import React from "react";
 import { Route } from "react-router-dom";
-import Add_Enquiry from "../pages/Reports/Add_Enquiry.jsx";
+import Add_Enquiry from "../pages/Reports/Add_Enquiry";
 import EnquiryList from "../pages/Reports/Enquiry_List";
 import ReceiptList from "../pages/Reports/ReceiptList";
 import Payment_list from "../pages/Reports/Payment_list";

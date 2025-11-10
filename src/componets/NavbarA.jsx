@@ -42,18 +42,18 @@ export default function NavBarA() {
             </Link>
             <span className="separator">•</span>
             <Link
-              to="/appointment-list"
+              to="/appointments"
               className={`nav-link ${
-                location.pathname === "/appointment-list" ? "active" : ""
+                location.pathname === "/appointments" ? "active" : ""
               }`}
             >
               <span className="nav-icon">📋</span>
               Appointment List
             </Link>
             <Link
-              to="/receipt-list"
+              to="/reports/receipts"
               className={`nav-link ${
-                location.pathname === "/receipt-list" ? "active" : ""
+                location.pathname === "/reports/receipts" ? "active" : ""
               }`}
             >
               <span className="nav-icon">📋</span>
@@ -61,9 +61,9 @@ export default function NavBarA() {
             </Link>
             <span className="separator">•</span>
             <Link
-              to="/add-appointment"
+              to="/appointment/add"
               className={`nav-link ${
-                location.pathname === "/add-appointment" ? "active" : ""
+                location.pathname === "/appointment/add" ? "active" : ""
               }`}
             >
               <span className="nav-icon">➕</span>
@@ -71,9 +71,9 @@ export default function NavBarA() {
             </Link>
             <span className="separator">•</span>
             <Link
-              to="/enquiry-list"
+              to="/reports/enquiry"
               className={`nav-link ${
-                location.pathname === "/enquiry-list" ? "active" : ""
+                location.pathname === "/reports/enquiry" ? "active" : ""
               }`}
             >
               <span className="nav-icon">📝</span>
@@ -81,9 +81,9 @@ export default function NavBarA() {
             </Link>
             <span className="separator">•</span>
             <Link
-              to="/add-enquiry"
+              to="/reports/enquiry/add"
               className={`nav-link ${
-                location.pathname === "/add-enquiry" ? "active" : ""
+                location.pathname === "/reports/enquiry/add" ? "active" : ""
               }`}
             >
               <span className="nav-icon">✏️</span>

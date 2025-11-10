@@ -39,10 +39,7 @@ export default function Header() {
         localStorage.clear();
         navigate('/login', { replace: true });
     };
-
-
     
-
     return (
       <>
         {/* Header Start  */}

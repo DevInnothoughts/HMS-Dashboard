@@ -42,9 +42,9 @@ export default function NavBarA() {
             </Link>
             <span className="separator">•</span>
             <Link
-              to="/all-patients"
+              to="/patients"
               className={`nav-link ${
-                location.pathname === "/all-patients" ? "active" : ""
+                location.pathname === "/patients" ? "active" : ""
               }`}
             >
               <span className="nav-icon">📋</span>
@@ -52,9 +52,9 @@ export default function NavBarA() {
             </Link>
             <span className="separator">•</span>
             <Link
-              to="/add-patient"
+              to="/patient/add"
               className={`nav-link ${
-                location.pathname === "/add-patient" ? "active" : ""
+                location.pathname === "/patient/add" ? "active" : ""
               }`}
             >
               <span className="nav-icon">➕</span>

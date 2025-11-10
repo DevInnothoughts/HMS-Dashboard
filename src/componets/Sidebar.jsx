@@ -44,7 +44,7 @@ export default function Sidebar() {
             <Link to="/">Hospital Dashboard</Link>
           </li>
           <li>
-            <Link to="/doctor-schedule">Doctor Schedule</Link>
+            <Link to="/doctor/schedule">Doctor Schedule</Link>
           </li>
           <li>
             <Link to="/dashboard3">Patient Dashboard</Link>
@@ -54,10 +54,10 @@ export default function Sidebar() {
 
       <li
         className={`menu-item ${
-          activeIndex === "/all-patients" ? "active" : ""
+          activeIndex === "/patients" ? "active" : ""
         }`}
       >
-        <Link to="/all-patients">
+        <Link to="/patients">
           <div className="icon-item">
             <i className="fa fa-wheelchair"></i>
           </div>
@@ -78,10 +78,10 @@ export default function Sidebar() {
 
       <li
         className={`menu-item ${
-          activeIndex === "/appointment-list" ? "active" : ""
+          activeIndex === "/appointments" ? "active" : ""
         }`}
       >
-        <Link to="/appointment-list">
+        <Link to="/appointments">
           <div className="icon-item">
             <i className="fa fa-calendar"></i>
           </div>
@@ -91,10 +91,10 @@ export default function Sidebar() {
 
       <li
         className={`menu-item ${
-          activeIndex === "/invoice-list" ? "active" : ""
+          activeIndex === "/invoices" ? "active" : ""
         }`}
       >
-        <Link to="/invoice-list">
+        <Link to="/invoices">
           <div className="icon-item">
             <FeatherIcon icon="file-text" />
           </div>
