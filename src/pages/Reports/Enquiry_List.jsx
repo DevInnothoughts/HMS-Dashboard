@@ -16,7 +16,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { FilterMatchMode } from "primereact/api";
 import "../../styles/styles.css"; // Add this import at the top
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 import moment from "moment";
 
 export default function EnquiryList() {
@@ -69,6 +69,7 @@ export default function EnquiryList() {
         setFilteredEnquiries(result); // Initialize filtered data
         console.log("Enquires API Response:", data); // Debug API response
       } else {
+        console.log(response);
         console.error(
           "Error fetching enquiries:",
           data.message || "Unknown error"
@@ -474,6 +475,16 @@ export default function EnquiryList() {
                           padding: "0.75rem",
                         }}
                       />
+                      <Column 
+                        field="doctorName" 
+                        header="Doctor Name" 
+                        sortable 
+                        style={{ 
+                            border: "1px solid #90caf9", 
+                            textAlign: "center", 
+                            padding: "0.75rem", 
+                        }}
+                    />
                     </DataTable>
                   )}
                 </Card.Body>

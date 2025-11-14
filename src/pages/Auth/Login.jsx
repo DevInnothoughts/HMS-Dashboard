@@ -2,11 +2,14 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate, Navigate } from "react-router-dom";
 import { Button, Form } from "react-bootstrap";
 
-import eyeIcon from "/src/assets/images/Eye/view.png";
-import eyeSlashIcon from "/src/assets/images/Eye/invisible.png";
-import logo from "/src/assets/images/logo/icon-logo.png";
+import eyeIcon from "../../assets/images/Eye/view.png";
+import eyeSlashIcon from "../../assets/images/Eye/invisible.png";
+import logo from "../../assets/images/logo/icon-logo.png";
 
-const BASE_URL = "http://194.195.117.79:5100/api"; // Update with your backend API base URL
+// Define the hardcoded list directly for use
+const LOCATIONS_LIST = ["hms", "pune"]; // Added a couple more for better list view
+
+const BASE_URL = "http://localhost:5100/api"; // BASE_URL is still needed for the handleSubmit fetch
 
 export default function Login() {
   const navigate = useNavigate();
@@ -17,7 +20,7 @@ export default function Login() {
       const accountType = localStorage.getItem("accountType");
 
       if (isAuthenticated === "true") {
-        navigate(accountType === "admin" ? "/admin-panel" : "/");
+        navigate(accountType === "admin" ? "/" : "/");
       }
     };
 
@@ -26,7 +29,7 @@ export default function Login() {
 
   const [formData, setFormData] = useState({
     accountType: "",
-    jobLocation: "",
+    jobLocation: "", // This will be set by the location list selection
     email: "",
     password: "",
   });
@@ -40,6 +43,14 @@ export default function Login() {
       ...formData,
       [name]: type === "checkbox" ? checked : value,
     });
+  };
+
+  // Handler for location list selection
+  const handleLocationSelect = (location) => {
+    setFormData((prevData) => ({
+      ...prevData,
+      jobLocation: location,
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -75,7 +86,7 @@ export default function Login() {
         localStorage.setItem("userEmail", email);
         localStorage.setItem("token", data.data.token);
 
-        navigate(data.data.role === "admin" ? "/admin-panel" : "/", {
+        navigate(data.data.role === "admin" ? "/" : "/", {
           replace: true,
         });
       } else {
@@ -87,35 +98,7 @@ export default function Login() {
     }
   };
 
-  // Fetch Locations for Dropdown
-  const [locations, setLocations] = useState([]);
-
-  useEffect(() => {
-    const fetchDropdownData = async () => {
-      try {
-        const response = await fetch(`${BASE_URL}/V1/auth/locationDropdown`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          console.log("Locations API Response:", data);
-
-          // ✅ Correcting the state update
-          setLocations(Array.isArray(data.data) ? data.data : []);
-        } else {
-          console.error("Failed to fetch Locations:", response.statusText);
-        }
-      } catch (error) {
-        console.error("Error fetching dropdown data:", error.message);
-      }
-    };
-
-    fetchDropdownData();
-  }, []);
+  // --- Location Fetching logic has been removed ---
 
   if (localStorage.getItem("isAuthenticated") === "true") {
     return <Navigate to="/" replace />;
@@ -218,24 +201,58 @@ export default function Login() {
             </Form.Select>
           </Form.Group>
 
+          {/* 👇 START: Location List using LOCATIONS_LIST array 👇 */}
           <Form.Group className="mb-4">
-            <Form.Select
-              name="jobLocation"
-              value={formData.jobLocation}
-              onChange={handleChange}
+            <div style={{ marginBottom: "8px", fontWeight: "600", color: "#4A5568" }}>
+              Select Location:
+            </div>
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "10px",
+                justifyContent: "flex-start",
+              }}
             >
-              <option value="">Select Location</option>
-              {locations.length > 0 ? (
-                locations.map((location, index) => (
-                  <option key={index} value={location}>
+              {LOCATIONS_LIST.length > 0 ? (
+                LOCATIONS_LIST.map((location, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => handleLocationSelect(location)}
+                    style={{
+                      padding: "10px 18px",
+                      borderRadius: "20px",
+                      border:
+                        formData.jobLocation === location
+                          ? "2px solid #4776E6"
+                          : "1px solid #E2E8F0",
+                      backgroundColor:
+                        formData.jobLocation === location
+                          ? "#EBF4FF" // Light blue for selected
+                          : "#F8FAFC",
+                      color:
+                        formData.jobLocation === location
+                          ? "#4776E6"
+                          : "#4A5568",
+                      fontSize: "14px",
+                      fontWeight: "500",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      textTransform: "capitalize",
+                    }}
+                  >
                     {location}
-                  </option>
+                  </button>
                 ))
               ) : (
-                <option value="">No locations available</option>
+                <span style={{ color: "#718096", fontSize: "14px" }}>
+                  No locations defined.
+                </span>
               )}
-            </Form.Select>
+            </div>
           </Form.Group>
+          {/* 👆 END: Location List 👆 */}
 
           <Form.Group className="mb-4">
             <Form.Control
@@ -295,7 +312,19 @@ export default function Login() {
           </Form.Group>
 
           <Form.Group className="mb-4">
-            <Button className="w-100" type="submit">
+            <Button
+              className="w-100"
+              type="submit"
+              style={{
+                background: "linear-gradient(120deg, #4776E6 0%, #8E54E9 100%)",
+                border: "none",
+                padding: "15px",
+                borderRadius: "12px",
+                fontSize: "16px",
+                fontWeight: "600",
+                boxShadow: "0 4px 15px rgba(71, 118, 230, 0.4)",
+              }}
+            >
               Login
             </Button>
           </Form.Group>
