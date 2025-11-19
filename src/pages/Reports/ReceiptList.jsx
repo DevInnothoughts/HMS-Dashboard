@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
+import { decodeJwt } from "../../utils/decode-jwt";
 import {
   Container,
   Row,
@@ -26,11 +27,12 @@ import logo from "../../assets/images/3.png";
 import labLogo from "../../assets/images/1.png";
 import pharmacyLogo from "../../assets/images/2.png";
 import receiptLogo from "../../assets/images/4.png";
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 const LOCATION = "demo"; // Assuming a default location is needed for API calls
 
 export default function ReceiptList() {
   // --- State Management ---
+  const [currentLocation, setCurrentLocation] = useState('default');
   const [receipts, setReceipts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fromDate, setFromDate] = useState(moment().startOf('day').toDate());
@@ -39,6 +41,21 @@ export default function ReceiptList() {
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
 
+  useEffect(() => {
+    // 1. Get the token
+    const token = localStorage.getItem('token');
+    if (token) {
+        // 2. Decode the token
+        const payload = decodeJwt(token);
+        // 3. Set the location state from the payload
+        if (payload && payload.jobLocation) {
+            setCurrentLocation(payload.jobLocation);
+            console.log(`Location set from JWT: ${payload.jobLocation}`);
+        }
+    } else {
+        console.warn("JWT Token not found in localStorage.");
+    }
+  }, []);
   // ------------------------- API & Data Fetching -------------------------
 
   // Helper to format Date objects to YYYY-MM-DD string for API
@@ -49,22 +66,27 @@ export default function ReceiptList() {
   const fetchReceiptsData = useCallback(async () => {
     setLoading(true);
     try {
-      if (!fromDate || !toDate) return;
+      if (!currentLocation || !fromDate || !toDate) {
+        if (!currentLocation) console.warn("Waiting for location to be set from JWT...");
+      return;
+      }
 
       const finalFromDate = formatToYYYYMMDD(fromDate);
       const finalToDate = formatToYYYYMMDD(toDate);
 
       const url = new URL(`${BASE_URL}/V1/appointment/listReceipt`);
+      
       const params = {
         from: finalFromDate,
         to: finalToDate,
-        location: LOCATION,
+        location: currentLocation, // <--- Use the state location here
       };
 
+      // Ensure the dates are formatted correctly for the API, then append all params
       Object.keys(params).forEach((key) =>
         url.searchParams.append(key, params[key])
       );
-
+      
       const response = await fetch(url.toString(), {
         method: "GET",
         headers: { "Content-Type": "application/json" },
@@ -83,12 +105,15 @@ export default function ReceiptList() {
     } finally {
       setLoading(false);
     }
-  }, [fromDate, toDate]);
+  }, [fromDate, toDate, currentLocation]);
 
   // Load data on date filter change or component mount
   useEffect(() => {
-    fetchReceiptsData();
-  }, [fetchReceiptsData]);
+    // Check currentLocation dependency here
+    if (currentLocation !== 'default') {
+        fetchReceiptsData();
+    }
+  }, [fetchReceiptsData, currentLocation]);
 
   // ------------------------- Print & Action Logic -------------------------
 
