@@ -5,11 +5,7 @@ import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import FeatherIcon from "feather-icons-react";
 import { Link, useNavigate } from "react-router-dom";
-// import {
-//   CountryDropdown,
-//   StateDropdown,
-//   CityDropdown,
-// } from "react-country-state-dropdown";
+import { decodeJwt } from "../../utils/decode-jwt";
 import {
   Container,
   Row,
@@ -21,13 +17,12 @@ import {
   Spinner,
   Modal,
 } from "react-bootstrap";
-// import PageBreadcrumb from "../componets/PageBreadcrumb";
 import { toast } from "react-hot-toast";
 import DatePicker from "react-datepicker";
 import NavBarP from "../../components/NavbarP";
 import logo from "../../assets/images/3.png";
 
-const BASE_URL = "http://localhost:5000/api"; // Update your API base URL here
+const BASE_URL = "http://localhost:5100/api"; // Update your API base URL here
 
 const formatDate = (dateString) => {
   if (!dateString) return "";
@@ -80,11 +75,22 @@ export default function All_patient() {
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
   const [loading, setLoading] = useState(false); // Loading state
-  const [fromDate, setFromDate] = useState(formatDate(new Date())); // Ensure this is valid
-  const [toDate, setToDate] = useState(formatDate(new Date())); // Ensure this is valid
+  // REMOVED: [fromDate, setFromDate]
+  // REMOVED: [toDate, setToDate]
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditPatientModal, setShowEditPatientModal] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null); // Selected patient data
+  const [currentLocation, setCurrentLocation] = useState('default'); // State to hold JWT location
+  useEffect(() => {
+      // Fetches and sets location from the token upon component mount
+      const token = localStorage.getItem('token');
+      if (token) {
+          const payload = decodeJwt(token);
+          if (payload && payload.jobLocation) {
+              setCurrentLocation(payload.jobLocation);
+          }
+      }
+    }, []);
 
   const [workPatterns, setWorkPatterns] = useState({
     Sedentary: false,
@@ -95,87 +101,6 @@ export default function All_patient() {
 
   const [selectedBirthDate, setSelectedBirthDate] = useState(null);
 
-  // function dateISO(dateInput) {
-  //   const date = new Date(dateInput);
-  //   if (isNaN(date.getTime())) {
-  //     console.error("Invalid date", dateInput);
-  //     return null; // or handle it appropriately
-  //   }
-
-  //   // Get day, month, and year
-  //   const day = String(date.getDate()).padStart(2, "0");
-  //   const month = String(date.getMonth() + 1).padStart(2, "0"); // Month is 0-based
-  //   const year = date.getFullYear();
-
-  //   // Return in dd/mm/yyyy format
-  //   return `${day}/${month}/${year}`;
-  // }
-
-  // function formatDate(date) {
-  //   if (!date || typeof date !== "string") return ""; // Prevent undefined errors
-
-  //   if (/^\d{2}\/\d{2}\/\d{4}$/.test(date)) return date; // Already in DD/MM/YYYY
-
-  //   try {
-  //     if (date.includes("T")) date = date.split("T")[0]; // Handle ISO format
-
-  //     const [year, month, day] = date.split("-"); // Convert YYYY-MM-DD
-  //     return `${day}/${month}/${year}`;
-  //   } catch (error) {
-  //     console.error("Error formatting date:", error);
-  //     return "";
-  //   }
-  // }
-
-  // // Update the formatDate function to be more robust
-  // function formatDate(date) {
-  //   if (!date) return "";
-
-  //   try {
-  //     // Handle string dates
-  //     if (typeof date === "string") {
-  //       // If already in DD/MM/YYYY format, return as is
-  //       if (/^\d{2}\/\d{2}\/\d{4}$/.test(date)) {
-  //         return date;
-  //       }
-
-  //       // Handle ISO date strings
-  //       if (date.includes("T")) {
-  //         date = date.split("T")[0];
-  //       }
-
-  //       // Convert YYYY-MM-DD to DD/MM/YYYY
-  //       if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-  //         const [year, month, day] = date.split("-");
-  //         return `${day}/${month}/${year}`;
-  //       }
-  //     }
-
-  //     // Handle Date objects
-  //     if (date instanceof Date) {
-  //       if (isNaN(date.getTime())) {
-  //         return ""; // Return empty string for invalid dates
-  //       }
-  //       const day = String(date.getDate()).padStart(2, "0");
-  //       const month = String(date.getMonth() + 1).padStart(2, "0");
-  //       const year = date.getFullYear();
-  //       return `${day}/${month}/${year}`;
-  //     }
-
-  //     // If we get here, try to create a new Date object
-  //     const d = new Date(date);
-  //     if (isNaN(d.getTime())) {
-  //       return ""; // Return empty string for invalid dates
-  //     }
-  //     const day = String(d.getDate()).padStart(2, "0");
-  //     const month = String(d.getMonth() + 1).padStart(2, "0");
-  //     const year = d.getFullYear();
-  //     return `${day}/${month}/${year}`;
-  //   } catch (error) {
-  //     console.error("Error formatting date:", error);
-  //     return "";
-  //   }
-  // }
 
   const fetchDropdownData = async () => {
     try {
@@ -196,11 +121,6 @@ export default function All_patient() {
       } else {
         console.error("Failed to fetch doctors:", doctorResponse.statusText);
       }
-      //   } catch (error) {
-      //     console.error("Error fetching doctors:", error.message);
-      //   }
-      // };
-
       // Fetch FDE List
       const fdeResponse = await fetch(
         `${BASE_URL}/V1/appointment/fdeDropdown?location=${location}`,
@@ -228,12 +148,12 @@ export default function All_patient() {
     fetchDropdownData();
   }, []);
 
-  // Function to format date to yyyy-MM-dd
-  const formatToApiDate = (date) => {
-    if (!date) return "";
-    const [day, month, year] = date.split("/");
-    return `${day}-${month}-${year}`; // Return formatted date as yyyy-MM-dd
-  };
+  // REMOVED: formatToApiDate is no longer needed as we remove date filtering.
+  // const formatToApiDate = (date) => {
+  //   if (!date) return "";
+  //   const [day, month, year] = date.split("/");
+  //   return `${day}-${month}-${year}`; // Return formatted date as yyyy-MM-dd
+  // };
 
   // Add this state for doctor search
   const [doctorSearchResults, setDoctorSearchResults] = useState([]);
@@ -337,33 +257,6 @@ export default function All_patient() {
   }, [patientSearchResults]);
 
   // Add this function to calculate age from birth date
-  // const calculateAge = (birthDate) => {
-  //   if (!birthDate) return "";
-
-  //   let parts = birthDate.includes("/")
-  //     ? birthDate.split("/")
-  //     : birthDate.split("-");
-  //   if (parts.length !== 3) return "";
-
-  //   const [day, month, year] = parts;
-  //   const birth = new Date(`${year}-${month}-${day}`);
-
-  //   if (isNaN(birth.getTime())) return "";
-
-  //   const today = new Date();
-  //   let age = today.getFullYear() - birth.getFullYear();
-  //   const monthDiff = today.getMonth() - birth.getMonth();
-
-  //   if (
-  //     monthDiff < 0 ||
-  //     (monthDiff === 0 && today.getDate() < birth.getDate())
-  //   ) {
-  //     age--;
-  //   }
-  //   return age;
-  // };
-
-  // Add this function to calculate age from birth date
   const calculateAge = (birthDate) => {
     if (!birthDate) return "";
 
@@ -446,22 +339,14 @@ export default function All_patient() {
     setShowAddModal(false); // Close the modal after submission
   };
 
-  // Fetch patients data
+  // Fetch patients data - MODIFIED TO REMOVE DATE FILTERING
   const fetchPatientsData = async () => {
     setLoading(true);
-    let formattedFromDate = formatToApiDate(fromDate); // Format the from date
-    let formattedToDate = formatToApiDate(toDate); // Format the to date
-    console.log(
-      "Fetching patients from",
-      formattedFromDate,
-      "to",
-      formattedToDate
-    );
     try {
+      // API call now fetches ALL patients without date parameters
       const url = new URL(
-        `${BASE_URL}/V1/patient/listPatient?from=${formattedFromDate}&to=${formattedToDate}&location=${location}`
+        `${BASE_URL}/V1/patient/listPatient?location=${location}`
       );
-
       const response = await fetch(url, {
         method: "GET",
         headers: {
@@ -472,7 +357,7 @@ export default function All_patient() {
       const data = await response.json();
 
       if (response.ok) {
-        console.log("Fetched Data:", data.data);
+        console.log("Fetched Data (All Patients):", data.data);
         setPatients(data.data || []);
       } else {
         console.error(
@@ -487,11 +372,12 @@ export default function All_patient() {
     }
   };
 
+  // Initial fetch on component mount
   useEffect(() => {
     fetchPatientsData().then((data) =>
       console.log("Fetched Patient Data:", data)
     );
-  }, []);
+  }, []); // Run only once
 
   useEffect(() => {
     if (selectedPatient) {
@@ -561,21 +447,6 @@ export default function All_patient() {
     }
   }, [selectedPatient]); // Runs whenever `selectedPatient` changes
 
-  // const handleSetCountry = (value) => {
-  //   setCountry(value);
-  //   setFormData((prev) => ({ ...prev, country: value }));
-  // };
-
-  // const handleSetState = (value) => {
-  //   setState(value);
-  //   setFormData((prev) => ({ ...prev, state: value }));
-  // };
-
-  // const handleSetCity = (value) => {
-  //   setCity(value);
-  //   setFormData((prev) => ({ ...prev, city: value }));
-  // };
-
   const formatDateToDisplay = (dateString) => {
     if (!dateString) return ""; // Return empty if no date is provided
 
@@ -634,27 +505,6 @@ export default function All_patient() {
       reference_type: patient.reference_type || "", // Ensure it's set
       specific_work: Boolean(patient.specific_work) || "", // Ensure it's set
     });
-
-    // Safely parse work patterns
-    // try {
-    //   const specificWorkString = patient.specific_work || "";
-    //   const workPatternsArray = specificWorkString
-    //     .split(",")
-    //     .map((item) => item.trim());
-
-    // const updatedWorkPatterns = {
-    //   Sedentary: workPatternsArray.includes("Sedentary"),
-    //   Travelling: workPatternsArray.includes("Travelling"),
-    //   "Strenuous (Physical Activity)": workPatternsArray.includes(
-    //     "Strenuous (Physical Activity)"
-    //   ),
-    //   "Mentally Stressful": workPatternsArray.includes("Mentally Stressful"),
-    // };
-
-    //   setWorkPatterns(updatedWorkPatterns);
-    // } catch (error) {
-    //   console.error("Error parsing work patterns:", error);
-    // Set default work patterns if parsing fails
 
     // Convert work pattern string into checkboxes
     setWorkPatterns({
@@ -739,12 +589,6 @@ export default function All_patient() {
     console.log("Reference Type:", reference_type);
     console.log("Reference:", ref);
 
-    const formatDateForAPI = (dateString) => {
-      if (!dateString) return null;
-      const [day, month, year] = dateString.split("/");
-      return `${year}-${month}-${day}`; // Convert to API format YYYY-MM-DD
-    };
-
     // Convert workPatterns into a comma-separated string
     const specificWork = Object.entries(workPatterns)
       .filter(([_, value]) => value)
@@ -815,7 +659,7 @@ export default function All_patient() {
 
   const handleViewPatient = async (patient) => {
     console.log("Being passed data:", patient);
-    if (!patient || !phone) {
+    if (!patient || !patient.phone) {
       console.error("Patient data or phone number is missing");
       return;
     }
@@ -1045,7 +889,7 @@ export default function All_patient() {
               text-align: center;
               padding-top: 3px;
             }
-              .time-date{
+            .time-date{
               display: flex;
               justify-content: space-between;
               margin-top: 5px;
@@ -1098,15 +942,15 @@ export default function All_patient() {
             <div class="section-title">Patient Details</div>
             <div class="row">
               <div class="col">
-                <table class="details-table">   
+                <table class="details-table">	
                   <tr><td>Reg No:</td><td>${patient.Uid_no}</td></tr>
                   <tr><td>Name:</td><td>${patient.name}</td></tr>
                   <tr><td>Gender:</td><td>${patient.sex}</td></tr>
                   <tr><td>DOB (Age):</td><td>${patient.birth_date} (${
         patient.age
       })</td></tr>
-         <tr><td>Reffered By:</td><td>${patient.reference_type}</td></tr>     
-                 
+         <tr><td>Reffered By:</td><td>${patient.reference_type}</td></tr>	 
+                  
                 </table>
               </div>
               <div class="col">
@@ -1115,9 +959,9 @@ export default function All_patient() {
                   <tr><td>Address:</td><td>${patient.address}</td></tr>
                   <tr><td>Mobile No:</td><td>${patient.phone}</td></tr>
                   <tr><td>Email:</td><td>${patient.email}</td></tr>
-                       <tr><td>Occupation:</td><td>${
-                         patient.occupation
-                       }</td></tr>      
+                    	<tr><td>Occupation:</td><td>${
+                        patient.occupation
+                      }</td></tr>	 
                 </table>
               </div>
             </div>
@@ -1125,16 +969,16 @@ export default function All_patient() {
             <div class="consent-box">
             <div class="consent-title">OPD CONCENT FORM</div>
               <p>I, the undersigned patient or responsible relative ....................................................................................................................................
-                  hereby give consent and authority to Healing Hands Clinic physicians, surgeons and medical person administer and perform medical examinations, investigations, medical treatments and out-patient procedure during the course of the medical care as an out-patient, as deemed advisable or necessary.
-                  I understand and accept Healing Hands Clinic policies and agree to abide by them. I also give consent to the clinic for contacting me/him/her by telephone if needed regarding appointments and follow-ups.| allow the clinic and the doctors to discuss about my/his/her medical issues amongst themselves knowing that privacy will be maintained.
-                  I undersigned, give permission for using any observed/discussed/new information found during my consultation/treatment to be used for study purposes/research in future.
-                  </p>
+              	  hereby give consent and authority to Healing Hands Clinic physicians, surgeons and medical person administer and perform medical examinations, investigations, medical treatments and out-patient procedure during the course of the medical care as an out-patient, as deemed advisable or necessary.
+              	  I understand and accept Healing Hands Clinic policies and agree to abide by them. I also give consent to the clinic for contacting me/him/her by telephone if needed regarding appointments and follow-ups.| allow the clinic and the doctors to discuss about my/his/her medical issues amongst themselves knowing that privacy will be maintained.
+              	  I undersigned, give permission for using any observed/discussed/new information found during my consultation/treatment to be used for study purposes/research in future.
+              	  </p>
               <p>मी खाली सही करणारा रुग्ण / रुग्णाचा जबाबदार पालक/ नातेवाईक ..........................................................................................................
-                  हीलींग हॅन्डस् क्लिनीक येथिल चिकिसक शल्यविशाराद व वैधकीय कर्मचारी याना बाहय रुग्ण म्हणून सदर रुग्णाच्या हितासाठी / आरोग्यासाठी आवश्यक त्या सर्व नैदानिक तपासण्या परीक्षणे, वैद्यकीय औषधोपचार व लघुशस्त्रक्रिया करण्यास परवानगी देतो. मला हीलींग हॅन्डस क्लिनीकची सर्व धोरणे ज्ञात सून मी त्याचे पालन करण्यास तयार आहे.
-                  मी खाली सही करणार अशी ही संमती देतो की मला तपासणीच्या वेळेतील बदल किंवा फेरतपासणीबाबतच्या वेळेतील व इतर अन्य बदल कळविण्याकरीता केलेल्या दूरध्वनी संपर्कबद्दल मला आक्षेप असणार नाही. मी, क्लिनिक व डॉक्टर यांना माझ्या / त्याच्या/ तिच्या वैदयकिय समस्थाची आपआपसांत चर्चा करण्याची परवानगी देत आहे तसेच यांची गोपनियता राखण्यात येईल याची मला माहीती दिलेली आहे. मी खाली सही करणारा/करणारी,
-                   माझ्या उपचाराच्या दरम्यान प्राप्त झालेली / सापडलेली कोणत्याही प्रकारच्या माहितीचे उपयोग भविष्यकालीन अभ्यासासाठी / संशोधनासाठी करण्याची परवानगी देत आहे.
-                   </p>
-                   <p>Patients Name (रुग्णाचे नाव)::</p><br>
+              	  हीलींग हॅन्डस् क्लिनीक येथिल चिकिसक शल्यविशाराद व वैधकीय कर्मचारी याना बाहय रुग्ण म्हणून सदर रुग्णाच्या हितासाठी / आरोग्यासाठी आवश्यक त्या सर्व नैदानिक तपासण्या परीक्षणे, वैद्यकीय औषधोपचार व लघुशस्त्रक्रिया करण्यास परवानगी देतो. मला हीलींग हॅन्डस क्लिनीकची सर्व धोरणे ज्ञात सून मी त्याचे पालन करण्यास तयार आहे.
+              	  मी खाली सही करणार अशी ही संमती देतो की मला तपासणीच्या वेळेतील बदल किंवा फेरतपासणीबाबतच्या वेळेतील व इतर अन्य बदल कळविण्याकरीता केलेल्या दूरध्वनी संपर्कबद्दल मला आक्षेप असणार नाही. मी, क्लिनिक व डॉक्टर यांना माझ्या / त्याच्या/ तिच्या वैदयकिय समस्थाची आपआपसांत चर्चा करण्याची परवानगी देत आहे तसेच यांची गोपनियता राखण्यात येईल याची मला माहीती दिलेली आहे. मी खाली सही करणारा/करणारी,
+              	   माझ्या उपचाराच्या दरम्यान प्राप्त झालेली / सापडलेली कोणत्याही प्रकारच्या माहितीचे उपयोग भविष्यकालीन अभ्यासासाठी / संशोधनासाठी करण्याची परवानगी देत आहे.
+              	   </p>
+                                 <p>Patients Name (रुग्णाचे नाव)::</p><br>
               <div class="signature-box">
                 <p>Patient's Signature(रुग्णाची सही)</p>
                 
@@ -1239,7 +1083,7 @@ export default function All_patient() {
             <div
               className="controls"
               style={{
-                //  display: "flex",
+                //  display: "flex",
                 alignItems: "center",
                 gap: "10px",
                 flexWrap: "wrap",
@@ -1293,7 +1137,7 @@ export default function All_patient() {
                   handleReferenceChange(e);
                   setFormData((prev) => ({
                     ...prev,
-                    ref: paper, // Store the selected TV show in ref
+                    ref: e.target.value, // Store the other newspaper in ref
                     reference_type: "newspaper", // Store "Newspaper" in reference_type
                   }));
                 }}
@@ -1344,7 +1188,7 @@ export default function All_patient() {
                     borderRadius: "4px",
                     maxHeight: "200px",
                     overflowY: "auto",
-                    //  width: "100%",
+                    //  width: "100%",
                     boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                     fontSize: "15px",
                   }}
@@ -1452,6 +1296,7 @@ export default function All_patient() {
                       display: "flex",
                       alignItems: "center",
                       marginRight: "100px",
+                      cursor: "pointer",
                       transform: "scale(1.2)", // Increase size
                     }}
                   >
@@ -1459,7 +1304,14 @@ export default function All_patient() {
                       type="radio"
                       name="internet"
                       value={source}
-                      onChange={handleReferenceChange}
+                      onChange={(e) => {
+                        handleReferenceChange(e);
+                        setFormData((prev) => ({
+                            ...prev,
+                            ref: source, // Store selected source in ref
+                            reference_type: "internet",
+                        }));
+                      }}
                       checked={referenceDetails.internet === source}
                       style={{ marginRight: "10px" }} // Space between radio and label
                     />
@@ -1500,7 +1352,14 @@ export default function All_patient() {
                       type="radio"
                       name="MediaRef"
                       value={media}
-                      onChange={handleReferenceChange}
+                      onChange={(e) => {
+                          handleReferenceChange(e);
+                          setFormData((prev) => ({
+                            ...prev,
+                            ref: media, // Store selected media in ref
+                            reference_type: "MediaRef",
+                        }));
+                      }}
                       checked={referenceDetails.MediaRef === media}
                       style={{ marginRight: "10px" }} // Space between radio and label
                     />
@@ -1552,6 +1411,7 @@ export default function All_patient() {
                       display: "flex",
                       alignItems: "center",
                       marginRight: "10px", // Reduced margin
+                      cursor: "pointer",
                       transform: "scale(1)", // Normal size
                     }}
                   >
@@ -1559,7 +1419,14 @@ export default function All_patient() {
                       type="radio"
                       name="TVShow"
                       value={show}
-                      onChange={handleReferenceChange}
+                      onChange={(e) => {
+                        handleReferenceChange(e);
+                        setFormData((prev) => ({
+                            ...prev,
+                            ref: show, // Store selected show in ref
+                            reference_type: "TVShow",
+                        }));
+                      }}
                       checked={referenceDetails.TVShow === show}
                       style={{ marginRight: "5px" }} // Reduced space between radio and label
                     />
@@ -1646,6 +1513,11 @@ export default function All_patient() {
                             old_patient_pincode: patient.pincode || "",
                           });
                           setPatientSearchResults([]); // Clear search results after selection
+                          setFormData((prev) => ({
+                            ...prev,
+                            ref: `${patient.phone || ""},${patient.name || ""},${patient.patient_id || ""},${patient.pincode || ""}`,
+                            reference_type: "old_ref",
+                          }));
                         }}
                       >
                         <div
@@ -1726,7 +1598,14 @@ export default function All_patient() {
                 name="friendname"
                 placeholder="Friend Name"
                 value={referenceDetails.friendname || ""}
-                onChange={handleReferenceChange}
+                onChange={(e) => {
+                    handleReferenceChange(e);
+                    setFormData((prev) => ({
+                      ...prev,
+                      ref: `${e.target.value},${referenceDetails.friendno || ""}`,
+                      reference_type: "family_friends",
+                    }));
+                }}
                 style={{ flex: "1", minWidth: "200px" }} // Adjust width as needed
               />
               <input
@@ -1740,6 +1619,11 @@ export default function All_patient() {
                   // Allow only numbers and limit to 10 digits
                   if (/^\d{0,10}$/.test(value)) {
                     handleReferenceChange(e);
+                    setFormData((prev) => ({
+                      ...prev,
+                      ref: `${referenceDetails.friendname || ""},${value}`,
+                      reference_type: "family_friends",
+                    }));
                   }
                 }}
                 maxLength="10" // Limit input to 10 characters
@@ -1759,7 +1643,14 @@ export default function All_patient() {
                     type="radio"
                     name="HHC_board"
                     value="HHC_board"
-                    onChange={handleReferenceChange}
+                    onChange={(e) => {
+                        handleReferenceChange(e);
+                        setFormData((prev) => ({
+                          ...prev,
+                          ref: "HHC_board",
+                          reference_type: "hhc_board",
+                        }));
+                    }}
                     checked={referenceDetails.HHC_board === "HHC_board"}
                     style={{ marginRight: "10px", transform: "scale(1.2)" }} // Space between radio and label
                   />
@@ -1780,7 +1671,14 @@ export default function All_patient() {
                     type="radio"
                     name="HHF"
                     value="HHF"
-                    onChange={handleReferenceChange}
+                    onChange={(e) => {
+                        handleReferenceChange(e);
+                        setFormData((prev) => ({
+                          ...prev,
+                          ref: "HHF",
+                          reference_type: "HHF",
+                        }));
+                    }}
                     checked={referenceDetails.HHF === "HHF"}
                     style={{ marginRight: "10px", transform: "scale(1.2)" }} // Space between radio and label
                   />
@@ -1803,7 +1701,14 @@ export default function All_patient() {
                     name="other"
                     placeholder="Other"
                     value={referenceDetails.other || ""}
-                    onChange={handleReferenceChange}
+                    onChange={(e) => {
+                        handleReferenceChange(e);
+                        setFormData((prev) => ({
+                          ...prev,
+                          ref: e.target.value,
+                          reference_type: "other",
+                        }));
+                    }}
                   />
                 </li>
               </ul>
@@ -1823,7 +1728,14 @@ export default function All_patient() {
                     name="WOM"
                     placeholder="Other"
                     value={referenceDetails.WOM || ""}
-                    onChange={handleReferenceChange}
+                    onChange={(e) => {
+                        handleReferenceChange(e);
+                        setFormData((prev) => ({
+                          ...prev,
+                          ref: e.target.value,
+                          reference_type: "WOM",
+                        }));
+                    }}
                   />
                 </li>
               </ul>
@@ -1838,9 +1750,15 @@ export default function All_patient() {
   const handleReferenceChange = (e) => {
     const { value } = e.target;
     setSelectedReference(value); // Update selectedReference state
+    
+    // Note: The specific reference setting (formData.ref and formData.reference_type) 
+    // is now handled inside the renderReferenceDetails switch case to capture sub-details.
+    // However, if the main dropdown is changed, we update the reference type here immediately.
     setFormData((prev) => ({
-      ...prev,
-      reference_type: value,
+        ...prev,
+        reference_type: value,
+        // Reset ref details when main type changes, will be overwritten by input/radio handlers
+        ref: "", 
     }));
   };
 
@@ -1869,36 +1787,8 @@ export default function All_patient() {
     old_patient_pincode: "",
   });
 
-  const referenceFields = {
-    Newspaper: ["Sakal", "MT", "TOI", "Pune Mirror", "Lokmat"],
-    DoctorReference: ["DoctorReference"],
-    Internet: [
-      "Google",
-      "Practo",
-      "Facebook",
-      "Instagram",
-      "Website",
-      "Just Dial",
-      "Youtube",
-    ],
-    EntertainmentMedia: ["Radio", "Hoarding", "Tv Show"],
-    TvShow: [
-      "Zee 24 Taas",
-      "Saam TV",
-      "Zee Marathi",
-      "IBN Lokmat",
-      "TV9",
-      "Others",
-    ],
-    PatientReference: ["Patient Reference"],
-    Family: ["Family/Friends"],
-    HHC: ["/HHC Board"],
-    HHF: ["/HHF"],
-    Other: ["/Other Details"],
-    WOM: ["/WOM Details"],
-  };
-
   // Header content with search and refresh button
+  // MODIFIED: Date picker section removed entirely
   const renderHeader = () => (
     <div
       style={{
@@ -1913,7 +1803,7 @@ export default function All_patient() {
       <div
         style={{
           display: "flex",
-          justifyContent: "space-between",
+          justifyContent: "flex-start", // Align to start since date pickers are gone
           alignItems: "center",
           gap: "20px",
         }}
@@ -1959,151 +1849,31 @@ export default function All_patient() {
           </Form.Group>
         </div>
 
-        {/* Date Picker Section */}
-        <div
+        {/* Refresh Button (Now simple refresh for all data) */}
+        <Button
+          variant="primary"
+          onClick={fetchPatientsData} // Call fetchPatientsData without parameters
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "15px",
-            border: "2px solid #4dd0e1",
-            borderRadius: "12px",
-            padding: "15px",
-            backgroundColor: "#f5fcfd",
+            backgroundColor: "#00bcd4",
+            border: "none",
+            borderRadius: "8px",
+            padding: "8px 20px",
+            fontSize: "14px",
+            fontWeight: "500",
+            color: "white",
+            cursor: "pointer",
+            transition: "all 0.3s ease",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+            // marginTop: "20px", // Removed margin since date picker is gone
+            ":hover": {
+              backgroundColor: "#00acc1",
+              transform: "translateY(-1px)",
+              boxShadow: "0 4px 8px rgba(0,0,0,0.15)",
+            },
           }}
         >
-          <div
-            style={{
-              margin: 0,
-              position: "relative",
-            }}
-          >
-            <div
-              style={{
-                fontSize: "14px",
-                fontWeight: "500",
-                color: "#00838f",
-                marginBottom: "5px",
-              }}
-            >
-              From Date
-            </div>
-            <DatePicker
-              selected={
-                fromDate
-                  ? (() => {
-                      try {
-                        const [day, month, year] = fromDate.split("/");
-                        return new Date(year, month - 1, day);
-                      } catch (error) {
-                        return new Date();
-                      }
-                    })()
-                  : new Date()
-              }
-              onChange={(date) => {
-                if (date) {
-                  setFromDate(formatDate(date));
-                }
-              }}
-              dateFormat="dd-MM-yyyy"
-              placeholderText="Select from date"
-              maxDate={new Date()}
-              customInput={
-                <Form.Control
-                  style={{
-                    borderRadius: "8px",
-                    border: "2px solid #4dd0e1",
-                    padding: "8px 12px",
-                    width: "160px",
-                    fontSize: "14px",
-                    cursor: "pointer",
-                    backgroundColor: "white",
-                    transition: "all 0.3s ease",
-                  }}
-                />
-              }
-            />
-          </div>
-
-          <div
-            style={{
-              margin: 0,
-              position: "relative",
-            }}
-          >
-            <div
-              style={{
-                fontSize: "14px",
-                fontWeight: "500",
-                color: "#00838f",
-                marginBottom: "5px",
-              }}
-            >
-              To Date
-            </div>
-            <DatePicker
-              selected={
-                toDate
-                  ? (() => {
-                      try {
-                        const [day, month, year] = toDate.split("/");
-                        return new Date(year, month - 1, day);
-                      } catch (error) {
-                        return new Date();
-                      }
-                    })()
-                  : new Date()
-              }
-              onChange={(date) => {
-                if (date) {
-                  setToDate(formatDate(date));
-                }
-              }}
-              dateFormat="dd-MM-yyyy"
-              placeholderText="Select to date"
-              minDate={fromDate}
-              customInput={
-                <Form.Control
-                  style={{
-                    borderRadius: "8px",
-                    border: "2px solid #4dd0e1",
-                    padding: "8px 12px",
-                    width: "160px",
-                    fontSize: "14px",
-                    cursor: "pointer",
-                    backgroundColor: "white",
-                    transition: "all 0.3s ease",
-                  }}
-                />
-              }
-            />
-          </div>
-
-          <Button
-            variant="primary"
-            onClick={() => fetchPatientsData(true)}
-            style={{
-              backgroundColor: "#00bcd4",
-              border: "none",
-              borderRadius: "8px",
-              padding: "8px 20px",
-              fontSize: "14px",
-              fontWeight: "500",
-              color: "white",
-              cursor: "pointer",
-              transition: "all 0.3s ease",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              marginTop: "20px",
-              ":hover": {
-                backgroundColor: "#00acc1",
-                transform: "translateY(-1px)",
-                boxShadow: "0 4px 8px rgba(0,0,0,0.15)",
-              },
-            }}
-          >
-            Refresh Data
-          </Button>
-        </div>
+          <FeatherIcon icon="refresh-ccw" size={16} className="me-2" /> Refresh All Data
+        </Button>
       </div>
     </div>
   );
@@ -2158,7 +1928,7 @@ export default function All_patient() {
       return;
     }
 
-    const formattedDate = formatDate(date);
+    const formattedDate = date.toISOString().split("T")[0]; // Format to YYYY-MM-DD
     console.log("Formatted Date:", formattedDate);
 
     setFormData((prevState) => {
@@ -2169,15 +1939,8 @@ export default function All_patient() {
       };
     });
 
-    handleInputChange({
-      target: {
-        name: "date",
-        value: date.toISOString().split("T")[0], // Ensures the date format is consistent
-      },
-    });
-
     if (name === "birth_date") {
-      const calculatedAge = calculateAge(formattedDate);
+      const calculatedAge = calculateAge(date); // Pass Date object to calculatedAge
 
       setFormData((prevState) => {
         if (
@@ -2200,12 +1963,13 @@ export default function All_patient() {
     }
 
     // Prevent unnecessary regeneration of time slots
-    setTimeSlots((prevSlots) => {
-      const newSlots = generateTimeSlots();
-      return JSON.stringify(prevSlots) !== JSON.stringify(newSlots)
-        ? newSlots
-        : prevSlots;
-    });
+    // NOTE: This logic seems redundant here as timeSlots is a constant function
+    // setTimeSlots((prevSlots) => {
+    //   const newSlots = generateTimeSlots();
+    //   return JSON.stringify(prevSlots) !== JSON.stringify(newSlots)
+    //     ? newSlots
+    //     : prevSlots;
+    // });
   };
 
   // Update the parseDate function to be more robust
@@ -2250,7 +2014,7 @@ export default function All_patient() {
         padding: "20px",
       }}
     >
-      <NavBarP pagename="Add Patient Details" />
+      <NavBarP pagename="All Registered Patients" />
       <Modal
         show={showAddModal}
         onHide={() => setShowAddModal(false)}
@@ -2268,7 +2032,13 @@ export default function All_patient() {
                   <Form.Label>Date</Form.Label>
                   <DatePicker
                     selected={formData.date ? new Date(formData.date) : null}
-                    onChange={handleDateChange}
+                    onChange={(date) => {
+                        handleDateChange(date);
+                        setFormData((prev) => ({
+                            ...prev,
+                            date: date.toISOString().split("T")[0],
+                        }));
+                    }}
                     className="form-control"
                     dateFormat="dd-MM-yyyy"
                     placeholderText="Select Date"
@@ -2280,14 +2050,22 @@ export default function All_patient() {
                 <Form.Group className="mb-20">
                   <Form.Label>Doctor Name</Form.Label>
                   <Form.Select
-                    name="doctorName" // Changed from doctorName to doctor_id
-                    value={formData.doctorName}
-                    onChange={handleInputChange}
+                    name="doctor_id" // Use doctor_id for API submission
+                    value={formData.doctor_id}
+                    onChange={(e) => {
+                        const selectedDocId = e.target.value;
+                        const selectedDoc = doctors.find(doc => doc.doctor_id === selectedDocId);
+                        setFormData((prev) => ({ 
+                            ...prev, 
+                            doctor_id: selectedDocId,
+                            doctorName: selectedDoc ? selectedDoc.name : ""
+                        }));
+                    }}
                   >
                     <option value="">Select a Doctor</option>
                     {doctors && doctors.length > 0 ? (
                       doctors.map((doctor) => (
-                        <option key={doctor.doctor_id} value={doctor.name}>
+                        <option key={doctor.doctor_id} value={doctor.doctor_id}>
                           {doctor.name}
                         </option>
                       ))
@@ -2347,13 +2125,21 @@ export default function All_patient() {
                   <Form.Select
                     name="FDE_Name"
                     value={formData.FDE_Name}
-                    onChange={handleInputChange}
+                    onChange={(e) => {
+                        const selectedFDEId = e.target.value;
+                        const selectedFDE = fdeList.find(fde => fde.FDEID === selectedFDEId);
+                        setFormData((prev) => ({ 
+                            ...prev, 
+                            FDE_Name: selectedFDEId,
+                            fdeName: selectedFDE ? selectedFDE.FDEName : "" // Store name for confirmation if needed
+                        }));
+                    }}
                   >
                     <option value="">Select FDE Name</option>
                     {fdeList &&
                       fdeList.length > 0 &&
                       fdeList.map((fde) => (
-                        <option key={fde.FDEID} value={fde.FDEName}>
+                        <option key={fde.FDEID} value={fde.FDEID}>
                           {fde.FDEName}
                         </option>
                       ))}
@@ -2561,83 +2347,6 @@ export default function All_patient() {
               </Col>
             </Row>
             <Row>
-              {/* <Col md={3} className="mb-4">
-                  <Form.Group className="mb-3">
-                    <Form.Label>Country</Form.Label>
-                    <CountryDropdown
-                      className="form-control"
-                      searchable={true}
-                      value={formData.country || ""}
-                      onChange={(e, value) => {
-                        handleSetCountry(value);
-                        setFormData((prev) => ({
-                          ...prev,
-                          country: value.name,
-                        }));
-                      }}
-                      placeholder="Choose a country"
-                      style={{
-                        borderRadius: "8px",
-                        width: "100%",
-                        cursor: "pointer",
-                      }}
-                    />
-                  </Form.Group>
-                </Col>
-
-                <Col md={3} className="mb-4">
-                  <Form.Group className="mb-3">
-                    <Form.Label>State</Form.Label>
-                    <StateDropdown
-                      className="form-control"
-                      country={country}
-                      searchable={true}
-                      value={formData.state || ""}
-                      onChange={(e, value) => {
-                        handleSetState(value);
-                        setFormData((prev) => ({
-                          ...prev,
-                          state: value.name,
-                        }));
-                      }}
-                      placeholder="Choose a state/province"
-                      style={{
-                        height: "100%",
-                        borderRadius: "8px",
-                        width: "100%",
-                        cursor: "pointer",
-                      }}
-                    />
-                  </Form.Group>
-                </Col>
-
-                <Col md={3} className="mb-4">
-                  <Form.Group className="mb-3">
-                    <Form.Label>City</Form.Label>
-                    <CityDropdown
-                      className="form-control"
-                      country={country}
-                      state={state}
-                      searchable={true}
-                      value={formData.city || ""}
-                      onChange={(e, value) => {
-                        handleSetCity(value);
-                        setFormData((prev) => ({
-                          ...prev,
-                          city: value.name,
-                        }));
-                      }}
-                      placeholder="Choose a city"
-                      style={{
-                        height: "100%",
-                        borderRadius: "8px",
-                        width: "100%",
-                        cursor: "pointer",
-                      }}
-                    />
-                  </Form.Group>
-                </Col> */}
-
               <Col md={3} className="mb-4">
                 <Form.Group className="mb-3">
                   <Form.Label>Address</Form.Label>
@@ -2729,23 +2438,21 @@ export default function All_patient() {
                     id="birth_date"
                     selected={
                       formData?.birth_date
-                        ? new Date(formData.birth_date)
+                        ? parseDate(formData.birth_date) // Use parseDate to handle DD-MM-YYYY format
                         : null
                     }
                     onChange={(date) => {
                       if (!date) return; // Prevent null values from breaking
 
-                      // const formattedDate = formatDate(date);
-
                       handleInputChange({
                         target: {
                           name: "birth_date",
-                          value: date,
+                          value: date, // Pass Date object to handler
                         },
                       });
                     }}
                     className="form-control"
-                    dateFormat="dd-MM-yyyy"
+                    dateFormat="yyyy-MM-dd" // Use API standard format YYYY-MM-DD for date picker value
                     placeholderText="Select Date"
                     showMonthDropdown
                     showYearDropdown
@@ -2904,7 +2611,7 @@ export default function All_patient() {
           <Button variant="primary" onClick={handleSaveChanges}>
             Save Changes
           </Button>
-          <Button variant="primary" onClick={handlePrint}>
+          <Button variant="primary" onClick={() => handlePrint(selectedPatient)}>
             Registration Form
           </Button>
           <Button
@@ -2940,11 +2647,6 @@ export default function All_patient() {
                 referenceDetails: "",
                 patient_type: false,
               });
-
-              // Reset the location dropdowns
-              // setCountry(null);
-              // setState(null);
-              // setCity(null);
 
               // Clear any validation errors
               setErrors({});
