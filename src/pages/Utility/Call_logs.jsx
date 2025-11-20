@@ -4,6 +4,7 @@ import { FilterMatchMode } from "primereact/api";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import FeatherIcon from "feather-icons-react";
+import { decodeJwt } from "../../utils/decode-jwt";
 import {
   Container,
   Row,
@@ -20,7 +21,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import "../../styles/styles.css"; // Add this import at the top
 import { toast } from "react-hot-toast";
 
-export const BASE_URL = "http://194.195.117.79:5100/api"; // Update your API base URL here
+export const BASE_URL = "http://localhost:5100/api"; // Update your API base URL here
 
 export default function Call_logs() {
   const [CallLogs, setCallLogs] = useState([]);
@@ -44,13 +45,25 @@ export default function Call_logs() {
   const [timeSlots, setTimeSlots] = useState([]); // Add this state for time slots
   const [selectedDate, setSelectedDate] = useState(null); // Add this state for the modal
   const [enquiries, setEnquiries] = useState([]);
-
+  const [currentLocation, setCurrentLocation] = useState('default');
+  
   function formatDate(date) {
     return new Date(date); // Return a Date object
   }
 
   const [fromDate, setFromDate] = useState(new Date()); // Initialize with Date object
   const [toDate, setToDate] = useState(new Date()); // Initialize with Date object
+
+  useEffect(() => {
+      const token = localStorage.getItem('token');
+      if (token) {
+          const payload = decodeJwt(token);
+          if (payload && payload.jobLocation) {
+              setCurrentLocation(payload.jobLocation);
+          }
+      }
+    }, []);
+  
 
   const handleAddAppointmentClick = (rowData) => {
     const today = new Date();
@@ -114,6 +127,7 @@ export default function Call_logs() {
       const params = {
         from: formatToApiDate(fromDate),
         to: formatToApiDate(toDate),
+        location: currentLocation,
       };
 
       Object.keys(params).forEach((key) => {
