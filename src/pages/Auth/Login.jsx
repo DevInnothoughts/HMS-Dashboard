@@ -7,7 +7,7 @@ import eyeSlashIcon from "../../assets/images/Eye/invisible.png";
 import logo from "../../assets/images/logo/icon-logo.png";
 
 // Define the hardcoded list directly for use
-const LOCATIONS_LIST = ["hms", "pune"]; // Added a couple more for better list view
+const LOCATIONS_LIST = ["hms", "pune", "demo"]; // Added a couple more for better list view
 
 const BASE_URL = "http://localhost:5100/api"; // BASE_URL is still needed for the handleSubmit fetch
 
