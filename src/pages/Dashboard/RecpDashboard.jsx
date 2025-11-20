@@ -434,7 +434,6 @@ export default function ReceptionistDashboard() {
                                 ref={calendarRef}
                                 plugins={[dayGridPlugin, timeGridPlugin, listPlugin]}
                                 initialView="dayGridMonth"
-                                initialDate={selectedDate}
                                 headerToolbar={{
                                     left: 'prev,next,today',
                                     center: 'title',
@@ -445,8 +444,7 @@ export default function ReceptionistDashboard() {
                                 events={appointments}
                                 // 🔥 NEW: Update selectedDate state whenever user navigates months
                                 datesSet={(info) => {
-                                    // The 'start' property of info gives the beginning of the rendered range.
-                                    // We use this to set the state, which is then used by handleManualFetch.
+                                    // Set the selectedDate state to the start of the currently viewed month
                                     setSelectedDate(moment(info.start).format("YYYY-MM-DD"));
                                 }}
                                 eventClick={handleEventClick}
