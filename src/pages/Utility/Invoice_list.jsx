@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from "react";
 import {
   Container,
@@ -10,10 +11,11 @@ import {
   Form,
 } from "react-bootstrap";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
+import { decodeJwt } from "../../utils/decode-jwt";
 import { Link } from "react-router-dom";
 import logo from "../../assets/images/3.png";
 
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 const InvoiceList = () => {
   const [invoices, setInvoices] = useState([]);
@@ -26,6 +28,18 @@ const InvoiceList = () => {
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState(null); // Initialize as null or empty string
+  
+  // Existing logic to decode JWT and set currentLocation
+  useEffect(() => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        const payload = decodeJwt(token);
+        if (payload?.jobLocation) setCurrentLocation(payload.jobLocation);
+      }
+    }, []); // VERY IMPORTANT!!!
+
+
   const [formData, setFormData] = useState({
     dynamicRows: [],
     Sub_Total: "0.00",
@@ -36,52 +50,67 @@ const InvoiceList = () => {
 
   const initialFormData = { ...formData };
 
-  // Fetch invoices on mount
+  // Fetch invoices on mount (MODIFIED)
   useEffect(() => {
-    const fetchInvoices = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const response = await fetch(`${BASE_URL}/V1/invoice/listInvoice`);
+  const fetchInvoices = async () => {
+    if (!currentLocation) return;
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch(
+        `${BASE_URL}/V1/invoice/listInvoice?location=${encodeURIComponent(currentLocation)}`
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setInvoices(data.data || []);
+      } else {
+        throw new Error(data.message || "Failed to fetch invoices");
+      }
+    } catch (err) {
+      setError(err.message || "An error occurred while fetching invoices.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchInvoices();
+}, [currentLocation]);
+
+  // Fetch dropdown data (MODIFIED)
+  useEffect(() => {
+  const fetchDropdowns = async () => {
+    if (!currentLocation) return;
+
+    try {
+      const endpoints = [
+        { url: "/V1/invoice/consultant_dropdown", setter: setConsultants },
+        { url: "/V1/invoice/surgeon_dropdown", setter: setSurgeons },
+        { url: "/V1/invoice/insurance_co_dropdown", setter: setInsurance },
+        { url: "/V1/invoice/tpa_dropdown", setter: setTpa },
+      ];
+
+      for (const { url, setter } of endpoints) {
+        const response = await fetch(
+          `${BASE_URL}${url}?location=${encodeURIComponent(currentLocation)}`
+        );
+
         const data = await response.json();
         if (response.ok) {
-          setInvoices(data.data || []);
-        } else {
-          throw new Error(data.message || "Failed to fetch invoices");
+          setter(data.data || []);
         }
-      } catch (err) {
-        setError(err.message || "An error occurred while fetching invoices.");
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (err) {
+      console.error(err);
+      setError("Failed to fetch dropdown data.");
+    }
+  };
 
-    fetchInvoices();
-  }, []);
-
-  // Fetch dropdown data
-  useEffect(() => {
-    const fetchDropdowns = async () => {
-      try {
-        const endpoints = [
-          { url: "/V1/invoice/consultant_dropdown", setter: setConsultants },
-          { url: "/V1/invoice/surgeon_dropdown", setter: setSurgeons },
-          { url: "/V1/invoice/insurance_co_dropdown", setter: setInsurance },
-          { url: "/V1/invoice/tpa_dropdown", setter: setTpa },
-        ];
-
-        for (const { url, setter } of endpoints) {
-          const response = await fetch(`${BASE_URL}${url}`);
-          const data = await response.json();
-          if (response.ok) setter(data.data || []);
-        }
-      } catch (err) {
-        setError("Failed to fetch dropdown data.");
-      }
-    };
-
-    fetchDropdowns();
-  }, []);
+  fetchDropdowns();
+}, [currentLocation]);
 
   // Update payable amount
   useEffect(() => {
@@ -172,33 +201,45 @@ const InvoiceList = () => {
     setShowModal(false);
     setSelectedInvoice(null);
   };
+  
   const handleSaveChanges = async () => {
     if (selectedInvoice) {
+      if (!currentLocation) {
+        alert("Cannot save changes: Location data is missing.");
+        return;
+      }
+
       try {
+        // 💡 MODIFIED: Include currentLocation in the PUT request body
+        const payload = { 
+            ...selectedInvoice, 
+            location: currentLocation 
+        };
+        
         const response = await fetch(
           `${BASE_URL}/V1/invoice/${selectedInvoice.invoice_id}`,
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(selectedInvoice),
+            body: JSON.stringify(payload), // Send payload with location
           }
         );
-
+        
         const result = await response.json();
 
         if (response.ok) {
-          // Update the invoice in the state
+          // ... (rest of update logic) ...
           setInvoices((prevInvoices) =>
             prevInvoices.map((invoice) =>
               invoice.invoice_id === selectedInvoice.invoice_id
-                ? { ...invoice, ...selectedInvoice } // Update invoice with new details
+                ? { ...invoice, ...selectedInvoice } 
                 : invoice
             )
           );
 
           alert("Invoice updated successfully!");
-          handleCloseModal(); // Close the modal
-          setShowSuccessPopup(true); // Show success popup
+          handleCloseModal(); 
+          setShowSuccessPopup(true); 
         } else {
           alert(result.message || "Error updating invoice.");
         }
@@ -207,6 +248,7 @@ const InvoiceList = () => {
       }
     }
   };
+  
   const updatePayableAmt = (updatedInvoice) => {
     let payableAmt = updatedInvoice.Sub_Total;
 
@@ -432,8 +474,8 @@ const InvoiceList = () => {
                         <tr key={invoice.invoice_id}>
                           <td>{invoice.invoice_id}</td>
                           <td>{invoice.creation_date}</td>
-                          <td>{invoice.patientName}</td>
-                          <td>{invoice.phone}</td>
+                          <td>{invoice.patient_name}</td>
+                          <td>{invoice.patient_phone}</td>
                           <td>{invoice.pay_mode}</td>
                           <td>{invoice.payable_amt}</td>
                           <td>{invoice.due_amt}</td>
