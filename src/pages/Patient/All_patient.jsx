@@ -103,9 +103,12 @@ export default function All_patient() {
 
 
   const fetchDropdownData = async () => {
+    if (!currentLocation || currentLocation === 'default') return;
+
     try {
-      const doctorResponse = await fetch(
-        `${BASE_URL}/V1/appointment/doctorDropdown?location=${location}`,
+        // 💡 FIX 2: Use currentLocation state variable for doctor dropdown
+        const doctorResponse = await fetch(
+          `${BASE_URL}/V1/appointment/doctorDropdown?location=${encodeURIComponent(currentLocation)}`,
         {
           method: "GET",
           headers: {
@@ -341,12 +344,16 @@ export default function All_patient() {
 
   // Fetch patients data - MODIFIED TO REMOVE DATE FILTERING
   const fetchPatientsData = async () => {
+    if (!currentLocation || currentLocation === 'default') {
+        console.warn("Location not set yet, skipping patient fetch.");
+        return;
+    }
     setLoading(true);
     try {
-      // API call now fetches ALL patients without date parameters
-      const url = new URL(
-        `${BASE_URL}/V1/patient/listPatient?location=${location}`
-      );
+        // 💡 FIX 1: Use currentLocation state variable
+        const url = new URL(
+            `${BASE_URL}/V1/patient/listPatient?location=${encodeURIComponent(currentLocation)}`
+        );
       const response = await fetch(url, {
         method: "GET",
         headers: {
@@ -374,10 +381,12 @@ export default function All_patient() {
 
   // Initial fetch on component mount
   useEffect(() => {
-    fetchPatientsData().then((data) =>
-      console.log("Fetched Patient Data:", data)
-    );
-  }, []); // Run only once
+    // Only fetch if currentLocation has been successfully set from JWT
+    if (currentLocation && currentLocation !== 'default') {
+        fetchPatientsData();
+        fetchDropdownData(); // Also ensure dropdowns use the correct location
+    }
+}, [currentLocation]); // Run only once
 
   useEffect(() => {
     if (selectedPatient) {
