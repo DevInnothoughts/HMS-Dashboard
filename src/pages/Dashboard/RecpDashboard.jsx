@@ -4,12 +4,12 @@ import FeatherIcon from "feather-icons-react";
 import { Row, Col, Card, Container, Form, Button, Modal, Spinner } from "react-bootstrap";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 
-// --- FULLCALENDAR IMPORTS (Required for Calendar View) ---
-import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import listPlugin from '@fullcalendar/list';
+// --- REACT BIG CALENDAR IMPORTS ---
+import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
+
+// Initialize the localizer for react-big-calendar
+const localizer = momentLocalizer(moment);
 
 // --- JWT DECODE UTILITY (Required for Location) ---
 function decodeJwt(token) {
@@ -33,13 +33,17 @@ export default function ReceptionistDashboard() {
   const [doctors, setDoctors] = useState([]);
   const [selectedDoctorId, setSelectedDoctorId] = useState('');
   const [currentLocation, setCurrentLocation] = useState('default');
-  // State holds the date used to determine the month to fetch
-  const [selectedDate, setSelectedDate] = useState(moment().format('YYYY-MM-DD'));
   
+  // selectedDate is now a Date object or moment object for RBC internal use
+  const [selectedDate, setSelectedDate] = useState(new Date()); 
+  const [currentView, setCurrentView] = useState('month'); // State for the calendar view
+
   // State for Modals and selected event details
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelComment, setCancelComment] = useState('');
   const [selectedEvent, setSelectedEvent] = useState(null); 
+  
+  // RBC doesn't need a ref for simple date navigation, but we'll keep it for potential future API use
   const calendarRef = React.useRef(null);
 
 
@@ -67,40 +71,46 @@ export default function ReceptionistDashboard() {
 
   // ------------------------- API Fetching -------------------------
   
-  // Helper to format API response into calendar events
+  // Helper to format API response into react-big-calendar events
   const formatAppointments = useCallback((data) => {
-    return data.map(app => ({
-        // Title shown on the calendar
-        title: `${app.appointment_time || 'N/A'} — ${app.patient_name || 'Patient'}`,
-
-        // Full ISO timestamp for FullCalendar
-        start: moment(
-            moment(app.appointment_timestamp).format("YYYY-MM-DD") +
-            " " +
-            app.appointment_time,
+    return data.map(app => {
+        
+        // Combine date and time to create the start date object
+        const startTime = moment(
+            moment(app.appointment_timestamp).format("YYYY-MM-DD") + " " + app.appointment_time,
             "YYYY-MM-DD HH:mm"
-        ).toISOString(),
+        );
 
-        // Details to show inside event click popup
-        phone: app.patient_phone,
-        date: moment(app.appointment_timestamp).format('DD-MM-YYYY'),
-        time: app.appointment_time,
-
-        patientName: app.patient_name,
-        doctorName: app.doctor_name,
-        patientType: app.patient_type || 'Other', // Ensure type exists
-        status: app.status,
-        note: app.note,
-        confirmTime: app.confirm_time,
-
-        // IDs
-        patientid: app.patient_id,
-        appointmentid: app.appointment_id,
+        // For simplicity, we'll set the end time 30 minutes later, or just use the start time for the month view
+        const endTime = startTime.clone().add(30, 'minutes');
         
-        // Use patientType for styling FullCalendar events
-        classNames: [app.patient_type || 'Other'],
-        
-    }));
+        return {
+            // Title shown on the calendar
+            title: `${app.appointment_time || 'N/A'} — ${app.patient_name || 'Patient'}`,
+
+            // Date objects required by RBC
+            start: startTime.toDate(),
+            end: endTime.toDate(), 
+
+            // Custom props
+            phone: app.patient_phone,
+            date: moment(app.appointment_timestamp).format('DD-MM-YYYY'),
+            time: app.appointment_time,
+
+            patientName: app.patient_name,
+            doctorName: app.doctor_name,
+            patientType: app.patient_type || 'Other', 
+            status: app.status,
+            note: app.note,
+            confirmTime: app.confirm_time,
+
+            patientid: app.patient_id,
+            appointmentid: app.appointment_id,
+            
+            // Used for custom styling/event component
+            isConfirmed: app.confirm_time !== '0' && app.confirm_time !== 0,
+        };
+    });
 }, []);
 
 
@@ -119,49 +129,39 @@ export default function ReceptionistDashboard() {
   }, [currentLocation]);
   
   // New: Fetches all appointments for the calculated date range
-  const fetchAllAppointments = useCallback(async (dateRange) => {
-    const { start, end } = dateRange;
+  const fetchAppointmentsForRange = useCallback(async (dateToFetch, doctorId) => {
     if (currentLocation === 'default') return;
 
     setLoading(true);
+    
+    // Determine the date range based on the current view and the date
+    const targetMoment = moment(dateToFetch);
+    let start, end;
+
+    if (currentView === 'month') {
+        start = targetMoment.clone().startOf('month').toDate();
+        end = targetMoment.clone().endOf('month').toDate();
+    } else if (currentView === 'week') {
+         start = targetMoment.clone().startOf('week').toDate();
+        end = targetMoment.clone().endOf('week').toDate();
+    } else { // 'day' or 'agenda'
+        start = targetMoment.clone().startOf('day').toDate();
+        end = targetMoment.clone().endOf('day').toDate();
+    }
+
     try {
         const from = moment(start).format('DD-MM-YYYY');
         const to = moment(end).format('DD-MM-YYYY');
 
-        // URL without the 'doctor' parameter
-        const url = `${BASE_URL}/V1/appointment/listAppointments?from=${from}&to=${to}&location=${currentLocation}`;
+        let url = `${BASE_URL}/V1/appointment/listAppointments?from=${from}&to=${to}&location=${currentLocation}`;
+        if (doctorId) {
+            url += `&doctor=${doctorId}`;
+        }
+        
         const response = await fetch(url);
         const data = await response.json();
 
         if (data.statusCode === 200 && Array.isArray(data.data)) {
-            const formattedEvents = formatAppointments(data.data);
-            setAppointments(formattedEvents);
-        } else {
-             setAppointments([]);
-        }
-    } catch (error) {
-        console.error("Error fetching all appointments:", error);
-        setAppointments([]);
-    } finally {
-        setLoading(false);
-    }
-  }, [currentLocation, formatAppointments]);
-
-  // Re-added: Fetches appointments for a specific doctor
-  const fetchAppointments = useCallback(async (dateRange, doctorId) => {
-    const { start, end } = dateRange;
-    if (currentLocation === 'default' || !doctorId) return;
-
-    setLoading(true);
-    try {
-        const from = moment(start).format('DD-MM-YYYY');
-        const to = moment(end).format('DD-MM-YYYY');
-
-        const url = `${BASE_URL}/V1/appointment/listAppointments?from=${from}&to=${to}&location=${currentLocation}&doctor=${doctorId}`;
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (data.statusCode === 200 && Array.isArray(data.data)) { 
             const formattedEvents = formatAppointments(data.data);
             setAppointments(formattedEvents);
         } else {
@@ -173,147 +173,115 @@ export default function ReceptionistDashboard() {
     } finally {
         setLoading(false);
     }
-  }, [currentLocation, formatAppointments]); 
+  }, [currentLocation, currentView, formatAppointments]); 
 
 
-  // Manual fetch handler triggered by the "Find" button or initial load
-  const handleManualFetch = useCallback(() => {
-    // Determine the target date based on the state. 
-    // This state is updated either by the date picker or the calendar navigation.
-    const targetMoment = moment(selectedDate, 'YYYY-MM-DD');
-    
-    // Ensure the calendar view focuses on the selected month
-    if (calendarRef.current) {
-        const calendarApi = calendarRef.current.getApi();
-        calendarApi.gotoDate(selectedDate);
+  // **EFFECT: API Fetch on state change**
+  // This triggers fetch whenever the location, doctor, or the central date/view changes.
+  useEffect(() => {
+    if (currentLocation !== 'default') {
+        fetchAppointmentsForRange(selectedDate, selectedDoctorId);
     }
-    
-    // 1. Calculate the date range (start/end of month for the current target date)
-    const dateRange = {
-        start: targetMoment.clone().startOf('month').toDate(),
-        end: targetMoment.clone().endOf('month').toDate(),
-    };
-    
-    // 2. Call the appropriate fetch function
-    if (selectedDoctorId) {
-        fetchAppointments(dateRange, selectedDoctorId);
-    } else {
-        fetchAllAppointments(dateRange);
-    }
-  }, [selectedDate, selectedDoctorId, fetchAppointments, fetchAllAppointments]);
+  }, [selectedDate, selectedDoctorId, currentLocation, currentView, fetchAppointmentsForRange]);
 
-
-  // Initial load and dependency fetching
+  // Initial load dependency fetching
   useEffect(() => {
     fetchDropdowns();
   }, [fetchDropdowns]);
 
-  // Run initial fetch only when location FIRST becomes valid
-  useEffect(() => {
-    if (currentLocation !== "default") {
-        // Use a short delay to ensure calendar has mounted and initialDate is set
-        setTimeout(() => handleManualFetch(), 100); 
-    }
-  }, [currentLocation]); // Triggered only on location change
-
 
   // ------------------------- Action Handlers -------------------------
 
-  const handleConfirm = async (appointmentId) => {
-    if (!window.confirm("Confirmation: The patient has come to the clinic ...!")) {
-        return;
-    }
+  // RBC: Called when user clicks 'next', 'prev', 'today', or selects a new view
+  const handleCalendarNavigate = (newDate, view, action) => {
+    setSelectedDate(newDate); 
+    // The useEffect above automatically triggers the data fetch for this new date
+  };
 
+  // RBC: Called when user changes view (month, week, day)
+  const handleCalendarView = (newView) => {
+    setCurrentView(newView);
+    // The useEffect above automatically triggers the data fetch for this new view range
+  }
+  
+  // Date picker change: Must update the selectedDate state AND tell the calendar to jump
+  const handleDateChange = (e) => {
+      const newMomentDate = moment(e.target.value, "YYYY-MM-DD").toDate();
+      setSelectedDate(newMomentDate);
+      // RBC automatically navigates when 'date' prop changes, so we don't need 'navigate' here
+  };
+  
+  // Doctor/Refresh change (Doctor change triggers fetch via useEffect)
+  const handleDoctorChange = (e) => {
+      setSelectedDoctorId(e.target.value);
+  };
+  
+  const handleRefreshClick = () => {
+    // Resetting the date to today forces the useEffect to run and refresh data
+    setSelectedDate(new Date()); 
+    // Note: RBC handles jumping to 'today' internally when 'selectedDate' changes to today.
+  };
+
+  // RBC: Event click handler
+  const handleEventClick = (event) => {
+    setSelectedEvent({
+        title: event.title,     
+        date: event.date,                 
+        phone: event.phone,               
+        time: event.time,                 
+        patientName: event.patientName,
+        doctorName: event.doctorName,
+        patientType: event.patientType,
+        note: event.note,
+        patientid: event.patientid,
+        appointmentid: event.appointmentid,
+        confirmTime: event.confirmTime,
+    });
+  };
+
+  const handleConfirm = async (appointmentId) => {
+    // ... (Confirm logic)
+    if (!window.confirm("Confirmation: The patient has come to the clinic ...!")) return;
     try {
         const url = `${BASE_URL}/V1/appointment/confirm`;
-        const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            AppointmentID: appointmentId,
-            PatientType: selectedEvent.patientType,
-            PatientID: selectedEvent.patientid
-        })
+        await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                AppointmentID: appointmentId,
+                PatientType: selectedEvent.patientType,
+                PatientID: selectedEvent.patientid
+            })
         });
-
-        const data = await response.json();
-        if (data.statusCode === 200) {
         window.location.reload();
-        }
     } catch (error) {
         console.error("Confirm error:", error);
     }
-    }; 
+  }; 
 
   const handleCancelSubmit = async (e) => {
     e.preventDefault();
+    // ... (Cancel logic)
     if (!cancelComment) {
         alert("Please Enter the Cancellation details.");
         return;
     }
-
     try {
         const url = `${BASE_URL}/V1/appointment/cancel`;
-        const response = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            cancelComment,
-            cancelID: selectedEvent.appointmentid
-        })
+        await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                cancelComment,
+                cancelID: selectedEvent.appointmentid
+            })
         });
-
-        const data = await response.json();
-
-        if (data.statusCode === 200) {
         setShowCancelModal(false);
         window.location.reload();
-        }
     } catch (error) {
         console.error("Cancel error:", error);
     }
-    };
-
- const handleEventClick = (clickInfo) => {
-    const props = clickInfo.event.extendedProps;
-
-    setSelectedEvent({
-        title: clickInfo.event.title,     
-        date: props.date,                 
-        phone: props.phone,               
-        time: props.time,                 
-        
-        patientName: props.patientName,
-        doctorName: props.doctorName,
-        patientType: props.patientType,
-
-        note: props.note,
-
-        patientid: props.patientid,
-        appointmentid: props.appointmentid,
-        confirmTime: props.confirmTime,
-    });
-};
-
-  
-  const handleDoctorChange = (e) => {
-      setSelectedDoctorId(e.target.value);
   };
-
-  const handleDateChange = (e) => {
-      // Update the date state when the date picker changes
-      setSelectedDate(e.target.value);
-  };
-  
-  // The Find button now triggers the manual fetch and jumps the calendar view
-  const handleFindClick = () => {
-    if (!selectedDate) {
-        alert('Please select a Date.');
-        return;
-    }
-    handleManualFetch();
-};
-
 
   // ------------------------- JSX RENDER HELPERS -------------------------
 
@@ -326,17 +294,36 @@ export default function ReceptionistDashboard() {
       </div>
   );
 
+  // Custom styling for RBC events
+  const eventStyleGetter = useCallback((event) => {
+      const colorMap = {
+          New: "#000000",
+          Follow: "#ff8000",
+          Postoperative: "#8000ff",
+          Other: "#ff0080"
+      };
+      
+      const backgroundColor = colorMap[event.patientType] || "#000";
+      
+      return {
+          style: {
+              backgroundColor,
+              color: "#fff",
+              borderRadius: "3px",
+              border: '1px solid #ddd',
+          },
+      };
+  }, []);
+
   const AppointmentDetailsCard = () => {
     if (!selectedEvent) {
         return <p className="p-3">Select an appointment from the calendar to view details.</p>;
     }
     
-    // Check confirmTime property
     const isConfirmed = selectedEvent.confirmTime !== '0' && selectedEvent.confirmTime !== 0;
 
     return (
         <div className="p-3" style={{ lineHeight: '30px' }}>
-            {/* Display patientName */}
             <span className='font-weight-bold'>Patient Name</span>: <span className='text-danger font-weight-bold'>{selectedEvent.patientName || selectedEvent.title.split('—')[1]?.trim()}</span><br/>
             <span className='font-weight-bold'>Appointment Date</span>: <span className='text-danger font-weight-bold'>{selectedEvent.date}</span><br/>
             <span className='font-weight-bold'>Patient Phone No.</span>: <span className='text-danger font-weight-bold'>{selectedEvent.phone}</span><br/>
@@ -386,11 +373,12 @@ export default function ReceptionistDashboard() {
                     {/* Selector & Find Button */}
                     <Col lg={6} md={12}>
                         <div className="d-flex align-items-center controls">
-                            {/* Date Picker (Controls the month fetched) */}
+                            {/* Date Picker */}
                             <Form.Control 
                                 type="date" 
                                 placeholder="mm/dd/yyyy" 
-                                value={selectedDate} 
+                                // Format the date object back to YYYY-MM-DD for the input
+                                value={moment(selectedDate).format("YYYY-MM-DD")} 
                                 onChange={handleDateChange}
                                 style={{ width: 'auto', marginRight: '10px' }} 
                             />
@@ -402,8 +390,8 @@ export default function ReceptionistDashboard() {
                                 ))}
                             </Form.Select>
                             
-                            <Button variant="danger" onClick={handleFindClick}>
-                                Find / Refresh
+                            <Button variant="danger" onClick={handleRefreshClick}> 
+                                Refresh / Today
                             </Button>
                         </div>
                     </Col>
@@ -430,52 +418,24 @@ export default function ReceptionistDashboard() {
                         {loading ? (
                             <div className="d-flex justify-content-center align-items-center h-100"><Spinner animation="border" /></div>
                         ) : (
-                            <FullCalendar
+                            <Calendar
                                 ref={calendarRef}
-                                plugins={[dayGridPlugin, timeGridPlugin, listPlugin]}
-                                initialView="dayGridMonth"
-                                headerToolbar={{
-                                    left: 'prev,next,today',
-                                    center: 'title',
-                                    right: 'dayGridMonth, timeGridDay, listDay'
-                                }}
-                                
-                                weekends={true}
+                                localizer={localizer}
                                 events={appointments}
-                                // 🔥 NEW: Update selectedDate state whenever user navigates months
-                                datesSet={(info) => {
-                                    // Set the selectedDate state to the start of the currently viewed month
-                                    setSelectedDate(moment(info.start).format("YYYY-MM-DD"));
-                                }}
-                                eventClick={handleEventClick}
-                                // Custom coloring
-                                eventContent={({ event }) => {
-                                    const colorMap = {
-                                        New: "#000000",
-                                        Follow: "#ff8000",
-                                        Postoperative: "#8000ff",
-                                        Other: "#ff0080"
-                                    };
-                                    // Use the patientType from the event's extendedProps
-                                    const patientType = event.extendedProps.patientType || 'Other'; 
-
-                                    return (
-                                        <div
-                                        style={{
-                                            backgroundColor: colorMap[patientType] || "#000",
-                                            color: "#fff",
-                                            padding: "2px",
-                                            borderRadius: "3px",
-                                            whiteSpace: 'normal', 
-                                            overflow: 'hidden',
-                                            textOverflow: 'ellipsis',
-                                            fontSize: '10px' 
-                                        }}
-                                        >
-                                        {event.title}
-                                        </div>
-                                    );
-                                    }}
+                                date={selectedDate} // Controls the currently visible date
+                                view={currentView} // Controls the current view
+                                onNavigate={handleCalendarNavigate} // Handles prev/next/today clicks
+                                onSelectEvent={handleEventClick} // Handles event click
+                                onView={handleCalendarView} // Handles month/week/day view change
+                                
+                                startAccessor="start"
+                                endAccessor="end"
+                                
+                                style={{ height: 600, padding: '15px' }}
+                                eventPropGetter={eventStyleGetter} // Apply custom styles
+                                
+                                views={['month', 'week', 'day', 'agenda']}
+                                defaultView='month'
                             />
                         )}
                     </Card.Body>

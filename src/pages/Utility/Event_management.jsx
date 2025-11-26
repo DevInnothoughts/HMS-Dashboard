@@ -1,10 +1,31 @@
 import React from "react";
-import FullCalendar from "fullcalendar-reactwrapper";
+// Import React Big Calendar components
+import { Calendar, momentLocalizer } from 'react-big-calendar';
+import moment from 'moment';
 import { Row, Col, Card, Container } from "react-bootstrap";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 
+// Initialize the localizer for React Big Calendar
+const localizer = momentLocalizer(moment);
+
+// Helper function to convert your existing event format
+const formatEventsForRBC = (events) => {
+    return events.map(event => {
+        // RBC requires Date objects for start and end
+        return {
+            ...event,
+            start: new Date(event.start),
+            // Ensure end date exists, otherwise set it to start date
+            end: event.end ? new Date(event.end) : moment(event.start).add(1, 'hour').toDate(),
+            // RBC uses title property
+            title: event.title,
+        };
+    });
+};
+
+
 export default function Event_management() {
-  const events = [
+  const rawEvents = [
     {
       title: "All Day Event",
       start: "2024-08-01",
@@ -44,6 +65,34 @@ export default function Event_management() {
       start: "2024-08-28",
     },
   ];
+
+  // Format events once
+  const events = formatEventsForRBC(rawEvents);
+  
+  // Custom styling for RBC events based on their title/type (optional)
+  const eventPropGetter = (event) => {
+    let backgroundColor = '#3174ad'; // RBC default color
+    if (event.title.includes('Birthday')) {
+      backgroundColor = '#007bff'; // Primary
+    } else if (event.title.includes('Meeting')) {
+      backgroundColor = '#6c757d'; // Secondary
+    } else if (event.title.includes('Conference')) {
+      backgroundColor = '#28a745'; // Success
+    }
+
+    return {
+      style: {
+        backgroundColor: backgroundColor,
+        borderRadius: '5px',
+        opacity: 0.8,
+        color: 'white',
+        border: '0px',
+        display: 'block'
+      },
+    };
+  };
+
+
   return (
     <div className="themebody-wrap">
       {/* Breadcrumb Start */}
@@ -57,6 +106,7 @@ export default function Event_management() {
               <Card>
                 <Card.Body>
                   <Row>
+                    {/* Event List (Sidebar remains the same) */}
                     <Col xxl={3}>
                       <ul className="events-list" id="codex-events-list">
                         <li className="fc-event bg-primary">
@@ -76,21 +126,35 @@ export default function Event_management() {
                         </li>
                       </ul>
                     </Col>
+                    
+                    {/* React Big Calendar Component */}
                     <Col xxl={9}>
-                      {/* <div id="codex-calendar"></div> */}
-                      <div id="example-component" className="codex-calendar">
-                        <FullCalendar
-                          id="your-custom-ID"
-                          header={{
-                            left: "prev,next today myCustomButton",
-                            center: "title",
-                            right: "month,basicWeek,basicDay,list ",
-                          }}
-                          defaultDate={"2024-08-12"}
-                          navLinks={true}
-                          editable={true}
-                          eventLimit={true}
+                      <div id="rbc-calendar-container" className="codex-calendar" style={{ height: '600px' }}>
+                        <Calendar
+                          localizer={localizer}
                           events={events}
+                          // RBC uses defaultDate (Date object) to set the initial view date
+                          defaultDate={new Date('2024-08-12')} 
+                          // RBC uses defaultView (string) to set the starting view
+                          defaultView="month" 
+                          
+                          // Configuration for views
+                          views={['month', 'week', 'day', 'agenda']}
+                          
+                          // Accessor props (default names, match your formatted events)
+                          startAccessor="start"
+                          endAccessor="end"
+                          titleAccessor="title"
+                          
+                          // Enable drag and drop/resizing (requires additional RBC package, but set here for functionality parity)
+                          // draggableAccessor={event => true} 
+                          // editable={true} // Not a direct RBC prop, handled by separate components
+
+                          // Custom style for events
+                          eventPropGetter={eventPropGetter}
+                          
+                          // Style for the container (RBC requires a height)
+                          style={{ height: '100%' }}
                         />
                       </div>
                     </Col>
