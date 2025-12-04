@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { decodeJwt } from "../../utils/decode-jwt";
 import { FilterMatchMode } from "primereact/api";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
@@ -21,7 +22,6 @@ import moment from "moment";
 
 // --- Configuration ---
 const BASE_URL = "http://localhost:5100/api";
-const LOCATION = "hms"; // Fixed location for API calls
 const TYPE_LIST = ["NEW", "FOLLOW", "POST-OPERATIVE"];
 
 export default function Appointment_list() {
@@ -31,6 +31,7 @@ export default function Appointment_list() {
   const [filters, setFilters] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
+  const [currentLocation, setCurrentLocation] = useState('default'); // ** EDITED **: Default is 'default'
 
   // --- Filter State ---
   const [fromDate, setFromDate] = useState(new Date());
@@ -53,19 +54,31 @@ export default function Appointment_list() {
 
   // ------------------------- API UTILITIES -------------------------
 
+  useEffect(() => {
+      const token = localStorage.getItem('token');
+      console.log("Token:", token);
+      if (token) {
+          const payload = decodeJwt(token);
+          if (payload && payload.jobLocation) {
+              setCurrentLocation(payload.jobLocation);
+          }
+          console.log(payload.jobLocation);
+      }
+    }, []);
+
   const formatDateToDDMMYYYY = (date) => {
     if (date instanceof Date) {
       return moment(date).format("DD-MM-YYYY");
     }
     return "";
   };
-  
+
   // Generates time slots (Helper for Edit Modal)
   const generateTimeSlots = () => {
     const slots = [];
     const startTime = moment().startOf('day').add(7, 'hours'); // Start 7 AM
     const endTime = moment().startOf('day').add(23, 'hours').add(45, 'minutes'); // End 11:45 PM
-    
+
     // Logic to start from the next 15-minute interval if the date is today (simplified check)
     const isToday = moment(selectedAppointment?.appointment_timestamp).isSame(moment(), 'day');
     if (isToday) {
@@ -77,23 +90,25 @@ export default function Appointment_list() {
     }
 
     let currentTime = startTime.clone();
-    
+
     while (currentTime.isSameOrBefore(endTime)) {
       slots.push(currentTime.format('hh:mm A'));
       currentTime.add(15, 'minutes');
     }
     return slots;
   };
-  
+
   const fetchAppointmentData = useCallback(async () => {
     setLoading(true);
     try {
-      if (!fromDate || !toDate) return;
+      // ** EDITED **: Check if currentLocation is available before fetching
+      if (!fromDate || !toDate || currentLocation === 'default') return; 
 
       const formattedFromDate = formatDateToDDMMYYYY(fromDate);
       const formattedToDate = formatDateToDDMMYYYY(toDate);
 
-      const url = `${BASE_URL}/V1/appointment/listAppointments?from=${formattedFromDate}&to=${formattedToDate}&location=${LOCATION}`;
+      // ** EDITED **: Replaced LOCATION with currentLocation
+      const url = `${BASE_URL}/V1/appointment/listAppointments?from=${formattedFromDate}&to=${formattedToDate}&location=${currentLocation}`;
 
       const response = await fetch(url, { method: "GET" });
       const data = await response.json();
@@ -108,14 +123,15 @@ export default function Appointment_list() {
     } finally {
       setLoading(false);
     }
-  }, [fromDate, toDate]);
+  }, [fromDate, toDate, currentLocation]); // ** EDITED **: Added currentLocation to dependency array
 
   const fetchDropdownData = useCallback(async () => {
     try {
+      // ** EDITED **: Replaced LOCATION with currentLocation in all endpoints
       const endpoints = [
-        `${BASE_URL}/V1/appointment/consultationDropdown?location=${LOCATION}`,
-        `${BASE_URL}/V1/appointment/doctorDropdown?location=${LOCATION}`,
-        `${BASE_URL}/V1/appointment/fdeDropdown?location=${LOCATION}`,
+        `${BASE_URL}/V1/appointment/consultationDropdown?location=${currentLocation}`,
+        `${BASE_URL}/V1/appointment/doctorDropdown?location=${currentLocation}`,
+        `${BASE_URL}/V1/appointment/fdeDropdown?location=${currentLocation}`,
       ];
 
       const [consultationResponse, doctorResponse, fdeResponse] = await Promise.all(
@@ -128,22 +144,25 @@ export default function Appointment_list() {
     } catch (error) {
       console.error("Error fetching dropdown data:", error.message);
     }
-  }, []);
+  }, [currentLocation]); // ** EDITED **: Added currentLocation to dependency array
 
   // ------------------------- EFFECTS -------------------------
 
   useEffect(() => {
-    fetchAppointmentData();
-    fetchDropdownData();
-  }, [fetchAppointmentData, fetchDropdownData]);
-  
+    // Only fetch data if currentLocation is set to something meaningful
+    if (currentLocation !== 'default') {
+        fetchAppointmentData();
+        fetchDropdownData();
+    }
+  }, [fetchAppointmentData, fetchDropdownData, currentLocation]); // ** EDITED **: Added currentLocation dependency
+
   // Effect to regenerate time slots when editing a different appointment's date/time
   useEffect(() => {
     if (selectedAppointment) {
       setTimeSlots(generateTimeSlots());
     }
   }, [selectedAppointment?.appointment_timestamp]);
-  
+
   // ------------------------- HANDLERS -------------------------
 
   const handleDateChange = (date) => {
@@ -155,7 +174,7 @@ export default function Appointment_list() {
       appointment_timestamp: date.toISOString(), // Store the timestamp
     }));
   };
-  
+
   const handleEditModalInputChange = (e) => {
     const { name, value } = e.target;
     setSelectedAppointment((prev) => ({
@@ -169,13 +188,13 @@ export default function Appointment_list() {
         alert("Error: Patient Phone number is missing!");
         return;
     }
-    
+
     // Prepare data (filter out unwanted keys if necessary)
     const updatePayload = {
         ...selectedAppointment,
         // Ensure date/time fields are correctly formatted if the backend expects a specific string format
         date: formatDateToDDMMYYYY(new Date(selectedAppointment.appointment_timestamp)),
-        patient_location: LOCATION, // Ensure location is sent
+        patient_location: currentLocation, // ** EDITED **: Ensure location is sent as currentLocation
     };
 
     try {
@@ -187,7 +206,7 @@ export default function Appointment_list() {
           body: JSON.stringify(updatePayload),
         }
       );
-      
+
       const result = await response.json();
 
       if (response.ok) {
@@ -208,8 +227,9 @@ export default function Appointment_list() {
     if (!appointmentIdToDelete) return;
 
     try {
+      // ** EDITED **: Pass currentLocation as a query parameter
       const response = await fetch(
-        `${BASE_URL}/V1/appointment/delete/${appointmentIdToDelete}?location=${LOCATION}`,
+        `${BASE_URL}/V1/appointment/delete/${appointmentIdToDelete}?location=${currentLocation}`,
         {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
@@ -235,11 +255,12 @@ export default function Appointment_list() {
   // Process/Action Button Handlers (Simplified for the component structure)
   const handleProcessUpdate = async (appId, endpoint, successMessage) => {
     try {
+      // ** EDITED **: Pass currentLocation as a query parameter
       const response = await fetch(
-        `${BASE_URL}/V1/appointment/${endpoint}?appId=${appId}&location=${LOCATION}`,
+        `${BASE_URL}/V1/appointment/${endpoint}?appId=${appId}&location=${currentLocation}`,
         { method: "PUT", headers: { "Content-Type": "application/json" } }
       );
-      
+
       const data = await response.json();
 
       if (response.ok) {
@@ -271,7 +292,7 @@ export default function Appointment_list() {
     if (hasHistory) return "#ff9861"; // Orange
     return "#fff";
   };
-  
+
   const renderActionBody = (rowData) => {
     const { appointment_id, confirm_time, historychk, executivechk, consultationchk } = rowData;
     const isConfirmed = confirm_time != 0;
@@ -314,7 +335,7 @@ export default function Appointment_list() {
             <button title="History" onClick={() => handleProcessUpdate(appointment_id, 'updateHistoryChk', 'History process completed!')} disabled={historychk === 3}>
               <FeatherIcon icon="clock" className="w-18" />
             </button>
-            
+
             {/* Execution Check (Requires historyChk = 3) */}
             <button title="Execution" onClick={() => handleProcessUpdate(appointment_id, 'updateExecutionChk', 'Execution process completed!')} disabled={historychk !== 3 || executivechk === 1 || executivechk === 4}>
               <FeatherIcon icon="list" className="w-18" />
@@ -334,7 +355,7 @@ export default function Appointment_list() {
       </div>
     );
   };
-  
+
   const renderHeader = () => (
     <div
       style={{
@@ -381,6 +402,10 @@ export default function Appointment_list() {
               />
             </InputGroup>
           </Form.Group>
+          {/* ** EDITED **: Display current location for user info */}
+          <div style={{ fontSize: "14px", fontWeight: "bold", color: "#00838f" }}>
+              Location: {currentLocation.toUpperCase()}
+          </div>
         </div>
 
         {/* Date Picker Section */}
@@ -437,6 +462,8 @@ export default function Appointment_list() {
               boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
               marginTop: "20px",
             }}
+            // ** EDITED **: Disable button if location is default
+            disabled={currentLocation === 'default'}
           >
             Refresh Data
           </Button>
@@ -457,7 +484,7 @@ export default function Appointment_list() {
         padding: "20px",
       }}
     >
-      
+
       {/* --- Delete Modal --- */}
       <Modal
         show={showDeleteModal}

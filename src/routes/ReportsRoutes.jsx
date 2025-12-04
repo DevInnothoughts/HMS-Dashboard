@@ -9,7 +9,7 @@ import FDE_details_list from "../pages/Reports/fde_details_list";
 export const ReportRoutes = (
   <>
     <Route path="/reports/enquiry" element={<EnquiryList />} />
-    <Route path="/reports/enquiry/add" element={Add_Enquiry} />
+    <Route path="/reports/enquiry/add" element={<Add_Enquiry />} />
     <Route path="/reports/payment" element={<Payment_list />} />
     <Route path="/reports/receipts" element={<ReceiptList />} />
     <Route path="/reports/fde" element={<FDE_details_list />} />
