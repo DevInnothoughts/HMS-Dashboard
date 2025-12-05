@@ -1,3 +1,4 @@
+/* eslint-disable no-irregular-whitespace */
 import React, { useState, useEffect, useCallback } from "react";
 import { Row, Col, Form, Container, Card } from "react-bootstrap";
 import { useLocation, useParams } from "react-router-dom";
@@ -53,7 +54,7 @@ export default function Add_appointment() {
   const [loading, setLoading] = useState(false);
   const [doctors, setDoctors] = useState([]);
   const [fdeList, setFdeList] = useState([]);
-  // EDITED: Renamed state for clarity and schema alignment
+  // EDITED: Renamed state for clarity and schema alignment (treatment_name)
   const [treatmentList, setTreatmentList] = useState([]); 
   const [departmentList, setDepartmentList] = useState([]);
   const [isExistingPatient, setIsExistingPatient] = useState(false);
@@ -65,20 +66,29 @@ export default function Add_appointment() {
   const [currentLocation, setCurrentLocation] = useState(null); 
 
   const [formData, setFormData] = useState({
-    // EDITED: Matches state to component usage (treatment is a string)
+    // Matches DB column treatment_name (Line 15 in schema list)
     treatment: "", 
-    date: new Date().toISOString().split("T")[0],
-    patientName: "",
-    patient_phone: "",
-    // EDITED: Renamed 'address' to 'patient_location' for schema alignment
+    // Maps to appointment_timestamp (Line 6 in schema list)
+    date: new Date().toISOString().split("T")[0], 
+    patientName: "", // Patient Name is implied by patient_id/patient_phone
+    patient_phone: "", // Matches DB column (Line 4)
+    // Matches DB column patient_location (Line 16)
     patient_location: "", 
-    patient_type: "",
-    appointmentTime: "",
-    note: "",
-    FDE_Name: "",
-    departmentName: "",
-    doctorName: "",
-    // REMOVED: reference
+    // Matches DB column patient_type (Line 5)
+    patient_type: "", 
+    // Maps to appointment_time (Line 7)
+    appointmentTime: "", 
+    note: "", // Maps to note (Line 18)
+    FDE_Name: "", // Matches DB column (Line 17)
+    departmentName: "", // Non-schema field, kept for dropdown logic
+    doctorName: "", // Non-schema field, kept for UI/dropdown value
+    
+    // Hidden fields for schema alignment (Defaults/Required)
+    doctor_id: "", // Maps to doctor_id (Line 2)
+    consultationchk: 0, // Matches consultationchk (Line 14) - Defaulted to 0 in schema
+    // Additional fields needed for backend based on schema:
+    confirm_time: 0, // Defaulted to 0 in schema
+    status: "BOOKED", // Assuming default status for new booking
   });
 
   const [errors, setErrors] = useState({});
@@ -104,7 +114,6 @@ export default function Add_appointment() {
         setFormData((prev) => ({
             ...prev,
             patientName: "",
-            // EDITED: Use patient_location from state
             patient_location: "", 
             appointmentTime: new Date().toLocaleTimeString("en-US", {
                 hour: "2-digit",
@@ -115,16 +124,14 @@ export default function Add_appointment() {
             FDE_Name: "",
             departmentName: "",
             doctorName: "",
-            // REMOVED: reference
             patient_type: "NEW",
+            doctor_id: "",
         }));
         return;
     }
 
     try {
-      // Include FDE's job location in API call to search patient in current clinic
       const url = `${BASE_URL}/V1/appointment/getPatientByMobile?patient_phone=${patient_phone}&location=${currentLocation}`;
-      console.log(url);
       const response = await fetch(url, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
@@ -135,15 +142,14 @@ export default function Add_appointment() {
         setFormData((prev) => ({
           ...prev,
           patientName: "",
-          // EDITED: Use patient_location from state
           patient_location: "", 
           patient_type: "NEW",
+          doctor_id: "",
         }));
         return;
       }
 
       const data = await response.json();
-      console.log("Fetched Patient Data:", data);
 
       if (data.statusCode === 200 && data.data) {
         setIsExistingPatient(true);
@@ -151,15 +157,14 @@ export default function Add_appointment() {
         setFormData((prev) => ({
           ...prev,
           patientName: data.data.name || "",
-          // EDITED: Map fetched patient address to patient_location
           patient_location: data.data.address || "", 
           appointmentTime: data.data.appointmentTime || "",
           note: data.data.note || "",
           FDE_Name: data.data.FDE_Name || "",
           departmentName: data.data.departmentName || "",
           doctorName: data.data.doctorName || "",
-          // REMOVED: reference
           patient_type: "",
+          doctor_id: data.data.doctor_id || "", // Ensure doctor_id is updated
         }));
       } else {
         setIsExistingPatient(false);
@@ -167,6 +172,7 @@ export default function Add_appointment() {
           ...prev,
           patientName: "",
           patient_type: "NEW",
+          doctor_id: "",
         }));
       }
     } catch (error) {
@@ -176,6 +182,7 @@ export default function Add_appointment() {
         ...prev,
         patientName: "",
         patient_type: "NEW",
+        doctor_id: "",
       }));
     }
   }, [currentLocation]); 
@@ -184,7 +191,6 @@ export default function Add_appointment() {
     if (!currentLocation) return; 
 
     try {
-      // Added location to all dropdown calls
       const treatmentResposne = await fetch(
         `${BASE_URL}/V1/appointment/treatmentDropdown?location=${currentLocation}`,
         { method: "GET", headers: { "Content-Type": "application/json" } }
@@ -192,7 +198,6 @@ export default function Add_appointment() {
 
       if (treatmentResposne.ok) {
         const treatmentData = await treatmentResposne.json();
-        // EDITED: Use new state variable name
         setTreatmentList(
           Array.isArray(treatmentData.data) ? treatmentData.data : []
         );
@@ -207,6 +212,7 @@ export default function Add_appointment() {
 
       if (doctorResponse.ok) {
         const doctorData = await doctorResponse.json();
+        // Store doctors list and their IDs for later mapping
         setDoctors(Array.isArray(doctorData.data) ? doctorData.data : []);
       } else {
         console.error("Failed to fetch doctors:", doctorResponse.statusText);
@@ -273,6 +279,21 @@ export default function Add_appointment() {
   const handleInputChange = (e) => {
     const { name, value, tagName } = e.target;
 
+    // Special logic for doctor selection to capture doctor_id
+    if (name === "doctorName") {
+        // Find the corresponding doctor object to get the ID
+        const selectedDoctor = doctors.find(d => d.name === value);
+        
+        setFormData((prevState) => ({
+            ...prevState,
+            // doctorName stores the name/label for display
+            doctorName: value, 
+            // doctor_id stores the numeric ID needed for the DB (Line 2 in schema)
+            doctor_id: selectedDoctor ? selectedDoctor.doctor_id : "",
+        }));
+        return;
+    }
+
     if (name === "patientName") {
       const alphabetsOnly = value.replace(/[^A-Za-z\s]/g, "");
       setFormData((prevState) => ({
@@ -283,7 +304,7 @@ export default function Add_appointment() {
       return;
     }
 
-    // EDITED: Check for 'patient_location' (schema field)
+    // Check for 'patient_location' (schema field)
     if (name === "patient_location") { 
       const validAddressChars = value.replace(/[^A-Za-z\s,.\-/#]/g, "");
       setFormData((prevState) => ({
@@ -307,34 +328,33 @@ export default function Add_appointment() {
   const validate = () => {
     const newErrors = {};
     const requiredFields = [
-      "date",
-      "patientName",
-      "patient_type",
-      "patient_phone",
-      "appointmentTime",
-      "note",
-      "FDE_Name",
-      "departmentName",
-      "doctorName",
+      "date", // Maps to appointment_timestamp (NO NULL)
+      "patientName", // Patient Name is needed for registration flow
+      "patient_type", // Matches DB column (NO NULL)
+      "patient_phone", // Matches DB column (NO NULL)
+      "appointmentTime", // Maps to appointment_time (YES NULL, but required for UX)
+      "note", // Maps to note (YES NULL, but required in original code)
+      "FDE_Name", // Matches DB column (YES NULL)
+      "departmentName", // UI field
+      "doctor_id", // Mapped from doctorName selection (NO NULL)
     ];
-    // Conditionally require patient_location for new patients/other types
+    // Conditionally require patient_location
     if (shouldShowAddressAndReference()) {
-      requiredFields.push("patient_location");
-      // REMOVED: "reference" from required fields
+      requiredFields.push("patient_location"); // Matches DB column (YES NULL)
     }
     // Conditionally require treatment for 'OTHER' type
     if (formData.patient_type === "OTHER") {
-      requiredFields.push("treatment");
+      requiredFields.push("treatment"); // Maps to treatment_name (YES NULL)
     }
 
     requiredFields.forEach((field) => {
       if (!formData[field]) {
-        // EDITED: Improved error message for treatment/patient_location
         let displayName = field.replace(/([A-Z])/g, " $1");
         if (field === 'treatment') displayName = 'Treatment';
         if (field === 'patient_location') displayName = 'Address (Patient Location)';
+        if (field === 'doctor_id') displayName = 'Appointment With (Doctor)';
         
-        newErrors[field] = `${displayName} is required`;
+        newErrors[field === 'doctor_id' ? 'doctorName' : field] = `${displayName} is required`;
       }
     });
 
@@ -342,7 +362,6 @@ export default function Add_appointment() {
       newErrors.patient_phone = "Enter a valid phone number (7-15 digits)";
     }
     
-    // Check for currentLocation
     if (!currentLocation) {
         newErrors.location = "Location data is not available. Please try logging in again.";
     }
@@ -352,51 +371,51 @@ export default function Add_appointment() {
 
   const handleSubmit = async (saveType) => {
     const validationErrors = validate();
-    console.log("Form Data:", formData);
     setErrors(validationErrors);
-    console.log(validationErrors);
     
     if (Object.keys(validationErrors).length === 0) {
       setLoading(true);
 
-      const formatDate = (date) => {
-        const d = new Date(date);
-        const day = String(d.getDate()).padStart(2, "0");
-        const month = String(d.getMonth() + 1).padStart(2, "0");
-        const year = d.getFullYear();
-        return `${day}-${month}-${year}`;
-      };
+//       const formatDate = (date) => {
+//         const d = new Date(date);
+//         const day = String(d.getDate()).padStart(2, "0");
+//         const month = String(d.getMonth() + 1).padStart(2, "0");
+//         const year = d.getFullYear();
+//         return `${day}-${month}-${year}`;
+//       };
 
-      const formattedDate = formatDate(formData.date);
+//       const formattedDate = formatDate(formData.date);
 
+      // --- PAYLOAD MAPPING TO SCHEMA (Line numbers refer to schema list) ---
       const payload = {
-        // EDITED: Align payload fields with schema where possible
-        // Mapping formData keys to DB schema fields
-        date: formattedDate, // Maps to appointment_timestamp
-        patientName: formData.patientName,
-        patient_type: formData.patient_type,
-        patient_phone: formData.patient_phone,
-        appointmentTime: formData.appointmentTime, // Maps to appointment_time
-        note: formData.note,
-        FDE_Name: formData.FDE_Name, // Maps to FDE_Name
-        departmentName: formData.departmentName,
-        doctorName: formData.doctorName,
-        // REMOVED: reference
-        // Schema Field: treatment_name (Line 15)
-        treatment_name: formData.treatment, 
-        // Schema Field: patient_location (Line 16)
-        patient_location: formData.patient_location,
-        // Additional operational data (FDE's clinic location)
-        clinic_location: currentLocation,
+        // Core Fields
+        doctor_id: formData.doctor_id, // Matches DB column (Line 2)
+        patient_type: formData.patient_type, // Matches DB column (Line 5)
+        patient_phone: formData.patient_phone, // Matches DB column (Line 4)
+        appointment_timestamp: formData.date, // Maps from date (Line 6)
+        appointment_time: formData.appointmentTime, // Matches DB column (Line 7)
+        patient_location: formData.patient_location, // Matches DB column (Line 16)
+        FDE_Name: formData.FDE_Name, // Matches DB column (Line 17)
+        treatment_name: formData.treatment, // Maps from treatment (Line 15)
+        note: formData.note, // Maps to note (Line 18)
+        
+        // Fields with Default/Fixed values
+        confirm_time: formData.confirm_time || 0, // Matches DB column (Line 8)
+        status: formData.status || "BOOKED", // Matches DB column (Line 9)
+        is_deleted: 0, // Matches DB column (Line 10)
+        consultationchk: formData.consultationchk, // Matches DB column (Line 14)
+        
+        // Non-schema or auxiliary fields needed for backend logic
+        patientName: formData.patientName, // Auxiliary field for patient creation/lookup
+        clinic_location: currentLocation, // Auxiliary field for filtering/auditing
         saveType,
         countryCode: getCountryCode(formData.patient_phone),
       };
-      
+      // --- END PAYLOAD MAPPING ---
+      console.log(payload);
       try {
-        console.log("Sending request to backend...");
-        console.log(payload);
         const response = await fetch(
-          `${BASE_URL}/V1/appointment/addAppointment`,
+          `${BASE_URL}/V1/appointment/addAppointment?location=${currentLocation}`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -405,7 +424,6 @@ export default function Add_appointment() {
         );
 
         if (response.ok) {
-          const responseData = await response.json();
           alert("Appointment added successfully");
           // Reset form
           setFormData({
@@ -413,7 +431,6 @@ export default function Add_appointment() {
             date: new Date().toISOString().split("T")[0],
             patientName: "",
             patient_phone: "",
-            // EDITED: Use patient_location
             patient_location: "", 
             patient_type: "",
             appointmentTime: "",
@@ -421,7 +438,10 @@ export default function Add_appointment() {
             FDE_Name: "",
             departmentName: "",
             doctorName: "",
-            // REMOVED: reference
+             doctor_id: "",
+             consultationchk: 0, 
+             confirm_time: 0,
+             status: "BOOKED",
           });
         } else {
           const errorData = await response.json();
@@ -522,6 +542,7 @@ export default function Add_appointment() {
                 ...prev,
                 patientName: "",
                 patient_type: "NEW",
+                doctor_id: "",
             }));
         }
     }
@@ -597,7 +618,7 @@ return (
                           <Form.Label>Type <span className="required">*</span></Form.Label>
                           <Form.Control
                             as="select"
-                            name="patient_type" // Matches schema (patient_type)
+                            name="patient_type" // Matches schema (patient_type - Line 5)
                             value={formData.patient_type}
                             onChange={(e) => {
                               setType(e.target.value);
@@ -647,7 +668,7 @@ return (
                             Appointment Time <span className="required">*</span>
                           </Form.Label>
                           <Form.Select
-                            name="appointmentTime" // Matches state key, maps to schema: appointment_time
+                            name="appointmentTime" // Maps to appointment_time (Line 7)
                             value={formData.appointmentTime}
                             onChange={handleInputChange}
                           >
@@ -690,7 +711,7 @@ return (
                             FDE Name <span className="required">*</span>
                           </Form.Label>
                           <Form.Select
-                            name="FDE_Name" // Matches schema (FDE_Name)
+                            name="FDE_Name" // Matches schema (FDE_Name - Line 17)
                             value={formData.FDE_Name}
                             onChange={handleInputChange}
                             disabled={!currentLocation}
@@ -739,23 +760,23 @@ return (
                             Appointment With <span className="required">*</span>
                           </Form.Label>
                           <Form.Select
-                            name="doctorName" // This maps to doctor_id/doctorName in payload
-                            value={formData.doctorName}
+                            name="doctorName" // Used for UI value
+                            value={formData.name}
                             onChange={handleInputChange}
                             disabled={!currentLocation}
                           >
                             <option value="">Select Doctor</option>
                             {doctors?.map((doctor) => (
                               <option
-                                key={doctor.doctorName}
-                                value={doctor.doctorName}
+                                key={doctor.doctor_id}
+                                value={doctor.name}
                               >
                                 {doctor.doctor_id} - {doctor.name}
                               </option>
                             ))}
                           </Form.Select>
-                           {errors.doctorName && (
-                            <p style={{ color: "red" }}>{errors.doctorName}</p>
+                           {errors.name && (
+                            <p style={{ color: "red" }}>{errors.name}</p>
                           )}
                         </Form.Group>
                       </Col>
@@ -770,13 +791,12 @@ return (
                             <Form.Label>Treatment</Form.Label>
                             <Form.Select
                               // Corrected name to match state key 'treatment'
-                              name="treatment" 
+                              name="treatment" // Maps to treatment_name (Line 15)
                               value={formData.treatment}
                               onChange={handleInputChange}
                               disabled={!currentLocation}
                             >
                               <option value="">Select a Treatment</option>
-                              {/* EDITED: Use new state variable name (treatmentList) */}
                               {treatmentList && treatmentList.length > 0 ? (
                                 treatmentList.map((treatment) => (
                                   <option
@@ -797,15 +817,13 @@ return (
                         </Col>
                       )}
                       {/* Address (patient_location) - The patient's address/city */}
-                      {/* Use the remaining 8 columns if treatment is not shown, 4 if it is */}
                       {shouldShowAddressAndReference() && (
                         <Col md={formData.patient_type === "OTHER" || formData.treatment ? 4 : 8} className="mb-4">
                           <Form.Group className="mb-3">
                             <Form.Label>Address (Patient Location) <span className="required">*</span></Form.Label>
                             <Form.Control
                               type="text"
-                              // EDITED: Corrected name to match schema/state key 'patient_location'
-                              name="patient_location" 
+                              name="patient_location" // Maps to patient_location (Line 16)
                               value={formData.patient_location}
                               onChange={handleInputChange}
                               placeholder="Enter Patient Address"
@@ -817,7 +835,6 @@ return (
                           </Form.Group>
                         </Col>
                       )}
-                      {/* REMOVED: Reference Field block */}
                     </Row>
                     
                     {/* Fourth Row: Note */}
@@ -829,7 +846,7 @@ return (
                           </Form.Label>
                           <Form.Control
                             as="textarea" // Changed from type="text" to textarea for better note entry
-                            name="note" // Matches schema (note)
+                            name="note" // Matches schema (note - Line 18)
                             value={formData.note}
                             onChange={handleInputChange}
                             placeholder="Add Notes"

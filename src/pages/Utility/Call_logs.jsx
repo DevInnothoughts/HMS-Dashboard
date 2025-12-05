@@ -103,21 +103,22 @@ export default function Call_logs() {
   //   return `${year}-${month}-${day}`; // Return formatted date as yyyy-MM-dd
   // };
 
-  const formatToApiDate = (date) => {
-    // Ensure the date is a valid Date object
-    const validDate = date instanceof Date ? date : new Date(date);
+const formatToApiDate = (date) => {
+  // Ensure the date is a valid Date object
+  const validDate = date instanceof Date ? date : new Date(date);
 
-    if (isNaN(validDate)) {
-      console.error("Invalid date:", date);
-      return null;
-    }
+  if (isNaN(validDate)) {
+    console.error("Invalid date:", date);
+    return null;
+  }
 
-    const day = String(validDate.getDate()).padStart(2, "0");
-    const month = String(validDate.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed
-    const year = validDate.getFullYear();
+  const day = String(validDate.getDate()).padStart(2, "0");
+  const month = String(validDate.getMonth() + 1).padStart(2, "0"); // Months are zero-indexed
+  const year = validDate.getFullYear();
 
-    return `${day}/${month}/${year}`;
-  };
+  // CHANGE MADE HERE: Use hyphens instead of slashes
+  return `${day}-${month}-${year}`;
+};
 
   // Fetch the call logs data from API
   const fetchCallLogsData = async () => {
@@ -607,7 +608,7 @@ export default function Call_logs() {
                 setFromDate(date); // Set the Date object directly
                 console.log("From Date Selected:", date);
               }}
-              dateFormat="dd/MM/yyyy"
+              dateFormat="dd-MM-yyyy"
               placeholderText="Select from date"
               maxDate={new Date()}
               customInput={
@@ -689,7 +690,7 @@ export default function Call_logs() {
                 setToDate(formattedDate);
                 console.log("To Date Selected:", formattedDate);
               }}
-              dateFormat="dd/MM/yyyy"
+              dateFormat="dd-MM-yyyy"
               placeholderText="Select to date"
               minDate={fromDate ? new Date(fromDate) : null}
               customInput={
