@@ -160,7 +160,7 @@ export default function ReceptionistDashboard() {
         
         const response = await fetch(url);
         const data = await response.json();
-
+        console.log(data);
         if (data.statusCode === 200 && Array.isArray(data.data)) {
             const formattedEvents = formatAppointments(data.data);
             setAppointments(formattedEvents);
@@ -297,10 +297,10 @@ export default function ReceptionistDashboard() {
   // Custom styling for RBC events
   const eventStyleGetter = useCallback((event) => {
       const colorMap = {
-          New: "#000000",
-          Follow: "#ff8000",
-          Postoperative: "#8000ff",
-          Other: "#ff0080"
+          NEW: "#000000",
+          FOLLOW: "#ff8000",
+          POSTOPERATIVE: "#8000ff",
+          OTHER: "#ff0080"
       };
       
       const backgroundColor = colorMap[event.patientType] || "#000";
