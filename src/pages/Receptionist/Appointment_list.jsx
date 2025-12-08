@@ -114,6 +114,7 @@ export default function Appointment_list() {
       const data = await response.json();
 
       if (response.ok && data.data) {
+        console.log(data.data);
         setAppointmentData(data.data);
       } else {
         console.error("Error fetching appointments:", data.message || "Unknown error");

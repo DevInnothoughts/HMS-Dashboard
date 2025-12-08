@@ -94,6 +94,7 @@ export default function ReceiptList() {
 
       const data = await response.json();
       if (response.ok && Array.isArray(data.data)) {
+        console.log(data.data);
         setReceipts(data.data);
         console.log("📥 Fetched Receipts:", data.data.length);
       } else {
