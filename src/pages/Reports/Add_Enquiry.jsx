@@ -63,8 +63,9 @@ const formatDate = (date) => {
   const day = String(d.getDate()).padStart(2, "0");
   const month = String(d.getMonth() + 1).padStart(2, "0");
   const year = d.getFullYear();
-  return `${day}-${month}-${year}`;
+  return `${year}-${month}-${day}`;  // FIXED format
 };
+
 
 export default function Add_Enquiry() {
   const [currentLocation, setCurrentLocation] = useState(null);
@@ -140,9 +141,10 @@ export default function Add_Enquiry() {
   };
 
   const parseDate = (dateString) => {
-    const [day, month, year] = dateString.split("-").map(Number);
-    return new Date(year, month - 1, day);
-  };
+  const [year, month, day] = dateString.split("-").map(Number);
+  return new Date(year, month - 1, day);
+};
+
 
   // Handle input changes (used for all text/select inputs)
   const handleInputChange = (e) => {
@@ -338,7 +340,7 @@ export default function Add_Enquiry() {
                               if (date) {
                                 setFormData((prev) => ({
                                   ...prev,
-                                  date: formatDate(date),
+                                  date: formatDate(date), // stores YYYY-MM-DD
                                 }));
                               }
                             }}
