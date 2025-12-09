@@ -62,10 +62,10 @@ export default function ReceptionistDashboard() {
   const counts = useMemo(() => {
       return appointments.reduce((acc, event) => {
           // Use patientType from the formatted event data
-          const type = event.patientType || 'Other'; 
+          const type = (event.patientType || 'Other').toLowerCase();
           acc[type] = (acc[type] || 0) + 1;
           return acc;
-      }, { New: 0, Follow: 0, Postoperative: 0, Other: 0 });
+      }, { NEW: 0, FOLLOW: 0, POSTOPERATIVE: 0, OTHER: 0 });
   }, [appointments]);
 
 
@@ -240,48 +240,71 @@ export default function ReceptionistDashboard() {
   };
 
   const handleConfirm = async (appointmentId) => {
-    // ... (Confirm logic)
-    if (!window.confirm("Confirmation: The patient has come to the clinic ...!")) return;
+    if (!window.confirm("Confirmation: The patient has come to the clinic ...!"))
+        return;
+
     try {
-        const url = `${BASE_URL}/V1/appointment/confirm`;
+        const url = `${BASE_URL}/V1/appointment/confirmAppointment?location=${currentLocation}`;
+
         await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                AppointmentID: appointmentId,
-                PatientType: selectedEvent.patientType,
-                PatientID: selectedEvent.patientid
-            })
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ appointment_id: appointmentId })
         });
-        window.location.reload();
+
+        // refresh UI
+        await fetchAppointmentsForRange(selectedDate, selectedDoctorId);
+
     } catch (error) {
         console.error("Confirm error:", error);
     }
-  }; 
+};
+
 
   const handleCancelSubmit = async (e) => {
     e.preventDefault();
-    // ... (Cancel logic)
-    if (!cancelComment) {
-        alert("Please Enter the Cancellation details.");
+    
+    // Assuming selectedEvent.appointmentid and cancelComment are available in scope.
+    const appointmentIdToDelete = selectedEvent?.appointmentid;
+    const cancellationReason = cancelComment; // Use the cancellation reason text
+    
+    if (!appointmentIdToDelete) {
+        console.error("Missing appointment ID for cancellation.");
+        // HIPAA: Provide generic feedback
+        alert("Cannot process cancellation. Appointment ID is missing."); 
+        return;
+    }
+    if (!cancellationReason) {
+        alert("Cancellation failed. Please enter the reason for cancellation.");
         return;
     }
     try {
-        const url = `${BASE_URL}/V1/appointment/cancel`;
-        await fetch(url, {
-            method: "POST",
+        const url = `${BASE_URL}/V1/appointment/delete/${appointmentIdToDelete}?location=${currentLocation}`;
+        // 2. Perform DELETE request
+        const response = await fetch(url, {
+            method: "DELETE",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                cancelComment,
-                cancelID: selectedEvent.appointmentid
-            })
+            body: JSON.stringify({ cancellationReason }) 
         });
-        setShowCancelModal(false);
-        window.location.reload();
+        if (response.ok) {
+            // HIPAA: Generic success message
+            alert("Appointment successfully cancelled.");
+            // Assuming fetchAppointmentData is available to refresh the list
+            fetchAppointmentsForRange(selectedDate, selectedDoctorId);            // Assuming setShowCancelModal and setCancelComment are available in scope
+            setShowCancelModal(false);
+            setCancelComment(""); 
+        } else {
+            const errorData = await response.json();
+            // HIPAA: Generic error message, avoid leaking backend details
+            alert("Failed to cancel appointment. Please try again.");
+            console.error("Backend Error:", errorData.message || 'Unknown error');
+        }
     } catch (error) {
-        console.error("Cancel error:", error);
+        // HIPAA: Generic network error message
+        alert("An error occurred while cancelling the appointment.");
+        console.error("Network Error:", error);
     }
-  };
+};
 
   // ------------------------- JSX RENDER HELPERS -------------------------
 
@@ -319,7 +342,7 @@ export default function ReceptionistDashboard() {
     if (!selectedEvent) {
         return <p className="p-3">Select an appointment from the calendar to view details.</p>;
     }
-    
+    console.log(selectedEvent);
     const isConfirmed = selectedEvent.confirmTime !== '0' && selectedEvent.confirmTime !== 0;
 
     return (
@@ -335,11 +358,11 @@ export default function ReceptionistDashboard() {
                 <Button variant="primary" onClick={() => handleConfirm(selectedEvent.appointmentid)} disabled={isConfirmed} title="Confirm" className="me-2 mb-2">
                     <FeatherIcon icon="check" size={16} /> Confirm
                 </Button>
-                <Link to={`/edit-patient/${selectedEvent.patientid}`} className="me-2 mb-2">
+                {/* <Link to={`/edit-patient/${selectedEvent.patientid}`} className="me-2 mb-2">
                     <Button variant="info" disabled={isConfirmed}>
                         <FeatherIcon icon="edit" size={16} /> Edit Patient
                     </Button>
-                </Link>
+                </Link> */}
                 <Button variant="danger" onClick={() => setShowCancelModal(true)} disabled={isConfirmed} title="Cancel" className="me-2 mb-2">
                     <FeatherIcon icon="trash-2" size={16} /> Cancel
                 </Button>
