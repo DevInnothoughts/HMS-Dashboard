@@ -69,6 +69,7 @@ export default function All_patient() {
     specific_work: "",
     reference_type: "",
     ref: "",
+    patient_id: "",
   });
   const navigate = useNavigate();
   const [filters1, setFilters1] = useState({
@@ -108,7 +109,7 @@ export default function All_patient() {
     try {
         // 💡 FIX 2: Use currentLocation state variable for doctor dropdown
         const doctorResponse = await fetch(
-          `${BASE_URL}/V1/appointment/doctorDropdown?location=${encodeURIComponent(currentLocation)}`,
+          `${BASE_URL}/V1/appointment/doctorDropdown?location=${currentLocation}`,
         {
           method: "GET",
           headers: {
@@ -126,7 +127,7 @@ export default function All_patient() {
       }
       // Fetch FDE List
       const fdeResponse = await fetch(
-        `${BASE_URL}/V1/appointment/fdeDropdown?location=${location}`,
+        `${BASE_URL}/V1/appointment/fdeDropdown?location=${currentLocation}`,
         {
           method: "GET",
           headers: {
@@ -513,6 +514,7 @@ export default function All_patient() {
       companyname: patient.companyname || "",
       reference_type: patient.reference_type || "", // Ensure it's set
       specific_work: Boolean(patient.specific_work) || "", // Ensure it's set
+      patient_id: patient.patient_id || "",
     });
 
     // Convert work pattern string into checkboxes
@@ -706,7 +708,7 @@ export default function All_patient() {
     const selectedFDE = fdeList.find((fde) => fde.FDEID === formData.FDE_Name);
     const fdeName = selectedFDE ? selectedFDE.FDEName : "";
 
-    const formattedDate = moment(formData.date).format("DD-MM-YYYY"); // Format date before sending
+    const formattedDate = moment(formData.date).format("YYYY-MM-DD"); // Format date before sending
 
     // Get the selected doctor's name from the doctors list
     const selectedDoctor = doctors.find(
@@ -714,33 +716,26 @@ export default function All_patient() {
     );
     const doctorName = selectedDoctor ? selectedDoctor.name : "";
 
-    console.log("Selected Doctor:", {
-      doctor_id: formData.doctor_id,
-      doctorName: doctorName,
-    });
-
-    console.log("Selected FDE:", {
-      FDEID: formData.FDE_Name,
-      FDEName: fdeName,
-    });
-
     const payload = {
-      date: formattedDate,
+      appointment_timestamp: formattedDate,
       doctor_id: formData.doctor_id,
       doctorName: formData.doctorName,
       patientName: formData.name,
       patient_phone: formData.phone,
-      appointmentTime: formData.appointmentTime,
+      // FIX: Use the patient_id stored in formData, which was set in handleAddAppointmentClick
+      patient_id: formData.patient_id, 
+      patient_type: "NEW",
+      appointment_time: formData.appointmentTime,
       FDE_Name: formData.FDE_Name,
       note: formData.note,
       phone: formData.phone,
     };
-
+    console.log(payload);
     try {
       console.log("Sending request to backend...", payload);
 
       const response = await fetch(
-        `${BASE_URL}/V1/appointment/addAppointment`,
+        `${BASE_URL}/V1/appointment/addAppointment?location=${currentLocation}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -767,15 +762,14 @@ export default function All_patient() {
 
   // Actions template for the DataTable
   const handleAddAppointmentClick = (patient) => {
-    console.log("Selected Patient for Appointment:", patient);
-    console.log("Patient Phone Number:", patient.phone);
-
-    // Create a new Date object for today and format it properly
+    // FIX: Extract patient_id from the patient object
+    const patientId = patient.patient_id || ""; 
+    
     const today = new Date();
-    const formattedDate = today; // Keep it as a Date object
+    const formattedDate = today; 
 
     const formDataToSet = {
-      date: formattedDate, // Store the actual Date object
+      date: formattedDate, 
       doctor_id: "",
       doctorName: "",
       name: patient.name || "",
@@ -784,9 +778,10 @@ export default function All_patient() {
       fdeId: "",
       FDE_Name: "",
       note: patient.note || "",
+      // FIX: Store the patient_id in formData
+      patient_id: patientId, 
     };
 
-    console.log("Setting form data:", formDataToSet);
     setFormData(formDataToSet);
     setShowAddModal(true);
   };
@@ -2189,6 +2184,7 @@ export default function All_patient() {
                         appointmentTime: "",
                         FDE_Name: "",
                         note: "",
+                        patient_id: "",
                       });
                     }}
                   >
@@ -2655,6 +2651,7 @@ export default function All_patient() {
                 reference: "",
                 referenceDetails: "",
                 patient_type: false,
+                patient_id: "",
               });
 
               // Clear any validation errors
