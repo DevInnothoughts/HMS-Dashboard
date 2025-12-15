@@ -34,7 +34,7 @@ export default function NavBarA() {
             <Link
               to="/"
               className={`nav-link ${
-                location.pathname === "/" ? "active" : ""
+                location.pathname === "/reception-dashboard" ? "active" : ""
               }`}
             >
               <span className="nav-icon">🏠</span>

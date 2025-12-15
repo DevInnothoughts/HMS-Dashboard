@@ -254,14 +254,23 @@ export default function Appointment_list() {
   };
 
   // Process/Action Button Handlers (Simplified for the component structure)
-  const handleProcessUpdate = async (appId, endpoint, successMessage) => {
+  const handleProcessUpdate = async (appId, endpoint, patient_type, patient_phone, successMessage) => {
     try {
-      // ** EDITED **: Pass currentLocation as a query parameter
-      const response = await fetch(
-        `${BASE_URL}/V1/appointment/${endpoint}?appId=${appId}&location=${currentLocation}`,
+      console.log(appId, endpoint, successMessage);
+      let response = "";
+      if (!patient_phone && !patient_type){
+        response = await fetch(
+          `${BASE_URL}/V1/appointment/${endpoint}?appId=${appId}&location=${currentLocation}`,
+          { method: "PUT", headers: { "Content-Type": "application/json" } }
+        );
+        console.log(response);
+      } else {
+      response = await fetch(
+        `${BASE_URL}/V1/appointment/${endpoint}?appId=${appId}&location=${currentLocation}&patientType=${patient_type}&patientPhone=${patient_phone}`,
         { method: "PUT", headers: { "Content-Type": "application/json" } }
       );
-
+      console.log(response);
+    }
       const data = await response.json();
 
       if (response.ok) {
@@ -279,7 +288,9 @@ export default function Appointment_list() {
   // ------------------------- JSX RENDER HELPERS -------------------------
 
   const getProcessColor = (rowData) => {
+    // console.log(rowData);
     const { ConfirmPatient, historychk, executivechk, consultationchk } = rowData;
+    // console.log( ConfirmPatient, historychk, executivechk, consultationchk );
     const isConfirmed = ConfirmPatient === 1;
     const hasHistory = historychk === 3;
     const hasExecution = executivechk === 1;
@@ -295,7 +306,15 @@ export default function Appointment_list() {
   };
 
   const renderActionBody = (rowData) => {
-    const { appointment_id, confirm_time, historychk, executivechk, consultationchk } = rowData;
+    const { 
+      appointment_id, 
+      confirm_time, 
+      historychk, 
+      executivechk, 
+      consultationchk,
+      patient_type, // <-- ADDED
+      patient_phone, // <-- ADDED
+  } = rowData;
     const isConfirmed = confirm_time != 0;
 
     return (
@@ -323,7 +342,17 @@ export default function Appointment_list() {
             <button title="Cancel" onClick={() => setAppointmentIdToDelete(appointment_id) || setShowDeleteModal(true)} disabled={isConfirmed}>
               <FeatherIcon icon="trash-2" className="w-18 text-danger" />
             </button>
-            <button title="Confirm" onClick={() => handleProcessUpdate(appointment_id, 'confirmAppointment', 'Appointment confirmed!')} disabled={isConfirmed}>
+            <button 
+              title="Confirm" 
+              onClick={() => handleProcessUpdate(
+                appointment_id, 
+                'confirmAppointment',
+                patient_type, // <-- CORRECTED: Now passing the value from rowData
+                patient_phone, // <-- CORRECTED: Now passing the value from rowData
+                'Appointment confirmed!'
+              )} 
+              disabled={isConfirmed}
+            >
               <FeatherIcon icon="check" className="w-18" />
             </button>
           </>
@@ -333,17 +362,17 @@ export default function Appointment_list() {
         {isConfirmed && (
           <>
             {/* History Check (Requires confirmation) */}
-            <button title="History" onClick={() => handleProcessUpdate(appointment_id, 'updateHistoryChk', 'History process completed!')} disabled={historychk === 3}>
+            <button title="History" onClick={() => handleProcessUpdate(appointment_id, 'updateHistoryChk', null, null,  "History process completed!")} disabled={historychk === 3}>
               <FeatherIcon icon="clock" className="w-18" />
             </button>
 
             {/* Execution Check (Requires historyChk = 3) */}
-            <button title="Execution" onClick={() => handleProcessUpdate(appointment_id, 'updateExecutionChk', 'Execution process completed!')} disabled={historychk !== 3 || executivechk === 1 || executivechk === 4}>
+            <button title="Execution" onClick={() => handleProcessUpdate(appointment_id, 'updateExecutionChk', null, null, "Execution process completed!")} disabled={historychk !== 3 || executivechk === 1 || executivechk === 4}>
               <FeatherIcon icon="list" className="w-18" />
             </button>
 
             {/* Consultation Check (Requires executivechk = 1) */}
-            <button title="Consultation" onClick={() => handleProcessUpdate(appointment_id, 'updateConsultationChk', 'Consultation process completed!')} disabled={executivechk !== 1 || consultationchk === 2}>
+            <button title="Consultation" onClick={() => handleProcessUpdate(appointment_id, 'updateConsultationChk', null, null, "Consultation process completed!")} disabled={executivechk !== 1 || consultationchk === 2}>
               <FeatherIcon icon="user-check" className="w-18" />
             </button>
 
@@ -535,12 +564,6 @@ export default function Appointment_list() {
                                       <option value="">Select a Doctor</option>
                                       {doctors.map((doctor) => (<option key={doctor.doctor_id} value={doctor.name}>{doctor.name}</option>))}
                                   </Form.Select>
-                              </Form.Group>
-                          </Col>
-                          <Col md={4}>
-                              <Form.Group className="mb-3">
-                                  <Form.Label>Patient Name</Form.Label>
-                                  <Form.Control type="text" name="patientName" value={selectedAppointment.patientName || ""} onChange={handleEditModalInputChange} />
                               </Form.Group>
                           </Col>
                           <Col md={4}>

@@ -92,7 +92,7 @@ export default function Add_appointment() {
   const [errors, setErrors] = useState({});
 
   const newPatientTypes = ["NEW"];
-  const existingPatientTypes = ["FOLLOW", "POSTOPERATIVE", "OTHER"];
+  const existingPatientTypes = ["FOLLOW", "POST-OPERATIVE", "OTHER"];
 
   // Effect to fetch currentLocation from JWT
   useEffect(() => {
@@ -149,7 +149,7 @@ export default function Add_appointment() {
       if (data.statusCode === 200 && data.data) {
         setIsExistingPatient(true);
         // HIPAA: Use console.warn or toast.info instead of native alert()
-        console.warn(`${data.data.name} is already registered.`); 
+        alert(`${data.data.name} is already registered.`); 
         
         setFormData((prev) => ({
           ...prev,
@@ -407,7 +407,7 @@ export default function Add_appointment() {
     return !(
       isExistingPatient &&
       (formData.patient_type === "FOLLOW" ||
-        formData.patient_type === "POSTOPERATIVE" ||
+        formData.patient_type === "POST-OPERATIVE" ||
         formData.patient_type === "OTHER")
     );
   };

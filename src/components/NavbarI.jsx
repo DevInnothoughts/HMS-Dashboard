@@ -33,7 +33,7 @@ export default function NavBarI() {
           <nav className="breadcrumb-nav">
             <Link 
               to="/" 
-              className={`nav-link ${location.pathname === "/" ? "active" : ""}`}
+              className={`nav-link ${location.pathname === "/reception-dashboard" ? "active" : ""}`}
             >
               <span className="nav-icon">🏠</span>
               Dashboard

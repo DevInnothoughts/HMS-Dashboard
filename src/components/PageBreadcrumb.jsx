@@ -28,7 +28,7 @@ export default function PageBreadcrumb(props) {
                     <div className="left-breadcrumb">
                         <ul className="breadcrumb mb-0">
                             <li className="breadcrumb-item ">
-                                <Link to="/">Dashboard</Link>
+                                <Link to="/reception-dashboard">Dashboard</Link>
                             </li>
                             <li className="breadcrumb-item active">
                                 <Link to={''}>{props.pagename}</Link>
