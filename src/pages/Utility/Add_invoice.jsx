@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import { Row, Col, Form, Container, Card } from "react-bootstrap";
+import { decodeJwt } from "../../utils/decode-jwt";
 
 const BASE_URL = "http://localhost:5100/api";
 
@@ -8,7 +9,7 @@ const AddInvoice = () => {
   const initialFormData = {
     invoice_id: "",
     admission_no: "",
-    patientName: "",
+    patient_id: "",
     discharge_date: "",
     dischargetime: "",
     bed_category: "",
@@ -38,61 +39,48 @@ const AddInvoice = () => {
   const [insurance, setInsurance] = useState([]); // State for insurance dropdown
   const [tpa, setTpa] = useState([]);
 
+  const [currentLocation, setCurrentLocation] = useState(null); 
+  
+  // --- Effect to determine current location ---
   useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+        const payload = decodeJwt(token);
+        if (payload && payload.jobLocation) {
+            // console.log("PAYLOAD LOC: ", payload.jobLocation);
+            setCurrentLocation(payload.jobLocation);
+        }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!currentLocation) return;
+  
     const fetchDropdowns = async () => {
       try {
-        // Fetch consultants
-        const responseConsultant = await fetch(
-          `${BASE_URL}/V1/invoice/consultant_dropdown`
-        );
-        const dataConsultant = await responseConsultant.json();
-
-        if (responseConsultant.ok) {
-          setConsultants(dataConsultant.data); // Assuming data contains an array of consultants
-        } else {
-          console.error("Error fetching consultants:", dataConsultant.message);
-        }
-
-        // Fetch surgeons
-        const responseSurgeon = await fetch(
-          `${BASE_URL}/V1/invoice/surgeon_dropdown`
-        );
-        const dataSurgeon = await responseSurgeon.json();
-
-        if (responseSurgeon.ok) {
-          setSurgeons(dataSurgeon.data); // Assuming data contains an array of surgeons
-        } else {
-          console.error("Error fetching surgeons:", dataSurgeon.message);
-        }
-
-        // Fetch insurance
-        const responseInsurance = await fetch(
-          `${BASE_URL}/V1/invoice/insurance_co_dropdown`
-        );
-        const dataInsurance = await responseInsurance.json();
-
-        if (responseInsurance.ok) {
-          setInsurance(dataInsurance.data); // Assuming API returns an array
-        } else {
-          console.error("Error fetching insurance:", dataInsurance.message);
-        }
-
-        // Fetch TPA
-        const responseTpa = await fetch(`${BASE_URL}/V1/invoice/tpa_dropdown`);
-        const dataTpa = await responseTpa.json();
-
-        if (responseTpa.ok) {
-          setTpa(dataTpa.data); // Assuming API returns an array
-        } else {
-          console.error("Error fetching TPA:", dataTpa.message);
-        }
-      } catch (error) {
-        console.error("Error fetching dropdown data:", error);
+        const [cRes, sRes, iRes, tRes] = await Promise.all([
+          fetch(`${BASE_URL}/V1/invoice/consultant_dropdown?location=${currentLocation}`),
+          fetch(`${BASE_URL}/V1/invoice/surgeon_dropdown?location=${currentLocation}`),
+          fetch(`${BASE_URL}/V1/invoice/insurance_co_dropdown?location=${currentLocation}`),
+          fetch(`${BASE_URL}/V1/invoice/tpa_dropdown?location=${currentLocation}`)
+        ]);
+  
+        const [c, s, i, t] = await Promise.all([
+          cRes.json(), sRes.json(), iRes.json(), tRes.json()
+        ]);
+  
+        if (cRes.ok) setConsultants(c.data ?? []);
+        if (sRes.ok) setSurgeons(s.data ?? []);
+        if (iRes.ok) setInsurance(i.data ?? []);
+        if (tRes.ok) setTpa(t.data ?? []);
+      } catch (err) {
+        console.error("Dropdown fetch failed:", err);
       }
     };
-
+  
     fetchDropdowns();
-  }, []); // Empty dependency array ensures this effect runs only once when component mounts
+  }, [currentLocation]);
+  
 
   // Validate form
   const validate = () => {
@@ -100,7 +88,7 @@ const AddInvoice = () => {
     const requiredFields = [
       "invoice_id",
       "admission_no",
-      "patientName",
+      "patient_id",
       "discharge_date",
       "dischargetime",
       "bed_category",
@@ -201,7 +189,7 @@ const AddInvoice = () => {
       setLoading(true);
 
       try {
-        const response = await fetch(`${BASE_URL}/V1/invoice/addInvoice`, {
+        const response = await fetch(`${BASE_URL}/V1/invoice/addInvoice?location=${currentLocation}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -298,17 +286,17 @@ const AddInvoice = () => {
                     {/* Patient Name */}
                     <Col md={4} className="mb-4">
                       <Form.Group className="mb-3">
-                        <Form.Label>Patient Name</Form.Label>
+                        <Form.Label>Patient ID</Form.Label>
                         <Form.Control
                           type="text"
-                          id="patientName"
-                          name="patientName"
-                          value={formData.patientName}
+                          id="patient_id"
+                          name="patient_id"
+                          value={formData.patient_id}
                           onChange={handleInputChange}
-                          isInvalid={errors.patientName}
+                          isInvalid={errors.patient_id}
                         />
                         <Form.Control.Feedback type="invalid">
-                          {errors.patientName}
+                          {errors.patient_id}
                         </Form.Control.Feedback>
                       </Form.Group>
                     </Col>
