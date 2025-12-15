@@ -308,7 +308,7 @@ export default function ReceiptList() {
 
   const actionBodyTemplate = (receipt) => (
     <div className="cart-action" style={{ margin: "5px", display: "flex", gap: "5px" }}>
-      <Link
+      {/* <Link
         onClick={() => sendMail(receipt)}
         className="mail"
         to="#"
@@ -316,7 +316,7 @@ export default function ReceiptList() {
         title="Mail"
       >
         <FeatherIcon icon="mail" className="w-18" />
-      </Link>
+      </Link> */}
       <Link
         onClick={() => handlePrintReceipt(receipt)}
         className="print"

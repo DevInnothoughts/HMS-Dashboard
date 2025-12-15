@@ -332,7 +332,7 @@ export default function Call_logs() {
       >
         <FeatherIcon icon="plus-square" className="w-18" />
       </Button>
-      {/* <Button
+      <Button
         variant="btn"
         onClick={() => handleEnquiryClick(rowData)}
         className="enquiry-btn"
@@ -348,7 +348,7 @@ export default function Call_logs() {
         }}
       >
         <FeatherIcon icon="message-circle" className="w-18" />
-      </Button> */}
+      </Button>
       <Button
         variant="btn"
         onClick={() => handleNoteClick(rowData.note, rowData)}
