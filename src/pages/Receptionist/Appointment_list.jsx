@@ -315,6 +315,7 @@ export default function Appointment_list() {
       patient_type, // <-- ADDED
       patient_phone, // <-- ADDED
   } = rowData;
+  console.log(rowData);
     const isConfirmed = confirm_time != 0;
 
     return (

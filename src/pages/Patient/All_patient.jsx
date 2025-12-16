@@ -724,7 +724,7 @@ export default function All_patient() {
       patient_phone: formData.phone,
       // FIX: Use the patient_id stored in formData, which was set in handleAddAppointmentClick
       patient_id: formData.patient_id, 
-      patient_type: "NEW",
+      patient_type: "FOLLOW",
       appointment_time: formData.appointmentTime,
       FDE_Name: formData.FDE_Name,
       note: formData.note,

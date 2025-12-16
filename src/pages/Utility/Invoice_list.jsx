@@ -384,7 +384,7 @@ const handleInputChange = (e) => {
 
     try {
         const response = await fetch(
-          `${BASE_URL}/V1/invoice/${selectedInvoice.invoice_id}`,
+          `${BASE_URL}/V1/invoice/${selectedInvoice.invoice_id}?location=${currentLocation}`,
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },

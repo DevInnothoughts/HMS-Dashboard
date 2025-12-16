@@ -221,6 +221,18 @@ export default function Call_logs() {
     const { name, value, type, checked } = e.target;
     const newValue = type === "checkbox" ? checked : value;
 
+    if (name === "doctor_id") { // <-- ADDED LOGIC FOR DOCTOR_ID
+      const selectedDoctor = doctors.find((doc) => String(doc.doctor_id) === value);
+      
+      setEnquiryForm((prev) => ({
+        ...prev,
+        doctor_id: value,
+        // Optional: If you need doctorName in the enquiryForm state later
+        // doctorName: selectedDoctor ? selectedDoctor.name : "", 
+      }));
+      return;
+    }
+
     if (name === "FDE_Name") {
       const selectedFDE = fdeList.find((fde) => String(fde.FDEID) === value);
       
@@ -232,10 +244,10 @@ export default function Call_logs() {
       return;
     }
 
-    setEnquiryForm({
-      ...enquiryForm,
+    setEnquiryForm((prev) => ({ // Ensure previous state is used here
+      ...prev,
       [name]: newValue,
-    });
+    }));
   };
 
   const handleEnquiryClick = (callLog) => {
@@ -666,25 +678,34 @@ export default function Call_logs() {
       !enquiryForm.date ||
       !enquiryForm.patient_name ||
       !enquiryForm.caller_no ||
-      !enquiryForm.enquirytype
+      !enquiryForm.enquirytype ||
+      !enquiryForm.time // <-- NEW: Validate time
     ) {
-      toast.error("Please fill in all required fields (Date, Patient Name, Contact Number, Enquiry Type).");
+      toast.error("Please fill in all required fields (Date, Time, Patient Name, Contact Number, Enquiry Type).");
       return;
     }
 
+    // Ensure we have a valid time (formatted HH:mm:ss if necessary, but HH:mm A should be okay for now)
+    const enquiryTime = enquiryForm.time.split(' ')[0] + ':00'; // Simple conversion to HH:mm:ss if time is HH:mm A
+
     const payload = {
-      date: enquiryForm.date,
+      // NOTE: Using patient_phone for caller_no in the FE input is fine.
+      patient_location: currentLocation, // <-- NEW: Added from state
+      patient_type: enquiryForm.patient_type, // <-- Added from state (defaulted to 'NEW')
+      date: moment(enquiryForm.date).format("YYYY-MM-DD"), // Format date for service
+      time: enquiryForm.time, // <-- NEW: Added time
+      
       doctor_id: enquiryForm.doctor_id || null, 
       patient_name: enquiryForm.patient_name,
       patient_phone: enquiryForm.caller_no,
-      patient_type: "NEW",
-      // time: enquiryForm.call_time,
       enquirytype: enquiryForm.enquirytype,
       fdeId: enquiryForm.FDE_Name || null,
       FDE_Name: enquiryForm.FDE_Name || null, 
+      reference: enquiryForm.reference || null, // <-- Added reference
       note: enquiryForm.note || "",
     };
 
+    console.log(payload);
     try {
       console.log("Sending Enquiry Request.");
 
@@ -1197,6 +1218,18 @@ export default function Call_logs() {
                 </Col>
                 <Col md={6}>
                   <Form.Group className="mb-3">
+                    <Form.Label>Call Back Time (Required)</Form.Label>
+                    <Form.Control
+                      type="time"
+                      name="time"
+                      value={enquiryForm.time}
+                      onChange={handleEnquiryInputChange}
+                      required
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group className="mb-3">
                     <Form.Label>Enquiry Type</Form.Label>
                     <Form.Select
                       name="enquirytype"
@@ -1251,10 +1284,31 @@ export default function Call_logs() {
                       name="caller_no"
                       placeholder="Mobile Number"
                       value={selectedCallLog?.caller_no}
-                      onChange={handleInputChange}
+                      onChange={handleEnquiryInputChange}
                     />
                   </Form.Group>
                 </Col>
+                <Col md={6}>
+                <Form.Group className="mb-20">
+                  <Form.Label>Doctor Name</Form.Label>
+                  <Form.Select
+                    name="doctor_id"
+                    value={enquiryForm.doctor_id}
+                    onChange={handleEnquiryInputChange}
+                  >
+                    <option value="">Select a Doctor</option>
+                    {doctors && doctors.length > 0 ? (
+                      doctors.map((doctor) => (
+                        <option key={doctor.doctor_id} value={doctor.doctor_id}>
+                          {doctor.doctor_id} - {doctor.name}
+                        </option>
+                      ))
+                    ) : (
+                      <option disabled>No doctors available</option>
+                    )}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
                 <Col md={6}>
                   <Form.Group className="mb-20">
                     <Form.Label>FDE Name</Form.Label>
@@ -1272,6 +1326,18 @@ export default function Call_logs() {
                           </option>
                         ))}
                     </Form.Select>
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group className="mb-20">
+                    <Form.Label>Reference</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="reference"
+                      value={enquiryForm.reference}
+                      onChange={handleEnquiryInputChange}
+                      placeholder="e.g., Google, Friend, Walk-in"
+                    />
                   </Form.Group>
                 </Col>
                 <Col md={6}>
