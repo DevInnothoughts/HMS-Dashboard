@@ -16,8 +16,9 @@
 }
 
 .themebody-wrap {
-    margin-top: 79px;
-    margin-left: 285px;
+    margin-top: 72px;
+    margin-inline-start: 235px;
+    // width: calc(100% - 235px);
     transition: all 0.5s ease;
     overflow: hidden;
 }
@@ -219,7 +220,7 @@ ul.codex-soclist{
 
 /*breadcrumb css*/
 .codex-breadcrumb{
-    padding: 20px 25px;
+    padding: 10px 15px;
     text-transform: capitalize;
     transition: all 0.5s ease;
     // display: none;
@@ -646,7 +647,7 @@ ul.iconGroup {
 
 /*class ex*/
 ul.cdxclass-exa{
-    padding: 30px;
+    padding: 0px;
     background-color: rgba($theme-primary, 0.04);
     li{
         font-weight: 600;

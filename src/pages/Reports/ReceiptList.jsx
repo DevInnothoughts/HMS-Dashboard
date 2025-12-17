@@ -10,7 +10,6 @@ import {
   Card,
   Form,
   InputGroup,
-  Button,
   Spinner,
 } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
@@ -21,6 +20,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import "../../styles/styles.css";
 import { FilterMatchMode } from "primereact/api";
 import moment from "moment";
+import { Button } from "react-bootstrap";
 
 // --- Assets/Config (Keep these imports if necessary, but typically defined outside) ---
 import logo from "../../assets/images/3.png";
@@ -45,15 +45,15 @@ export default function ReceiptList() {
     // 1. Get the token
     const token = localStorage.getItem('token');
     if (token) {
-        // 2. Decode the token
-        const payload = decodeJwt(token);
-        // 3. Set the location state from the payload
-        if (payload && payload.jobLocation) {
-            setCurrentLocation(payload.jobLocation);
-            console.log(`Location set from JWT: ${payload.jobLocation}`);
-        }
+      // 2. Decode the token
+      const payload = decodeJwt(token);
+      // 3. Set the location state from the payload
+      if (payload && payload.jobLocation) {
+        setCurrentLocation(payload.jobLocation);
+        console.log(`Location set from JWT: ${payload.jobLocation}`);
+      }
     } else {
-        console.warn("JWT Token not found in localStorage.");
+      console.warn("JWT Token not found in localStorage.");
     }
   }, []);
   // ------------------------- API & Data Fetching -------------------------
@@ -68,14 +68,14 @@ export default function ReceiptList() {
     try {
       if (!currentLocation || !fromDate || !toDate) {
         if (!currentLocation) console.warn("Waiting for location to be set from JWT...");
-      return;
+        return;
       }
 
       const finalFromDate = formatToYYYYMMDD(fromDate);
       const finalToDate = formatToYYYYMMDD(toDate);
 
       const url = new URL(`${BASE_URL}/V1/appointment/listReceipt`);
-      
+
       const params = {
         from: finalFromDate,
         to: finalToDate,
@@ -86,7 +86,7 @@ export default function ReceiptList() {
       Object.keys(params).forEach((key) =>
         url.searchParams.append(key, params[key])
       );
-      
+
       const response = await fetch(url.toString(), {
         method: "GET",
         headers: { "Content-Type": "application/json" },
@@ -112,7 +112,7 @@ export default function ReceiptList() {
   useEffect(() => {
     // Check currentLocation dependency here
     if (currentLocation !== 'default') {
-        fetchReceiptsData();
+      fetchReceiptsData();
     }
   }, [fetchReceiptsData, currentLocation]);
 
@@ -135,14 +135,14 @@ export default function ReceiptList() {
 
     let result = toWords(Math.round(num));
     if (num >= 100000) {
-        // Simple logic for Lakhs (adjust based on required regional format)
-        const lakhs = Math.floor(num / 100000);
-        const remainder = num % 100000;
-        result = toWords(lakhs) + " Lakh " + toWords(remainder);
+      // Simple logic for Lakhs (adjust based on required regional format)
+      const lakhs = Math.floor(num / 100000);
+      const remainder = num % 100000;
+      result = toWords(lakhs) + " Lakh " + toWords(remainder);
     }
     return result.trim() + " Rupees Only";
   };
-  
+
   // Handles the complex logic of fetching images, creating the HTML, and printing
   const handlePrintReceipt = (selectedReceipt) => {
     if (!selectedReceipt) {
@@ -186,7 +186,7 @@ export default function ReceiptList() {
           const receiptContent = `
             <html>
                 <head>
-                <title>Receipt - Healing Hands</title>
+                <title>Receipt- Healing Hands</title>
                 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
                 <style>
                   body, table, tr, td, p {
@@ -196,8 +196,8 @@ export default function ReceiptList() {
                   }
                   .bgdiv { background: #2b9163; padding: 15px; }
                   .maindiv { background: white; border: 1px solid white; border-radius: 15px; padding: 10px; }
-                  .HHClogo { width: 100%; border-right: dotted; border-color: #ccc; padding-right: 20px; }
-                  .Lablogo, .Medicologo { width: 50%; }
+                  .HHClogo { width: 100%; border-color: #ccc; padding-right: 2; margin-right: 50px; }
+                  .Lablogo, .Medicologo { margin-right: 40px;  width: 50%; }
                   .receipt { width: 80%; height: 380px; }
                   .fa-phone { padding: 3px 4px; border: 1px solid grey; border-radius: 50%; }
                   .amount-box-container { display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-start; }
@@ -213,11 +213,11 @@ export default function ReceiptList() {
                       <tr>
                         <td style="width:30%;"><img src="${mainLogo}" class="HHClogo"></td>
                         <td style="width:15%; text-align:right;"><img src="${labLogoBase64}" class="Lablogo"></td>
-                        <td style="width:15%; text-align:center;"><img src="${pharmacyLogoBase64}" class="Medicologo"></td>
+                        <td style="width:15%; text-align:center; "><img src="${pharmacyLogoBase64}" class="Medicologo"></td>
                         <td style="width:40%;">
-                          <table width='100%' border='0'>
-                            <tr><td>Receipt No. &nbsp;&nbsp;<b>${selectedReceipt.receipt_id}</b></td></tr>
-                            <tr><td>Date : &nbsp;&nbsp;<b>${selectedReceipt.receipt_date}</b></td></tr>
+                          <table width='100%' border='0' style= "margin-left:180px;">
+                          <tr><td>Date:&nbsp;<b>${selectedReceipt.receipt_date}</b></td></tr>
+                          <tr margin><td>Receipt No:&nbsp;<b>${selectedReceipt.receipt_id}</b></td></tr>
                           </table>
                         </td>
                       </tr>
@@ -229,27 +229,18 @@ export default function ReceiptList() {
                         <td style="width:85%;">
                           <table width='100%' border='0'>
                             <tr>
-                              <td style="width:30%; line-height:40px;">Received From : </td>
+                              <td style="width:30%; line-height:40px;">Received From: </td>
                               <td><p style="border-bottom: dotted; border-color: #ccc; font-weight: 600; text-transform: uppercase;">${selectedReceipt.patientName}</p></td>
                             </tr>
                           </table>
                           <table width='100%' border='0'>
                             <tr>
                               <td>
-                                For <span style="font-weight:600; text-transform:uppercase; border-bottom: dotted; border-color: #ccc;">${selectedReceipt.consultation}</span>
+                                For:  <span style="font-weight:600; text-transform:uppercase; border-bottom: dotted; border-color: #ccc;">${selectedReceipt.consultation}</span>
                               </td>
                             </tr>
                           </table>
-                          <table width='100%' border='0'>
-                            <tr>
-                              <td style="line-height:40px;">
-                                <i class="fa fa-phone"></i>&nbsp;8888288884&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;020 - 26164488/99
-                              </td>
-                            </tr>
-                          </table>
-                          <table width='100%' border='0'>
-                            <tr><td>Email: info@healinghandsclinic.co.in&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;Website: www.healinghandsclinic.co.in</td></tr>
-                          </table>
+                          
                           <br>
                           <table width='100%' border='0'>
                             <tbody>
@@ -258,16 +249,17 @@ export default function ReceiptList() {
                                   Payment Mode: &nbsp;<b>${selectedReceipt.paymentmode}</b><br>
                                   In Words: &nbsp;<b>${amountInWords}</b><br><br>
                                   <b>Next Appointment: </b>No appointment scheduled<br>
-                                  <b>Dhole Patil Road: </b><br>
-                                  Healing Hands Clinic Pvt Ltd<br>
+                                  <br>
+                                  Healing Hands Clinic Pvt Ltd,<br>
+                                  Dhole Patil Road,<br>
                                   DP Road, Ground Floor, Millenium Star Extension,<br>
-                                  Adjacent to Ruby Hall Clinic, Pune 411001
+                                  Adjacent to Ruby Hall Clinic, Pune, 411001.
                                 </td>
                                 <td style="width:40%; vertical-align: top;">
                                   <div class="amount-box-container">
                                     <div class="amount-box"><b>Total:</b> Rs. ${selectedReceipt.totalamt}/-</div>
-                                    <div class="amount-box"><b>Discount:</b> Rs. ${selectedReceipt.discountamt}/-</div>
-                                    <div class="amount-box" style="margin-top: 10px;"><b>Net Amount:</b> Rs. ${(selectedReceipt.totalamt - selectedReceipt.discountamt)}/-</div>
+                                    <div class="amount-box" style="margin-top: 5px;"><b>Discount:</b> Rs. ${selectedReceipt.discountamt}/-</div>
+                                    <div class="amount-box" style="margin-top: 5px;"><b>Net Amount:</b> Rs. ${(selectedReceipt.totalamt - selectedReceipt.discountamt)}/-</div>
                                   </div>
                                 </td>
                               </tr>
@@ -276,8 +268,27 @@ export default function ReceiptList() {
                           <table width='100%' border='0'>
                             <tr>
                               <td style="width:100%;" colspan="3">
-                                <br><br>
-                                <p>In case you have not received the correct receipt for the paid amount... [Full footer text]</p>
+                                <br>
+                                <p>In case you have not received the correct receipt for the paid amount. Please contact the clinic.</p>
+                                <table width='100%' border='0'>
+                            <tr>
+                              <td>
+                                <i class="fa fa-phone"></i>&nbsp;8888288884&nbsp;|&nbsp;020-26164488/99
+                              </td>
+                            </tr>
+                          </table>
+                          <table width='100%' border='0'>
+                            <tr>
+                            <td> 
+                            <i class="fa fa-envelope-open"></i>&nbsp;info@healinghandsclinic.co.in
+                            </td>
+                          </tr>
+                          </table>
+                            <table width='100%' border='0'>
+                            <tr>
+                            <td> 
+                            <i class="fa fa-globe"></i>&nbsp;www.healinghandsclinic.co.in</td></tr>
+                          </table>
                               </td>
                             </tr>
                           </table>
@@ -286,11 +297,7 @@ export default function ReceiptList() {
                     </table>
                   </div>
                 </div>
-                <button class="print-btn" onclick="window.print()">Print</button>
-                <div style="clear:both; color:#aaa; padding:20px;">
-                  <hr />
-                  <center>&copy;2025 <a target="_blank" href="http://www.innothoughts.com/" style="color:grey;">Innothoughts System Pvt. Ltd</a></center>
-                </div>
+                <button class="print-btn" onclick="window.print()" style="margin-left:40%; margin-top:20px;">Print</button >
               </body>
             </html>
           `;
@@ -307,27 +314,28 @@ export default function ReceiptList() {
   };
 
   const actionBodyTemplate = (receipt) => (
-    <div className="cart-action" style={{ margin: "5px", display: "flex", gap: "5px" }}>
-      {/* <Link
-        onClick={() => sendMail(receipt)}
-        className="mail"
-        to="#"
-        style={{ width: "35px", height: "35px", display: "flex", justifyContent: "center", alignItems: "center", borderRadius: "50%", padding: "0" }}
-        title="Mail"
-      >
-        <FeatherIcon icon="mail" className="w-18" />
-      </Link> */}
-      <Link
-        onClick={() => handlePrintReceipt(receipt)}
-        className="print"
-        to="#"
-        style={{ width: "35px", height: "35px", display: "flex", justifyContent: "center", alignItems: "center", borderRadius: "50%", padding: "0" }}
-        title="Print"
-      >
-        <FeatherIcon icon="printer" className="w-18" />
-      </Link>
+    // Use a utility class to center the action items in the cell
+    <div className="d-flex align-items-center justify-content-center">
+        {/* Mail Button */}
+        <Button
+            onClick={() => sendMail(receipt)}
+            className="btn-sm btn-icon me-2" // Standard small icon button classes
+            variant="primary" // Use a light background (often white/grey)
+            title="Mail"
+        >
+            <FeatherIcon icon="mail" size="14" />
+        </Button>
+        {/* Print Button */}
+        <Button
+            onClick={() => handlePrintReceipt(receipt)}
+            className="btn-sm btn-icon" // Standard small icon button classes
+            variant="primary" // Use a primary/teal color for the button
+            title="Print"
+        >
+            <FeatherIcon icon="printer" size="14" />
+        </Button>
     </div>
-  );
+);
 
   const renderHeader = () => (
     <div
@@ -350,6 +358,17 @@ export default function ReceiptList() {
       >
         {/* Global Search Section */}
         <Form.Group style={{ display: "flex", alignItems: "center", margin: 0 }}>
+           <span
+              style={{
+                marginRight: "10px",
+                fontSize: "16px",
+                fontWeight: "bold",
+                color: "#333",
+                marginBottom: "15px"
+              }}
+            >
+              Search
+            </span>
           <InputGroup>
             <Form.Control
               type="search"
@@ -433,7 +452,7 @@ export default function ReceiptList() {
               marginTop: "20px",
             }}
           >
-            Refresh Data
+            <FeatherIcon icon="refresh-ccw" size={16} className="me-2" />Refresh All Data
           </Button>
         </div>
       </div>
@@ -487,8 +506,8 @@ export default function ReceiptList() {
                         "totalamt",
                       ]}
                       responsiveLayout="scroll"
-                      className="p-datatable-customers"
-                      rowClassName={(rowData, { rowIndex }) => ({
+                    className="datatable-compact-style" 
+                     rowClassName={(rowData, { rowIndex }) => ({
                         style: {
                           backgroundColor: rowIndex % 2 === 0 ? "#e0f7fa" : "white",
                           transition: "background-color 0.3s ease",
@@ -503,7 +522,7 @@ export default function ReceiptList() {
                       })}
                       style={{
                         border: "1px solid #4dd0e1",
-                        marginTop: "20px",
+                        marginTop: "5px",
                         width: "100%",
                         background: "white",
                         borderRadius: "8px",
@@ -515,47 +534,50 @@ export default function ReceiptList() {
                         header="Sr. No"
                         body={(rowData, { rowIndex }) => rowIndex + 1}
                         sortable
+                        headerClassName="datatable-header-center"
                         style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem" }}
                       />
                       <Column
                         field="receipt_id"
                         header="Receipt ID"
-                        sortable
+                        headerClassName="datatable-header-center"
                         style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem" }}
                       />
                       <Column
                         field="receipt_date"
-                        header="Date"
-                        sortable
-                        style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem" }}
+                        header="Receipt Date"
+                        headerClassName="datatable-header-center"
+                        style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem", width:"100px" }}
                       />
                       <Column
                         field="patientName"
                         header="Patient Name"
-                        sortable
-                        style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem" }}
+                        headerClassName="datatable-header-center"
+                        style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem", wordBreak: "break-word" }}
                       />
                       <Column
                         field="consultation"
                         header="Consultation"
-                        sortable
+                        headerClassName="datatable-header-center"
                         style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem" }}
                       />
                       <Column
                         field="doctorName"
-                        header="Doctor"
-                        sortable
+                        header="Doctor Name"
+                        headerClassName="datatable-header-center"
                         style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem" }}
                       />
                       <Column
                         field="totalamt"
                         header="Total Amount"
+                        headerClassName="datatable-header-center"
                         body={(rowData) => `₹ ${parseFloat(rowData.totalamt).toFixed(2)}`}
                         style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem" }}
                       />
                       <Column
                         field="discountamt"
                         header="Discount Amount"
+                        headerClassName="datatable-header-center"
                         body={(rowData) => `₹ ${parseFloat(rowData.discountamt || 0).toFixed(2)}`}
                         style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem" }}
                       />
@@ -563,7 +585,8 @@ export default function ReceiptList() {
                         header="Actions"
                         body={actionBodyTemplate}
                         exportable={false}
-                        style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem" }}
+                        headerClassName="datatable-header-center"
+                        style={{ border: "1px solid #90caf9", alignContent: "center", padding: "0.75rem" }}
                       />
                     </DataTable>
                   )}
@@ -576,3 +599,4 @@ export default function ReceiptList() {
     </div>
   );
 }
+

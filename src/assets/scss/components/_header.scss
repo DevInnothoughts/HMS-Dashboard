@@ -5,10 +5,10 @@
     position: fixed;
     top: 0;   
     left: 0;
-    margin-inline-start: 285px;
-    width: calc(100% - 285px);
+    margin-inline-start: 235px;
+    width: calc(100% - 235px);
     z-index: 4;
-    padding:20px 24px;
+    padding:15px 24px;
     background-color: var(--#{$prefix}body-bg);    
     box-shadow: 0 0 40px 5px rgba($black, 0.05);   
     transition: all 0.5s ease;

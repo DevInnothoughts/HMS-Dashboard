@@ -31,7 +31,7 @@ export default function Sidebar() {
       <li className={`menu-item ${activeIndex === "/" ? "active" : ""}`}>
         <Link to="#" onClick={() => handleMenuClick("/")}>
           <div className="icon-item">
-            <FeatherIcon icon="home" />
+            <FeatherIcon icon="grid" />
           </div>
           <span>Dashboard</span>
           <i className="fa fa-angle-down"></i>
@@ -227,8 +227,11 @@ export default function Sidebar() {
           <img className="img-fluid" src={logo} alt="sidebar-lightlogo" />
           <span className="ms-2">HMS</span>
         </Link>
+        <div className="sidebar-action" onClick={toggleSidebar}>
+                <FeatherIcon icon="menu" />
+              </div>
       </div>
-
+      
       <SimpleBar className="codex-menu">
         {accountType === "doctor"
           ? renderDoctorMenu()

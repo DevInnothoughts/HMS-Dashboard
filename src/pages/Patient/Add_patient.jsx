@@ -12,7 +12,7 @@ import NavBarP from "../../components/NavbarP";
 import { toast } from "react-hot-toast"; // Assuming react-hot-toast is imported globally or available
 
 // Assuming these helpers are defined elsewhere
-import { decodeJwt } from "../../utils/decode-jwt"; 
+import { decodeJwt } from "../../utils/decode-jwt";
 
 const hospitalData = {
   Cardiology: {
@@ -46,7 +46,7 @@ const generateUID = () => {
 };
 
 // Keeping the original API URL as requested, but noting the need for HTTPS.
-const BASE_URL = "http://localhost:5100/api"; 
+const BASE_URL = "http://localhost:5100/api";
 
 export default function Add_Patient() {
   const [formData, setFormData] = useState({
@@ -84,11 +84,11 @@ export default function Add_Patient() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-        // NOTE: Replace 'decodeJwt' with your actual JWT decoding utility
-        const payload = decodeJwt(token); 
-        if (payload && payload.jobLocation) {
-            setCurrentLocation(payload.jobLocation);
-        }
+      // NOTE: Replace 'decodeJwt' with your actual JWT decoding utility
+      const payload = decodeJwt(token);
+      if (payload && payload.jobLocation) {
+        setCurrentLocation(payload.jobLocation);
+      }
     }
   }, []);
   // ---------------------------------------------
@@ -133,7 +133,7 @@ export default function Add_Patient() {
     // HIPAA: Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (formData.email && !emailRegex.test(formData.email)) {
-        newErrors.email = "Invalid email format";
+      newErrors.email = "Invalid email format";
     }
 
     return newErrors;
@@ -171,20 +171,20 @@ export default function Add_Patient() {
       console.log("Attempting to submit patient registration.");
 
       try {
-        const payload = { 
-            ...formData, 
-            saveType,
-            patient_location: currentLocation, // Include location in the payload
-            // Explicitly ensuring PHI fields are present and correctly mapped for API
-            patientName: formData.patientName, 
-            mobileNo: formData.mobileNo, 
-            email: formData.email,
+        const payload = {
+          ...formData,
+          saveType,
+          patient_location: currentLocation, // Include location in the payload
+          // Explicitly ensuring PHI fields are present and correctly mapped for API
+          patientName: formData.patientName,
+          mobileNo: formData.mobileNo,
+          email: formData.email,
         };
 
         const response = await fetch(`${BASE_URL}/V1/patient/addPatient?location=${currentLocation}`, {
           method: "POST",
           // HIPAA: Authorization header required for secure API calls
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
             // "Authorization": `Bearer ${localStorage.getItem('token')}`, 
           },
@@ -256,7 +256,7 @@ export default function Add_Patient() {
   const handleDepartmentChange = (e) => {
     const department = e.target.value;
     setSelectedDepartment(department);
-    setSelectedCategory(""); 
+    setSelectedCategory("");
     setSelectedDoctor("");
   };
 
@@ -283,7 +283,7 @@ export default function Add_Patient() {
       style={{
         background: "linear-gradient(to right, #e0f7fa, #80deea)",
         minHeight: "100vh",
-        padding: "20px",
+        padding: "10px",
         fontFamily: "'Poppins', Arial, sans-serif",
       }}
     >
@@ -301,14 +301,22 @@ export default function Add_Patient() {
               }}
               show={showAddModal}
             >
-              <Card.Body style={{ padding: "30px" }}>
+              <Card.Body style={{ padding: "20px" }}>
+                 <h4 className="section-title" style={{marginBottom:"15px"}}>
+                     Add New Patient Details
+                      <span className="ms-2 text-secondary" style={{ fontSize: '0.8em' }}>
+                        (Clinic Location: {currentLocation ? currentLocation.toUpperCase() : "Loading..."}
+                        )
+                      </span>
+                    </h4>
                 <Form>
                   {/* Basic Information Section */}
                   <div className="form-section">
-                    <h5 className="section-title">
-                      <i className="fas fa-user-circle me-2"></i>
-                      Basic Information
-                    </h5>
+                    <h5 className="section-title"
+                      style={{ marginBottom: "15px" }}>
+                      <i className="fa fa-user-circle me-2"></i>
+                      Basic Information 
+                    </h5> 
                     <Row>
                       <Col md={3}>
                         <Form.Group className="mb-3">
@@ -357,7 +365,7 @@ export default function Add_Patient() {
                           />
                         </Form.Group>
                       </Col>
-                      <Col md={1}>
+                      <Col md={3}>
                         <Form.Group className="mb-3">
                           <Form.Label>Title</Form.Label>
                           <Form.Control
@@ -409,7 +417,7 @@ export default function Add_Patient() {
                           </Form.Control>
                         </Form.Group>
                       </Col>
-                      <Col md={1}>
+                      <Col md={3}>
                         <Form.Group className="mb-3">
                           <Form.Label>
                             Age <span style={styles.required}>*</span>
@@ -428,8 +436,8 @@ export default function Add_Patient() {
 
                   {/* Contact Information Section */}
                   <div className="form-section">
-                    <h5 className="section-title">
-                      <i className="fas fa-address-book me-2"></i>
+                    <h5 className="section-title" style={{ marginBottom: "15px" }}>
+                      <i className="fa fa-address-book me-2"></i>
                       Contact Information
                     </h5>
                     <Row>
@@ -445,7 +453,7 @@ export default function Add_Patient() {
                             value={formData.mobileNo}
                             onChange={handleInputChange}
                           />
-                           {errors.mobileNo && (
+                          {errors.mobileNo && (
                             <p className="error-message">{errors.mobileNo}</p>
                           )}
                         </Form.Group>
@@ -484,13 +492,13 @@ export default function Add_Patient() {
 
                   {/* Address Information Section */}
                   <div className="form-section">
-                    <h5 className="section-title">
-                      <i className="fas fa-map-marker-alt me-2"></i>
+                    <h5 className="section-title" style={{ marginBottom: "15px" }}>
+                      <i className="fa fa-map-marker me-2"></i>
                       Address Information
                     </h5>
                     <Row>
-                      <Col md={4} className="mb-4">
-                        <Form.Group className="mb-3">
+                      <Col md={3} >
+                        <Form.Group className="ms-1">
                           <Form.Label>
                             Country <span style={styles.required}>*</span>
                           </Form.Label>
@@ -521,8 +529,8 @@ export default function Add_Patient() {
                       </Col>
 
                       {/* State Dropdown */}
-                      <Col md={4} className="mb-4">
-                        <Form.Group className="mb-3">
+                      <Col md={3} >
+                        <Form.Group className="ms-5">
                           <Form.Label>
                             State <span style={styles.required}>*</span>
                           </Form.Label>
@@ -553,7 +561,7 @@ export default function Add_Patient() {
                         </Form.Group>
                       </Col>
                       {/* City Dropdown */}
-                      <Col md={4} className="mb-4">
+                      <Col md={3} >
                         <Form.Group className="mb-3">
                           <Form.Label>
                             City <span style={styles.required}>*</span>
@@ -590,12 +598,12 @@ export default function Add_Patient() {
 
                   {/* Medical Information Section */}
                   <div className="form-section">
-                    <h5 className="section-title">
-                      <i className="fas fa-heartbeat me-2"></i>
+                    <h5 className="section-title" style={{ marginBottom: "15px" }}>
+                      <i className="fa fa-heartbeat me-2"></i>
                       Medical Information
                     </h5>
                     <Row>
-                      <Col md={2}>
+                      <Col md={3}>
                         <Form.Group className="mb-3">
                           <Form.Label>Blood Group</Form.Label>
                           <Form.Control
@@ -675,8 +683,8 @@ export default function Add_Patient() {
 
                   {/* Appointment Information Section */}
                   <div className="form-section">
-                    <h5 className="section-title">
-                      <i className="fas fa-calendar-check me-2"></i>
+                    <h5 className="section-title" style={{ marginBottom: "15px" }}>
+                      <i className="fa fa-calendar me-2"></i>
                       Appointment Information
                     </h5>
                     <Row>
@@ -766,12 +774,12 @@ export default function Add_Patient() {
                     </button>
                     <button
                       type="button"
-                      className="btn btn-danger"
+                      className="btn btn-danger ms-2"
                       onClick={() => {
                         // Reset all form fields
                         setFormData({
                           prefix: "",
-                          date: new Date().toISOString().split("T")[0], 
+                          date: new Date().toISOString().split("T")[0],
                           uid: generateUID(),
                           patientName: "",
                           sex: "",

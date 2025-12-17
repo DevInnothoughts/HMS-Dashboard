@@ -20,51 +20,104 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import moment from "moment";
 
-// --- Configuration ---
 const BASE_URL = "http://localhost:5100/api";
 const TYPE_LIST = ["NEW", "FOLLOW", "POST-OPERATIVE"];
 
+const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
+  const defaultBg = '#f1f1f1';
+  const defaultBorder = '#ccc';
+  const defaultColor = '#555';
+  const isDanger = title === 'Cancel';
+  const isConfirm = title === 'Confirm';
+  const isReceipt = title === 'Receipts';
+
+  const baseStyle = {
+    padding: '4px 6px',
+    minWidth: '35px',
+    borderRadius: '4px',
+    border: `1px solid ${disabled ? '#ddd' : (isDanger ? '#dc3545' : defaultBorder)}`,
+    backgroundColor: disabled ? '#f8f9fa' : (isConfirm ? '#e6f7ea' : defaultBg),
+    color: disabled ? '#aaa' : (isDanger ? '#dc3545' : defaultColor),
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    transition: 'all 0.2s ease-in-out',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: disabled ? 'none' : '0 1px 3px rgba(0,0,0,0.05)',
+    opacity: disabled ? 0.6 : 1,
+    ...props.style,
+  };
+
+  const iconColor = disabled ? '#aaa' : (isDanger ? '#dc3545' : (isReceipt ? '#007bff' : defaultColor));
+
+  const iconStyle = {
+    margin: "2px",
+    width: '18px',
+    height: '18px',
+    stroke: iconColor,
+  };
+
+  const handleMouseOver = (e) => {
+    if (!disabled) {
+      e.currentTarget.style.backgroundColor = isDanger ? '#c82333' : '#e0e0e0';
+      e.currentTarget.children[0].style.stroke = 'white';
+      e.currentTarget.style.color = isDanger ? 'white' : defaultColor;
+      e.currentTarget.style.border = `1px solid ${isDanger ? '#c82333' : '#b0b0b0'}`;
+    }
+  };
+
+  const handleMouseOut = (e) => {
+    if (!disabled) {
+      e.currentTarget.style.backgroundColor = isConfirm ? '#e6f7ea' : defaultBg;
+      e.currentTarget.children[0].style.stroke = iconColor;
+      e.currentTarget.style.border = `1px solid ${isDanger ? '#dc3545' : defaultBorder}`;
+    }
+  };
+
+  return (
+    <button
+      title={title}
+      onClick={onClick}
+      disabled={disabled}
+      style={baseStyle}
+      onMouseOver={handleMouseOver}
+      onMouseOut={handleMouseOut}
+    >
+      <FeatherIcon icon={icon} style={iconStyle} />
+    </button>
+  );
+};
+
+
 export default function Appointment_list() {
-  // --- Core State ---
   const [appointmentData, setAppointmentData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [filters, setFilters] = useState({
-    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-  });
-  const [currentLocation, setCurrentLocation] = useState('default'); // ** EDITED **: Default is 'default'
-
-  // --- Filter State ---
+  const [filters, setFilters] = useState({ global: { value: null, matchMode: FilterMatchMode.CONTAINS }, });
+  const [currentLocation, setCurrentLocation] = useState('default');
   const [fromDate, setFromDate] = useState(new Date());
   const [toDate, setToDate] = useState(new Date());
-
-  // --- Modal/Action State ---
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [appointmentIdToDelete, setAppointmentIdToDelete] = useState(null);
   const [cancellationReason, setCancellationReason] = useState("");
-  const [showReceiptModal, setShowReceiptModal] = useState(false); // To open the (future) Receipt Modal
-
-  // --- Dropdown Data State (Needed for Modals) ---
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [doctors, setDoctors] = useState([]);
   const [fdeList, setFdeList] = useState([]);
   const [consultationList, setConsultationList] = useState([]);
   const [timeSlots, setTimeSlots] = useState([]);
 
-
-  // ------------------------- API UTILITIES -------------------------
-
   useEffect(() => {
-      const token = localStorage.getItem('token');
-      console.log("Token:", token);
-      if (token) {
-          const payload = decodeJwt(token);
-          if (payload && payload.jobLocation) {
-              setCurrentLocation(payload.jobLocation);
-          }
-          console.log(payload.jobLocation);
+    const token = localStorage.getItem('token');
+    console.log("Token:", token);
+    if (token) {
+      const payload = decodeJwt(token);
+      if (payload && payload.jobLocation) {
+        setCurrentLocation(payload.jobLocation);
       }
-    }, []);
+      console.log(payload.jobLocation);
+    }
+  }, []);
 
   const formatDateToDDMMYYYY = (date) => {
     if (date instanceof Date) {
@@ -73,20 +126,17 @@ export default function Appointment_list() {
     return "";
   };
 
-  // Generates time slots (Helper for Edit Modal)
   const generateTimeSlots = () => {
     const slots = [];
-    const startTime = moment().startOf('day').add(7, 'hours'); // Start 7 AM
-    const endTime = moment().startOf('day').add(23, 'hours').add(45, 'minutes'); // End 11:45 PM
+    const startTime = moment().startOf('day').add(7, 'hours');
+    const endTime = moment().startOf('day').add(23, 'hours').add(45, 'minutes');
 
-    // Logic to start from the next 15-minute interval if the date is today (simplified check)
     const isToday = moment(selectedAppointment?.appointment_timestamp).isSame(moment(), 'day');
     if (isToday) {
-        let now = moment();
-        let currentMinutes = now.minute();
-        // Snap to the next 15-minute interval
-        let nextInterval = Math.ceil(currentMinutes / 15) * 15;
-        startTime.set({ 'hour': now.hour(), 'minute': 0, 'second': 0 }).add(nextInterval, 'minutes');
+      let now = moment();
+      let currentMinutes = now.minute();
+      let nextInterval = Math.ceil(currentMinutes / 15) * 15;
+      startTime.set({ 'hour': now.hour(), 'minute': 0, 'second': 0 }).add(nextInterval, 'minutes');
     }
 
     let currentTime = startTime.clone();
@@ -101,13 +151,10 @@ export default function Appointment_list() {
   const fetchAppointmentData = useCallback(async () => {
     setLoading(true);
     try {
-      // ** EDITED **: Check if currentLocation is available before fetching
-      if (!fromDate || !toDate || currentLocation === 'default') return; 
+      if (!fromDate || !toDate || currentLocation === 'default') return;
 
       const formattedFromDate = formatDateToDDMMYYYY(fromDate);
       const formattedToDate = formatDateToDDMMYYYY(toDate);
-
-      // ** EDITED **: Replaced LOCATION with currentLocation
       const url = `${BASE_URL}/V1/appointment/listAppointments?from=${formattedFromDate}&to=${formattedToDate}&location=${currentLocation}`;
 
       const response = await fetch(url, { method: "GET" });
@@ -124,11 +171,10 @@ export default function Appointment_list() {
     } finally {
       setLoading(false);
     }
-  }, [fromDate, toDate, currentLocation]); // ** EDITED **: Added currentLocation to dependency array
+  }, [fromDate, toDate, currentLocation]);
 
   const fetchDropdownData = useCallback(async () => {
     try {
-      // ** EDITED **: Replaced LOCATION with currentLocation in all endpoints
       const endpoints = [
         `${BASE_URL}/V1/appointment/consultationDropdown?location=${currentLocation}`,
         `${BASE_URL}/V1/appointment/doctorDropdown?location=${currentLocation}`,
@@ -145,57 +191,49 @@ export default function Appointment_list() {
     } catch (error) {
       console.error("Error fetching dropdown data:", error.message);
     }
-  }, [currentLocation]); // ** EDITED **: Added currentLocation to dependency array
+  }, [currentLocation]);
 
-  // ------------------------- EFFECTS -------------------------
 
   useEffect(() => {
-    // Only fetch data if currentLocation is set to something meaningful
     if (currentLocation !== 'default') {
-        fetchAppointmentData();
-        fetchDropdownData();
+      fetchAppointmentData();
+      fetchDropdownData();
     }
-  }, [fetchAppointmentData, fetchDropdownData, currentLocation]); // ** EDITED **: Added currentLocation dependency
+  }, [fetchAppointmentData, fetchDropdownData, currentLocation]);
 
-  // Effect to regenerate time slots when editing a different appointment's date/time
   useEffect(() => {
     if (selectedAppointment) {
       setTimeSlots(generateTimeSlots());
     }
   }, [selectedAppointment?.appointment_timestamp]);
 
-  // ------------------------- HANDLERS -------------------------
-
   const handleDateChange = (date) => {
     if (!date || !selectedAppointment) return;
 
-    // Update the selectedAppointment state with the new date
     setSelectedAppointment((prev) => ({
       ...prev,
-      appointment_timestamp: date.toISOString(), // Store the timestamp
+      appointment_timestamp: date.toISOString(),
     }));
   };
 
   const handleEditModalInputChange = (e) => {
     const { name, value } = e.target;
     setSelectedAppointment((prev) => ({
-        ...prev,
-        [name]: value,
+      ...prev,
+      [name]: value,
     }));
   };
 
   const handleSaveChanges = async () => {
     if (!selectedAppointment || !selectedAppointment.patient_phone) {
-        alert("Error: Patient Phone number is missing!");
-        return;
+      alert("Error: Patient Phone number is missing!");
+      return;
     }
 
-    // Prepare data (filter out unwanted keys if necessary)
     const updatePayload = {
-        ...selectedAppointment,
-        // Ensure date/time fields are correctly formatted if the backend expects a specific string format
-        date: formatDateToDDMMYYYY(new Date(selectedAppointment.appointment_timestamp)),
-        patient_location: currentLocation, // ** EDITED **: Ensure location is sent as currentLocation
+      ...selectedAppointment,
+      date: formatDateToDDMMYYYY(new Date(selectedAppointment.appointment_timestamp)),
+      patient_location: currentLocation,
     };
 
     try {
@@ -212,7 +250,7 @@ export default function Appointment_list() {
 
       if (response.ok) {
         alert("Appointment updated successfully!");
-        fetchAppointmentData(); // Refresh list to show changes
+        fetchAppointmentData();
         setShowEditModal(false);
       } else {
         console.error("Failed to update appointment:", result.message);
@@ -228,13 +266,11 @@ export default function Appointment_list() {
     if (!appointmentIdToDelete) return;
 
     try {
-      // ** EDITED **: Pass currentLocation as a query parameter
       const response = await fetch(
         `${BASE_URL}/V1/appointment/delete/${appointmentIdToDelete}?location=${currentLocation}`,
         {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
-          // body: JSON.stringify({ cancellationReason }), // Send reason if backend supports it in DELETE body/query
         }
       );
 
@@ -252,8 +288,6 @@ export default function Appointment_list() {
       console.error("Network Error:", error);
     }
   };
-
-  // Process/Action Button Handlers (Simplified for the component structure)
   const handleProcessUpdate = async (appId, endpoint, patient_type, patient_phone, successMessage) => {
     try {
       console.log(appId, endpoint, successMessage);
@@ -284,103 +318,98 @@ export default function Appointment_list() {
     }
   };
 
-
-  // ------------------------- JSX RENDER HELPERS -------------------------
-
-  const getProcessColor = (rowData) => {
-    // console.log(rowData);
-    const { ConfirmPatient, historychk, executivechk, consultationchk } = rowData;
-    // console.log( ConfirmPatient, historychk, executivechk, consultationchk );
-    const isConfirmed = ConfirmPatient === 1;
+  const getRowClassName = (rowData) => {
+    const { ConfirmPatient, historychk, executivechk, consultationchk, confirm_time } = rowData;
+    const isConfirmed = confirm_time != 0;
     const hasHistory = historychk === 3;
     const hasExecution = executivechk === 1;
     const hasConsultation = consultationchk === 2;
     const hasReceipt = executivechk === 4;
 
-    if (!isConfirmed) return "#fff";
-    if (hasReceipt) return "#b2ff8e"; // Green
-    if (hasConsultation) return "#ccb3f0"; // Purple
-    if (hasExecution) return "#faff61"; // Yellow
-    if (hasHistory) return "#ff9861"; // Orange
-    return "#fff";
+    if (!isConfirmed) return 'row-status-unconfirmed';
+    if (hasReceipt) return 'row-status-receipt';
+    if (hasConsultation) return 'row-status-consultation';
+    if (hasExecution) return 'row-status-execution';
+    if (hasHistory) return 'row-status-history';
+
+    return '';
   };
 
   const renderActionBody = (rowData) => {
-    const { 
-      appointment_id, 
-      confirm_time, 
-      historychk, 
-      executivechk, 
-      consultationchk,
-      patient_type, // <-- ADDED
-      patient_phone, // <-- ADDED
-  } = rowData;
-  console.log(rowData);
+    const { appointment_id, confirm_time, historychk, executivechk, consultationchk , patient_phone, patient_type} = rowData;
     const isConfirmed = confirm_time != 0;
+    const isHistoryDone = historychk === 3;
+    const isExecutionDone = executivechk === 1 || executivechk === 4;
+    const isConsultationDone = consultationchk === 2;
+    const isReceiptDone = executivechk === 4;
 
     return (
       <div
         className="cart-action"
         style={{
-          backgroundColor: getProcessColor(rowData),
-          margin: "5px",
+          margin: "0",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          gap: "5px",
-          border: "3px solid #ccc",
-          padding: "10px",
-          borderRadius: "8px",
-          transition: "background-color 0.3s ease",
+          padding: "2px",
+          gap: "2px",
         }}
       >
-        {/* Unconfirmed Actions: Edit, Delete, Confirm */}
+
         {!isConfirmed && (
           <>
-            <button title="Edit" onClick={() => { setSelectedAppointment(rowData); setShowEditModal(true); }} disabled={isConfirmed}>
-              <FeatherIcon icon="edit" className="w-18" />
-            </button>
-            <button title="Cancel" onClick={() => setAppointmentIdToDelete(appointment_id) || setShowDeleteModal(true)} disabled={isConfirmed}>
-              <FeatherIcon icon="trash-2" className="w-18 text-danger" />
-            </button>
-            <button 
-              title="Confirm" 
-              onClick={() => handleProcessUpdate(
-                appointment_id, 
-                'confirmAppointment',
-                patient_type, // <-- CORRECTED: Now passing the value from rowData
-                patient_phone, // <-- CORRECTED: Now passing the value from rowData
-                'Appointment confirmed!'
-              )} 
+            <ActionButton
+              title="Edit"
+              onClick={() => { setSelectedAppointment(rowData); setShowEditModal(true); }}
               disabled={isConfirmed}
-            >
-              <FeatherIcon icon="check" className="w-18" />
-            </button>
+              icon="edit"
+              style={{ backgroundColor: '#9fd1ffff', borderColor: '#001696ff' }}
+            />
+            <ActionButton
+              title="Cancel"
+              onClick={() => setAppointmentIdToDelete(appointment_id) || setShowDeleteModal(true)}
+              disabled={isConfirmed}
+              icon="trash-2"
+            />
+            <ActionButton
+              title="Confirm"
+              onClick={() => handleProcessUpdate(appointment_id, 'confirmAppointment', patient_type, patient_phone, 'Appointment confirmed!')}
+              disabled={isConfirmed}
+              icon="check"
+              style={{ backgroundColor: '#b4ffaaff', borderColor: '#007500ff' }}
+            />
           </>
         )}
 
-        {/* Confirmed Actions: Process Flow */}
         {isConfirmed && (
           <>
-            {/* History Check (Requires confirmation) */}
-            <button title="History" onClick={() => handleProcessUpdate(appointment_id, 'updateHistoryChk', null, null,  "History process completed!")} disabled={historychk === 3}>
-              <FeatherIcon icon="clock" className="w-18" />
-            </button>
+            <ActionButton
+              title="History"
+              onClick={() => handleProcessUpdate(appointment_id, 'updateHistoryChk', null, null, 'History process completed!')}
+              disabled={isHistoryDone}
+              icon="book-open"
+            />
 
-            {/* Execution Check (Requires historyChk = 3) */}
-            <button title="Execution" onClick={() => handleProcessUpdate(appointment_id, 'updateExecutionChk', null, null, "Execution process completed!")} disabled={historychk !== 3 || executivechk === 1 || executivechk === 4}>
-              <FeatherIcon icon="list" className="w-18" />
-            </button>
+            <ActionButton
+              title="Executive"
+              onClick={() => handleProcessUpdate(appointment_id, 'updateExecutionChk',null, null, 'Execution process completed!')}
+              disabled={!isHistoryDone || isExecutionDone}
+              icon="list"
+            />
 
-            {/* Consultation Check (Requires executivechk = 1) */}
-            <button title="Consultation" onClick={() => handleProcessUpdate(appointment_id, 'updateConsultationChk', null, null, "Consultation process completed!")} disabled={executivechk !== 1 || consultationchk === 2}>
-              <FeatherIcon icon="user-check" className="w-18" />
-            </button>
+            <ActionButton
+              title="Consultation"
+              onClick={() => handleProcessUpdate(appointment_id, 'updateConsultationChk',null, null, 'Consultation process completed!')}
+              disabled={!isExecutionDone || isConsultationDone}
+              icon="user"
+            />
 
-            {/* Receipts (Requires consultationchk = 2) */}
-            <button title="Receipts" disabled={consultationchk !== 2} onClick={() => { setSelectedAppointment(rowData); setShowReceiptModal(true); }}>
-              <FeatherIcon icon="file-text" className="w-18" />
-            </button>
+            <ActionButton
+              title="Receipts"
+              onClick={() => { setSelectedAppointment(rowData); setShowReceiptModal(true); }}
+              disabled={!isConsultationDone}
+              icon="credit-card"
+            />
           </>
         )}
       </div>
@@ -390,12 +419,12 @@ export default function Appointment_list() {
   const renderHeader = () => (
     <div
       style={{
-        border: "2px solid #4dd0e1",
+        border: "1px solid #4dd0e1",
         textAlign: "center",
-        borderRadius: "12px",
-        padding: "15px",
+        borderRadius: "8px",
+        padding: "10px",
         backgroundColor: "#e0f7fa",
-        boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
       }}
     >
       <div
@@ -403,12 +432,23 @@ export default function Appointment_list() {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          gap: "20px",
+          gap: "10px",
         }}
       >
-        {/* Global Search Section */}
-        <div style={{ display: "flex", alignItems: "center", gap: "30px" }}>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
           <Form.Group style={{ display: "flex", alignItems: "center", margin: 0 }}>
+            <span
+              style={{
+                marginRight: "10px",
+                fontSize: "16px",
+                fontWeight: "bold",
+                color: "#333",
+                marginBottom: "15px"
+              }}
+            >
+              Search
+            </span>
             <InputGroup>
               <Form.Control
                 type="search"
@@ -423,37 +463,33 @@ export default function Appointment_list() {
                 }
                 placeholder="Global Search"
                 style={{
-                  borderRadius: "8px",
-                  border: "2px solid #4dd0e1",
-                  padding: "8px 12px",
-                  width: "250px",
-                  fontSize: "14px",
+                  borderRadius: "6px",
+                  border: "1px solid #4dd0e1",
+                  padding: "5px 8px",
+                  width: "200px",
+                  fontSize: "12px",
                   transition: "all 0.3s ease",
                 }}
               />
             </InputGroup>
           </Form.Group>
-          {/* ** EDITED **: Display current location for user info */}
-          <div style={{ fontSize: "14px", fontWeight: "bold", color: "#00838f" }}>
-              Location: {currentLocation.toUpperCase()}
-          </div>
+          
         </div>
 
-        {/* Date Picker Section */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "15px",
-            border: "2px solid #4dd0e1",
-            borderRadius: "12px",
-            padding: "15px",
+            gap: "10px",
+            border: "1px solid #4dd0e1",
+            borderRadius: "8px",
+            padding: "8px",
             backgroundColor: "#f5fcfd",
           }}
         >
-          {/* From Date Picker */}
+
           <div>
-            <div style={{ fontSize: "14px", fontWeight: "500", color: "#00838f", marginBottom: "5px" }}>
+            <div style={{ fontSize: "12px", fontWeight: "500", color: "#00838f", marginBottom: "3px" }}>
               From Date
             </div>
             <DatePicker
@@ -461,12 +497,11 @@ export default function Appointment_list() {
               onChange={setFromDate}
               dateFormat="dd-MM-yyyy"
               placeholderText="Select from date"
-              customInput={<Form.Control style={{ /* styles */ }} />}
+              customInput={<Form.Control style={{ padding: '5px 8px', fontSize: '12px' }} />}
             />
           </div>
-          {/* To Date Picker */}
           <div>
-            <div style={{ fontSize: "14px", fontWeight: "500", color: "#00838f", marginBottom: "5px" }}>
+            <div style={{ fontSize: "12px", fontWeight: "500", color: "#00838f", marginBottom: "3px" }}>
               To Date
             </div>
             <DatePicker
@@ -474,7 +509,7 @@ export default function Appointment_list() {
               onChange={setToDate}
               dateFormat="dd-MM-yyyy"
               minDate={fromDate}
-              customInput={<Form.Control style={{ /* styles */ }} />}
+              customInput={<Form.Control style={{ padding: '5px 8px', fontSize: '12px' }} />}
             />
           </div>
           <Button
@@ -483,27 +518,42 @@ export default function Appointment_list() {
             style={{
               backgroundColor: "#00bcd4",
               border: "none",
-              borderRadius: "8px",
-              padding: "8px 20px",
-              fontSize: "14px",
+              borderRadius: "6px",
+              padding: "8px 15px",
+              fontSize: "12px",
               fontWeight: "500",
               color: "white",
               cursor: "pointer",
               transition: "all 0.3s ease",
               boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              marginTop: "20px",
+              marginTop: "15px",
             }}
-            // ** EDITED **: Disable button if location is default
             disabled={currentLocation === 'default'}
           >
-            Refresh Data
+            <FeatherIcon icon="refresh-ccw" size={16} className="me-2" />Refresh All Data
           </Button>
         </div>
       </div>
     </div>
   );
 
-  // ------------------------- RENDER -------------------------
+  const getColumnStyle = (width) => ({
+    width: width,
+    minWidth: width,
+    maxWidth: width,
+    border: "1px solid #000000ff",
+    textAlign: "center",
+    padding: "0.5rem"
+  });
+
+  const noteColumnStyle = {
+    minWidth: "200px",
+    maxWidth: "400px",
+    border: "1px solid #000000ff",
+    textAlign: "left",
+    padding: "0.5rem",
+    overflowWrap: 'break-word'
+  };
 
   return (
     <div
@@ -512,11 +562,10 @@ export default function Appointment_list() {
         background: "linear-gradient(to right, #e0f7fa, #80deea)",
         fontFamily: "'Poppins', Arial, sans-serif",
         minHeight: "100vh",
-        padding: "20px",
+        padding: "10px",
       }}
     >
 
-      {/* --- Delete Modal --- */}
       <Modal
         show={showDeleteModal}
         onHide={() => setShowDeleteModal(false)}
@@ -535,6 +584,7 @@ export default function Appointment_list() {
             onChange={(e) => setCancellationReason(e.target.value)}
           ></textarea>
         </Modal.Body>
+
         <Modal.Footer>
           <Button variant="danger" onClick={handleDelete}>
             Submit & Cancel
@@ -542,91 +592,97 @@ export default function Appointment_list() {
         </Modal.Footer>
       </Modal>
 
-      {/* --- Edit Modal --- */}
       <Modal show={showEditModal} onHide={() => setShowEditModal(false)} size="lg" centered>
-          <Modal.Header closeButton><Modal.Title>Edit Appointment</Modal.Title></Modal.Header>
-          <Modal.Body>
-              {selectedAppointment ? (
-                  <Form>
-                      <Row>
-                          <Col md={4} className="mb-4">
-                              <Form.Group className="mb-3">
-                                  <Form.Label>Type</Form.Label>
-                                  <Form.Select name="patient_type" value={selectedAppointment.patient_type || ""} onChange={handleEditModalInputChange}>
-                                      <option value="">Select Type</option>
-                                      {TYPE_LIST.map((type, index) => (<option key={index} value={type}>{type}</option>))}
-                                  </Form.Select>
-                              </Form.Group>
-                          </Col>
-                          <Col md={4}>
-                              <Form.Group className="mb-3">
-                                  <Form.Label>Doctor Name</Form.Label>
-                                  <Form.Select name="doctorName" value={selectedAppointment.doctorName || ""} onChange={handleEditModalInputChange}>
-                                      <option value="">Select a Doctor</option>
-                                      {doctors.map((doctor) => (<option key={doctor.doctor_id} value={doctor.name}>{doctor.name}</option>))}
-                                  </Form.Select>
-                              </Form.Group>
-                          </Col>
-                          <Col md={4}>
-                              <Form.Group className="mb-3">
-                                  <Form.Label>Contact No</Form.Label>
-                                  <Form.Control type="text" name="patient_phone" value={selectedAppointment.patient_phone || ""} onChange={handleEditModalInputChange} />
-                              </Form.Group>
-                          </Col>
-                          <Col md={4}>
-                            <Form.Group>
-                                <Form.Label>Appointment Date</Form.Label>
-                                <DatePicker
-                                    selected={selectedAppointment.appointment_timestamp ? new Date(selectedAppointment.appointment_timestamp) : null}
-                                    onChange={handleDateChange}
-                                    dateFormat="dd-MM-yyyy"
-                                    className="form-control"
-                                    placeholderText="Select Date"
-                                />
-                            </Form.Group>
-                        </Col>
-                        <Col md={4}>
-                            <Form.Group>
-                                <Form.Label>Appointment Time</Form.Label>
-                                <Form.Select name="appointmentTime" value={selectedAppointment.appointmentTime || ""} onChange={handleEditModalInputChange}>
-                                    <option value="">Select Time</option>
-                                    {timeSlots.map((time, index) => (<option key={index} value={time}>{time}</option>))}
-                                </Form.Select>
-                            </Form.Group>
-                        </Col>
-                        {/* More fields here... FDE, Reference, Note, etc. */}
-                      </Row>
-                      <Button variant="primary" onClick={handleSaveChanges} style={{ float: "right", marginTop: '20px' }}>
-                          Save Changes
-                      </Button>
-                  </Form>
-              ) : (
-                  <p>Loading appointment details...</p>
-              )}
-          </Modal.Body>
+        <Modal.Header closeButton><Modal.Title>Edit Appointment</Modal.Title></Modal.Header>
+        <Modal.Body>
+          {selectedAppointment ? (
+            <Form>
+              <Row>
+                <Col md={4} className="mb-2">
+                  <Form.Group className="mb-2">
+                    <Form.Label style={{ fontSize: '14px' }}>Type</Form.Label>
+                    <Form.Select name="patient_type" value={selectedAppointment.patient_type || ""} onChange={handleEditModalInputChange} style={{ fontSize: '14px' }}>
+                      <option value="">Select Type</option>
+                      {TYPE_LIST.map((type, index) => (<option key={index} value={type}>{type}</option>))}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+
+                <Col md={4}>
+                  <Form.Group className="mb-2">
+                    <Form.Label style={{ fontSize: '14px' }}>Doctor Name</Form.Label>
+                    <Form.Select name="doctorName" value={selectedAppointment.doctorName || ""} onChange={handleEditModalInputChange} style={{ fontSize: '14px' }}>
+                      <option value="">Select a Doctor</option>
+                      {doctors.map((doctor) => (<option key={doctor.doctor_id} value={doctor.name}>{doctor.name}</option>))}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+
+                <Col md={4}>
+                  <Form.Group className="mb-2">
+                    <Form.Label style={{ fontSize: '14px' }}>Patient Name</Form.Label>
+                    <Form.Control type="text" name="patientName" value={selectedAppointment.patientName || ""} onChange={handleEditModalInputChange} style={{ fontSize: '14px' }} />
+                  </Form.Group>
+                </Col>
+
+                <Col md={4}>
+                  <Form.Group className="mb-2">
+                    <Form.Label style={{ fontSize: '14px' }}>Contact No</Form.Label>
+                    <Form.Control type="text" name="patient_phone" value={selectedAppointment.patient_phone || ""} onChange={handleEditModalInputChange} style={{ fontSize: '14px' }} />
+                  </Form.Group>
+                </Col>
+
+                <Col md={4}>
+                  <Form.Group className="mb-2">
+                    <Form.Label style={{ fontSize: '14px' }}>Appointment Date</Form.Label>
+                    <DatePicker
+                      selected={selectedAppointment.appointment_timestamp ? new Date(selectedAppointment.appointment_timestamp) : null}
+                      onChange={handleDateChange}
+                      dateFormat="dd-MM-yyyy"
+                      className="form-control"
+                      placeholderText="Select Date"
+                      style={{ fontSize: '14px' }}
+                    />
+                  </Form.Group>
+                </Col>
+
+                <Col md={4}>
+                  <Form.Group className="mb-2">
+                    <Form.Label style={{ fontSize: '14px' }}>Appointment Time</Form.Label>
+                    <Form.Select name="appointmentTime" value={selectedAppointment.appointmentTime || ""} onChange={handleEditModalInputChange} style={{ fontSize: '14px' }}>
+                      <option value="">Select Time</option>
+                      {timeSlots.map((time, index) => (<option key={index} value={time}>{time}</option>))}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+              </Row>
+              <Button variant="primary" onClick={handleSaveChanges} style={{ float: "right", marginTop: '10px' }}>
+                Save Changes
+              </Button>
+            </Form>
+          ) : (
+            <p>Loading appointment details...</p>
+          )}
+        </Modal.Body>
       </Modal>
 
-      {/* --- Receipt Modal (Needs full implementation in modular component) --- */}
       {showReceiptModal && (
         <Modal show={showReceiptModal} onHide={() => setShowReceiptModal(false)} size="xl" centered>
-            <Modal.Body><p>Receipt Generation/Saving UI Goes Here.</p></Modal.Body>
+          <Modal.Body><p>Receipt Generation/Saving UI Goes Here.</p></Modal.Body>
         </Modal>
       )}
 
-
-      {/* --- Main Content --- */}
       <NavBarA pagename="Appointment List" />
-
-      <div className="theme-body" style={{ /* styles */ }}>
+      <div className="theme-body">
         <Container fluid>
           <Row>
             <Col md={12}>
               <Card
                 style={{
-                  marginLeft: "-30px",
-                  marginRight: "-30px",
-                  borderRadius: "12px",
-                  boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
+                  marginLeft: "-10px",
+                  marginRight: "-10px",
+                  borderRadius: "8px",
+                  boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
                   borderColor: "#00bcd4",
                   background: "white",
                   border: "1px solid #00bcd4",
@@ -651,25 +707,80 @@ export default function Appointment_list() {
                       ]}
                       currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
                       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
-                      responsiveLayout="scroll"
-                      className="p-datatable-customers"
+                      className="p-datatable-customers p-datatable-gridlines p-datatable-striped datatable-compact-style"
+                      rowClassName={getRowClassName}
                     >
-                      <Column field="appointment_id" header="Sr.No" style={{ width: "60px", textAlign: "center" }} />
+                      <Column
+                        field="appointment_id"
+                        header="ID"
+                        sortable
+                        style={getColumnStyle("88px")}
+                        headerClassName="datatable-header-center"
+                      />
                       <Column
                         field="appointment_timestamp"
                         header="Date"
-                        sortable
+                        style={getColumnStyle("85px")}
                         body={(rowData) => moment(rowData.appointment_timestamp).format("DD-MM-YYYY")}
+                        headerClassName="datatable-header-center"
                       />
-                      <Column field="appointment_time" header="Appo.Time" sortable />
-                      <Column field="confirm_time" header="Confirm Time" sortable />
-                      <Column field="patient_type" header="Type" sortable />
-                      <Column field="patient_name" header="Patient Name" sortable />
-                      <Column field="patient_phone" header="Contact No" sortable />
-                      <Column field="doctor_name" header="Doctor Details" sortable />
-                      <Column field="FDE_Name" header="FDE Name" sortable />
-                      <Column field="note" header="Note" sortable />
-                      <Column header="Actions" body={renderActionBody} exportable={false} />
+                      <Column
+                        field="appointment_time"
+                        header="Appointment Time"
+                        style={getColumnStyle("83px")}
+                        headerClassName="datatable-header-center"
+                      />
+                      <Column
+                        field="confirm_time"
+                        header="Confirm Time"
+                        style={getColumnStyle("65px")}
+                        headerClassName="datatable-header-center"
+                      />
+                      <Column
+                        field="patient_type"
+                        header="Patient Type"
+                        style={getColumnStyle("75px")}
+                        headerClassName="datatable-header-center"
+                      />
+                      <Column
+                        field="patient_name"
+                        header="Patient Name"
+
+                        style={getColumnStyle("120px")}
+                        headerClassName="datatable-header-center"
+                      />
+                      <Column
+                        field="patient_phone"
+                        header="Contact No"
+                        style={getColumnStyle("110px")}
+                        headerClassName="datatable-header-center"
+                      />
+                      <Column
+                        field="doctor_name"
+                        header="Doctor"
+                        style={getColumnStyle("110px")}
+                        headerClassName="datatable-header-center"
+                      />
+                      <Column
+                        field="FDE_Name"
+                        header="FDE"
+                        style={getColumnStyle("60px")}
+                        headerClassName="datatable-header-center"
+                      />
+                      <Column
+                        field="note"
+                        header="Note"
+                        style={getColumnStyle("145px")}
+                        body={(rowData) => <div style={{ whiteSpace: 'normal', textAlign: "left" }}>{rowData.note}</div>}
+                        headerClassName="datatable-header-center"
+                      />
+                      <Column
+                        header="Actions"
+                        body={renderActionBody}
+                        exportable={false}
+                        style={getColumnStyle("165px")}
+                        headerClassName="datatable-header-center"
+                      />
                     </DataTable>
                   )}
                 </Card.Body>

@@ -29,7 +29,17 @@ export default function NavBarA() {
     <div className="navbar-container">
       <Container fluid>
         <div className="navbar-content">
-          {/* Breadcrumb Navigation */}
+
+         <div className="date-time">
+            <div className="time-box">
+              <i className="fa fa-clock-o pulse"></i>
+              {time}
+            </div>
+            <div className="date-box">
+              <i className="fa fa-calendar"></i>
+              {formattedDate}
+            </div>
+          </div>
           <nav className="breadcrumb-nav">
             <Link
               to="/"
@@ -42,22 +52,23 @@ export default function NavBarA() {
             </Link>
             <span className="separator">•</span>
             <Link
-              to="/appointments"
+              to="/reports/enquiry/add"
               className={`nav-link ${
-                location.pathname === "/appointments" ? "active" : ""
+                location.pathname === "/reports/enquiry/add" ? "active" : ""
               }`}
             >
-              <span className="nav-icon">📋</span>
-              Appointment List
+              <span className="nav-icon">➕</span>
+              Add Enquiry
             </Link>
+            <span className="separator">•</span>
             <Link
-              to="/reports/receipts"
+              to="/reports/enquiry"
               className={`nav-link ${
-                location.pathname === "/reports/receipts" ? "active" : ""
+                location.pathname === "/reports/enquiry" ? "active" : ""
               }`}
             >
               <span className="nav-icon">📋</span>
-              Receipt List
+              Enquiry List
             </Link>
             <span className="separator">•</span>
             <Link
@@ -71,37 +82,25 @@ export default function NavBarA() {
             </Link>
             <span className="separator">•</span>
             <Link
-              to="/reports/enquiry"
+              to="/appointments"
               className={`nav-link ${
-                location.pathname === "/reports/enquiry" ? "active" : ""
+                location.pathname === "/appointments" ? "active" : ""
               }`}
             >
-              <span className="nav-icon">📝</span>
-              Enquiry List
+              <span className="nav-icon">📋</span>
+              Appointment List
             </Link>
             <span className="separator">•</span>
             <Link
-              to="/reports/enquiry/add"
+              to="/reports/receipts"
               className={`nav-link ${
-                location.pathname === "/reports/enquiry/add" ? "active" : ""
+                location.pathname === "/reports/receipts" ? "active" : ""
               }`}
             >
-              <span className="nav-icon">✏️</span>
-              Add Enquiry
+              <span className="nav-icon">📋</span>
+              Receipt List
             </Link>
           </nav>
-
-          {/* Right Section: Time & Date */}
-          <div className="date-time">
-            <div className="time-box">
-              <i className="fa fa-clock-o pulse"></i>
-              {time}
-            </div>
-            <div className="date-box">
-              <i className="fa fa-calendar"></i>
-              {formattedDate}
-            </div>
-          </div>
         </div>
       </Container>
 

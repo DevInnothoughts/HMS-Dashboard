@@ -242,10 +242,15 @@ const AddInvoice = () => {
                 borderColor: "#00bcd4",
                 background: "white",
                 border: "1px solid #00bcd4",
+                padding:"15px",
               }}
             >
               <Card.Body>
                 <Form onSubmit={handleSubmit}>
+                     <h4 style={{marginBottom:"20px"}}>Add Invoice Details <span className="ms-2 text-secondary" style={{ fontSize: '0.8em' }}>
+                        (Clinic Location: {currentLocation ? currentLocation.toUpperCase() : "Loading..."}
+                        )
+                      </span></h4>
                   <Row>
                     {/* Invoice No */}
                     <Col md={4} className="mb-4">
@@ -286,7 +291,7 @@ const AddInvoice = () => {
                     {/* Patient Name */}
                     <Col md={4} className="mb-4">
                       <Form.Group className="mb-3">
-                        <Form.Label>Patient ID</Form.Label>
+                        <Form.Label>Patient Id</Form.Label>
                         <Form.Control
                           type="text"
                           id="patient_id"
@@ -297,58 +302,6 @@ const AddInvoice = () => {
                         />
                         <Form.Control.Feedback type="invalid">
                           {errors.patient_id}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
-
-                    {/* Discharge Date */}
-                    <Col md={4} className="mb-4">
-                      <Form.Group className="mb-3">
-                        <Form.Label>Discharge Date </Form.Label>
-                        <Form.Control
-                          type="date"
-                          id="discharge_date"
-                          name="discharge_date"
-                          value={formData.discharge_date}
-                          onChange={handleInputChange}
-                          isInvalid={errors.discharge_date}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {errors.discharge_date}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
-
-                    {/* Discharge Time */}
-                    <Col md={4} className="mb-4">
-                      <Form.Group className="mb-3">
-                        <Form.Label>Discharge Time</Form.Label>
-                        <Form.Control
-                          type="time"
-                          name="dischargetime"
-                          value={formData.dischargetime}
-                          onChange={handleInputChange}
-                        />
-                        {errors.dischargetime && (
-                          <p style={{ color: "red" }}>{errors.dischargetime}</p>
-                        )}
-                      </Form.Group>
-                    </Col>
-
-                    {/* Bed Category */}
-                    <Col md={4} className="mb-4">
-                      <Form.Group className="mb-3">
-                        <Form.Label>Bed Category </Form.Label>
-                        <Form.Control
-                          type="text"
-                          id="bed_category"
-                          name="bed_category"
-                          value={formData.bed_category}
-                          onChange={handleInputChange}
-                          isInvalid={errors.bed_category}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {errors.bed_category}
                         </Form.Control.Feedback>
                       </Form.Group>
                     </Col>
@@ -386,6 +339,59 @@ const AddInvoice = () => {
                         <Form.Control.Feedback type="invalid">
                           {errors.admissiontime}
                         </Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+
+                    {/* Bed Category */}
+                    <Col md={4} className="mb-4">
+                      <Form.Group className="mb-3">
+                        <Form.Label>Bed Category </Form.Label>
+                        <Form.Control
+                          type="text"
+                          id="bed_category"
+                          name="bed_category"
+                          value={formData.bed_category}
+                          onChange={handleInputChange}
+                          isInvalid={errors.bed_category}
+                        />
+                        <Form.Control.Feedback type="invalid">
+                          {errors.bed_category}
+                        </Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+
+                     {/* Discharge Date */}
+                    <Col md={4} className="mb-4">
+                      <Form.Group className="mb-3">
+                        <Form.Label>Discharge Date </Form.Label>
+                        <Form.Control
+                          type="date"
+                          id="discharge_date"
+                          name="discharge_date"
+                          value={formData.discharge_date}
+                          min={formData.admission_date}
+                          onChange={handleInputChange}
+                          isInvalid={errors.discharge_date}
+                        />
+                        <Form.Control.Feedback type="invalid">
+                          {errors.discharge_date}
+                        </Form.Control.Feedback>
+                      </Form.Group>
+                    </Col>
+
+                    {/* Discharge Time */}
+                    <Col md={4} className="mb-4">
+                      <Form.Group className="mb-3">
+                        <Form.Label>Discharge Time</Form.Label>
+                        <Form.Control
+                          type="time"
+                          name="dischargetime"
+                          value={formData.dischargetime}
+                          onChange={handleInputChange}
+                        />
+                        {errors.dischargetime && (
+                          <p style={{ color: "red" }}>{errors.dischargetime}</p>
+                        )}
                       </Form.Group>
                     </Col>
 
@@ -492,7 +498,8 @@ const AddInvoice = () => {
                               type="button"
                               onClick={() => deleteDynamicRow(index)}
                               className="btn btn-danger"
-                              style={{ width: "10%" }}
+                              style={{ width: "10%"}}
+                        
                             >
                               -
                             </button>
@@ -502,6 +509,7 @@ const AddInvoice = () => {
                           type="button"
                           onClick={addDynamicRow}
                           className="btn btn-success"
+                          style={{marginBottom:"10px"}}
                         >
                           + Add Row
                         </button>
@@ -762,21 +770,23 @@ const AddInvoice = () => {
                     {/* Submit and Reset Buttons */}
                     <Col
                       md={12}
-                      className="d-flex justify-content-end align-items-end mb-4"
+                      className="d-flex justify-content-end align-items-end mb-4" 
+                      style={{marginTop:"15px"}}
                     >
-                      <button
-                        type="submit"
-                        disabled={loading}
-                        className="btn btn-primary"
-                      >
-                        {loading ? "Submitting..." : "Submit"}
-                      </button>
                       <button
                         type="button"
                         onClick={handleReset}
-                        className="btn btn-secondary ms-2"
+                        className="btn btn-secondary"
+                        style={{marginBottom:"15px"}}
                       >
                         Reset
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="btn btn-primary ms-2"
+                      > 
+                        {loading ? "Submitting..." : "Submit"}
                       </button>
                     </Col>
                   </Row>

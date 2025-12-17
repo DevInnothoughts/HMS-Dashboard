@@ -22,6 +22,7 @@ import DatePicker from "react-datepicker";
 import NavBarP from "../../components/NavbarP";
 import logo from "../../assets/images/3.png";
 
+
 const BASE_URL = "http://localhost:5100/api"; // Update your API base URL here
 
 const formatDate = (dateString) => {
@@ -1019,64 +1020,97 @@ export default function All_patient() {
     });
   };
 
+  // const actionBodyTemplate = (patient) => (
+  //   <div
+  //     className="cart-action"
+  //     style={{ margin: "5px", display: "flex", gap: "5px" }}
+  //   >
+  //     <Link
+  //       onClick={() => handlePrint(patient)}
+  //       className="print"
+  //       to=""
+  //       style={{
+  //         width: "35px", // Slightly reduce the width
+  //         height: "35px", // Slightly reduce the height
+  //         display: "flex",
+  //         justifyContent: "center",
+  //         alignItems: "center",
+  //         borderRadius: "50%", // Circular shape
+  //         padding: "0", // Remove default padding
+  //       }}
+  //       title="Print" // Tooltip text on hover
+  //     >
+  //       <FeatherIcon icon="printer" className="w-18" />
+  //     </Link>
+  //     <Button
+  //       variant="btn"
+  //       onClick={() => handleAddAppointmentClick(patient)} // Pass patient here
+  //       className="appointment-btn"
+  //       title="Add Appointment" // Tooltip text on hover
+  //       style={{
+  //         width: "35px", // Set a fixed size for consistent button sizes
+  //         height: "35px", // Set a fixed size for consistent button sizes
+  //         display: "flex",
+  //         justifyContent: "center",
+  //         alignItems: "center",
+  //         borderRadius: "50%", // Circular shape
+  //         padding: "0", // Remove padding to keep the size uniform
+  //       }}
+  //     >
+  //       <FeatherIcon icon="plus-square" className="w-18" />
+  //     </Button>
+  //     <Button
+  //       variant="btn"
+  //       onClick={() => handleEditPatient(patient)} // Pass patient here
+  //       className="edit-btn"
+  //       style={{
+  //         width: "35px", // Slightly reduce the width
+  //         height: "35px", // Slightly reduce the height
+  //         display: "flex",
+  //         justifyContent: "center",
+  //         alignItems: "center",
+  //         borderRadius: "50%", // Circular shape
+  //         padding: "0", // Remove default padding
+  //       }}
+  //       title="Edit Patient" // Tooltip text on hover
+  //     >
+  //       <FeatherIcon icon="edit" className="w-18" />
+  //     </Button>
+  //   </div>
+  // );
+
   const actionBodyTemplate = (patient) => (
-    <div
-      className="cart-action"
-      style={{ margin: "5px", display: "flex", gap: "5px" }}
+  <div
+    className="d-flex align-items-center justify-content-center" 
+  >
+    <Link
+      onClick={() => handlePrint(patient)}
+      className="print btn btn-primary btn-sm btn-icon me-2" 
+      to=""
+      title="Print"
     >
-      <Link
-        onClick={() => handlePrint(patient)}
-        className="print"
-        to=""
-        style={{
-          width: "35px", // Slightly reduce the width
-          height: "35px", // Slightly reduce the height
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          borderRadius: "50%", // Circular shape
-          padding: "0", // Remove default padding
-        }}
-        title="Print" // Tooltip text on hover
-      >
-        <FeatherIcon icon="printer" className="w-18" />
-      </Link>
-      <Button
-        variant="btn"
-        onClick={() => handleAddAppointmentClick(patient)} // Pass patient here
-        className="appointment-btn"
-        title="Add Appointment" // Tooltip text on hover
-        style={{
-          width: "35px", // Set a fixed size for consistent button sizes
-          height: "35px", // Set a fixed size for consistent button sizes
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          borderRadius: "50%", // Circular shape
-          padding: "0", // Remove padding to keep the size uniform
-        }}
-      >
-        <FeatherIcon icon="plus-square" className="w-18" />
-      </Button>
-      <Button
-        variant="btn"
-        onClick={() => handleEditPatient(patient)} // Pass patient here
-        className="edit-btn"
-        style={{
-          width: "35px", // Slightly reduce the width
-          height: "35px", // Slightly reduce the height
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          borderRadius: "50%", // Circular shape
-          padding: "0", // Remove default padding
-        }}
-        title="Edit Patient" // Tooltip text on hover
-      >
-        <FeatherIcon icon="edit" className="w-18" />
-      </Button>
-    </div>
-  );
+      <FeatherIcon icon="printer" size="14" /> 
+    </Link>
+
+    <Button
+      variant="primary"
+      onClick={() => handleAddAppointmentClick(patient)}
+      className="appointment-btn btn-sm btn-icon me-2"
+      title="Add Appointment"
+    >
+      <FeatherIcon icon="plus-square" size="14" />
+    </Button>
+
+    <Button
+      variant="primary"
+      onClick={() => handleEditPatient(patient)}
+      className="edit-btn btn-sm btn-icon"
+      title="Edit Patient"
+    >
+      <FeatherIcon icon="edit" size="14" />
+    </Button>
+  </div>
+);
 
   const renderReferenceDetails = () => {
     switch (selectedReference) {
@@ -1827,6 +1861,17 @@ export default function All_patient() {
               margin: 0,
             }}
           >
+            <span
+            style={{
+                marginRight: "10px", 
+                fontSize: "16px", 
+                fontWeight: "bold", 
+                color: "#333",
+                marginBottom:"15px"
+            }}
+        >
+        Search
+        </span>
             <InputGroup>
               <Form.Control
                 type="search"
@@ -1853,6 +1898,8 @@ export default function All_patient() {
           </Form.Group>
         </div>
 
+        
+
         {/* Refresh Button (Now simple refresh for all data) */}
         <Button
           variant="primary"
@@ -1868,7 +1915,6 @@ export default function All_patient() {
             cursor: "pointer",
             transition: "all 0.3s ease",
             boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-            // marginTop: "20px", // Removed margin since date picker is gone
             ":hover": {
               backgroundColor: "#00acc1",
               transform: "translateY(-1px)",
@@ -1876,7 +1922,7 @@ export default function All_patient() {
             },
           }}
         >
-          <FeatherIcon icon="refresh-ccw" size={16} className="me-2" /> Refresh All Data
+        <FeatherIcon icon="refresh-ccw" size={16} className="me-2" />Refresh
         </Button>
       </div>
     </div>
@@ -2718,7 +2764,7 @@ export default function All_patient() {
                       currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
                       paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
                       responsiveLayout="scroll"
-                      className="p-datatable-customers"
+                      className="datatable-compact-style"
                       rowClassName={(formData, { rowIndex }) => ({
                         style: {
                           backgroundColor:
@@ -2743,19 +2789,9 @@ export default function All_patient() {
                       }}
                     >
                       <Column
-                        field="Uid_no"
-                        header="UID"
-                        sortable
-                        style={{
-                          border: "1px solid #90caf9",
-                          textAlign: "center",
-                          padding: "0.75rem",
-                        }}
-                      />
-                      <Column
                         field="date"
                         header="Date"
-                        sortable
+                        headerClassName="datatable-header-center"
                         body={(rowData) => {
                           const date = new Date(rowData.date);
                           // Format to DD-MM-YYYY
@@ -2767,21 +2803,72 @@ export default function All_patient() {
                           padding: "0.75rem",
                         }}
                       />
-
                       <Column
-                        field="name"
-                        header="Name"
+                        field="Uid_no"
+                        header="UID"
+                        headerClassName="datatable-header-center"
                         sortable
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
                           padding: "0.75rem",
+                        
+                        }}
+                      />
+                      
+
+                      <Column
+                        field="name"
+                        header="Patient Name"
+                        headerClassName="datatable-header-center"
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          wordBreak:"break-word",
+                          width:"150px"
+                        }}
+                      />
+                      <Column
+                        field="phone"
+                        header="Phone No"
+                        headerClassName="datatable-header-center"
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          wordBreak:"break-word",
+                          width:"110px"
+                        }}
+                      />
+                       <Column
+                        field="mobile_2"
+                        header="Alternate Phone No"
+                        headerClassName="datatable-header-center"
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          wordBreak:"break-word",
+                          width:"110px"
+                        }}
+                      />
+                      <Column
+                        field="address"
+                        header="Patient Address"
+                        headerClassName="datatable-header-center"
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width:"200px",
+                          textAlign:"left"
                         }}
                       />
                       <Column
                         field="age"
                         header="Age"
-                        sortable
+                        headerClassName="datatable-header-center"
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -2791,51 +2878,26 @@ export default function All_patient() {
                       <Column
                         field="sex"
                         header="Gender"
-                        sortable
+                        headerClassName="datatable-header-center"
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
                           padding: "0.75rem",
+                          width:"60px"
                         }}
                       />
-                      <Column
-                        field="phone"
-                        header="Phone No"
-                        sortable
-                        style={{
-                          border: "1px solid #90caf9",
-                          textAlign: "center",
-                          padding: "0.75rem",
-                        }}
-                      />
-                      <Column
-                        field="email"
-                        header="Email"
-                        sortable
-                        style={{
-                          border: "1px solid #90caf9",
-                          textAlign: "center",
-                          padding: "0.75rem",
-                        }}
-                      />
-                      <Column
-                        header="Status"
-                        body={statusBodyTemplate}
-                        sortable
-                        style={{
-                          border: "1px solid #90caf9",
-                          textAlign: "center",
-                          padding: "0.75rem",
-                        }}
-                      />
+                      
+                     
                       <Column
                         header="Actions"
                         body={actionBodyTemplate}
                         exportable={false}
+                        headerClassName="datatable-header-center"
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
                           padding: "0.75rem",
+                          width:"200px"
                         }}
                       />
                     </DataTable>

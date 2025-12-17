@@ -14,3 +14,4 @@ thead, tbody, tfoot, tr, td, th{
 .table > :not(:last-child) > :last-child > *{
     border-color: var(--#{$prefix}border-color);
 }
+

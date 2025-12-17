@@ -55,7 +55,7 @@ const getDynamicRowsFromInvoice = (invoice) => {
   }
 
   // Use the totalamt field from the API as the definitive sub_total
-  const Sub_Total = parseFloat(invoice.totalamt) || calculatedTotal; 
+  const Sub_Total = parseFloat(invoice.totalamt) || calculatedTotal;
 
   return { dynamicRows, Sub_Total: Sub_Total.toFixed(2) };
 };
@@ -64,15 +64,15 @@ const calculatePayableAmt = (invoice) => {
   const totalAmt = parseFloat(invoice.totalamt) || 0;
   const discount = parseFloat(invoice.discount) || 0;
   const pdc = parseFloat(invoice.pdc) || 0;
-  
+
   // NOTE: Assuming bill_Type/bill_method must be inferred from context or determined in the modal
   const billMethod = invoice.bill_method || (invoice.chequeno !== 'NULL' && invoice.chequeno) ? 'PDC' : 'non_insurance';
   const billType = invoice.bill_Type || (invoice.insurancecompany ? 'insurance' : 'non_insurance');
 
   if (billMethod === "PDC") {
     return Math.max(0, totalAmt - pdc).toFixed(2);
-  } 
-  
+  }
+
   if (billType === "non_insurance" || billType === "charity" || billMethod === "reimbursement") {
     return Math.max(0, totalAmt - discount).toFixed(2);
   }
@@ -84,9 +84,9 @@ const calculatePayableAmt = (invoice) => {
 const formatDateForDisplay = (dateValue) => {
   if (!dateValue) return "N/A";
   try {
-      return new Date(dateValue).toLocaleDateString('en-GB'); 
+    return new Date(dateValue).toLocaleDateString('en-GB');
   } catch (e) {
-      return String(dateValue).split('T')[0]; // Fallback for bad date format
+    return String(dateValue).split('T')[0]; // Fallback for bad date format
   }
 };
 // --- END NEW HELPER FUNCTIONS ---
@@ -103,26 +103,26 @@ const InvoiceList = () => {
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [currentLocation, setCurrentLocation] = useState(null); 
-  
+  const [currentLocation, setCurrentLocation] = useState(null);
+
   // State for editable dynamic row data in the modal
   const [modalInvoiceData, setModalInvoiceData] = useState({
-      dynamicRows: [],
-      Sub_Total: "0.00",
-      discount: "0.00",
-      pdc: "0.00",
-      payableAmount: "0.00",
+    dynamicRows: [],
+    Sub_Total: "0.00",
+    discount: "0.00",
+    pdc: "0.00",
+    payableAmount: "0.00",
   });
 
 
   // Existing logic to decode JWT and set currentLocation
   useEffect(() => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        const payload = decodeJwt(token);
-        if (payload?.jobLocation) setCurrentLocation(payload.jobLocation);
-      }
-    }, []);
+    const token = localStorage.getItem('token');
+    if (token) {
+      const payload = decodeJwt(token);
+      if (payload?.jobLocation) setCurrentLocation(payload.jobLocation);
+    }
+  }, []);
 
 
   const [formData, setFormData] = useState({
@@ -136,23 +136,23 @@ const InvoiceList = () => {
   const initialFormData = { ...formData };
 
   // Fetch invoices on mount (MODIFIED)
-useEffect(() => {
-  const fetchInvoices = async () => {
-    if (!currentLocation) return;
+  useEffect(() => {
+    const fetchInvoices = async () => {
+      if (!currentLocation) return;
 
-    setLoading(true);
-    setError("");
+      setLoading(true);
+      setError("");
 
-    try {
-      const response = await fetch(
-        `${BASE_URL}/V1/invoice/listInvoice?location=${encodeURIComponent(currentLocation)}`
-      );
+      try {
+        const response = await fetch(
+          `${BASE_URL}/V1/invoice/listInvoice?location=${encodeURIComponent(currentLocation)}`
+        );
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (response.ok) {
-        // CRITICAL FIX: The API returns a flat structure, calculate payable and due amounts here.
-        const processedInvoices = (data.data || []).map(invoice => ({
+        if (response.ok) {
+          // CRITICAL FIX: The API returns a flat structure, calculate payable and due amounts here.
+          const processedInvoices = (data.data || []).map(invoice => ({
             ...invoice,
             totalamt: parseFloat(invoice.totalamt) || 0,
             discount: parseFloat(invoice.discount) || 0,
@@ -166,56 +166,56 @@ useEffect(() => {
             pay_mode: invoice.chequeno && invoice.chequeno !== 'NULL' ? 'PDC' : (invoice.insurancecompany ? 'INSURANCE' : 'CASH/CARD'),
             patient_name: invoice.patient_name || 'N/A', // Assuming patient name is embedded
             patient_phone: invoice.patient_phone || 'N/A', // Assuming phone is embedded
-        }));
+          }));
 
-        setInvoices(processedInvoices || []);
-      } else {
-        // HIPAA: Generic error message
-        console.error(data.message);
-        throw new Error("Failed to fetch invoices."); 
+          setInvoices(processedInvoices || []);
+        } else {
+          // HIPAA: Generic error message
+          console.error(data.message);
+          throw new Error("Failed to fetch invoices.");
+        }
+      } catch (err) {
+        setError(err.message || "An error occurred while fetching invoices.");
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      setError(err.message || "An error occurred while fetching invoices.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  fetchInvoices();
-}, [currentLocation]);
+    fetchInvoices();
+  }, [currentLocation]);
 
   // Fetch dropdown data (MODIFIED)
-useEffect(() => {
-  const fetchDropdowns = async () => {
-    if (!currentLocation) return;
+  useEffect(() => {
+    const fetchDropdowns = async () => {
+      if (!currentLocation) return;
 
-    try {
-      const endpoints = [
-        { url: "consultant_dropdown", setter: setConsultants },
-        { url: "surgeon_dropdown", setter: setSurgeons },
-        { url: "insurance_co_dropdown", setter: setInsurance },
-        { url: "tpa_dropdown", setter: setTpa },
-      ];
+      try {
+        const endpoints = [
+          { url: "consultant_dropdown", setter: setConsultants },
+          { url: "surgeon_dropdown", setter: setSurgeons },
+          { url: "insurance_co_dropdown", setter: setInsurance },
+          { url: "tpa_dropdown", setter: setTpa },
+        ];
 
-      for (const { url, setter } of endpoints) {
-        const response = await fetch(
-          `${BASE_URL}/V1/invoice/${url}?location=${encodeURIComponent(currentLocation)}`
-        );
+        for (const { url, setter } of endpoints) {
+          const response = await fetch(
+            `${BASE_URL}/V1/invoice/${url}?location=${encodeURIComponent(currentLocation)}`
+          );
 
-        const data = await response.json();
-        if (response.ok) {
-          setter(data.data || []);
+          const data = await response.json();
+          if (response.ok) {
+            setter(data.data || []);
+          }
         }
+      } catch (err) {
+        console.error(err);
+        // HIPAA: Generic error message
+        setError("Failed to fetch dropdown data.");
       }
-    } catch (err) {
-      console.error(err);
-      // HIPAA: Generic error message
-      setError("Failed to fetch dropdown data."); 
-    }
-  };
+    };
 
-  fetchDropdowns();
-}, [currentLocation]);
+    fetchDropdowns();
+  }, [currentLocation]);
 
   // Update payable amount
   useEffect(() => {
@@ -238,7 +238,7 @@ useEffect(() => {
     formData.bill_method,
   ]);
 
-const handleInputChange = (e) => {
+  const handleInputChange = (e) => {
     // This function is generally used for global form handling, but the modal
     // uses setSelectedInvoice for field updates. Keeping this handler simple.
     const { name, value } = e.target;
@@ -246,83 +246,83 @@ const handleInputChange = (e) => {
   };
 
   const handleDynamicRowChange = (index, field, value) => {
-      setModalInvoiceData(prevModalData => {
-          const updatedRows = prevModalData.dynamicRows.map((row, i) =>
-              i === index ? { ...row, [field]: value } : row
-          );
+    setModalInvoiceData(prevModalData => {
+      const updatedRows = prevModalData.dynamicRows.map((row, i) =>
+        i === index ? { ...row, [field]: value } : row
+      );
 
-          // Calculate Sub_Total based on edited rows
-          const newSubTotal = updatedRows.reduce(
-              (total, row) => total + (parseFloat(row.value) || 0),
-              0
-          );
+      // Calculate Sub_Total based on edited rows
+      const newSubTotal = updatedRows.reduce(
+        (total, row) => total + (parseFloat(row.value) || 0),
+        0
+      );
 
-          const updatedModalData = {
-              ...prevModalData,
-              dynamicRows: updatedRows,
-              Sub_Total: newSubTotal.toFixed(2),
-          };
-          
-          // Re-calculate Payable Amt based on new Sub_Total
-          const discount = parseFloat(updatedModalData.discount || 0);
-          const pdc = parseFloat(updatedModalData.pdc || 0);
-          
-          let payable = newSubTotal - (updatedModalData.bill_method === "PDC" ? pdc : discount);
-          updatedModalData.payableAmount = Math.max(0, payable).toFixed(2);
+      const updatedModalData = {
+        ...prevModalData,
+        dynamicRows: updatedRows,
+        Sub_Total: newSubTotal.toFixed(2),
+      };
+
+      // Re-calculate Payable Amt based on new Sub_Total
+      const discount = parseFloat(updatedModalData.discount || 0);
+      const pdc = parseFloat(updatedModalData.pdc || 0);
+
+      let payable = newSubTotal - (updatedModalData.bill_method === "PDC" ? pdc : discount);
+      updatedModalData.payableAmount = Math.max(0, payable).toFixed(2);
 
 
-          // Also update selectedInvoice for API submission
-          setSelectedInvoice(prevInvoice => ({
-              ...prevInvoice,
-              // Update individual amount fields based on which dynamic row was changed (CRITICAL)
-              // This is complex, so we rely on the backend to re-calculate from the flat data,
-              // but we must send the updated flat fields back. For now, we only update Sub_Total.
-              totalamt: newSubTotal.toFixed(2),
-              payable_amt: updatedModalData.payableAmount,
-          }));
+      // Also update selectedInvoice for API submission
+      setSelectedInvoice(prevInvoice => ({
+        ...prevInvoice,
+        // Update individual amount fields based on which dynamic row was changed (CRITICAL)
+        // This is complex, so we rely on the backend to re-calculate from the flat data,
+        // but we must send the updated flat fields back. For now, we only update Sub_Total.
+        totalamt: newSubTotal.toFixed(2),
+        payable_amt: updatedModalData.payableAmount,
+      }));
 
-          return updatedModalData;
-      });
+      return updatedModalData;
+    });
   };
 
   const addDynamicRow = () => {
-        setModalInvoiceData(prevModalData => ({
-            ...prevModalData,
-            dynamicRows: [...prevModalData.dynamicRows, { label: "", value: "", field: "" }],
-        }));
-    };
+    setModalInvoiceData(prevModalData => ({
+      ...prevModalData,
+      dynamicRows: [...prevModalData.dynamicRows, { label: "", value: "", field: "" }],
+    }));
+  };
 
-    const deleteDynamicRow = (index) => {
-        setModalInvoiceData(prevModalData => {
-            const updatedRows = prevModalData.dynamicRows.filter((_, i) => i !== index);
-            
-            const newSubTotal = updatedRows.reduce(
-                (total, row) => total + (parseFloat(row.value) || 0),
-                0
-            );
-            
-            const updatedModalData = {
-                ...prevModalData,
-                dynamicRows: updatedRows,
-                Sub_Total: newSubTotal.toFixed(2),
-            };
+  const deleteDynamicRow = (index) => {
+    setModalInvoiceData(prevModalData => {
+      const updatedRows = prevModalData.dynamicRows.filter((_, i) => i !== index);
 
-            // Re-calculate Payable Amt
-            const discount = parseFloat(updatedModalData.discount || 0);
-            const pdc = parseFloat(updatedModalData.pdc || 0);
-            let payable = newSubTotal - (updatedModalData.bill_method === "PDC" ? pdc : discount);
-            updatedModalData.payableAmount = Math.max(0, payable).toFixed(2);
-            
-            // Also update selectedInvoice for API submission
-            setSelectedInvoice(prevInvoice => ({
-                ...prevInvoice,
-                totalamt: newSubTotal.toFixed(2),
-                payable_amt: updatedModalData.payableAmount,
-            }));
+      const newSubTotal = updatedRows.reduce(
+        (total, row) => total + (parseFloat(row.value) || 0),
+        0
+      );
 
-            return updatedModalData;
-        });
-    };
+      const updatedModalData = {
+        ...prevModalData,
+        dynamicRows: updatedRows,
+        Sub_Total: newSubTotal.toFixed(2),
+      };
+
+      // Re-calculate Payable Amt
+      const discount = parseFloat(updatedModalData.discount || 0);
+      const pdc = parseFloat(updatedModalData.pdc || 0);
+      let payable = newSubTotal - (updatedModalData.bill_method === "PDC" ? pdc : discount);
+      updatedModalData.payableAmount = Math.max(0, payable).toFixed(2);
+
+      // Also update selectedInvoice for API submission
+      setSelectedInvoice(prevInvoice => ({
+        ...prevInvoice,
+        totalamt: newSubTotal.toFixed(2),
+        payable_amt: updatedModalData.payableAmount,
+      }));
+
+      return updatedModalData;
+    });
+  };
 
   const handleReset = () => {
     setFormData(initialFormData);
@@ -330,95 +330,95 @@ const handleInputChange = (e) => {
   };
 
   const handleEditInvoice = (invoice) => {
-      // 1. Map flat DB structure back to UI dynamic rows
-      const { dynamicRows, Sub_Total } = getDynamicRowsFromInvoice(invoice);
+    // 1. Map flat DB structure back to UI dynamic rows
+    const { dynamicRows, Sub_Total } = getDynamicRowsFromInvoice(invoice);
 
-      // 2. Determine Payable amount for the modal display
-      const payableAmount = calculatePayableAmt(invoice);
-      
-      // 3. Set the state for both the source invoice and the modal editable data
-      setSelectedInvoice(invoice); // Source invoice used for general fields and PUT payload
+    // 2. Determine Payable amount for the modal display
+    const payableAmount = calculatePayableAmt(invoice);
 
-      setModalInvoiceData({
-          dynamicRows: dynamicRows,
-          Sub_Total: Sub_Total,
-          discount: invoice.discount || "0.00",
-          pdc: parseFloat(invoice.pdc) || "0.00",
-          payableAmount: payableAmount,
-          bill_method: invoice.bill_method || 'non_insurance', // Infer or set default
-          bill_Type: invoice.bill_Type || 'non_insurance', // Infer or set default
-      });
-      
-      setShowModal(true);
-    };
+    // 3. Set the state for both the source invoice and the modal editable data
+    setSelectedInvoice(invoice); // Source invoice used for general fields and PUT payload
+
+    setModalInvoiceData({
+      dynamicRows: dynamicRows,
+      Sub_Total: Sub_Total,
+      discount: invoice.discount || "0.00",
+      pdc: parseFloat(invoice.pdc) || "0.00",
+      payableAmount: payableAmount,
+      bill_method: invoice.bill_method || 'non_insurance', // Infer or set default
+      bill_Type: invoice.bill_Type || 'non_insurance', // Infer or set default
+    });
+
+    setShowModal(true);
+  };
 
   const handleCloseModal = () => {
     setShowModal(false);
     setSelectedInvoice(null);
     // Reset modalInvoiceData to initial state if needed
   };
-  
+
   const handleSaveChanges = async () => {
     if (!selectedInvoice) return;
 
     if (!currentLocation) {
-        // HIPAA: Generic error
-        toast.error("Cannot save changes: Location data is missing.");
-        return;
+      // HIPAA: Generic error
+      toast.error("Cannot save changes: Location data is missing.");
+      return;
     }
-    
+
     // 1. Prepare the final payload for the backend (combining flat invoice and dynamic row values)
-    const payload = { 
-        ...selectedInvoice, 
-        ...modalInvoiceData, // Overwrite totals and discount/PDC fields
-        location: currentLocation,
-        totalamt: modalInvoiceData.Sub_Total,
-        payable_amt: modalInvoiceData.payableAmount,
-        discount: modalInvoiceData.discount,
-        pdc: modalInvoiceData.pdc,
-        
+    const payload = {
+      ...selectedInvoice,
+      ...modalInvoiceData, // Overwrite totals and discount/PDC fields
+      location: currentLocation,
+      totalamt: modalInvoiceData.Sub_Total,
+      payable_amt: modalInvoiceData.payableAmount,
+      discount: modalInvoiceData.discount,
+      pdc: modalInvoiceData.pdc,
+
     };
-    
+
     // HIPAA: Generalized logging
     console.log("Attempting to save invoice changes for ID:", selectedInvoice.invoice_id);
 
     try {
-        const response = await fetch(
-          `${BASE_URL}/V1/invoice/${selectedInvoice.invoice_id}?location=${currentLocation}`,
-          {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload), 
-          }
-        );
-        
-        const result = await response.json();
-
-        if (response.ok) {
-          // Update the main list state with the new data
-          setInvoices((prevInvoices) =>
-            prevInvoices.map((invoice) =>
-              invoice.invoice_id === selectedInvoice.invoice_id
-                ? { ...invoice, ...payload } // Use the payload to update the local state immediately
-                : invoice
-            )
-          );
-
-          toast.success("Invoice updated successfully!");
-          handleCloseModal(); 
-        } else {
-          // HIPAA: Generic error message
-          toast.error("Error updating invoice. Please try again.");
-          console.error("Backend Error:", result.message);
+      const response = await fetch(
+        `${BASE_URL}/V1/invoice/${selectedInvoice.invoice_id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
         }
+      );
+
+      const result = await response.json();
+
+      if (response.ok) {
+        // Update the main list state with the new data
+        setInvoices((prevInvoices) =>
+          prevInvoices.map((invoice) =>
+            invoice.invoice_id === selectedInvoice.invoice_id
+              ? { ...invoice, ...payload } // Use the payload to update the local state immediately
+              : invoice
+          )
+        );
+
+        toast.success("Invoice updated successfully!");
+        handleCloseModal();
+      } else {
+        // HIPAA: Generic error message
+        toast.error("Error updating invoice. Please try again.");
+        console.error("Backend Error:", result.message);
+      }
     } catch (err) {
-        // HIPAA: Generic network error message
-        toast.error("An unexpected error occurred while updating the invoice.");
-        console.error("Network Error:", err);
+      // HIPAA: Generic network error message
+      toast.error("An unexpected error occurred while updating the invoice.");
+      console.error("Network Error:", err);
     }
   };
 
-  
+
   const updatePayableAmt = (updatedInvoice) => {
     let payableAmt = updatedInvoice.Sub_Total;
 
@@ -522,27 +522,19 @@ const handleInputChange = (e) => {
           </div>
 
           <table class="details-table">
-            <tr><td>Bill No:</td><td>${
-              invoice.invoice_id
-            }</td><td>Bill Date:</td><td>${formatDateForDisplay(invoice.creation_date)}</td></tr>
-            <tr><td>Patient Name:</td><td>${
-              invoice.patient_name
-            }</td><td>Gender / Age:</td><td>${invoice.gender || 'N/A'} / ${
-              invoice.age || 'N/A'
-            }</td></tr>
-            <tr><td>Admission No:</td><td>${
-              invoice.admission_no
-            }</td><td>Bed Category:</td><td>${
-              invoice.bed_desc || "N/A"
-            }</td></tr>
-            <tr><td>Doctor Name:</td><td>${
-              invoice.consultant || 'N/A'
-            }</td><td>Surgeon Name:</td><td>${invoice.surgeon_desc || 'N/A'}</td></tr>
-            <tr><td>Admission Date & Time:</td><td>${formatDateForDisplay(invoice.creation_date)} ${
-              invoice.admissiontime
-            }</td><td>Discharge Date & Time:</td><td>${formatDateForDisplay(invoice.due_date)} ${
-              invoice.dischargetime
-            }</td></tr>
+            <tr><td>Bill No:</td><td>${invoice.invoice_id
+        }</td><td>Bill Date:</td><td>${formatDateForDisplay(invoice.creation_date)}</td></tr>
+            <tr><td>Patient Name:</td><td>${invoice.patient_name
+        }</td><td>Gender / Age:</td><td>${invoice.gender || 'N/A'} / ${invoice.age || 'N/A'
+        }</td></tr>
+            <tr><td>Admission No:</td><td>${invoice.admission_no
+        }</td><td>Bed Category:</td><td>${invoice.bed_desc || "N/A"
+        }</td></tr>
+            <tr><td>Doctor Name:</td><td>${invoice.consultant || 'N/A'
+        }</td><td>Surgeon Name:</td><td>${invoice.surgeon_desc || 'N/A'}</td></tr>
+            <tr><td>Admission Date & Time:</td><td>${formatDateForDisplay(invoice.creation_date)} ${invoice.admissiontime
+        }</td><td>Discharge Date & Time:</td><td>${formatDateForDisplay(invoice.due_date)} ${invoice.dischargetime
+        }</td></tr>
           </table>
 
           <div class="title">FINAL BILL</div>
@@ -551,10 +543,10 @@ const handleInputChange = (e) => {
           <table class="summary-table">
             <tr><th>Items/Services</th><th>Amount (INR)</th></tr>
             ${dynamicRows
-              .map(
-                (row) => `<tr><td>${row.label}</td><td>${row.value}</td></tr>`
-              )
-              .join("")}
+          .map(
+            (row) => `<tr><td>${row.label}</td><td>${row.value}</td></tr>`
+          )
+          .join("")}
           </table>
 
           <div class="section-title">Account Summary</div>
@@ -590,7 +582,7 @@ const handleInputChange = (e) => {
     });
   };
 
-return (
+  return (
     <div
       className="themebody-wrap"
       style={{
@@ -601,7 +593,7 @@ return (
       }}
     >
       <PageBreadcrumb pagename="Invoice List" />
-      <Container fluid>
+      <Container fluid >
         <Row>
           <Col>
             <Card
@@ -611,13 +603,17 @@ return (
                 borderColor: "#00bcd4",
                 background: "white",
                 border: "1px solid #00bcd4",
+                padding:"15px",
               }}
             >
-              <Card.Body>
+              <Card.Body >
                 <div className="d-flex justify-content-between mb-3">
-                  <h5>Invoice List (Location: {currentLocation || 'N/A'})</h5>
+                  <h4>Invoice List <span className="ms-2 text-secondary" style={{ fontSize: '0.8em' }}>
+                        (Clinic Location: {currentLocation ? currentLocation.toUpperCase() : "Loading..."}
+                        )
+                      </span></h4>
                   <Link to="/invoice/add">
-                    <Button variant="primary">Add New Invoice</Button>
+                    <Button variant="primary" style={{ marginBottom: "15px" }}>Add New Invoice</Button>
                   </Link>
                 </div>
 
@@ -625,17 +621,17 @@ return (
                 {error && <p style={{ color: "red" }}>{error}</p>}
 
                 {!loading && !error && invoices.length > 0 && (
-                  <Table striped bordered hover responsive>
+                  <Table striped bordered hover responsive className="text-center" style={{alignContent:"center"}}>
                     <thead>
                       <tr>
-                        <th>Invoice ID</th>
-                        <th>Date</th>
-                        <th>Patient Name</th>
-                        <th>Phone No</th>
-                        <th>Pay Mode</th>
-                        <th>Payable Amount</th>
-                        <th>Due Amount</th>
-                        <th>Actions</th>
+                        <th style={{ width: "90px" }}>Invoice ID</th>
+                        <th style={{ width: "105px" }}>Date</th>
+                        <th style={{ width: "180px" }}>Patient Name</th>
+                        <th style={{ width: "110px" }}>Phone No</th>
+                        <th style={{ width: "110px" }}>Pay Mode</th>
+                        <th style={{ width: "140px" }}>Payable Amount</th>
+                        <th style={{ width: "120px" }}>Due Amount</th>
+                        <th style={{ width: "200px" }}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -646,27 +642,27 @@ return (
                           <td>{invoice.patient_name}</td>
                           <td>{invoice.patient_phone}</td>
                           {/* Display the determined pay mode */}
-                          <td>{invoice.pay_mode}</td> 
+                          <td>{invoice.pay_mode}</td>
                           <td>{invoice.payable_amt}</td>
                           {/* Calculate due amount based on total - received */}
-                          <td>{invoice.due_amt.toFixed(2)}</td> 
+                          <td>{invoice.due_amt.toFixed(2)}</td>
                           <td>
                             <Link>
                               <Button
+                                variant="warning"
+                                className="me-2"
+                                onClick={() => handleEditInvoice(invoice)}
+                              >
+                                Edit Invoice
+                              </Button>
+                              <Button
                                 variant="info"
                                 size="sm"
-                                className="me-2"
                                 onClick={() => handlePrint(invoice)}
                               >
                                 Print
                               </Button>
                             </Link>
-                            <Button
-                              variant="warning"
-                              onClick={() => handleEditInvoice(invoice)}
-                            >
-                              Edit Invoice
-                            </Button>
                           </td>
                         </tr>
                       ))}
@@ -679,7 +675,7 @@ return (
         </Row>
       </Container>
 
-<Modal show={showModal} onHide={handleCloseModal} size="lg">
+      <Modal show={showModal} onHide={handleCloseModal} size="lg">
         <Modal.Header closeButton>
           <Modal.Title>Edit Invoice</Modal.Title>
         </Modal.Header>
@@ -730,17 +726,17 @@ return (
                   </Form.Group>
                 </Col>
 
-                {/* Discharge Details */}
+               {/* Admission Details */}
                 <Col md={4} className="mb-3">
-                  <Form.Group controlId="discharge_date">
-                    <Form.Label>Discharge Date</Form.Label>
+                  <Form.Group controlId="admission_date">
+                    <Form.Label>Admission Date</Form.Label>
                     <Form.Control
-                      type="text"
-                      value={selectedInvoice.due_date}
+                      type="date"
+                      value={selectedInvoice.creation_date}
                       onChange={(e) =>
                         setSelectedInvoice({
                           ...selectedInvoice,
-                          due_date: e.target.value,
+                          creation_date: e.target.value,
                         })
                       }
                     />
@@ -748,15 +744,15 @@ return (
                 </Col>
 
                 <Col md={4} className="mb-3">
-                  <Form.Group controlId="dischargetime">
-                    <Form.Label>Discharge Time</Form.Label>
+                  <Form.Group controlId="admissiontime">
+                    <Form.Label>Admission Time</Form.Label>
                     <Form.Control
-                      type="text"
-                      value={selectedInvoice.dischargetime}
+                      type="time"
+                      value={selectedInvoice.admissiontime}
                       onChange={(e) =>
                         setSelectedInvoice({
                           ...selectedInvoice,
-                          dischargetime: e.target.value,
+                          admissiontime: e.target.value,
                         })
                       }
                     />
@@ -779,17 +775,18 @@ return (
                   </Form.Group>
                 </Col>
 
-                {/* Admission Details */}
+                  {/* Discharge Details */}
                 <Col md={4} className="mb-3">
-                  <Form.Group controlId="admission_date">
-                    <Form.Label>Admission Date</Form.Label>
+                  <Form.Group controlId="discharge_date">
+                    <Form.Label>Discharge Date</Form.Label>
                     <Form.Control
-                      type="text"
-                      value={selectedInvoice.creation_date}
+                      type="date"
+                      value={selectedInvoice.due_date}
+                      min={selectedInvoice.creation_date}
                       onChange={(e) =>
                         setSelectedInvoice({
                           ...selectedInvoice,
-                          creation_date: e.target.value,
+                          due_date: e.target.value,
                         })
                       }
                     />
@@ -797,15 +794,15 @@ return (
                 </Col>
 
                 <Col md={4} className="mb-3">
-                  <Form.Group controlId="admissiontime">
-                    <Form.Label>Admission Time</Form.Label>
+                  <Form.Group controlId="dischargetime">
+                    <Form.Label>Discharge Time</Form.Label>
                     <Form.Control
-                      type="text"
-                      value={selectedInvoice.admissiontime}
+                      type="time"
+                      value={selectedInvoice.dischargetime}
                       onChange={(e) =>
                         setSelectedInvoice({
                           ...selectedInvoice,
-                          admissiontime: e.target.value,
+                          dischargetime: e.target.value,
                         })
                       }
                     />
@@ -837,7 +834,7 @@ return (
                 {/* Surgeon Name */}
                 <Col md={4} className="mb-3">
                   <Form.Group controlId="surgeonName">
-                    <Form.Label>Surgeon Description</Form.Label>
+                    <Form.Label>Surgeon Name</Form.Label>
                     <Form.Select
                       value={selectedInvoice?.surgeon_desc || ""}
                       onChange={(e) =>
@@ -847,7 +844,7 @@ return (
                         })
                       }
                     >
-                      <option value="">Select Surgeon Description</option>
+                      <option value="">Select Surgeon</option>
                       {surgeons.map((surgeon, index) => (
                         <option key={index} value={surgeon.name}>
                           {surgeon.name}
@@ -909,6 +906,7 @@ return (
                       type="button"
                       onClick={addDynamicRow}
                       className="btn btn-success"
+                      style={{marginLeft:"10px", marginBottom:"15px"}}
                     >
                       + Add Row
                     </button>
@@ -923,7 +921,7 @@ return (
                       type="number"
                       value={modalInvoiceData.Sub_Total}
                       readOnly // Calculated field
-                      style={{backgroundColor: '#eee'}}
+                      style={{ backgroundColor: '#eee' }}
                     />
                   </Form.Group>
                 </Col>
@@ -1089,43 +1087,43 @@ return (
                 {/* Fields for Non-Insurance or Charity */}
                 {(selectedInvoice.bill_Type === "non_insurance" ||
                   selectedInvoice.bill_Type === "charity") && (
-                  <>
-                    <Col md={4} className="mb-3">
-                      <Form.Group controlId="discount">
-                        <Form.Label>Discount Amount</Form.Label>
-                        <Form.Control
-                          type="number"
-                          value={selectedInvoice.discount}
-                          onChange={(e) => {
-                            const discountAmount = parseFloat(e.target.value); // Ensure the discount is a number
-                            const updatedInvoice = {
-                              ...selectedInvoice,
-                              discount: discountAmount,
-                            };
+                    <>
+                      <Col md={4} className="mb-3">
+                        <Form.Group controlId="discount">
+                          <Form.Label>Discount Amount</Form.Label>
+                          <Form.Control
+                            type="number"
+                            value={selectedInvoice.discount}
+                            onChange={(e) => {
+                              const discountAmount = parseFloat(e.target.value); // Ensure the discount is a number
+                              const updatedInvoice = {
+                                ...selectedInvoice,
+                                discount: discountAmount,
+                              };
 
-                            // Apply the discount to Sub_Total and update payable_amt
-                            updatedInvoice.payable_amt =
-                              updatedInvoice.Sub_Total - discountAmount;
+                              // Apply the discount to Sub_Total and update payable_amt
+                              updatedInvoice.payable_amt =
+                                updatedInvoice.Sub_Total - discountAmount;
 
-                            // Update the state with the modified invoice
-                            setSelectedInvoice(updatedInvoice);
-                          }}
-                        />
-                      </Form.Group>
-                    </Col>
+                              // Update the state with the modified invoice
+                              setSelectedInvoice(updatedInvoice);
+                            }}
+                          />
+                        </Form.Group>
+                      </Col>
 
-                    <Col md={4} className="mb-3">
-                      <Form.Group controlId="payableAmount">
-                        <Form.Label>Payable Amount</Form.Label>
-                        <Form.Control
-                          type="number"
-                          value={selectedInvoice.payable_amt}
-                          readOnly // Payable amount is automatically calculated and read-only
-                        />
-                      </Form.Group>
-                    </Col>
-                  </>
-                )}
+                      <Col md={4} className="mb-3">
+                        <Form.Group controlId="payableAmount">
+                          <Form.Label>Payable Amount</Form.Label>
+                          <Form.Control
+                            type="number"
+                            value={selectedInvoice.payable_amt}
+                            readOnly // Payable amount is automatically calculated and read-only
+                          />
+                        </Form.Group>
+                      </Col>
+                    </>
+                  )}
                 {/* For Reimbursement bill method */}
                 {selectedInvoice.bill_method === "reimbursement" && (
                   <Col md={4} className="mb-3">

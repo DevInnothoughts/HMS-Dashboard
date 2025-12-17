@@ -4,6 +4,7 @@ import FeatherIcon from "feather-icons-react";
 import { Row, Col, Card, Container, Form, Button, Modal, Spinner } from "react-bootstrap";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 
+
 // --- REACT BIG CALENDAR IMPORTS ---
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
@@ -62,7 +63,7 @@ export default function ReceptionistDashboard() {
   const counts = useMemo(() => {
       return appointments.reduce((acc, event) => {
           // Use patientType from the formatted event data
-          const type = (event.patientType || 'Other').toLowerCase();
+          const type = (event.patientType || 'Other').toUpperCase();
           acc[type] = (acc[type] || 0) + 1;
           return acc;
       }, { NEW: 0, FOLLOW: 0, POSTOPERATIVE: 0, OTHER: 0 });
@@ -239,30 +240,21 @@ export default function ReceptionistDashboard() {
     });
   };
 
-  const handleConfirm = async (appointmentId, patientType, phone) => {
+  const handleConfirm = async (appointmentId) => {
     if (!window.confirm("Confirmation: The patient has come to the clinic ...!"))
         return;
 
     try {
-        const url = `${BASE_URL}/V1/appointment/confirmAppointment?appId=${appointmentId}&location=${currentLocation}&patientType=${patientType}&patientPhone=${phone}`;
+        const url = `${BASE_URL}/V1/appointment/confirmAppointment?location=${currentLocation}`;
 
-        const response = await fetch(url, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-          });
-          
-          const result = await response.json();
-          console.log(result);
-          if (!response.ok || result.statusCode !== 200) {
-            alert("Failed to confirm appointment");
-            return;
-          }
-          
+        await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ appointment_id: appointmentId })
+        });
+
+        // refresh UI
         await fetchAppointmentsForRange(selectedDate, selectedDoctorId);
-        setSelectedEvent(prev =>
-            appointments.find(a => a.appointmentid === prev?.appointmentid) || null
-          );
-          
 
     } catch (error) {
         console.error("Confirm error:", error);
@@ -364,7 +356,7 @@ export default function ReceptionistDashboard() {
             <span className='font-weight-bold'>Note</span>: {selectedEvent.note}<br/>
             
             <div className="mt-3 d-flex flex-wrap">
-                <Button variant="primary" onClick={() => handleConfirm(selectedEvent.appointmentid, selectedEvent.patientType, selectedEvent.phone)} disabled={isConfirmed} title="Confirm" className="me-2 mb-2">
+                <Button variant="primary" onClick={() => handleConfirm(selectedEvent.appointmentid)} disabled={isConfirmed} title="Confirm" className="me-2 mb-2">
                     <FeatherIcon icon="check" size={16} /> Confirm
                 </Button>
                 {/* <Link to={`/edit-patient/${selectedEvent.patientid}`} className="me-2 mb-2">
@@ -422,31 +414,34 @@ export default function ReceptionistDashboard() {
                                 ))}
                             </Form.Select>
                             
-                            <Button variant="danger" onClick={handleRefreshClick}> 
-                                Refresh / Today
+                            <Button variant="danger" onClick={handleRefreshClick} style={{marginBottom:"17px"}}> 
+                              <FeatherIcon icon="refresh-ccw" size={16} className="me-2" />Refresh
                             </Button>
                         </div>
                     </Col>
 
                     {/* Legend / Counts */}
-                    <Col lg={6} md={12} className="mt-3 mt-lg-0">
-                        <div className="d-flex justify-content-lg-end justify-content-start">
-                            <ColorLegend name="New Patient" count={counts.New} bgColor="#000000" />
-                            <ColorLegend name="Follow Patient" count={counts.Follow} bgColor="#ff8000" />
-                            <ColorLegend name="Postoperative Patient" count={counts.Postoperative} bgColor="#8000ff" />
-                            <ColorLegend name="Other Patient" count={counts.Other} bgColor="#ff0080" />
-                        </div>
-                    </Col>
+                   
                 </Row>
             </Col>
 
             {/* ------------------------------------------------------------- */}
             {/* 2. CALENDAR (8 COL) AND DETAILS (4 COL) */}
             {/* ------------------------------------------------------------- */}
-            <Col xxl={8} xl={12}> {/* Calendar takes 8 columns */}
+            <div>
+                 <Col className="mt-lg-0" style={{marginRight:"530px" , marginBottom:"10px"}}>
+                        <div className="d-flex justify-content-lg-end justify-content-start">
+                            <ColorLegend name="New Patient" count={counts.NEW} bgColor="#000000" />
+                            <ColorLegend name="Follow Patient" count={counts.FOLLOW} bgColor="#ff8000" />
+                            <ColorLegend name="Postoperative Patient" count={counts.POSTOPERATIVE} bgColor="#8000ff" />
+                            <ColorLegend name="Other Patient" count={counts.OTHER} bgColor="#ff0080" />
+                        </div>
+                    </Col> {/* Calendar takes 8 columns */}
+            </div>
+            <Col xxl={8} xl={12} >
                 <Card>
                     <Card.Header><h4><FeatherIcon icon="calendar" size={18} className="me-2" />CALENDAR SCHEDULE</h4></Card.Header>
-                    <Card.Body style={{ minHeight: '500px', padding: 0,  }}>
+                    <Card.Body style={{ minHeight: '500px', padding: 0 }}>
                         {loading ? (
                             <div className="d-flex justify-content-center align-items-center h-100"><Spinner animation="border" /></div>
                         ) : (

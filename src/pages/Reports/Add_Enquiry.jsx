@@ -306,6 +306,7 @@ export default function Add_Enquiry() {
             <Col>
               <Card
                 style={{
+                  padding:"20px",
                   borderRadius: "12px",
                   boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
                   borderColor: "#00bcd4",
@@ -315,15 +316,15 @@ export default function Add_Enquiry() {
               >
                 <Card.Body>
                   <Form onSubmit={handleSubmit}>
-                    <h5 className="section-title mb-4">
-                      <i className="fas fa-search me-2"></i>
-                      New Enquiry Details
+                    <h4 className="section-title " style={{marginBottom:"20px"}}>
+                      
+                      Add New Enquiry Details
                       {/* Display Location status */}
-                      <span className="ms-3 text-secondary" style={{fontSize: '0.8em'}}>
-                        (Location: {currentLocation ? currentLocation.toUpperCase() : "Loading..."}
+                      <span className="ms-2 text-secondary" style={{fontSize: '0.8em'}}>
+                        (Clinic Location: {currentLocation ? currentLocation.toUpperCase() : "Loading..."}
                         )
                       </span>
-                    </h5>
+                    </h4>
                     {errors.location && (
                         <p style={{ color: "red", fontWeight: "bold" }}>{errors.location}</p>
                     )}
@@ -454,7 +455,7 @@ export default function Add_Enquiry() {
                     {/* --- ROW 2: Patient Type, Time, Mobile, Address --- */}
                     <Row>
                        {/* ** Patient Type (Maps to schema: patient_type) ** */}
-                       <Col md={3}>
+                       <Col md={3} style={{marginBottom:"15px"}}>
                             <Form.Group controlId="patient_type">
                                 <Form.Label>Patient Type <span className="required">*</span></Form.Label>
                                 <Form.Control

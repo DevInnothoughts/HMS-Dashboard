@@ -4,9 +4,7 @@ import SimpleBar from 'simplebar-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Form } from 'react-bootstrap';
 import { useSidebarContext } from '../pages/api/useSidebarContext';
-// For Font Awesome CSS
 import 'font-awesome/css/font-awesome.min.css';
-// Import images
 import adminimg from '/src/assets/images/avtar/admin.jpg';
 import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
 
@@ -49,57 +47,11 @@ export default function Header() {
               {/* <div className="sidebar-action navicon-wrap" onClick={toggleSidebar}>
                             <FeatherIcon icon="menu" />
                         </div> */}
-              <div className="sidebar-action" onClick={toggleSidebar}>
-                <FeatherIcon icon="menu" />
-              </div>
-              <div className="navsearch-bar">
-                <div className="input-group">
-                  <Form.Control
-                    type="text"
-                    placeholder="Search Here"
-                    name="navsearch"
-                    value={navsearchData.navsearch}
-                    onChange={handleChange}
-                  />
-                  <span className="input-group-text">
-                    <FeatherIcon icon="search" />
-                  </span>
-                </div>
-              </div>
+                        
+              
             </div>
             <div className="header-right">
               <ul className="nav-iconlist">
-                <li>
-                  <button
-                    onClick={handleLogout}
-                    style={{
-                      background: 'linear-gradient(120deg, #4776E6 0%, #8E54E9 100%)',
-                      border: 'none',
-                      padding: '8px 16px',
-                      borderRadius: '8px',
-                      color: 'white',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      transition: 'all 0.3s ease',
-                      boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
-                    }}
-                    onMouseOver={(e) => {
-                      e.target.style.transform = 'translateY(-2px)';
-                      e.target.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
-                    }}
-                    onMouseOut={(e) => {
-                      e.target.style.transform = 'translateY(0)';
-                      e.target.style.boxShadow = '0 2px 6px rgba(0,0,0,0.1)';
-                    }}
-                  >
-                    <i className="fa fa-sign-out" style={{ fontSize: '16px' }}></i>
-                    Logout
-                  </button>
-                </li>
                 <li>
                   <div className="navicon-wrap btn-windowfull">
                     <FeatherIcon icon="maximize" />
@@ -361,6 +313,37 @@ export default function Header() {
                       </li>
                     </ul>
                   </div>
+                </li>
+                <li>
+                  <button
+                    onClick={handleLogout}
+                    style={{
+                      background: 'linear-gradient(120deg, #4776E6 0%, #8E54E9 100%)',
+                      border: 'none',
+                      padding: '8px 16px',
+                      borderRadius: '8px',
+                      color: 'white',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
+                    }}
+                    onMouseOver={(e) => {
+                      e.target.style.transform = 'translateY(-2px)';
+                      e.target.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)';
+                    }}
+                    onMouseOut={(e) => {
+                      e.target.style.transform = 'translateY(0)';
+                      e.target.style.boxShadow = '0 2px 6px rgba(0,0,0,0.1)';
+                    }}
+                  >
+                    <i className="fa fa-sign-out" style={{ fontSize: '16px' }}></i>
+                    Logout
+                  </button>
                 </li>
               </ul>
             </div>

@@ -223,16 +223,14 @@ export default function Call_logs() {
 
     if (name === "doctor_id") { // <-- ADDED LOGIC FOR DOCTOR_ID
       const selectedDoctor = doctors.find((doc) => String(doc.doctor_id) === value);
-      
       setEnquiryForm((prev) => ({
         ...prev,
         doctor_id: value,
-        // Optional: If you need doctorName in the enquiryForm state later
+        // Optional: If you need doctorName in the enquiryForm state late
         // doctorName: selectedDoctor ? selectedDoctor.name : "", 
       }));
       return;
     }
-
     if (name === "FDE_Name") {
       const selectedFDE = fdeList.find((fde) => String(fde.FDEID) === value);
       
@@ -244,10 +242,10 @@ export default function Call_logs() {
       return;
     }
 
-    setEnquiryForm((prev) => ({ // Ensure previous state is used here
-      ...prev,
+    setEnquiryForm({
+      ...enquiryForm,
       [name]: newValue,
-    }));
+    });
   };
 
   const handleEnquiryClick = (callLog) => {
@@ -326,60 +324,37 @@ export default function Call_logs() {
   };
   
   const actionBodyTemplate = (rowData) => (
-    <div className="cart-action" style={{ display: "flex", gap: "5px" }}>
-      <Button
-        variant="btn"
-        onClick={() => handleAddAppointmentClick(rowData)}
-        className="appointment-btn"
-        title="Add Appointment"
-        style={{
-          width: "35px",
-          height: "35px",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          borderRadius: "50%",
-          padding: "0",
-        }}
-      >
-        <FeatherIcon icon="plus-square" className="w-18" />
-      </Button>
-      <Button
-        variant="btn"
-        onClick={() => handleEnquiryClick(rowData)}
-        className="enquiry-btn"
-        title="Enquiry"
-        style={{
-          width: "35px",
-          height: "35px",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          borderRadius: "50%",
-          padding: "0",
-        }}
-      >
-        <FeatherIcon icon="message-circle" className="w-18" />
-      </Button>
-      <Button
-        variant="btn"
-        onClick={() => handleNoteClick(rowData.note, rowData)}
-        className="note-btn"
-        title="View Notes"
-        style={{
-          width: "35px",
-          height: "35px",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          borderRadius: "50%",
-          padding: "0",
-        }}
-      >
-        <FeatherIcon icon="file-text" className="w-18" />
-      </Button>
+    <div
+        className="d-flex align-items-center justify-content-center"
+    >
+        <Button
+            variant="primary"
+            onClick={() => handleEnquiryClick(rowData)}
+            className="enquiry-btn btn-sm btn-icon me-2"
+            title="Enquiry"
+        >
+            <FeatherIcon icon="message-circle" size="14" /> 
+        </Button>
+        
+        <Button
+            variant="primary"
+            onClick={() => handleAddAppointmentClick(rowData)}
+            className="appointment-btn btn-sm btn-icon me-2" 
+            title="Add Appointment"
+        >
+            <FeatherIcon icon="plus-square" size="14" />
+        </Button>
+        
+        <Button
+            variant="primary"
+            onClick={() => handleNoteClick(rowData.note, rowData)}
+            className="note-btn btn-sm btn-icon" 
+            title="Add Notes"
+        >
+            <FeatherIcon icon="file-text" size="14" />
+        </Button>
     </div>
-  );
+);
 
   const renderHeader = () => (
     <div
@@ -415,6 +390,17 @@ export default function Call_logs() {
               margin: 0,
             }}
           >
+            <span
+            style={{
+                marginRight: "10px", 
+                fontSize: "16px", 
+                fontWeight: "bold", 
+                color: "#333",
+                marginBottom:"15px"
+            }}
+        >
+        Search
+        </span>
             <InputGroup>
               <Form.Control
                 type="search"
@@ -570,7 +556,7 @@ export default function Call_logs() {
               },
             }}
           >
-            Refresh Data
+            <FeatherIcon icon="refresh-ccw" size={16} className="me-2" />Refresh
           </Button>
         </div>
       </div>
@@ -678,34 +664,28 @@ export default function Call_logs() {
       !enquiryForm.date ||
       !enquiryForm.patient_name ||
       !enquiryForm.caller_no ||
-      !enquiryForm.enquirytype ||
-      !enquiryForm.time // <-- NEW: Validate time
+      !enquiryForm.enquirytype
     ) {
-      toast.error("Please fill in all required fields (Date, Time, Patient Name, Contact Number, Enquiry Type).");
+      toast.error("Please fill in all required fields (Date, Patient Name, Contact Number, Enquiry Type).");
       return;
     }
 
-    // Ensure we have a valid time (formatted HH:mm:ss if necessary, but HH:mm A should be okay for now)
-    const enquiryTime = enquiryForm.time.split(' ')[0] + ':00'; // Simple conversion to HH:mm:ss if time is HH:mm A
-
     const payload = {
-      // NOTE: Using patient_phone for caller_no in the FE input is fine.
       patient_location: currentLocation, // <-- NEW: Added from state
       patient_type: enquiryForm.patient_type, // <-- Added from state (defaulted to 'NEW')
-      date: moment(enquiryForm.date).format("YYYY-MM-DD"), // Format date for service
-      time: enquiryForm.time, // <-- NEW: Added time
-      
+      date: moment(enquiryForm.date).format("YYYY-MM-DD"),
+      time: enquiryForm.time, // <-- NEW: Added time // Format date for service
       doctor_id: enquiryForm.doctor_id || null, 
       patient_name: enquiryForm.patient_name,
       patient_phone: enquiryForm.caller_no,
+      patient_type: "NEW",
+      // time: enquiryForm.call_time,
       enquirytype: enquiryForm.enquirytype,
       fdeId: enquiryForm.FDE_Name || null,
       FDE_Name: enquiryForm.FDE_Name || null, 
-      reference: enquiryForm.reference || null, // <-- Added reference
       note: enquiryForm.note || "",
     };
 
-    console.log(payload);
     try {
       console.log("Sending Enquiry Request.");
 
@@ -831,7 +811,7 @@ export default function Call_logs() {
                         currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
                         responsiveLayout="scroll"
-                        className="p-datatable-customers"
+                        className="datatable-compact-style"
                         style={{
                           border: "1px solid #4dd0e1",
                           marginTop: "20px",
@@ -845,6 +825,7 @@ export default function Call_logs() {
                           field="ivr_id"
                           header="Sr No."
                           sortable
+                          headerClassName="datatable-header-center"
                           style={{
                             border: "1px solid #90caf9",
                             textAlign: "center",
@@ -854,7 +835,7 @@ export default function Call_logs() {
                         <Column
                           field="call_date"
                           header="Date"
-                          sortable
+                          headerClassName="datatable-header-center"
                           style={{
                             border: "1px solid #90caf9",
                             textAlign: "center",
@@ -863,8 +844,8 @@ export default function Call_logs() {
                         />
                         <Column
                           field="caller_no"
-                          header="Phone No."
-                          sortable
+                          header="Caller No."
+                          headerClassName="datatable-header-center"
                           style={{
                             border: "1px solid #90caf9",
                             textAlign: "center",
@@ -873,8 +854,8 @@ export default function Call_logs() {
                         />
                         <Column
                           field="destination_no"
-                          header="Destination Number"
-                          sortable
+                          header="Destination No."
+                          headerClassName="datatable-header-center"
                           style={{
                             border: "1px solid #90caf9",
                             textAlign: "center",
@@ -883,8 +864,8 @@ export default function Call_logs() {
                         />
                         <Column
                           field="call_time"
-                          header="Call Time"
-                          sortable
+                          header="Time"
+                          headerClassName="datatable-header-center"
                           style={{
                             border: "1px solid #90caf9",
                             textAlign: "center",
@@ -893,8 +874,8 @@ export default function Call_logs() {
                         />
                         <Column
                           field="call_type"
-                          header="Type"
-                          sortable
+                          header="Call Type"
+                          headerClassName="datatable-header-center"
                           style={{
                             border: "1px solid #90caf9",
                             textAlign: "center",
@@ -903,8 +884,8 @@ export default function Call_logs() {
                         />
                         <Column
                           field="call_status"
-                          header="Raw Type"
-                          sortable
+                          header="Call Status"
+                          headerClassName="datatable-header-center"
                           style={{
                             border: "1px solid #90caf9",
                             textAlign: "center",
@@ -913,8 +894,8 @@ export default function Call_logs() {
                         />
                         <Column
                           field="call_duration"
-                          header="Duration"
-                          sortable
+                          header="Call Duration"
+                          headerClassName="datatable-header-center"
                           style={{
                             border: "1px solid #90caf9",
                             textAlign: "center",
@@ -924,7 +905,7 @@ export default function Call_logs() {
                         <Column
                           field="circle_name"
                           header="Region"
-                          sortable
+                          headerClassName="datatable-header-center"
                           style={{
                             border: "1px solid #90caf9",
                             textAlign: "center",
@@ -934,7 +915,7 @@ export default function Call_logs() {
                         <Column
                           field="status"
                           header="Status"
-                          sortable
+                          headerClassName="datatable-header-center"
                           style={{
                             border: "1px solid #90caf9",
                             textAlign: "center",
@@ -944,7 +925,7 @@ export default function Call_logs() {
                         <Column
                           field="note"
                           header="Note"
-                          sortable
+                          headerClassName="datatable-header-center"
                           style={{
                             border: "1px solid #90caf9",
                             textAlign: "center",
@@ -954,7 +935,7 @@ export default function Call_logs() {
                         <Column
                           field="source"
                           header="Source"
-                          sortable
+                          headerClassName="datatable-header-center"
                           style={{
                             border: "1px solid #90caf9",
                             textAlign: "center",
@@ -965,6 +946,7 @@ export default function Call_logs() {
                           header="Actions"
                           body={actionBodyTemplate}
                           exportable={false}
+                          headerClassName="datatable-header-center"
                           style={{
                             border: "1px solid #90caf9",
                             textAlign: "center",
@@ -1284,7 +1266,7 @@ export default function Call_logs() {
                       name="caller_no"
                       placeholder="Mobile Number"
                       value={selectedCallLog?.caller_no}
-                      onChange={handleEnquiryInputChange}
+                      onChange={handleInputChange}
                     />
                   </Form.Group>
                 </Col>
@@ -1292,11 +1274,11 @@ export default function Call_logs() {
                 <Form.Group className="mb-20">
                   <Form.Label>Doctor Name</Form.Label>
                   <Form.Select
-                    name="doctor_id"
+                   name="doctor_id"
                     value={enquiryForm.doctor_id}
                     onChange={handleEnquiryInputChange}
                   >
-                    <option value="">Select a Doctor</option>
+                  <option value="">Select a Doctor</option>
                     {doctors && doctors.length > 0 ? (
                       doctors.map((doctor) => (
                         <option key={doctor.doctor_id} value={doctor.doctor_id}>
@@ -1308,7 +1290,7 @@ export default function Call_logs() {
                     )}
                   </Form.Select>
                 </Form.Group>
-              </Col>
+                </Col>
                 <Col md={6}>
                   <Form.Group className="mb-20">
                     <Form.Label>FDE Name</Form.Label>
@@ -1326,18 +1308,6 @@ export default function Call_logs() {
                           </option>
                         ))}
                     </Form.Select>
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group className="mb-20">
-                    <Form.Label>Reference</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="reference"
-                      value={enquiryForm.reference}
-                      onChange={handleEnquiryInputChange}
-                      placeholder="e.g., Google, Friend, Walk-in"
-                    />
                   </Form.Group>
                 </Col>
                 <Col md={6}>

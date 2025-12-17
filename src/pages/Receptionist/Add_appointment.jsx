@@ -1,4 +1,3 @@
-/* eslint-disable no-irregular-whitespace */
 import React, { useState, useEffect, useCallback } from "react";
 import { Row, Col, Form, Container, Card } from "react-bootstrap";
 import { useLocation, useParams } from "react-router-dom";
@@ -6,9 +5,8 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import NavBarA from "../../components/NavbarA";
 import "../../styles/styles.css";
-// Assuming utility functions and toast are available:
-import { toast } from "react-hot-toast"; 
-import { decodeJwt } from "../../utils/decode-jwt"; 
+import { toast } from "react-hot-toast";
+import { decodeJwt } from "../../utils/decode-jwt";
 
 const getCountryCode = (patient_phone) => {
   if (!patient_phone) return "Unknown";
@@ -19,7 +17,6 @@ const getCountryCode = (patient_phone) => {
   return country ? country.value : "Unknown";
 };
 
-// ... (countryCodes and countryNumberLimits remain unchanged) ...
 const countryCodes = [
   { value: "+1", label: "🇺🇸 USA (+1)" },
   { value: "+91", label: "🇮🇳 India (+91)" },
@@ -64,71 +61,62 @@ export default function Add_appointment() {
   const [type, setType] = useState("");
   const location = useLocation();
   const { phone } = useParams();
-  
-  const [currentLocation, setCurrentLocation] = useState(null); 
+
+  const [currentLocation, setCurrentLocation] = useState(null);
 
   const [formData, setFormData] = useState({
-    treatment: "", // Maps to treatment_name (Line 15 in schema list)
-    date: new Date().toISOString().split("T")[0], 
-    patientName: "", 
-    patient_phone: "", 
-    patient_location: "", 
-    patient_type: "", 
-    appointmentTime: "", 
-    note: "", 
-    FDE_Name: "", 
-    departmentName: "", 
-    doctorName: "", 
-    
-    // Schema fields
-    doctor_id: "", 
+    treatment: "",
+    date: new Date().toISOString().split("T")[0],
+    patientName: "",
+    patient_phone: "",
+    patient_location: "",
+    patient_type: "",
+    appointmentTime: "",
+    note: "",
+    FDE_Name: "",
+    departmentName: "",
+    doctorName: "",
+    doctor_id: "",
     consultationchk: 0,
-    confirm_time: 0, 
+    confirm_time: 0,
     status: "BOOKED",
-    // ADDED: Required patient_id for existing patients
     patient_id: "",
   });
 
   const [errors, setErrors] = useState({});
 
   const newPatientTypes = ["NEW"];
-  const existingPatientTypes = ["FOLLOW", "POST-OPERATIVE", "OTHER"];
+  const existingPatientTypes = ["FOLLOW", "POSTOPERATIVE", "OTHER"];
 
-  // Effect to fetch currentLocation from JWT
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-        // NOTE: Replace 'decodeJwt' with your actual JWT decoding utility
-        const payload = decodeJwt(token); 
-        if (payload && payload.jobLocation) {
-            setCurrentLocation(payload.jobLocation);
-        }
-        // Setting dummy location for local development compatibility
-        // setCurrentLocation('DemoClinic'); 
+      const payload = decodeJwt(token);
+      if (payload && payload.jobLocation) {
+        setCurrentLocation(payload.jobLocation);
+      }
     }
   }, []);
 
-  // Use useCallback to memoize the fetch functions
   const fetchPatientDetails = useCallback(async (patient_phone) => {
     if (!patient_phone || !currentLocation) {
-        setIsExistingPatient(false);
-        setFormData((prev) => ({
-            ...prev,
-            patientName: "",
-            patient_location: "", 
-            patient_id: "", // CLEAR patient_id if phone is invalid
-            appointmentTime: new Date().toLocaleTimeString("en-US", {
-                hour: "2-digit",
-                minute: "2-digit",
-                hour12: true,
-            }),
-            note: "", FDE_Name: "", departmentName: "", doctorName: "",
-            patient_type: "NEW", doctor_id: "",
-        }));
-        return;
+      setIsExistingPatient(false);
+      setFormData((prev) => ({
+        ...prev,
+        patientName: "",
+        patient_location: "",
+        patient_id: "",
+        appointmentTime: new Date().toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        }),
+        note: "", FDE_Name: "", departmentName: "", doctorName: "",
+        patient_type: "NEW", doctor_id: "",
+      }));
+      return;
     }
 
-    // HIPAA: Log only the action, not the sensitive phone number directly.
     console.log("Fetching patient details...");
 
     try {
@@ -148,15 +136,13 @@ export default function Add_appointment() {
 
       if (data.statusCode === 200 && data.data) {
         setIsExistingPatient(true);
-        // HIPAA: Use console.warn or toast.info instead of native alert()
-        alert(`${data.data.name} is already registered.`); 
-        
+        console.warn(`${data.data.name} is already registered.`);
+
         setFormData((prev) => ({
           ...prev,
           patientName: data.data.name || "",
-          patient_location: data.data.address || "", 
-          // CRITICAL FIX: Store the patient_id when found
-          patient_id: data.data.patient_id || "", 
+          patient_location: data.data.address || "",
+          patient_id: data.data.patient_id || "",
           appointmentTime: data.data.appointmentTime || "",
           note: data.data.note || "",
           FDE_Name: data.data.FDE_Name || "",
@@ -174,12 +160,11 @@ export default function Add_appointment() {
       setIsExistingPatient(false);
       setFormData((prev) => ({ ...prev, patientName: "", patient_id: "", patient_type: "NEW", doctor_id: "" }));
     }
-  }, [currentLocation]); 
+  }, [currentLocation]);
 
   const fetchDropdownData = useCallback(async () => {
-    if (!currentLocation) return; 
+    if (!currentLocation) return;
 
-    // HIPAA: Log action only
     console.log("Fetching dropdown data...");
 
     try {
@@ -202,19 +187,16 @@ export default function Add_appointment() {
       setDepartmentList(Array.isArray(departmentData) ? departmentData : []);
 
     } catch (error) {
-      // HIPAA: Generic error message
       console.error("Error fetching dropdown data:", error.message);
     }
-  }, [currentLocation]); 
+  }, [currentLocation]);
 
-  // Effect to fetch patient details when phone/location changes
   useEffect(() => {
     if (phone && currentLocation) {
       fetchPatientDetails(phone);
     }
   }, [phone, currentLocation, fetchPatientDetails]);
 
-  // Effect to set current time for appointment time on component load
   useEffect(() => {
     const currentTime = new Date().toLocaleTimeString("en-US", {
       hour: "2-digit",
@@ -227,7 +209,6 @@ export default function Add_appointment() {
     }));
   }, []);
 
-  // Fetch dropdown data when location is ready
   useEffect(() => {
     if (currentLocation) {
       fetchDropdownData();
@@ -237,20 +218,18 @@ export default function Add_appointment() {
   const handleInputChange = (e) => {
     const { name, value, tagName } = e.target;
 
-    // Special logic for doctor selection to capture doctor_id
     if (name === "doctorName") {
-        const selectedDoctor = doctors.find(d => d.name === value);
-        
-        setFormData((prevState) => ({
-            ...prevState,
-            doctorName: value, 
-            doctor_id: selectedDoctor ? selectedDoctor.doctor_id : "",
-        }));
-        return;
+      const selectedDoctor = doctors.find(d => d.name === value);
+
+      setFormData((prevState) => ({
+        ...prevState,
+        doctorName: value,
+        doctor_id: selectedDoctor ? selectedDoctor.doctor_id : "",
+      }));
+      return;
     }
 
     if (name === "patientName") {
-      // HIPAA: Sanitize input for PHI
       const alphabetsOnly = value.replace(/[^A-Za-z\s]/g, "");
       setFormData((prevState) => ({
         ...prevState,
@@ -259,8 +238,7 @@ export default function Add_appointment() {
       return;
     }
 
-    if (name === "patient_location") { 
-      // HIPAA: Sanitize address input
+    if (name === "patient_location") {
       const validAddressChars = value.replace(/[^A-Za-z0-9\s,.\-/#]/g, "");
       setFormData((prevState) => ({
         ...prevState,
@@ -280,15 +258,15 @@ export default function Add_appointment() {
   const validate = () => {
     const newErrors = {};
     const requiredFields = [
-      "date", 
-      "patientName", 
-      "patient_type", 
+      "date",
+      "patientName",
+      "patient_type",
       "patient_phone",
-      "appointmentTime", 
-      "note", 
+      "appointmentTime",
+      "note",
       "FDE_Name",
       "departmentName",
-      "doctor_id", 
+      "doctor_id",
     ];
 
     if (shouldShowAddressAndReference()) {
@@ -298,10 +276,9 @@ export default function Add_appointment() {
     if (formData.patient_type === "OTHER") {
       requiredFields.push("treatment");
     }
-    
-    // CRITICAL: Require patient_id if this is NOT a new patient
+
     if (formData.patient_type !== "NEW" && !formData.patient_id) {
-        newErrors.patient_phone = "Patient ID is required for existing patient types (FOLLOW, POSTOPERATIVE, OTHER). Please search by phone number.";
+      newErrors.patient_phone = "Patient ID is required for existing patient types (FOLLOW, POSTOPERATIVE, OTHER). Please search by phone number.";
     }
 
     requiredFields.forEach((field) => {
@@ -310,7 +287,7 @@ export default function Add_appointment() {
         if (field === 'treatment') displayName = 'Treatment';
         if (field === 'patient_location') displayName = 'Address (Patient Location)';
         if (field === 'doctor_id') displayName = 'Appointment With (Doctor)';
-        
+
         newErrors[field === 'doctor_id' ? 'doctorName' : field] = `${displayName} is required`;
       }
     });
@@ -318,9 +295,9 @@ export default function Add_appointment() {
     if (!formData.patient_phone || !phoneRegex.test(formData.patient_phone)) {
       newErrors.patient_phone = "Enter a valid phone number (7-15 digits)";
     }
-    
+
     if (!currentLocation) {
-        newErrors.location = "Location data is not available.";
+      newErrors.location = "Location data is not available.";
     }
 
     return newErrors;
@@ -329,32 +306,32 @@ export default function Add_appointment() {
   const handleSubmit = async (saveType) => {
     const validationErrors = validate();
     setErrors(validationErrors);
-    
+
     if (Object.keys(validationErrors).length === 0) {
       setLoading(true);
 
       // --- PAYLOAD MAPPING TO SCHEMA ---
       const payload = {
         // Core Fields
-        doctor_id: formData.doctor_id, 
+        doctor_id: formData.doctor_id,
         patient_type: formData.patient_type,
         patient_phone: formData.patient_phone,
         appointment_timestamp: formData.date,
         appointment_time: formData.appointmentTime,
         patient_location: formData.patient_location,
         FDE_Name: formData.FDE_Name,
-        treatment_name: formData.treatment, 
+        treatment_name: formData.treatment,
         note: formData.note,
-        
+
         // CRITICAL FIX: Send patient_id only if it exists (for existing patients)
-        patient_id: formData.patient_id || undefined, 
-        
+        patient_id: formData.patient_id || undefined,
+
         // Fields with Default/Fixed values
         confirm_time: formData.confirm_time || 0,
         status: formData.status || "BOOKED",
         is_deleted: 0,
-        consultationchk: formData.consultationchk, 
-        
+        consultationchk: formData.consultationchk,
+
         // Non-schema or auxiliary fields
         patientName: formData.patientName,
         clinic_location: currentLocation,
@@ -362,9 +339,9 @@ export default function Add_appointment() {
         countryCode: getCountryCode(formData.patient_phone),
       };
       // --- END PAYLOAD MAPPING ---
-      
+
       // HIPAA: Generalized logging
-      console.log("Submitting appointment request."); 
+      console.log("Submitting appointment request.");
 
       try {
         const response = await fetch(
@@ -379,7 +356,7 @@ export default function Add_appointment() {
 
         if (response.ok) {
           // HIPAA: Generic success message
-          alert("Appointment added successfully"); 
+          alert("Appointment added successfully");
           // Reset form (Data Minimization)
           setFormData({
             treatment: "", date: new Date().toISOString().split("T")[0], patientName: "",
@@ -391,7 +368,7 @@ export default function Add_appointment() {
           const errorData = await response.json();
           // HIPAA: Generic error message, avoid echoing sensitive details
           console.error(`Backend error: ${errorData.message}`);
-          alert(`Failed to add appointment. Please try again.`); 
+          alert(`Failed to add appointment. Please try again.`);
         }
       } catch (error) {
         // HIPAA: Generic network error
@@ -407,7 +384,7 @@ export default function Add_appointment() {
     return !(
       isExistingPatient &&
       (formData.patient_type === "FOLLOW" ||
-        formData.patient_type === "POST-OPERATIVE" ||
+        formData.patient_type === "POSTOPERATIVE" ||
         formData.patient_type === "OTHER")
     );
   };
@@ -453,46 +430,46 @@ export default function Add_appointment() {
       },
     });
   };
-  
+
   // Wrapper for fetchPatientDetails to handle incomplete phone number logic
   const handlePhoneNumberChange = (e) => {
     const patient_phone = e.target.value.replace(/\D/g, ""); // Remove non-digits
-    const selectedCountryCode = "+91"; 
+    const selectedCountryCode = "+91";
     const limits =
-        countryNumberLimits[selectedCountryCode] ||
-        countryNumberLimits.default;
+      countryNumberLimits[selectedCountryCode] ||
+      countryNumberLimits.default;
 
     if (patient_phone.length <= limits.max) {
-        setFormData((prev) => ({
-            ...prev,
-            patient_phone: patient_phone,
-        }));
+      setFormData((prev) => ({
+        ...prev,
+        patient_phone: patient_phone,
+      }));
 
-        if (patient_phone.length === limits.max && currentLocation) {
-            // HIPAA: Pass PHI only to secure function/API
-            fetchPatientDetails(patient_phone);
-        } else {
-            // Clear relevant data if the number is incomplete
-            setIsExistingPatient(false);
-            setFormData((prev) => ({
-                ...prev,
-                patientName: "",
-                patient_type: "NEW",
-                doctor_id: "",
-                patient_id: "", // CRITICAL: Clear patient_id if search fails/incomplete
-            }));
-        }
+      if (patient_phone.length === limits.max && currentLocation) {
+        // HIPAA: Pass PHI only to secure function/API
+        fetchPatientDetails(patient_phone);
+      } else {
+        // Clear relevant data if the number is incomplete
+        setIsExistingPatient(false);
+        setFormData((prev) => ({
+          ...prev,
+          patientName: "",
+          patient_type: "NEW",
+          doctor_id: "",
+          patient_id: "", // CRITICAL: Clear patient_id if search fails/incomplete
+        }));
+      }
     }
   }
 
 
-return (
+  return (
     <div
       className="themebody-wrap"
       style={{
         background: "linear-gradient(to right, #e0f7fa, #80deea)",
         minHeight: "100vh",
-        padding: "20px",
+        padding: "12px",
         fontFamily: "'Poppins', Arial, sans-serif",
       }}
     >
@@ -509,18 +486,18 @@ return (
                 overflow: "hidden",
               }}
             >
-              <Card.Body style={{ padding: "30px" }}>
+              <Card.Body >
                 <Form>
                   <div className="form-section">
-                    <h5 className="section-title">
-                      Appointment Details
-                      <span className="ms-3 text-secondary" style={{fontSize: '0.8em'}}>
+                    <h4 className="section-title" style={{marginBottom:"15px"}}>
+                     Add New Appointment Details
+                      <span className="ms-2 text-secondary" style={{ fontSize: '0.8em' }}>
                         (Clinic Location: {currentLocation ? currentLocation.toUpperCase() : "Loading..."}
                         )
                       </span>
-                    </h5>
+                    </h4>
                     {errors.location && (
-                        <p style={{ color: "red", fontWeight: "bold" }}>{errors.location}</p>
+                      <p style={{ color: "red", fontWeight: "bold" }}>{errors.location}</p>
                     )}
                     <br />
                     <Row>
@@ -534,16 +511,15 @@ return (
                             name="patient_phone"
                             value={formData.patient_phone}
                             onChange={handlePhoneNumberChange}
-                            placeholder={`Enter ${
-                              countryNumberLimits["+91"].max
-                            } digit number`}
+                            placeholder={`Enter ${countryNumberLimits["+91"].max
+                              } digit number`}
                             maxLength={
                               countryNumberLimits["+91"].max
                             }
                           />
-                            {errors.patient_phone && (
-                              <p style={{ color: "red" }}>{errors.patient_phone}</p>
-                            )}
+                          {errors.patient_phone && (
+                            <p style={{ color: "red" }}>{errors.patient_phone}</p>
+                          )}
                         </Form.Group>
                       </Col>
                       <Col md={2} className="mb-4">
@@ -571,9 +547,9 @@ return (
                               </option>
                             ))}
                           </Form.Control>
-                            {errors.patient_type && (
-                              <p style={{ color: "red" }}>{errors.patient_type}</p>
-                            )}
+                          {errors.patient_type && (
+                            <p style={{ color: "red" }}>{errors.patient_type}</p>
+                          )}
                         </Form.Group>
                       </Col>
                       <Col md={2}>
@@ -590,9 +566,9 @@ return (
                             dateFormat="dd-MM-yyyy"
                             placeholderText="Select Date"
                           />
-                            {errors.date && (
-                              <p style={{ color: "red" }}>{errors.date}</p>
-                            )}
+                          {errors.date && (
+                            <p style={{ color: "red" }}>{errors.date}</p>
+                          )}
                         </Form.Group>
                       </Col>
                       <Col md={2}>
@@ -612,9 +588,9 @@ return (
                               </option>
                             ))}
                           </Form.Select>
-                            {errors.appointmentTime && (
-                              <p style={{ color: "red" }}>{errors.appointmentTime}</p>
-                            )}
+                          {errors.appointmentTime && (
+                            <p style={{ color: "red" }}>{errors.appointmentTime}</p>
+                          )}
                         </Form.Group>
                       </Col>
                       <Col md={4}>
@@ -629,15 +605,15 @@ return (
                             onChange={handleInputChange}
                             placeholder="Enter Patient Name"
                           />
-                            {errors.patientName && (
-                              <p style={{ color: "red" }}>{errors.patientName}</p>
-                            )}
+                          {errors.patientName && (
+                            <p style={{ color: "red" }}>{errors.patientName}</p>
+                          )}
                         </Form.Group>
                       </Col>
                     </Row>
-                    
+
                     {/* Second Row: FDE Name, Department, Doctor */}
-                    <Row className="mb-4">
+                    <Row className="mb-30">
                       <Col md={4}>
                         <Form.Group>
                           <Form.Label>
@@ -656,9 +632,9 @@ return (
                               </option>
                             ))}
                           </Form.Select>
-                            {errors.FDE_Name && (
-                              <p style={{ color: "red" }}>{errors.FDE_Name}</p>
-                            )}
+                          {errors.FDE_Name && (
+                            <p style={{ color: "red" }}>{errors.FDE_Name}</p>
+                          )}
                         </Form.Group>
                       </Col>
                       <Col md={4}>
@@ -682,9 +658,9 @@ return (
                               </option>
                             ))}
                           </Form.Select>
-                            {errors.departmentName && (
-                              <p style={{ color: "red" }}>{errors.departmentName}</p>
-                            )}
+                          {errors.departmentName && (
+                            <p style={{ color: "red" }}>{errors.departmentName}</p>
+                          )}
                         </Form.Group>
                       </Col>
                       <Col md={4}>
@@ -708,15 +684,15 @@ return (
                               </option>
                             ))}
                           </Form.Select>
-                            {errors.doctorName && (
-                              <p style={{ color: "red" }}>{errors.doctorName}</p>
-                            )}
+                          {errors.doctorName && (
+                            <p style={{ color: "red" }}>{errors.doctorName}</p>
+                          )}
                         </Form.Group>
                       </Col>
                     </Row>
-                    
+
                     {/* Third Row: Treatment, Address (Patient Location) */}
-                    <Row className="mb-4">
+                    <Row className="mb-20">
                       {/* Treatment Field (Visible only when 'OTHER' is selected OR a treatment is already set) */}
                       {(formData.patient_type === "OTHER" || formData.treatment) && (
                         <Col md={4}>
@@ -742,9 +718,9 @@ return (
                                 <option disabled>No treatment available</option>
                               )}
                             </Form.Select>
-                              {errors.treatment && (
-                                <p style={{ color: "red" }}>{errors.treatment}</p>
-                              )}
+                            {errors.treatment && (
+                              <p style={{ color: "red" }}>{errors.treatment}</p>
+                            )}
                           </Form.Group>
                         </Col>
                       )}
@@ -768,7 +744,7 @@ return (
                         </Col>
                       )}
                     </Row>
-                    
+
                     {/* Fourth Row: Note */}
                     <Row>
                       <Col md={6}>
@@ -783,13 +759,13 @@ return (
                             onChange={handleInputChange}
                             placeholder="Add Notes"
                           />
-                            {errors.note && (
-                              <p style={{ color: "red" }}>{errors.note}</p>
-                            )}
+                          {errors.note && (
+                            <p style={{ color: "red" }}>{errors.note}</p>
+                          )}
                         </Form.Group>
                       </Col>
                     </Row>
-                    
+
                     {/* Buttons */}
                     <Row className="mt-4">
                       <Col className="text-end">
@@ -797,7 +773,7 @@ return (
                           type="button"
                           className="btn btn-primary me-2"
                           onClick={() => handleSubmit("save")}
-                          disabled={loading || !currentLocation} 
+                          disabled={loading || !currentLocation}
                         >
                           Book Appointment
                         </button>
@@ -814,19 +790,19 @@ return (
         </Row>
       </Container>
       <style>
-        {`
-          .enquiry-card {
-            border-radius: 15px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            border: none;
-            background: #f8f9fa;
-            overflow: hidden;
-            margin-bottom: 30px;
-          }
+        {`
+ .enquiry-card {
+ border-radius: 15px;
+box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+ border: none;
+ background: #f8f9fa;
+ overflow: hidden;
+ margin-bottom: 30px;
+ }
 
-          .card-body {
-            padding: 30px;
-          }
+ .card-body {
+ padding: 30px;
+ } 
 
           .form-section {
             background: #f8f9fa;
@@ -904,7 +880,7 @@ return (
           /* Responsive adjustments */
           @media (max-width: 768px) {
             .card-body {
-              padding: 20px;
+              padding: 5px;
             }
 
             .form-section {
@@ -964,7 +940,7 @@ return (
             display: block;
           }
         `}
-      </style>
+      </style>
     </div>
   );
 }

@@ -42,3 +42,105 @@
 
 // Dashboard
 @import 'theme/responsive';
+
+.datatable-header-center th {
+    text-align: center !important;
+}
+
+.datatable-header-center .p-column-header-content {
+    justify-content: center !important;
+}
+
+// .p-datatable .p-datatable-tbody > tr.row-status-unconfirmed > td {
+//   background-color: #ffffff !important;
+// }
+
+// .p-datatable .p-datatable-tbody > tr.row-status-history > td {
+//   background-color: #FFA500 !important;
+// }
+
+// .p-datatable .p-datatable-tbody > tr.row-status-execution > td {
+//   background-color: #FFFF00  !important;
+// }
+
+// .p-datatable .p-datatable-tbody > tr.row-status-consultation > td {
+//   background-color: #800080 !important;
+// }
+
+// .p-datatable .p-datatable-tbody > tr.row-status-receipt > td {
+//   background-color: #008000!important;
+// }
+
+// .p-datatable .p-datatable-tbody > tr > td {
+//   color: rgb(255, 255, 255) !important;
+// } 
+
+.p-datatable .p-datatable-tbody > tr.row-status-unconfirmed > td {
+  background-color: #ffffff !important; 
+}
+
+.p-datatable .p-datatable-tbody > tr.row-status-history > td {
+  background-color: #FFA500 !important;
+}
+
+.p-datatable .p-datatable-tbody > tr.row-status-execution > td {
+  background-color: #FFFF00 !important; 
+}
+
+.p-datatable .p-datatable-tbody > tr.row-status-consultation > td {
+  background-color: #800080 !important;
+}
+
+.p-datatable .p-datatable-tbody > tr.row-status-receipt > td {
+  background-color: #008000 !important;
+}
+
+.p-datatable .p-datatable-tbody > tr > td {
+  color: #000000 !important; 
+}
+
+.p-datatable .p-datatable-tbody > tr.row-status-history > td {
+  background-color: #FFA500 !important; 
+  color: #000000 !important;           
+}
+
+.p-datatable .p-datatable-tbody > tr.row-status-consultation > td {
+  background-color: #800080 !important;
+  color: #ffffff !important;           
+}
+
+.p-datatable .p-datatable-tbody > tr.row-status-receipt > td {
+  background-color: #008000 !important;
+  color: #ffffff !important;           
+}
+
+.datatable-compact-style .p-datatable-header,
+.datatable-compact-style .p-datatable-thead > tr > th,
+.datatable-compact-style .p-datatable-tbody > tr > td {
+    font-size: 12px;
+    padding: 0.5rem 0.5rem; 
+    line-height: 1.2;
+}
+
+.datatable-compact-style .p-datatable-tbody > tr > td .cart-action {
+    padding: 5px;
+    gap: 2px; 
+    border-width: 1px;
+}
+
+.datatable-compact-style .p-datatable-tbody > tr > td .cart-action button {
+    padding: 3px 5px;
+    height: auto;
+    width: auto;
+}
+
+.datatable-compact-style .p-datatable-tbody > tr > td .cart-action .w-18 {
+    width: 14px; 
+    height: 14px; 
+}
+
+.datatable-compact-style .p-datatable-tbody > tr {
+    height: auto !important; 
+    min-height: 0;
+}
+
