@@ -683,6 +683,7 @@ export default function Call_logs() {
       enquirytype: enquiryForm.enquirytype,
       fdeId: enquiryForm.FDE_Name || null,
       FDE_Name: enquiryForm.FDE_Name || null, 
+      reference: enquiryForm.reference || null,
       note: enquiryForm.note || "",
     };
 
@@ -1308,6 +1309,18 @@ export default function Call_logs() {
                           </option>
                         ))}
                     </Form.Select>
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group className="mb-20">
+                    <Form.Label>Reference</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="reference"
+                      value={enquiryForm.reference}
+                      onChange={handleEnquiryInputChange}
+                      placeholder="e.g., Google, Friend, Walk-in"
+                    />
                   </Form.Group>
                 </Col>
                 <Col md={6}>

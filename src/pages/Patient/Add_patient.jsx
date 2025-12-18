@@ -240,17 +240,17 @@ export default function Add_Patient() {
 
   const handleSetCountry = (selectedOption) => {
     setCountry(selectedOption);
-    setFormData((prev) => ({ ...prev, country: selectedOption.label }));
+    setFormData((prev) => ({ ...prev, country: selectedOption.name }));
   };
 
   const handleSetState = (selectedOption) => {
     setState(selectedOption);
-    setFormData((prev) => ({ ...prev, state: selectedOption.label }));
+    setFormData((prev) => ({ ...prev, state: selectedOption.name }));
   };
 
   const handleSetCity = (selectedOption) => {
     setCity(selectedOption);
-    setFormData((prev) => ({ ...prev, city: selectedOption.label }));
+    setFormData((prev) => ({ ...prev, city: selectedOption.name }));
   };
 
   const handleDepartmentChange = (e) => {
@@ -497,8 +497,8 @@ export default function Add_Patient() {
                       Address Information
                     </h5>
                     <Row>
-                      <Col md={3} >
-                        <Form.Group className="ms-1">
+                      <Col md={5} >
+                        <Form.Group className="p-4">
                           <Form.Label>
                             Country <span style={styles.required}>*</span>
                           </Form.Label>
@@ -529,8 +529,8 @@ export default function Add_Patient() {
                       </Col>
 
                       {/* State Dropdown */}
-                      <Col md={3} >
-                        <Form.Group className="ms-5">
+                      <Col md={6} >
+                        <Form.Group className="p-4">
                           <Form.Label>
                             State <span style={styles.required}>*</span>
                           </Form.Label>
@@ -561,8 +561,8 @@ export default function Add_Patient() {
                         </Form.Group>
                       </Col>
                       {/* City Dropdown */}
-                      <Col md={3} >
-                        <Form.Group className="mb-3">
+                      <Col md={4} >
+                        <Form.Group className="p-4">
                           <Form.Label>
                             City <span style={styles.required}>*</span>
                           </Form.Label>

@@ -235,10 +235,10 @@ export default function Appointment_list() {
       date: formatDateToDDMMYYYY(new Date(selectedAppointment.appointment_timestamp)),
       patient_location: currentLocation,
     };
-
+    console.log(updatePayload);
     try {
       const response = await fetch(
-        `${BASE_URL}/V1/appointment/editAppointment/${selectedAppointment.patient_phone}`,
+        `${BASE_URL}/V1/appointment/editAppointment/${selectedAppointment.patient_phone}?location=${currentLocation}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },

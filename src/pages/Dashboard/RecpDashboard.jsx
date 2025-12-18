@@ -240,22 +240,27 @@ export default function ReceptionistDashboard() {
     });
   };
 
-  const handleConfirm = async (appointmentId) => {
+  const handleConfirm = async (appointmentId, patientType, phone) => {
     if (!window.confirm("Confirmation: The patient has come to the clinic ...!"))
         return;
 
     try {
-        const url = `${BASE_URL}/V1/appointment/confirmAppointment?location=${currentLocation}`;
-
-        await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ appointment_id: appointmentId })
-        });
-
-        // refresh UI
+       const url = `${BASE_URL}/V1/appointment/confirmAppointment?location=${currentLocation}&appId=${appointmentId}&patientType=${patientType}&patientPhone=${phone}`;
+       const response = await fetch(url, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+          });      
+          const result = await response.json();
+          console.log(result);
+          if (!response.ok || result.statusCode !== 200) {
+            alert("Failed to confirm appointment");
+            return;
+          }     
         await fetchAppointmentsForRange(selectedDate, selectedDoctorId);
-
+        setSelectedEvent(prev =>
+            appointments.find(a => a.appointmentid === prev?.appointmentid) || null
+          );
+          
     } catch (error) {
         console.error("Confirm error:", error);
     }
@@ -356,7 +361,7 @@ export default function ReceptionistDashboard() {
             <span className='font-weight-bold'>Note</span>: {selectedEvent.note}<br/>
             
             <div className="mt-3 d-flex flex-wrap">
-                <Button variant="primary" onClick={() => handleConfirm(selectedEvent.appointmentid)} disabled={isConfirmed} title="Confirm" className="me-2 mb-2">
+                <Button variant="primary" onClick={() => handleConfirm(selectedEvent.appointmentid, selectedEvent.patientType, selectedEvent.phone)} disabled={isConfirmed} title="Confirm" className="me-2 mb-2">
                     <FeatherIcon icon="check" size={16} /> Confirm
                 </Button>
                 {/* <Link to={`/edit-patient/${selectedEvent.patientid}`} className="me-2 mb-2">

@@ -16,23 +16,23 @@ export default function Edit_appointment() {
   const [city, setCity] = useState(null);
   const [formData, setFormData] = useState({
     title: "",
-    firstName: "Sarah",
-    lastName: "Smith",
-    dateOfBirth: "10/12/1999",
+    firstName: "",
+    lastName: "",
+    dateOfBirth: "",
     gender: "",
     department: "",
-    appointmentWith: "Dr. Hal Appeno",
-    appointmentDate: "20/03/2023",
+    appointmentWith: "",
+    appointmentDate: "",
     appointmentTime: "",
-    phone: "+1 50 456XXX",
-    email: "example@email.com",
+    phone: "",
+    email: "",
     city: "",
     state: "",
     country: "",
-    postalCode: "395008",
+    postalCode: "",
     address:
-      "463 Avenida Doutor José Singer,6- Conjunto Residencial Humaitá, São Vicente, SP, Brasil",
-    notes: "Nothing",
+      "l",
+    notes: "",
   });
 
   const handleInputChange = (e) => {

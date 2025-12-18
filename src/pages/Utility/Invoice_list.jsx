@@ -149,10 +149,10 @@ const InvoiceList = () => {
         );
 
         const data = await response.json();
-
+        console.log(data);
         if (response.ok) {
           // CRITICAL FIX: The API returns a flat structure, calculate payable and due amounts here.
-          const processedInvoices = (data.data || []).map(invoice => ({
+          const processedInvoices = (data.data[0] || []).map(invoice => ({
             ...invoice,
             totalamt: parseFloat(invoice.totalamt) || 0,
             discount: parseFloat(invoice.discount) || 0,
@@ -384,7 +384,7 @@ const InvoiceList = () => {
 
     try {
       const response = await fetch(
-        `${BASE_URL}/V1/invoice/${selectedInvoice.invoice_id}`,
+        `${BASE_URL}/V1/invoice/${selectedInvoice.invoice_id}?location=${currentLocation}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
