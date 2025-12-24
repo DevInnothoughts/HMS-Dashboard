@@ -29,56 +29,15 @@ export default function NavBarA() {
     <div className="navbar-container">
       <Container fluid>
         <div className="navbar-content">
-
-         <div className="date-time">
-            <div className="time-box">
-              <i className="fa fa-clock-o pulse"></i>
-              {time}
-            </div>
-            <div className="date-box">
-              <i className="fa fa-calendar"></i>
-              {formattedDate}
-            </div>
-          </div>
           <nav className="breadcrumb-nav">
             <Link
-              to="/"
+              to="/reception-dashboard"
               className={`nav-link ${
                 location.pathname === "/reception-dashboard" ? "active" : ""
               }`}
             >
-              <span className="nav-icon">🏠</span>
-              Dashboard
-            </Link>
-            <span className="separator">•</span>
-            <Link
-              to="/reports/enquiry/add"
-              className={`nav-link ${
-                location.pathname === "/reports/enquiry/add" ? "active" : ""
-              }`}
-            >
-              <span className="nav-icon">➕</span>
-              Add Enquiry
-            </Link>
-            <span className="separator">•</span>
-            <Link
-              to="/reports/enquiry"
-              className={`nav-link ${
-                location.pathname === "/reports/enquiry" ? "active" : ""
-              }`}
-            >
-              <span className="nav-icon">📋</span>
-              Enquiry List
-            </Link>
-            <span className="separator">•</span>
-            <Link
-              to="/appointment/add"
-              className={`nav-link ${
-                location.pathname === "/appointment/add" ? "active" : ""
-              }`}
-            >
-              <span className="nav-icon">➕</span>
-              Add Appointment
+              <span className="fa fa-th"></span>
+             Reception Dashboard
             </Link>
             <span className="separator">•</span>
             <Link
@@ -90,8 +49,18 @@ export default function NavBarA() {
               <span className="nav-icon">📋</span>
               Appointment List
             </Link>
-            <span className="separator">•</span>
+             <span className="separator">•</span>
             <Link
+              to="/appointment/add"
+              className={`nav-link ${
+                location.pathname === "/appointment/add" ? "active" : ""
+              }`}
+            >
+              <span className="nav-icon">➕</span>
+              Add Appointment
+            </Link>
+              <span className="separator">•</span>
+               <Link
               to="/reports/receipts"
               className={`nav-link ${
                 location.pathname === "/reports/receipts" ? "active" : ""
@@ -100,6 +69,27 @@ export default function NavBarA() {
               <span className="nav-icon">📋</span>
               Receipt List
             </Link>
+              <span className="separator">•</span>
+              <Link
+              to="/reports/enquiry"
+              className={`nav-link ${
+                location.pathname === "/reports/enquiry" ? "active" : ""
+              }`}
+            >
+              <span className="nav-icon">📋</span>
+              Enquiry List
+            </Link>
+             <span className="separator">•</span>
+            <Link
+              to="/reports/enquiry/add"
+              className={`nav-link ${
+                location.pathname === "/reports/enquiry/add" ? "active" : ""
+              }`}
+            >
+              <span className="nav-icon">➕</span>
+              Add Enquiry
+            </Link>
+            
           </nav>
         </div>
       </Container>

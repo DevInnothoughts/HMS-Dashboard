@@ -142,13 +142,14 @@ export default function All_patient() {
 
       if (response.ok && data.data) {
         setPatients(data.data);
-      } else {
-        Swal.fire({
-          icon: 'error',
-          title: 'Fetch Failed',
-          text: 'Failed to fetch patient data.'
-        });
-      }
+      } 
+      // else {
+      //   Swal.fire({
+      //     icon: 'error',
+      //     title: 'Fetch Failed',
+      //     text: 'Failed to fetch patient data.'
+      //   });
+      // }
     } catch (error) {
       console.error("Error fetching patients:", error);
       Swal.fire({
@@ -694,7 +695,7 @@ export default function All_patient() {
       ...formData,
       date: formData.date || "",
       birth_date: formData.birth_date,
-      age: formData.birth_date,
+      age: formData.age,
       specific_work: specificWork,
       reference_type,
       ref,

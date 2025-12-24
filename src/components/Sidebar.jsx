@@ -6,6 +6,62 @@ import FeatherIcon from "feather-icons-react";
 import { useSidebarContext } from "../pages/api/useSidebarContext";
 import logo from "/src/assets/images/logo/icon-logo.png";
 
+const SidebarLinesCSS = () => (
+  <style>{`
+    .submenu-list {
+      position: relative;
+      list-style: none;
+      margin-left: 25px !important;
+      padding-left: 0 !important;
+    }
+
+    /* Vertical line */
+    .submenu-list::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 2px;
+      height: 100%;
+      background-color: #00aaff;
+    }
+
+    .submenu-list li {
+      position: relative;
+      padding-left: -9px; 
+      line-height: 15px;
+      margin-bottom: 6px;
+    }
+
+    /* Horizontal line */
+    .submenu-list li::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 15px; 
+      height: 1px;
+      background-color: #00aaff;
+      transform: translateY(-50%);
+    }
+
+    /* Cut vertical line exactly at last item */
+    .submenu-list li:last-child::after {
+      content: "";
+      position: absolute;
+      left: -1px;
+      top: 50%;
+      width: 4px;
+      height: 100%;
+      background-color: #fff;
+    }
+
+    .submenu-list li:hover::before {
+      background-color: #3b82f6;
+    }
+  `}</style>
+);
+
 export default function Sidebar() {
   const location = useLocation();
   const [activeIndex, setActiveIndex] = useState(null);
@@ -21,7 +77,6 @@ export default function Sidebar() {
 
   const { toggleSidebar } = useSidebarContext();
 
-  // 🏥 **Receptionist Panel**
   const renderReceptionistMenu = () => (
     <ul>
       <li className="cdxmenu-title">
@@ -161,7 +216,6 @@ export default function Sidebar() {
     </ul>
   );
 
-  // 👨‍⚕️ **Doctor Panel**
   const renderDoctorMenu = () => (
     <ul>
       <li className="cdxmenu-title">
@@ -222,6 +276,7 @@ export default function Sidebar() {
 
   return (
     <div className="codex-sidebar">
+      <SidebarLinesCSS />
       <div className="logo-gridwrap">
         <Link className="lightlogo" to="/">
           <img className="img-fluid" src={logo} alt="sidebar-lightlogo" />

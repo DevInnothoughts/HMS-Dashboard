@@ -32,13 +32,13 @@ export default function NavBarA() {
           {/* Breadcrumb Navigation */}
           <nav className="breadcrumb-nav">
             <Link
-              to="/"
+              to="/reception-dashboard"
               className={`nav-link ${
                 location.pathname === "/" ? "active" : ""
               }`}
             >
-              <span className="nav-icon">🏠</span>
-              Dashboard
+              <span className="fa fa-th"></span>
+              Reception Dashboard
             </Link>
             <span className="separator">•</span>
             <Link
@@ -61,18 +61,6 @@ export default function NavBarA() {
               Add Patient
             </Link>
           </nav>
-
-          {/* Right Section: Time & Date */}
-          <div className="date-time">
-            <div className="time-box">
-              <i className="fa fa-clock-o pulse"></i>
-              {time}
-            </div>
-            <div className="date-box">
-              <i className="fa fa-calendar"></i>
-              {formattedDate}
-            </div>
-          </div>
         </div>
       </Container>
 
