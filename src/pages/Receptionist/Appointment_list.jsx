@@ -3,6 +3,9 @@ import { decodeJwt } from "../../utils/decode-jwt";
 import { FilterMatchMode } from "primereact/api";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
+import Swal from 'sweetalert2';
+import { useNavigate } from "react-router-dom";
+import PageBreadcrumb from "../../components/PageBreadcrumb";
 import FeatherIcon from "feather-icons-react";
 import {
   Container,
@@ -22,6 +25,18 @@ import moment from "moment";
 
 const BASE_URL = "http://localhost:5100/api";
 const TYPE_LIST = ["NEW", "FOLLOW", "POST-OPERATIVE"];
+
+const Toast = Swal.mixin({
+  toast: true,
+  position: 'top-end',
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.addEventListener('mouseenter', Swal.stopTimer)
+    toast.addEventListener('mouseleave', Swal.resumeTimer)
+  }
+});
 
 const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
   const defaultBg = '#f1f1f1';
@@ -90,6 +105,7 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
 
 
 export default function Appointment_list() {
+  const navigate = useNavigate();
   const [appointmentData, setAppointmentData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({ global: { value: null, matchMode: FilterMatchMode.CONTAINS }, });
@@ -106,7 +122,91 @@ export default function Appointment_list() {
   const [fdeList, setFdeList] = useState([]);
   const [consultationList, setConsultationList] = useState([]);
   const [timeSlots, setTimeSlots] = useState([]);
+  const [billingItems, setBillingItems] = useState([{ label: "", amount: "" }]);
+  const [receiptForm, setReceiptForm] = useState({
+    consultationType: "",
+    registrationType: "",
+    regComment: "",
+    discountAmt: "",
+    discountNote: "",
+    paymentMode: "",
+    posTerminal: ""
+  });
 
+  const calculateTotals = () => {
+    const subtotal = billingItems.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+    const payable = subtotal - (parseFloat(receiptForm.discountAmt) || 0);
+    return { subtotal, payable };
+  };
+
+  const addBillingRow = () => setBillingItems([...billingItems, { label: "", amount: "" }]);
+
+  const removeBillingRow = (index) => {
+    const list = [...billingItems];
+    list.splice(index, 1);
+    setBillingItems(list);
+  };
+
+  const handleGenerateReceipt = async () => {
+    const { subtotal, payable } = calculateTotals();
+    const payload = {
+      appId: selectedAppointment.appointment_id,
+      patientName: selectedAppointment.patient_name,
+      doctorName: selectedAppointment.doctor_name,
+      location: currentLocation,
+      billingItems: billingItems,
+      consultation: receiptForm.consultationType,
+      registrationType: receiptForm.registrationType,
+      regComment: receiptForm.regComment,
+      discountamt: parseFloat(receiptForm.discountAmt) || 0,
+      discountNote: receiptForm.discountNote,
+      paymentmode: receiptForm.paymentMode,
+      totalamt: subtotal,
+      payableamt: payable
+    };
+
+    try {
+      const response = await fetch(`${BASE_URL}/V1/appointment/saveReceipt`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        Swal.fire("Success", "Receipt Generated Successfully", "success");
+        setShowReceiptModal(false);
+        navigate("/receipt-list");
+      } else {
+        const errorData = await response.json();
+        Swal.fire("Error", errorData.message || "Internal Server Error", "error");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
+  // const handleReceiptFormChange = (e) => {
+  //   const { name, value } = e.target;
+  //   setReceiptForm(prev => ({
+  //     ...prev,
+  //     [name]: value
+  //   }));
+  // };
+
+  const handleReceiptFormChange = (e) => {
+    const { name, value } = e.target;
+
+    if (name === "doctorName") {
+      const selectedDoctor = doctors.find(d => d.name === value);
+      setReceiptForm(prev => ({
+        ...prev,
+        doctorName: value,
+        doctor_id: selectedDoctor ? selectedDoctor.doctor_id : ""
+      }));
+    } else {
+      setReceiptForm(prev => ({ ...prev, [name]: value }));
+    }
+  };
   useEffect(() => {
     const token = localStorage.getItem('token');
     console.log("Token:", token);
@@ -226,13 +326,17 @@ export default function Appointment_list() {
 
   const handleSaveChanges = async () => {
     if (!selectedAppointment || !selectedAppointment.patient_phone) {
-      alert("Error: Patient Phone number is missing!");
-      return;
+      Swal.fire({
+        icon: 'error',
+        title: 'Missing Information',
+        text: 'Patient Phone number is missing!'
+      }); return;
     }
-
+    const dateOnly = moment(selectedAppointment.appointment_timestamp).format("YYYY-MM-DD");
+    console.log(dateOnly);
     const updatePayload = {
       ...selectedAppointment,
-      date: formatDateToDDMMYYYY(new Date(selectedAppointment.appointment_timestamp)),
+      appointment_timestamp: dateOnly,
       patient_location: currentLocation,
     };
     console.log(updatePayload);
@@ -249,16 +353,27 @@ export default function Appointment_list() {
       const result = await response.json();
 
       if (response.ok) {
-        alert("Appointment updated successfully!");
+        Toast.fire({
+          icon: 'success',
+          title: 'Appointment updated successfully!'
+        });
         fetchAppointmentData();
         setShowEditModal(false);
       } else {
         console.error("Failed to update appointment:", result.message);
-        alert("Failed to update appointment: " + (result.message || "Unknown error"));
+        Swal.fire({
+          icon: 'error',
+          title: 'Update Failed',
+          text: result.message || "Unknown error"
+        });
       }
     } catch (error) {
       console.error("Error updating appointment:", error.message);
-      alert("Error updating appointment: " + error.message);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.message
+      });
     }
   };
 
@@ -275,20 +390,33 @@ export default function Appointment_list() {
       );
 
       if (response.ok) {
-        alert("Appointment successfully cancelled.");
+        Swal.fire({
+          icon: 'success',
+          title: 'Cancelled',
+          text: 'Appointment successfully cancelled.',
+          timer: 2000
+        });
         fetchAppointmentData();
         setShowDeleteModal(false);
         setCancellationReason("");
       } else {
         const errorData = await response.json();
-        alert("Failed to delete appointment: " + (errorData.message || 'Unknown error'));
+        Swal.fire({
+          icon: 'error',
+          title: 'Cancellation Failed',
+          text: errorData.message || 'Unknown error'
+        });
       }
     } catch (error) {
-      alert("An error occurred while deleting the appointment.");
+      Swal.fire({
+        icon: 'error',
+        title: 'Network Error',
+        text: 'An error occurred while deleting the appointment.'
+      });
       console.error("Network Error:", error);
     }
   };
-  const handleProcessUpdate = async (appId, endpoint, patient_type, patient_phone, successMessage) => {
+  const handleProcessUpdate = async (appId, endpoint, patient_type, patient_phone, successMessage="Confirmed!") => {
     try {
       console.log(appId, endpoint, successMessage);
       let response = "";
@@ -308,13 +436,24 @@ export default function Appointment_list() {
       const data = await response.json();
 
       if (response.ok) {
-        alert(successMessage);
+        Toast.fire({
+          icon: 'success',
+          title: successMessage
+        });
         fetchAppointmentData();
       } else {
-        alert(`Failed to update process: ${data.message || 'Unknown error'}`);
+        Swal.fire({
+          icon: 'error',
+          title: 'Process Error',
+          text: data.message || 'Unknown error'
+        });
       }
     } catch (error) {
-      alert(`Error updating process. Please try again: ${error.message}`);
+      Swal.fire({
+        icon: 'error',
+        title: 'Connection Error',
+        text: error.message
+      });
     }
   };
 
@@ -358,12 +497,12 @@ export default function Appointment_list() {
 
         {!isConfirmed && (
           <>
-            <ActionButton
+             <ActionButton
               title="Edit"
               onClick={() => { setSelectedAppointment(rowData); setShowEditModal(true); }}
               disabled={isConfirmed}
               icon="edit"
-              style={{ backgroundColor: '#9fd1ffff', borderColor: '#001696ff' }}
+
             />
             <ActionButton
               title="Cancel"
@@ -373,10 +512,10 @@ export default function Appointment_list() {
             />
             <ActionButton
               title="Confirm"
-              onClick={() => handleProcessUpdate(appointment_id, 'confirmAppointment', patient_type, patient_phone, 'Appointment confirmed!')}
+              onClick={() => handleProcessUpdate(appointment_id, 'confirmAppointment', 'Appointment confirmed!')}
               disabled={isConfirmed}
               icon="check"
-              style={{ backgroundColor: '#b4ffaaff', borderColor: '#007500ff' }}
+
             />
           </>
         )}
@@ -416,6 +555,16 @@ export default function Appointment_list() {
     );
   };
 
+  const ColorLegend = ({ name, count, bgColor }) => (
+    <div style={{ display: 'inline-flex', alignItems: 'center', marginRight: '20px' }}>
+      <div style={{ width: '12px', height: '12px', borderRadius: '3px', backgroundColor: bgColor, border: '1px solid #ccc', marginRight: '5px' }}></div>
+      <p style={{ display: 'inline', margin: 0, fontSize: '14px', color: '#000' }}>
+        {name}
+      </p>
+    </div>
+  );
+
+
   const renderHeader = () => (
     <div
       style={{
@@ -441,10 +590,9 @@ export default function Appointment_list() {
             <span
               style={{
                 marginRight: "10px",
-                fontSize: "16px",
+                fontSize: "13px",
                 fontWeight: "bold",
                 color: "#333",
-                marginBottom: "15px"
               }}
             >
               Search
@@ -473,7 +621,6 @@ export default function Appointment_list() {
               />
             </InputGroup>
           </Form.Group>
-          
         </div>
 
         <div
@@ -534,6 +681,17 @@ export default function Appointment_list() {
           </Button>
         </div>
       </div>
+      <div style={{ marginTop: "15px" }}>
+        <Col xs={12}>
+          <div className="d-flex flex-wrap justify-content-start align-items-center">
+            <ColorLegend name="Appointment Confirmed" bgColor="#ffffff" />
+            <ColorLegend name="History Checked" bgColor="#FFA500" />
+            <ColorLegend name="Executive Checked" bgColor="#FFFF00" />
+            <ColorLegend name="Consultation Checked" bgColor="#800080" />
+            <ColorLegend name="Receipt Generated" bgColor="#008000" />
+          </div>
+        </Col>
+      </div>
     </div>
   );
 
@@ -565,7 +723,7 @@ export default function Appointment_list() {
         padding: "10px",
       }}
     >
-
+      <PageBreadcrumb pagename="Appointment List" />
       <Modal
         show={showDeleteModal}
         onHide={() => setShowDeleteModal(false)}
@@ -665,12 +823,6 @@ export default function Appointment_list() {
           )}
         </Modal.Body>
       </Modal>
-
-      {showReceiptModal && (
-        <Modal show={showReceiptModal} onHide={() => setShowReceiptModal(false)} size="xl" centered>
-          <Modal.Body><p>Receipt Generation/Saving UI Goes Here.</p></Modal.Body>
-        </Modal>
-      )}
 
       <NavBarA pagename="Appointment List" />
       <div className="theme-body">
@@ -789,6 +941,281 @@ export default function Appointment_list() {
           </Row>
         </Container>
       </div>
+      <Modal show={showReceiptModal} onHide={() => setShowReceiptModal(false)} size="lg" centered>
+        <Modal.Header closeButton style={{ backgroundColor: "#e0f7fa", borderBottom: "1px solid #4dd0e1" }}>
+          <Modal.Title style={{ fontSize: "18px", fontWeight: "600", color: "#00838f" }}>
+            <FeatherIcon icon="credit-card" size={20} className="me-2" />
+            Generate Receipt
+          </Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body style={{ backgroundColor: "#f5fcfd", padding: "25px" }}>
+          <Form>
+            <div className="mb-4">
+              <h6 style={{ color: "#00bcd4", borderBottom: "1px solid #00bcd4", paddingBottom: "5px", marginBottom: "5px", fontSize: "15px" }}>
+                Basic Details
+              </h6>
+              <Row className="mb-10">
+                <Col md={6}>
+                  <Form.Label style={{ fontSize: '13px', fontWeight: "500" }}>Patient Name <span className="text-danger">*</span></Form.Label>
+                  <Form.Control
+                    readOnly
+                    value={selectedAppointment?.patient_name || ""}
+                    style={{ fontSize: '13px', backgroundColor: "#eee" }}
+                  />
+                </Col>
+
+                <Col>
+                  <Form.Group className="mb-2">
+                    <Form.Label style={{ fontSize: '13px', fontWeight: "500" }}>Doctor Name <span className="text-danger">*</span></Form.Label>
+                    <Form.Select
+                      name="doctorName"
+                      style={{ fontSize: '13px' }}
+                      value={receiptForm.doctorName || ""}
+                      onChange={handleReceiptFormChange}
+                    >
+                      <option value="">Select Doctor</option>
+                      {doctors.map((doctor) => (
+                        <option key={doctor.doctor_id} value={doctor.name}>
+                          {doctor.name}
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+              </Row>
+
+              <Row className="mb-3">
+                <Col md={6}>
+                  <Form.Label style={{ fontSize: '13px', fontWeight: "500" }}>Registration Type </Form.Label>
+                  <Form.Select
+                    style={{ fontSize: '13px' }}
+                    name="registrationType"
+                    onChange={handleReceiptFormChange}
+                  >
+                    <option value="">Select Registration</option>
+                    {["DNC", "DNW", "DNP", "Only Registration"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </Form.Select>
+                </Col>
+              </Row>
+
+              {receiptForm.registrationType && (
+                <Form.Group className="mb-3">
+                  <Form.Label style={{ fontSize: '13px', fontWeight: "500" }}>Registration Comment Box</Form.Label>
+                  <Form.Control
+                    as="textarea"
+                    rows={1}
+                    name="regComment"
+                    placeholder="Enter notes..."
+                    style={{ fontSize: '13px' }}
+                    onChange={handleReceiptFormChange}
+                  />
+                </Form.Group>
+              )}
+            </div>
+
+            <div className="mb-4">
+              <div className="d-flex justify-content-between align-items-center">
+                <h6 style={{ color: "#00bcd4", borderBottom: "1px solid #00bcd4", paddingBottom: "5px", marginTop: "20px", marginBottom: "5px", fontSize: "15px", flex: 1 }}>
+                  Billing Particulars
+                </h6>
+              </div>
+
+              {/* {billingItems.map((item, index) => (
+                <Row key={index} className="mb-2 align-items-end">
+                   <Col md={6}>
+                  <Form.Label style={{ fontSize: '13px', fontWeight: "500" }}>Consultation Type <span className="text-danger">*</span></Form.Label>
+                  <Form.Select
+                    style={{ fontSize: '13px' }}
+                    name="consultationType"
+                    onChange={handleReceiptFormChange}
+                  >
+                    <option value="">Select Type</option>
+                    {["CONSULTATION", "FOLLOW-UP", "PROCTOSCOPY", "MCDPA", "COLON HYDROTHERAPY", "COLONOSCOPY", "USG", "USG ABDOMEN AND PELVIS", "MANOMETRY", "BIOFEEDBACK", "ECHODEFECOGRAPHY", "USG SCROTUM", "UNILATERAL DOPPLER", "BILATERAL DOPPLER", "PROCEDURE", "GASTROSCOPY", "3D ENDO ANAL IMAGING", "OTHERS", "MRI FISTULOGRAM", "2D SCAN", "LAB", "POSTOPERATIVE", "BLOOD TESTS + ECG", "DIET", "UROFLOWMETRY", "DIET PLAN - 1 MONTH", "DIET PLAN - 3 MONTH", "DIET PLAN - 6 MONTH", "ENEMA", "MEDICINES", "DRESSING", "CYSTOSCOPY", "POST OPERATIVE FOLLOW UP", "POST OPERATIVE DRESSING + CONSULTATION"].map(item => (
+                      <option key={item} value={item}>{item}</option>
+                    ))}
+                  </Form.Select>
+                </Col>
+                  <Col md={2}>
+                    <Form.Label style={{ fontSize: '12px' }}>Amount (₹) <span className="text-danger">*</span></Form.Label>
+                    <Form.Control
+                      type="number"
+                      style={{ fontSize: '13px' }}
+                      value={item.amount}
+                      onChange={(e) => {
+                        const newItems = [...billingItems];
+                        newItems[index].amount = e.target.value;
+                        setBillingItems(newItems);
+                      }}
+                    />
+                  </Col>
+                  <Col md={4} className="d-flex mb-2">
+                    <Button
+                      variant="outline-danger"
+                      className="me-2 btn-sm"
+                      onClick={() => removeBillingRow(index)}
+                      style={{ padding: '10px 10px' }}
+                      disabled={billingItems.length <= 1}
+                    >
+                      - Delete Row
+                    </Button>
+                    <Button
+                      variant="outline-success"
+                      className="btn-sm"
+                      onClick={addBillingRow}
+                      style={{ padding: '10px 10px'}}
+                    >
+                      + Add Row
+                    </Button>
+                  </Col>
+                </Row>
+              ))} */}
+
+              {billingItems.map((item, index) => (
+                <Row key={index} className="mb-10 align-items-end">
+                  <Col md={6}>
+                    <Form.Label style={{ fontSize: '13px', fontWeight: "500" }}>Consultation Type </Form.Label>
+                    <Form.Select
+                      style={{ fontSize: '13px' }}
+                      value={item.label}
+                      onChange={(e) => {
+                        const newItems = [...billingItems];
+                        newItems[index].label = e.target.value;
+                        setBillingItems(newItems);
+                      }}
+                    >
+                      <option value="">Select Type</option>
+                      {["CONSULTATION", "FOLLOW-UP", "PROCTOSCOPY", "MCDPA", "COLON HYDROTHERAPY", "COLONOSCOPY", "USG", "USG ABDOMEN AND PELVIS", "MANOMETRY", "BIOFEEDBACK", "ECHODEFECOGRAPHY", "USG SCROTUM", "UNILATERAL DOPPLER", "BILATERAL DOPPLER", "PROCEDURE", "GASTROSCOPY", "3D ENDO ANAL IMAGING", "OTHERS", "MRI FISTULOGRAM", "2D SCAN", "LAB", "POSTOPERATIVE", "BLOOD TESTS + ECG", "DIET", "UROFLOWMETRY", "DIET PLAN - 1 MONTH", "DIET PLAN - 3 MONTH", "DIET PLAN - 6 MONTH", "ENEMA", "MEDICINES", "DRESSING", "CYSTOSCOPY", "POST OPERATIVE FOLLOW UP", "POST OPERATIVE DRESSING + CONSULTATION"].map(opt => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </Form.Select>
+                  </Col>
+                  <Col md={2}>
+                    <Form.Label style={{ fontSize: '12px' }}>Amount (₹)</Form.Label>
+                    <Form.Control
+                      type="number"
+                      style={{ fontSize: '13px' }}
+                      value={receiptForm.registrationType ? 0 : item.amount}
+                      disabled={!!receiptForm.registrationType}
+                      onChange={(e) => {
+                        const newItems = [...billingItems];
+                        newItems[index].amount = e.target.value;
+                        setBillingItems(newItems);
+                      }}
+                    />
+                  </Col>
+                  <Col md={4} className="d-flex mb-2">
+                    <Button
+                      variant="outline-danger"
+                      className="me-2 btn-sm"
+                      onClick={() => removeBillingRow(index)}
+                      style={{ padding: '10px 10px' }}
+                      disabled={billingItems.length <= 1}
+                    >
+                      - Delete Row
+                    </Button>
+                    <Button
+                      variant="outline-success"
+                      className="btn-sm"
+                      onClick={addBillingRow}
+                      style={{ padding: '10px 10px' }}
+                    >
+                      + Add Row
+                    </Button>
+                  </Col>
+                </Row>
+              ))}
+            </div>
+
+            <div className="mb-2">
+              <h6 style={{ color: "#00bcd4", borderBottom: "1px solid #00bcd4", paddingBottom: "5px", marginTop: "20px", marginBottom: "5px", fontSize: "15px" }}>
+                Payment Details
+              </h6>
+              <Row className="mb-10">
+                <Col md={4}>
+                  <Form.Label style={{ fontSize: '13px', fontWeight: "500" }}>Discount Amount (₹)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    name="discountAmt"
+                    style={{ fontSize: '13px' }}
+                    value={receiptForm.registrationType ? 0 : receiptForm.discountAmt}
+                    disabled={!!receiptForm.registrationType}
+                    onChange={handleReceiptFormChange}
+                  />
+                </Col>
+                <Col md={8}>
+                  <Form.Label style={{ fontSize: '13px', fontWeight: "500" }}>Discount Note</Form.Label>
+                  <Form.Control
+                    name="discountNote"
+                    style={{ fontSize: '13px' }}
+                    onChange={handleReceiptFormChange}
+                  />
+                </Col>
+              </Row>
+
+              <Row className="mb-15">
+                <Col md={6}>
+                  <Form.Label style={{ fontSize: '13px', fontWeight: "500" }}>Mode of Payment</Form.Label>
+                  <Form.Select
+                    style={{ fontSize: '13px' }}
+                    name="paymentMode"
+                    onChange={handleReceiptFormChange}
+                  >
+                    <option value="">Select Mode</option>
+                    {["card", "upi", "cash"].map(opt => <option key={opt} value={opt}>{opt.toUpperCase()}</option>)}
+                  </Form.Select>
+                </Col>
+
+                <Col md={6}>
+                  <Form.Label style={{ fontSize: '13px', fontWeight: "500" }}>PoS Terminal </Form.Label>
+                  <Form.Select
+                    style={{ fontSize: '13px' }}
+                    name="posTerminal"
+                    onChange={handleReceiptFormChange}
+                  >
+                    <option value="">Select Terminal</option>
+                    {["HDFC", "BHARAT PE 1", "BHARAT PE 2", "PINE LABS", "OFFLINE"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                  </Form.Select>
+                </Col>
+              </Row>
+
+              <div className="p-3 mb-3" style={{ backgroundColor: "#e0f7fa", borderRadius: "8px", border: "1px dashed #00bcd4", marginTop: "10px" }}>
+                <Row className="text-end">
+                  <Col>
+                    <div className="mb-2" style={{ borderBottom: "1px solid #b2ebf2", paddingBottom: "5px" }}>
+                      <h6 style={{ fontSize: "12px", textAlign: "left", color: "#00838f", marginBottom: "5px" }}>Charge Breakdown:</h6>
+                      {billingItems.map((item, idx) => (
+                        <div key={idx} style={{ fontSize: "12px", color: "#555", display: "flex", justifyContent: "space-between" }}>
+                          <span>{item.label || `Item ${idx + 1}`} :</span>
+                          <span>₹ {receiptForm.registrationType ? 0 : (item.amount || 0)}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ fontSize: "13px", color: "#555" }}>Subtotal: <strong>₹ {calculateTotals().subtotal}</strong></div>
+                    <div style={{ fontSize: "13px", color: "#d32f2f", marginTop: "5px" }}>Discount: <strong>- ₹ {receiptForm.discountAmt || 0}</strong></div>
+                    <div style={{ fontSize: "16px", color: "#00838f", fontWeight: "bold", marginTop: "5px" }}>
+                      Payable Amount: ₹ {calculateTotals().payable}
+                    </div>
+                  </Col>
+                </Row>
+              </div>
+            </div>
+          </Form>
+        </Modal.Body>
+
+        <Modal.Footer style={{ backgroundColor: "#f5fcfd", borderTop: "1px solid #4dd0e1" }}>
+          <Button variant="secondary" onClick={() => setShowReceiptModal(false)} style={{ fontSize: '13px', borderRadius: "10px" }}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleGenerateReceipt}
+            style={{ backgroundColor: "#00bcd4", border: "none", fontSize: '13px', borderRadius: "10px" }}
+          >
+            <FeatherIcon icon="file-text" size={14} className="me-2" />
+            Generate & Save Receipt
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }

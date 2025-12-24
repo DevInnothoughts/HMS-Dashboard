@@ -6,6 +6,9 @@ import { Column } from "primereact/column";
 import FeatherIcon from "feather-icons-react";
 import { Link, useNavigate } from "react-router-dom";
 import { decodeJwt } from "../../utils/decode-jwt";
+import Swal from 'sweetalert2';
+import PageBreadcrumb from "../../components/PageBreadcrumb";
+
 import {
   Container,
   Row,
@@ -24,6 +27,18 @@ import logo from "../../assets/images/3.png";
 
 
 const BASE_URL = "http://localhost:5100/api"; // Update your API base URL here
+
+const Toast = Swal.mixin({
+  toast: true,
+  position: 'top-end',
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.addEventListener('mouseenter', Swal.stopTimer)
+    toast.addEventListener('mouseleave', Swal.resumeTimer)
+  }
+});
 
 const formatDate = (dateString) => {
   if (!dateString) return "";
@@ -76,13 +91,23 @@ export default function All_patient() {
   const [filters1, setFilters1] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
-  const [loading, setLoading] = useState(false); // Loading state
-  // REMOVED: [fromDate, setFromDate]
-  // REMOVED: [toDate, setToDate]
+  const [fromDate, setFromDate] = useState(new Date());
+  const [toDate, setToDate] = useState(new Date());
+  const [loading, setLoading] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditPatientModal, setShowEditPatientModal] = useState(false);
-  const [selectedPatient, setSelectedPatient] = useState(null); // Selected patient data
-  const [currentLocation, setCurrentLocation] = useState('default'); // State to hold JWT location
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [currentLocation, setCurrentLocation] = useState('default');
+
+  const formatToApiDate = (date) => {
+    const validDate = date instanceof Date ? date : new Date(date);
+    if (isNaN(validDate)) return null;
+    const day = String(validDate.getDate()).padStart(2, "0");
+    const month = String(validDate.getMonth() + 1).padStart(2, "0");
+    const year = validDate.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
   useEffect(() => {
       // Fetches and sets location from the token upon component mount
       const token = localStorage.getItem('token');
@@ -93,6 +118,64 @@ export default function All_patient() {
           }
       }
     }, []);
+
+  const fetchPatientData = async () => {
+    setLoading(true);
+    try {
+      const url = new URL(`${BASE_URL}/V1/patient/listPatient`);
+      const params = {
+        from: formatToApiDate(fromDate),
+        to: formatToApiDate(toDate),
+        location: currentLocation,
+      };
+
+      Object.keys(params).forEach((key) => {
+        if (params[key]) url.searchParams.append(key, params[key]);
+      });
+
+      const response = await fetch(url, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.data) {
+        setPatients(data.data);
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Fetch Failed',
+          text: 'Failed to fetch patient data.'
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching patients:", error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'An error occurred while loading patient data.'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (currentLocation) {
+      fetchPatientData();
+    }
+  }, [currentLocation, fromDate, toDate]);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      const payload = decodeJwt(token);
+      if (payload && payload.jobLocation) {
+        setCurrentLocation(payload.jobLocation);
+      }
+    }
+  }, []);
 
   const [workPatterns, setWorkPatterns] = useState({
     Sedentary: false,
@@ -633,26 +716,34 @@ export default function All_patient() {
       const responseData = await response.json(); // ✅ Fetch response JSON only once
 
       if (response.ok) {
-        toast.success("Patient information updated successfully");
-
-        // Update the patient in state without refreshing
+        Toast.fire({
+          icon: 'success',
+          title: 'Patient information updated successfully'
+        });
         setPatients((prevPatients) =>
           prevPatients.map((p) =>
             p.phone === selectedPatient.phone
-              ? { ...p, ...responseData.data } // ✅ Use the received data correctly
+              ? { ...p, ...responseData.data }
               : p
           )
         );
 
-        // Close the modal and reset state
         setShowEditPatientModal(false);
         setSelectedPatient(null);
         setFormData({});
       } else {
-        toast.error(responseData.message || "Failed to update patient");
+        Swal.fire({
+          icon: 'error',
+          title: 'Update Failed',
+          text: responseData.message || "Failed to update patient"
+        });
       }
     } catch (error) {
-      toast.error("Network error. Please try again.");
+      Swal.fire({
+        icon: 'error',
+        title: 'Network Error',
+        text: 'Please check your connection and try again.'
+      });
     }
   };
 
@@ -751,11 +842,19 @@ export default function All_patient() {
 
       const responseData = await response.json();
       console.log("Appointment added successfully:", responseData);
-      toast.success("Appointment booked successfully");
-      setShowAddModal(false);
+      Swal.fire({
+        icon: 'success',
+        title: 'Booked!',
+        text: 'Appointment booked successfully',
+        timer: 2000
+      }); setShowAddModal(false);
     } catch (error) {
       console.error("Error adding appointment:", error.message);
-      toast.error("Failed to book appointment. Please try again.");
+      Swal.fire({
+        icon: 'error',
+        title: 'Booking Failed',
+        text: 'Failed to book appointment. Please try again.'
+      });
     } finally {
       setLoading(false);
     }
@@ -1089,7 +1188,7 @@ export default function All_patient() {
       to=""
       title="Print"
     >
-      <FeatherIcon icon="printer" size="14" /> 
+      <FeatherIcon icon="printer" size="12" /> 
     </Link>
 
     <Button
@@ -1098,7 +1197,7 @@ export default function All_patient() {
       className="appointment-btn btn-sm btn-icon me-2"
       title="Add Appointment"
     >
-      <FeatherIcon icon="plus-square" size="14" />
+      <FeatherIcon icon="plus-square" size="12" />
     </Button>
 
     <Button
@@ -1107,7 +1206,7 @@ export default function All_patient() {
       className="edit-btn btn-sm btn-icon"
       title="Edit Patient"
     >
-      <FeatherIcon icon="edit" size="14" />
+      <FeatherIcon icon="edit" size="12" />
     </Button>
   </div>
 );
@@ -1830,28 +1929,27 @@ export default function All_patient() {
   const renderHeader = () => (
     <div
       style={{
-        border: "2px solid #4dd0e1",
+        border: "1px solid #4dd0e1",
         textAlign: "center",
-        borderRadius: "12px",
-        padding: "15px",
+        borderRadius: "8px",
+        padding: "10px",
         backgroundColor: "#e0f7fa",
-        boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
       }}
     >
       <div
         style={{
           display: "flex",
-          justifyContent: "flex-start", // Align to start since date pickers are gone
+          justifyContent: "space-between",
           alignItems: "center",
-          gap: "20px",
+          gap: "10px",
         }}
       >
-        {/* Global Search Section */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "30px",
+            gap: "15px",
           }}
         >
           <Form.Group
@@ -1862,16 +1960,15 @@ export default function All_patient() {
             }}
           >
             <span
-            style={{
-                marginRight: "10px", 
-                fontSize: "16px", 
-                fontWeight: "bold", 
+              style={{
+                marginRight: "10px",
+                fontSize: "13px",
+                fontWeight: "bold",
                 color: "#333",
-                marginBottom:"15px"
-            }}
-        >
-        Search
-        </span>
+              }}
+            >
+              Search
+            </span>
             <InputGroup>
               <Form.Control
                 type="search"
@@ -1886,11 +1983,11 @@ export default function All_patient() {
                 }
                 placeholder="Global Search"
                 style={{
-                  borderRadius: "8px",
-                  border: "2px solid #4dd0e1",
-                  padding: "8px 12px",
-                  width: "250px",
-                  fontSize: "14px",
+                  borderRadius: "6px",
+                  border: "1px solid #4dd0e1",
+                  padding: "5px 8px",
+                  width: "200px",
+                  fontSize: "12px",
                   transition: "all 0.3s ease",
                 }}
               />
@@ -1898,35 +1995,93 @@ export default function All_patient() {
           </Form.Group>
         </div>
 
-        
-
-        {/* Refresh Button (Now simple refresh for all data) */}
-        <Button
-          variant="primary"
-          onClick={fetchPatientsData} // Call fetchPatientsData without parameters
+        <div
           style={{
-            backgroundColor: "#00bcd4",
-            border: "none",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            border: "1px solid #4dd0e1",
             borderRadius: "8px",
-            padding: "8px 20px",
-            fontSize: "14px",
-            fontWeight: "500",
-            color: "white",
-            cursor: "pointer",
-            transition: "all 0.3s ease",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-            ":hover": {
-              backgroundColor: "#00acc1",
-              transform: "translateY(-1px)",
-              boxShadow: "0 4px 8px rgba(0,0,0,0.15)",
-            },
+            padding: "8px",
+            backgroundColor: "#f5fcfd",
           }}
         >
-        <FeatherIcon icon="refresh-ccw" size={16} className="me-2" />Refresh
-        </Button>
+          <div>
+            <div
+              style={{
+                fontSize: "12px",
+                fontWeight: "500",
+                color: "#00838f",
+                marginBottom: "3px",
+              }}
+            >
+              From Date
+            </div>
+            <DatePicker
+              selected={fromDate}
+              onChange={(date) => setFromDate(date)}
+              dateFormat="dd-MM-yyyy"
+              placeholderText="Select from date"
+              maxDate={new Date()}
+              customInput={
+                <Form.Control style={{ padding: "5px 8px", fontSize: "12px" }} />
+              }
+            />
+          </div>
+
+          <div>
+            <div
+              style={{
+                fontSize: "12px",
+                fontWeight: "500",
+                color: "#00838f",
+                marginBottom: "3px",
+              }}
+            >
+              To Date
+            </div>
+            <DatePicker
+              selected={toDate}
+              onChange={(date) => setToDate(date)}
+              dateFormat="dd-MM-yyyy"
+              placeholderText="Select to date"
+              minDate={fromDate}
+              customInput={
+                <Form.Control style={{ padding: "5px 8px", fontSize: "12px" }} />
+              }
+            />
+          </div>
+
+          <Button
+            variant="primary"
+            onClick={() => fetchPatientData()}
+            style={{
+              backgroundColor: "#00bcd4",
+              border: "none",
+              borderRadius: "8px",
+              padding: "6px 7px",
+              fontSize: "12px",
+              fontWeight: "500",
+              color: "white",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              marginTop: "13px",
+              ":hover": {
+                backgroundColor: "#00acc1",
+                transform: "translateY(-1px)",
+                boxShadow: "0 4px 8px rgba(0,0,0,0.15)",
+              },
+            }}
+          >
+            <FeatherIcon icon="refresh-ccw" size={13} className="me-2" />
+            Refresh
+          </Button>
+        </div>
       </div>
     </div>
   );
+
 
   const header = renderHeader();
 
@@ -2064,6 +2219,7 @@ export default function All_patient() {
         padding: "20px",
       }}
     >
+      <PageBreadcrumb pagename="Patients List" />
       <NavBarP pagename="All Registered Patients" />
       <Modal
         show={showAddModal}
@@ -2076,72 +2232,23 @@ export default function All_patient() {
         <Modal.Body>
           <Form onSubmit={handleAddAppointment}>
             <Row>
-              {/* Date */}
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label>Date</Form.Label>
-                  <DatePicker
-                    selected={formData.date ? new Date(formData.date) : null}
-                    onChange={(date) => {
-                        handleDateChange(date);
-                        setFormData((prev) => ({
-                            ...prev,
-                            date: date.toISOString().split("T")[0],
-                        }));
-                    }}
-                    className="form-control"
-                    dateFormat="dd-MM-yyyy"
-                    placeholderText="Select Date"
-                    minDate={new Date()} // Prevent past dates
-                  />
-                </Form.Group>
-              </Col>
               <Col md={6}>
                 <Form.Group className="mb-20">
-                  <Form.Label>Doctor Name</Form.Label>
-                  <Form.Select
-                    name="doctor_id" // Use doctor_id for API submission
-                    value={formData.doctor_id}
-                    onChange={(e) => {
-                        const selectedDocId = e.target.value;
-                        const selectedDoc = doctors.find(doc => doc.doctor_id === selectedDocId);
-                        setFormData((prev) => ({ 
-                            ...prev, 
-                            doctor_id: selectedDocId,
-                            doctorName: selectedDoc ? selectedDoc.name : ""
-                        }));
-                    }}
-                  >
-                    <option value="">Select a Doctor</option>
-                    {doctors && doctors.length > 0 ? (
-                      doctors.map((doctor) => (
-                        <option key={doctor.doctor_id} value={doctor.doctor_id}>
-                          {doctor.name}
-                        </option>
-                      ))
-                    ) : (
-                      <option disabled>No doctors available</option>
-                    )}
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-
-              <Col md={6}>
-                <Form.Group className="mb-20">
-                  <Form.Label>Patient Name</Form.Label>
+                  <Form.Label>Patient Name <span style={{color:"red"}} className="required">*</span></Form.Label>
                   <Form.Control
                     type="text"
                     name="name"
                     placeholder="Patient Name"
                     value={formData.name}
-                    onChange={handleInputChange}
+                    // onChange={handleInputChange}
+                    readOnly
                   />
                 </Form.Group>
               </Col>
 
               <Col md={6}>
                 <Form.Group className="mb-20">
-                  <Form.Label>Mobile Number</Form.Label>
+                  <Form.Label>Mobile Number <span style={{color:"red"}} className="required">*</span></Form.Label>
                   <Form.Control
                     type="text"
                     name="phone"
@@ -2151,9 +2258,28 @@ export default function All_patient() {
                   />
                 </Form.Group>
               </Col>
-
               <Col md={6}>
                 <Form.Group>
+                  <Form.Label>Appointment Date <span style={{color:"red"}} className="required">*</span></Form.Label>
+                  <DatePicker
+                    selected={formData.date ? new Date(formData.date) : null}
+                    onChange={(date) => {
+                      handleDateChange(date);
+                      setFormData((prev) => ({
+                        ...prev,
+                        date: date.toISOString().split("T")[0],
+                      }));
+                    }}
+                    className="form-control"
+                    dateFormat="dd-MM-yyyy"
+                    placeholderText="Select Date"
+                    minDate={new Date()}
+                  />
+                </Form.Group>
+              </Col>
+              
+              <Col md={6}>
+                <Form.Group className="mb-20">
                   <Form.Label>Appointment Time</Form.Label>
                   <Form.Select
                     name="appointmentTime"
@@ -2169,6 +2295,37 @@ export default function All_patient() {
                   </Form.Select>
                 </Form.Group>
               </Col>
+
+              <Col md={6}>
+                <Form.Group className="mb-20">
+                  <Form.Label>Doctor Name <span style={{color:"red"}} className="required">*</span></Form.Label>
+                  <Form.Select
+                    name="doctor_id"
+                    value={formData.doctor_id}
+                    onChange={(e) => {
+                      const selectedDocId = e.target.value;
+                      const selectedDoc = doctors.find(doc => doc.doctor_id === selectedDocId);
+                      setFormData((prev) => ({
+                        ...prev,
+                        doctor_id: selectedDocId,
+                        doctorName: selectedDoc ? selectedDoc.name : ""
+                      }));
+                    }}
+                  >
+                    <option value="">Select a Doctor</option>
+                    {doctors && doctors.length > 0 ? (
+                      doctors.map((doctor) => (
+                        <option key={doctor.doctor_id} value={doctor.doctor_id}>
+                          {doctor.name}
+                        </option>
+                      ))
+                    ) : (
+                      <option disabled>No doctors available</option>
+                    )}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+              
               <Col md={6}>
                 <Form.Group className="mb-20">
                   <Form.Label>FDE Name</Form.Label>
@@ -2176,13 +2333,13 @@ export default function All_patient() {
                     name="FDE_Name"
                     value={formData.FDE_Name}
                     onChange={(e) => {
-                        const selectedFDEId = e.target.value;
-                        const selectedFDE = fdeList.find(fde => fde.FDEID === selectedFDEId);
-                        setFormData((prev) => ({ 
-                            ...prev, 
-                            FDE_Name: selectedFDEId,
-                            fdeName: selectedFDE ? selectedFDE.FDEName : "" // Store name for confirmation if needed
-                        }));
+                      const selectedFDEId = e.target.value;
+                      const selectedFDE = fdeList.find(fde => fde.FDEID === selectedFDEId);
+                      setFormData((prev) => ({
+                        ...prev,
+                        FDE_Name: selectedFDEId,
+                        fdeName: selectedFDE ? selectedFDE.FDEName : ""
+                      }));
                     }}
                   >
                     <option value="">Select FDE Name</option>
@@ -2255,16 +2412,16 @@ export default function All_patient() {
             <Row>
               <Col md={3} className="mb-4">
                 <Form.Group className="mb-3">
-                  <Form.Label>UID No</Form.Label>
+                  <Form.Label>UID No <span style={{color:"red"}} className="required">*</span></Form.Label>
                   <Form.Control
                     type="text"
                     name="Uid_no"
                     value={formData.Uid_no}
                     readOnly
                     style={{
-                      backgroundColor: "#e9ecef", // Light grey background to indicate read-only
-                      color: "#6c757d", // Grey text color
-                      cursor: "not-allowed", // Show "not-allowed" cursor
+                      backgroundColor: "#e9ecef",
+                      color: "#6c757d",
+                      cursor: "not-allowed",
                     }}
                     onChange={handleInputChange}
                   />
@@ -2273,23 +2430,23 @@ export default function All_patient() {
               {/* Date */}
               <Col md={3} className="mb-4">
                 <Form.Group className="mb-3" controlId="formPatientDate">
-                  <Form.Label>Patient Date</Form.Label>
+                  <Form.Label>Admission Date <span style={{color:"red"}} className="required">*</span></Form.Label>
                   <Form.Control
                     type="text"
                     name="date"
                     value={formatDate(formData.date)}
                     readOnly
                     style={{
-                      backgroundColor: "#e9ecef", // Light grey background to indicate read-only
-                      color: "#6c757d", // Grey text color
-                      cursor: "not-allowed", // Show "not-allowed" cursor
+                      backgroundColor: "#e9ecef",
+                      color: "#6c757d",
+                      cursor: "not-allowed",
                     }}
                   />
                 </Form.Group>
               </Col>
               <Col md={2} className="mb-4">
                 <Form.Group className="mb-3">
-                  <Form.Label>Prefix</Form.Label>
+                  <Form.Label>Prefix </Form.Label>
                   <Form.Control
                     id="prefix"
                     as="select"
@@ -2306,7 +2463,7 @@ export default function All_patient() {
               </Col>
               <Col md={2} className="mb-4">
                 <Form.Group className="mb-3">
-                  <Form.Label>Patient Name</Form.Label>
+                  <Form.Label>Patient Name <span style={{color:"red"}} className="required">*</span></Form.Label>
                   <Form.Control
                     type="text"
                     id="name"
@@ -2319,22 +2476,22 @@ export default function All_patient() {
               </Col>
               <Col md={2} className="mb-4">
                 <Form.Group className="mb-3">
-                  <Form.Label>VIP</Form.Label>
+                  <Form.Label>VIP <span style={{color:"red"}} className="required">*</span></Form.Label>
                   <Form.Check
                     type="checkbox"
                     id="patient_type"
                     name="patient_type"
-                    checked={!!formData.patient_type} // Ensure it's treated as a boolean
+                    checked={!!formData.patient_type}
                     onChange={(e) => {
                       setFormData((prev) => ({
                         ...prev,
-                        patient_type: e.target.checked, // Toggle the boolean value
+                        patient_type: e.target.checked,
                       }));
                     }}
                     style={{
                       cursor: "pointer",
                       marginRight: "15.5rem",
-                      transform: "scale(1.5)", // Increase size
+                      transform: "scale(1.5)",
                     }}
                   />
                 </Form.Group>
@@ -2343,7 +2500,7 @@ export default function All_patient() {
             <Row>
               <Col md={3} className="mb-4">
                 <Form.Group className="mb-3">
-                  <Form.Label>Email</Form.Label>
+                  <Form.Label>Email <span style={{color:"red"}} className="required">*</span></Form.Label>
                   <Form.Control
                     type="email"
                     name="email"
@@ -2356,7 +2513,7 @@ export default function All_patient() {
 
               <Col md={3}>
                 <Form.Group className="mb-20">
-                  <Form.Label>Gender</Form.Label>
+                  <Form.Label>Gender <span style={{color:"red"}} className="required">*</span></Form.Label>
                   <Form.Select
                     type="text"
                     name="sex"
@@ -2372,7 +2529,7 @@ export default function All_patient() {
               {/* Mobile No */}
               <Col md={3} className="mb-4">
                 <Form.Group className="mb-3">
-                  <Form.Label>Mobile No</Form.Label>
+                  <Form.Label>Mobile No <span style={{color:"red"}} className="required">*</span></Form.Label>
                   <Form.Control
                     id="phone"
                     type="number"
@@ -2400,7 +2557,7 @@ export default function All_patient() {
             <Row>
               <Col md={3} className="mb-4">
                 <Form.Group className="mb-3">
-                  <Form.Label>Address</Form.Label>
+                  <Form.Label>Address <span style={{color:"red"}} className="required">*</span></Form.Label>
                   <Form.Control
                     type="text"
                     name="address"
@@ -2412,7 +2569,7 @@ export default function All_patient() {
               </Col>
               <Col md={3} className="mb-4">
                 <Form.Group className="mb-3">
-                  <Form.Label>Pincode No</Form.Label>
+                  <Form.Label>Pincode No </Form.Label>
                   <Form.Control
                     id="pincode"
                     type="number"
@@ -2425,7 +2582,7 @@ export default function All_patient() {
               </Col>
               <Col md={3} className="mb-4">
                 <Form.Group className="mb-3">
-                  <Form.Label>Identity</Form.Label>
+                  <Form.Label>Identity <span style={{color:"red"}} className="required">*</span></Form.Label>
                   <Form.Control
                     id="identity"
                     as="select"
@@ -2436,7 +2593,7 @@ export default function All_patient() {
                     onChange={handleInputChange}
                   >
                     <option value="" disabled>
-                      Select Identity
+                      Select Identity 
                     </option>
                     <option value="Aadhaar No">Aadhaar No</option>
                     <option value="Passport No">Passport No</option>
@@ -2446,7 +2603,7 @@ export default function All_patient() {
               </Col>
               <Col md={3}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Identity Number</Form.Label>
+                  <Form.Label>Identity Number <span style={{color:"red"}} className="required">*</span></Form.Label>
                   <Form.Control
                     type="text"
                     name="identityNumber"
@@ -2462,7 +2619,7 @@ export default function All_patient() {
               </Col>
               <Col md={3}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Blood Group</Form.Label>
+                  <Form.Label>Blood Group <span style={{color:"red"}} className="required">*</span></Form.Label>
                   <Form.Select
                     id="blood_group"
                     type="text"
@@ -2484,26 +2641,26 @@ export default function All_patient() {
               </Col>
               <Col md={3}>
                 <Form.Group>
-                  <Form.Label>Birth Date</Form.Label>
+                  <Form.Label>Birth Date <span style={{color:"red"}} className="required">*</span></Form.Label>
                   <DatePicker
                     id="birth_date"
                     selected={
                       formData?.birth_date
-                        ? parseDate(formData.birth_date) // Use parseDate to handle DD-MM-YYYY format
+                        ? parseDate(formData.birth_date)
                         : null
                     }
                     onChange={(date) => {
-                      if (!date) return; // Prevent null values from breaking
+                      if (!date) return;
 
                       handleInputChange({
                         target: {
                           name: "birth_date",
-                          value: date, // Pass Date object to handler
+                          value: date,
                         },
                       });
                     }}
                     className="form-control"
-                    dateFormat="yyyy-MM-dd" // Use API standard format YYYY-MM-DD for date picker value
+                    dateFormat="yyyy-MM-dd"
                     placeholderText="Select Date"
                     showMonthDropdown
                     showYearDropdown
@@ -2516,7 +2673,7 @@ export default function All_patient() {
 
               <Col md={3} className="mb-4">
                 <Form.Group className="mb-3">
-                  <Form.Label>Age</Form.Label>
+                  <Form.Label>Age <span style={{color:"red"}} className="required">*</span></Form.Label>
                   <Form.Control
                     id="age"
                     type="text"
@@ -2572,7 +2729,7 @@ export default function All_patient() {
                           style={{
                             cursor: "pointer",
                             marginRight: "15.5rem",
-                            transform: "scale(1.2)", // Increase size
+                            transform: "scale(1.2)",
                           }}
                         />
                       </Col>
@@ -2586,7 +2743,7 @@ export default function All_patient() {
                           onChange={handleWorkPatternChange}
                           style={{
                             cursor: "pointer",
-                            transform: "scale(1.2)", // Increase size
+                            transform: "scale(1.2)",
                           }}
                         />
                       </Col>
@@ -2602,7 +2759,7 @@ export default function All_patient() {
                           onChange={handleWorkPatternChange}
                           style={{
                             cursor: "pointer",
-                            transform: "scale(1.2)", // Increase size
+                            transform: "scale(1.2)",
                           }}
                         />
                       </Col>
@@ -2616,7 +2773,7 @@ export default function All_patient() {
                           onChange={handleWorkPatternChange}
                           style={{
                             cursor: "pointer",
-                            transform: "scale(1.2)", // Increase size
+                            transform: "scale(1.2)",
                           }}
                         />
                       </Col>
@@ -2655,7 +2812,6 @@ export default function All_patient() {
                 </div>
               </Col>
             </Row>
-            {/* Add additional fields for editing */}
           </Form>
         </Modal.Body>
         <Modal.Footer>

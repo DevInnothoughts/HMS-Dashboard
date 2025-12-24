@@ -4,9 +4,23 @@ import { useLocation, useParams } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import NavBarA from "../../components/NavbarA";
+import Swal from 'sweetalert2';
 import "../../styles/styles.css";
 import { toast } from "react-hot-toast";
+import PageBreadcrumb from "../../components/PageBreadcrumb";
 import { decodeJwt } from "../../utils/decode-jwt";
+
+const Toast = Swal.mixin({
+  toast: true,
+  position: 'top-end',
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.addEventListener('mouseenter', Swal.stopTimer)
+    toast.addEventListener('mouseleave', Swal.resumeTimer)
+  }
+});
 
 const getCountryCode = (patient_phone) => {
   if (!patient_phone) return "Unknown";
@@ -61,9 +75,7 @@ export default function Add_appointment() {
   const [type, setType] = useState("");
   const location = useLocation();
   const { phone } = useParams();
-
   const [currentLocation, setCurrentLocation] = useState(null);
-
   const [formData, setFormData] = useState({
     treatment: "",
     date: new Date().toISOString().split("T")[0],
@@ -82,9 +94,7 @@ export default function Add_appointment() {
     status: "BOOKED",
     patient_id: "",
   });
-
   const [errors, setErrors] = useState({});
-
   const newPatientTypes = ["NEW"];
   const existingPatientTypes = ["FOLLOW", "POSTOPERATIVE", "OTHER"];
 
@@ -136,7 +146,7 @@ export default function Add_appointment() {
 
       if (data.statusCode === 200 && data.data) {
         setIsExistingPatient(true);
-        console.warn(`${data.data.name} is already registered.`);
+        alert(`${data.data.name} is already registered.`);
 
         setFormData((prev) => ({
           ...prev,
@@ -322,17 +332,11 @@ export default function Add_appointment() {
         FDE_Name: formData.FDE_Name,
         treatment_name: formData.treatment,
         note: formData.note,
-
-        // CRITICAL FIX: Send patient_id only if it exists (for existing patients)
         patient_id: formData.patient_id || undefined,
-
-        // Fields with Default/Fixed values
         confirm_time: formData.confirm_time || 0,
         status: formData.status || "BOOKED",
         is_deleted: 0,
         consultationchk: formData.consultationchk,
-
-        // Non-schema or auxiliary fields
         patientName: formData.patientName,
         clinic_location: currentLocation,
         saveType,
@@ -355,28 +359,42 @@ export default function Add_appointment() {
         );
 
         if (response.ok) {
-          // HIPAA: Generic success message
-          alert("Appointment added successfully");
-          // Reset form (Data Minimization)
-          setFormData({
-            treatment: "", date: new Date().toISOString().split("T")[0], patientName: "",
-            patient_phone: "", patient_location: "", patient_type: "", appointmentTime: "",
-            note: "", FDE_Name: "", departmentName: "", doctorName: "", doctor_id: "",
-            consultationchk: 0, confirm_time: 0, status: "BOOKED", patient_id: "",
-          });
-        } else {
-          const errorData = await response.json();
-          // HIPAA: Generic error message, avoid echoing sensitive details
-          console.error(`Backend error: ${errorData.message}`);
-          alert(`Failed to add appointment. Please try again.`);
-        }
-      } catch (error) {
-        // HIPAA: Generic network error
-        console.error("Error adding appointment:", error.message);
-        alert("A network error occurred while adding the appointment. Please try again.");
-      } finally {
-        setLoading(false);
-      }
+          Swal.fire({
+                      icon: 'success',
+                      title: 'Success!',
+                      text: 'Appointment booked successfully.',
+                      confirmButtonColor: '#00bcd4'
+                    });
+                              setFormData({
+                      treatment: "", date: new Date().toISOString().split("T")[0], patientName: "",
+                      patient_phone: "", patient_location: "", patient_type: "", appointmentTime: "",
+                      note: "", FDE_Name: "", departmentName: "", doctorName: "", doctor_id: "",
+                      consultationchk: 0, confirm_time: 0, status: "BOOKED", patient_id: "",
+                    });
+                  } else {
+                    const errorData = await response.json();
+                    console.error(`Backend error: ${errorData.message}`);
+          Swal.fire({
+                      icon: 'error',
+                      title: 'Booking Failed',
+                      text: errorData.message || 'Failed to book appointment'
+                    });
+                          }
+                } catch (error) {
+                  console.error("Error adding appointment:", error.message);
+          Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'A network error occurred.'
+                  });
+                      } finally {
+                  setLoading(false);
+                }
+              } else {
+                Toast.fire({
+                  icon: 'warning',
+                  title: 'Please fill all required fields'
+      });
     }
   };
 
@@ -473,6 +491,7 @@ export default function Add_appointment() {
         fontFamily: "'Poppins', Arial, sans-serif",
       }}
     >
+      <PageBreadcrumb pagename="Add New Appointment Page" />
       <NavBarA pagename="Add Appointment" />
       <Container fluid>
         <Row>
@@ -481,7 +500,7 @@ export default function Add_appointment() {
               style={{
                 borderRadius: "15px",
                 boxShadow: "0 10px 20px rgba(0,0,0,0.1)",
-                border: "4px solid #00bcd4",
+                border: "1.5px solid #00bcd4",
                 background: "white",
                 overflow: "hidden",
               }}
@@ -489,22 +508,18 @@ export default function Add_appointment() {
               <Card.Body >
                 <Form>
                   <div className="form-section">
-                    <h4 className="section-title" style={{marginBottom:"15px"}}>
+                    <h4 className="section-title">
                      Add New Appointment Details
-                      <span className="ms-2 text-secondary" style={{ fontSize: '0.8em' }}>
-                        (Clinic Location: {currentLocation ? currentLocation.toUpperCase() : "Loading..."}
-                        )
-                      </span>
                     </h4>
                     {errors.location && (
                       <p style={{ color: "red", fontWeight: "bold" }}>{errors.location}</p>
                     )}
                     <br />
-                    <Row>
-                      <Col md={2}>
+                    <Row className="mb-10">
+                      <Col md={3}>
                         <Form.Group>
                           <Form.Label>
-                            Mobile No <span className="required">*</span>
+                            Mobile No <span style={{color:"red"}} className="required">*</span>
                           </Form.Label>
                           <Form.Control
                             type="tel"
@@ -522,9 +537,9 @@ export default function Add_appointment() {
                           )}
                         </Form.Group>
                       </Col>
-                      <Col md={2} className="mb-4">
+                      <Col md={3} className="mb-4">
                         <Form.Group className="mb-3">
-                          <Form.Label>Type <span className="required">*</span></Form.Label>
+                          <Form.Label>Patient Type <span style={{color:"red"}} className="required">*</span></Form.Label>
                           <Form.Control
                             as="select"
                             name="patient_type"
@@ -552,10 +567,10 @@ export default function Add_appointment() {
                           )}
                         </Form.Group>
                       </Col>
-                      <Col md={2}>
+                      <Col md={3}>
                         <Form.Group>
                           <Form.Label>
-                            Date <span className="required">*</span>
+                           Appointment Date <span style={{color:"red"}} className="required">*</span>
                           </Form.Label>
                           <DatePicker
                             selected={
@@ -571,10 +586,10 @@ export default function Add_appointment() {
                           )}
                         </Form.Group>
                       </Col>
-                      <Col md={2}>
+                      <Col md={3}>
                         <Form.Group>
                           <Form.Label>
-                            Appointment Time <span className="required">*</span>
+                            Appointment Time <span style={{color:"red"}} className="required">*</span>
                           </Form.Label>
                           <Form.Select
                             name="appointmentTime"
@@ -593,10 +608,14 @@ export default function Add_appointment() {
                           )}
                         </Form.Group>
                       </Col>
+                      
+                    </Row>
+
+                    <Row className="mb-15">
                       <Col md={4}>
                         <Form.Group>
                           <Form.Label>
-                            Patient Name <span className="required">*</span>
+                            Patient Name <span style={{color:"red"}} className="required">*</span>
                           </Form.Label>
                           <Form.Control
                             type="text"
@@ -610,14 +629,10 @@ export default function Add_appointment() {
                           )}
                         </Form.Group>
                       </Col>
-                    </Row>
-
-                    {/* Second Row: FDE Name, Department, Doctor */}
-                    <Row className="mb-30">
                       <Col md={4}>
                         <Form.Group>
                           <Form.Label>
-                            FDE Name <span className="required">*</span>
+                            FDE Name <span style={{color:"red"}} className="required">*</span>
                           </Form.Label>
                           <Form.Select
                             name="FDE_Name"
@@ -640,7 +655,7 @@ export default function Add_appointment() {
                       <Col md={4}>
                         <Form.Group>
                           <Form.Label>
-                            Department Name <span className="required">*</span>
+                            Department Name <span style={{color:"red"}} className="required">*</span>
                           </Form.Label>
                           <Form.Select
                             name="departmentName"
@@ -663,10 +678,12 @@ export default function Add_appointment() {
                           )}
                         </Form.Group>
                       </Col>
+                      </Row>
+                      <Row className="mb-15">
                       <Col md={4}>
                         <Form.Group>
                           <Form.Label>
-                            Appointment With <span className="required">*</span>
+                            Appointment With <span style={{color:"red"}} className="required">*</span>
                           </Form.Label>
                           <Form.Select
                             name="doctorName"
@@ -691,12 +708,10 @@ export default function Add_appointment() {
                       </Col>
                     </Row>
 
-                    {/* Third Row: Treatment, Address (Patient Location) */}
-                    <Row className="mb-20">
-                      {/* Treatment Field (Visible only when 'OTHER' is selected OR a treatment is already set) */}
+                    <Row className="mb-15">
                       {(formData.patient_type === "OTHER" || formData.treatment) && (
                         <Col md={4}>
-                          <Form.Group className="mb-20">
+                          <Form.Group className="mb-3">
                             <Form.Label>Treatment</Form.Label>
                             <Form.Select
                               name="treatment"
@@ -724,11 +739,11 @@ export default function Add_appointment() {
                           </Form.Group>
                         </Col>
                       )}
-                      {/* Address (patient_location) - The patient's address/city */}
+
                       {shouldShowAddressAndReference() && (
                         <Col md={formData.patient_type === "OTHER" || formData.treatment ? 4 : 8} className="mb-4">
                           <Form.Group className="mb-3">
-                            <Form.Label>Address (Patient Location) <span className="required">*</span></Form.Label>
+                            <Form.Label>Patient Address <span style={{color:"red"}} className="required">*</span></Form.Label>
                             <Form.Control
                               type="text"
                               name="patient_location"
@@ -745,12 +760,11 @@ export default function Add_appointment() {
                       )}
                     </Row>
 
-                    {/* Fourth Row: Note */}
                     <Row>
                       <Col md={6}>
                         <Form.Group>
                           <Form.Label>
-                            Note <span className="required">*</span>
+                            Note <span style={{color:"red"}} className="required">*</span>
                           </Form.Label>
                           <Form.Control
                             as="textarea"
@@ -766,19 +780,18 @@ export default function Add_appointment() {
                       </Col>
                     </Row>
 
-                    {/* Buttons */}
                     <Row className="mt-4">
                       <Col className="text-end">
+                      <button type="button" className="btn btn-danger me-2">
+                          Cancel
+                        </button>
                         <button
                           type="button"
-                          className="btn btn-primary me-2"
+                          className="btn btn-primary"
                           onClick={() => handleSubmit("save")}
                           disabled={loading || !currentLocation}
                         >
                           Book Appointment
-                        </button>
-                        <button type="button" className="btn btn-danger">
-                          Cancel
                         </button>
                       </Col>
                     </Row>
@@ -789,158 +802,6 @@ export default function Add_appointment() {
           </Col>
         </Row>
       </Container>
-      <style>
-        {`
- .enquiry-card {
- border-radius: 15px;
-box-shadow: 0 10px 20px rgba(0,0,0,0.1);
- border: none;
- background: #f8f9fa;
- overflow: hidden;
- margin-bottom: 30px;
- }
-
- .card-body {
- padding: 30px;
- } 
-
-          .form-section {
-            background: #f8f9fa;
-            padding: 25px;
-            border-radius: 12px;
-            margin-bottom: 25px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-          }
-
-          .form-label {
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 8px;
-            font-size: 0.95rem;
-          }
-
-          .form-control, .form-select {
-            border-radius: 8px;
-            border: 3px solid #dee2e6;
-            padding: 12px 15px;
-            transition: all 0.3s ease;
-            background-color: #ffffff;
-            color: #2c3e50;
-            font-size: 0.95rem;
-          }
-
-          .form-control:focus, .form-select:focus {
-            border-color: #00bcd4;
-            box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.1);
-            background-color: #f8F9FA;
-          }
-
-          textarea.form-control {
-            min-height: 120px;
-            resize: vertical;
-          }
-
-          .form-select {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: right 0.75rem center;
-            background-size: 16px 12px;
-          }
-
-          .btn-primary {
-            background:linear-gradient(45deg, #00bcd4, #00acc1);
-            border: none;
-            padding: 12px 25px;
-            border-radius: 8px;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 188, 212, 0.2);
-          }
-
-          .btn-primary:hover {
-            background: linear-gradient(45deg, #00acc1, #0097a7);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 188, 212, 0.3);
-          }
-
-          .btn-primary:disabled {
-            background: #bdc3c7;
-            transform: none;
-          }
-
-          /* Error message styling */
-          .error-message {
-            color: #e74c3c;
-            font-size: 0.85rem;
-            margin-top: 5px;
-          }
-
-          /* Responsive adjustments */
-          @media (max-width: 768px) {
-            .card-body {
-              padding: 5px;
-            }
-
-            .form-section {
-              padding: 15px;
-            }
-
-            .btn-primary {
-              width: 100%;
-              margin-top: 15px;
-            }
-          }
-
-          /* Row spacing */
-          .row {
-            margin-bottom: 20px;
-          }
-
-          /* Spinner styling */
-          .spinner-border {
-            margin-right: 8px;
-            width: 1.2rem;
-            height: 1.2rem;
-          }
-
-          /* Optional: Add animation for form elements */
-          .form-control, .form-select, .btn {
-            animation: fadeIn 0.5s ease-in-out;
-          }
-
-          @keyframes fadeIn {
-            from {
-              opacity: 0;
-              transform: translateY(10px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-
-          /* Optional: Add hover effect for form controls */
-          .form-control:hover, .form-select:hover {
-            border-color: #3498db;
-          }
-
-            .date-picker-wrapper {
-            margin-bottom: 0 !important;
-          }
-
-          .react-datepicker-wrapper {
-            margin-bottom: 0 !important;
-            display: block;
-          }
-
-          .react-datepicker__input-container {
-            margin-bottom: 0 !important;
-            display: block;
-          }
-        `}
-      </style>
     </div>
   );
 }

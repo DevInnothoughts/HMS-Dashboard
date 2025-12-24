@@ -401,7 +401,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
-import { decodeJwt } from "../../utils/decode-jwt"; // Assuming this utility is functional
+import { decodeJwt } from "../../utils/decode-jwt";
+import PageBreadcrumb from "../../components/PageBreadcrumb";
 import {
   Container,
   Row,
@@ -420,6 +421,19 @@ import "react-datepicker/dist/react-datepicker.css";
 import "../../styles/styles.css";
 import { FilterMatchMode } from "primereact/api";
 import moment from "moment";
+import Swal from 'sweetalert2'; 
+
+const Toast = Swal.mixin({
+  toast: true,
+  position: 'top-end',
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.addEventListener('mouseenter', Swal.stopTimer)
+    toast.addEventListener('mouseleave', Swal.resumeTimer)
+  }
+});
 
 // --- Configuration ---
 const BASE_URL = "http://localhost:5100/api";
@@ -459,7 +473,6 @@ export default function EnquiryList() {
   };
 
   const fetchEnquiriesData = useCallback(async () => {
-    // 🛑 Block fetch if location hasn't been determined yet
     if (currentLocation === 'default') {
         console.warn("Waiting for location to be set from JWT...");
         return;
@@ -500,15 +513,23 @@ export default function EnquiryList() {
       if (response.ok && Array.isArray(data.data)) {
         setEnquiries(data.data);
         setFilteredEnquiries(data.data);
-      } else {
+      } else {  
+        Toast.fire({
+          icon: 'error',
+          title: 'Failed to load enquiries'
+        });
         console.error("Error fetching enquiries:", data.message || "Unknown error");
       }
     } catch (error) {
+      Toast.fire({
+          icon: 'error',
+          title: 'Failed to load enquiries'
+        });
       console.error("Error fetching enquiries:", error);
     } finally {
       setLoading(false);
     }
-  }, [fromDate, toDate, currentLocation]); // Re-run fetch on location change
+  }, [fromDate, toDate, currentLocation]); 
 
   // Load data on location/date change
   useEffect(() => {
@@ -529,15 +550,15 @@ export default function EnquiryList() {
 
   // ------------------------- JSX RENDER HELPERS -------------------------
 
-  const renderHeader = () => (
+   const renderHeader = () => (
     <div
       style={{
-        border: "2px solid #4dd0e1",
+        border: "1px solid #4dd0e1",
         textAlign: "center",
-        borderRadius: "12px",
-        padding: "15px",
+        borderRadius: "8px",
+        padding: "10px",
         backgroundColor: "#e0f7fa",
-        boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
       }}
     >
       <div
@@ -545,19 +566,18 @@ export default function EnquiryList() {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          gap: "20px",
+          gap: "10px",
         }}
       >
-        {/* Global Search Section */}
-        <div style={{ display: "flex", alignItems: "center", gap: "30px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
           <Form.Group style={{ display: "flex", alignItems: "center", margin: 0 }}>
-            <span
+            <span 
+            
             style={{
                 marginRight: "10px", 
-                fontSize: "16px", 
+                fontSize: "13px", 
                 fontWeight: "bold", 
                 color: "#333",
-                marginBottom:"15px"
             }}
         >
         Search
@@ -569,11 +589,11 @@ export default function EnquiryList() {
                 onChange={handleGlobalSearchChange}
                 placeholder="Global Search"
                 style={{
-                  borderRadius: "8px",
-                  border: "2px solid #4dd0e1",
-                  padding: "8px 12px",
-                  width: "250px",
-                  fontSize: "14px",
+                  borderRadius: "6px",
+                  border: "1px solid #4dd0e1",
+                  padding: "5px 8px",
+                  width: "200px",
+                  fontSize: "12px",
                   transition: "all 0.3s ease",
                 }}
               />
@@ -581,21 +601,19 @@ export default function EnquiryList() {
           </Form.Group>
         </div>
 
-        {/* Date Picker Section */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: "15px",
-            border: "2px solid #4dd0e1",
-            borderRadius: "12px",
-            padding: "15px",
+            gap: "10px",
+            border: "1px solid #4dd0e1",
+            borderRadius: "8px",
+            padding: "8px",
             backgroundColor: "#f5fcfd",
           }}
         >
-          {/* From Date Picker */}
           <div>
-            <div style={{ fontSize: "14px", fontWeight: "500", color: "#00838f", marginBottom: "5px" }}>
+            <div style={{ fontSize: "12px", fontWeight: "500", color: "#00838f", marginBottom: "3px" }}>
               From Date
             </div>
             <DatePicker
@@ -605,24 +623,14 @@ export default function EnquiryList() {
               placeholderText="Select from date"
               customInput={
                 <Form.Control
-                  style={{
-                    borderRadius: "8px",
-                    border: "2px solid #4dd0e1",
-                    padding: "8px 12px",
-                    width: "160px",
-                    fontSize: "14px",
-                    cursor: "pointer",
-                    backgroundColor: "white",
-                    transition: "all 0.3s ease",
-                  }}
+                 style={{ padding: '5px 8px', fontSize: '12px' }}
                 />
               }
             />
           </div>
 
-          {/* To Date Picker */}
           <div>
-            <div style={{ fontSize: "14px", fontWeight: "500", color: "#00838f", marginBottom: "5px" }}>
+            <div style={{ fontSize: "12px", fontWeight: "500", color: "#00838f", marginBottom: "3px" }}>
               To Date
             </div>
             <DatePicker
@@ -633,16 +641,7 @@ export default function EnquiryList() {
               minDate={fromDate}
               customInput={
                 <Form.Control
-                  style={{
-                    borderRadius: "8px",
-                    border: "2px solid #4dd0e1",
-                    padding: "8px 12px",
-                    width: "160px",
-                    fontSize: "14px",
-                    cursor: "pointer",
-                    backgroundColor: "white",
-                    transition: "all 0.3s ease",
-                  }}
+                  style={{ padding: '5px 8px', fontSize: '12px' }}
                 />
               }
             />
@@ -654,18 +653,18 @@ export default function EnquiryList() {
             style={{
               backgroundColor: "#00bcd4",
               border: "none",
-              borderRadius: "8px",
-              padding: "8px 20px",
-              fontSize: "14px",
+              borderRadius: "6px",
+              padding: "6px 7px",
+              fontSize: "12px",
               fontWeight: "500",
               color: "white",
               cursor: "pointer",
               transition: "all 0.3s ease",
               boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              marginTop: "20px",
+              marginTop: "15px",
             }}
           >
-            <FeatherIcon icon="refresh-ccw" size={16} className="me-2" />Refresh All Data
+            <FeatherIcon icon="refresh-ccw" size={13} className="me-2" />Refresh
           </Button>
         </div>
       </div>
@@ -681,10 +680,10 @@ export default function EnquiryList() {
         background: "linear-gradient(to right, #e0f7fa, #80deea)",
         fontFamily: "'Poppins', Arial, sans-serif",
         minHeight: "100vh",
-        padding: "20px",
+        padding: "10px",
       }}
     >
-      {/* Display Location in header */}
+      <PageBreadcrumb pagename="Enquiry List" />
       <NavBarA pagename={`Enquiry List (${currentLocation.toUpperCase()})`} /> 
       
       <div className="theme-body">
@@ -697,7 +696,7 @@ export default function EnquiryList() {
                   boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
                   borderColor: "#00bcd4",
                   background: "white",
-                  border: "4px solid #00bcd4",
+                  border: "1.5px solid #00bcd4",
                 }}
               >
                 <Card.Body>
@@ -720,7 +719,6 @@ export default function EnquiryList() {
                         "FDE_Name",
                       ]}
                       responsiveLayout="scroll"
-                      // --- STYLING CHANGE 1: Added datatable-compact-style class ---
                       className="p-datatable-customers datatable-compact-style" 
                       rowClassName={(rowData, { rowIndex }) => ({
                         style: {
@@ -734,74 +732,64 @@ export default function EnquiryList() {
                           e.currentTarget.style.backgroundColor =
                             rowIndex % 2 === 0 ? "#e0f7fa" : "white";
                         },
-                      })}
-                      style={{
-                        border: "1px solid #4dd0e1",
-                        marginTop: "5px",
-                        width: "100%",
-                        background: "white",
-                        borderRadius: "8px",
-                        overflow: "hidden",
-                      }}
+                      })}                      
                     >
                       <Column
                         field="srNo"
-                        header="Sr. No"
+                        header="Sr No."
                         body={(rowData, { rowIndex }) => rowIndex + 1}
                         sortable
-                        // --- STYLING CHANGE 2: Added headerClassName and removed padding from style ---
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center" }}
+                        style={{ border: "1px solid #90caf9", textAlign: "center", width:"80px" }}
                       />
                       <Column
                         field="date"
                         header="Date"
                         body={(rowData) => moment(rowData.date).format("DD-MM-YYYY")}
-                        // --- STYLING CHANGE 2: Added headerClassName and removed padding from style ---
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center" }}
+                        style={{ border: "1px solid #90caf9", textAlign: "center", width:"90px" }}
                       />
+                        <Column
+                          field="patient_phone"
+                          header="Contact No."
+                          body={(rowData) => rowData.patient_phone || "-"}
+                          headerClassName="datatable-header-center"
+                          style={{ border: "1px solid #90caf9", textAlign: "center", width:"90px" }}
+                        />
                       <Column
                         field="patient_name"
                         header="Patient Name"
-                        // --- STYLING CHANGE 2: Added headerClassName and removed padding from style ---
+                        body={(rowData) => rowData.patient_name || "-"}
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center" }}
-                      />
-                      <Column
-                        field="patient_phone"
-                        header="Contact No"
-                        // --- STYLING CHANGE 2: Added headerClassName and removed padding from style ---
-                        headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center" }}
+                        style={{ border: "1px solid #90caf9", textAlign: "center", width:"180px", wordBreak:"break-word" }}
                       />
                       <Column
                         field="patient_location"
                         header="Address"
-                        // --- STYLING CHANGE 2: Added headerClassName and removed padding from style ---
+                        body={(rowData) => rowData.patient_location || "-"}
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center", wordBreak:"break-all" }}
+                        style={{ border: "1px solid #90caf9", textAlign: "center", wordBreak:"break-all", width:"180px"  }}
                       />
                       <Column
                         field="enquirytype"
                         header="Enquiry Type"
-                        // --- STYLING CHANGE 2: Added headerClassName and removed padding from style ---
+                        body={(rowData) => rowData.enquirytype || "-"}
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center", wordBreak:"break-all" }}
+                        style={{ border: "1px solid #90caf9", textAlign: "center", wordBreak:"break-word", width:"150px" }}
                       />
                       <Column
                         field="FDE_Name"
                         header="FDE Name"
-                        // --- STYLING CHANGE 2: Added headerClassName and removed padding from style ---
+                        body={(rowData) => rowData.FDE_Name || "-"}
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center" }}
+                        style={{ border: "1px solid #90caf9", textAlign: "center", width:"130px", wordBreak:"break-word" }}
                       />
                       <Column 
                         field="doctorName" 
                         header="Doctor Name" 
-                        // --- STYLING CHANGE 2: Added headerClassName and removed padding from style ---
+                        body={(rowData) => rowData.doctorName || "-"}
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center" }}
+                        style={{ border: "1px solid #90caf9", textAlign: "center", width:"150px" }}
                     />
                     </DataTable>
                   )}

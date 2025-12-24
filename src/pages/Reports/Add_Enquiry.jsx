@@ -9,20 +9,33 @@ import {
   Spinner,
 } from "react-bootstrap";
 import NavBarA from "../../components/NavbarA";
+import Swal from 'sweetalert2';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import "../../styles/styles.css"; // Add this import at the top
+import PageBreadcrumb from "../../components/PageBreadcrumb";
+import "../../styles/styles.css";
 import { decodeJwt } from "../../utils/decode-jwt";
 
-// Country code options
 const getCountryCode = (patient_phone) => {
-  if (!patient_phone) return "Unknown"; // Handle empty case
+  if (!patient_phone) return "Unknown";
 
   const country = countryCodes.find((code) =>
     patient_phone.startsWith(code.value)
   );
   return country ? country.value : "Unknown";
 };
+
+const Toast = Swal.mixin({
+  toast: true,
+  position: 'top-end',
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.addEventListener('mouseenter', Swal.stopTimer)
+    toast.addEventListener('mouseleave', Swal.resumeTimer)
+  }
+});
 
 // Your existing country code array
 const countryCodes = [
@@ -206,8 +219,12 @@ export default function Add_Enquiry() {
         const data = await response.json();
 
         if (response.ok) {
-          alert("Enquiry added successfully!");
-          // Reset form data, keeping the date updated and time defaulted
+          Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: 'Enquiry has been added successfully.',
+            confirmButtonColor: '#00bcd4'
+          });
           setFormData({
             date: formatDate(new Date()),
             doctorId: "",
@@ -219,25 +236,34 @@ export default function Add_Enquiry() {
             reference: "",
             FDE_Name: "",
             note: "",
-            time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }), 
+            time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }),
           });
         } else {
-          console.error(
-            "Error adding enquiry:",
-            data.message || "Unknown error"
-          );
-          alert(data.message || "Error adding enquiry. Please try again.");
+          const errorData = await response.json();
+          Swal.fire({
+            icon: 'error',
+            title: 'Failed',
+            text: errorData.message || 'Failed to add enquiry'
+          });
         }
       } catch (error) {
-        console.error("Error submitting form:", error);
-        alert(
-          "Error submitting form. Please check your network and try again."
-        );
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'A network error occurred.'
+        });
       } finally {
-        setLoading(false); // Reset loading state
+        setLoading(false);
       }
+    } else {
+      // Validation Warning
+      Toast.fire({
+        icon: 'warning',
+        title: 'Please fill all required fields'
+      });
     }
   };
+
 
   const fetchDropdownData = useCallback(async () => {
     // Only fetch if location is available
@@ -287,17 +313,17 @@ export default function Add_Enquiry() {
       }
   }
 
-
   return (
     <div
       className="themebody-wrap"
       style={{
         background: "linear-gradient(to right, #e0f7fa, #80deea)",
         minHeight: "100vh",
-        padding: "20px",
+        padding: "10px",
         fontFamily: "'Poppins', Arial, sans-serif",
       }}
     >
+      <PageBreadcrumb pagename="Add New Enquiry Page" />
       <NavBarA pagename="Add Enquiry" />
 
       <div className="theme-body">
@@ -306,405 +332,294 @@ export default function Add_Enquiry() {
             <Col>
               <Card
                 style={{
-                  padding:"20px",
+                  padding: "20px",
                   borderRadius: "12px",
                   boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
                   borderColor: "#00bcd4",
                   background: "white",
-                  border: "4px solid #00bcd4",
+                  border: "1.5px solid #00bcd4",
                 }}
               >
                 <Card.Body>
                   <Form onSubmit={handleSubmit}>
-                    <h4 className="section-title " style={{marginBottom:"20px"}}>
-                      
-                      Add New Enquiry Details
-                      {/* Display Location status */}
-                      <span className="ms-2 text-secondary" style={{fontSize: '0.8em'}}>
-                        (Clinic Location: {currentLocation ? currentLocation.toUpperCase() : "Loading..."}
-                        )
-                      </span>
-                    </h4>
-                    {errors.location && (
-                        <p style={{ color: "red", fontWeight: "bold" }}>{errors.location}</p>
-                    )}
-                    
-                    {/* --- ROW 1: Date, Enquiry Type, Doctor Name, Patient Name --- */}
-                    <Row>
-                      {/* Date (Maps to schema: date) */}
-                      <Col md={3}>
-                        <Form.Group className="mb-3">
-                          <Form.Label>Date <span className="required">*</span></Form.Label>
-                          <DatePicker
-                            selected={parseDate(formData.date)}
-                            onChange={(date) => {
-                              if (date) {
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  date: formatDate(date), // stores YYYY-MM-DD
-                                }));
-                              }
-                            }}
-                            dateFormat="dd-MM-yyyy"
-                            minDate={new Date()} // This prevents selecting past dates
-                            placeholderText="Select Date"
-                            className="form-control"
-                            autoComplete="off"
-                            showYearDropdown
-                            scrollableYearDropdown
-                            yearDropdownItemNumber={10}
-                          />
-                          {errors.date && (
-                            <p style={{ color: "red" }}>{errors.date}</p>
-                          )}
-                        </Form.Group>
-                      </Col>
-                      
-                      {/* Enquiry Type (Maps to schema: enquirytype) */}
-                      <Col md={3}>
-                        <Form.Group controlId="enquirytype">
-                          <Form.Label>Enquiry Type <span className="required">*</span></Form.Label>
-                          <Form.Control
-                            as="select"
-                            name="enquirytype"
-                            value={formData.enquirytype}
-                            onChange={handleInputChange}
-                            required
-                          >
-                            <option value="">Select Enquiry Type</option>
-                            {[
-                              "Call for Refund Amount",
-                              "Wrong Enquiry or Spam Call",
-                              "Enquiry for Test Charges",
-                              "Accounts Department",
-                              "Call for Another Branches",
-                              "Call for IPD Doctors",
-                              "Call for Assistant Doctors",
-                              "Call Regarding Job Vacancy",
-                              "Appointment Consultation",
-                              "Online Consultation",
-                              "SX Cost Enquiry",
-                              "Call for Lab Test Enquiry",
-                              "Medicines Availability at Pharmacy",
-                              "Patient is Coming Late for Appointment",
-                              "Insurance Related Queries",
-                            ].map((type) => (
-                              <option key={type} value={type}>
-                                {type}
-                              </option>
-                            ))}
-                          </Form.Control>
-                          {errors.enquirytype && (
-                            <p style={{ color: "red" }}>{errors.enquirytype}</p>
-                          )}
-                        </Form.Group>
-                      </Col>
-                      
-                      {/* Doctor Name Dropdown (Maps state: doctorId to schema: doctor_id) */}
-                      <Col md={3}>
-                        <Form.Group className="mb-20">
-                          <Form.Label>Doctor Name <span className="required">*</span></Form.Label>
-                          <Form.Select
-                            name="doctorId"
-                            value={formData.doctorId}
-                            onChange={handleInputChange}
-                            disabled={!currentLocation || doctors.length === 0}
-                            required
-                          >
-                            <option value="">Select a Doctor</option>
-                            {doctors && doctors.length > 0 ? (
-                              doctors.map((doctor) => (
-                                <option
-                                  key={doctor.doctor_id}
-                                  value={doctor.doctor_id}
-                                >
-                                  {doctor.doctor_id} - {doctor.name}
-                                </option>
-                              ))
-                            ) : (
-                              <option disabled>
-                                {currentLocation ? "No doctors available" : "Loading doctors..."}
-                              </option>
-                            )}
-                          </Form.Select>
-                          {errors.doctorId && (
-                            <p style={{ color: "red" }}>{errors.doctorId}</p>
-                          )}
-                        </Form.Group>
-                      </Col>
-                      
-                      {/* Patient Name (Maps to schema: patient_name) */}
-                      <Col md={3}>
-                        <Form.Group controlId="patient_name">
-                          <Form.Label>Patient Name <span className="required">*</span></Form.Label>
-                          <Form.Control
-                            type="text"
-                            name="patient_name"
-                            placeholder="Enter Patient Name"
-                            value={formData.patient_name}
-                            onChange={handleInputChange}
-                            required
-                          />
-                          {errors.patient_name && (
-                            <p style={{ color: "red" }}>{errors.patient_name}</p>
-                          )}
-                        </Form.Group>
-                      </Col>
-                    </Row>
-                    
-                    {/* --- ROW 2: Patient Type, Time, Mobile, Address --- */}
-                    <Row>
-                       {/* ** Patient Type (Maps to schema: patient_type) ** */}
-                       <Col md={3} style={{marginBottom:"15px"}}>
-                            <Form.Group controlId="patient_type">
-                                <Form.Label>Patient Type <span className="required">*</span></Form.Label>
-                                <Form.Control
-                                    as="select"
-                                    name="patient_type"
-                                    value={formData.patient_type}
-                                    onChange={handleInputChange}
-                                    required
-                                >
-                                    <option value="">Select Type</option>
-                                    <option value="NEW">NEW</option>
-                                    <option value="EXISTING">EXISTING</option>
-                                    <option value="REFERRAL">REFERRAL</option>
-                                </Form.Control>
-                                {errors.patient_type && (
-                                    <p style={{ color: "red" }}>{errors.patient_type}</p>
-                                )}
-                            </Form.Group>
-                        </Col>
-                        
-                        {/* ** Time (Maps to schema: time) ** */}
-                        <Col md={3}>
-                            <Form.Group controlId="time">
-                                <Form.Label>Time (HH:MM) <span className="required">*</span></Form.Label>
-                                <Form.Control
-                                    type="text"
-                                    name="time"
-                                    // Use handleTimeChange to manage the specific format requirement 
-                                    value={formData.time.substring(0, 5)} 
-                                    onChange={handleTimeChange}
-                                    placeholder="e.g., 14:30"
-                                    maxLength={5} 
-                                    required
-                                />
-                                {errors.time && (
-                                    <p style={{ color: "red" }}>{errors.time}</p>
-                                )}
-                            </Form.Group>
-                        </Col>
-                        
-                        {/* Mobile Number (Maps to schema: patient_phone) */}
-                        <Col md={3}>
-                            <Form.Group controlId="patient_phone">
-                            <Form.Label>Mobile Number <span className="required">*</span></Form.Label>
-                            <Form.Control
-                                type="tel"
-                                name="patient_phone"
-                                value={formData.patient_phone}
-                                onChange={(e) => {
-                                const patient_phone = e.target.value.replace(
-                                    /\D/g,
-                                    ""
-                                ); // Remove non-digits
-                                const selectedCountryCode =
-                                    formData.countryCode || "+91"; // Default to India if none selected
-                                const limits =
-                                    countryNumberLimits[selectedCountryCode] ||
-                                    countryNumberLimits.default;
+                  <h4 className="section-title" style={{ marginBottom: "20px" }}>
+                    Add New Enquiry Details
+                  </h4>
+                  {errors.location && (
+                    <p style={{ color: "red", fontWeight: "bold" }}>{errors.location}</p>
+                  )}
 
-                                // Only update if the number is within limits or being deleted
-                                if (patient_phone.length <= limits.max) {
-                                    setFormData((prev) => ({
-                                    ...prev,
-                                    patient_phone: patient_phone,
-                                    }));
-                                }
-                                }}
-                                placeholder={`Enter ${
-                                countryNumberLimits["+91"].max
-                                } digit number`}
-                                maxLength={15}
-                                required
-                            />
-                            {errors.patient_phone && (
-                                <p style={{ color: "red" }}>
-                                {errors.patient_phone}
-                                </p>
-                            )}
-                            </Form.Group>
-                        </Col>
-                        
-                        {/* Address (Maps to schema: patient_location) */}
-                        <Col md={3}>
-                            <Form.Group controlId="patient_location">
-                            <Form.Label>Address <span className="required">*</span></Form.Label>
-                            <Form.Control
-                                type="text"
-                                name="patient_location"
-                                placeholder="Enter Address"
-                                value={formData.patient_location}
-                                onChange={handleInputChange}
-                                required
-                            />
-                            {errors.patient_location && (
-                                <p style={{ color: "red" }}>{errors.patient_location}</p>
-                            )}
-                            </Form.Group>
-                        </Col>
-                    </Row>
-                    
-                    {/* --- ROW 3: Reference, FDE Name, Note --- */}
-                    <Row>
-                      <Col md={3}>
-                        {/* Reference (Maps to schema: reference) */}
-                        <Form.Group controlId="reference">
-                          <Form.Label>Reference <span className="required">*</span></Form.Label>
-                          <Form.Control
-                            as="select"
-                            name="reference"
-                            placeholder="Enter Reference"
-                            value={formData.reference}
-                            onChange={handleInputChange}
-                            required
-                          >
-                            <option value="">Select Reference</option>
-                            {[
-                              "Newspaper",
-                              "Doctor Reference",
-                              "Internet",
-                              "Entertainment Media",
-                              "TV Show",
-                              "Patient Reference",
-                              "Other",
-                              "HHC Board",
-                              "HHF",
-                              "Word of Mouth",
-                            ].map((ref) => (
-                              <option key={ref} value={ref}>
-                                {ref}
+                  {/* First Row: Date, Time, Enquiry Type */}
+                  <Row className="g-4 mb-20">
+                    <Col md={4}>
+                      <Form.Group className="mb-3">
+                        <Form.Label>Enquiry Date <span style={{ color: "red" }} className="required">*</span></Form.Label>
+                        <DatePicker
+                          selected={parseDate(formData.date)}
+                          onChange={(date) => {
+                            if (date) {
+                              setFormData((prev) => ({
+                                ...prev,
+                                date: formatDate(date),
+                              }));
+                            }
+                          }}
+                          dateFormat="dd-MM-yyyy"
+                          minDate={new Date()}
+                          placeholderText="Select Date"
+                          className="form-control"
+                          autoComplete="off"
+                          showYearDropdown
+                          scrollableYearDropdown
+                          yearDropdownItemNumber={10}
+                        />
+                        {errors.date && <p style={{ color: "red" }}>{errors.date}</p>}
+                      </Form.Group>
+                    </Col>
+
+                    <Col md={4}>
+                      <Form.Group controlId="time">
+                        <Form.Label>Enquiry Time <span style={{ color: "red" }} className="required">*</span></Form.Label>
+                        <Form.Control
+                          type="time"
+                          name="time"
+                          value={formData.time.substring(0, 5)}
+                          onChange={handleTimeChange}
+                          placeholder="e.g., 14:30"
+                          maxLength={5}
+                          required
+                        />
+                        {errors.time && <p style={{ color: "red" }}>{errors.time}</p>}
+                      </Form.Group>
+                    </Col>
+
+                    <Col md={4}>
+                      <Form.Group controlId="enquirytype">
+                        <Form.Label>Enquiry Type <span style={{ color: "red" }} className="required">*</span></Form.Label>
+                        <Form.Control
+                          as="select"
+                          name="enquirytype"
+                          value={formData.enquirytype}
+                          onChange={handleInputChange}
+                          required
+                        >
+                          <option value="">Select Enquiry Type</option>
+                          {[
+                            "Call for Refund Amount",
+                            "Wrong Enquiry or Spam Call",
+                            "Enquiry for Test Charges",
+                            "Accounts Department",
+                            "Call for Another Branches",
+                            "Call for IPD Doctors",
+                            "Call for Assistant Doctors",
+                            "Call Regarding Job Vacancy",
+                            "Appointment Consultation",
+                            "Online Consultation",
+                            "SX Cost Enquiry",
+                            "Call for Lab Test Enquiry",
+                            "Medicines Availability at Pharmacy",
+                            "Patient is Coming Late for Appointment",
+                            "Insurance Related Queries",
+                          ].map((type) => (
+                            <option key={type} value={type}>{type}</option>
+                          ))}
+                        </Form.Control>
+                        {errors.enquirytype && <p style={{ color: "red" }}>{errors.enquirytype}</p>}
+                      </Form.Group>
+                    </Col>
+                  </Row>
+
+                  {/* Second Row: Patient Type, Patient Name, Mobile Number */}
+                  <Row className="g-4 mb-20">
+                    <Col md={4}>
+                      <Form.Group controlId="patient_type">
+                        <Form.Label>Patient Type <span style={{ color: "red" }} className="required">*</span></Form.Label>
+                        <Form.Control
+                          as="select"
+                          name="patient_type"
+                          value={formData.patient_type}
+                          onChange={handleInputChange}
+                          required
+                        >
+                          <option value="">Select Type</option>
+                          <option value="NEW">NEW</option>
+                          <option value="EXISTING">EXISTING</option>
+                          <option value="REFERRAL">REFERRAL</option>
+                        </Form.Control>
+                        {errors.patient_type && <p style={{ color: "red" }}>{errors.patient_type}</p>}
+                      </Form.Group>
+                    </Col>
+
+                    <Col md={4}>
+                      <Form.Group controlId="patient_name">
+                        <Form.Label>Patient Name <span style={{ color: "red" }} className="required">*</span></Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="patient_name"
+                          placeholder="Enter Patient Name"
+                          value={formData.patient_name}
+                          onChange={handleInputChange}
+                          required
+                        />
+                        {errors.patient_name && <p style={{ color: "red" }}>{errors.patient_name}</p>}
+                      </Form.Group>
+                    </Col>
+
+                    <Col md={4}>
+                      <Form.Group controlId="patient_phone">
+                        <Form.Label>Mobile Number <span style={{ color: "red" }} className="required">*</span></Form.Label>
+                        <Form.Control
+                          type="tel"
+                          name="patient_phone"
+                          value={formData.patient_phone}
+                          onChange={(e) => {
+                            const patient_phone = e.target.value.replace(/\D/g, "");
+                            const selectedCountryCode = formData.countryCode || "+91";
+                            // Note: countryNumberLimits constant is defined at the top of your file
+                            if (patient_phone.length <= 10) { 
+                              setFormData((prev) => ({ ...prev, patient_phone }));
+                            }
+                          }}
+                          placeholder="Enter 10 digit number"
+                          maxLength={15}
+                          required
+                        />
+                        {errors.patient_phone && <p style={{ color: "red" }}>{errors.patient_phone}</p>}
+                      </Form.Group>
+                    </Col>
+                  </Row>
+
+                  {/* Third Row: Patient Address, Doctor Name, FDE Name */}
+                  <Row className="g-4 mb-20">
+                    <Col md={4}>
+                      <Form.Group controlId="patient_location">
+                        <Form.Label>Patient Address <span style={{ color: "red" }} className="required">*</span></Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="patient_location"
+                          placeholder="Enter Address"
+                          value={formData.patient_location}
+                          onChange={handleInputChange}
+                          required
+                        />
+                        {errors.patient_location && <p style={{ color: "red" }}>{errors.patient_location}</p>}
+                      </Form.Group>
+                    </Col>
+
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Label>Doctor Name <span style={{ color: "red" }} className="required">*</span></Form.Label>
+                        <Form.Select
+                          name="doctorId"
+                          value={formData.doctorId}
+                          onChange={handleInputChange}
+                          disabled={!currentLocation || doctors.length === 0}
+                          required
+                        >
+                          <option value="">Select a Doctor</option>
+                          {doctors && doctors.length > 0 ? (
+                            doctors.map((doctor) => (
+                              <option key={doctor.doctor_id} value={doctor.doctor_id}>
+                                {doctor.doctor_id} - {doctor.name}
                               </option>
-                            ))}
-                          </Form.Control>
-                          {errors.reference && (
-                            <p style={{ color: "red" }}>{errors.reference}</p>
+                            ))
+                          ) : (
+                            <option disabled>
+                              {currentLocation ? "No doctors available" : "Loading doctors..."}
+                            </option>
                           )}
-                        </Form.Group>
-                      </Col>
-                      
-                      {/* FDE Name (Maps to schema: FDE_Name) */}
-                      <Col md={3}>
-                        <Form.Group controlId="FDE_Name">
-                          <Form.Label>FDE Name <span className="required">*</span></Form.Label>
-                          <Form.Control
-                            as="select"
-                            name="FDE_Name"
-                            value={formData.FDE_Name}
-                            onChange={handleInputChange}
-                            required
-                          >
-                            <option value="">Select FDE Name</option>
-                            {[
-                              "Akshay",
-                              "Ashutosh",
-                              "Dattatray",
-                              "Noshin",
-                              "Princy",
-                              "Samira",
-                              "Vishaka",
-                              "Zeba",
-                              "Walk-In",
-                              "Heena",
-                              "Purvi Shinde",
-                              "Mahima",
-                              "Pratiksha",
-                              "Jishnu",
-                              "Shweta Chavan",
-                              "Hurmaan",
-                              "Priya Dhiwar",
-                              "Diksha Jha",
-                              "Shraddha",
-                              "Sagar Satish Deshpande",
-                              "Supriya Thorat",
-                              "Diksha",
-                              "Josephine",
-                              "Chhaya Keer",
-                              "Aasiya",
-                              "Bhavana",
-                              "Joel",
-                              "Rohini",
-                              "Aditi",
-                              "Samruddhi",
-                              "Sofiya",
-                              "Sakshi",
-                              "Hritik",
-                              "Priyanshu",
-                              "Saurav",
-                              "Gracy",
-                              "Neelam",
-                              "Shreya",
-                              "Vaishnavi",
-                              "Shruti",
-                              "Samruddhi K",
-                            ].map((name) => (
-                              <option key={name} value={name}>
-                                {name}
-                              </option>
-                            ))}
-                          </Form.Control>
-                          {errors.FDE_Name && (
-                            <p style={{ color: "red" }}>{errors.FDE_Name}</p>
-                          )}
-                        </Form.Group>
-                      </Col>
-                      
-                      {/* Note (Maps to schema: note) */}
-                      <Col md={6}>
-                        <Form.Group controlId="note">
-                          <Form.Label>Note <span className="required">*</span></Form.Label>
-                          <Form.Control
-                            as="textarea"
-                            name="note"
-                            rows={3}
-                            placeholder="Enter Note"
-                            value={formData.note}
-                            onChange={handleInputChange}
-                            required
-                          />
-                          {errors.note && (
-                            <p style={{ color: "red" }}>{errors.note}</p>
-                          )}
-                        </Form.Group>
-                      </Col>
-                    </Row>
-                    <br />
-                    
-                    {/* Submit Button */}
-                    <Form.Group className="text-end mb-0">
-                      <Button
-                        variant="primary"
-                        type="submit"
-                        disabled={loading || !currentLocation} 
-                      >
-                        {loading ? (
-                          <>
-                            <Spinner
-                              as="span"
-                              animation="border"
-                              size="sm"
-                              role="status"
-                              aria-hidden="true"
-                            />
-                            {" Adding Enquiry..."}
-                          </>
-                        ) : (
-                          "Add Enquiry"
-                        )}
-                      </Button>
-                    </Form.Group>
-                  </Form>
+                        </Form.Select>
+                        {errors.doctorId && <p style={{ color: "red" }}>{errors.doctorId}</p>}
+                      </Form.Group>
+                    </Col>
+
+                    <Col md={4}>
+                      <Form.Group controlId="FDE_Name">
+                        <Form.Label>FDE Name <span style={{ color: "red" }} className="required">*</span></Form.Label>
+                        <Form.Control
+                          as="select"
+                          name="FDE_Name"
+                          value={formData.FDE_Name}
+                          onChange={handleInputChange}
+                          required
+                        >
+                          <option value="">Select FDE Name</option>
+                          {[
+                            "Akshay", "Ashutosh", "Dattatray", "Noshin", "Princy", "Samira", "Vishaka",
+                            "Zeba", "Walk-In", "Heena", "Purvi Shinde", "Mahima", "Pratiksha", "Jishnu",
+                            "Shweta Chavan", "Hurmaan", "Priya Dhiwar", "Diksha Jha", "Shraddha",
+                            "Sagar Satish Deshpande", "Supriya Thorat", "Diksha", "Josephine",
+                            "Chhaya Keer", "Aasiya", "Bhavana", "Joel", "Rohini", "Aditi", "Samruddhi",
+                            "Sofiya", "Sakshi", "Hritik", "Priyanshu", "Saurav", "Gracy", "Neelam",
+                            "Shreya", "Vaishnavi", "Shruti", "Samruddhi K",
+                          ].map((name) => (
+                            <option key={name} value={name}>{name}</option>
+                          ))}
+                        </Form.Control>
+                        {errors.FDE_Name && <p style={{ color: "red" }}>{errors.FDE_Name}</p>}
+                      </Form.Group>
+                    </Col>
+                  </Row>
+
+                  {/* Fourth Row: Reference and Note */}
+                  <Row className="g-4 mb-4">
+                    <Col md={4}>
+                      <Form.Group controlId="reference">
+                        <Form.Label>Reference <span style={{ color: "red" }} className="required">*</span></Form.Label>
+                        <Form.Control
+                          as="select"
+                          name="reference"
+                          value={formData.reference}
+                          onChange={handleInputChange}
+                          required
+                        >
+                          <option value="">Select Reference</option>
+                          {[
+                            "Newspaper", "Doctor Reference", "Internet", "Entertainment Media",
+                            "TV Show", "Patient Reference", "Other", "HHC Board", "HHF", "Word of Mouth",
+                          ].map((ref) => (
+                            <option key={ref} value={ref}>{ref}</option>
+                          ))}
+                        </Form.Control>
+                        {errors.reference && <p style={{ color: "red" }}>{errors.reference}</p>}
+                      </Form.Group>
+                    </Col>
+
+                    <Col md={8}>
+                      <Form.Group controlId="note">
+                        <Form.Label>Note <span style={{ color: "red" }} className="required">*</span></Form.Label>
+                        <Form.Control
+                          as="textarea"
+                          name="note"
+                          rows={3}
+                          placeholder="Enter Note"
+                          value={formData.note}
+                          onChange={handleInputChange}
+                          required
+                        />
+                        {errors.note && <p style={{ color: "red" }}>{errors.note}</p>}
+                      </Form.Group>
+                    </Col>
+                  </Row>
+
+                  <Form.Group className="text-end" style={{marginTop:"20px"}}>
+                    <Button
+                      variant="primary"
+                      type="submit"
+                      disabled={loading || !currentLocation}
+                      style={{ backgroundColor: "#00bcd4", borderColor: "#00bcd4", padding: "10px 30px" }}
+                    >
+                      {loading ? (
+                        <>
+                          <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
+                          {" Adding Enquiry..."}
+                        </>
+                      ) : (
+                        "ADD ENQUIRY"
+                      )}
+                    </Button>
+                  </Form.Group>
+                </Form>
                 </Card.Body>
               </Card>
             </Col>

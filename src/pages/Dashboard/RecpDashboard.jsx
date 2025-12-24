@@ -3,14 +3,37 @@ import { Link } from "react-router-dom";
 import FeatherIcon from "feather-icons-react";
 import { Row, Col, Card, Container, Form, Button, Modal, Spinner } from "react-bootstrap";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
-
-
-// --- REACT BIG CALENDAR IMPORTS ---
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
+import Swal from 'sweetalert2';
 
-// Initialize the localizer for react-big-calendar
 const localizer = momentLocalizer(moment);
+
+const CustomEvent = ({ event }) => (
+    <div style={{ fontSize: '11px', lineHeight: '1.2', padding: '2px' }}>
+        <strong>{event.time}</strong>
+        <div style={{
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            fontWeight: '500'
+        }}>
+            {event.patientName}
+        </div>
+    </div>
+);
+
+const Toast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true,
+    didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer)
+        toast.addEventListener('mouseleave', Swal.resumeTimer)
+    }
+});
 
 // --- JWT DECODE UTILITY (Required for Location) ---
 function decodeJwt(token) {
@@ -163,14 +186,29 @@ export default function ReceptionistDashboard() {
         const data = await response.json();
         console.log(data);
         if (data.statusCode === 200 && Array.isArray(data.data)) {
-            const formattedEvents = formatAppointments(data.data);
+            let filteredData = data.data;
+            if (doctorId) {
+                filteredData = data.data.filter(app => String(app.doctor_id) === String(doctorId));
+            }
+
+            const formattedEvents = formatAppointments(filteredData);
             setAppointments(formattedEvents);
         } else {
-             setAppointments([]);
+            setAppointments([]);
+            Swal.fire({
+                icon: 'error',
+                title: 'Fetch Failed',
+                text: 'Failed to fetch appointment data.'
+            });
         }
     } catch (error) {
         console.error("Error fetching appointments:", error);
         setAppointments([]);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred while loading dashboard data.'
+        });
     } finally {
         setLoading(false);
     }
@@ -241,8 +279,17 @@ export default function ReceptionistDashboard() {
   };
 
   const handleConfirm = async (appointmentId, patientType, phone) => {
-    if (!window.confirm("Confirmation: The patient has come to the clinic ...!"))
-        return;
+    const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: "Confirmation: The patient has come to the clinic...!",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, confirm it!'
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
        const url = `${BASE_URL}/V1/appointment/confirmAppointment?location=${currentLocation}&appId=${appointmentId}&patientType=${patientType}&patientPhone=${phone}`;
@@ -253,16 +300,27 @@ export default function ReceptionistDashboard() {
           const result = await response.json();
           console.log(result);
           if (!response.ok || result.statusCode !== 200) {
-            alert("Failed to confirm appointment");
+            Swal.fire({
+                icon: 'error',
+                title: 'Failed',
+                text: 'Failed to confirm appointment!'
+            });
             return;
-          }     
+        }
+
+        Toast.fire({
+            icon: 'success',
+            title: 'Appointment confirmed successfully'
+        });
+
         await fetchAppointmentsForRange(selectedDate, selectedDoctorId);
-        setSelectedEvent(prev =>
-            appointments.find(a => a.appointmentid === prev?.appointmentid) || null
-          );
-          
     } catch (error) {
         console.error("Confirm error:", error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred during confirmation.'
+        });
     }
 };
 
@@ -293,21 +351,21 @@ export default function ReceptionistDashboard() {
             body: JSON.stringify({ cancellationReason }) 
         });
         if (response.ok) {
-            // HIPAA: Generic success message
             alert("Appointment successfully cancelled.");
-            // Assuming fetchAppointmentData is available to refresh the list
-            fetchAppointmentsForRange(selectedDate, selectedDoctorId);            // Assuming setShowCancelModal and setCancelComment are available in scope
+
+            fetchAppointmentsForRange(selectedDate, selectedDoctorId);
+
+            setSelectedEvent(null);
+
             setShowCancelModal(false);
-            setCancelComment(""); 
+            setCancelComment("");
         } else {
             const errorData = await response.json();
-            // HIPAA: Generic error message, avoid leaking backend details
-            alert("Failed to cancel appointment. Please try again.");
-            console.error("Backend Error:", errorData.message || 'Unknown error');
+            alert("Failed to cancel appointment.");
+            console.error("Backend Error:", errorData.message);
         }
     } catch (error) {
-        // HIPAA: Generic network error message
-        alert("An error occurred while cancelling the appointment.");
+        alert("An error occurred while cancelling.");
         console.error("Network Error:", error);
     }
 };
@@ -360,157 +418,155 @@ export default function ReceptionistDashboard() {
             <span className='font-weight-bold'>Patient Type</span>: <span className='text-danger font-weight-bold'>{selectedEvent.patientType}</span><br/>
             <span className='font-weight-bold'>Note</span>: {selectedEvent.note}<br/>
             
-            <div className="mt-3 d-flex flex-wrap">
-                <Button variant="primary" onClick={() => handleConfirm(selectedEvent.appointmentid, selectedEvent.patientType, selectedEvent.phone)} disabled={isConfirmed} title="Confirm" className="me-2 mb-2">
-                    <FeatherIcon icon="check" size={16} /> Confirm
-                </Button>
-                {/* <Link to={`/edit-patient/${selectedEvent.patientid}`} className="me-2 mb-2">
-                    <Button variant="info" disabled={isConfirmed}>
-                        <FeatherIcon icon="edit" size={16} /> Edit Patient
-                    </Button>
-                </Link> */}
-                <Button variant="danger" onClick={() => setShowCancelModal(true)} disabled={isConfirmed} title="Cancel" className="me-2 mb-2">
-                    <FeatherIcon icon="trash-2" size={16} /> Cancel
-                </Button>
-                
-                {isConfirmed && (
-                    <Button variant="success" onClick={() => window.open(`//print-receipt-url/${selectedEvent.appointmentid}`)} title="Print" className="ms-0 ms-sm-2 mb-2">
-                        <FeatherIcon icon="printer" size={16} /> Print
-                    </Button>
-                )}
-            </div>
+            <div className="mt-3">
+                    {isConfirmed ? (
+                        /* Visual Indicator for Confirmed Status */
+                        <div className="alert alert-success d-flex align-items-center" style={{ borderRadius: '8px' }}>
+                            <FeatherIcon icon="check-circle" size={20} className="me-2" />
+                            <div>
+                                <strong>Confirmed</strong>
+                                <div style={{ fontSize: '12px', lineHeight: '14px' }}>
+                                    Checked in at: {selectedEvent.confirmTime}
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        /* Show Buttons only if NOT confirmed */
+                        <div className="d-flex flex-wrap">
+                            <Button
+                                variant="primary"
+                                onClick={() => handleConfirm(selectedEvent.appointmentid, selectedEvent.patientType, selectedEvent.phone)}
+                                title="Confirm"
+                                className="me-2 mb-2"
+                            >
+                                <FeatherIcon icon="check" size={16} /> Confirm Arrival
+                            </Button>
+
+                            <Button
+                                variant="danger"
+                                onClick={() => setShowCancelModal(true)}
+                                title="Cancel"
+                                className="me-2 mb-2"
+                            >
+                                <FeatherIcon icon="trash-2" size={16} /> Cancel
+                            </Button>
+                        </div>
+                    )}
+                </div>
         </div>
     );
   };
   
   return (
     <div className="themebody-wrap">
-      {/* Breadcrumb Start */}
-      <PageBreadcrumb pagename={`RECEPTIONIST DASHBOARD (${currentLocation.toUpperCase()})`} />
-      {/* Breadcrumb End */}
-      
-      {/* theme body start */}
-      <div className="theme-body">
-        <Container fluid className="cdxuser-profile">
-          <Row>
-            
-            {/* ------------------------------------------------------------- */}
-            {/* 1. DOCTOR SELECTOR / FIND / LEGEND ROW (FULL WIDTH) */}
-            {/* ------------------------------------------------------------- */}
-            <Col xxl={12} className="mb-4">
-                <Row className="align-items-center">
-                    {/* Selector & Find Button */}
-                    <Col lg={6} md={12}>
-                        <div className="d-flex align-items-center controls">
-                            {/* Date Picker */}
-                            <Form.Control 
-                                type="date" 
-                                placeholder="mm/dd/yyyy" 
-                                // Format the date object back to YYYY-MM-DD for the input
-                                value={moment(selectedDate).format("YYYY-MM-DD")} 
-                                onChange={handleDateChange}
-                                style={{ width: 'auto', marginRight: '10px' }} 
-                            />
-                            
-                            <Form.Select onChange={handleDoctorChange} value={selectedDoctorId} style={{ width: 'auto', marginRight: '10px' }}>
-                                <option value="">ALL DOCTORS</option> 
-                                {doctors.map(doc => (
-                                    <option key={doc.doctor_id} value={doc.doctor_id}>{doc.name}</option>
-                                ))}
-                            </Form.Select>
-                            
-                            <Button variant="danger" onClick={handleRefreshClick} style={{marginBottom:"17px"}}> 
-                              <FeatherIcon icon="refresh-ccw" size={16} className="me-2" />Refresh
-                            </Button>
-                        </div>
+        <PageBreadcrumb pagename="Reception Dashboard" />
+        <div className="theme-body">
+            <Container fluid className="cdxuser-profile">
+                <Row>
+                    <Col xxl={12} className="mb-4">
+                        <Row className="align-items-center">
+                            <Col lg={6} md={12}>
+                                <div className="d-flex align-items-center controls">
+                                    <Form.Control
+                                        type="date"
+                                        placeholder="mm/dd/yyyy"
+                                        value={moment(selectedDate).format("YYYY-MM-DD")}
+                                        onChange={handleDateChange}
+                                        style={{ width: 'auto', marginRight: '10px' }}
+                                    />
+
+                                    <Form.Select onChange={handleDoctorChange} value={selectedDoctorId} style={{ width: 'auto', marginRight: '10px' }}>
+                                        <option value="">ALL DOCTORS</option>
+                                        {doctors.map(doc => (
+                                            <option key={doc.doctor_id} value={doc.doctor_id}>{doc.name}</option>
+                                        ))}
+                                    </Form.Select>
+
+                                    <Button className="dashbutton" variant="danger" onClick={handleRefreshClick} style={{ fontSize: "13px", borderRadius: "10px", padding: "8px 10px" }} >
+                                        <FeatherIcon icon="refresh-ccw" size={12} className="me-1" />Refresh
+                                    </Button>
+                                </div>
+                            </Col>
+                        </Row>
                     </Col>
-
-                    {/* Legend / Counts */}
-                   
-                </Row>
-            </Col>
-
-            {/* ------------------------------------------------------------- */}
-            {/* 2. CALENDAR (8 COL) AND DETAILS (4 COL) */}
-            {/* ------------------------------------------------------------- */}
-            <div>
-                 <Col className="mt-lg-0" style={{marginRight:"530px" , marginBottom:"10px"}}>
-                        <div className="d-flex justify-content-lg-end justify-content-start">
+                    <Col xs={12} className="mb-5" style={{ marginLeft: "10px", marginTop: "20px" }}>
+                        <div className="d-flex flex-wrap justify-content-start">
                             <ColorLegend name="New Patient" count={counts.NEW} bgColor="#000000" />
                             <ColorLegend name="Follow Patient" count={counts.FOLLOW} bgColor="#ff8000" />
                             <ColorLegend name="Postoperative Patient" count={counts.POSTOPERATIVE} bgColor="#8000ff" />
                             <ColorLegend name="Other Patient" count={counts.OTHER} bgColor="#ff0080" />
                         </div>
-                    </Col> {/* Calendar takes 8 columns */}
-            </div>
-            <Col xxl={8} xl={12} >
-                <Card>
-                    <Card.Header><h4><FeatherIcon icon="calendar" size={18} className="me-2" />CALENDAR SCHEDULE</h4></Card.Header>
-                    <Card.Body style={{ minHeight: '500px', padding: 0 }}>
-                        {loading ? (
-                            <div className="d-flex justify-content-center align-items-center h-100"><Spinner animation="border" /></div>
-                        ) : (
-                            <Calendar
-                                ref={calendarRef}
-                                localizer={localizer}
-                                events={appointments}
-                                date={selectedDate} // Controls the currently visible date
-                                view={currentView} // Controls the current view
-                                onNavigate={handleCalendarNavigate} // Handles prev/next/today clicks
-                                onSelectEvent={handleEventClick} // Handles event click
-                                onView={handleCalendarView} // Handles month/week/day view change
-                                
-                                startAccessor="start"
-                                endAccessor="end"
-                                
-                                style={{ height: 600, padding: '15px' }}
-                                eventPropGetter={eventStyleGetter} // Apply custom styles
-                                
-                                views={['month', 'week', 'day', 'agenda']}
-                                defaultView='month'
-                            />
-                        )}
-                    </Card.Body>
-                </Card>
-            </Col>
+                    </Col>
+                    <Col xxl={8} xl={12} >
+                        <Card>
+                            <Card.Header><h4><FeatherIcon icon="calendar" size={18} className="me-2" />CALENDAR SCHEDULE</h4></Card.Header>
+                            <Card.Body style={{ minHeight: '500px', padding: 0 }}>
+                                {loading ? (
+                                    <div className="d-flex justify-content-center align-items-center h-100"><Spinner animation="border" /></div>
+                                ) : (
+                                    <Calendar
+                                        ref={calendarRef}
+                                        localizer={localizer}
+                                        events={appointments}
+                                        date={selectedDate}
+                                        view={currentView}
+                                        onNavigate={handleCalendarNavigate}
+                                        onSelectEvent={handleEventClick}
+                                        onView={handleCalendarView}
+                                        startAccessor="start"
+                                        endAccessor="end"
+                                        // style={{ height: 600, padding: '15px' }}
+                                        eventPropGetter={eventStyleGetter}
+                                        views={['month', 'week', 'day', 'agenda']}
+                                        defaultView='month'
+                                        components={{
+                                            event: CustomEvent
+                                        }}
+                                        step={15}
+                                        timeslots={4}
+                                        style={{ height: 800 }}
+                                        dayLayoutAlgorithm={'no-overlap'}
+                                    />
+                                )}
+                            </Card.Body>
+                        </Card>
+                    </Col>
 
-            <Col xxl={4} xl={12}> {/* Details takes 4 columns */}
-                <Card>
-                    <Card.Header><h4><FeatherIcon icon="info" size={18} className="me-2" />APPOINTMENT DETAILS</h4></Card.Header>
-                    <Card.Body>
-                        <AppointmentDetailsCard />
-                    </Card.Body>
-                </Card>
-            </Col>
-          </Row>
-        </Container>
-      </div>
-      {/* theme body end */}
-      
-      {/* Cancellation Modal */}
-      <Modal show={showCancelModal} onHide={() => setShowCancelModal(false)} centered>
-          <Modal.Header closeButton>
-              <Modal.Title>REASON OF CANCELLATION</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-              <Form onSubmit={handleCancelSubmit}>
-                  <Form.Group className="mb-3">
-                      <Form.Control
-                          as="textarea"
-                          rows={4}
-                          name="cancelComment"
-                          value={cancelComment}
-                          onChange={(e) => setCancelComment(e.target.value)}
-                          placeholder="Please Enter the Cancellation details..."
-                      />
-                  </Form.Group>
-                  <input type="hidden" name="cancelid" value={selectedEvent?.appointmentid || ''} />
-                  <Button variant="danger" type="submit" className="formBtn">
-                      Submit
-                  </Button>
-              </Form>
-          </Modal.Body>
-      </Modal>
+                    <Col xxl={4} xl={12}>
+                        <Card>
+                            <Card.Header><h4><FeatherIcon icon="info" size={18} className="me-2" />APPOINTMENT DETAILS</h4></Card.Header>
+                            <Card.Body>
+                                <AppointmentDetailsCard />
+                            </Card.Body>
+                        </Card>
+                    </Col>
+                </Row>
+            </Container>
+        </div>
+
+        <Modal show={showCancelModal} onHide={() => setShowCancelModal(false)} centered>
+            <Modal.Header closeButton>
+                <Modal.Title>REASON OF CANCELLATION</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                <Form onSubmit={handleCancelSubmit}>
+                    <Form.Group className="mb-3">
+                        <Form.Control
+                            as="textarea"
+                            rows={4}
+                            name="cancelComment"
+                            value={cancelComment}
+                            onChange={(e) => setCancelComment(e.target.value)}
+                            placeholder="Please Enter the Cancellation details..."
+                        />
+                    </Form.Group>
+                    <input type="hidden" name="cancelid" value={selectedEvent?.appointmentid || ''} />
+                    <Button variant="danger" type="submit" className="formBtn">
+                        Submit
+                    </Button>
+                </Form>
+            </Modal.Body>
+        </Modal>
     </div>
-  );
+);
 }

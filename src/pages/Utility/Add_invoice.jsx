@@ -1,9 +1,22 @@
 import React, { useState, useEffect } from "react";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
-import { Row, Col, Form, Container, Card } from "react-bootstrap";
+import { Row, Col, Form, Container, Card, Button } from "react-bootstrap";
 import { decodeJwt } from "../../utils/decode-jwt";
+import Swal from 'sweetalert2';
 
 const BASE_URL = "http://localhost:5100/api";
+
+const Toast = Swal.mixin({
+  toast: true,
+  position: 'top-end',
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.addEventListener('mouseenter', Swal.stopTimer)
+    toast.addEventListener('mouseleave', Swal.resumeTimer)
+  }
+}); 
 
 const AddInvoice = () => {
   const initialFormData = {
@@ -17,13 +30,14 @@ const AddInvoice = () => {
     admissiontime: "",
     consultantName: "",
     surgeonName: "",
-    Sub_Total: "",
+    Sub_Total: "0.00",
     bill_Type: "",
     bill_method: "",
     note: "",
-    dynamicRows: [{ label: "", value: "" }], // New field for dynamic rows
+    dynamicRows: [{ label: "", value: "" }],
     discount: "",
-    payableAmount: "",
+    discountAmount: "",
+    payableAmount: "0.00",
     chequeno: "",
     pdc: "",
     reimbursement: "",
@@ -34,12 +48,11 @@ const AddInvoice = () => {
   const [formData, setFormData] = useState(initialFormData);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [consultants, setConsultants] = useState([]); // State for consultant dropdown
-  const [surgeons, setSurgeons] = useState([]); // State for surgeon dropdown
-  const [insurance, setInsurance] = useState([]); // State for insurance dropdown
+  const [consultants, setConsultants] = useState([]);
+  const [surgeons, setSurgeons] = useState([]);
+  const [insurance, setInsurance] = useState([]);
   const [tpa, setTpa] = useState([]);
-
-  const [currentLocation, setCurrentLocation] = useState(null); 
+  const [currentLocation, setCurrentLocation] = useState(null);
   
   // --- Effect to determine current location ---
   useEffect(() => {
@@ -115,29 +128,38 @@ const AddInvoice = () => {
     const { name, value } = e.target;
     let updatedFormData = { ...formData, [name]: value };
 
-    // Update payableAmount based on discount or PDC
-    if (name === "discount" || name === "pdc") {
-      const discount = parseFloat(updatedFormData.discount || 0); // Ensure discount is a number
-      const pdc = parseFloat(updatedFormData.pdc || 0); // Ensure PDC is a number
-      const subTotal = parseFloat(updatedFormData.Sub_Total || 0); // Ensure Sub_Total is a number
-
-      const payable = Math.max(
-        subTotal - (updatedFormData.bill_method === "PDC" ? pdc : discount),
-        0
-      );
-      updatedFormData = {
-        ...updatedFormData,
-        payableAmount: payable.toFixed(2),
-      };
+    if (name === "bill_Type") {
+      updatedFormData.bill_method = "";
+      updatedFormData.insurance = "";
+      updatedFormData.tpa = "";
+      updatedFormData.chequeno = "";
+      updatedFormData.pdc = "";
+      updatedFormData.discount = "";
+      updatedFormData.discountAmount = "";
     }
 
-    // Automatically set payableAmount to Sub_Total for reimbursement
-    if (name === "bill_method" && value === "reimbursement") {
+    if (name === "bill_method" && value !== "PDC") {
+      updatedFormData.chequeno = "";
+      updatedFormData.pdc = "";
+    }
+
+    if (["discount", "pdc", "discountAmount", "Sub_Total", "bill_Type", "bill_method"].includes(name)) {
       const subTotal = parseFloat(updatedFormData.Sub_Total || 0);
-      updatedFormData = {
-        ...updatedFormData,
-        payableAmount: subTotal.toFixed(2),
-      };
+      const discount = parseFloat(updatedFormData.discount || 0);
+      const discountAmount = parseFloat(updatedFormData.discountAmount || 0);
+      const pdc = parseFloat(updatedFormData.pdc || 0);
+
+      let payable = subTotal;
+      if (updatedFormData.bill_Type === "charity") {
+        payable = subTotal - discountAmount;
+      } else if (updatedFormData.bill_method === "PDC") {
+        payable = subTotal - pdc;
+      } else if (updatedFormData.bill_Type === "non_insurance") {
+        payable = subTotal - discount;
+      } else {
+        payable = subTotal;
+      }
+      updatedFormData.payableAmount = Math.max(payable, 0).toFixed(2);
     }
 
     setFormData(updatedFormData);
@@ -147,18 +169,16 @@ const AddInvoice = () => {
     const updatedRows = formData.dynamicRows.map((row, i) =>
       i === index ? { ...row, [field]: value } : row
     );
-    // Calculate the new subtotal
-    const newSubTotal = updatedRows.reduce((total, row) => {
-      const rowValue = parseFloat(row.value) || 0; // Ensure valid number
-      return total + rowValue;
-    }, 0);
+    const newSubTotal = updatedRows.reduce((total, row) => total + (parseFloat(row.value) || 0), 0);
 
     setFormData({
       ...formData,
       dynamicRows: updatedRows,
-      Sub_Total: newSubTotal.toFixed(2), // Update Sub_Total with the calculated sum
+      Sub_Total: newSubTotal.toFixed(2),
+      payableAmount: newSubTotal.toFixed(2)
     });
   };
+
 
   const addDynamicRow = () => {
     setFormData({
@@ -169,14 +189,32 @@ const AddInvoice = () => {
 
   const deleteDynamicRow = (index) => {
     const updatedRows = formData.dynamicRows.filter((_, i) => i !== index);
-    setFormData({ ...formData, dynamicRows: updatedRows });
+    const newSubTotal = updatedRows.reduce((total, row) => total + (parseFloat(row.value) || 0), 0);
+    setFormData({ ...formData, dynamicRows: updatedRows, Sub_Total: newSubTotal.toFixed(2) });
+  };
+
+  const resetForm = () => {
+    setFormData(initialFormData);
+    setErrors({});
   };
 
   // Reset form
   const handleReset = () => {
-    setFormData(initialFormData);
-    setErrors({});
-  };
+    Swal.fire({
+      title: 'Reset Invoice?',
+      text: "All entered data will be cleared!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, reset'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        resetForm(); // Calls the helper
+        Toast.fire({ icon: 'success', title: 'Form reset successful' });
+      }
+    });
+  }; 
 
   // Submit form
   const handleSubmit = async (e) => {
@@ -189,6 +227,7 @@ const AddInvoice = () => {
       setLoading(true);
 
       try {
+        console.log(formData);
         const response = await fetch(`${BASE_URL}/V1/invoice/addInvoice?location=${currentLocation}`, {
           method: "POST",
           headers: {
@@ -199,605 +238,300 @@ const AddInvoice = () => {
 
         const data = await response.json();
 
-        if (response.ok) {
-          console.log(data);
-          alert("Invoice added successfully!");
-          handleReset(); // Reset form data
-        } else {
-          console.error(
-            "Error adding invoice:",
-            data.message || "Unknown error"
-          );
-          alert(data.message || "Error adding invoice. Please try again.");
-        }
-      } catch (error) {
-        console.error("Error submitting form:", error);
-        alert(
-          "Error submitting form. Please check your network and try again."
-        );
-      } finally {
-        setLoading(false);
-      }
+       if (response.ok) {
+      Swal.fire({
+        title: "Success!",
+        text: "Invoice added successfully!",
+        icon: "success",
+        timer: 2000, 
+        showConfirmButton: true,     
+        confirmButtonText: "Okay",   
+        confirmButtonColor: "#00acc1"
+      });
+      resetForm();
+    } else {
+      Swal.fire({
+        title: "Ops...",
+        text: data.message || "Error adding invoice.",
+        icon: "error",
+      });
     }
-  };
+  } catch (error) {
+    Swal.fire({
+      title: "Network Error",
+      text: "Please check your connection and try again.",
+      icon: "warning",
+    });
+  } finally {
+    setLoading(false);
+  }
+  }
+};
 
-  return (
-    <div
-      className="themebody-wrap"
-      style={{
-        background: "linear-gradient(to right, #e0f7fa, #80deea)",
-        minHeight: "100vh",
-        padding: "20px",
-        fontFamily: "'Poppins', Arial, sans-serif",
-      }}
-    >
-      <PageBreadcrumb pagename="Add Invoice" />
-      <Container fluid>
-        <Row>
-          <Col>
-            <Card
-              style={{
-                borderRadius: "12px",
-                boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
-                borderColor: "#00bcd4",
-                background: "white",
-                border: "1px solid #00bcd4",
-                padding:"15px",
-              }}
-            >
-              <Card.Body>
-                <Form onSubmit={handleSubmit}>
-                     <h4 style={{marginBottom:"20px"}}>Add Invoice Details <span className="ms-2 text-secondary" style={{ fontSize: '0.8em' }}>
-                        (Clinic Location: {currentLocation ? currentLocation.toUpperCase() : "Loading..."}
-                        )
-                      </span></h4>
-                  <Row>
-                    {/* Invoice No */}
-                    <Col md={4} className="mb-4">
-                      <Form.Group className="mb-3">
-                        <Form.Label>Invoice No</Form.Label>
-                        <Form.Control
-                          type="text"
-                          id="invoice_id"
-                          name="invoice_id"
-                          value={formData.invoice_id}
-                          onChange={handleInputChange}
-                          isInvalid={errors.invoice_id}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {errors.invoice_id}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
+const sectionTitleStyle = {
+  fontSize: "1.1rem",
+  fontWeight: "600",
+  color: "#00838f",
+  paddingLeft: "12px",
+  padding: "10px",
+  marginBottom: "5px"
+};
 
-                    {/* Admission No */}
-                    <Col md={4} className="mb-4">
-                      <Form.Group className="mb-3">
-                        <Form.Label>Admission No</Form.Label>
-                        <Form.Control
-                          type="text"
-                          id="admission_no"
-                          name="admission_no"
-                          value={formData.admission_no}
-                          onChange={handleInputChange}
-                          isInvalid={errors.admission_no}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {errors.admission_no}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
+const cardStyle = {
+  border: "none",
+  borderRadius: "12px",
+  paddingBottom:"10px",
+  borderTop: "4px solid #00bcd4",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+  marginBottom: "25px",
+  backgroundColor: "#fff"
+};
 
-                    {/* Patient Name */}
-                    <Col md={4} className="mb-4">
-                      <Form.Group className="mb-3">
-                        <Form.Label>Patient Id</Form.Label>
-                        <Form.Control
-                          type="text"
-                          id="patient_id"
-                          name="patient_id"
-                          value={formData.patient_id}
-                          onChange={handleInputChange}
-                          isInvalid={errors.patient_id}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {errors.patient_id}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
+return (
+  <div className="themebody-wrap" style={{ background: "#f0f4f8", minHeight: "150vh", padding: "10px" }}>
+    <Container>
+      <PageBreadcrumb pagename="Add New Invoice Page" />
 
-                    {/* Admission Date */}
-                    <Col md={4} className="mb-4">
-                      <Form.Group className="mb-3">
-                        <Form.Label>Admission Date </Form.Label>
-                        <Form.Control
-                          type="date"
-                          id="admission_date"
-                          name="admission_date"
-                          value={formData.admission_date}
-                          onChange={handleInputChange}
-                          isInvalid={errors.admission_date}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {errors.admission_date}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
+      <Form onSubmit={handleSubmit}>
+        {/* SECTION 1: PATIENT DETAILS */}
+        <Card style={cardStyle}>
+          <Card.Body className="p-4">
+            <h5 style={sectionTitleStyle}>Patient & Admission Information</h5>
+            <Row className="g-3">
+              <Col md={4}>
+                <Form.Label className="small fw-bold text-muted">Invoice No</Form.Label>
+                <Form.Control name="invoice_id" value={formData.invoice_id} onChange={handleInputChange} isInvalid={errors.invoice_id} placeholder="Enter Invoice ID" />
+                <Form.Control.Feedback type="invalid">{errors.invoice_id}</Form.Control.Feedback>
+              </Col>
+              <Col md={4}>
+                <Form.Label className="small fw-bold text-muted">Admission No</Form.Label>
+                <Form.Control name="admission_no" value={formData.admission_no} onChange={handleInputChange} isInvalid={errors.admission_no} placeholder="Enter Admission No" />
+              </Col>
+              <Col md={4}>
+                <Form.Label className="small fw-bold text-muted">Patient ID</Form.Label>
+                <Form.Control name="patient_id" value={formData.patient_id} onChange={handleInputChange} isInvalid={errors.patient_id} placeholder="Enter Patient ID" />
+              </Col>
+              <Col md={3}>
+                <Form.Label className="small fw-bold text-muted">Admission Date</Form.Label>
+                <Form.Control type="date" name="admission_date" value={formData.admission_date} onChange={handleInputChange} isInvalid={errors.admission_date} />
+              </Col>
+              <Col md={3}>
+                <Form.Label className="small fw-bold text-muted">Admission Time</Form.Label>
+                <Form.Control type="time" name="admissiontime" value={formData.admissiontime} onChange={handleInputChange} isInvalid={errors.admissiontime} />
+              </Col>
+              <Col md={3}>
+                <Form.Label className="small fw-bold text-muted">Discharge Date</Form.Label>
+                <Form.Control type="date" name="discharge_date" min={formData.admission_date} value={formData.discharge_date} onChange={handleInputChange} isInvalid={errors.discharge_date} />
+              </Col>
+              <Col md={3}>
+                <Form.Label className="small fw-bold text-muted">Discharge Time</Form.Label>
+                <Form.Control type="time" name="dischargetime" value={formData.dischargetime} onChange={handleInputChange} />
+              </Col>
+              <Col md={4}>
+                <Form.Label className="small fw-bold text-muted">Bed Category</Form.Label>
+                <Form.Control name="bed_category" placeholder="Enter Bed Category" value={formData.bed_category} onChange={handleInputChange} isInvalid={errors.bed_category} />
+              </Col>
+              <Col md={4}>
+                <Form.Label className="small fw-bold text-muted">Consultant Name</Form.Label>
+                <Form.Select name="consultantName" value={formData.consultantName} onChange={handleInputChange} isInvalid={errors.consultantName}>
+                  <option value="">SELECT CONSULTANT</option>
+                  {consultants.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
+                </Form.Select>
+              </Col>
+              <Col md={4}>
+                <Form.Label className="small fw-bold text-muted">Surgeon Name</Form.Label>
+                <Form.Select name="surgeonName" value={formData.surgeonName} onChange={handleInputChange} isInvalid={errors.surgeonName}>
+                  <option value="">SELECT SURGEON</option>
+                  {surgeons.map((surgeon) => <option key={surgeon._id} value={surgeon.name}>{surgeon.name}</option>)}
+                </Form.Select>
+              </Col>
+            </Row>
+          </Card.Body>
+        </Card>
 
-                    {/* Admission Time */}
-                    <Col md={4} className="mb-4">
-                      <Form.Group className="mb-3">
-                        <Form.Label>Admission Time </Form.Label>
-                        <Form.Control
-                          type="time"
-                          id="admissiontime"
-                          name="admissiontime"
-                          value={formData.admissiontime}
-                          onChange={handleInputChange}
-                          isInvalid={errors.admissiontime}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {errors.admissiontime}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
+        {/* SECTION 2: BILL LABELS */}
+        <Card style={cardStyle}>
+          <Card.Body className="p-4">
+            <h5 style={sectionTitleStyle}>Billing Particulars</h5>
 
-                    {/* Bed Category */}
-                    <Col md={4} className="mb-4">
-                      <Form.Group className="mb-3">
-                        <Form.Label>Bed Category </Form.Label>
-                        <Form.Control
-                          type="text"
-                          id="bed_category"
-                          name="bed_category"
-                          value={formData.bed_category}
-                          onChange={handleInputChange}
-                          isInvalid={errors.bed_category}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {errors.bed_category}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
+            {formData.dynamicRows.map((row, index) => (
+              <Row key={index} className="mb-3 align-items-end">
+                {/* Description Box - Increased width for better space */}
+                <Col md={6}>
+                  <Form.Label className="small fw-bold text-muted">Label Name</Form.Label>
+                  <Form.Control
+                    placeholder="e.g. Consultation Fees / Laboratory Charges"
+                    value={row.label}
+                    onChange={(e) => handleDynamicRowChange(index, "label", e.target.value)}
+                  />
+                </Col>
 
-                     {/* Discharge Date */}
-                    <Col md={4} className="mb-4">
-                      <Form.Group className="mb-3">
-                        <Form.Label>Discharge Date </Form.Label>
-                        <Form.Control
-                          type="date"
-                          id="discharge_date"
-                          name="discharge_date"
-                          value={formData.discharge_date}
-                          min={formData.admission_date}
-                          onChange={handleInputChange}
-                          isInvalid={errors.discharge_date}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                          {errors.discharge_date}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
+                {/* Amount Box */}
+                <Col md={4}>
+                  <Form.Label className="small fw-bold text-muted">Amount (₹)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    placeholder="e.g. 500"
+                    value={row.value}
+                    onChange={(e) => handleDynamicRowChange(index, "value", e.target.value)}
+                  />
+                </Col>
 
-                    {/* Discharge Time */}
-                    <Col md={4} className="mb-4">
-                      <Form.Group className="mb-3">
-                        <Form.Label>Discharge Time</Form.Label>
-                        <Form.Control
-                          type="time"
-                          name="dischargetime"
-                          value={formData.dischargetime}
-                          onChange={handleInputChange}
-                        />
-                        {errors.dischargetime && (
-                          <p style={{ color: "red" }}>{errors.dischargetime}</p>
-                        )}
-                      </Form.Group>
-                    </Col>
+                {/* Delete Button - Only 1 button per row now */}
+                <Col md={2}>
+                  <Button
+                    variant="outline-danger"
+                    className="w-100"
+                    style={{ whiteSpace: "nowrap" }}
+                    onClick={() => deleteDynamicRow(index)}
+                  >
+                    - Delete
+                  </Button>
+                </Col>
+              </Row>
+            ))}
 
-                    {/* Consultant Name */}
-                    <Col md={4} className="mb-4">
-                      <Form.Group className="mb-3">
-                        <Form.Label>Consultant Name</Form.Label>
-                        <Form.Select
-                          id="consultantName"
-                          name="consultantName"
-                          value={formData.consultantName}
-                          onChange={handleInputChange}
-                          isInvalid={errors.consultantName}
-                        >
-                          <option value="" disabled>
-                            SELECT CONSULTANT
-                          </option>
-                          {consultants.map((consultant) => (
-                            <option
-                              key={consultant._id}
-                              value={consultant.name}
-                            >
-                              {consultant.name}
-                            </option>
-                          ))}
-                        </Form.Select>
-                        <Form.Control.Feedback type="invalid">
-                          {errors.consultantName}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
+            {/* + Add Row Button - Placed BELOW the rows, centered and wide */}
+            <Row className="justify-content-center mt-4">
+              <Col md={4}>
+                <Button
+                  variant="outline-info"
+                  className="w-200 py-10"
+                  style={{
+                    whiteSpace: "nowrap",
+                    padding: "100px",
+                    margin: "10px",
+                    borderStyle: "dashed",
+                    borderWidth: "2px",
+                    fontWeight: "600"
+                  }}
+                  onClick={addDynamicRow}
+                >
+                  + Add New Billing Row
+                </Button>
+              </Col>
+            </Row>
+          </Card.Body>
+        </Card>
 
-                    {/* Surgeon Name */}
-                    <Col md={4} className="mb-4">
-                      <Form.Group className="mb-3">
-                        <Form.Label>Surgeon Name</Form.Label>
-                        <Form.Select
-                          id="surgeonName"
-                          name="surgeonName"
-                          value={formData.surgeonName}
-                          onChange={handleInputChange}
-                          isInvalid={errors.surgeonName}
-                        >
-                          <option value="" disabled>
-                            SELECT SURGEON
-                          </option>
-                          {surgeons.map((surgeon) => (
-                            <option key={surgeon._id} value={surgeon.name}>
-                              {surgeon.name}
-                            </option>
-                          ))}
-                        </Form.Select>
-                        <Form.Control.Feedback type="invalid">
-                          {errors.surgeonName}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
+        {/* SECTION 3: BILLING CONFIG & PAYMENT */}
+        <Card style={{ ...cardStyle, borderTop: "4px solid #00bcd4" }}>
+          <Card.Body className="p-4">
+            <h5 style={sectionTitleStyle}>Payment Details & Config</h5>
+            <Row className="g-4">
+              <Col md={2}>
+                <Form.Label className="small fw-bold text-muted">Bill Type</Form.Label>
+                <Form.Select name="bill_Type" value={formData.bill_Type} onChange={handleInputChange} isInvalid={errors.bill_Type}>
+                  <option value="">SELECT BILL TYPE</option>
+                  <option value="insurance">Insurance</option>
+                  <option value="non_insurance">Non-Insurance</option>
+                  <option value="charity">Charity</option>
+                </Form.Select>
+              </Col>
 
-                    {/* Section Divider */}
-                    <Col md={12} className="mb-4">
-                      <hr className="my-4" />
-                    </Col>
+              {/* Show Insurance fields only if Insurance is selected */}
+              {formData.bill_Type === "insurance" && (
+                <>
+                  <Col md={5}>
+                    <Form.Label className="small fw-bold text-muted">Insurance Company</Form.Label>
+                    <Form.Select name="insurance" value={formData.insurance} onChange={handleInputChange}>
+                      <option value="">CHOOSE INSURANCE</option>
+                      {insurance.map(i => <option key={i._id} value={i.companyname}>{i.companyname}</option>)}
+                    </Form.Select>
+                  </Col>
+                  <Col md={5}>
+                    <Form.Label className="small fw-bold text-muted">TPA</Form.Label>
+                    <Form.Select name="tpa" value={formData.tpa} onChange={handleInputChange}>
+                      <option value="">SELECT TPA</option>
+                      {tpa.map(t => <option key={t._id} value={t.companyname}>{t.companyname}</option>)}
+                    </Form.Select>
+                  </Col>
+                  <Col md={4}>
+                    <Form.Label className="small fw-bold text-muted">Bill Method</Form.Label>
+                    <Form.Select name="bill_method" value={formData.bill_method} onChange={handleInputChange}>
+                      <option value="">SELECT BILL METHOD</option>
+                      <option value="cashless">Cashless</option>
+                      <option value="PDC">PDC</option>
+                      <option value="reimbursement">Reimbursement</option>
+                    </Form.Select>
+                  </Col>
+                </>
+              )}
 
-                    {/* Dynamic Rows Section */}
-                    <Col md={12} className="mb-4">
-                      <div>
-                        <Form.Label>Bill Label </Form.Label>
-                        {formData.dynamicRows.map((row, index) => (
-                          <div
-                            key={index}
-                            style={{
-                              display: "flex",
-                              gap: "10px",
-                              marginBottom: "10px",
-                            }}
-                          >
-                            <Form.Control
-                              type="text"
-                              placeholder="Label"
-                              value={row.label}
-                              onChange={(e) =>
-                                handleDynamicRowChange(
-                                  index,
-                                  "label",
-                                  e.target.value
-                                )
-                              }
-                              style={{ width: "45%" }}
-                            />
-                            <Form.Control
-                              type="text"
-                              placeholder="Value"
-                              value={row.value}
-                              onChange={(e) =>
-                                handleDynamicRowChange(
-                                  index,
-                                  "value",
-                                  e.target.value
-                                )
-                              }
-                              style={{ width: "45%" }}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => deleteDynamicRow(index)}
-                              className="btn btn-danger"
-                              style={{ width: "10%"}}
-                        
-                            >
-                              -
-                            </button>
-                          </div>
-                        ))}
-                        <button
-                          type="button"
-                          onClick={addDynamicRow}
-                          className="btn btn-success"
-                          style={{marginBottom:"10px"}}
-                        >
-                          + Add Row
-                        </button>
-                      </div>
-                    </Col>
+              {/* Logic for PDC visibility: Only if bill_method is exactly "PDC" */}
+              {formData.bill_method === "PDC" && (
+                <>
+                  <Col md={4}>
+                    <Form.Label className="small fw-bold text-muted">Cheque No</Form.Label>
+                    <Form.Control
+                      type="number"
+                      placeholder="Enter Cheque Number"
+                      name="chequeno"
+                      value={formData.chequeno}
+                      onChange={handleInputChange}
+                    />
+                  </Col>
+                  <Col md={4}>
+                    <Form.Label className="small fw-bold text-muted">PDC Amount</Form.Label>
+                    <Form.Control
+                      type="number"
+                      placeholder="e.g. 100.00"
+                      name="pdc"
+                      value={formData.pdc}
+                      onChange={handleInputChange}
+                    />
+                  </Col>
+                </>
+              )}
 
-                    {/* Sub Total */}
-                    <Col md={4} className="mb-4">
-                      <Form.Group className="mb-3">
-                        <Form.Label>Sub Total </Form.Label>
-                        <Form.Control
-                          type="number"
-                          id="Sub_Total"
-                          name="Sub_Total"
-                          value={formData.Sub_Total}
-                          onChange={handleInputChange}
-                        />
-                      </Form.Group>
-                    </Col>
+              {/* Other conditional fields remain as they were */}
+              {formData.bill_Type === "non_insurance" && (
+                <Col md={4}>
+                  <Form.Label className="small fw-bold text-muted">Discount Amount</Form.Label>
+                  <Form.Control type="number" name="discount" placeholder="e.g. 100.00" value={formData.discount} onChange={handleInputChange} />
+                </Col>
+              )}
 
-                    {/* Bill Type */}
-                    <Col md={4} className="mb-4">
-                      <Form.Group className="mb-3">
-                        <Form.Label>Bill Type </Form.Label>
-                        <Form.Select
-                          id="bill_Type"
-                          name="bill_Type"
-                          value={formData.bill_Type}
-                          onChange={handleInputChange}
-                          isInvalid={errors.bill_Type}
-                        >
-                          <option value="" disabled>
-                            SELECT BILL TYPE
-                          </option>
-                          <option value="insurance">Insurance</option>
-                          <option value="non_insurance">Non-Insurance</option>
-                          <option value="charity">Charity</option>
-                        </Form.Select>
-                        <Form.Control.Feedback type="invalid">
-                          {errors.bill_Type}
-                        </Form.Control.Feedback>
-                      </Form.Group>
-                    </Col>
+              {formData.bill_Type === "charity" && (
+                <Col md={4}>
+                  <Form.Label className="small fw-bold text-muted">Charity Discount</Form.Label>
+                  <Form.Control type="number" placeholder="e.g. 100.00" name="discountAmount" value={formData.discountAmount} onChange={handleInputChange} />
+                </Col>
+              )}
 
-                    {/* Conditional Fields for Insurance */}
-                    {formData.bill_Type === "insurance" && (
-                      <>
-                        <Col md={4} className="mb-4">
-                          <Form.Group className="mb-3">
-                            <Form.Label>Insurance Company</Form.Label>
-                            <Form.Select
-                              id="insurance"
-                              name="insurance"
-                              value={formData.insurance}
-                              onChange={handleInputChange}
-                              isInvalid={errors.insurance}
-                            >
-                              <option value="">CHOOSE INSURANCE</option>
-                              {insurance.map((insurance) => (
-                                <option
-                                  key={insurance._id}
-                                  value={insurance.companyname}
-                                >
-                                  {insurance.companyname}
-                                </option>
-                              ))}
-                            </Form.Select>
-                            <Form.Control.Feedback type="invalid">
-                              {errors.insurance}
-                            </Form.Control.Feedback>
-                          </Form.Group>
-                        </Col>
+              <Col md={8}>
+                <Form.Label className="small fw-bold text-muted">Note / Remarks</Form.Label>
+                <Form.Control as="textarea" rows={2} name="note" placeholder="Enter a note" value={formData.note} onChange={handleInputChange} />
+              </Col>
+            </Row>
 
-                        {/* Payment Method Dropdown */}
-                        {formData.insurance && (
-                          <Col md={4} className="mb-4">
-                            <Form.Group className="mb-3">
-                              <Form.Label>Select Bill Method</Form.Label>
-                              <Form.Select
-                                id="bill_method"
-                                name="bill_method"
-                                value={formData.bill_method}
-                                onChange={handleInputChange}
-                                isInvalid={errors.bill_method}
-                              >
-                                <option value="" disabled>
-                                  SELECT BILL METHOD
-                                </option>
-                                <option value="cashless">Cashless</option>
-                                <option value="PDC">PDC</option>
-                                <option value="reimbursement">
-                                  Reimbursement
-                                </option>
-                              </Form.Select>
-                              <Form.Control.Feedback type="invalid">
-                                {errors.bill_method}
-                              </Form.Control.Feedback>
-                            </Form.Group>
-                          </Col>
-                        )}
+            {/* TRANSACTION SUMMARY - HIGHLIGHTED AT THE CORNER/BOTTOM */}
+            <div className="mt-5 p-4" style={{ backgroundColor: "#f8f9fa", borderRadius: "10px", border: "1px dashed #cbd5e0" }}>
+              <Row className="justify-content-center text-center">
+                <Col md={4} className="border-end">
+                  <span className="text-info d-block small fw-bold text-uppercase">Sub Total</span>
+                  <h2 className="mb-0 fw-bold">₹ {formData.Sub_Total}</h2>
+                </Col>
+                <Col md={4}>
+                  <span className="text-info d-block small fw-bold text-uppercase">Payable Amount</span>
+                  <h2 className="mb-0 fw-bold" style={{ color: "#00838f" }}>₹ {formData.payableAmount}</h2>
+                </Col>
+              </Row>
+            </div>
+          </Card.Body>
+        </Card>
 
-                        {/* Conditional Fields for PDC */}
-                        {formData.bill_method === "PDC" && (
-                          <>
-                            <Col md={4} className="mb-4">
-                              <Form.Group className="mb-3">
-                                <Form.Label>Enter Cheque No</Form.Label>
-                                <Form.Control
-                                  type="number"
-                                  id="chequeno"
-                                  name="chequeno"
-                                  value={formData.chequeno || ""}
-                                  onChange={handleInputChange}
-                                />
-                              </Form.Group>
-                            </Col>
-                            <Col md={4} className="mb-4">
-                              <Form.Group className="mb-3">
-                                <Form.Label>Enter PDC Amount</Form.Label>
-                                <Form.Control
-                                  type="number"
-                                  id="pdc"
-                                  name="pdc"
-                                  value={formData.pdc || ""}
-                                  onChange={handleInputChange}
-                                />
-                              </Form.Group>
-                            </Col>
-                            <Col md={4} className="mb-4">
-                              <Form.Group className="mb-3">
-                                <Form.Label>Payable Amount</Form.Label>
-                                <Form.Control
-                                  type="number"
-                                  id="payableAmount"
-                                  name="payableAmount"
-                                  value={formData.payableAmount || ""}
-                                  onChange={handleInputChange}
-                                />
-                              </Form.Group>
-                            </Col>
-                          </>
-                        )}
-
-                        {/* Conditional Fields for Reimbursement */}
-                        {formData.bill_method === "reimbursement" && (
-                          <Col md={4} className="mb-4">
-                            <Form.Group className="mb-3">
-                              <Form.Label>Payable Amount</Form.Label>
-                              <Form.Control
-                                type="number"
-                                id="payableAmount"
-                                name="payableAmount"
-                                value={formData.payableAmount || ""}
-                                onChange={handleInputChange}
-                              />
-                            </Form.Group>
-                          </Col>
-                        )}
-
-                        <Col md={4} className="mb-4">
-                          <Form.Group className="mb-3">
-                            <Form.Label>TPA</Form.Label>
-                            <Form.Select
-                              id="tpa"
-                              name="tpa"
-                              value={formData.tpa}
-                              onChange={handleInputChange}
-                              isInvalid={errors.tpa}
-                            >
-                              <option value="">MEDI ASSIST TPA</option>
-                              {tpa.map((tpa) => (
-                                <option key={tpa._id} value={tpa.companyname}>
-                                  {tpa.companyname}
-                                </option>
-                              ))}
-                            </Form.Select>
-                            <Form.Control.Feedback type="invalid">
-                              {errors.tpa}
-                            </Form.Control.Feedback>
-                          </Form.Group>
-                        </Col>
-                      </>
-                    )}
-
-                    {/* Conditional Fields for Non-Insurance */}
-                    {formData.bill_Type === "non_insurance" && (
-                      <>
-                        <Col md={4} className="mb-4">
-                          <Form.Group className="mb-3">
-                            <Form.Label>Discount Amount</Form.Label>
-                            <Form.Control
-                              type="number"
-                              name="discount"
-                              value={formData.discount}
-                              onChange={handleInputChange}
-                            />
-                          </Form.Group>
-                        </Col>
-
-                        <Col md={4} className="mb-4">
-                          <Form.Group className="mb-3">
-                            <Form.Label>Payable Amount</Form.Label>
-                            <Form.Control
-                              type="number"
-                              name="payableAmount"
-                              value={formData.payableAmount}
-                              readonly
-                              onChange={handleInputChange}
-                            />
-                          </Form.Group>
-                        </Col>
-                      </>
-                    )}
-
-                    {/* Conditional Fields for Charity */}
-                    {formData.bill_Type === "charity" && (
-                      <>
-                        <Col md={4} className="mb-4">
-                          <Form.Group className="mb-3">
-                            <Form.Label>Discount Amount</Form.Label>
-                            <Form.Control
-                              type="number"
-                              name="discountAmount"
-                              value={formData.discountAmount}
-                              onChange={handleInputChange}
-                            />
-                          </Form.Group>
-                        </Col>
-
-                        <Col md={4} className="mb-4">
-                          <Form.Group className="mb-3">
-                            <Form.Label>Payable Amount</Form.Label>
-                            <Form.Control
-                              type="number"
-                              name="payableAmount"
-                              value={formData.payableAmount}
-                              onChange={handleInputChange}
-                            />
-                          </Form.Group>
-                        </Col>
-                      </>
-                    )}
-
-                    {/* Note */}
-                    <Col md={4} className="mb-4">
-                      <Form.Group className="mb-3">
-                        <Form.Label>Note </Form.Label>
-                        <Form.Control
-                          as="textarea"
-                          id="note"
-                          name="note"
-                          value={formData.note}
-                          onChange={handleInputChange}
-                        />
-                      </Form.Group>
-                    </Col>
-
-                    {/* Submit and Reset Buttons */}
-                    <Col
-                      md={12}
-                      className="d-flex justify-content-end align-items-end mb-4" 
-                      style={{marginTop:"15px"}}
-                    >
-                      <button
-                        type="button"
-                        onClick={handleReset}
-                        className="btn btn-secondary"
-                        style={{marginBottom:"15px"}}
-                      >
-                        Reset
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={loading}
-                        className="btn btn-primary ms-2"
-                      > 
-                        {loading ? "Submitting..." : "Submit"}
-                      </button>
-                    </Col>
-                  </Row>
-                </Form>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      </Container>
-    </div>
-  );
+        {/* ACTION BUTTONS */}
+        <div className="d-flex justify-content-end gap-3 mb-5">
+          <Button variant="outline-secondary" size="lg" onClick={handleReset} style={{ padding: "10px 40px" }}>Reset</Button>
+          <Button variant="primary" size="lg" type="submit" disabled={loading} style={{ padding: "10px 50px", backgroundColor: "#00acc1", border: "none" }}>
+            {loading ? "Submitting..." : "Submit Invoice"}
+          </Button>
+        </div>
+      </Form>
+    </Container>
+  </div>
+);
 };
 
 export default AddInvoice;

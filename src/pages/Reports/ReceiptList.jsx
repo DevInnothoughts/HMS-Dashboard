@@ -3,6 +3,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { decodeJwt } from "../../utils/decode-jwt";
+import PageBreadcrumb from "../../components/PageBreadcrumb";
+import Swal from 'sweetalert2';
 import {
   Container,
   Row,
@@ -21,14 +23,25 @@ import "../../styles/styles.css";
 import { FilterMatchMode } from "primereact/api";
 import moment from "moment";
 import { Button } from "react-bootstrap";
-
-// --- Assets/Config (Keep these imports if necessary, but typically defined outside) ---
 import logo from "../../assets/images/3.png";
 import labLogo from "../../assets/images/1.png";
 import pharmacyLogo from "../../assets/images/2.png";
 import receiptLogo from "../../assets/images/4.png";
 const BASE_URL = "http://localhost:5100/api";
-const LOCATION = "demo"; // Assuming a default location is needed for API calls
+const LOCATION = "demo";
+
+const Toast = Swal.mixin({
+  toast: true,
+  position: 'top-end',
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.addEventListener('mouseenter', Swal.stopTimer)
+    toast.addEventListener('mouseleave', Swal.resumeTimer)
+  }
+});
+
 
 export default function ReceiptList() {
   // --- State Management ---
@@ -98,15 +111,24 @@ export default function ReceiptList() {
         setReceipts(data.data);
         console.log("📥 Fetched Receipts:", data.data.length);
       } else {
+        Toast.fire({
+          icon: 'error',
+          title: 'Failed to load receipts'
+        });
         console.error("❌ Error fetching receipts:", data.message || "Unknown error");
         setReceipts([]);
       }
     } catch (error) {
+      Toast.fire({
+        icon: 'error',
+        title: 'Network error occurred'
+      });
       console.error("❌ Error fetching receipts:", error);
     } finally {
       setLoading(false);
     }
   }, [fromDate, toDate, currentLocation]);
+
 
   // Load data on date filter change or component mount
   useEffect(() => {
@@ -146,7 +168,13 @@ export default function ReceiptList() {
   // Handles the complex logic of fetching images, creating the HTML, and printing
   const handlePrintReceipt = (selectedReceipt) => {
     if (!selectedReceipt) {
-      alert("No receipt selected for printing.");
+      Swal.fire({
+        title: 'Preparing Print',
+        text: `Opening receipt for ${receipt.patient_name}`,
+        icon: 'info',
+        timer: 1500,
+        showConfirmButton: false
+      });
       return;
     }
 
@@ -155,6 +183,34 @@ export default function ReceiptList() {
       alert("Please allow pop-ups to print the receipt.");
       return;
     }
+
+    const handleDeleteReceipt = async (receiptId) => {
+      const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this receipt deletion!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+      });
+
+      if (result.isConfirmed) {
+        try {
+          const response = await fetch(`${BASE_URL}/V1/receipt/delete/${receiptId}?location=${currentLocation}`, {
+            method: 'DELETE'
+          });
+          if (response.ok) {
+            Swal.fire('Deleted!', 'Receipt has been deleted.', 'success');
+            fetchReceipts();
+          } else {
+            Toast.fire({ icon: 'error', title: 'Delete failed' });
+          }
+        } catch (error) {
+          Toast.fire({ icon: 'error', title: 'Error connecting to server' });
+        }
+      }
+    };
 
     const getBase64Image = (imgUrl) => {
       return new Promise((resolve) => {
@@ -179,7 +235,7 @@ export default function ReceiptList() {
       getBase64Image(pharmacyLogo),
       getBase64Image(receiptLogo),
     ])
-      .then(
+       .then(
         ([mainLogo, labLogoBase64, pharmacyLogoBase64, receiptLogoBase64]) => {
           const amountInWords = numberToWords(selectedReceipt.totalamt - selectedReceipt.discountamt);
 
@@ -196,8 +252,8 @@ export default function ReceiptList() {
                   }
                   .bgdiv { background: #2b9163; padding: 15px; }
                   .maindiv { background: white; border: 1px solid white; border-radius: 15px; padding: 10px; }
-                  .HHClogo { width: 100%; border-color: #ccc; padding-right: 2; margin-right: 50px; }
-                  .Lablogo, .Medicologo { margin-right: 40px;  width: 50%; }
+                  .Lablogo, .Medicologo { margin-right: 10px; width: 60px; }
+                  .HHClogo { width: 200px; }
                   .receipt { width: 80%; height: 380px; }
                   .fa-phone { padding: 3px 4px; border: 1px solid grey; border-radius: 50%; }
                   .amount-box-container { display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-start; }
@@ -228,19 +284,18 @@ export default function ReceiptList() {
                         <td style="width:15%;"><img src="${receiptLogoBase64}" class="receipt"></td>
                         <td style="width:85%;">
                           <table width='100%' border='0'>
-                            <tr>
-                              <td style="width:30%; line-height:40px;">Received From: </td>
-                              <td><p style="border-bottom: dotted; border-color: #ccc; font-weight: 600; text-transform: uppercase;">${selectedReceipt.patientName}</p></td>
-                            </tr>
-                          </table>
+                        <tr>
+                        <td style="width:85px; line-height:40px;">Received From: </td>
+                        <td><p style="font-weight: 600; text-transform: uppercase;">${selectedReceipt.patientName}</p></td>
+                        </tr>
+                         </table>
                           <table width='100%' border='0'>
                             <tr>
                               <td>
-                                For:  <span style="font-weight:600; text-transform:uppercase; border-bottom: dotted; border-color: #ccc;">${selectedReceipt.consultation}</span>
+                                For:  <span style="font-weight:600; text-transform:uppercase;">${selectedReceipt.consultation}</span>
                               </td>
                             </tr>
-                          </table>
-                          
+                          </table>                         
                           <br>
                           <table width='100%' border='0'>
                             <tbody>
@@ -301,7 +356,6 @@ export default function ReceiptList() {
               </body>
             </html>
           `;
-
           receiptWindow.document.write(receiptContent);
           receiptWindow.document.close();
         }
@@ -310,65 +364,70 @@ export default function ReceiptList() {
   };
 
   const sendMail = (receipt) => {
-    alert(`Sending email receipt for ID: ${receipt.receipt_id} (Not implemented)`);
+    Swal.fire({
+      title: 'Feature Coming Soon!',
+      // text: `Emailing receipt for ID: ${receipt.receipt_id} is currently under development.`,
+      text: `Emailing receipt feature is currently under development.`,
+      icon: 'info',
+      confirmButtonColor: '#00bcd4'
+    });
   };
 
   const actionBodyTemplate = (receipt) => (
-    // Use a utility class to center the action items in the cell
     <div className="d-flex align-items-center justify-content-center">
-        {/* Mail Button */}
-        <Button
-            onClick={() => sendMail(receipt)}
-            className="btn-sm btn-icon me-2" // Standard small icon button classes
-            variant="primary" // Use a light background (often white/grey)
-            title="Mail"
-        >
-            <FeatherIcon icon="mail" size="14" />
-        </Button>
-        {/* Print Button */}
-        <Button
-            onClick={() => handlePrintReceipt(receipt)}
-            className="btn-sm btn-icon" // Standard small icon button classes
-            variant="primary" // Use a primary/teal color for the button
-            title="Print"
-        >
-            <FeatherIcon icon="printer" size="14" />
-        </Button>
+      {/* Mail Button */}
+      <Button
+        onClick={() => sendMail(receipt)}
+        className="btn btn-extra-small btn-icon  me-2"
+        variant="primary"
+        title="Mail"
+      >
+        <FeatherIcon icon="mail" size="14" />
+      </Button>
+      {/* Print Button */}
+      <Button
+        onClick={() => handlePrintReceipt(receipt)}
+        className="btn btn-extra-small btn-icon "
+        variant="primary"
+        title="Print"
+      >
+        <FeatherIcon icon="printer" size="14" />
+      </Button>
     </div>
 );
 
-  const renderHeader = () => (
+const renderHeader = () => (
+  <div
+    style={{
+      border: "1px solid #4dd0e1",
+      textAlign: "center",
+      borderRadius: "8px",
+      padding: "10px",
+      backgroundColor: "#e0f7fa",
+      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+    }}
+  >
     <div
       style={{
-        border: "2px solid #4dd0e1",
-        textAlign: "center",
-        borderRadius: "12px",
-        padding: "15px",
-        backgroundColor: "#e0f7fa",
-        boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        gap: "10px",
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: "20px",
-        }}
-      >
-        {/* Global Search Section */}
+
+      <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
         <Form.Group style={{ display: "flex", alignItems: "center", margin: 0 }}>
-           <span
-              style={{
-                marginRight: "10px",
-                fontSize: "16px",
-                fontWeight: "bold",
-                color: "#333",
-                marginBottom: "15px"
-              }}
-            >
-              Search
-            </span>
+          <span
+            style={{
+              marginRight: "10px",
+              fontSize: "13px",
+              fontWeight: "bold",
+              color: "#333",
+            }}
+          >
+            Search
+          </span>
           <InputGroup>
             <Form.Control
               type="search"
@@ -383,220 +442,216 @@ export default function ReceiptList() {
               }
               placeholder="Global Search"
               style={{
-                borderRadius: "8px",
-                border: "2px solid #4dd0e1",
-                padding: "8px 12px",
-                width: "250px",
-                fontSize: "14px",
+                borderRadius: "6px",
+                border: "1px solid #4dd0e1",
+                padding: "5px 8px",
+                width: "200px",
+                fontSize: "12px",
                 transition: "all 0.3s ease",
               }}
             />
           </InputGroup>
         </Form.Group>
+      </div>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          border: "1px solid #4dd0e1",
+          borderRadius: "8px",
+          padding: "8px",
+          backgroundColor: "#f5fcfd",
+        }}
+      >
+        <div>
+          <div style={{ fontSize: "12px", fontWeight: "500", color: "#00838f", marginBottom: "3px" }}>
+            From Date
+          </div>
+          <DatePicker
+            selected={fromDate}
+            onChange={setFromDate}
+            dateFormat="dd-MM-yyyy"
+            placeholderText="Select from date"
+            customInput={<Form.Control style={{ padding: '5px 8px', fontSize: '12px' }} />}
+          />
+        </div>
 
-        {/* Date Picker Section */}
-        <div
+        <div>
+          <div style={{ fontSize: "12px", fontWeight: "500", color: "#00838f", marginBottom: "3px" }}>
+            To Date
+          </div>
+          <DatePicker
+            selected={toDate}
+            onChange={setToDate}
+            dateFormat="dd-MM-yyyy"
+            minDate={fromDate}
+            placeholderText="Select to date"
+            customInput={<Form.Control style={{ padding: '5px 8px', fontSize: '12px' }} />}
+          />
+        </div>
+
+        <Button
+          variant="primary"
+          onClick={fetchReceiptsData}
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "15px",
-            border: "2px solid #4dd0e1",
-            borderRadius: "12px",
-            padding: "15px",
-            backgroundColor: "#f5fcfd",
+            backgroundColor: "#00bcd4",
+            border: "none",
+            borderRadius: "6px",
+            padding: "6px 7px",
+            fontSize: "12px",
+            fontWeight: "500",
+            color: "white",
+            cursor: "pointer",
+            transition: "all 0.3s ease",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+            marginTop: "15px",
           }}
         >
-          {/* From Date Picker */}
-          <div>
-            <div style={{ fontSize: "14px", fontWeight: "500", color: "#00838f", marginBottom: "5px" }}>
-              From Date
-            </div>
-            <DatePicker
-              selected={fromDate}
-              onChange={setFromDate}
-              dateFormat="dd-MM-yyyy"
-              placeholderText="Select from date"
-              customInput={<Form.Control style={{ /* styles */ }} />}
-            />
-          </div>
-
-          {/* To Date Picker */}
-          <div>
-            <div style={{ fontSize: "14px", fontWeight: "500", color: "#00838f", marginBottom: "5px" }}>
-              To Date
-            </div>
-            <DatePicker
-              selected={toDate}
-              onChange={setToDate}
-              dateFormat="dd-MM-yyyy"
-              minDate={fromDate}
-              placeholderText="Select to date"
-              customInput={<Form.Control style={{ /* styles */ }} />}
-            />
-          </div>
-
-          <Button
-            variant="primary"
-            onClick={fetchReceiptsData} // Re-fetch on button click
-            style={{
-              backgroundColor: "#00bcd4",
-              border: "none",
-              borderRadius: "8px",
-              padding: "8px 20px",
-              fontSize: "14px",
-              fontWeight: "500",
-              color: "white",
-              cursor: "pointer",
-              transition: "all 0.3s ease",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              marginTop: "20px",
-            }}
-          >
-            <FeatherIcon icon="refresh-ccw" size={16} className="me-2" />Refresh All Data
-          </Button>
-        </div>
+          <FeatherIcon icon="refresh-ccw" size={13} className="me-2" />Refresh
+        </Button>
       </div>
     </div>
-  );
+  </div>
+);
 
-  return (
-    <div
-      className="themebody-wrap"
-      style={{
-        background: "linear-gradient(to right, #e0f7fa, #80deea)",
-        fontFamily: "'Poppins', Arial, sans-serif",
-        minHeight: "100vh",
-        padding: "20px",
-      }}
-    >
-      <NavBarA pagename="Receipt List" />
-      <div className="theme-body">
-        <Container fluid>
-          <Row>
-            <Col>
-              <Card
-                style={{
-                  borderRadius: "12px",
-                  boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
-                  borderColor: "#00bcd4",
-                  background: "white",
-                  border: "4px solid #00bcd4",
-                }}
-              >
-                <Card.Body>
-                  {loading ? (
-                    <div className="d-flex justify-content-center py-5" style={{ color: "#00bcd4" }}>
-                      <Spinner animation="border" role="status">
-                        <span className="visually-hidden">Loading...</span>
-                      </Spinner>
-                    </div>
-                  ) : (
-                    <DataTable
-                      value={receipts}
-                      paginator
-                      rows={10}
-                      header={renderHeader}
-                      filters={filters} // Use filters state for global filtering
-                      globalFilterFields={[
-                        "receipt_id",
-                        "receipt_date",
-                        "patientName",
-                        "consultation",
-                        "doctorName",
-                        "totalamt",
-                      ]}
-                      responsiveLayout="scroll"
-                    className="datatable-compact-style" 
-                     rowClassName={(rowData, { rowIndex }) => ({
-                        style: {
-                          backgroundColor: rowIndex % 2 === 0 ? "#e0f7fa" : "white",
-                          transition: "background-color 0.3s ease",
-                        },
-                        onMouseOver: (e) => {
-                          e.currentTarget.style.backgroundColor = "#b2ebf2";
-                        },
-                        onMouseOut: (e) => {
-                          e.currentTarget.style.backgroundColor =
-                            rowIndex % 2 === 0 ? "#e0f7fa" : "white";
-                        },
-                      })}
-                      style={{
-                        border: "1px solid #4dd0e1",
-                        marginTop: "5px",
-                        width: "100%",
-                        background: "white",
-                        borderRadius: "8px",
-                        overflow: "hidden",
-                      }}
-                    >
-                      <Column
-                        field="srNo"
-                        header="Sr. No"
-                        body={(rowData, { rowIndex }) => rowIndex + 1}
-                        sortable
-                        headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem" }}
-                      />
-                      <Column
-                        field="receipt_id"
-                        header="Receipt ID"
-                        headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem" }}
-                      />
-                      <Column
-                        field="receipt_date"
-                        header="Receipt Date"
-                        headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem", width:"100px" }}
-                      />
-                      <Column
-                        field="patientName"
-                        header="Patient Name"
-                        headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem", wordBreak: "break-word" }}
-                      />
-                      <Column
-                        field="consultation"
-                        header="Consultation"
-                        headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem" }}
-                      />
-                      <Column
-                        field="doctorName"
-                        header="Doctor Name"
-                        headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem" }}
-                      />
-                      <Column
-                        field="totalamt"
-                        header="Total Amount"
-                        headerClassName="datatable-header-center"
-                        body={(rowData) => `₹ ${parseFloat(rowData.totalamt).toFixed(2)}`}
-                        style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem" }}
-                      />
-                      <Column
-                        field="discountamt"
-                        header="Discount Amount"
-                        headerClassName="datatable-header-center"
-                        body={(rowData) => `₹ ${parseFloat(rowData.discountamt || 0).toFixed(2)}`}
-                        style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem" }}
-                      />
-                      <Column
-                        header="Actions"
-                        body={actionBodyTemplate}
-                        exportable={false}
-                        headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", alignContent: "center", padding: "0.75rem" }}
-                      />
-                    </DataTable>
-                  )}
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
-        </Container>
-      </div>
+return (
+  <div
+    className="themebody-wrap"
+    style={{
+      background: "linear-gradient(to right, #e0f7fa, #80deea)",
+      fontFamily: "'Poppins', Arial, sans-serif",
+      minHeight: "100vh",
+      padding: "20px",
+    }}
+  >
+    <PageBreadcrumb pagename="Receipt List" />
+    <NavBarA pagename="Receipt List" />
+    <div className="theme-body">
+      <Container fluid>
+        <Row>
+          <Col>
+            <Card
+              style={{
+                borderRadius: "12px",
+                boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
+                borderColor: "#00bcd4",
+                background: "white",
+                border: "1.5px solid #00bcd4",
+              }}
+            >
+              <Card.Body>
+                {loading ? (
+                  <div className="d-flex justify-content-center py-5" style={{ color: "#00bcd4" }}>
+                    <Spinner animation="border" role="status">
+                      <span className="visually-hidden">Loading...</span>
+                    </Spinner>
+                  </div>
+                ) : (
+                  <DataTable
+                    value={receipts}
+                    paginator
+                    rows={10}
+                    header={renderHeader}
+                    filters={filters}
+                    globalFilterFields={[
+                      "receipt_id",
+                      "receipt_date",
+                      "patientName",
+                      "consultation",
+                      "doctorName",
+                      "totalamt",
+                    ]}
+                    responsiveLayout="scroll"
+                    className="datatable-compact-style"
+                    rowClassName={(rowData, { rowIndex }) => ({
+                      style: {
+                        backgroundColor: rowIndex % 2 === 0 ? "#e0f7fa" : "white",
+                        transition: "background-color 0.3s ease",
+                      },
+                      onMouseOver: (e) => {
+                        e.currentTarget.style.backgroundColor = "#b2ebf2";
+                      },
+                      onMouseOut: (e) => {
+                        e.currentTarget.style.backgroundColor =
+                          rowIndex % 2 === 0 ? "#e0f7fa" : "white";
+                      },
+                    })}
+
+                  >
+                    <Column
+                      field="srNo"
+                      header="Sr. No"
+                      body={(rowData, { rowIndex }) => rowIndex + 1}
+                      sortable
+                      headerClassName="datatable-header-center"
+                      style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem", width: "90px" }}
+                    />
+                    <Column
+                      field="receipt_id"
+                      header="Receipt ID"
+                      body={(rowData) => rowData.receipt_id || "-"}
+                      headerClassName="datatable-header-center"
+                      style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem", width: "90px" }}
+                    />
+                    <Column
+                      field="receipt_date"
+                      header="Receipt Date"
+                      body={(rowData) => rowData.receipt_date || "-"}
+                      headerClassName="datatable-header-center"
+                      style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem", width: "100px" }}
+                    />
+                    <Column
+                      field="patientName"
+                      header="Patient Name"
+                      body={(rowData) => rowData.patientName || "-"}
+                      headerClassName="datatable-header-center"
+                      style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem", wordBreak: "break-word", width: "180px" }}
+                    />
+                    <Column
+                      field="consultation"
+                      header="Consultation"
+                      body={(rowData) => rowData.consultation || "-"}
+                      headerClassName="datatable-header-center"
+                      style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem", wordBreak: "break-word", width: "140px" }}
+                    />
+                    <Column
+                      field="doctorName"
+                      header="Doctor Name"
+                      body={(rowData) => rowData.doctorName || "-"}
+                      headerClassName="datatable-header-center"
+                      style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem", wordBreak: "break-word", width: "180px" }}
+                    />
+                    <Column
+                      field="totalamt"
+                      header="Total Amount"
+                      headerClassName="datatable-header-center"
+                      body={(rowData) => `₹ ${parseFloat(rowData.totalamt).toFixed(2)}`}
+                      style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem", width: "120px" }}
+                    />
+                    <Column
+                      field="discountamt"
+                      header="Discount Amount"
+                      headerClassName="datatable-header-center"
+                      body={(rowData) => `₹ ${parseFloat(rowData.discountamt || 0).toFixed(2)}`}
+                      style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem", width: "120px" }}
+                    />
+                    <Column
+                      header="Actions"
+                      body={actionBodyTemplate}
+                      exportable={false}
+                      headerClassName="datatable-header-center"
+                      style={{ border: "1px solid #90caf9", alignContent: "center", padding: "0.75rem", width: "100px" }}
+                    />
+                  </DataTable>
+                )}
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
     </div>
-  );
+  </div>
+);
 }
 

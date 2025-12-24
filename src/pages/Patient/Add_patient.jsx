@@ -1,6 +1,9 @@
 /* eslint-disable no-unused-vars */
-import React, { useState, useEffect } from "react"; // Added useEffect
+import React, { useState, useEffect } from "react"; 
 import { Row, Col, Form, Container, Card } from "react-bootstrap";
+import PageBreadcrumb from "../../components/PageBreadcrumb";
+import { decodeJwt } from "../../utils/decode-jwt";
+import Swal from 'sweetalert2';
 import {
   CountryDropdown,
   StateDropdown,
@@ -9,10 +12,19 @@ import {
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import NavBarP from "../../components/NavbarP";
-import { toast } from "react-hot-toast"; // Assuming react-hot-toast is imported globally or available
 
-// Assuming these helpers are defined elsewhere
-import { decodeJwt } from "../../utils/decode-jwt";
+// Professional Toast configuration for quick non-intrusive success alerts
+const Toast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true,
+    didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer)
+        toast.addEventListener('mouseleave', Swal.resumeTimer)
+    }
+});
 
 const hospitalData = {
   Cardiology: {
@@ -49,6 +61,15 @@ const generateUID = () => {
 const BASE_URL = "http://localhost:5100/api";
 
 export default function Add_Patient() {
+  const [errors, setErrors] = useState({});
+  const [country, setCountry] = useState(null);
+  const [state, setState] = useState(null);
+  const [city, setCity] = useState(null);
+  const [selectedDepartment, setSelectedDepartment] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedDoctor, setSelectedDoctor] = useState("");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState('default');
   const [formData, setFormData] = useState({
     prefix: "",
     date: new Date().toISOString().split("T")[0],
@@ -69,18 +90,19 @@ export default function Add_Patient() {
     city: "",
     patientHistory: "",
   });
-
-  const [errors, setErrors] = useState({});
-  const [country, setCountry] = useState(null);
-  const [state, setState] = useState(null);
-  const [city, setCity] = useState(null);
-  const [selectedDepartment, setSelectedDepartment] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedDoctor, setSelectedDoctor] = useState("");
-  const [showAddModal, setShowAddModal] = useState(false); // Unused state, but kept
-  const [currentLocation, setCurrentLocation] = useState('default'); // ADDED: Location state
-
   // --- HIPAA: Fetch Current Location from JWT ---
+  const dropdownStyle = {
+    width: "100%",
+    height: "38px", // Standard Bootstrap input height
+    borderRadius: "6px", // Slightly softer corners to match
+    border: "2px solid #dee2e6", // Thinner border
+    fontSize: "14px", // Matches standard text size
+    color: "#495057",
+    backgroundColor: "#fff",
+    transition: "border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out",
+    boxShadow: "none",
+  };
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -192,8 +214,12 @@ export default function Add_Patient() {
         });
 
         if (response.ok) {
-          toast.success("Patient profile created successfully.");
-          // Reset form after successful submission (Data Minimization)
+          Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: 'Patient profile created successfully.',
+            confirmButtonColor: '#00bcd4'
+          });          // Reset form after successful submission (Data Minimization)
           setFormData({
             prefix: "",
             date: new Date().toISOString().split("T")[0],
@@ -222,19 +248,27 @@ export default function Add_Patient() {
 
         } else {
           const errorData = await response.json();
-          // HIPAA: Use generic, non-specific error message
-          toast.error(
-            errorData.message || "Failed to save patient details. Please try again."
-          );
+          // ERROR ALERT FROM BACKEND
+          Swal.fire({
+            icon: 'error',
+            title: 'Saving Failed',
+            text: errorData.message || "Failed to save patient details. Please try again."
+          });
         }
       } catch (error) {
-        console.error("Network Error:", error);
-        // HIPAA: Use generic network error message
-        toast.error("A network error occurred while saving patient details.");
+        // NETWORK ERROR ALERT
+        Swal.fire({
+            icon: 'error',
+            title: 'Connection Error',
+            text: 'A network error occurred while saving patient details.'
+        });
       }
     } else {
-      console.log("Validation errors exist.");
-      toast.error("Please correct the validation errors before submitting.");
+      // VALIDATION ALERT
+      Toast.fire({
+        icon: 'warning',
+        title: 'Please correct the validation errors'
+      });
     }
   };
 
@@ -287,6 +321,7 @@ export default function Add_Patient() {
         fontFamily: "'Poppins', Arial, sans-serif",
       }}
     >
+      <PageBreadcrumb pagename="Add New Patient Page" />
       <NavBarP pagename="Add Patient Details" />
       <Container fluid>
         <Row>
@@ -301,13 +336,9 @@ export default function Add_Patient() {
               }}
               show={showAddModal}
             >
-              <Card.Body style={{ padding: "20px" }}>
+             <Card.Body style={{ padding: "20px" }}>
                  <h4 className="section-title" style={{marginBottom:"15px"}}>
                      Add New Patient Details
-                      <span className="ms-2 text-secondary" style={{ fontSize: '0.8em' }}>
-                        (Clinic Location: {currentLocation ? currentLocation.toUpperCase() : "Loading..."}
-                        )
-                      </span>
                     </h4>
                 <Form>
                   {/* Basic Information Section */}
@@ -357,10 +388,6 @@ export default function Add_Patient() {
                             showMonthDropdown
                             showYearDropdown
                             dropdownMode="select"
-                            style={{
-                              height: "38px",
-                              width: "100%",
-                            }}
                             wrapperClassName="date-picker-wrapper"
                           />
                         </Form.Group>
@@ -434,7 +461,6 @@ export default function Add_Patient() {
                     </Row>
                   </div>
 
-                  {/* Contact Information Section */}
                   <div className="form-section">
                     <h5 className="section-title" style={{ marginBottom: "15px" }}>
                       <i className="fa fa-address-book me-2"></i>
@@ -473,7 +499,7 @@ export default function Add_Patient() {
                       <Col md={5}>
                         <Form.Group className="mb-3">
                           <Form.Label>
-                            Email <span style={styles.required}>*</span>
+                            Email 
                           </Form.Label>
                           <Form.Control
                             type="email"
@@ -490,113 +516,67 @@ export default function Add_Patient() {
                     </Row>
                   </div>
 
-                  {/* Address Information Section */}
-                  <div className="form-section">
-                    <h5 className="section-title" style={{ marginBottom: "15px" }}>
-                      <i className="fa fa-map-marker me-2"></i>
-                      Address Information
-                    </h5>
-                    <Row>
-                      <Col md={5} >
-                        <Form.Group className="p-4">
-                          <Form.Label>
-                            Country <span style={styles.required}>*</span>
-                          </Form.Label>
-                          <CountryDropdown
-                            className="custom-dropdown"
-                            searchable={true}
-                            value={country}
-                            style={{
-                              borderRadius: "8px",
-                              border: "3px solid #dee2e6",
-                              transition: "all 0.3s ease",
-                              backgroundColor: "#ffffff",
-                              color: "#2c3e50",
-                              fontSize: "0.95rem",
-                            }}
-                            onChange={(e, value) => {
-                              handleSetCountry(value);
-                              setFormData((prev) => ({
-                                ...prev,
-                                country: value.name,
-                              }));
-                            }}
-                          />
-                          {errors.country && (
-                            <p className="error-message">{errors.country}</p>
-                          )}
-                        </Form.Group>
-                      </Col>
+                 <div className="form-section">
+                  <h5 className="section-title" style={{ marginBottom: "15px" }}>
+                    <i className="fa fa-map-marker me-2"></i>
+                    Address Information
+                  </h5>
+                  {/* Added g-4 for consistent spacing between columns */}
+                  <Row className="g-4"> 
+                    {/* xs={12} makes it full width on mobile, md={4} aligns 3 in a row on desktop */}
+                    <Col xs={12} md={4}>
+                      <Form.Group>
+                        <Form.Label>
+                          Country <span style={styles.required}>*</span>
+                        </Form.Label>
+                        <CountryDropdown
+                          className="custom-dropdown"
+                          searchable={true}
+                          value={country}
+                          style={dropdownStyle}
+                          onChange={(e, value) => handleSetCountry(value)}
+                        />
+                        {errors.country && <p className="error-message">{errors.country}</p>}
+                      </Form.Group>
+                    </Col>
 
-                      {/* State Dropdown */}
-                      <Col md={6} >
-                        <Form.Group className="p-4">
-                          <Form.Label>
-                            State <span style={styles.required}>*</span>
-                          </Form.Label>
-                          <StateDropdown
-                            className="custom-dropdown"
-                            country={country}
-                            searchable={true}
-                            value={state}
-                            style={{
-                              borderRadius: "8px",
-                              border: "3px solid #dee2e6",
-                              transition: "all 0.3s ease",
-                              backgroundColor: "#ffffff",
-                              color: "#2c3e50",
-                              fontSize: "0.95rem",
-                            }}
-                            onChange={(e, value) => {
-                              handleSetState(value);
-                              setFormData((prev) => ({
-                                ...prev,
-                                state: value.name,
-                              }));
-                            }}
-                          />
-                          {errors.state && (
-                            <p className="error-message">{errors.state}</p>
-                          )}
-                        </Form.Group>
-                      </Col>
-                      {/* City Dropdown */}
-                      <Col md={4} >
-                        <Form.Group className="p-4">
-                          <Form.Label>
-                            City <span style={styles.required}>*</span>
-                          </Form.Label>
-                          <CityDropdown
-                            className="custom-dropdown"
-                            country={country}
-                            searchable={true}
-                            state={state}
-                            value={city}
-                            style={{
-                              borderRadius: "8px",
-                              border: "3px solid #dee2e6",
-                              transition: "all 0.3s ease",
-                              backgroundColor: "#ffffff",
-                              color: "#2c3e50",
-                              fontSize: "0.95rem",
-                            }}
-                            onChange={(e, value) => {
-                              handleSetCity(value);
-                              setFormData((prev) => ({
-                                ...prev,
-                                city: value.name,
-                              }));
-                            }}
-                          />
-                          {errors.city && (
-                            <p className="error-message">{errors.city}</p>
-                          )}
-                        </Form.Group>
-                      </Col>
-                    </Row>
-                  </div>
+                    <Col xs={12} md={4}>
+                      <Form.Group>
+                        <Form.Label>
+                          State <span style={styles.required}>*</span>
+                        </Form.Label>
+                        <StateDropdown
+                          className="custom-dropdown"
+                          country={country}
+                          searchable={true}
+                          value={state}
+                          style={dropdownStyle}
+                          onChange={(e, value) => handleSetState(value)}
+                        />
+                        {errors.state && <p className="error-message">{errors.state}</p>}
+                      </Form.Group>
+                    </Col>
 
-                  {/* Medical Information Section */}
+                    <Col xs={12} md={4}>
+                      <Form.Group>
+                        <Form.Label>
+                          City <span style={styles.required}>*</span>
+                        </Form.Label>
+                        <CityDropdown
+                          className="custom-dropdown"
+                          country={country}
+                          searchable={true}
+                          state={state}
+                          value={city}
+                          style={dropdownStyle}
+                          onChange={(e, value) => handleSetCity(value)}
+                        />
+                        {errors.city && <p className="error-message">{errors.city}</p>}
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                </div>
+
                   <div className="form-section">
                     <h5 className="section-title" style={{ marginBottom: "15px" }}>
                       <i className="fa fa-heartbeat me-2"></i>
@@ -605,7 +585,7 @@ export default function Add_Patient() {
                     <Row>
                       <Col md={3}>
                         <Form.Group className="mb-3">
-                          <Form.Label>Blood Group</Form.Label>
+                          <Form.Label>Blood Group</Form.Label><span style={styles.required}>*</span>
                           <Form.Control
                             as="select"
                             name="blood_group"
@@ -681,7 +661,6 @@ export default function Add_Patient() {
                     </Row>
                   </div>
 
-                  {/* Appointment Information Section */}
                   <div className="form-section">
                     <h5 className="section-title" style={{ marginBottom: "15px" }}>
                       <i className="fa fa-calendar me-2"></i>
@@ -754,9 +733,6 @@ export default function Add_Patient() {
                     </Row>
                   </div>
 
-                  <style>{/* ... (CSS styles remain unchanged) ... */}</style>
-
-                  {/* Form Buttons */}
                   <div
                     className="form-section"
                     style={{
@@ -767,45 +743,56 @@ export default function Add_Patient() {
                   >
                     <button
                       type="button"
-                      className="btn btn-primary"
-                      onClick={() => handleSubmit("save")}
-                    >
-                      Create Patient Profile
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-danger ms-2"
+                      className="btn btn-danger "
                       onClick={() => {
-                        // Reset all form fields
-                        setFormData({
-                          prefix: "",
-                          date: new Date().toISOString().split("T")[0],
-                          uid: generateUID(),
-                          patientName: "",
-                          sex: "",
-                          mobileNo: "",
-                          alternateNo: "",
-                          age: "",
-                          blood_group: "",
-                          weight: "",
-                          email: "",
-                          height: "",
-                          country: "",
-                          state: "",
-                          city: "",
-                          patientHistory: "",
+                        // CANCEL CONFIRMATION
+                        Swal.fire({
+                            title: 'Are you sure?',
+                            text: "All unsaved patient data will be lost.",
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#d33',
+                            cancelButtonColor: '#aaa',
+                            confirmButtonText: 'Yes, Reset Form'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                setFormData({
+                                    prefix: "",
+                                    date: new Date().toISOString().split("T")[0],
+                                    uid: generateUID(),
+                                    patientName: "",
+                                    sex: "",
+                                    mobileNo: "",
+                                    alternateNo: "",
+                                    age: "",
+                                    blood_group: "",
+                                    weight: "",
+                                    email: "",
+                                    height: "",
+                                    country: "",
+                                    state: "",
+                                    city: "",
+                                    patientHistory: "",
+                                });
+                                setCountry(null);
+                                setState(null);
+                                setCity(null);
+                                setSelectedDepartment("");
+                                setSelectedCategory("");
+                                setSelectedDoctor("");
+                                setErrors({});
+                            }
                         });
-
-                        setCountry(null);
-                        setState(null);
-                        setCity(null);
-                        setSelectedDepartment("");
-                        setSelectedCategory("");
-                        setSelectedDoctor("");
-                        setErrors({});
                       }}
                     >
                       Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary ms-2"
+                      onClick={() => handleSubmit("save")}
+                    >
+                      Create Patient Profile
                     </button>
                   </div>
                 </Form>
