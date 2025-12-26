@@ -348,23 +348,26 @@ export default function All_patient() {
   // Add this function to calculate age from birth date
   const calculateAge = (birthDate) => {
     if (!birthDate) return "";
-
+  
+    // Convert birthDate to a standard format if it's DD/MM/YYYY
+    let formattedDate = birthDate;
+    if (typeof birthDate === 'string' && birthDate.includes('/')) {
+      const [day, month, year] = birthDate.split('/');
+      formattedDate = `${year}-${month}-${day}`;
+    }
+  
     const today = new Date();
-    const birth = new Date(birthDate);
-
+    const birth = new Date(formattedDate);
+  
     if (isNaN(birth.getTime())) return "";
-
+  
     let age = today.getFullYear() - birth.getFullYear();
     const monthDiff = today.getMonth() - birth.getMonth();
-
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < birth.getDate())
-    ) {
+  
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
       age--;
     }
-
-    // Prevent negative ages for future dates
+  
     return age < 0 ? 0 : age;
   };
 
@@ -695,7 +698,7 @@ export default function All_patient() {
       ...formData,
       date: formData.date || "",
       birth_date: formData.birth_date,
-      age: formData.age,
+      age: calculateAge(formData.birth_date),
       specific_work: specificWork,
       reference_type,
       ref,
@@ -3026,6 +3029,14 @@ export default function All_patient() {
                         field="age"
                         header="Age"
                         headerClassName="datatable-header-center"
+                        body={(rowData) => {
+                          // If the database already has an age number, use it.
+                          // Otherwise, calculate it from the birth_date field.
+                          if (rowData.age && !isNaN(rowData.age) && rowData.age < 150) {
+                            return rowData.age;
+                          }
+                          return calculateAge(rowData.birth_date);
+                        }}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
