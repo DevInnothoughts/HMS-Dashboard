@@ -149,42 +149,54 @@ export default function Appointment_list() {
 
   const handleGenerateReceipt = async () => {
     const { subtotal, payable } = calculateTotals();
+  
+    // 1. Format billing items into the array of arrays expected by the backend
+    // We use parseFloat and "|| 0" to prevent the NaN error you encountered
+    const consultationData = billingItems
+      .filter(item => item.label) // Only send items that have a type selected
+      .map(item => [
+        item.label, 
+        receiptForm.registrationType ? 0 : (parseFloat(item.amount) || 0)
+      ]);
+  
     const payload = {
-      appId: selectedAppointment.appointment_id,
-      patientName: selectedAppointment.patient_name,
-      doctorName: selectedAppointment.doctor_name,
-      location: currentLocation,
-      billingItems: billingItems,
-      consultation: receiptForm.consultationType,
-      registrationType: receiptForm.registrationType,
-      regComment: receiptForm.regComment,
-      discountamt: parseFloat(receiptForm.discountAmt) || 0,
-      discountNote: receiptForm.discountNote,
+      appointment_id: selectedAppointment.appointment_id,
+      doctor_id: selectedAppointment.doctor_id, // Ensure this ID is available in your state
+      appointment_date: moment(new Date()).format("DD-MM-YYYY"),
+      consultations: consultationData, // Correct format: [['TYPE', 500], ...]
       paymentmode: receiptForm.paymentMode,
-      totalamt: subtotal,
-      payableamt: payable
+      expectedamt: parseFloat(payable) || 0,
+      discountamt: parseFloat(receiptForm.discountAmt) || 0,
+      discountnote: receiptForm.discountNote || "",
+      comment: receiptForm.regComment || "",
+      // Match the switch case names in your backend
+      PosMachine: receiptForm.posTerminal, 
+      MachineType: "Android" // Or however you track machine categories
     };
-
+  
+    console.log("🚀 Payload to be sent:", payload);
+  
     try {
-      const response = await fetch(`${BASE_URL}/V1/appointment/saveReceipt`, {
+      const response = await fetch(`${BASE_URL}/V1/appointment/saveReceipt?location=${currentLocation}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-
+  
+      const result = await response.json();
+  
       if (response.ok) {
         Swal.fire("Success", "Receipt Generated Successfully", "success");
         setShowReceiptModal(false);
         navigate("/receipt-list");
       } else {
-        const errorData = await response.json();
-        Swal.fire("Error", errorData.message || "Internal Server Error", "error");
+        Swal.fire("Error", result.data || result.message || "Failed to save receipt", "error");
       }
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Frontend Error:", error);
+      Swal.fire("Error", "Network or Server Error", "error");
     }
   };
-
   // const handleReceiptFormChange = (e) => {
   //   const { name, value } = e.target;
   //   setReceiptForm(prev => ({
@@ -941,6 +953,7 @@ export default function Appointment_list() {
           </Row>
         </Container>
       </div>
+
       <Modal show={showReceiptModal} onHide={() => setShowReceiptModal(false)} size="lg" centered>
         <Modal.Header closeButton style={{ backgroundColor: "#e0f7fa", borderBottom: "1px solid #4dd0e1" }}>
           <Modal.Title style={{ fontSize: "18px", fontWeight: "600", color: "#00838f" }}>
@@ -1174,7 +1187,7 @@ export default function Appointment_list() {
                     onChange={handleReceiptFormChange}
                   >
                     <option value="">Select Terminal</option>
-                    {["HDFC", "BHARAT PE 1", "BHARAT PE 2", "PINE LABS", "OFFLINE"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    {["HDFC","BharatPe", "BharatPe1", "BharatPe2", "PINE LABS","TEST", "OFFLINE"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
                   </Form.Select>
                 </Col>
               </Row>
