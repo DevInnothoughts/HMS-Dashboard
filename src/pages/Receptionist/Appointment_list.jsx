@@ -149,54 +149,115 @@ export default function Appointment_list() {
 
   const handleGenerateReceipt = async () => {
     const { subtotal, payable } = calculateTotals();
-  
-    // 1. Format billing items into the array of arrays expected by the backend
-    // We use parseFloat and "|| 0" to prevent the NaN error you encountered
+
     const consultationData = billingItems
-      .filter(item => item.label) // Only send items that have a type selected
-      .map(item => [
-        item.label, 
-        receiptForm.registrationType ? 0 : (parseFloat(item.amount) || 0)
-      ]);
-  
+        .filter(item => item.label)
+        .map(item => [item.label, parseFloat(item.amount) || 0]);
+
     const payload = {
-      appointment_id: selectedAppointment.appointment_id,
-      doctor_id: selectedAppointment.doctor_id, // Ensure this ID is available in your state
-      appointment_date: moment(new Date()).format("DD-MM-YYYY"),
-      consultations: consultationData, // Correct format: [['TYPE', 500], ...]
-      paymentmode: receiptForm.paymentMode,
-      expectedamt: parseFloat(payable) || 0,
-      discountamt: parseFloat(receiptForm.discountAmt) || 0,
-      discountnote: receiptForm.discountNote || "",
-      comment: receiptForm.regComment || "",
-      // Match the switch case names in your backend
-      PosMachine: receiptForm.posTerminal, 
-      MachineType: "Android" // Or however you track machine categories
+        appointment_id: selectedAppointment.appointment_id,
+        doctor_id: selectedAppointment.doctor_id,
+        appointment_date: moment(new Date()).format("DD-MM-YYYY"),
+        consultations: consultationData,
+        paymentmode: receiptForm.paymentMode,
+        expectedamt: parseFloat(payable) || 0,
+        discountamt: parseFloat(receiptForm.discountAmt) || 0,
+        discountnote: receiptForm.discountNote || "",
+        comment: receiptForm.regComment || "",
+        PosMachine: receiptForm.posTerminal,
+        MachineType: "OPD"
     };
-  
-    console.log("🚀 Payload to be sent:", payload);
-  
+
     try {
-      const response = await fetch(`${BASE_URL}/V1/appointment/saveReceipt?location=${currentLocation}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-  
-      const result = await response.json();
-  
-      if (response.ok) {
-        Swal.fire("Success", "Receipt Generated Successfully", "success");
-        setShowReceiptModal(false);
-        navigate("/receipt-list");
-      } else {
-        Swal.fire("Error", result.data || result.message || "Failed to save receipt", "error");
-      }
+        const response = await fetch(`${BASE_URL}/V1/appointment/saveReceipt?location=${currentLocation}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+        console.log(result);
+        if (result.statusCode === 201 || result.statusCode === 200) { // This handles 200/201 (Cash/Instant Success)
+          Swal.fire("Success", "Receipt Generated Successfully", "success");
+          setShowReceiptModal(false);
+          navigate("/receipt-list");
+        } else if (result.statusCode === 202 && ( result.data?.result === 'success' || result.data?.stat === 'success')) {
+            // This handles the "Pending Digital" case
+            showPaymentPendingPopup(result.data.reference_id, payload, result.data.pos_tid);
+        } else {
+            Swal.fire("Error", result.message || "Failed to initiate payment", "error");
+        }
     } catch (error) {
-      console.error("Frontend Error:", error);
-      Swal.fire("Error", "Network or Server Error", "error");
+        console.error("Frontend Error:", error);
+        Swal.fire("Error", "Server Communication Failed", "error");
     }
-  };
+};
+
+const showPaymentPendingPopup = (referenceId, originalPayload) => {
+  Swal.fire({
+      title: 'Transaction in Progress',
+      html: `
+          <div style="padding: 10px;">
+              <div class="spinner-border text-info mb-3" role="status"></div>
+              <p><strong>Waiting for card swipe...</strong></p>
+              <p class="text-muted small">Reference ID: ${referenceId}</p>
+              <hr/>
+              <p style="font-size: 13px;">Please check the POS terminal and click "Check Status" once the swipe is completed.</p>
+          </div>
+      `,
+      icon: 'info',
+      allowOutsideClick: false,
+      showCancelButton: true,
+      confirmButtonText: 'Check Status',
+      cancelButtonText: 'Cancel Payment',
+      confirmButtonColor: '#00bcd4',
+      cancelButtonColor: '#cfd8dc',
+      showLoaderOnConfirm: true,
+      // preConfirm handles the manual status check
+      preConfirm: async () => {
+        try {
+            console.log("Check status data sending: ", referenceId, originalPayload);
+            const response = await fetch(`${BASE_URL}/V1/appointment/checkPaymentStatus?location=${currentLocation}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    receiptData: originalPayload, // Wrap this so backend can destructure easily
+                    reference_id: referenceId,
+                    transaction_id: originalPayload.transaction_id, // From backend initiation
+                    PosMachine: originalPayload.PosMachine,
+                    MachineType: originalPayload.MachineType
+                }),
+            });
+
+            const result = await response.json();
+
+            // Logic check: Backend ApiResponse usually has statusCode or success property
+            if (response.ok && (result.success || result.statusCode === 201)) {
+                return result; 
+            } else {
+                Swal.showValidationMessage(result.message || 'Swipe not detected yet');
+                return false;
+            }
+        } catch (error) {
+            Swal.showValidationMessage(`Check failed: ${error.message}`);
+        }
+    }
+  }).then((result) => {
+      if (result.isConfirmed && result.value?.success) {
+          Swal.fire({
+              title: "Paid!",
+              text: "Receipt Generated Successfully",
+              icon: "success",
+              timer: 2000
+          });
+          setShowReceiptModal(false);
+          navigate("/receipt-list");
+      } else if (result.dismiss === Swal.DismissReason.cancel) {
+          Swal.fire("Cancelled", "The payment process was stopped.", "warning");
+      }
+  });
+};
+
   // const handleReceiptFormChange = (e) => {
   //   const { name, value } = e.target;
   //   setReceiptForm(prev => ({

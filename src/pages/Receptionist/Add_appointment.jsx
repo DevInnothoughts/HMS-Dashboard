@@ -345,7 +345,7 @@ export default function Add_appointment() {
       // --- END PAYLOAD MAPPING ---
 
       // HIPAA: Generalized logging
-      console.log("Submitting appointment request.");
+      console.log("Submitting appointment request");
 
       try {
         const response = await fetch(
