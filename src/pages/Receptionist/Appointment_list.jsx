@@ -176,14 +176,16 @@ export default function Appointment_list() {
         });
 
         const result = await response.json();
-        console.log(result);
+        // console.log(result);
         if (result.statusCode === 201 || result.statusCode === 200) { // This handles 200/201 (Cash/Instant Success)
           Swal.fire("Success", "Receipt Generated Successfully", "success");
           setShowReceiptModal(false);
           navigate("/receipt-list");
         } else if (result.statusCode === 202 && ( result.data?.result === 'success' || result.data?.stat === 'success')) {
             // This handles the "Pending Digital" case
-            showPaymentPendingPopup(result.data.reference_id, payload, result.data.pos_tid);
+            // showPaymentPendingPopup(result.data.transaction_id, payload, result.data.pos_tid);
+            showPaymentPendingPopup(result.data.transaction_id, payload);
+
         } else {
             Swal.fire("Error", result.message || "Failed to initiate payment", "error");
         }
@@ -230,7 +232,7 @@ const showPaymentPendingPopup = (referenceId, originalPayload) => {
             });
 
             const result = await response.json();
-
+            // console.log("status check backend response: ", result);
             // Logic check: Backend ApiResponse usually has statusCode or success property
             if (response.ok && (result.success || result.statusCode === 201)) {
                 return result; 
@@ -585,7 +587,7 @@ const showPaymentPendingPopup = (referenceId, originalPayload) => {
             />
             <ActionButton
               title="Confirm"
-              onClick={() => handleProcessUpdate(appointment_id, 'confirmAppointment', 'Appointment confirmed!')}
+              onClick={() => handleProcessUpdate(appointment_id, 'confirmAppointment', patient_type, patient_phone, 'Appointment confirmed!')}
               disabled={isConfirmed}
               icon="check"
 
@@ -619,7 +621,7 @@ const showPaymentPendingPopup = (referenceId, originalPayload) => {
             <ActionButton
               title="Receipts"
               onClick={() => { setSelectedAppointment(rowData); setShowReceiptModal(true); }}
-              disabled={!isConsultationDone}
+              disabled={!isConsultationDone || isReceiptDone}
               icon="credit-card"
             />
           </>
