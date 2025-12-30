@@ -176,7 +176,7 @@ export default function Appointment_list() {
         });
 
         const result = await response.json();
-        // console.log(result);
+        // console.log("SaVE receipt : ",result);
         if (result.statusCode === 201 || result.statusCode === 200) { // This handles 200/201 (Cash/Instant Success)
           Swal.fire("Success", "Receipt Generated Successfully", "success");
           setShowReceiptModal(false);
@@ -184,7 +184,7 @@ export default function Appointment_list() {
         } else if (result.statusCode === 202 && ( result.data?.result === 'success' || result.data?.stat === 'success')) {
             // This handles the "Pending Digital" case
             // showPaymentPendingPopup(result.data.transaction_id, payload, result.data.pos_tid);
-            showPaymentPendingPopup(result.data.transaction_id, payload);
+            showPaymentPendingPopup(result.data.transaction_id, payload, result.data);
 
         } else {
             Swal.fire("Error", result.message || "Failed to initiate payment", "error");
@@ -195,7 +195,31 @@ export default function Appointment_list() {
     }
 };
 
-const showPaymentPendingPopup = (referenceId, originalPayload) => {
+const cancelPayment = async (referenceId, originalPayload, apidata) => {
+  try {
+    const response = await fetch(
+      `${BASE_URL}/V1/appointment/cancelPaymentStatus?location=${currentLocation}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reference_id: referenceId,
+          transaction_id: originalPayload.transaction_id,
+          PosMachine: originalPayload.PosMachine,
+          MachineType: originalPayload.MachineType,
+          apidata: apidata,
+        })
+      }
+    );
+
+    return await response.json();
+  } catch (err) {
+    throw new Error(err.message);
+  }
+};
+
+
+const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
   Swal.fire({
       title: 'Transaction in Progress',
       html: `
@@ -244,7 +268,7 @@ const showPaymentPendingPopup = (referenceId, originalPayload) => {
             Swal.showValidationMessage(`Check failed: ${error.message}`);
         }
     }
-  }).then((result) => {
+  }).then(async (result) => {
       if (result.isConfirmed && result.value?.success) {
           Swal.fire({
               title: "Paid!",
@@ -254,8 +278,40 @@ const showPaymentPendingPopup = (referenceId, originalPayload) => {
           });
           setShowReceiptModal(false);
           navigate("/receipt-list");
-      } else if (result.dismiss === Swal.DismissReason.cancel) {
-          Swal.fire("Cancelled", "The payment process was stopped.", "warning");
+        } else if (result.dismiss === Swal.DismissReason.cancel) {
+          // Show a confirm dialog specifically for cancellation to prevent accidental clicks
+          const confirmCancel = await Swal.fire({
+              title: 'Are you sure?',
+              text: "This will stop the payment request on the machine.",
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonText: 'Yes, Cancel it!',
+              cancelButtonText: 'No, Wait'
+          });
+      
+          if (confirmCancel.isConfirmed) {
+              try {
+                  Swal.fire({
+                      title: "Cancelling...",
+                      allowOutsideClick: false,
+                      didOpen: () => Swal.showLoading()
+                  });
+                  // console.log(referenceId, originalPayload, apidata);
+                  const cancelResult = await cancelPayment(referenceId, originalPayload, apidata);
+                  // console.log(cancelResult);
+                  if (cancelResult?.success || cancelResult?.status) {
+                      await Swal.fire("Cancelled", "POS request stopped.", "success");
+                      setShowReceiptModal(false); // Close the main billing modal
+                  } else {
+                      Swal.fire("Error", cancelResult?.message || "Remote cancel failed. Please cancel manually on machine.", "error");
+                  }
+              } catch (err) {
+                  Swal.fire("Error", "Server error during cancellation", "error");
+              }
+          } else {
+              // If they click 'No, Wait', re-open the pending popup
+              showPaymentPendingPopup(referenceId, originalPayload, apidata);
+          }
       }
   });
 };
