@@ -363,7 +363,7 @@ const LOCATIONS_LIST = [
   "Andheri", "Sahakar Nagar", "Gurgaon Sector 14", "Gurgaon Sector 49",
   "Kemps Corner", "Latur", "Indore", "Mysore", "Undri", "Vashi",
   "Hinjewadi", "Lucknow", "Kalaburagi", "Rajaji Nagar", "Sarjapura",
-  "Katraj", "lead", "demo", "Demo Server"
+  "Katraj", "lead", "Pratiksha Local", "Demo Server"
 ].sort();
 
 const BASE_URL = "http://localhost:5100/api";
