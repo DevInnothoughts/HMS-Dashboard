@@ -44,16 +44,13 @@ const getDynamicRowsFromInvoice = (invoice) => {
   if (!invoice) return { dynamicRows: [], Sub_Total: "0.00" };
 
   if (invoice.title && typeof invoice.title === 'string') {
-    const entries = invoice.title.split(',');
-
-    entries.forEach(entry => {
+    invoice.title.split(',').forEach(entry => {
       const parts = entry.split(':');
       if (parts.length === 2) {
         const label = parts[0].trim();
-        const valueStr = parts[1].trim();
-        const value = parseFloat(valueStr) || 0;
+        const value = parseFloat(parts[1].trim()) || 0;
 
-        if (value > 0) {
+        if (label !== "") {
           dynamicRows.push({
             label: label,
             value: value.toFixed(2),
@@ -85,8 +82,7 @@ const getDynamicRowsFromInvoice = (invoice) => {
     'ot_amt': 'OT Charges',
   };
 
-  const Sub_Total = parseFloat(invoice.totalamt) || titleCalculatedTotal;
-
+  const Sub_Total = titleCalculatedTotal > 0 ? titleCalculatedTotal : (parseFloat(invoice.totalamt) || 0);
   return { dynamicRows, Sub_Total: Sub_Total.toFixed(2) };
 };
 
@@ -336,7 +332,10 @@ const InvoiceList = () => {
   const addDynamicRow = () => {
     setModalInvoiceData(prevModalData => ({
       ...prevModalData,
-      dynamicRows: [...prevModalData.dynamicRows, { label: "", value: "", field: "" }],
+      dynamicRows: [
+        ...prevModalData.dynamicRows, 
+        { label: "", value: "0.00", field: "title_parsed" }
+      ],
     }));
   };
 
@@ -411,16 +410,21 @@ const InvoiceList = () => {
       return;
     }
 
-    const payload = {
-      ...selectedInvoice,
-      ...modalInvoiceData,
-      location: currentLocation,
-      totalamt: modalInvoiceData.Sub_Total,
-      payable_amt: modalInvoiceData.payableAmount,
-      discount: modalInvoiceData.discount,
-      pdc: modalInvoiceData.pdc,
+    const titleString = modalInvoiceData.dynamicRows
+    .filter(row => row.label.trim() !== "") // Remove empty rows
+    .map(row => `${row.label.trim()}: ${parseFloat(row.value || 0).toFixed(2)}`)
+    .join(', ');
 
-    };
+  const payload = {
+    ...selectedInvoice,
+    ...modalInvoiceData,
+    title: titleString, // This is the crucial part for your backend
+    location: currentLocation,
+    totalamt: modalInvoiceData.Sub_Total,
+    payable_amt: modalInvoiceData.payableAmount,
+    discount: modalInvoiceData.discount,
+    pdc: modalInvoiceData.pdc,
+  };
 
     console.log("Attempting to save invoice changes for ID:", selectedInvoice.invoice_id);
 
@@ -437,13 +441,9 @@ const InvoiceList = () => {
       const result = await response.json();
 
       if (response.ok) {
-        setInvoices((prevInvoices) =>
-          prevInvoices.map((invoice) =>
-            invoice.invoice_id === selectedInvoice.invoice_id
-              ? { ...invoice, ...payload }
-              : invoice
-          )
-        );
+        setInvoices((prev) => prev.map(inv => 
+          inv.invoice_id === selectedInvoice.invoice_id ? { ...inv, title: titleString } : inv
+        ));
         Swal.fire({
           icon: 'success',
           title: 'Updated!',
@@ -1096,7 +1096,7 @@ const InvoiceList = () => {
                           alignItems: "center"
                         }}>
                           <span style={{ fontSize: "1rem", fontWeight: "500" }}>Payable Amount:</span>
-                          <span style={{ fontSize: "1.5rem", fontWeight: "600" }}>₹ {parseFloat(selectedInvoice.payable_amt).toLocaleString()}</span>
+                          <span style={{ fontSize: "1.5rem", fontWeight: "600" }}>₹ {parseFloat(modalInvoiceData.payableAmount).toLocaleString()}</span>
                         </div>
                       </div>
                     </div>
