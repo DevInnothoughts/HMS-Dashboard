@@ -27,23 +27,23 @@ import logo from "../../assets/images/3.png";
 import labLogo from "../../assets/images/1.png";
 import pharmacyLogo from "../../assets/images/2.png";
 import receiptLogo from "../../assets/images/4.png";
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 const LOCATION = "demo"; // Assuming a default location is needed for API calls
 
 export default function ReceiptList() {
   // --- State Management ---
-  const [currentLocation, setCurrentLocation] = useState('default');
+  const [currentLocation, setCurrentLocation] = useState("default");
   const [receipts, setReceipts] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [fromDate, setFromDate] = useState(moment().startOf('day').toDate());
-  const [toDate, setToDate] = useState(moment().endOf('day').toDate());
+  const [fromDate, setFromDate] = useState(moment().startOf("day").toDate());
+  const [toDate, setToDate] = useState(moment().endOf("day").toDate());
   const [filters, setFilters] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
 
   useEffect(() => {
     // 1. Get the token
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (token) {
       // 2. Decode the token
       const payload = decodeJwt(token);
@@ -67,7 +67,8 @@ export default function ReceiptList() {
     setLoading(true);
     try {
       if (!currentLocation || !fromDate || !toDate) {
-        if (!currentLocation) console.warn("Waiting for location to be set from JWT...");
+        if (!currentLocation)
+          console.warn("Waiting for location to be set from JWT...");
         return;
       }
 
@@ -98,7 +99,10 @@ export default function ReceiptList() {
         setReceipts(data.data);
         console.log("📥 Fetched Receipts:", data.data.length);
       } else {
-        console.error("❌ Error fetching receipts:", data.message || "Unknown error");
+        console.error(
+          "❌ Error fetching receipts:",
+          data.message || "Unknown error"
+        );
         setReceipts([]);
       }
     } catch (error) {
@@ -111,7 +115,7 @@ export default function ReceiptList() {
   // Load data on date filter change or component mount
   useEffect(() => {
     // Check currentLocation dependency here
-    if (currentLocation !== 'default') {
+    if (currentLocation !== "default") {
       fetchReceiptsData();
     }
   }, [fetchReceiptsData, currentLocation]);
@@ -120,16 +124,50 @@ export default function ReceiptList() {
 
   // Helper function for converting number to words (kept isolated)
   const numberToWords = (num) => {
-    const ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"];
-    const teens = ["Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
-    const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+    const ones = [
+      "",
+      "One",
+      "Two",
+      "Three",
+      "Four",
+      "Five",
+      "Six",
+      "Seven",
+      "Eight",
+      "Nine",
+    ];
+    const teens = [
+      "Ten",
+      "Eleven",
+      "Twelve",
+      "Thirteen",
+      "Fourteen",
+      "Fifteen",
+      "Sixteen",
+      "Seventeen",
+      "Eighteen",
+      "Nineteen",
+    ];
+    const tens = [
+      "",
+      "",
+      "Twenty",
+      "Thirty",
+      "Forty",
+      "Fifty",
+      "Sixty",
+      "Seventy",
+      "Eighty",
+      "Ninety",
+    ];
 
     const toWords = (n) => {
       if (n === 0) return "";
       if (n < 10) return ones[n];
       if (n < 20) return teens[n - 10];
       if (n < 100) return tens[Math.floor(n / 10)] + " " + ones[n % 10];
-      if (n < 1000) return ones[Math.floor(n / 100)] + " Hundred " + toWords(n % 100);
+      if (n < 1000)
+        return ones[Math.floor(n / 100)] + " Hundred " + toWords(n % 100);
       return toWords(Math.floor(n / 1000)) + " Thousand " + toWords(n % 1000);
     };
 
@@ -181,7 +219,9 @@ export default function ReceiptList() {
     ])
       .then(
         ([mainLogo, labLogoBase64, pharmacyLogoBase64, receiptLogoBase64]) => {
-          const amountInWords = numberToWords(selectedReceipt.totalamt - selectedReceipt.discountamt);
+          const amountInWords = numberToWords(
+            selectedReceipt.totalamt - selectedReceipt.discountamt
+          );
 
           const receiptContent = `
             <html>
@@ -216,8 +256,12 @@ export default function ReceiptList() {
                         <td style="width:15%; text-align:center; "><img src="${pharmacyLogoBase64}" class="Medicologo"></td>
                         <td style="width:40%;">
                           <table width='100%' border='0' style= "margin-left:180px;">
-                          <tr><td>Date:&nbsp;<b>${selectedReceipt.receipt_date}</b></td></tr>
-                          <tr margin><td>Receipt No:&nbsp;<b>${selectedReceipt.receipt_id}</b></td></tr>
+                          <tr><td>Date:&nbsp;<b>${
+                            selectedReceipt.receipt_date
+                          }</b></td></tr>
+                          <tr margin><td>Receipt No:&nbsp;<b>${
+                            selectedReceipt.receipt_id
+                          }</b></td></tr>
                           </table>
                         </td>
                       </tr>
@@ -230,13 +274,17 @@ export default function ReceiptList() {
                           <table width='100%' border='0'>
                             <tr>
                               <td style="width:30%; line-height:40px;">Received From: </td>
-                              <td><p style="border-bottom: dotted; border-color: #ccc; font-weight: 600; text-transform: uppercase;">${selectedReceipt.patientName}</p></td>
+                              <td><p style="border-bottom: dotted; border-color: #ccc; font-weight: 600; text-transform: uppercase;">${
+                                selectedReceipt.patientName
+                              }</p></td>
                             </tr>
                           </table>
                           <table width='100%' border='0'>
                             <tr>
                               <td>
-                                For:  <span style="font-weight:600; text-transform:uppercase; border-bottom: dotted; border-color: #ccc;">${selectedReceipt.consultation}</span>
+                                For:  <span style="font-weight:600; text-transform:uppercase; border-bottom: dotted; border-color: #ccc;">${
+                                  selectedReceipt.consultation
+                                }</span>
                               </td>
                             </tr>
                           </table>
@@ -246,7 +294,9 @@ export default function ReceiptList() {
                             <tbody>
                               <tr>
                                 <td style="width:60%; vertical-align: top;">
-                                  Payment Mode: &nbsp;<b>${selectedReceipt.paymentmode}</b><br>
+                                  Payment Mode: &nbsp;<b>${
+                                    selectedReceipt.paymentmode
+                                  }</b><br>
                                   In Words: &nbsp;<b>${amountInWords}</b><br><br>
                                   <b>Next Appointment: </b>No appointment scheduled<br>
                                   <br>
@@ -257,9 +307,16 @@ export default function ReceiptList() {
                                 </td>
                                 <td style="width:40%; vertical-align: top;">
                                   <div class="amount-box-container">
-                                    <div class="amount-box"><b>Total:</b> Rs. ${selectedReceipt.totalamt}/-</div>
-                                    <div class="amount-box" style="margin-top: 5px;"><b>Discount:</b> Rs. ${selectedReceipt.discountamt}/-</div>
-                                    <div class="amount-box" style="margin-top: 5px;"><b>Net Amount:</b> Rs. ${(selectedReceipt.totalamt - selectedReceipt.discountamt)}/-</div>
+                                    <div class="amount-box"><b>Total:</b> Rs. ${
+                                      selectedReceipt.totalamt
+                                    }/-</div>
+                                    <div class="amount-box" style="margin-top: 5px;"><b>Discount:</b> Rs. ${
+                                      selectedReceipt.discountamt
+                                    }/-</div>
+                                    <div class="amount-box" style="margin-top: 5px;"><b>Net Amount:</b> Rs. ${
+                                      selectedReceipt.totalamt -
+                                      selectedReceipt.discountamt
+                                    }/-</div>
                                   </div>
                                 </td>
                               </tr>
@@ -310,32 +367,34 @@ export default function ReceiptList() {
   };
 
   const sendMail = (receipt) => {
-    alert(`Sending email receipt for ID: ${receipt.receipt_id} (Not implemented)`);
+    alert(
+      `Sending email receipt for ID: ${receipt.receipt_id} (Not implemented)`
+    );
   };
 
   const actionBodyTemplate = (receipt) => (
     // Use a utility class to center the action items in the cell
     <div className="d-flex align-items-center justify-content-center">
-        {/* Mail Button */}
-        <Button
-            onClick={() => sendMail(receipt)}
-            className="btn-sm btn-icon me-2" // Standard small icon button classes
-            variant="primary" // Use a light background (often white/grey)
-            title="Mail"
-        >
-            <FeatherIcon icon="mail" size="14" />
-        </Button>
-        {/* Print Button */}
-        <Button
-            onClick={() => handlePrintReceipt(receipt)}
-            className="btn-sm btn-icon" // Standard small icon button classes
-            variant="primary" // Use a primary/teal color for the button
-            title="Print"
-        >
-            <FeatherIcon icon="printer" size="14" />
-        </Button>
+      {/* Mail Button */}
+      <Button
+        onClick={() => sendMail(receipt)}
+        className="btn-sm btn-icon me-2" // Standard small icon button classes
+        variant="primary" // Use a light background (often white/grey)
+        title="Mail"
+      >
+        <FeatherIcon icon="mail" size="14" />
+      </Button>
+      {/* Print Button */}
+      <Button
+        onClick={() => handlePrintReceipt(receipt)}
+        className="btn-sm btn-icon" // Standard small icon button classes
+        variant="primary" // Use a primary/teal color for the button
+        title="Print"
+      >
+        <FeatherIcon icon="printer" size="14" />
+      </Button>
     </div>
-);
+  );
 
   const renderHeader = () => (
     <div
@@ -357,18 +416,20 @@ export default function ReceiptList() {
         }}
       >
         {/* Global Search Section */}
-        <Form.Group style={{ display: "flex", alignItems: "center", margin: 0 }}>
-           <span
-              style={{
-                marginRight: "10px",
-                fontSize: "16px",
-                fontWeight: "bold",
-                color: "#333",
-                marginBottom: "15px"
-              }}
-            >
-              Search
-            </span>
+        <Form.Group
+          style={{ display: "flex", alignItems: "center", margin: 0 }}
+        >
+          <span
+            style={{
+              marginRight: "10px",
+              fontSize: "16px",
+              fontWeight: "bold",
+              color: "#333",
+              marginBottom: "15px",
+            }}
+          >
+            Search
+          </span>
           <InputGroup>
             <Form.Control
               type="search"
@@ -408,7 +469,14 @@ export default function ReceiptList() {
         >
           {/* From Date Picker */}
           <div>
-            <div style={{ fontSize: "14px", fontWeight: "500", color: "#00838f", marginBottom: "5px" }}>
+            <div
+              style={{
+                fontSize: "14px",
+                fontWeight: "500",
+                color: "#00838f",
+                marginBottom: "5px",
+              }}
+            >
               From Date
             </div>
             <DatePicker
@@ -416,13 +484,28 @@ export default function ReceiptList() {
               onChange={setFromDate}
               dateFormat="dd-MM-yyyy"
               placeholderText="Select from date"
-              customInput={<Form.Control style={{ /* styles */ }} />}
+              customInput={
+                <Form.Control
+                  style={
+                    {
+                      /* styles */
+                    }
+                  }
+                />
+              }
             />
           </div>
 
           {/* To Date Picker */}
           <div>
-            <div style={{ fontSize: "14px", fontWeight: "500", color: "#00838f", marginBottom: "5px" }}>
+            <div
+              style={{
+                fontSize: "14px",
+                fontWeight: "500",
+                color: "#00838f",
+                marginBottom: "5px",
+              }}
+            >
               To Date
             </div>
             <DatePicker
@@ -431,7 +514,15 @@ export default function ReceiptList() {
               dateFormat="dd-MM-yyyy"
               minDate={fromDate}
               placeholderText="Select to date"
-              customInput={<Form.Control style={{ /* styles */ }} />}
+              customInput={
+                <Form.Control
+                  style={
+                    {
+                      /* styles */
+                    }
+                  }
+                />
+              }
             />
           </div>
 
@@ -452,7 +543,8 @@ export default function ReceiptList() {
               marginTop: "20px",
             }}
           >
-            <FeatherIcon icon="refresh-ccw" size={16} className="me-2" />Refresh All Data
+            <FeatherIcon icon="refresh-ccw" size={16} className="me-2" />
+            Refresh All Data
           </Button>
         </div>
       </div>
@@ -485,7 +577,10 @@ export default function ReceiptList() {
               >
                 <Card.Body>
                   {loading ? (
-                    <div className="d-flex justify-content-center py-5" style={{ color: "#00bcd4" }}>
+                    <div
+                      className="d-flex justify-content-center py-5"
+                      style={{ color: "#00bcd4" }}
+                    >
                       <Spinner animation="border" role="status">
                         <span className="visually-hidden">Loading...</span>
                       </Spinner>
@@ -506,10 +601,11 @@ export default function ReceiptList() {
                         "totalamt",
                       ]}
                       responsiveLayout="scroll"
-                    className="datatable-compact-style" 
-                     rowClassName={(rowData, { rowIndex }) => ({
+                      className="datatable-compact-style"
+                      rowClassName={(rowData, { rowIndex }) => ({
                         style: {
-                          backgroundColor: rowIndex % 2 === 0 ? "#e0f7fa" : "white",
+                          backgroundColor:
+                            rowIndex % 2 === 0 ? "#e0f7fa" : "white",
                           transition: "background-color 0.3s ease",
                         },
                         onMouseOver: (e) => {
@@ -535,58 +631,100 @@ export default function ReceiptList() {
                         body={(rowData, { rowIndex }) => rowIndex + 1}
                         sortable
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem" }}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                        }}
                       />
                       <Column
                         field="receipt_id"
                         header="Receipt ID"
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem" }}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                        }}
                       />
                       <Column
                         field="receipt_date"
                         header="Receipt Date"
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem", width:"100px" }}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "100px",
+                        }}
                       />
                       <Column
                         field="patientName"
                         header="Patient Name"
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem", wordBreak: "break-word" }}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          wordBreak: "break-word",
+                        }}
                       />
                       <Column
                         field="consultation"
                         header="Consultation"
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem" }}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                        }}
                       />
                       <Column
                         field="doctorName"
                         header="Doctor Name"
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem" }}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                        }}
                       />
                       <Column
                         field="totalamt"
                         header="Total Amount"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => `₹ ${parseFloat(rowData.totalamt).toFixed(2)}`}
-                        style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem" }}
+                        body={(rowData) =>
+                          `₹ ${parseFloat(rowData.totalamt).toFixed(2)}`
+                        }
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                        }}
                       />
                       <Column
                         field="discountamt"
                         header="Discount Amount"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => `₹ ${parseFloat(rowData.discountamt || 0).toFixed(2)}`}
-                        style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem" }}
+                        body={(rowData) =>
+                          `₹ ${parseFloat(rowData.discountamt || 0).toFixed(2)}`
+                        }
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                        }}
                       />
                       <Column
                         header="Actions"
                         body={actionBodyTemplate}
                         exportable={false}
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", alignContent: "center", padding: "0.75rem" }}
+                        style={{
+                          border: "1px solid #90caf9",
+                          alignContent: "center",
+                          padding: "0.75rem",
+                        }}
                       />
                     </DataTable>
                   )}
@@ -599,4 +737,3 @@ export default function ReceiptList() {
     </div>
   );
 }
-

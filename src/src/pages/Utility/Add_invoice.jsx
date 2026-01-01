@@ -3,7 +3,7 @@ import PageBreadcrumb from "../../components/PageBreadcrumb";
 import { Row, Col, Form, Container, Card } from "react-bootstrap";
 import { decodeJwt } from "../../utils/decode-jwt";
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const AddInvoice = () => {
   const initialFormData = {
@@ -39,36 +39,47 @@ const AddInvoice = () => {
   const [insurance, setInsurance] = useState([]); // State for insurance dropdown
   const [tpa, setTpa] = useState([]);
 
-  const [currentLocation, setCurrentLocation] = useState(null); 
-  
+  const [currentLocation, setCurrentLocation] = useState(null);
+
   // --- Effect to determine current location ---
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (token) {
-        const payload = decodeJwt(token);
-        if (payload && payload.jobLocation) {
-            // console.log("PAYLOAD LOC: ", payload.jobLocation);
-            setCurrentLocation(payload.jobLocation);
-        }
+      const payload = decodeJwt(token);
+      if (payload && payload.jobLocation) {
+        // console.log("PAYLOAD LOC: ", payload.jobLocation);
+        setCurrentLocation(payload.jobLocation);
+      }
     }
   }, []);
 
   useEffect(() => {
     if (!currentLocation) return;
-  
+
     const fetchDropdowns = async () => {
       try {
         const [cRes, sRes, iRes, tRes] = await Promise.all([
-          fetch(`${BASE_URL}/V1/invoice/consultant_dropdown?location=${currentLocation}`),
-          fetch(`${BASE_URL}/V1/invoice/surgeon_dropdown?location=${currentLocation}`),
-          fetch(`${BASE_URL}/V1/invoice/insurance_co_dropdown?location=${currentLocation}`),
-          fetch(`${BASE_URL}/V1/invoice/tpa_dropdown?location=${currentLocation}`)
+          fetch(
+            `${BASE_URL}/V1/invoice/consultant_dropdown?location=${currentLocation}`
+          ),
+          fetch(
+            `${BASE_URL}/V1/invoice/surgeon_dropdown?location=${currentLocation}`
+          ),
+          fetch(
+            `${BASE_URL}/V1/invoice/insurance_co_dropdown?location=${currentLocation}`
+          ),
+          fetch(
+            `${BASE_URL}/V1/invoice/tpa_dropdown?location=${currentLocation}`
+          ),
         ]);
-  
+
         const [c, s, i, t] = await Promise.all([
-          cRes.json(), sRes.json(), iRes.json(), tRes.json()
+          cRes.json(),
+          sRes.json(),
+          iRes.json(),
+          tRes.json(),
         ]);
-  
+
         if (cRes.ok) setConsultants(c.data ?? []);
         if (sRes.ok) setSurgeons(s.data ?? []);
         if (iRes.ok) setInsurance(i.data ?? []);
@@ -77,10 +88,9 @@ const AddInvoice = () => {
         console.error("Dropdown fetch failed:", err);
       }
     };
-  
+
     fetchDropdowns();
   }, [currentLocation]);
-  
 
   // Validate form
   const validate = () => {
@@ -189,13 +199,16 @@ const AddInvoice = () => {
       setLoading(true);
 
       try {
-        const response = await fetch(`${BASE_URL}/V1/invoice/addInvoice?location=${currentLocation}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        });
+        const response = await fetch(
+          `${BASE_URL}/V1/invoice/addInvoice?location=${currentLocation}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(formData),
+          }
+        );
 
         const data = await response.json();
 
@@ -242,15 +255,24 @@ const AddInvoice = () => {
                 borderColor: "#00bcd4",
                 background: "white",
                 border: "1px solid #00bcd4",
-                padding:"15px",
+                padding: "15px",
               }}
             >
               <Card.Body>
                 <Form onSubmit={handleSubmit}>
-                     <h4 style={{marginBottom:"20px"}}>Add Invoice Details <span className="ms-2 text-secondary" style={{ fontSize: '0.8em' }}>
-                        (Clinic Location: {currentLocation ? currentLocation.toUpperCase() : "Loading..."}
-                        )
-                      </span></h4>
+                  <h4 style={{ marginBottom: "20px" }}>
+                    Add Invoice Details{" "}
+                    <span
+                      className="ms-2 text-secondary"
+                      style={{ fontSize: "0.8em" }}
+                    >
+                      (Clinic Location:{" "}
+                      {currentLocation
+                        ? currentLocation.toUpperCase()
+                        : "Loading..."}
+                      )
+                    </span>
+                  </h4>
                   <Row>
                     {/* Invoice No */}
                     <Col md={4} className="mb-4">
@@ -360,7 +382,7 @@ const AddInvoice = () => {
                       </Form.Group>
                     </Col>
 
-                     {/* Discharge Date */}
+                    {/* Discharge Date */}
                     <Col md={4} className="mb-4">
                       <Form.Group className="mb-3">
                         <Form.Label>Discharge Date </Form.Label>
@@ -498,8 +520,7 @@ const AddInvoice = () => {
                               type="button"
                               onClick={() => deleteDynamicRow(index)}
                               className="btn btn-danger"
-                              style={{ width: "10%"}}
-                        
+                              style={{ width: "10%" }}
                             >
                               -
                             </button>
@@ -509,7 +530,7 @@ const AddInvoice = () => {
                           type="button"
                           onClick={addDynamicRow}
                           className="btn btn-success"
-                          style={{marginBottom:"10px"}}
+                          style={{ marginBottom: "10px" }}
                         >
                           + Add Row
                         </button>
@@ -770,14 +791,14 @@ const AddInvoice = () => {
                     {/* Submit and Reset Buttons */}
                     <Col
                       md={12}
-                      className="d-flex justify-content-end align-items-end mb-4" 
-                      style={{marginTop:"15px"}}
+                      className="d-flex justify-content-end align-items-end mb-4"
+                      style={{ marginTop: "15px" }}
                     >
                       <button
                         type="button"
                         onClick={handleReset}
                         className="btn btn-secondary"
-                        style={{marginBottom:"15px"}}
+                        style={{ marginBottom: "15px" }}
                       >
                         Reset
                       </button>
@@ -785,7 +806,7 @@ const AddInvoice = () => {
                         type="submit"
                         disabled={loading}
                         className="btn btn-primary ms-2"
-                      > 
+                      >
                         {loading ? "Submitting..." : "Submit"}
                       </button>
                     </Col>

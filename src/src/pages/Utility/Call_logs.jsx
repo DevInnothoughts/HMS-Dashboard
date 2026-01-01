@@ -22,7 +22,7 @@ import "../../styles/styles.css";
 import { toast } from "react-hot-toast";
 
 // REVERTED: Retaining the original API URL as requested.
-export const BASE_URL = "http://localhost:5100/api"; 
+export const BASE_URL = "http://194.195.117.79:5100/api";
 
 export default function Call_logs() {
   const [CallLogs, setCallLogs] = useState([]);
@@ -46,8 +46,8 @@ export default function Call_logs() {
   const [timeSlots, setTimeSlots] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
   const [enquiries, setEnquiries] = useState([]);
-  const [currentLocation, setCurrentLocation] = useState('');
-  
+  const [currentLocation, setCurrentLocation] = useState("");
+
   function formatDate(date) {
     return new Date(date);
   }
@@ -56,17 +56,16 @@ export default function Call_logs() {
   const [toDate, setToDate] = useState(new Date());
 
   useEffect(() => {
-      const token = localStorage.getItem('token');
-      if (token) {
-          const payload = decodeJwt(token);
-          if (payload && payload.jobLocation) {
-              // console.log(payload.jobLocation);
-              setCurrentLocation(payload.jobLocation);
-              // console.log(currentLocation);
-          }
+    const token = localStorage.getItem("token");
+    if (token) {
+      const payload = decodeJwt(token);
+      if (payload && payload.jobLocation) {
+        // console.log(payload.jobLocation);
+        setCurrentLocation(payload.jobLocation);
+        // console.log(currentLocation);
       }
-    }, []);
-  
+    }
+  }, []);
 
   const handleAddAppointmentClick = (rowData) => {
     const today = new Date();
@@ -146,47 +145,46 @@ export default function Call_logs() {
   };
 
   const fetchDropdownData = useCallback(async () => {
-      try {
-        const endpoints = [
-          `${BASE_URL}/V1/appointment/fdeDropdown?location=${currentLocation}`,
-          `${BASE_URL}/V1/appointment/doctorDropdown?location=${currentLocation}`,
-        ];
+    try {
+      const endpoints = [
+        `${BASE_URL}/V1/appointment/fdeDropdown?location=${currentLocation}`,
+        `${BASE_URL}/V1/appointment/doctorDropdown?location=${currentLocation}`,
+      ];
 
-        const [fdeResponse, doctorResponse] = await Promise.all(
-          endpoints.map(url =>
-            fetch(url, {
-              method: "GET",
-              headers: { "Content-Type": "application/json" },
-            }).then(res => res.json())
-          )
-        );
+      const [fdeResponse, doctorResponse] = await Promise.all(
+        endpoints.map((url) =>
+          fetch(url, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+          }).then((res) => res.json())
+        )
+      );
 
-        setFdeList(Array.isArray(fdeResponse.data) ? fdeResponse.data : []);
-        setDoctors(Array.isArray(doctorResponse.data) ? doctorResponse.data : []);
+      setFdeList(Array.isArray(fdeResponse.data) ? fdeResponse.data : []);
+      setDoctors(Array.isArray(doctorResponse.data) ? doctorResponse.data : []);
+    } catch (error) {
+      console.error("Error fetching dropdown data:", error.message);
+      toast.error("Failed to load selection data.");
+    }
+  }, [currentLocation]);
 
-      } catch (error) {
-        console.error("Error fetching dropdown data:", error.message);
-        toast.error("Failed to load selection data.");
-      }
-    }, [currentLocation]); 
+  // Wait until currentLocation is available before fetching
+  useEffect(() => {
+    if (!currentLocation) return; // ⛔ stop here until JWT is decoded
 
-    // Wait until currentLocation is available before fetching
-    useEffect(() => {
-      if (!currentLocation) return; // ⛔ stop here until JWT is decoded
-
-      fetchCallLogsData();
-      fetchDropdownData();
-
-    }, [currentLocation, fromDate, toDate]);
-
+    fetchCallLogsData();
+    fetchDropdownData();
+  }, [currentLocation, fromDate, toDate]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     const newValue = type === "checkbox" ? checked : value;
 
     if (name === "doctor_id") {
-      const selectedDoctor = doctors.find((doc) => String(doc.doctor_id) === value);
-      
+      const selectedDoctor = doctors.find(
+        (doc) => String(doc.doctor_id) === value
+      );
+
       setFormData((prev) => ({
         ...prev,
         doctor_id: value,
@@ -195,9 +193,9 @@ export default function Call_logs() {
       return;
     }
 
-    if (name === "FDE_Name") { 
+    if (name === "FDE_Name") {
       const selectedFDE = fdeList.find((fde) => String(fde.FDEID) === value);
-      
+
       setFormData((prev) => ({
         ...prev,
         FDE_Name: value,
@@ -223,7 +221,7 @@ export default function Call_logs() {
 
     if (name === "FDE_Name") {
       const selectedFDE = fdeList.find((fde) => String(fde.FDEID) === value);
-      
+
       setEnquiryForm((prev) => ({
         ...prev,
         FDE_Name: value,
@@ -280,7 +278,10 @@ export default function Call_logs() {
         note: formData.note.trim(),
       };
 
-      console.log("Sending note update request for IVR ID:", selectedCallLog.ivr_id);
+      console.log(
+        "Sending note update request for IVR ID:",
+        selectedCallLog.ivr_id
+      );
 
       const response = await fetch(
         `${BASE_URL}/V1/ivrdata/editNote/${selectedCallLog.ivr_id}?location=${currentLocation}`,
@@ -312,7 +313,7 @@ export default function Call_logs() {
       toast.error("An error occurred while updating the note.");
     }
   };
-  
+
   // const actionBodyTemplate = (rowData) => (
   //   <div className="cart-action" style={{ display: "flex", gap: "5px" }}>
   //     <Button
@@ -350,7 +351,7 @@ export default function Call_logs() {
   //     >
   //       <FeatherIcon icon="plus-square" className="w-18" />
   //     </Button>
-      
+
   //     <Button
   //       variant="btn"
   //       onClick={() => handleNoteClick(rowData.note, rowData)}
@@ -372,37 +373,35 @@ export default function Call_logs() {
   // );
 
   const actionBodyTemplate = (rowData) => (
-    <div
-        className="d-flex align-items-center justify-content-center"
-    >
-        <Button
-            variant="primary"
-            onClick={() => handleEnquiryClick(rowData)}
-            className="enquiry-btn btn-sm btn-icon me-2"
-            title="Enquiry"
-        >
-            <FeatherIcon icon="message-circle" size="14" /> 
-        </Button>
-        
-        <Button
-            variant="primary"
-            onClick={() => handleAddAppointmentClick(rowData)}
-            className="appointment-btn btn-sm btn-icon me-2" 
-            title="Add Appointment"
-        >
-            <FeatherIcon icon="plus-square" size="14" />
-        </Button>
-        
-        <Button
-            variant="primary"
-            onClick={() => handleNoteClick(rowData.note, rowData)}
-            className="note-btn btn-sm btn-icon" 
-            title="Add Notes"
-        >
-            <FeatherIcon icon="file-text" size="14" />
-        </Button>
+    <div className="d-flex align-items-center justify-content-center">
+      <Button
+        variant="primary"
+        onClick={() => handleEnquiryClick(rowData)}
+        className="enquiry-btn btn-sm btn-icon me-2"
+        title="Enquiry"
+      >
+        <FeatherIcon icon="message-circle" size="14" />
+      </Button>
+
+      <Button
+        variant="primary"
+        onClick={() => handleAddAppointmentClick(rowData)}
+        className="appointment-btn btn-sm btn-icon me-2"
+        title="Add Appointment"
+      >
+        <FeatherIcon icon="plus-square" size="14" />
+      </Button>
+
+      <Button
+        variant="primary"
+        onClick={() => handleNoteClick(rowData.note, rowData)}
+        className="note-btn btn-sm btn-icon"
+        title="Add Notes"
+      >
+        <FeatherIcon icon="file-text" size="14" />
+      </Button>
     </div>
-);
+  );
 
   const renderHeader = () => (
     <div
@@ -439,16 +438,16 @@ export default function Call_logs() {
             }}
           >
             <span
-            style={{
-                marginRight: "10px", 
-                fontSize: "16px", 
-                fontWeight: "bold", 
+              style={{
+                marginRight: "10px",
+                fontSize: "16px",
+                fontWeight: "bold",
                 color: "#333",
-                marginBottom:"15px"
-            }}
-        >
-        Search
-        </span>
+                marginBottom: "15px",
+              }}
+            >
+              Search
+            </span>
             <InputGroup>
               <Form.Control
                 type="search"
@@ -604,7 +603,8 @@ export default function Call_logs() {
               },
             }}
           >
-            <FeatherIcon icon="refresh-ccw" size={16} className="me-2" />Refresh
+            <FeatherIcon icon="refresh-ccw" size={16} className="me-2" />
+            Refresh
           </Button>
         </div>
       </div>
@@ -626,7 +626,7 @@ export default function Call_logs() {
     const endTime = new Date();
     endTime.setHours(23, 45, 0);
 
-    const isToday = moment(formData.date).isSame(moment(), 'day');
+    const isToday = moment(formData.date).isSame(moment(), "day");
 
     if (isToday) {
       startTime.setHours(
@@ -656,8 +656,9 @@ export default function Call_logs() {
   }, [formData.date]);
 
   const handleSubmit = async (saveType) => {
-    
-    const selectedFDE = fdeList.find((fde) => String(fde.FDEID) === formData.FDE_Name);
+    const selectedFDE = fdeList.find(
+      (fde) => String(fde.FDEID) === formData.FDE_Name
+    );
     const fdeName = selectedFDE ? selectedFDE.FDEName : "";
 
     const selectedDoctor = doctors.find(
@@ -671,7 +672,7 @@ export default function Call_logs() {
       appointment_time: formData.appointmentTime,
       patient_phone: formData.caller_no,
       patient_type: "NEW",
-      appointment_timestamp: moment(formData.date).format("YYYY-MM-DD"), 
+      appointment_timestamp: moment(formData.date).format("YYYY-MM-DD"),
       doctorName: doctorName,
       doctor_id: formData.doctor_id,
       note: formData.note,
@@ -698,7 +699,6 @@ export default function Call_logs() {
       const responseData = await response.json();
       toast.success("Appointment booked successfully");
       setShowAddModal(false);
-      
     } catch (error) {
       console.error("Error adding appointment:", error.message);
       toast.error(`Failed to book appointment. Check console for details.`);
@@ -714,31 +714,36 @@ export default function Call_logs() {
       !enquiryForm.caller_no ||
       !enquiryForm.enquirytype
     ) {
-      toast.error("Please fill in all required fields (Date, Patient Name, Contact Number, Enquiry Type).");
+      toast.error(
+        "Please fill in all required fields (Date, Patient Name, Contact Number, Enquiry Type)."
+      );
       return;
     }
 
     const payload = {
       date: enquiryForm.date,
-      doctor_id: enquiryForm.doctor_id || null, 
+      doctor_id: enquiryForm.doctor_id || null,
       patient_name: enquiryForm.patient_name,
       patient_phone: enquiryForm.caller_no,
       patient_type: "NEW",
       // time: enquiryForm.call_time,
       enquirytype: enquiryForm.enquirytype,
       fdeId: enquiryForm.FDE_Name || null,
-      FDE_Name: enquiryForm.FDE_Name || null, 
+      FDE_Name: enquiryForm.FDE_Name || null,
       note: enquiryForm.note || "",
     };
 
     try {
       console.log("Sending Enquiry Request.");
 
-      const response = await fetch(`${BASE_URL}/V1/enquiry/addEnquiry?location=${currentLocation}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const response = await fetch(
+        `${BASE_URL}/V1/enquiry/addEnquiry?location=${currentLocation}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
 
       const responseData = await response.json();
       if (!response.ok) {
@@ -1051,7 +1056,10 @@ export default function Call_logs() {
                     <option value="">Select a Doctor</option>
                     {doctors && doctors.length > 0 ? (
                       doctors.map((doctor) => (
-                        <option key={doctor.doctor_id} value={String(doctor.doctor_id)}>
+                        <option
+                          key={doctor.doctor_id}
+                          value={String(doctor.doctor_id)}
+                        >
                           {doctor.doctor_id} - {doctor.name}
                         </option>
                       ))
@@ -1197,10 +1205,7 @@ export default function Call_logs() {
           />
         </Modal.Body>
         <Modal.Footer>
-          <Button
-            variant="primary"
-            onClick={handleSaveNote}
-          >
+          <Button variant="primary" onClick={handleSaveNote}>
             Save
           </Button>
           <Button variant="secondary" onClick={() => setShowNoteModal(false)}>

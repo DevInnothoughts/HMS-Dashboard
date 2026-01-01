@@ -23,7 +23,7 @@
 // import moment from "moment";
 
 // // --- Configuration ---
-// const BASE_URL = "http://localhost:5100/api";
+// const BASE_URL = "http://194.195.117.79:5100/api";
 
 // export default function EnquiryList() {
 //   // --- Core State ---
@@ -31,7 +31,7 @@
 //   const [enquiries, setEnquiries] = useState([]);
 //   const [filteredEnquiries, setFilteredEnquiries] = useState([]);
 //   const [loading, setLoading] = useState(false);
-  
+
 //   // --- Filter State ---
 //   const [fromDate, setFromDate] = useState(moment().startOf('day').toDate());
 //   const [toDate, setToDate] = useState(moment().endOf('day').toDate());
@@ -65,7 +65,7 @@
 //         console.warn("Waiting for location to be set from JWT...");
 //         return;
 //     }
-    
+
 //     setLoading(true);
 //     try {
 //       let finalFromDate = formatToDDMMYYYY(fromDate);
@@ -77,9 +77,9 @@
 //         finalFromDate = today;
 //         finalToDate = today;
 //       }
-      
+
 //       const url = new URL(`${BASE_URL}/V1/enquiry/listEnquiry`);
-      
+
 //       // Construct parameters
 //       const params = {
 //         from: finalFromDate,
@@ -117,7 +117,7 @@
 //         fetchEnquiriesData();
 //     }
 //   }, [fetchEnquiriesData, currentLocation]);
-  
+
 //   // Handle global search input change (using filters1 state)
 //   const handleGlobalSearchChange = (e) => {
 //     setFilters1({
@@ -189,7 +189,7 @@
 //               From Date
 //             </div>
 //             <DatePicker
-//               selected={fromDate} 
+//               selected={fromDate}
 //               onChange={setFromDate}
 //               dateFormat="dd-MM-yyyy"
 //               placeholderText="Select from date"
@@ -275,8 +275,8 @@
 //       }}
 //     >
 //       {/* Display Location in header */}
-//       <NavBarA pagename={`Enquiry List (${currentLocation.toUpperCase()})`} /> 
-      
+//       <NavBarA pagename={`Enquiry List (${currentLocation.toUpperCase()})`} />
+
 //       <div className="theme-body">
 //         <Container fluid>
 //           <Row>
@@ -371,9 +371,9 @@
 //                         header="FDE Name"
 //                         style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem" }}
 //                       />
-//                       <Column 
-//                         field="doctorName" 
-//                         header="Doctor Name" 
+//                       <Column
+//                         field="doctorName"
+//                         header="Doctor Name"
 //                         style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem" }}
 //                     />
 //                     </DataTable>
@@ -387,15 +387,6 @@
 //     </div>
 //   );
 // }
-
-
-
-
-
-
-
-
-
 
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useCallback } from "react";
@@ -422,18 +413,18 @@ import { FilterMatchMode } from "primereact/api";
 import moment from "moment";
 
 // --- Configuration ---
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 export default function EnquiryList() {
   // --- Core State ---
-  const [currentLocation, setCurrentLocation] = useState('default'); // State to hold JWT location
+  const [currentLocation, setCurrentLocation] = useState("default"); // State to hold JWT location
   const [enquiries, setEnquiries] = useState([]);
   const [filteredEnquiries, setFilteredEnquiries] = useState([]);
   const [loading, setLoading] = useState(false);
-  
+
   // --- Filter State ---
-  const [fromDate, setFromDate] = useState(moment().startOf('day').toDate());
-  const [toDate, setToDate] = useState(moment().endOf('day').toDate());
+  const [fromDate, setFromDate] = useState(moment().startOf("day").toDate());
+  const [toDate, setToDate] = useState(moment().endOf("day").toDate());
   const [filters1, setFilters1] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
@@ -441,12 +432,12 @@ export default function EnquiryList() {
   // ------------------------- JWT & Initial Setup -------------------------
   useEffect(() => {
     // Fetches and sets location from the token upon component mount
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (token) {
-        const payload = decodeJwt(token);
-        if (payload && payload.jobLocation) {
-            setCurrentLocation(payload.jobLocation);
-        }
+      const payload = decodeJwt(token);
+      if (payload && payload.jobLocation) {
+        setCurrentLocation(payload.jobLocation);
+      }
     }
   }, []);
 
@@ -460,11 +451,11 @@ export default function EnquiryList() {
 
   const fetchEnquiriesData = useCallback(async () => {
     // 🛑 Block fetch if location hasn't been determined yet
-    if (currentLocation === 'default') {
-        console.warn("Waiting for location to be set from JWT...");
-        return;
+    if (currentLocation === "default") {
+      console.warn("Waiting for location to be set from JWT...");
+      return;
     }
-    
+
     setLoading(true);
     try {
       let finalFromDate = formatToDDMMYYYY(fromDate);
@@ -476,9 +467,9 @@ export default function EnquiryList() {
         finalFromDate = today;
         finalToDate = today;
       }
-      
+
       const url = new URL(`${BASE_URL}/V1/enquiry/listEnquiry`);
-      
+
       // Construct parameters
       const params = {
         from: finalFromDate,
@@ -501,7 +492,10 @@ export default function EnquiryList() {
         setEnquiries(data.data);
         setFilteredEnquiries(data.data);
       } else {
-        console.error("Error fetching enquiries:", data.message || "Unknown error");
+        console.error(
+          "Error fetching enquiries:",
+          data.message || "Unknown error"
+        );
       }
     } catch (error) {
       console.error("Error fetching enquiries:", error);
@@ -512,18 +506,18 @@ export default function EnquiryList() {
 
   // Load data on location/date change
   useEffect(() => {
-    if (currentLocation !== 'default') {
-        fetchEnquiriesData();
+    if (currentLocation !== "default") {
+      fetchEnquiriesData();
     }
   }, [fetchEnquiriesData, currentLocation]);
-  
+
   // Handle global search input change (using filters1 state)
   const handleGlobalSearchChange = (e) => {
     setFilters1({
-        global: {
-          value: e.target.value,
-          matchMode: FilterMatchMode.CONTAINS,
-        },
+      global: {
+        value: e.target.value,
+        matchMode: FilterMatchMode.CONTAINS,
+      },
     });
   };
 
@@ -550,18 +544,20 @@ export default function EnquiryList() {
       >
         {/* Global Search Section */}
         <div style={{ display: "flex", alignItems: "center", gap: "30px" }}>
-          <Form.Group style={{ display: "flex", alignItems: "center", margin: 0 }}>
+          <Form.Group
+            style={{ display: "flex", alignItems: "center", margin: 0 }}
+          >
             <span
-            style={{
-                marginRight: "10px", 
-                fontSize: "16px", 
-                fontWeight: "bold", 
+              style={{
+                marginRight: "10px",
+                fontSize: "16px",
+                fontWeight: "bold",
                 color: "#333",
-                marginBottom:"15px"
-            }}
-        >
-        Search
-        </span> 
+                marginBottom: "15px",
+              }}
+            >
+              Search
+            </span>
             <InputGroup>
               <Form.Control
                 type="search"
@@ -595,11 +591,18 @@ export default function EnquiryList() {
         >
           {/* From Date Picker */}
           <div>
-            <div style={{ fontSize: "14px", fontWeight: "500", color: "#00838f", marginBottom: "5px" }}>
+            <div
+              style={{
+                fontSize: "14px",
+                fontWeight: "500",
+                color: "#00838f",
+                marginBottom: "5px",
+              }}
+            >
               From Date
             </div>
             <DatePicker
-              selected={fromDate} 
+              selected={fromDate}
               onChange={setFromDate}
               dateFormat="dd-MM-yyyy"
               placeholderText="Select from date"
@@ -622,7 +625,14 @@ export default function EnquiryList() {
 
           {/* To Date Picker */}
           <div>
-            <div style={{ fontSize: "14px", fontWeight: "500", color: "#00838f", marginBottom: "5px" }}>
+            <div
+              style={{
+                fontSize: "14px",
+                fontWeight: "500",
+                color: "#00838f",
+                marginBottom: "5px",
+              }}
+            >
               To Date
             </div>
             <DatePicker
@@ -665,7 +675,8 @@ export default function EnquiryList() {
               marginTop: "20px",
             }}
           >
-            <FeatherIcon icon="refresh-ccw" size={16} className="me-2" />Refresh All Data
+            <FeatherIcon icon="refresh-ccw" size={16} className="me-2" />
+            Refresh All Data
           </Button>
         </div>
       </div>
@@ -685,8 +696,8 @@ export default function EnquiryList() {
       }}
     >
       {/* Display Location in header */}
-      <NavBarA pagename={`Enquiry List (${currentLocation.toUpperCase()})`} /> 
-      
+      <NavBarA pagename={`Enquiry List (${currentLocation.toUpperCase()})`} />
+
       <div className="theme-body">
         <Container fluid>
           <Row>
@@ -702,8 +713,13 @@ export default function EnquiryList() {
               >
                 <Card.Body>
                   {loading ? (
-                    <div className="d-flex justify-content-center py-5" style={{ color: "#00bcd4" }}>
-                      <Spinner animation="border" role="status"><span className="visually-hidden">Loading...</span></Spinner>
+                    <div
+                      className="d-flex justify-content-center py-5"
+                      style={{ color: "#00bcd4" }}
+                    >
+                      <Spinner animation="border" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                      </Spinner>
                     </div>
                   ) : (
                     <DataTable
@@ -721,10 +737,11 @@ export default function EnquiryList() {
                       ]}
                       responsiveLayout="scroll"
                       // --- STYLING CHANGE 1: Added datatable-compact-style class ---
-                      className="p-datatable-customers datatable-compact-style" 
+                      className="p-datatable-customers datatable-compact-style"
                       rowClassName={(rowData, { rowIndex }) => ({
                         style: {
-                          backgroundColor: rowIndex % 2 === 0 ? "#e0f7fa" : "white",
+                          backgroundColor:
+                            rowIndex % 2 === 0 ? "#e0f7fa" : "white",
                           transition: "background-color 0.3s ease",
                         },
                         onMouseOver: (e) => {
@@ -751,58 +768,86 @@ export default function EnquiryList() {
                         sortable
                         // --- STYLING CHANGE 2: Added headerClassName and removed padding from style ---
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center" }}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                        }}
                       />
                       <Column
                         field="date"
                         header="Date"
-                        body={(rowData) => moment(rowData.date).format("DD-MM-YYYY")}
+                        body={(rowData) =>
+                          moment(rowData.date).format("DD-MM-YYYY")
+                        }
                         // --- STYLING CHANGE 2: Added headerClassName and removed padding from style ---
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center" }}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                        }}
                       />
                       <Column
                         field="patient_name"
                         header="Patient Name"
                         // --- STYLING CHANGE 2: Added headerClassName and removed padding from style ---
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center" }}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                        }}
                       />
                       <Column
                         field="patient_phone"
                         header="Contact No"
                         // --- STYLING CHANGE 2: Added headerClassName and removed padding from style ---
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center" }}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                        }}
                       />
                       <Column
                         field="patient_location"
                         header="Address"
                         // --- STYLING CHANGE 2: Added headerClassName and removed padding from style ---
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center", wordBreak:"break-all" }}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          wordBreak: "break-all",
+                        }}
                       />
                       <Column
                         field="enquirytype"
                         header="Enquiry Type"
                         // --- STYLING CHANGE 2: Added headerClassName and removed padding from style ---
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center", wordBreak:"break-all" }}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          wordBreak: "break-all",
+                        }}
                       />
                       <Column
                         field="FDE_Name"
                         header="FDE Name"
                         // --- STYLING CHANGE 2: Added headerClassName and removed padding from style ---
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center" }}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                        }}
                       />
-                      <Column 
-                        field="doctorName" 
-                        header="Doctor Name" 
+                      <Column
+                        field="doctorName"
+                        header="Doctor Name"
                         // --- STYLING CHANGE 2: Added headerClassName and removed padding from style ---
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center" }}
-                    />
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                        }}
+                      />
                     </DataTable>
                   )}
                 </Card.Body>

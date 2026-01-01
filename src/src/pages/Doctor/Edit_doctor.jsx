@@ -11,7 +11,7 @@ import {
 import SimpleBar from "simplebar-react";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 
-const BASE_URL = "http://localhost:5100/api"; // Correct API base URL
+const BASE_URL = "http://194.195.117.79:5100/api"; // Correct API base URL
 
 export default function Edit_doctor() {
   const [formData, setFormData] = useState({

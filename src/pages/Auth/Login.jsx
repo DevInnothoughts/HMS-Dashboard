@@ -9,7 +9,7 @@
 // // Define the hardcoded list directly for use
 // const LOCATIONS_LIST = ["hms", "pune", "demo"]; // Added a couple more for better list view
 
-// const BASE_URL = "http://localhost:5100/api"; // BASE_URL is still needed for the handleSubmit fetch
+// const BASE_URL = "http://194.195.117.79:5100/api"; // BASE_URL is still needed for the handleSubmit fetch
 
 // export default function Login() {
 //   const navigate = useNavigate();
@@ -334,17 +334,6 @@
 //   );
 // }
 
-
-
-
-
-
-
-
-
-
-
-
 import React, { useState } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
 import { Button, Form, Spinner } from "react-bootstrap";
@@ -357,16 +346,46 @@ import logo from "../../assets/images/logo/hhc-logo.webp";
 const MySwal = withReactContent(Swal);
 
 const LOCATIONS_LIST = [
-  "Hyderabad", "DP Road", "Surat", "Ludhiana", "Indiranagar", "Dighi",
-  "Thane", "Belagavi", "HSR Layout", "JP Nagar", "Navi Mumbai", "Chinchwad",
-  "Nashik", "Salunke Vihar", "Chakan", "Baner", "Kolhapur", "Secunderabad",
-  "Andheri", "Sahakar Nagar", "Gurgaon Sector 14", "Gurgaon Sector 49",
-  "Kemps Corner", "Latur", "Indore", "Mysore", "Undri", "Vashi",
-  "Hinjewadi", "Lucknow", "Kalaburagi", "Rajaji Nagar", "Sarjapura",
-  "Katraj", "lead", "demo", "Demo Server"
+  "Hyderabad",
+  "DP Road",
+  "Surat",
+  "Ludhiana",
+  "Indiranagar",
+  "Dighi",
+  "Thane",
+  "Belagavi",
+  "HSR Layout",
+  "JP Nagar",
+  "Navi Mumbai",
+  "Chinchwad",
+  "Nashik",
+  "Salunke Vihar",
+  "Chakan",
+  "Baner",
+  "Kolhapur",
+  "Secunderabad",
+  "Andheri",
+  "Sahakar Nagar",
+  "Gurgaon Sector 14",
+  "Gurgaon Sector 49",
+  "Kemps Corner",
+  "Latur",
+  "Indore",
+  "Mysore",
+  "Undri",
+  "Vashi",
+  "Hinjewadi",
+  "Lucknow",
+  "Kalaburagi",
+  "Rajaji Nagar",
+  "Sarjapura",
+  "Katraj",
+  "lead",
+  "demo",
+  "Demo Server",
 ].sort();
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -397,7 +416,8 @@ export default function Login() {
   };
 
   const getAccountOptions = () => {
-    if (formData.department === "OPD") return [{ value: "reception", label: "Reception" }];
+    if (formData.department === "OPD")
+      return [{ value: "reception", label: "Reception" }];
     if (formData.department === "IPD") {
       return [
         { value: "reception", label: "Reception" },
@@ -435,9 +455,10 @@ export default function Login() {
         localStorage.setItem("token", data.data.token);
 
         navigate("/reception-dashboard", { replace: true });
-
       } else {
-        setErrorMessage(data.message || "Invalid email or password. Please try again.");
+        setErrorMessage(
+          data.message || "Invalid email or password. Please try again."
+        );
       }
     } catch (error) {
       setErrorMessage("Server connection failed. Please try again later.");
@@ -458,13 +479,19 @@ export default function Login() {
         <div style={brandSectionStyle}>
           <img src={logo} alt="Healing Hands Clinic" style={logoStyle} />
           <p style={dreamQuoteStyle}>
-            “Our Dream is to Wake you up to a <span style={{ color: "#fff", fontWeight: "700" }}>Good Morning</span>”
+            “Our Dream is to Wake you up to a{" "}
+            <span style={{ color: "#fff", fontWeight: "700" }}>
+              Good Morning
+            </span>
+            ”
           </p>
-          <div style={focusedTaglineStyle}>India’s Most Trusted Proctology Clinic</div>
+          <div style={focusedTaglineStyle}>
+            India’s Most Trusted Proctology Clinic
+          </div>
           <div style={dividerStyle}></div>
           <p style={brandDescStyle}>
-            Specialized care for Proctology, Laparoscopy, and Vascular surgery including
-            Piles, Fistula, Hernia, Varicose Veins, and Urology.
+            Specialized care for Proctology, Laparoscopy, and Vascular surgery
+            including Piles, Fistula, Hernia, Varicose Veins, and Urology.
           </p>
         </div>
 
@@ -478,7 +505,9 @@ export default function Login() {
                 <strong>Login Failed:</strong> {errorMessage}
               </div>
             ) : (
-              <p style={{ color: "#718096", fontSize: "14px", marginTop: "5px" }}>
+              <p
+                style={{ color: "#718096", fontSize: "14px", marginTop: "5px" }}
+              >
                 Enter your credentials to continue
               </p>
             )}
@@ -487,7 +516,12 @@ export default function Login() {
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-10">
               <Form.Label style={labelStyle}>Department Type</Form.Label>
-              <Form.Select name="department" value={formData.department} onChange={handleChange} style={inputStyle}>
+              <Form.Select
+                name="department"
+                value={formData.department}
+                onChange={handleChange}
+                style={inputStyle}
+              >
                 <option value="">Select Department</option>
                 <option value="IPD">IPD</option>
                 <option value="OPD">OPD</option>
@@ -505,17 +539,26 @@ export default function Login() {
               >
                 <option value="">Select Account Type</option>
                 {getAccountOptions().map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
                 ))}
               </Form.Select>
             </Form.Group>
 
             <Form.Group className="mb-10">
               <Form.Label style={labelStyle}>Clinic Location</Form.Label>
-              <Form.Select name="jobLocation" value={formData.jobLocation} onChange={handleChange} style={inputStyle}>
+              <Form.Select
+                name="jobLocation"
+                value={formData.jobLocation}
+                onChange={handleChange}
+                style={inputStyle}
+              >
                 <option value="">Select Location</option>
                 {LOCATIONS_LIST.map((loc, index) => (
-                  <option key={index} value={loc}>{loc}</option>
+                  <option key={index} value={loc}>
+                    {loc}
+                  </option>
                 ))}
               </Form.Select>
             </Form.Group>
@@ -553,10 +596,21 @@ export default function Login() {
             </Form.Group>
 
             <div className="d-flex justify-content-center">
-              <Button type="submit" style={buttonStyle} disabled={isLoading} className="w-200">
+              <Button
+                type="submit"
+                style={buttonStyle}
+                disabled={isLoading}
+                className="w-200"
+              >
                 {isLoading ? (
                   <>
-                    <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
+                    <Spinner
+                      as="span"
+                      animation="border"
+                      size="sm"
+                      role="status"
+                      aria-hidden="true"
+                    />
                   </>
                 ) : (
                   "Login to Dashboard"
@@ -598,7 +652,8 @@ const blobStyle = {
   position: "absolute",
   width: "500px",
   height: "500px",
-  background: "radial-gradient(circle, rgba(77, 208, 225, 0.2) 0%, transparent 70%)",
+  background:
+    "radial-gradient(circle, rgba(77, 208, 225, 0.2) 0%, transparent 70%)",
   borderRadius: "50%",
   top: "-100px",
   right: "-100px",
@@ -609,7 +664,8 @@ const blob2Style = {
   position: "absolute",
   width: "400px",
   height: "400px",
-  background: "radial-gradient(circle, rgba(77, 208, 225, 0.15) 0%, transparent 70%)",
+  background:
+    "radial-gradient(circle, rgba(77, 208, 225, 0.15) 0%, transparent 70%)",
   borderRadius: "50%",
   bottom: "-100px",
   left: "-100px",
@@ -632,7 +688,8 @@ const cardStyle = {
 
 const brandSectionStyle = {
   flex: "1",
-  background: "linear-gradient(135deg, rgb(77, 208, 225) 0%, rgb(40, 170, 185) 100%)",
+  background:
+    "linear-gradient(135deg, rgb(77, 208, 225) 0%, rgb(40, 170, 185) 100%)",
   padding: "30px 30px",
   display: "flex",
   flexDirection: "column",
@@ -678,7 +735,7 @@ const logoStyle = {
 const brandTaglineStyle = {
   fontSize: "20px",
   fontWeight: "500",
-  marginTop: "5px"
+  marginTop: "5px",
 };
 
 const dividerStyle = {
@@ -742,5 +799,5 @@ const buttonStyle = {
   boxShadow: "0 10px 15px -3px rgba(77, 208, 225, 0.3)",
   transition: "transform 0.2s ease",
   backgroundColor: "#178aaeff",
-  color: "#fff"
+  color: "#fff",
 };

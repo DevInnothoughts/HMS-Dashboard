@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Row, Col, Form, Container, Card } from "react-bootstrap";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import { decodeJwt } from "../../utils/decode-jwt";
-import Swal from 'sweetalert2';
+import Swal from "sweetalert2";
 import {
   CountryDropdown,
   StateDropdown,
@@ -14,14 +14,14 @@ import NavBarP from "../../components/NavbarP";
 
 const Toast = Swal.mixin({
   toast: true,
-  position: 'top-end',
+  position: "top-end",
   showConfirmButton: false,
   timer: 3000,
   timerProgressBar: true,
   didOpen: (toast) => {
-    toast.addEventListener('mouseenter', Swal.stopTimer)
-    toast.addEventListener('mouseleave', Swal.resumeTimer)
-  }
+    toast.addEventListener("mouseenter", Swal.stopTimer);
+    toast.addEventListener("mouseleave", Swal.resumeTimer);
+  },
 });
 
 const hospitalData = {
@@ -54,7 +54,7 @@ const generateUID = () => {
   return `${Date.now()}`;
 };
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 export default function Add_Patient() {
   const [errors, setErrors] = useState({});
@@ -65,7 +65,7 @@ export default function Add_Patient() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
-  const [currentLocation, setCurrentLocation] = useState('default');
+  const [currentLocation, setCurrentLocation] = useState("default");
   const [formData, setFormData] = useState({
     prefix: "",
     date: new Date().toISOString().split("T")[0],
@@ -99,7 +99,7 @@ export default function Add_Patient() {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (token) {
       const payload = decodeJwt(token);
       if (payload && payload.jobLocation) {
@@ -190,20 +190,23 @@ export default function Add_Patient() {
           email: formData.email,
         };
 
-        const response = await fetch(`${BASE_URL}/V1/patient/addPatient?location=${currentLocation}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        });
+        const response = await fetch(
+          `${BASE_URL}/V1/patient/addPatient?location=${currentLocation}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          }
+        );
 
         if (response.ok) {
           Swal.fire({
-            icon: 'success',
-            title: 'Success!',
-            text: 'Patient profile created successfully.',
-            confirmButtonColor: '#00bcd4'
+            icon: "success",
+            title: "Success!",
+            text: "Patient profile created successfully.",
+            confirmButtonColor: "#00bcd4",
           });
           setFormData({
             prefix: "",
@@ -230,26 +233,27 @@ export default function Add_Patient() {
           setSelectedDepartment("");
           setSelectedCategory("");
           setSelectedDoctor("");
-
         } else {
           const errorData = await response.json();
           Swal.fire({
-            icon: 'error',
-            title: 'Saving Failed',
-            text: errorData.message || "Failed to save patient details. Please try again."
+            icon: "error",
+            title: "Saving Failed",
+            text:
+              errorData.message ||
+              "Failed to save patient details. Please try again.",
           });
         }
       } catch (error) {
         Swal.fire({
-          icon: 'error',
-          title: 'Connection Error',
-          text: 'A network error occurred while saving patient details.'
+          icon: "error",
+          title: "Connection Error",
+          text: "A network error occurred while saving patient details.",
         });
       }
     } else {
       Toast.fire({
-        icon: 'warning',
-        title: 'Please correct the validation errors'
+        icon: "warning",
+        title: "Please correct the validation errors",
       });
     }
   };
@@ -324,8 +328,10 @@ export default function Add_Patient() {
                 </h4>
                 <Form>
                   <div className="form-section">
-                    <h5 className="section-title"
-                      style={{ marginBottom: "15px" }}>
+                    <h5
+                      className="section-title"
+                      style={{ marginBottom: "15px" }}
+                    >
                       <i className="fa fa-user-circle me-2"></i>
                       Basic Information
                     </h5>
@@ -345,7 +351,7 @@ export default function Add_Patient() {
                         </Form.Group>
                       </Col>
                       <Col md={2}>
-                        <Form.Group >
+                        <Form.Group>
                           <Form.Label className="d-block">
                             Date <span style={styles.required}>*</span>
                           </Form.Label>
@@ -443,7 +449,10 @@ export default function Add_Patient() {
                   </div>
 
                   <div className="form-section">
-                    <h5 className="section-title" style={{ marginBottom: "15px" }}>
+                    <h5
+                      className="section-title"
+                      style={{ marginBottom: "15px" }}
+                    >
                       <i className="fa fa-address-book me-2"></i>
                       Contact Information
                     </h5>
@@ -479,9 +488,7 @@ export default function Add_Patient() {
                       </Col>
                       <Col md={5}>
                         <Form.Group className="mb-3">
-                          <Form.Label>
-                            Email
-                          </Form.Label>
+                          <Form.Label>Email</Form.Label>
                           <Form.Control
                             type="email"
                             name="email"
@@ -498,7 +505,10 @@ export default function Add_Patient() {
                   </div>
 
                   <div className="form-section">
-                    <h5 className="section-title" style={{ marginBottom: "15px" }}>
+                    <h5
+                      className="section-title"
+                      style={{ marginBottom: "15px" }}
+                    >
                       <i className="fa fa-map-marker me-2"></i>
                       Address Information
                     </h5>
@@ -556,7 +566,8 @@ export default function Add_Patient() {
                       <Col md={12}>
                         <Form.Group className="mb-3">
                           <Form.Label>
-                            Patient Address <span style={styles.required}>*</span>
+                            Patient Address{" "}
+                            <span style={styles.required}>*</span>
                           </Form.Label>
                           <Form.Control
                             as="textarea"
@@ -567,7 +578,10 @@ export default function Add_Patient() {
                             onChange={handleInputChange}
                           />
                           {errors.address && (
-                            <p className="error-message" style={{ color: "red", fontSize: "12px" }}>
+                            <p
+                              className="error-message"
+                              style={{ color: "red", fontSize: "12px" }}
+                            >
                               {errors.address}
                             </p>
                           )}
@@ -577,14 +591,18 @@ export default function Add_Patient() {
                   </div>
 
                   <div className="form-section">
-                    <h5 className="section-title" style={{ marginBottom: "15px" }}>
+                    <h5
+                      className="section-title"
+                      style={{ marginBottom: "15px" }}
+                    >
                       <i className="fa fa-heartbeat me-2"></i>
                       Medical Information
                     </h5>
                     <Row>
                       <Col md={3}>
                         <Form.Group className="mb-3">
-                          <Form.Label>Blood Group</Form.Label><span style={styles.required}>*</span>
+                          <Form.Label>Blood Group</Form.Label>
+                          <span style={styles.required}>*</span>
                           <Form.Control
                             as="select"
                             name="blood_group"
@@ -653,7 +671,9 @@ export default function Add_Patient() {
                             onChange={handleInputChange}
                           />
                           {errors.patientHistory && (
-                            <p className="error-message">{errors.patientHistory}</p>
+                            <p className="error-message">
+                              {errors.patientHistory}
+                            </p>
                           )}
                         </Form.Group>
                       </Col>
@@ -661,7 +681,10 @@ export default function Add_Patient() {
                   </div>
 
                   <div className="form-section">
-                    <h5 className="section-title" style={{ marginBottom: "15px" }}>
+                    <h5
+                      className="section-title"
+                      style={{ marginBottom: "15px" }}
+                    >
                       <i className="fa fa-calendar me-2"></i>
                       Appointment Information
                     </h5>
@@ -746,13 +769,13 @@ export default function Add_Patient() {
                       style={{ borderRadius: "10px" }}
                       onClick={() => {
                         Swal.fire({
-                          title: 'Are you sure?',
+                          title: "Are you sure?",
                           text: "All unsaved patient data will be lost.",
-                          icon: 'warning',
+                          icon: "warning",
                           showCancelButton: true,
-                          confirmButtonColor: '#d33',
-                          cancelButtonColor: '#aaa',
-                          confirmButtonText: 'Yes, Reset Form'
+                          confirmButtonColor: "#d33",
+                          cancelButtonColor: "#aaa",
+                          confirmButtonText: "Yes, Reset Form",
                         }).then((result) => {
                           if (result.isConfirmed) {
                             setFormData({

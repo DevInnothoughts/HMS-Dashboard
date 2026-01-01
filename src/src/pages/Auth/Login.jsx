@@ -9,7 +9,7 @@ import logo from "../../assets/images/logo/icon-logo.png";
 // Define the hardcoded list directly for use
 const LOCATIONS_LIST = ["hms", "pune", "demo"]; // Added a couple more for better list view
 
-const BASE_URL = "http://localhost:5100/api"; // BASE_URL is still needed for the handleSubmit fetch
+const BASE_URL = "http://194.195.117.79:5100/api"; // BASE_URL is still needed for the handleSubmit fetch
 
 export default function Login() {
   const navigate = useNavigate();
@@ -203,7 +203,13 @@ export default function Login() {
 
           {/* 👇 START: Location List using LOCATIONS_LIST array 👇 */}
           <Form.Group className="mb-4">
-            <div style={{ marginBottom: "8px", fontWeight: "600", color: "#4A5568" }}>
+            <div
+              style={{
+                marginBottom: "8px",
+                fontWeight: "600",
+                color: "#4A5568",
+              }}
+            >
               Select Location:
             </div>
             <div
@@ -333,5 +339,3 @@ export default function Login() {
     </div>
   );
 }
-
-    

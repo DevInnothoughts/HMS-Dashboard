@@ -46,7 +46,7 @@ const generateUID = () => {
 };
 
 // Keeping the original API URL as requested, but noting the need for HTTPS.
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 export default function Add_Patient() {
   const [formData, setFormData] = useState({
@@ -78,11 +78,11 @@ export default function Add_Patient() {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState("");
   const [showAddModal, setShowAddModal] = useState(false); // Unused state, but kept
-  const [currentLocation, setCurrentLocation] = useState('default'); // ADDED: Location state
+  const [currentLocation, setCurrentLocation] = useState("default"); // ADDED: Location state
 
   // --- HIPAA: Fetch Current Location from JWT ---
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (token) {
       // NOTE: Replace 'decodeJwt' with your actual JWT decoding utility
       const payload = decodeJwt(token);
@@ -181,15 +181,18 @@ export default function Add_Patient() {
           email: formData.email,
         };
 
-        const response = await fetch(`${BASE_URL}/V1/patient/addPatient?location=${currentLocation}`, {
-          method: "POST",
-          // HIPAA: Authorization header required for secure API calls
-          headers: {
-            "Content-Type": "application/json",
-            // "Authorization": `Bearer ${localStorage.getItem('token')}`, 
-          },
-          body: JSON.stringify(payload),
-        });
+        const response = await fetch(
+          `${BASE_URL}/V1/patient/addPatient?location=${currentLocation}`,
+          {
+            method: "POST",
+            // HIPAA: Authorization header required for secure API calls
+            headers: {
+              "Content-Type": "application/json",
+              // "Authorization": `Bearer ${localStorage.getItem('token')}`,
+            },
+            body: JSON.stringify(payload),
+          }
+        );
 
         if (response.ok) {
           toast.success("Patient profile created successfully.");
@@ -219,12 +222,12 @@ export default function Add_Patient() {
           setSelectedDepartment("");
           setSelectedCategory("");
           setSelectedDoctor("");
-
         } else {
           const errorData = await response.json();
           // HIPAA: Use generic, non-specific error message
           toast.error(
-            errorData.message || "Failed to save patient details. Please try again."
+            errorData.message ||
+              "Failed to save patient details. Please try again."
           );
         }
       } catch (error) {
@@ -302,21 +305,29 @@ export default function Add_Patient() {
               show={showAddModal}
             >
               <Card.Body style={{ padding: "20px" }}>
-                 <h4 className="section-title" style={{marginBottom:"15px"}}>
-                     Add New Patient Details
-                      <span className="ms-2 text-secondary" style={{ fontSize: '0.8em' }}>
-                        (Clinic Location: {currentLocation ? currentLocation.toUpperCase() : "Loading..."}
-                        )
-                      </span>
-                    </h4>
+                <h4 className="section-title" style={{ marginBottom: "15px" }}>
+                  Add New Patient Details
+                  <span
+                    className="ms-2 text-secondary"
+                    style={{ fontSize: "0.8em" }}
+                  >
+                    (Clinic Location:{" "}
+                    {currentLocation
+                      ? currentLocation.toUpperCase()
+                      : "Loading..."}
+                    )
+                  </span>
+                </h4>
                 <Form>
                   {/* Basic Information Section */}
                   <div className="form-section">
-                    <h5 className="section-title"
-                      style={{ marginBottom: "15px" }}>
+                    <h5
+                      className="section-title"
+                      style={{ marginBottom: "15px" }}
+                    >
                       <i className="fa fa-user-circle me-2"></i>
-                      Basic Information 
-                    </h5> 
+                      Basic Information
+                    </h5>
                     <Row>
                       <Col md={3}>
                         <Form.Group className="mb-3">
@@ -436,7 +447,10 @@ export default function Add_Patient() {
 
                   {/* Contact Information Section */}
                   <div className="form-section">
-                    <h5 className="section-title" style={{ marginBottom: "15px" }}>
+                    <h5
+                      className="section-title"
+                      style={{ marginBottom: "15px" }}
+                    >
                       <i className="fa fa-address-book me-2"></i>
                       Contact Information
                     </h5>
@@ -492,12 +506,15 @@ export default function Add_Patient() {
 
                   {/* Address Information Section */}
                   <div className="form-section">
-                    <h5 className="section-title" style={{ marginBottom: "15px" }}>
+                    <h5
+                      className="section-title"
+                      style={{ marginBottom: "15px" }}
+                    >
                       <i className="fa fa-map-marker me-2"></i>
                       Address Information
                     </h5>
                     <Row>
-                      <Col md={3} >
+                      <Col md={3}>
                         <Form.Group className="ms-1">
                           <Form.Label>
                             Country <span style={styles.required}>*</span>
@@ -529,7 +546,7 @@ export default function Add_Patient() {
                       </Col>
 
                       {/* State Dropdown */}
-                      <Col md={3} >
+                      <Col md={3}>
                         <Form.Group className="ms-5">
                           <Form.Label>
                             State <span style={styles.required}>*</span>
@@ -561,7 +578,7 @@ export default function Add_Patient() {
                         </Form.Group>
                       </Col>
                       {/* City Dropdown */}
-                      <Col md={3} >
+                      <Col md={3}>
                         <Form.Group className="mb-3">
                           <Form.Label>
                             City <span style={styles.required}>*</span>
@@ -598,7 +615,10 @@ export default function Add_Patient() {
 
                   {/* Medical Information Section */}
                   <div className="form-section">
-                    <h5 className="section-title" style={{ marginBottom: "15px" }}>
+                    <h5
+                      className="section-title"
+                      style={{ marginBottom: "15px" }}
+                    >
                       <i className="fa fa-heartbeat me-2"></i>
                       Medical Information
                     </h5>
@@ -674,7 +694,9 @@ export default function Add_Patient() {
                             onChange={handleInputChange}
                           />
                           {errors.patientHistory && (
-                            <p className="error-message">{errors.patientHistory}</p>
+                            <p className="error-message">
+                              {errors.patientHistory}
+                            </p>
                           )}
                         </Form.Group>
                       </Col>
@@ -683,7 +705,10 @@ export default function Add_Patient() {
 
                   {/* Appointment Information Section */}
                   <div className="form-section">
-                    <h5 className="section-title" style={{ marginBottom: "15px" }}>
+                    <h5
+                      className="section-title"
+                      style={{ marginBottom: "15px" }}
+                    >
                       <i className="fa fa-calendar me-2"></i>
                       Appointment Information
                     </h5>

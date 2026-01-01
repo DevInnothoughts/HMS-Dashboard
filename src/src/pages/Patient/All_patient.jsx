@@ -22,8 +22,7 @@ import DatePicker from "react-datepicker";
 import NavBarP from "../../components/NavbarP";
 import logo from "../../assets/images/3.png";
 
-
-const BASE_URL = "http://localhost:5100/api"; // Update your API base URL here
+const BASE_URL = "http://194.195.117.79:5100/api"; // Update your API base URL here
 
 const formatDate = (dateString) => {
   if (!dateString) return "";
@@ -82,17 +81,17 @@ export default function All_patient() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditPatientModal, setShowEditPatientModal] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null); // Selected patient data
-  const [currentLocation, setCurrentLocation] = useState('default'); // State to hold JWT location
+  const [currentLocation, setCurrentLocation] = useState("default"); // State to hold JWT location
   useEffect(() => {
-      // Fetches and sets location from the token upon component mount
-      const token = localStorage.getItem('token');
-      if (token) {
-          const payload = decodeJwt(token);
-          if (payload && payload.jobLocation) {
-              setCurrentLocation(payload.jobLocation);
-          }
+    // Fetches and sets location from the token upon component mount
+    const token = localStorage.getItem("token");
+    if (token) {
+      const payload = decodeJwt(token);
+      if (payload && payload.jobLocation) {
+        setCurrentLocation(payload.jobLocation);
       }
-    }, []);
+    }
+  }, []);
 
   const [workPatterns, setWorkPatterns] = useState({
     Sedentary: false,
@@ -103,14 +102,13 @@ export default function All_patient() {
 
   const [selectedBirthDate, setSelectedBirthDate] = useState(null);
 
-
   const fetchDropdownData = async () => {
-    if (!currentLocation || currentLocation === 'default') return;
+    if (!currentLocation || currentLocation === "default") return;
 
     try {
-        // 💡 FIX 2: Use currentLocation state variable for doctor dropdown
-        const doctorResponse = await fetch(
-          `${BASE_URL}/V1/appointment/doctorDropdown?location=${currentLocation}`,
+      // 💡 FIX 2: Use currentLocation state variable for doctor dropdown
+      const doctorResponse = await fetch(
+        `${BASE_URL}/V1/appointment/doctorDropdown?location=${currentLocation}`,
         {
           method: "GET",
           headers: {
@@ -346,16 +344,18 @@ export default function All_patient() {
 
   // Fetch patients data - MODIFIED TO REMOVE DATE FILTERING
   const fetchPatientsData = async () => {
-    if (!currentLocation || currentLocation === 'default') {
-        console.warn("Location not set yet, skipping patient fetch.");
-        return;
+    if (!currentLocation || currentLocation === "default") {
+      console.warn("Location not set yet, skipping patient fetch.");
+      return;
     }
     setLoading(true);
     try {
-        // 💡 FIX 1: Use currentLocation state variable
-        const url = new URL(
-            `${BASE_URL}/V1/patient/listPatient?location=${encodeURIComponent(currentLocation)}`
-        );
+      // 💡 FIX 1: Use currentLocation state variable
+      const url = new URL(
+        `${BASE_URL}/V1/patient/listPatient?location=${encodeURIComponent(
+          currentLocation
+        )}`
+      );
       const response = await fetch(url, {
         method: "GET",
         headers: {
@@ -384,11 +384,11 @@ export default function All_patient() {
   // Initial fetch on component mount
   useEffect(() => {
     // Only fetch if currentLocation has been successfully set from JWT
-    if (currentLocation && currentLocation !== 'default') {
-        fetchPatientsData();
-        fetchDropdownData(); // Also ensure dropdowns use the correct location
+    if (currentLocation && currentLocation !== "default") {
+      fetchPatientsData();
+      fetchDropdownData(); // Also ensure dropdowns use the correct location
     }
-}, [currentLocation]); // Run only once
+  }, [currentLocation]); // Run only once
 
   useEffect(() => {
     if (selectedPatient) {
@@ -724,7 +724,7 @@ export default function All_patient() {
       patientName: formData.name,
       patient_phone: formData.phone,
       // FIX: Use the patient_id stored in formData, which was set in handleAddAppointmentClick
-      patient_id: formData.patient_id, 
+      patient_id: formData.patient_id,
       patient_type: "NEW",
       appointment_time: formData.appointmentTime,
       FDE_Name: formData.FDE_Name,
@@ -764,13 +764,13 @@ export default function All_patient() {
   // Actions template for the DataTable
   const handleAddAppointmentClick = (patient) => {
     // FIX: Extract patient_id from the patient object
-    const patientId = patient.patient_id || ""; 
-    
+    const patientId = patient.patient_id || "";
+
     const today = new Date();
-    const formattedDate = today; 
+    const formattedDate = today;
 
     const formDataToSet = {
-      date: formattedDate, 
+      date: formattedDate,
       doctor_id: "",
       doctorName: "",
       name: patient.name || "",
@@ -780,7 +780,7 @@ export default function All_patient() {
       FDE_Name: "",
       note: patient.note || "",
       // FIX: Store the patient_id in formData
-      patient_id: patientId, 
+      patient_id: patientId,
     };
 
     setFormData(formDataToSet);
@@ -964,9 +964,7 @@ export default function All_patient() {
                   <tr><td>Address:</td><td>${patient.address}</td></tr>
                   <tr><td>Mobile No:</td><td>${patient.phone}</td></tr>
                   <tr><td>Email:</td><td>${patient.email}</td></tr>
-                    	<tr><td>Occupation:</td><td>${
-                        patient.occupation
-                      }</td></tr>	 
+                    	<tr><td>Occupation:</td><td>${patient.occupation}</td></tr>	 
                 </table>
               </div>
             </div>
@@ -1080,37 +1078,35 @@ export default function All_patient() {
   // );
 
   const actionBodyTemplate = (patient) => (
-  <div
-    className="d-flex align-items-center justify-content-center" 
-  >
-    <Link
-      onClick={() => handlePrint(patient)}
-      className="print btn btn-primary btn-sm btn-icon me-2" 
-      to=""
-      title="Print"
-    >
-      <FeatherIcon icon="printer" size="14" /> 
-    </Link>
+    <div className="d-flex align-items-center justify-content-center">
+      <Link
+        onClick={() => handlePrint(patient)}
+        className="print btn btn-primary btn-sm btn-icon me-2"
+        to=""
+        title="Print"
+      >
+        <FeatherIcon icon="printer" size="14" />
+      </Link>
 
-    <Button
-      variant="primary"
-      onClick={() => handleAddAppointmentClick(patient)}
-      className="appointment-btn btn-sm btn-icon me-2"
-      title="Add Appointment"
-    >
-      <FeatherIcon icon="plus-square" size="14" />
-    </Button>
+      <Button
+        variant="primary"
+        onClick={() => handleAddAppointmentClick(patient)}
+        className="appointment-btn btn-sm btn-icon me-2"
+        title="Add Appointment"
+      >
+        <FeatherIcon icon="plus-square" size="14" />
+      </Button>
 
-    <Button
-      variant="primary"
-      onClick={() => handleEditPatient(patient)}
-      className="edit-btn btn-sm btn-icon"
-      title="Edit Patient"
-    >
-      <FeatherIcon icon="edit" size="14" />
-    </Button>
-  </div>
-);
+      <Button
+        variant="primary"
+        onClick={() => handleEditPatient(patient)}
+        className="edit-btn btn-sm btn-icon"
+        title="Edit Patient"
+      >
+        <FeatherIcon icon="edit" size="14" />
+      </Button>
+    </div>
+  );
 
   const renderReferenceDetails = () => {
     switch (selectedReference) {
@@ -1345,9 +1341,9 @@ export default function All_patient() {
                       onChange={(e) => {
                         handleReferenceChange(e);
                         setFormData((prev) => ({
-                            ...prev,
-                            ref: source, // Store selected source in ref
-                            reference_type: "internet",
+                          ...prev,
+                          ref: source, // Store selected source in ref
+                          reference_type: "internet",
                         }));
                       }}
                       checked={referenceDetails.internet === source}
@@ -1391,11 +1387,11 @@ export default function All_patient() {
                       name="MediaRef"
                       value={media}
                       onChange={(e) => {
-                          handleReferenceChange(e);
-                          setFormData((prev) => ({
-                            ...prev,
-                            ref: media, // Store selected media in ref
-                            reference_type: "MediaRef",
+                        handleReferenceChange(e);
+                        setFormData((prev) => ({
+                          ...prev,
+                          ref: media, // Store selected media in ref
+                          reference_type: "MediaRef",
                         }));
                       }}
                       checked={referenceDetails.MediaRef === media}
@@ -1460,9 +1456,9 @@ export default function All_patient() {
                       onChange={(e) => {
                         handleReferenceChange(e);
                         setFormData((prev) => ({
-                            ...prev,
-                            ref: show, // Store selected show in ref
-                            reference_type: "TVShow",
+                          ...prev,
+                          ref: show, // Store selected show in ref
+                          reference_type: "TVShow",
                         }));
                       }}
                       checked={referenceDetails.TVShow === show}
@@ -1553,7 +1549,11 @@ export default function All_patient() {
                           setPatientSearchResults([]); // Clear search results after selection
                           setFormData((prev) => ({
                             ...prev,
-                            ref: `${patient.phone || ""},${patient.name || ""},${patient.patient_id || ""},${patient.pincode || ""}`,
+                            ref: `${patient.phone || ""},${
+                              patient.name || ""
+                            },${patient.patient_id || ""},${
+                              patient.pincode || ""
+                            }`,
                             reference_type: "old_ref",
                           }));
                         }}
@@ -1637,12 +1637,12 @@ export default function All_patient() {
                 placeholder="Friend Name"
                 value={referenceDetails.friendname || ""}
                 onChange={(e) => {
-                    handleReferenceChange(e);
-                    setFormData((prev) => ({
-                      ...prev,
-                      ref: `${e.target.value},${referenceDetails.friendno || ""}`,
-                      reference_type: "family_friends",
-                    }));
+                  handleReferenceChange(e);
+                  setFormData((prev) => ({
+                    ...prev,
+                    ref: `${e.target.value},${referenceDetails.friendno || ""}`,
+                    reference_type: "family_friends",
+                  }));
                 }}
                 style={{ flex: "1", minWidth: "200px" }} // Adjust width as needed
               />
@@ -1682,12 +1682,12 @@ export default function All_patient() {
                     name="HHC_board"
                     value="HHC_board"
                     onChange={(e) => {
-                        handleReferenceChange(e);
-                        setFormData((prev) => ({
-                          ...prev,
-                          ref: "HHC_board",
-                          reference_type: "hhc_board",
-                        }));
+                      handleReferenceChange(e);
+                      setFormData((prev) => ({
+                        ...prev,
+                        ref: "HHC_board",
+                        reference_type: "hhc_board",
+                      }));
                     }}
                     checked={referenceDetails.HHC_board === "HHC_board"}
                     style={{ marginRight: "10px", transform: "scale(1.2)" }} // Space between radio and label
@@ -1710,12 +1710,12 @@ export default function All_patient() {
                     name="HHF"
                     value="HHF"
                     onChange={(e) => {
-                        handleReferenceChange(e);
-                        setFormData((prev) => ({
-                          ...prev,
-                          ref: "HHF",
-                          reference_type: "HHF",
-                        }));
+                      handleReferenceChange(e);
+                      setFormData((prev) => ({
+                        ...prev,
+                        ref: "HHF",
+                        reference_type: "HHF",
+                      }));
                     }}
                     checked={referenceDetails.HHF === "HHF"}
                     style={{ marginRight: "10px", transform: "scale(1.2)" }} // Space between radio and label
@@ -1740,12 +1740,12 @@ export default function All_patient() {
                     placeholder="Other"
                     value={referenceDetails.other || ""}
                     onChange={(e) => {
-                        handleReferenceChange(e);
-                        setFormData((prev) => ({
-                          ...prev,
-                          ref: e.target.value,
-                          reference_type: "other",
-                        }));
+                      handleReferenceChange(e);
+                      setFormData((prev) => ({
+                        ...prev,
+                        ref: e.target.value,
+                        reference_type: "other",
+                      }));
                     }}
                   />
                 </li>
@@ -1767,12 +1767,12 @@ export default function All_patient() {
                     placeholder="Other"
                     value={referenceDetails.WOM || ""}
                     onChange={(e) => {
-                        handleReferenceChange(e);
-                        setFormData((prev) => ({
-                          ...prev,
-                          ref: e.target.value,
-                          reference_type: "WOM",
-                        }));
+                      handleReferenceChange(e);
+                      setFormData((prev) => ({
+                        ...prev,
+                        ref: e.target.value,
+                        reference_type: "WOM",
+                      }));
                     }}
                   />
                 </li>
@@ -1788,15 +1788,15 @@ export default function All_patient() {
   const handleReferenceChange = (e) => {
     const { value } = e.target;
     setSelectedReference(value); // Update selectedReference state
-    
-    // Note: The specific reference setting (formData.ref and formData.reference_type) 
+
+    // Note: The specific reference setting (formData.ref and formData.reference_type)
     // is now handled inside the renderReferenceDetails switch case to capture sub-details.
     // However, if the main dropdown is changed, we update the reference type here immediately.
     setFormData((prev) => ({
-        ...prev,
-        reference_type: value,
-        // Reset ref details when main type changes, will be overwritten by input/radio handlers
-        ref: "", 
+      ...prev,
+      reference_type: value,
+      // Reset ref details when main type changes, will be overwritten by input/radio handlers
+      ref: "",
     }));
   };
 
@@ -1862,16 +1862,16 @@ export default function All_patient() {
             }}
           >
             <span
-            style={{
-                marginRight: "10px", 
-                fontSize: "16px", 
-                fontWeight: "bold", 
+              style={{
+                marginRight: "10px",
+                fontSize: "16px",
+                fontWeight: "bold",
                 color: "#333",
-                marginBottom:"15px"
-            }}
-        >
-        Search
-        </span>
+                marginBottom: "15px",
+              }}
+            >
+              Search
+            </span>
             <InputGroup>
               <Form.Control
                 type="search"
@@ -1898,8 +1898,6 @@ export default function All_patient() {
           </Form.Group>
         </div>
 
-        
-
         {/* Refresh Button (Now simple refresh for all data) */}
         <Button
           variant="primary"
@@ -1922,7 +1920,8 @@ export default function All_patient() {
             },
           }}
         >
-        <FeatherIcon icon="refresh-ccw" size={16} className="me-2" />Refresh
+          <FeatherIcon icon="refresh-ccw" size={16} className="me-2" />
+          Refresh
         </Button>
       </div>
     </div>
@@ -2083,11 +2082,11 @@ export default function All_patient() {
                   <DatePicker
                     selected={formData.date ? new Date(formData.date) : null}
                     onChange={(date) => {
-                        handleDateChange(date);
-                        setFormData((prev) => ({
-                            ...prev,
-                            date: date.toISOString().split("T")[0],
-                        }));
+                      handleDateChange(date);
+                      setFormData((prev) => ({
+                        ...prev,
+                        date: date.toISOString().split("T")[0],
+                      }));
                     }}
                     className="form-control"
                     dateFormat="dd-MM-yyyy"
@@ -2103,13 +2102,15 @@ export default function All_patient() {
                     name="doctor_id" // Use doctor_id for API submission
                     value={formData.doctor_id}
                     onChange={(e) => {
-                        const selectedDocId = e.target.value;
-                        const selectedDoc = doctors.find(doc => doc.doctor_id === selectedDocId);
-                        setFormData((prev) => ({ 
-                            ...prev, 
-                            doctor_id: selectedDocId,
-                            doctorName: selectedDoc ? selectedDoc.name : ""
-                        }));
+                      const selectedDocId = e.target.value;
+                      const selectedDoc = doctors.find(
+                        (doc) => doc.doctor_id === selectedDocId
+                      );
+                      setFormData((prev) => ({
+                        ...prev,
+                        doctor_id: selectedDocId,
+                        doctorName: selectedDoc ? selectedDoc.name : "",
+                      }));
                     }}
                   >
                     <option value="">Select a Doctor</option>
@@ -2176,13 +2177,15 @@ export default function All_patient() {
                     name="FDE_Name"
                     value={formData.FDE_Name}
                     onChange={(e) => {
-                        const selectedFDEId = e.target.value;
-                        const selectedFDE = fdeList.find(fde => fde.FDEID === selectedFDEId);
-                        setFormData((prev) => ({ 
-                            ...prev, 
-                            FDE_Name: selectedFDEId,
-                            fdeName: selectedFDE ? selectedFDE.FDEName : "" // Store name for confirmation if needed
-                        }));
+                      const selectedFDEId = e.target.value;
+                      const selectedFDE = fdeList.find(
+                        (fde) => fde.FDEID === selectedFDEId
+                      );
+                      setFormData((prev) => ({
+                        ...prev,
+                        FDE_Name: selectedFDEId,
+                        fdeName: selectedFDE ? selectedFDE.FDEName : "", // Store name for confirmation if needed
+                      }));
                     }}
                   >
                     <option value="">Select FDE Name</option>
@@ -2662,7 +2665,10 @@ export default function All_patient() {
           <Button variant="primary" onClick={handleSaveChanges}>
             Save Changes
           </Button>
-          <Button variant="primary" onClick={() => handlePrint(selectedPatient)}>
+          <Button
+            variant="primary"
+            onClick={() => handlePrint(selectedPatient)}
+          >
             Registration Form
           </Button>
           <Button
@@ -2812,10 +2818,8 @@ export default function All_patient() {
                           border: "1px solid #90caf9",
                           textAlign: "center",
                           padding: "0.75rem",
-                        
                         }}
                       />
-                      
 
                       <Column
                         field="name"
@@ -2825,8 +2829,8 @@ export default function All_patient() {
                           border: "1px solid #90caf9",
                           textAlign: "center",
                           padding: "0.75rem",
-                          wordBreak:"break-word",
-                          width:"150px"
+                          wordBreak: "break-word",
+                          width: "150px",
                         }}
                       />
                       <Column
@@ -2837,11 +2841,11 @@ export default function All_patient() {
                           border: "1px solid #90caf9",
                           textAlign: "center",
                           padding: "0.75rem",
-                          wordBreak:"break-word",
-                          width:"110px"
+                          wordBreak: "break-word",
+                          width: "110px",
                         }}
                       />
-                       <Column
+                      <Column
                         field="mobile_2"
                         header="Alternate Phone No"
                         headerClassName="datatable-header-center"
@@ -2849,8 +2853,8 @@ export default function All_patient() {
                           border: "1px solid #90caf9",
                           textAlign: "center",
                           padding: "0.75rem",
-                          wordBreak:"break-word",
-                          width:"110px"
+                          wordBreak: "break-word",
+                          width: "110px",
                         }}
                       />
                       <Column
@@ -2861,8 +2865,8 @@ export default function All_patient() {
                           border: "1px solid #90caf9",
                           textAlign: "center",
                           padding: "0.75rem",
-                          width:"200px",
-                          textAlign:"left"
+                          width: "200px",
+                          textAlign: "left",
                         }}
                       />
                       <Column
@@ -2883,11 +2887,10 @@ export default function All_patient() {
                           border: "1px solid #90caf9",
                           textAlign: "center",
                           padding: "0.75rem",
-                          width:"60px"
+                          width: "60px",
                         }}
                       />
-                      
-                     
+
                       <Column
                         header="Actions"
                         body={actionBodyTemplate}
@@ -2897,7 +2900,7 @@ export default function All_patient() {
                           border: "1px solid #90caf9",
                           textAlign: "center",
                           padding: "0.75rem",
-                          width:"200px"
+                          width: "200px",
                         }}
                       />
                     </DataTable>

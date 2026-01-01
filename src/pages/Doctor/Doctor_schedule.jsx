@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 // --- REACT BIG CALENDAR IMPORTS ---
-import { Calendar, momentLocalizer } from 'react-big-calendar';
-import moment from 'moment';
-import 'react-big-calendar/lib/css/react-big-calendar.css';
+import { Calendar, momentLocalizer } from "react-big-calendar";
+import moment from "moment";
+import "react-big-calendar/lib/css/react-big-calendar.css";
 
 import {
   Row,
@@ -19,7 +19,7 @@ import PageBreadcrumb from "../../components/PageBreadcrumb";
 // Initialize the localizer for React Big Calendar
 const localizer = momentLocalizer(moment);
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 export default function DoctorSchedule() {
   const [appointmentData, setAppointmentData] = useState([]);
@@ -27,9 +27,9 @@ export default function DoctorSchedule() {
   const [selectedAppointments, setSelectedAppointments] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState("");
-  
+
   // State for RBC to control the current view date (defaults to today)
-  const [currentDate, setCurrentDate] = useState(new Date()); 
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   const formatDate = (dateString) => {
     // Converts "DD/MM/YYYY" to "YYYY-MM-DD"
@@ -69,7 +69,7 @@ export default function DoctorSchedule() {
           ([date, appointments]) => {
             const firstPatient = appointments[0].patientName;
             const totalAppointments = appointments.length;
-            
+
             // RBC requires Date objects for start and end
             const startDate = new Date(date + "T07:00:00"); // Start of the display window
             const endDate = new Date(date + "T23:59:59"); // End of the display window
@@ -111,41 +111,40 @@ export default function DoctorSchedule() {
   const handleEventClick = (event) => {
     // event object contains the properties defined in formattedEvents
     setSelectedAppointments(event.extendedProps.appointments);
-    
+
     // Format the date for display in the modal title
     const dateStr = moment(event.start).format("DD/MM/YYYY");
-    setSelectedDate(dateStr); 
+    setSelectedDate(dateStr);
     setShowModal(true);
   };
-  
+
   // RBC prop getter for event styling
   const eventPropGetter = useCallback((event) => {
-      return {
-          style: {
-              backgroundColor: '#007bff', 
-              borderColor: '#007bff',
-              color: 'white',
-              borderRadius: '5px',
-              padding: '8px',
-              fontSize: '14px',
-              textAlign: 'center',
-          },
-      };
+    return {
+      style: {
+        backgroundColor: "#007bff",
+        borderColor: "#007bff",
+        color: "white",
+        borderRadius: "5px",
+        padding: "8px",
+        fontSize: "14px",
+        textAlign: "center",
+      },
+    };
   }, []);
 
   // Handler for when the user navigates the calendar (prev, next, today)
   const handleNavigate = useCallback((newDate) => {
-      setCurrentDate(newDate);
-      // You can add logic here to refetch data for the new date range if needed,
-      // but for now, we rely on the initial fetch spanning a wide range.
-  }, []);
-  
-  // Handler for when the user changes the view (month, week, day)
-  const handleViewChange = useCallback((newView) => {
-      // This is generally not required unless you need to change logic based on the view
-      console.log(`View changed to: ${newView}`);
+    setCurrentDate(newDate);
+    // You can add logic here to refetch data for the new date range if needed,
+    // but for now, we rely on the initial fetch spanning a wide range.
   }, []);
 
+  // Handler for when the user changes the view (month, week, day)
+  const handleViewChange = useCallback((newView) => {
+    // This is generally not required unless you need to change logic based on the view
+    console.log(`View changed to: ${newView}`);
+  }, []);
 
   return (
     <div
@@ -182,28 +181,29 @@ export default function DoctorSchedule() {
                     </Spinner>
                   </div>
                 ) : (
-                  <div style={{ height: '75vh', minHeight: '600px', padding: '15px' }}>
+                  <div
+                    style={{
+                      height: "75vh",
+                      minHeight: "600px",
+                      padding: "15px",
+                    }}
+                  >
                     <Calendar
                       localizer={localizer}
                       events={appointmentData}
-                      
                       // Use currentDate state to control the visible date
-                      date={currentDate} 
+                      date={currentDate}
                       onNavigate={handleNavigate}
-                      onView={handleViewChange} 
-                      
+                      onView={handleViewChange}
                       // Configuration
                       defaultView="week" // Equivalent to timeGridWeek
-                      views={['month', 'week', 'day']} // Simplified RBC views
-                      
+                      views={["month", "week", "day"]} // Simplified RBC views
                       // Accessors
                       startAccessor="start"
                       endAccessor="end"
                       titleAccessor="title"
-                      
                       // Event interaction
-                      onSelectEvent={handleEventClick} 
-                      
+                      onSelectEvent={handleEventClick}
                       // Appearance
                       eventPropGetter={eventPropGetter}
                       step={15} // Sets the granularity of time slots to 15 minutes
@@ -211,7 +211,7 @@ export default function DoctorSchedule() {
                       min={new Date(0, 0, 0, 7, 0, 0)} // Start time 7:00 AM
                       max={new Date(0, 0, 0, 24, 0, 0)} // End time 12:00 AM (24:00)
                       allDayAccessor="allDay"
-                      style={{ height: '100%' }}
+                      style={{ height: "100%" }}
                     />
                   </div>
                 )}

@@ -70,7 +70,7 @@
 //   default: { min: 7, max: 15 }, // Default limits
 // };
 
-// const BASE_URL = "http://localhost:5100/api";
+// const BASE_URL = "http://194.195.117.79:5100/api";
 // const formatDate = (date) => {
 //   const d = new Date(date);
 //   const day = String(d.getDate()).padStart(2, "0");
@@ -79,18 +79,17 @@
 //   return `${year}-${month}-${day}`;  // FIXED format
 // };
 
-
 // export default function Add_Enquiry() {
 //   const [currentLocation, setCurrentLocation] = useState(null);
 //   const [formData, setFormData] = useState({
 //     date: formatDate(new Date()),
 //     // Maps to doctor_id in payload
-//     doctorId: "", 
+//     doctorId: "",
 //     enquirytype: "",
-//     patient_type: "", 
+//     patient_type: "",
 //     patient_name: "",
 //     patient_phone: "",
-//     time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }), 
+//     time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }),
 //     patient_location: "",
 //     reference: "",
 //     FDE_Name: "",
@@ -101,7 +100,6 @@
 //   const [loading, setLoading] = useState(false);
 //   const [doctors, setDoctors] = useState([]);
 //   const phoneRegex = /^[0-9]{7,15}$/; // Define phoneRegex before using it
-
 
 //   // Effect to fetch currentLocation from JWT
 //   useEffect(() => {
@@ -114,12 +112,11 @@
 //     }
 //   }, []);
 
-
 //   const validate = () => {
 //     const newErrors = {};
 //     const requiredFields = [
 //       "date",
-//       "doctorId", 
+//       "doctorId",
 //       "enquirytype",
 //       "patient_name",
 //       "patient_phone",
@@ -127,7 +124,7 @@
 //       "reference",
 //       "FDE_Name",
 //       "note",
-//       "patient_type", 
+//       "patient_type",
 //       "time",
 //     ];
 
@@ -158,7 +155,6 @@
 //   return new Date(year, month - 1, day);
 // };
 
-
 //   // Handle input changes (used for all text/select inputs)
 //   const handleInputChange = (e) => {
 //     const { name, value } = e.target;
@@ -182,7 +178,7 @@
 //       // Ensure all fields from formData are mapped explicitly, using backend field names
 //       const payload = {
 //           // Fields mapping directly to schema column names (except doctorId -> doctor_id)
-//           doctor_id: formData.doctorId, 
+//           doctor_id: formData.doctorId,
 //           patient_type: formData.patient_type,
 //           enquirytype: formData.enquirytype,
 //           patient_name: formData.patient_name,
@@ -195,7 +191,7 @@
 //           note: formData.note,
 
 //           // Add operational data (current FDE clinic location)
-//           clinic_location: currentLocation, 
+//           clinic_location: currentLocation,
 //           // Include country code based on phone format helper
 //           countryCode: getCountryCode(formData.patient_phone),
 //       };
@@ -204,7 +200,7 @@
 //       try {
 //         console.log("Sending request to backend...", payload);
 
-//         // Keeping the location in the query string as a convention used in the original code, 
+//         // Keeping the location in the query string as a convention used in the original code,
 //         // though it's also in the payload as clinic_location.
 //         const response = await fetch(`${BASE_URL}/V1/enquiry/addEnquiry?location=${currentLocation}`, {
 //           method: "POST",
@@ -263,7 +259,6 @@
 //       });
 //     }
 //   };
-
 
 //   const fetchDropdownData = useCallback(async () => {
 //     // Only fetch if location is available
@@ -502,7 +497,7 @@
 //                             const patient_phone = e.target.value.replace(/\D/g, "");
 //                             const selectedCountryCode = formData.countryCode || "+91";
 //                             // Note: countryNumberLimits constant is defined at the top of your file
-//                             if (patient_phone.length <= 10) { 
+//                             if (patient_phone.length <= 10) {
 //                               setFormData((prev) => ({ ...prev, patient_phone }));
 //                             }
 //                           }}
@@ -528,7 +523,6 @@
 //                         {errors.patient_location && <p style={{ color: "red" }}>{errors.patient_location}</p>}
 //                       </Form.Group>
 //                     </Col>
-
 
 //                   </Row>
 
@@ -574,8 +568,8 @@
 //                           <option value="">Select Reference</option>
 //                           {[
 //                             "Family / Friends", "Referred By Another Doctor", "Referred By Another Patient", "Internet", "Social Media", "Entertainment Media",
-//                              "TV Show", "Newspaper / Magazine", "Awareness Lecture", "HHC Board on building", "I was treated here in past ", "Healing Hands Clinic Branch", 
-//                              "Aggregators", "Other" 
+//                              "TV Show", "Newspaper / Magazine", "Awareness Lecture", "HHC Board on building", "I was treated here in past ", "Healing Hands Clinic Branch",
+//                              "Aggregators", "Other"
 //                           ].map((ref) => (
 //                             <option key={ref} value={ref}>{ref}</option>
 //                           ))}
@@ -643,7 +637,7 @@ import {
   Spinner,
 } from "react-bootstrap";
 import NavBarA from "../../components/NavbarA";
-import Swal from 'sweetalert2';
+import Swal from "sweetalert2";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
@@ -653,20 +647,22 @@ import { decodeJwt } from "../../utils/decode-jwt";
 
 const getCountryCode = (patient_phone) => {
   if (!patient_phone) return "Unknown";
-  const country = countryCodes.find((code) => patient_phone.startsWith(code.value));
+  const country = countryCodes.find((code) =>
+    patient_phone.startsWith(code.value)
+  );
   return country ? country.value : "Unknown";
 };
 
 const Toast = Swal.mixin({
   toast: true,
-  position: 'top-end',
+  position: "top-end",
   showConfirmButton: false,
   timer: 3000,
   timerProgressBar: true,
   didOpen: (toast) => {
-    toast.addEventListener('mouseenter', Swal.stopTimer)
-    toast.addEventListener('mouseleave', Swal.resumeTimer)
-  }
+    toast.addEventListener("mouseenter", Swal.stopTimer);
+    toast.addEventListener("mouseleave", Swal.resumeTimer);
+  },
 });
 
 const countryCodes = [
@@ -684,7 +680,7 @@ const countryCodes = [
   { value: "+34", label: "🇪🇸 Spain (+34)" },
 ];
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 const formatDate = (date) => {
   const d = new Date(date);
   const day = String(d.getDate()).padStart(2, "0");
@@ -702,7 +698,12 @@ export default function Add_Enquiry() {
     patient_type: "NEW",
     patient_name: "",
     patient_phone: "",
-    time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }),
+    time: new Date().toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    }),
     patient_location: "",
     reference: "",
     FDE_Name: "",
@@ -716,7 +717,7 @@ export default function Add_Enquiry() {
   const phoneRegex = /^[0-9]{7,15}$/;
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (token) {
       const payload = decodeJwt(token);
       if (payload && payload.jobLocation) {
@@ -727,13 +728,24 @@ export default function Add_Enquiry() {
 
   const validate = () => {
     const newErrors = {};
-    const requiredFields = ["date", "doctorId", "enquirytype", "patient_name", "patient_phone", "patient_location", "reference", "FDE_Name", "note", "time"];
+    const requiredFields = [
+      "date",
+      "doctorId",
+      "enquirytype",
+      "patient_name",
+      "patient_phone",
+      "patient_location",
+      "reference",
+      "FDE_Name",
+      "note",
+      "time",
+    ];
 
     requiredFields.forEach((field) => {
       if (!formData[field]) {
         let displayName = field.replace(/([A-Z])/g, " $1");
-        if (field === 'doctorId') displayName = 'Doctor Name';
-        if (field === 'FDE_Name') displayName = 'FDE Name';
+        if (field === "doctorId") displayName = "Doctor Name";
+        if (field === "FDE_Name") displayName = "FDE Name";
         newErrors[field] = `${displayName} is required`;
       }
     });
@@ -773,15 +785,20 @@ export default function Add_Enquiry() {
       reference: "",
       FDE_Name: "",
       note: "",
-      time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }),
+      time: new Date().toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      }),
     });
 
     setErrors({});
 
     // Toast notification
     Toast.fire({
-      icon: 'success',
-      title: 'Form reset successful'
+      icon: "success",
+      title: "Form reset successful",
     });
   };
 
@@ -809,31 +826,42 @@ export default function Add_Enquiry() {
       };
 
       try {
-        const response = await fetch(`${BASE_URL}/V1/enquiry/addEnquiry?location=${currentLocation}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+        const response = await fetch(
+          `${BASE_URL}/V1/enquiry/addEnquiry?location=${currentLocation}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          }
+        );
 
         if (response.ok) {
           Swal.fire({
-            icon: 'success',
-            title: 'Success!',
-            text: 'Enquiry has been added successfully.',
-            confirmButtonColor: '#00bcd4'
+            icon: "success",
+            title: "Success!",
+            text: "Enquiry has been added successfully.",
+            confirmButtonColor: "#00bcd4",
           });
           handleReset();
         } else {
           const errorData = await response.json();
-          Swal.fire({ icon: 'error', title: 'Failed', text: errorData.message || 'Failed to add enquiry' });
+          Swal.fire({
+            icon: "error",
+            title: "Failed",
+            text: errorData.message || "Failed to add enquiry",
+          });
         }
       } catch (error) {
-        Swal.fire({ icon: 'error', title: 'Error', text: 'A network error occurred.' });
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "A network error occurred.",
+        });
       } finally {
         setLoading(false);
       }
     } else {
-      Toast.fire({ icon: 'warning', title: 'Please fill all required fields' });
+      Toast.fire({ icon: "warning", title: "Please fill all required fields" });
     }
   };
 
@@ -843,13 +871,16 @@ export default function Add_Enquiry() {
     try {
       const fetchApi = async (endpoint) => {
         const url = `${BASE_URL}/V1/appointment/${endpoint}?location=${currentLocation}`;
-        const response = await fetch(url, { method: "GET", headers: { "Content-Type": "application/json" } });
+        const response = await fetch(url, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
         return response.ok ? response.json() : { data: [] };
       };
 
       const [doctorData, fdeData] = await Promise.all([
-        fetchApi('doctorDropdown').then(res => res.data),
-        fetchApi('fdeDropdown').then(res => res.data), // Fetching FDE dropdown
+        fetchApi("doctorDropdown").then((res) => res.data),
+        fetchApi("fdeDropdown").then((res) => res.data), // Fetching FDE dropdown
       ]);
 
       setDoctors(Array.isArray(doctorData) ? doctorData : []);
@@ -863,7 +894,11 @@ export default function Add_Enquiry() {
     if (currentLocation) fetchDropdownData();
   }, [currentLocation, fetchDropdownData]);
 
-  const inputStyle = { borderRadius: "8px", border: '2px solid rgb(77, 208, 225)', padding: "6px" };
+  const inputStyle = {
+    borderRadius: "8px",
+    border: "2px solid rgb(77, 208, 225)",
+    padding: "6px",
+  };
   const labelStyle = "fw-bold text-muted small uppercase mb-2";
 
   return (
@@ -891,15 +926,28 @@ export default function Add_Enquiry() {
                 overflow: "hidden",
               }}
             >
-              <div style={{
-                backgroundColor: "#67c5cfff",
-                padding: "20px 25px",
-                borderBottom: "2px solid #1a5b61ff",
-                display: "flex",
-                alignItems: "center"
-              }}>
-                <FeatherIcon icon="help-circle" size="24" style={{ color: "#1a5b61ff", marginRight: "12px" }} />
-                <h4 className="m-0" style={{ color: "#1a5b61ff", fontWeight: "600", fontSize: "1.25rem" }}>
+              <div
+                style={{
+                  backgroundColor: "#67c5cfff",
+                  padding: "20px 25px",
+                  borderBottom: "2px solid #1a5b61ff",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <FeatherIcon
+                  icon="help-circle"
+                  size="24"
+                  style={{ color: "#1a5b61ff", marginRight: "12px" }}
+                />
+                <h4
+                  className="m-0"
+                  style={{
+                    color: "#1a5b61ff",
+                    fontWeight: "600",
+                    fontSize: "1.25rem",
+                  }}
+                >
                   Add New Enquiry Detail
                 </h4>
               </div>
@@ -907,8 +955,15 @@ export default function Add_Enquiry() {
               <Card.Body style={{ padding: "20px" }}>
                 <Form onSubmit={handleSubmit}>
                   {errors.location && (
-                    <div className="alert alert-danger py-2 px-3 mb-4" style={{ borderRadius: "8px" }}>
-                      <FeatherIcon icon="alert-circle" size="18" className="me-2" />
+                    <div
+                      className="alert alert-danger py-2 px-3 mb-4"
+                      style={{ borderRadius: "8px" }}
+                    >
+                      <FeatherIcon
+                        icon="alert-circle"
+                        size="18"
+                        className="me-2"
+                      />
                       {errors.location}
                     </div>
                   )}
@@ -916,22 +971,36 @@ export default function Add_Enquiry() {
                   <Row className="g-4 mb-4">
                     <Col md={4}>
                       <Form.Group>
-                        <Form.Label className={labelStyle}>Enquiry Date <span className="text-danger">*</span></Form.Label>
+                        <Form.Label className={labelStyle}>
+                          Enquiry Date <span className="text-danger">*</span>
+                        </Form.Label>
                         <DatePicker
                           selected={parseDate(formData.date)}
-                          onChange={(date) => date && setFormData((prev) => ({ ...prev, date: formatDate(date) }))}
+                          onChange={(date) =>
+                            date &&
+                            setFormData((prev) => ({
+                              ...prev,
+                              date: formatDate(date),
+                            }))
+                          }
                           dateFormat="dd-MM-yyyy"
                           minDate={new Date()}
                           className="form-control custom-datepicker"
                           style={inputStyle}
                         />
-                        {errors.date && <p className="text-danger small mt-1">{errors.date}</p>}
+                        {errors.date && (
+                          <p className="text-danger small mt-1">
+                            {errors.date}
+                          </p>
+                        )}
                       </Form.Group>
                     </Col>
 
                     <Col md={4}>
                       <Form.Group>
-                        <Form.Label className={labelStyle}>Enquiry Type <span className="text-danger">*</span></Form.Label>
+                        <Form.Label className={labelStyle}>
+                          Enquiry Type <span className="text-danger">*</span>
+                        </Form.Label>
                         <Form.Select
                           name="enquirytype"
                           style={inputStyle}
@@ -940,20 +1009,40 @@ export default function Add_Enquiry() {
                         >
                           <option value="">Select Enquiry Type</option>
                           {[
-                            "Call for Refund Amount", "Wrong Enquiry or Spam Call", "Enquiry for Test Charges",
-                            "Accounts Department", "Call for Another Branches", "Call for IPD Doctors",
-                            "Call for Assistant Doctors", "Call Regarding Job Vacancy", "Appointment Consultation",
-                            "Online Consultation", "SX Cost Enquiry", "Call for Lab Test Enquiry",
-                            "Medicines Availability at Pharmacy", "Patient is Coming Late for Appointment", "Insurance Related Queries",
-                          ].map((type) => <option key={type} value={type}>{type}</option>)}
+                            "Call for Refund Amount",
+                            "Wrong Enquiry or Spam Call",
+                            "Enquiry for Test Charges",
+                            "Accounts Department",
+                            "Call for Another Branches",
+                            "Call for IPD Doctors",
+                            "Call for Assistant Doctors",
+                            "Call Regarding Job Vacancy",
+                            "Appointment Consultation",
+                            "Online Consultation",
+                            "SX Cost Enquiry",
+                            "Call for Lab Test Enquiry",
+                            "Medicines Availability at Pharmacy",
+                            "Patient is Coming Late for Appointment",
+                            "Insurance Related Queries",
+                          ].map((type) => (
+                            <option key={type} value={type}>
+                              {type}
+                            </option>
+                          ))}
                         </Form.Select>
-                        {errors.enquirytype && <p className="text-danger small mt-1">{errors.enquirytype}</p>}
+                        {errors.enquirytype && (
+                          <p className="text-danger small mt-1">
+                            {errors.enquirytype}
+                          </p>
+                        )}
                       </Form.Group>
                     </Col>
 
                     <Col md={4}>
                       <Form.Group>
-                        <Form.Label className={labelStyle}>Doctor Name <span className="text-danger">*</span></Form.Label>
+                        <Form.Label className={labelStyle}>
+                          Doctor Name <span className="text-danger">*</span>
+                        </Form.Label>
                         <Form.Select
                           name="doctorId"
                           style={inputStyle}
@@ -963,12 +1052,19 @@ export default function Add_Enquiry() {
                         >
                           <option value="">Select a Doctor</option>
                           {doctors.map((doctor) => (
-                            <option key={doctor.doctor_id} value={doctor.doctor_id}>
+                            <option
+                              key={doctor.doctor_id}
+                              value={doctor.doctor_id}
+                            >
                               {doctor.doctor_id} - {doctor.name}
                             </option>
                           ))}
                         </Form.Select>
-                        {errors.doctorId && <p className="text-danger small mt-1">{errors.doctorId}</p>}
+                        {errors.doctorId && (
+                          <p className="text-danger small mt-1">
+                            {errors.doctorId}
+                          </p>
+                        )}
                       </Form.Group>
                     </Col>
                   </Row>
@@ -976,7 +1072,9 @@ export default function Add_Enquiry() {
                   <Row className="g-4 mb-4">
                     <Col md={4}>
                       <Form.Group>
-                        <Form.Label className={labelStyle}>Patient Name <span className="text-danger">*</span></Form.Label>
+                        <Form.Label className={labelStyle}>
+                          Patient Name <span className="text-danger">*</span>
+                        </Form.Label>
                         <Form.Control
                           type="text"
                           name="patient_name"
@@ -985,31 +1083,47 @@ export default function Add_Enquiry() {
                           value={formData.patient_name}
                           onChange={handleInputChange}
                         />
-                        {errors.patient_name && <p className="text-danger small mt-1">{errors.patient_name}</p>}
+                        {errors.patient_name && (
+                          <p className="text-danger small mt-1">
+                            {errors.patient_name}
+                          </p>
+                        )}
                       </Form.Group>
                     </Col>
 
                     <Col md={4}>
                       <Form.Group>
-                        <Form.Label className={labelStyle}>Contact Number <span className="text-danger">*</span></Form.Label>
+                        <Form.Label className={labelStyle}>
+                          Contact Number <span className="text-danger">*</span>
+                        </Form.Label>
                         <Form.Control
                           type="tel"
                           name="patient_phone"
                           value={formData.patient_phone}
                           onChange={(e) => {
                             const val = e.target.value.replace(/\D/g, "");
-                            if (val.length <= 10) setFormData((prev) => ({ ...prev, patient_phone: val }));
+                            if (val.length <= 10)
+                              setFormData((prev) => ({
+                                ...prev,
+                                patient_phone: val,
+                              }));
                           }}
                           placeholder="Enter Contact Number"
                           style={inputStyle}
                         />
-                        {errors.patient_phone && <p className="text-danger small mt-1">{errors.patient_phone}</p>}
+                        {errors.patient_phone && (
+                          <p className="text-danger small mt-1">
+                            {errors.patient_phone}
+                          </p>
+                        )}
                       </Form.Group>
                     </Col>
 
                     <Col md={4}>
                       <Form.Group>
-                        <Form.Label className={labelStyle}>Address <span className="text-danger">*</span></Form.Label>
+                        <Form.Label className={labelStyle}>
+                          Address <span className="text-danger">*</span>
+                        </Form.Label>
                         <Form.Control
                           type="text"
                           name="patient_location"
@@ -1018,7 +1132,11 @@ export default function Add_Enquiry() {
                           value={formData.patient_location}
                           onChange={handleInputChange}
                         />
-                        {errors.patient_location && <p className="text-danger small mt-1">{errors.patient_location}</p>}
+                        {errors.patient_location && (
+                          <p className="text-danger small mt-1">
+                            {errors.patient_location}
+                          </p>
+                        )}
                       </Form.Group>
                     </Col>
                   </Row>
@@ -1026,7 +1144,9 @@ export default function Add_Enquiry() {
                   <Row className="g-4 mb-4">
                     <Col md={4}>
                       <Form.Group>
-                        <Form.Label className={labelStyle}>FDE Name <span className="text-danger">*</span></Form.Label>
+                        <Form.Label className={labelStyle}>
+                          FDE Name <span className="text-danger">*</span>
+                        </Form.Label>
                         <Form.Select
                           name="FDE_Name"
                           style={inputStyle}
@@ -1042,13 +1162,19 @@ export default function Add_Enquiry() {
                             </option>
                           ))}
                         </Form.Select>
-                        {errors.FDE_Name && <p className="text-danger small mt-1">{errors.FDE_Name}</p>}
+                        {errors.FDE_Name && (
+                          <p className="text-danger small mt-1">
+                            {errors.FDE_Name}
+                          </p>
+                        )}
                       </Form.Group>
                     </Col>
 
                     <Col md={4}>
                       <Form.Group>
-                        <Form.Label className={labelStyle}>Reference <span className="text-danger">*</span></Form.Label>
+                        <Form.Label className={labelStyle}>
+                          Reference <span className="text-danger">*</span>
+                        </Form.Label>
                         <Form.Select
                           name="reference"
                           style={inputStyle}
@@ -1057,12 +1183,31 @@ export default function Add_Enquiry() {
                         >
                           <option value="">Select Reference</option>
                           {[
-                            "Family / Friends", "Referred By Another Doctor", "Referred By Another Patient", "Internet", "Social Media", "Entertainment Media",
-                            "TV Show", "Newspaper / Magazine", "Awareness Lecture", "HHC Board on building", "I was treated here in past ", "Healing Hands Clinic Branch",
-                            "Aggregators", "Other"
-                          ].map((ref) => <option key={ref} value={ref}>{ref}</option>)}
+                            "Family / Friends",
+                            "Referred By Another Doctor",
+                            "Referred By Another Patient",
+                            "Internet",
+                            "Social Media",
+                            "Entertainment Media",
+                            "TV Show",
+                            "Newspaper / Magazine",
+                            "Awareness Lecture",
+                            "HHC Board on building",
+                            "I was treated here in past ",
+                            "Healing Hands Clinic Branch",
+                            "Aggregators",
+                            "Other",
+                          ].map((ref) => (
+                            <option key={ref} value={ref}>
+                              {ref}
+                            </option>
+                          ))}
                         </Form.Select>
-                        {errors.reference && <p className="text-danger small mt-1">{errors.reference}</p>}
+                        {errors.reference && (
+                          <p className="text-danger small mt-1">
+                            {errors.reference}
+                          </p>
+                        )}
                       </Form.Group>
                     </Col>
                   </Row>
@@ -1070,7 +1215,9 @@ export default function Add_Enquiry() {
                   <Row className="mb-10">
                     <Col md={12}>
                       <Form.Group>
-                        <Form.Label className={labelStyle}>Note <span className="text-danger">*</span></Form.Label>
+                        <Form.Label className={labelStyle}>
+                          Note <span className="text-danger">*</span>
+                        </Form.Label>
                         <Form.Control
                           as="textarea"
                           name="note"
@@ -1080,7 +1227,11 @@ export default function Add_Enquiry() {
                           value={formData.note}
                           onChange={handleInputChange}
                         />
-                        {errors.note && <p className="text-danger small mt-1">{errors.note}</p>}
+                        {errors.note && (
+                          <p className="text-danger small mt-1">
+                            {errors.note}
+                          </p>
+                        )}
                       </Form.Group>
                     </Col>
                   </Row>
@@ -1101,7 +1252,7 @@ export default function Add_Enquiry() {
                         borderRadius: "10px",
                         backgroundColor: "#00bcd4",
                         border: "none",
-                        fontWeight: "600"
+                        fontWeight: "600",
                       }}
                       disabled={loading || !currentLocation}
                     >

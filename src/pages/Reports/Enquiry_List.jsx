@@ -23,7 +23,7 @@
 // import moment from "moment";
 
 // // --- Configuration ---
-// const BASE_URL = "http://localhost:5100/api";
+// const BASE_URL = "http://194.195.117.79:5100/api";
 
 // export default function EnquiryList() {
 //   // --- Core State ---
@@ -31,7 +31,7 @@
 //   const [enquiries, setEnquiries] = useState([]);
 //   const [filteredEnquiries, setFilteredEnquiries] = useState([]);
 //   const [loading, setLoading] = useState(false);
-  
+
 //   // --- Filter State ---
 //   const [fromDate, setFromDate] = useState(moment().startOf('day').toDate());
 //   const [toDate, setToDate] = useState(moment().endOf('day').toDate());
@@ -65,7 +65,7 @@
 //         console.warn("Waiting for location to be set from JWT...");
 //         return;
 //     }
-    
+
 //     setLoading(true);
 //     try {
 //       let finalFromDate = formatToDDMMYYYY(fromDate);
@@ -77,9 +77,9 @@
 //         finalFromDate = today;
 //         finalToDate = today;
 //       }
-      
+
 //       const url = new URL(`${BASE_URL}/V1/enquiry/listEnquiry`);
-      
+
 //       // Construct parameters
 //       const params = {
 //         from: finalFromDate,
@@ -117,7 +117,7 @@
 //         fetchEnquiriesData();
 //     }
 //   }, [fetchEnquiriesData, currentLocation]);
-  
+
 //   // Handle global search input change (using filters1 state)
 //   const handleGlobalSearchChange = (e) => {
 //     setFilters1({
@@ -189,7 +189,7 @@
 //               From Date
 //             </div>
 //             <DatePicker
-//               selected={fromDate} 
+//               selected={fromDate}
 //               onChange={setFromDate}
 //               dateFormat="dd-MM-yyyy"
 //               placeholderText="Select from date"
@@ -275,8 +275,8 @@
 //       }}
 //     >
 //       {/* Display Location in header */}
-//       <NavBarA pagename={`Enquiry List (${currentLocation.toUpperCase()})`} /> 
-      
+//       <NavBarA pagename={`Enquiry List (${currentLocation.toUpperCase()})`} />
+
 //       <div className="theme-body">
 //         <Container fluid>
 //           <Row>
@@ -371,9 +371,9 @@
 //                         header="FDE Name"
 //                         style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem" }}
 //                       />
-//                       <Column 
-//                         field="doctorName" 
-//                         header="Doctor Name" 
+//                       <Column
+//                         field="doctorName"
+//                         header="Doctor Name"
 //                         style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem" }}
 //                     />
 //                     </DataTable>
@@ -387,15 +387,6 @@
 //     </div>
 //   );
 // }
-
-
-
-
-
-
-
-
-
 
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useCallback } from "react";
@@ -421,36 +412,36 @@ import "react-datepicker/dist/react-datepicker.css";
 import "../../styles/styles.css";
 import { FilterMatchMode } from "primereact/api";
 import moment from "moment";
-import Swal from 'sweetalert2'; 
+import Swal from "sweetalert2";
 
 const Toast = Swal.mixin({
   toast: true,
-  position: 'top-end',
+  position: "top-end",
   showConfirmButton: false,
   timer: 3000,
   timerProgressBar: true,
   didOpen: (toast) => {
-    toast.addEventListener('mouseenter', Swal.stopTimer)
-    toast.addEventListener('mouseleave', Swal.resumeTimer)
-  }
+    toast.addEventListener("mouseenter", Swal.stopTimer);
+    toast.addEventListener("mouseleave", Swal.resumeTimer);
+  },
 });
 
 // --- Configuration ---
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 export default function EnquiryList() {
   // --- Core State ---
-  const [currentLocation, setCurrentLocation] = useState('default'); // State to hold JWT location
+  const [currentLocation, setCurrentLocation] = useState("default"); // State to hold JWT location
   const [enquiries, setEnquiries] = useState([]);
   const [filteredEnquiries, setFilteredEnquiries] = useState([]);
   const [loading, setLoading] = useState(false);
   // Add these inside your component function
-const [rows, setRows] = useState(10);
-const [first, setFirst] = useState(0);
-  
+  const [rows, setRows] = useState(10);
+  const [first, setFirst] = useState(0);
+
   // --- Filter State ---
-  const [fromDate, setFromDate] = useState(moment().startOf('day').toDate());
-  const [toDate, setToDate] = useState(moment().endOf('day').toDate());
+  const [fromDate, setFromDate] = useState(moment().startOf("day").toDate());
+  const [toDate, setToDate] = useState(moment().endOf("day").toDate());
   const [filters1, setFilters1] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
@@ -458,12 +449,12 @@ const [first, setFirst] = useState(0);
   // ------------------------- JWT & Initial Setup -------------------------
   useEffect(() => {
     // Fetches and sets location from the token upon component mount
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (token) {
-        const payload = decodeJwt(token);
-        if (payload && payload.jobLocation) {
-            setCurrentLocation(payload.jobLocation);
-        }
+      const payload = decodeJwt(token);
+      if (payload && payload.jobLocation) {
+        setCurrentLocation(payload.jobLocation);
+      }
     }
   }, []);
 
@@ -476,11 +467,11 @@ const [first, setFirst] = useState(0);
   };
 
   const fetchEnquiriesData = useCallback(async () => {
-    if (currentLocation === 'default') {
-        console.warn("Waiting for location to be set from JWT...");
-        return;
+    if (currentLocation === "default") {
+      console.warn("Waiting for location to be set from JWT...");
+      return;
     }
-    
+
     setLoading(true);
     try {
       let finalFromDate = formatToDDMMYYYY(fromDate);
@@ -492,9 +483,9 @@ const [first, setFirst] = useState(0);
         finalFromDate = today;
         finalToDate = today;
       }
-      
+
       const url = new URL(`${BASE_URL}/V1/enquiry/listEnquiry`);
-      
+
       // Construct parameters
       const params = {
         from: finalFromDate,
@@ -516,44 +507,47 @@ const [first, setFirst] = useState(0);
       if (response.ok && Array.isArray(data.data)) {
         setEnquiries(data.data);
         setFilteredEnquiries(data.data);
-      } else {  
+      } else {
         Toast.fire({
-          icon: 'error',
-          title: 'Failed to load enquiries'
+          icon: "error",
+          title: "Failed to load enquiries",
         });
-        console.error("Error fetching enquiries:", data.message || "Unknown error");
+        console.error(
+          "Error fetching enquiries:",
+          data.message || "Unknown error"
+        );
       }
     } catch (error) {
       Toast.fire({
-          icon: 'error',
-          title: 'Failed to load enquiries'
-        });
+        icon: "error",
+        title: "Failed to load enquiries",
+      });
       console.error("Error fetching enquiries:", error);
     } finally {
       setLoading(false);
     }
-  }, [fromDate, toDate, currentLocation]); 
+  }, [fromDate, toDate, currentLocation]);
 
   // Load data on location/date change
   useEffect(() => {
-    if (currentLocation !== 'default') {
-        fetchEnquiriesData();
+    if (currentLocation !== "default") {
+      fetchEnquiriesData();
     }
   }, [fetchEnquiriesData, currentLocation]);
-  
+
   // Handle global search input change (using filters1 state)
   const handleGlobalSearchChange = (e) => {
     setFilters1({
-        global: {
-          value: e.target.value,
-          matchMode: FilterMatchMode.CONTAINS,
-        },
+      global: {
+        value: e.target.value,
+        matchMode: FilterMatchMode.CONTAINS,
+      },
     });
   };
 
   // ------------------------- JSX RENDER HELPERS -------------------------
 
-   const renderHeader = () => (
+  const renderHeader = () => (
     <div
       style={{
         border: "1px solid #4dd0e1",
@@ -574,42 +568,51 @@ const [first, setFirst] = useState(0);
       >
         <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
           <div style={{ display: "flex", alignItems: "center" }}>
-          <span style={{ marginRight: "8px", fontSize: "13px", fontWeight: "bold", color: "#333" }}>
-            Show
-          </span>
-          <Form.Select
-            size="sm"
-            value={rows}
-            onChange={(e) => {
+            <span
+              style={{
+                marginRight: "8px",
+                fontSize: "13px",
+                fontWeight: "bold",
+                color: "#333",
+              }}
+            >
+              Show
+            </span>
+            <Form.Select
+              size="sm"
+              value={rows}
+              onChange={(e) => {
                 setRows(parseInt(e.target.value));
                 setFirst(0); // Reset to first page when changing row count
-            }}
-            style={{
-              width: "70px",
-              height: "40px",
-              border: "1px solid #4dd0e1",
-              borderRadius: "6px",
-              fontSize: "12px",
-            }}
+              }}
+              style={{
+                width: "70px",
+                height: "40px",
+                border: "1px solid #4dd0e1",
+                borderRadius: "6px",
+                fontSize: "12px",
+              }}
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </Form.Select>
+          </div>
+          <Form.Group
+            className="ms-2"
+            style={{ display: "flex", alignItems: "center", margin: 0 }}
           >
-            <option value={10}>10</option>
-            <option value={25}>25</option>
-            <option value={50}>50</option>
-            <option value={100}>100</option>
-          </Form.Select>
-        </div>
-          <Form.Group className="ms-2" style={{ display: "flex", alignItems: "center", margin: 0 }}>
-            <span 
-            
-            style={{
-                marginRight: "10px", 
-                fontSize: "13px", 
-                fontWeight: "bold", 
+            <span
+              style={{
+                marginRight: "10px",
+                fontSize: "13px",
+                fontWeight: "bold",
                 color: "#333",
-            }}
-        >
-        Search
-        </span> 
+              }}
+            >
+              Search
+            </span>
             <InputGroup>
               <Form.Control
                 type="search"
@@ -621,7 +624,7 @@ const [first, setFirst] = useState(0);
                   border: "1px solid #4dd0e1",
                   padding: "5px 8px",
                   width: "200px",
-                  height:"40px",
+                  height: "40px",
                   fontSize: "12px",
                   transition: "all 0.3s ease",
                 }}
@@ -642,24 +645,38 @@ const [first, setFirst] = useState(0);
           }}
         >
           <div>
-            <div style={{ fontSize: "12px", fontWeight: "500", color: "#00838f", marginBottom: "3px" }}>
+            <div
+              style={{
+                fontSize: "12px",
+                fontWeight: "500",
+                color: "#00838f",
+                marginBottom: "3px",
+              }}
+            >
               From Date
             </div>
             <DatePicker
-              selected={fromDate} 
+              selected={fromDate}
               onChange={setFromDate}
               dateFormat="dd-MM-yyyy"
               placeholderText="Select from date"
               customInput={
                 <Form.Control
-                 style={{ padding: '5px 8px', fontSize: '12px' }}
+                  style={{ padding: "5px 8px", fontSize: "12px" }}
                 />
               }
             />
           </div>
 
           <div>
-            <div style={{ fontSize: "12px", fontWeight: "500", color: "#00838f", marginBottom: "3px" }}>
+            <div
+              style={{
+                fontSize: "12px",
+                fontWeight: "500",
+                color: "#00838f",
+                marginBottom: "3px",
+              }}
+            >
               To Date
             </div>
             <DatePicker
@@ -670,7 +687,7 @@ const [first, setFirst] = useState(0);
               minDate={fromDate}
               customInput={
                 <Form.Control
-                  style={{ padding: '5px 8px', fontSize: '12px' }}
+                  style={{ padding: "5px 8px", fontSize: "12px" }}
                 />
               }
             />
@@ -693,7 +710,8 @@ const [first, setFirst] = useState(0);
               marginTop: "15px",
             }}
           >
-            <FeatherIcon icon="refresh-ccw" size={13} className="me-2" />Refresh
+            <FeatherIcon icon="refresh-ccw" size={13} className="me-2" />
+            Refresh
           </Button>
         </div>
       </div>
@@ -713,8 +731,8 @@ const [first, setFirst] = useState(0);
       }}
     >
       <PageBreadcrumb pagename="Enquiry List" />
-      <NavBarA pagename={`Enquiry List (${currentLocation.toUpperCase()})`} /> 
-      
+      <NavBarA pagename={`Enquiry List (${currentLocation.toUpperCase()})`} />
+
       <div className="theme-body">
         <Container fluid>
           <Row>
@@ -730,8 +748,13 @@ const [first, setFirst] = useState(0);
               >
                 <Card.Body>
                   {loading ? (
-                    <div className="d-flex justify-content-center py-5" style={{ color: "#00bcd4" }}>
-                      <Spinner animation="border" role="status"><span className="visually-hidden">Loading...</span></Spinner>
+                    <div
+                      className="d-flex justify-content-center py-5"
+                      style={{ color: "#00bcd4" }}
+                    >
+                      <Spinner animation="border" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                      </Spinner>
                     </div>
                   ) : (
                     <DataTable
@@ -754,11 +777,12 @@ const [first, setFirst] = useState(0);
                       ]}
                       responsiveLayout="scroll"
                       paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
-                      currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" 
-                      className="p-datatable-customers datatable-compact-style" 
+                      currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
+                      className="p-datatable-customers datatable-compact-style"
                       rowClassName={(rowData, { rowIndex }) => ({
                         style: {
-                          backgroundColor: rowIndex % 2 === 0 ? "#e0f7fa" : "white",
+                          backgroundColor:
+                            rowIndex % 2 === 0 ? "#e0f7fa" : "white",
                           transition: "background-color 0.3s ease",
                         },
                         onMouseOver: (e) => {
@@ -768,63 +792,101 @@ const [first, setFirst] = useState(0);
                           e.currentTarget.style.backgroundColor =
                             rowIndex % 2 === 0 ? "#e0f7fa" : "white";
                         },
-                      })}                      
+                      })}
                     >
                       <Column
                         field="srNo"
                         header="Sr No"
                         body={(rowData, { rowIndex }) => rowIndex + 1}
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center", width:"60px" }}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          width: "60px",
+                        }}
                       />
                       <Column
                         field="date"
                         header="Date"
-                        body={(rowData) => moment(rowData.date).format("DD-MM-YYYY")}
+                        body={(rowData) =>
+                          moment(rowData.date).format("DD-MM-YYYY")
+                        }
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center", width:"90px" }}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          width: "90px",
+                        }}
                       />
-                        <Column
-                          field="patient_phone"
-                          header="Contact No"
-                          body={(rowData) => rowData.patient_phone || "-"}
-                          headerClassName="datatable-header-center"
-                          style={{ border: "1px solid #90caf9", textAlign: "center", width:"90px" }}
-                        />
+                      <Column
+                        field="patient_phone"
+                        header="Contact No"
+                        body={(rowData) => rowData.patient_phone || "-"}
+                        headerClassName="datatable-header-center"
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          width: "90px",
+                        }}
+                      />
                       <Column
                         field="patient_name"
                         header="Patient Name"
                         body={(rowData) => rowData.patient_name || "-"}
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center", width:"180px", wordBreak:"break-word" }}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          width: "180px",
+                          wordBreak: "break-word",
+                        }}
                       />
                       <Column
                         field="patient_location"
                         header="Address"
                         body={(rowData) => rowData.patient_location || "-"}
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center", wordBreak:"break-all", width:"180px"  }}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          wordBreak: "break-all",
+                          width: "180px",
+                        }}
                       />
                       <Column
                         field="enquirytype"
                         header="Enquiry Type"
                         body={(rowData) => rowData.enquirytype || "-"}
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center", wordBreak:"break-word", width:"150px" }}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          wordBreak: "break-word",
+                          width: "150px",
+                        }}
                       />
-                        <Column 
-                          field="doctorName" 
-                          header="Doctor Name" 
-                          body={(rowData) => rowData.doctorName || "-"}
-                          headerClassName="datatable-header-center"
-                          style={{ border: "1px solid #90caf9", textAlign: "center", width:"150px" }}
+                      <Column
+                        field="doctorName"
+                        header="Doctor Name"
+                        body={(rowData) => rowData.doctorName || "-"}
+                        headerClassName="datatable-header-center"
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          width: "150px",
+                        }}
                       />
                       <Column
                         field="FDE_Name"
                         header="FDE Name"
                         body={(rowData) => rowData.FDE_Name || "-"}
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center", width:"120px", wordBreak:"break-word" }}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          width: "120px",
+                          wordBreak: "break-word",
+                        }}
                       />
                     </DataTable>
                   )}

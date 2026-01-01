@@ -4,7 +4,7 @@ import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { decodeJwt } from "../../utils/decode-jwt";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
-import Swal from 'sweetalert2';
+import Swal from "sweetalert2";
 import {
   Container,
   Row,
@@ -27,29 +27,28 @@ import logo from "../../assets/images/3.png";
 import labLogo from "../../assets/images/1.png";
 import pharmacyLogo from "../../assets/images/2.png";
 import receiptLogo from "../../assets/images/4.png";
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 const LOCATION = "demo";
 
 const Toast = Swal.mixin({
   toast: true,
-  position: 'top-end',
+  position: "top-end",
   showConfirmButton: false,
   timer: 3000,
   timerProgressBar: true,
   didOpen: (toast) => {
-    toast.addEventListener('mouseenter', Swal.stopTimer)
-    toast.addEventListener('mouseleave', Swal.resumeTimer)
-  }
+    toast.addEventListener("mouseenter", Swal.stopTimer);
+    toast.addEventListener("mouseleave", Swal.resumeTimer);
+  },
 });
-
 
 export default function ReceiptList() {
   // --- State Management ---
-  const [currentLocation, setCurrentLocation] = useState('default');
+  const [currentLocation, setCurrentLocation] = useState("default");
   const [receipts, setReceipts] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [fromDate, setFromDate] = useState(moment().startOf('day').toDate());
-  const [toDate, setToDate] = useState(moment().endOf('day').toDate());
+  const [fromDate, setFromDate] = useState(moment().startOf("day").toDate());
+  const [toDate, setToDate] = useState(moment().endOf("day").toDate());
   const [rows, setRows] = useState(10);
   const [first, setFirst] = useState(0);
   const [filters, setFilters] = useState({
@@ -58,7 +57,7 @@ export default function ReceiptList() {
 
   useEffect(() => {
     // 1. Get the token
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (token) {
       // 2. Decode the token
       const payload = decodeJwt(token);
@@ -82,7 +81,8 @@ export default function ReceiptList() {
     setLoading(true);
     try {
       if (!currentLocation || !fromDate || !toDate) {
-        if (!currentLocation) console.warn("Waiting for location to be set from JWT...");
+        if (!currentLocation)
+          console.warn("Waiting for location to be set from JWT...");
         return;
       }
 
@@ -114,16 +114,19 @@ export default function ReceiptList() {
         console.log("📥 Fetched Receipts:", data.data.length);
       } else {
         Toast.fire({
-          icon: 'error',
-          title: 'Failed to load receipts'
+          icon: "error",
+          title: "Failed to load receipts",
         });
-        console.error("❌ Error fetching receipts:", data.message || "Unknown error");
+        console.error(
+          "❌ Error fetching receipts:",
+          data.message || "Unknown error"
+        );
         setReceipts([]);
       }
     } catch (error) {
       Toast.fire({
-        icon: 'error',
-        title: 'Network error occurred'
+        icon: "error",
+        title: "Network error occurred",
       });
       console.error("❌ Error fetching receipts:", error);
     } finally {
@@ -131,11 +134,10 @@ export default function ReceiptList() {
     }
   }, [fromDate, toDate, currentLocation]);
 
-
   // Load data on date filter change or component mount
   useEffect(() => {
     // Check currentLocation dependency here
-    if (currentLocation !== 'default') {
+    if (currentLocation !== "default") {
       fetchReceiptsData();
     }
   }, [fetchReceiptsData, currentLocation]);
@@ -144,16 +146,50 @@ export default function ReceiptList() {
 
   // Helper function for converting number to words (kept isolated)
   const numberToWords = (num) => {
-    const ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"];
-    const teens = ["Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
-    const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+    const ones = [
+      "",
+      "One",
+      "Two",
+      "Three",
+      "Four",
+      "Five",
+      "Six",
+      "Seven",
+      "Eight",
+      "Nine",
+    ];
+    const teens = [
+      "Ten",
+      "Eleven",
+      "Twelve",
+      "Thirteen",
+      "Fourteen",
+      "Fifteen",
+      "Sixteen",
+      "Seventeen",
+      "Eighteen",
+      "Nineteen",
+    ];
+    const tens = [
+      "",
+      "",
+      "Twenty",
+      "Thirty",
+      "Forty",
+      "Fifty",
+      "Sixty",
+      "Seventy",
+      "Eighty",
+      "Ninety",
+    ];
 
     const toWords = (n) => {
       if (n === 0) return "";
       if (n < 10) return ones[n];
       if (n < 20) return teens[n - 10];
       if (n < 100) return tens[Math.floor(n / 10)] + " " + ones[n % 10];
-      if (n < 1000) return ones[Math.floor(n / 100)] + " Hundred " + toWords(n % 100);
+      if (n < 1000)
+        return ones[Math.floor(n / 100)] + " Hundred " + toWords(n % 100);
       return toWords(Math.floor(n / 1000)) + " Thousand " + toWords(n % 1000);
     };
 
@@ -171,11 +207,11 @@ export default function ReceiptList() {
   const handlePrintReceipt = (selectedReceipt) => {
     if (!selectedReceipt) {
       Swal.fire({
-        title: 'Preparing Print',
+        title: "Preparing Print",
         text: `Opening receipt for ${receipt.patient_name}`,
-        icon: 'info',
+        icon: "info",
         timer: 1500,
-        showConfirmButton: false
+        showConfirmButton: false,
       });
       return;
     }
@@ -188,28 +224,31 @@ export default function ReceiptList() {
 
     const handleDeleteReceipt = async (receiptId) => {
       const result = await Swal.fire({
-        title: 'Are you sure?',
+        title: "Are you sure?",
         text: "You won't be able to revert this receipt deletion!",
-        icon: 'warning',
+        icon: "warning",
         showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Yes, delete it!'
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Yes, delete it!",
       });
 
       if (result.isConfirmed) {
         try {
-          const response = await fetch(`${BASE_URL}/V1/receipt/delete/${receiptId}?location=${currentLocation}`, {
-            method: 'DELETE'
-          });
+          const response = await fetch(
+            `${BASE_URL}/V1/receipt/delete/${receiptId}?location=${currentLocation}`,
+            {
+              method: "DELETE",
+            }
+          );
           if (response.ok) {
-            Swal.fire('Deleted!', 'Receipt has been deleted.', 'success');
+            Swal.fire("Deleted!", "Receipt has been deleted.", "success");
             fetchReceipts();
           } else {
-            Toast.fire({ icon: 'error', title: 'Delete failed' });
+            Toast.fire({ icon: "error", title: "Delete failed" });
           }
         } catch (error) {
-          Toast.fire({ icon: 'error', title: 'Error connecting to server' });
+          Toast.fire({ icon: "error", title: "Error connecting to server" });
         }
       }
     };
@@ -239,7 +278,9 @@ export default function ReceiptList() {
     ])
       .then(
         ([mainLogo, labLogoBase64, pharmacyLogoBase64, receiptLogoBase64]) => {
-          const amountInWords = numberToWords(selectedReceipt.totalamt - selectedReceipt.discountamt);
+          const amountInWords = numberToWords(
+            selectedReceipt.totalamt - selectedReceipt.discountamt
+          );
 
           const receiptContent = `
             <html>
@@ -274,8 +315,12 @@ export default function ReceiptList() {
                         <td style="width:15%; text-align:center; "><img src="${pharmacyLogoBase64}" class="Medicologo"></td>
                         <td style="width:40%;">
                           <table width='100%' border='0' style= "margin-left:180px;">
-                          <tr><td>Date:&nbsp;<b>${moment(selectedReceipt.receipt_date).format("DD-MM-YYYY")}</b></td></tr>
-                          <tr margin><td>Receipt No:&nbsp;<b>${selectedReceipt.receipt_id}</b></td></tr>
+                          <tr><td>Date:&nbsp;<b>${moment(
+                            selectedReceipt.receipt_date
+                          ).format("DD-MM-YYYY")}</b></td></tr>
+                          <tr margin><td>Receipt No:&nbsp;<b>${
+                            selectedReceipt.receipt_id
+                          }</b></td></tr>
                           </table>
                         </td>
                       </tr>
@@ -288,13 +333,17 @@ export default function ReceiptList() {
                           <table width='100%' border='0'>
                         <tr>
                         <td style="width:85px; line-height:40px;">Received From: </td>
-                        <td><p style="font-weight: 600; text-transform: uppercase;">${selectedReceipt.patientName}</p></td>
+                        <td><p style="font-weight: 600; text-transform: uppercase;">${
+                          selectedReceipt.patientName
+                        }</p></td>
                         </tr>
                          </table>
                           <table width='100%' border='0'>
                             <tr>
                               <td>
-                                For:  <span style="font-weight:600; text-transform:uppercase;">${selectedReceipt.consultation}</span>
+                                For:  <span style="font-weight:600; text-transform:uppercase;">${
+                                  selectedReceipt.consultation
+                                }</span>
                               </td>
                             </tr>
                           </table>                         
@@ -303,7 +352,9 @@ export default function ReceiptList() {
                             <tbody>
                               <tr>
                                 <td style="width:60%; vertical-align: top;">
-                                  Payment Mode: &nbsp;<b>${selectedReceipt.paymentmode}</b><br>
+                                  Payment Mode: &nbsp;<b>${
+                                    selectedReceipt.paymentmode
+                                  }</b><br>
                                   In Words: &nbsp;<b>${amountInWords}</b><br><br>
                                   <b>Next Appointment: </b>No appointment scheduled<br>
                                   <br>
@@ -314,9 +365,16 @@ export default function ReceiptList() {
                                 </td>
                                 <td style="width:40%; vertical-align: top;">
                                   <div class="amount-box-container">
-                                    <div class="amount-box"><b>Total:</b> Rs. ${selectedReceipt.totalamt}/-</div>
-                                    <div class="amount-box" style="margin-top: 5px;"><b>Discount:</b> Rs. ${selectedReceipt.discountamt}/-</div>
-                                    <div class="amount-box" style="margin-top: 5px;"><b>Net Amount:</b> Rs. ${(selectedReceipt.totalamt - selectedReceipt.discountamt)}/-</div>
+                                    <div class="amount-box"><b>Total:</b> Rs. ${
+                                      selectedReceipt.totalamt
+                                    }/-</div>
+                                    <div class="amount-box" style="margin-top: 5px;"><b>Discount:</b> Rs. ${
+                                      selectedReceipt.discountamt
+                                    }/-</div>
+                                    <div class="amount-box" style="margin-top: 5px;"><b>Net Amount:</b> Rs. ${
+                                      selectedReceipt.totalamt -
+                                      selectedReceipt.discountamt
+                                    }/-</div>
                                   </div>
                                 </td>
                               </tr>
@@ -367,11 +425,11 @@ export default function ReceiptList() {
 
   const sendMail = (receipt) => {
     Swal.fire({
-      title: 'Feature Coming Soon!',
+      title: "Feature Coming Soon!",
       // text: `Emailing receipt for ID: ${receipt.receipt_id} is currently under development.`,
       text: `Emailing receipt feature is currently under development.`,
-      icon: 'info',
-      confirmButtonColor: '#00bcd4'
+      icon: "info",
+      confirmButtonColor: "#00bcd4",
     });
   };
 
@@ -417,10 +475,16 @@ export default function ReceiptList() {
           gap: "10px",
         }}
       >
-
         <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
           <div style={{ display: "flex", alignItems: "center" }}>
-            <span style={{ marginRight: "8px", fontSize: "13px", fontWeight: "bold", color: "#333" }}>
+            <span
+              style={{
+                marginRight: "8px",
+                fontSize: "13px",
+                fontWeight: "bold",
+                color: "#333",
+              }}
+            >
               Show
             </span>
             <Form.Select
@@ -444,7 +508,10 @@ export default function ReceiptList() {
               <option value={100}>100</option>
             </Form.Select>
           </div>
-          <Form.Group className="ms-2" style={{ display: "flex", alignItems: "center", margin: 0 }}>
+          <Form.Group
+            className="ms-2"
+            style={{ display: "flex", alignItems: "center", margin: 0 }}
+          >
             <span
               style={{
                 marginRight: "10px",
@@ -493,7 +560,14 @@ export default function ReceiptList() {
           }}
         >
           <div>
-            <div style={{ fontSize: "12px", fontWeight: "500", color: "#00838f", marginBottom: "3px" }}>
+            <div
+              style={{
+                fontSize: "12px",
+                fontWeight: "500",
+                color: "#00838f",
+                marginBottom: "3px",
+              }}
+            >
               From Date
             </div>
             <DatePicker
@@ -501,12 +575,23 @@ export default function ReceiptList() {
               onChange={setFromDate}
               dateFormat="dd-MM-yyyy"
               placeholderText="Select from date"
-              customInput={<Form.Control style={{ padding: '5px 8px', fontSize: '12px' }} />}
+              customInput={
+                <Form.Control
+                  style={{ padding: "5px 8px", fontSize: "12px" }}
+                />
+              }
             />
           </div>
 
           <div>
-            <div style={{ fontSize: "12px", fontWeight: "500", color: "#00838f", marginBottom: "3px" }}>
+            <div
+              style={{
+                fontSize: "12px",
+                fontWeight: "500",
+                color: "#00838f",
+                marginBottom: "3px",
+              }}
+            >
               To Date
             </div>
             <DatePicker
@@ -515,7 +600,11 @@ export default function ReceiptList() {
               dateFormat="dd-MM-yyyy"
               minDate={fromDate}
               placeholderText="Select to date"
-              customInput={<Form.Control style={{ padding: '5px 8px', fontSize: '12px' }} />}
+              customInput={
+                <Form.Control
+                  style={{ padding: "5px 8px", fontSize: "12px" }}
+                />
+              }
             />
           </div>
 
@@ -536,7 +625,8 @@ export default function ReceiptList() {
               marginTop: "15px",
             }}
           >
-            <FeatherIcon icon="refresh-ccw" size={13} className="me-2" />Refresh
+            <FeatherIcon icon="refresh-ccw" size={13} className="me-2" />
+            Refresh
           </Button>
         </div>
       </div>
@@ -570,7 +660,10 @@ export default function ReceiptList() {
               >
                 <Card.Body>
                   {loading ? (
-                    <div className="d-flex justify-content-center py-5" style={{ color: "#00bcd4" }}>
+                    <div
+                      className="d-flex justify-content-center py-5"
+                      style={{ color: "#00bcd4" }}
+                    >
                       <Spinner animation="border" role="status">
                         <span className="visually-hidden">Loading...</span>
                       </Spinner>
@@ -601,7 +694,8 @@ export default function ReceiptList() {
                       className="datatable-compact-style"
                       rowClassName={(rowData, { rowIndex }) => ({
                         style: {
-                          backgroundColor: rowIndex % 2 === 0 ? "#e0f7fa" : "white",
+                          backgroundColor:
+                            rowIndex % 2 === 0 ? "#e0f7fa" : "white",
                           transition: "background-color 0.3s ease",
                         },
                         onMouseOver: (e) => {
@@ -612,21 +706,30 @@ export default function ReceiptList() {
                             rowIndex % 2 === 0 ? "#e0f7fa" : "white";
                         },
                       })}
-
                     >
                       <Column
                         field="srNo"
                         header="Sr No"
                         body={(rowData, { rowIndex }) => rowIndex + 1}
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem", width: "70px" }}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "70px",
+                        }}
                       />
                       <Column
                         field="receipt_id"
                         header="Receipt ID"
                         body={(rowData) => rowData.receipt_id || "-"}
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem", width: "110px" }}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "110px",
+                        }}
                       />
                       <Column
                         field="receipt_date"
@@ -641,7 +744,7 @@ export default function ReceiptList() {
                           border: "1px solid #90caf9",
                           textAlign: "center",
                           padding: "0.75rem",
-                          width: "100px"
+                          width: "100px",
                         }}
                       />
                       <Column
@@ -649,42 +752,79 @@ export default function ReceiptList() {
                         header="Patient Name"
                         body={(rowData) => rowData.patientName || "-"}
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem", wordBreak: "break-word", width: "180px" }}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          wordBreak: "break-word",
+                          width: "180px",
+                        }}
                       />
                       <Column
                         field="consultation"
                         header="Consultation"
                         body={(rowData) => rowData.consultation || "-"}
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem", wordBreak: "break-word", width: "140px" }}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          wordBreak: "break-word",
+                          width: "140px",
+                        }}
                       />
                       <Column
                         field="doctorName"
                         header="Doctor Name"
                         body={(rowData) => rowData.doctorName || "-"}
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem", wordBreak: "break-word", width: "180px" }}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          wordBreak: "break-word",
+                          width: "180px",
+                        }}
                       />
                       <Column
                         field="totalamt"
                         header="Total Amount"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => `₹ ${parseFloat(rowData.totalamt).toFixed(2)}`}
-                        style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem", width: "120px" }}
+                        body={(rowData) =>
+                          `₹ ${parseFloat(rowData.totalamt).toFixed(2)}`
+                        }
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "120px",
+                        }}
                       />
                       <Column
                         field="discountamt"
                         header="Discount Amount"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => `₹ ${parseFloat(rowData.discountamt || 0).toFixed(2)}`}
-                        style={{ border: "1px solid #90caf9", textAlign: "center", padding: "0.75rem", width: "120px" }}
+                        body={(rowData) =>
+                          `₹ ${parseFloat(rowData.discountamt || 0).toFixed(2)}`
+                        }
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "120px",
+                        }}
                       />
                       <Column
                         header="Actions"
                         body={actionBodyTemplate}
                         exportable={false}
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", alignContent: "center", padding: "0.75rem", width: "100px" }}
+                        style={{
+                          border: "1px solid #90caf9",
+                          alignContent: "center",
+                          padding: "0.75rem",
+                          width: "100px",
+                        }}
                       />
                     </DataTable>
                   )}
@@ -697,4 +837,3 @@ export default function ReceiptList() {
     </div>
   );
 }
-

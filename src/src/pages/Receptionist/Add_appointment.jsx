@@ -48,8 +48,7 @@ const countryNumberLimits = {
   default: { min: 7, max: 15 },
 };
 
-
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 export default function Add_appointment() {
   const [loading, setLoading] = useState(false);
@@ -89,7 +88,7 @@ export default function Add_appointment() {
   const existingPatientTypes = ["FOLLOW", "POSTOPERATIVE", "OTHER"];
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (token) {
       const payload = decodeJwt(token);
       if (payload && payload.jobLocation) {
@@ -98,69 +97,95 @@ export default function Add_appointment() {
     }
   }, []);
 
-  const fetchPatientDetails = useCallback(async (patient_phone) => {
-    if (!patient_phone || !currentLocation) {
-      setIsExistingPatient(false);
-      setFormData((prev) => ({
-        ...prev,
-        patientName: "",
-        patient_location: "",
-        patient_id: "",
-        appointmentTime: new Date().toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        }),
-        note: "", FDE_Name: "", departmentName: "", doctorName: "",
-        patient_type: "NEW", doctor_id: "",
-      }));
-      return;
-    }
-
-    console.log("Fetching patient details...");
-
-    try {
-      const url = `${BASE_URL}/V1/appointment/getPatientByMobile?patient_phone=${patient_phone}&location=${currentLocation}`;
-      const response = await fetch(url, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      if (!response.ok) {
+  const fetchPatientDetails = useCallback(
+    async (patient_phone) => {
+      if (!patient_phone || !currentLocation) {
         setIsExistingPatient(false);
-        setFormData((prev) => ({ ...prev, patientName: "", patient_id: "", patient_location: "", patient_type: "NEW", doctor_id: "" }));
+        setFormData((prev) => ({
+          ...prev,
+          patientName: "",
+          patient_location: "",
+          patient_id: "",
+          appointmentTime: new Date().toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          }),
+          note: "",
+          FDE_Name: "",
+          departmentName: "",
+          doctorName: "",
+          patient_type: "NEW",
+          doctor_id: "",
+        }));
         return;
       }
 
-      const data = await response.json();
+      console.log("Fetching patient details...");
 
-      if (data.statusCode === 200 && data.data) {
-        setIsExistingPatient(true);
-        console.warn(`${data.data.name} is already registered.`);
+      try {
+        const url = `${BASE_URL}/V1/appointment/getPatientByMobile?patient_phone=${patient_phone}&location=${currentLocation}`;
+        const response = await fetch(url, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
 
+        if (!response.ok) {
+          setIsExistingPatient(false);
+          setFormData((prev) => ({
+            ...prev,
+            patientName: "",
+            patient_id: "",
+            patient_location: "",
+            patient_type: "NEW",
+            doctor_id: "",
+          }));
+          return;
+        }
+
+        const data = await response.json();
+
+        if (data.statusCode === 200 && data.data) {
+          setIsExistingPatient(true);
+          console.warn(`${data.data.name} is already registered.`);
+
+          setFormData((prev) => ({
+            ...prev,
+            patientName: data.data.name || "",
+            patient_location: data.data.address || "",
+            patient_id: data.data.patient_id || "",
+            appointmentTime: data.data.appointmentTime || "",
+            note: data.data.note || "",
+            FDE_Name: data.data.FDE_Name || "",
+            departmentName: data.data.departmentName || "",
+            doctorName: data.data.doctorName || "",
+            patient_type: "",
+            doctor_id: data.data.doctor_id || "",
+          }));
+        } else {
+          setIsExistingPatient(false);
+          setFormData((prev) => ({
+            ...prev,
+            patientName: "",
+            patient_id: "",
+            patient_type: "NEW",
+            doctor_id: "",
+          }));
+        }
+      } catch (error) {
+        console.error("Error fetching patient details:", error);
+        setIsExistingPatient(false);
         setFormData((prev) => ({
           ...prev,
-          patientName: data.data.name || "",
-          patient_location: data.data.address || "",
-          patient_id: data.data.patient_id || "",
-          appointmentTime: data.data.appointmentTime || "",
-          note: data.data.note || "",
-          FDE_Name: data.data.FDE_Name || "",
-          departmentName: data.data.departmentName || "",
-          doctorName: data.data.doctorName || "",
-          patient_type: "",
-          doctor_id: data.data.doctor_id || "",
+          patientName: "",
+          patient_id: "",
+          patient_type: "NEW",
+          doctor_id: "",
         }));
-      } else {
-        setIsExistingPatient(false);
-        setFormData((prev) => ({ ...prev, patientName: "", patient_id: "", patient_type: "NEW", doctor_id: "" }));
       }
-    } catch (error) {
-      console.error("Error fetching patient details:", error);
-      setIsExistingPatient(false);
-      setFormData((prev) => ({ ...prev, patientName: "", patient_id: "", patient_type: "NEW", doctor_id: "" }));
-    }
-  }, [currentLocation]);
+    },
+    [currentLocation]
+  );
 
   const fetchDropdownData = useCallback(async () => {
     if (!currentLocation) return;
@@ -170,22 +195,25 @@ export default function Add_appointment() {
     try {
       const fetchApi = async (endpoint) => {
         const url = `${BASE_URL}/V1/appointment/${endpoint}?location=${currentLocation}`;
-        const response = await fetch(url, { method: "GET", headers: { "Content-Type": "application/json" } });
+        const response = await fetch(url, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
         return response.ok ? response.json() : { data: [] };
       };
 
-      const [treatmentData, doctorData, fdeData, departmentData] = await Promise.all([
-        fetchApi('treatmentDropdown').then(res => res.data),
-        fetchApi('doctorDropdown').then(res => res.data),
-        fetchApi('fdeDropdown').then(res => res.data),
-        fetchApi('departmentDropdown').then(res => res.data),
-      ]);
+      const [treatmentData, doctorData, fdeData, departmentData] =
+        await Promise.all([
+          fetchApi("treatmentDropdown").then((res) => res.data),
+          fetchApi("doctorDropdown").then((res) => res.data),
+          fetchApi("fdeDropdown").then((res) => res.data),
+          fetchApi("departmentDropdown").then((res) => res.data),
+        ]);
 
       setTreatmentList(Array.isArray(treatmentData) ? treatmentData : []);
       setDoctors(Array.isArray(doctorData) ? doctorData : []);
       setFdeList(Array.isArray(fdeData) ? fdeData : []);
       setDepartmentList(Array.isArray(departmentData) ? departmentData : []);
-
     } catch (error) {
       console.error("Error fetching dropdown data:", error.message);
     }
@@ -219,7 +247,7 @@ export default function Add_appointment() {
     const { name, value, tagName } = e.target;
 
     if (name === "doctorName") {
-      const selectedDoctor = doctors.find(d => d.name === value);
+      const selectedDoctor = doctors.find((d) => d.name === value);
 
       setFormData((prevState) => ({
         ...prevState,
@@ -233,7 +261,8 @@ export default function Add_appointment() {
       const alphabetsOnly = value.replace(/[^A-Za-z\s]/g, "");
       setFormData((prevState) => ({
         ...prevState,
-        [name]: tagName === "INPUT" ? alphabetsOnly.toUpperCase() : alphabetsOnly,
+        [name]:
+          tagName === "INPUT" ? alphabetsOnly.toUpperCase() : alphabetsOnly,
       }));
       return;
     }
@@ -242,7 +271,10 @@ export default function Add_appointment() {
       const validAddressChars = value.replace(/[^A-Za-z0-9\s,.\-/#]/g, "");
       setFormData((prevState) => ({
         ...prevState,
-        [name]: tagName === "INPUT" ? validAddressChars.toUpperCase() : validAddressChars,
+        [name]:
+          tagName === "INPUT"
+            ? validAddressChars.toUpperCase()
+            : validAddressChars,
       }));
       return;
     }
@@ -278,17 +310,21 @@ export default function Add_appointment() {
     }
 
     if (formData.patient_type !== "NEW" && !formData.patient_id) {
-      newErrors.patient_phone = "Patient ID is required for existing patient types (FOLLOW, POSTOPERATIVE, OTHER). Please search by phone number.";
+      newErrors.patient_phone =
+        "Patient ID is required for existing patient types (FOLLOW, POSTOPERATIVE, OTHER). Please search by phone number.";
     }
 
     requiredFields.forEach((field) => {
       if (!formData[field]) {
         let displayName = field.replace(/([A-Z])/g, " $1");
-        if (field === 'treatment') displayName = 'Treatment';
-        if (field === 'patient_location') displayName = 'Address (Patient Location)';
-        if (field === 'doctor_id') displayName = 'Appointment With (Doctor)';
+        if (field === "treatment") displayName = "Treatment";
+        if (field === "patient_location")
+          displayName = "Address (Patient Location)";
+        if (field === "doctor_id") displayName = "Appointment With (Doctor)";
 
-        newErrors[field === 'doctor_id' ? 'doctorName' : field] = `${displayName} is required`;
+        newErrors[
+          field === "doctor_id" ? "doctorName" : field
+        ] = `${displayName} is required`;
       }
     });
 
@@ -359,10 +395,22 @@ export default function Add_appointment() {
           alert("Appointment added successfully");
           // Reset form (Data Minimization)
           setFormData({
-            treatment: "", date: new Date().toISOString().split("T")[0], patientName: "",
-            patient_phone: "", patient_location: "", patient_type: "", appointmentTime: "",
-            note: "", FDE_Name: "", departmentName: "", doctorName: "", doctor_id: "",
-            consultationchk: 0, confirm_time: 0, status: "BOOKED", patient_id: "",
+            treatment: "",
+            date: new Date().toISOString().split("T")[0],
+            patientName: "",
+            patient_phone: "",
+            patient_location: "",
+            patient_type: "",
+            appointmentTime: "",
+            note: "",
+            FDE_Name: "",
+            departmentName: "",
+            doctorName: "",
+            doctor_id: "",
+            consultationchk: 0,
+            confirm_time: 0,
+            status: "BOOKED",
+            patient_id: "",
           });
         } else {
           const errorData = await response.json();
@@ -373,7 +421,9 @@ export default function Add_appointment() {
       } catch (error) {
         // HIPAA: Generic network error
         console.error("Error adding appointment:", error.message);
-        alert("A network error occurred while adding the appointment. Please try again.");
+        alert(
+          "A network error occurred while adding the appointment. Please try again."
+        );
       } finally {
         setLoading(false);
       }
@@ -436,8 +486,7 @@ export default function Add_appointment() {
     const patient_phone = e.target.value.replace(/\D/g, ""); // Remove non-digits
     const selectedCountryCode = "+91";
     const limits =
-      countryNumberLimits[selectedCountryCode] ||
-      countryNumberLimits.default;
+      countryNumberLimits[selectedCountryCode] || countryNumberLimits.default;
 
     if (patient_phone.length <= limits.max) {
       setFormData((prev) => ({
@@ -460,8 +509,7 @@ export default function Add_appointment() {
         }));
       }
     }
-  }
-
+  };
 
   return (
     <div
@@ -486,18 +534,29 @@ export default function Add_appointment() {
                 overflow: "hidden",
               }}
             >
-              <Card.Body >
+              <Card.Body>
                 <Form>
                   <div className="form-section">
-                    <h4 className="section-title" style={{marginBottom:"15px"}}>
-                     Add New Appointment Details
-                      <span className="ms-2 text-secondary" style={{ fontSize: '0.8em' }}>
-                        (Clinic Location: {currentLocation ? currentLocation.toUpperCase() : "Loading..."}
+                    <h4
+                      className="section-title"
+                      style={{ marginBottom: "15px" }}
+                    >
+                      Add New Appointment Details
+                      <span
+                        className="ms-2 text-secondary"
+                        style={{ fontSize: "0.8em" }}
+                      >
+                        (Clinic Location:{" "}
+                        {currentLocation
+                          ? currentLocation.toUpperCase()
+                          : "Loading..."}
                         )
                       </span>
                     </h4>
                     {errors.location && (
-                      <p style={{ color: "red", fontWeight: "bold" }}>{errors.location}</p>
+                      <p style={{ color: "red", fontWeight: "bold" }}>
+                        {errors.location}
+                      </p>
                     )}
                     <br />
                     <Row>
@@ -511,20 +570,21 @@ export default function Add_appointment() {
                             name="patient_phone"
                             value={formData.patient_phone}
                             onChange={handlePhoneNumberChange}
-                            placeholder={`Enter ${countryNumberLimits["+91"].max
-                              } digit number`}
-                            maxLength={
-                              countryNumberLimits["+91"].max
-                            }
+                            placeholder={`Enter ${countryNumberLimits["+91"].max} digit number`}
+                            maxLength={countryNumberLimits["+91"].max}
                           />
                           {errors.patient_phone && (
-                            <p style={{ color: "red" }}>{errors.patient_phone}</p>
+                            <p style={{ color: "red" }}>
+                              {errors.patient_phone}
+                            </p>
                           )}
                         </Form.Group>
                       </Col>
                       <Col md={2} className="mb-4">
                         <Form.Group className="mb-3">
-                          <Form.Label>Type <span className="required">*</span></Form.Label>
+                          <Form.Label>
+                            Type <span className="required">*</span>
+                          </Form.Label>
                           <Form.Control
                             as="select"
                             name="patient_type"
@@ -548,7 +608,9 @@ export default function Add_appointment() {
                             ))}
                           </Form.Control>
                           {errors.patient_type && (
-                            <p style={{ color: "red" }}>{errors.patient_type}</p>
+                            <p style={{ color: "red" }}>
+                              {errors.patient_type}
+                            </p>
                           )}
                         </Form.Group>
                       </Col>
@@ -589,7 +651,9 @@ export default function Add_appointment() {
                             ))}
                           </Form.Select>
                           {errors.appointmentTime && (
-                            <p style={{ color: "red" }}>{errors.appointmentTime}</p>
+                            <p style={{ color: "red" }}>
+                              {errors.appointmentTime}
+                            </p>
                           )}
                         </Form.Group>
                       </Col>
@@ -659,7 +723,9 @@ export default function Add_appointment() {
                             ))}
                           </Form.Select>
                           {errors.departmentName && (
-                            <p style={{ color: "red" }}>{errors.departmentName}</p>
+                            <p style={{ color: "red" }}>
+                              {errors.departmentName}
+                            </p>
                           )}
                         </Form.Group>
                       </Col>
@@ -694,7 +760,8 @@ export default function Add_appointment() {
                     {/* Third Row: Treatment, Address (Patient Location) */}
                     <Row className="mb-20">
                       {/* Treatment Field (Visible only when 'OTHER' is selected OR a treatment is already set) */}
-                      {(formData.patient_type === "OTHER" || formData.treatment) && (
+                      {(formData.patient_type === "OTHER" ||
+                        formData.treatment) && (
                         <Col md={4}>
                           <Form.Group className="mb-20">
                             <Form.Label>Treatment</Form.Label>
@@ -726,9 +793,20 @@ export default function Add_appointment() {
                       )}
                       {/* Address (patient_location) - The patient's address/city */}
                       {shouldShowAddressAndReference() && (
-                        <Col md={formData.patient_type === "OTHER" || formData.treatment ? 4 : 8} className="mb-4">
+                        <Col
+                          md={
+                            formData.patient_type === "OTHER" ||
+                            formData.treatment
+                              ? 4
+                              : 8
+                          }
+                          className="mb-4"
+                        >
                           <Form.Group className="mb-3">
-                            <Form.Label>Address (Patient Location) <span className="required">*</span></Form.Label>
+                            <Form.Label>
+                              Address (Patient Location){" "}
+                              <span className="required">*</span>
+                            </Form.Label>
                             <Form.Control
                               type="text"
                               name="patient_location"
@@ -738,7 +816,9 @@ export default function Add_appointment() {
                               required
                             />
                             {errors.patient_location && (
-                              <p style={{ color: "red" }}>{errors.patient_location}</p>
+                              <p style={{ color: "red" }}>
+                                {errors.patient_location}
+                              </p>
                             )}
                           </Form.Group>
                         </Col>

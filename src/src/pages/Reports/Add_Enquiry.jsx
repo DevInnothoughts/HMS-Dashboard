@@ -57,27 +57,31 @@ const countryNumberLimits = {
   default: { min: 7, max: 15 }, // Default limits
 };
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 const formatDate = (date) => {
   const d = new Date(date);
   const day = String(d.getDate()).padStart(2, "0");
   const month = String(d.getMonth() + 1).padStart(2, "0");
   const year = d.getFullYear();
-  return `${year}-${month}-${day}`;  // FIXED format
+  return `${year}-${month}-${day}`; // FIXED format
 };
-
 
 export default function Add_Enquiry() {
   const [currentLocation, setCurrentLocation] = useState(null);
   const [formData, setFormData] = useState({
     date: formatDate(new Date()),
     // Maps to doctor_id in payload
-    doctorId: "", 
+    doctorId: "",
     enquirytype: "",
-    patient_type: "", 
+    patient_type: "",
     patient_name: "",
     patient_phone: "",
-    time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }), 
+    time: new Date().toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    }),
     patient_location: "",
     reference: "",
     FDE_Name: "",
@@ -88,25 +92,23 @@ export default function Add_Enquiry() {
   const [loading, setLoading] = useState(false);
   const [doctors, setDoctors] = useState([]);
   const phoneRegex = /^[0-9]{7,15}$/; // Define phoneRegex before using it
-  
 
   // Effect to fetch currentLocation from JWT
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (token) {
-        const payload = decodeJwt(token);
-        if (payload && payload.jobLocation) {
-            setCurrentLocation(payload.jobLocation);
-        }
+      const payload = decodeJwt(token);
+      if (payload && payload.jobLocation) {
+        setCurrentLocation(payload.jobLocation);
+      }
     }
   }, []);
-
 
   const validate = () => {
     const newErrors = {};
     const requiredFields = [
       "date",
-      "doctorId", 
+      "doctorId",
       "enquirytype",
       "patient_name",
       "patient_phone",
@@ -114,7 +116,7 @@ export default function Add_Enquiry() {
       "reference",
       "FDE_Name",
       "note",
-      "patient_type", 
+      "patient_type",
       "time",
     ];
 
@@ -122,29 +124,29 @@ export default function Add_Enquiry() {
       if (!formData[field]) {
         // Customize display name for better UX
         let displayName = field.replace(/([A-Z])/g, " $1");
-        if (field === 'doctorId') displayName = 'Doctor Name';
-        if (field === 'FDE_Name') displayName = 'FDE Name';
-        
+        if (field === "doctorId") displayName = "Doctor Name";
+        if (field === "FDE_Name") displayName = "FDE Name";
+
         newErrors[field] = `${displayName} is required`;
       }
     });
     if (!formData.patient_phone || !phoneRegex.test(formData.patient_phone)) {
       newErrors.patient_phone = "Enter a valid phone number (7-15 digits)";
     }
-    
+
     // Check for currentLocation
     if (!currentLocation) {
-        newErrors.location = "Location data is not available. Please try logging in again.";
+      newErrors.location =
+        "Location data is not available. Please try logging in again.";
     }
 
     return newErrors;
   };
 
   const parseDate = (dateString) => {
-  const [year, month, day] = dateString.split("-").map(Number);
-  return new Date(year, month - 1, day);
-};
-
+    const [year, month, day] = dateString.split("-").map(Number);
+    return new Date(year, month - 1, day);
+  };
 
   // Handle input changes (used for all text/select inputs)
   const handleInputChange = (e) => {
@@ -168,38 +170,41 @@ export default function Add_Enquiry() {
       // ** EDITED PAYLOAD START **
       // Ensure all fields from formData are mapped explicitly, using backend field names
       const payload = {
-          // Fields mapping directly to schema column names (except doctorId -> doctor_id)
-          doctor_id: formData.doctorId, 
-          patient_type: formData.patient_type,
-          enquirytype: formData.enquirytype,
-          patient_name: formData.patient_name,
-          patient_phone: formData.patient_phone,
-          date: formData.date,
-          time: formData.time,
-          patient_location: formData.patient_location,
-          reference: formData.reference,
-          FDE_Name: formData.FDE_Name,
-          note: formData.note,
-          
-          // Add operational data (current FDE clinic location)
-          clinic_location: currentLocation, 
-          // Include country code based on phone format helper
-          countryCode: getCountryCode(formData.patient_phone),
+        // Fields mapping directly to schema column names (except doctorId -> doctor_id)
+        doctor_id: formData.doctorId,
+        patient_type: formData.patient_type,
+        enquirytype: formData.enquirytype,
+        patient_name: formData.patient_name,
+        patient_phone: formData.patient_phone,
+        date: formData.date,
+        time: formData.time,
+        patient_location: formData.patient_location,
+        reference: formData.reference,
+        FDE_Name: formData.FDE_Name,
+        note: formData.note,
+
+        // Add operational data (current FDE clinic location)
+        clinic_location: currentLocation,
+        // Include country code based on phone format helper
+        countryCode: getCountryCode(formData.patient_phone),
       };
       // ** EDITED PAYLOAD END **
 
       try {
         console.log("Sending request to backend...", payload);
 
-        // Keeping the location in the query string as a convention used in the original code, 
+        // Keeping the location in the query string as a convention used in the original code,
         // though it's also in the payload as clinic_location.
-        const response = await fetch(`${BASE_URL}/V1/enquiry/addEnquiry?location=${currentLocation}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        });
+        const response = await fetch(
+          `${BASE_URL}/V1/enquiry/addEnquiry?location=${currentLocation}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          }
+        );
 
         console.log("Response received:", response);
 
@@ -219,7 +224,12 @@ export default function Add_Enquiry() {
             reference: "",
             FDE_Name: "",
             note: "",
-            time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }), 
+            time: new Date().toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+              hour12: false,
+            }),
           });
         } else {
           console.error(
@@ -242,7 +252,7 @@ export default function Add_Enquiry() {
   const fetchDropdownData = useCallback(async () => {
     // Only fetch if location is available
     if (!currentLocation) return;
-    
+
     try {
       // Add location to the doctorDropdown call
       const doctorResponse = await fetch(
@@ -270,23 +280,22 @@ export default function Add_Enquiry() {
 
   useEffect(() => {
     if (currentLocation) {
-        fetchDropdownData();
+      fetchDropdownData();
     }
   }, [currentLocation, fetchDropdownData]);
-  
+
   // Helper to format time input in HH:MM:SS format (Optional: can be improved with a time picker component)
   const handleTimeChange = (e) => {
-      const value = e.target.value;
-      // Basic validation for HH:MM format
-      const regex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-      if (regex.test(value)) {
-          // If a valid HH:MM is entered, auto-append :00
-          setFormData(prev => ({ ...prev, time: value + ':00' }));
-      } else {
-          setFormData(prev => ({ ...prev, time: value }));
-      }
-  }
-
+    const value = e.target.value;
+    // Basic validation for HH:MM format
+    const regex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (regex.test(value)) {
+      // If a valid HH:MM is entered, auto-append :00
+      setFormData((prev) => ({ ...prev, time: value + ":00" }));
+    } else {
+      setFormData((prev) => ({ ...prev, time: value }));
+    }
+  };
 
   return (
     <div
@@ -306,7 +315,7 @@ export default function Add_Enquiry() {
             <Col>
               <Card
                 style={{
-                  padding:"20px",
+                  padding: "20px",
                   borderRadius: "12px",
                   boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
                   borderColor: "#00bcd4",
@@ -316,25 +325,37 @@ export default function Add_Enquiry() {
               >
                 <Card.Body>
                   <Form onSubmit={handleSubmit}>
-                    <h4 className="section-title " style={{marginBottom:"20px"}}>
-                      
+                    <h4
+                      className="section-title "
+                      style={{ marginBottom: "20px" }}
+                    >
                       Add New Enquiry Details
                       {/* Display Location status */}
-                      <span className="ms-2 text-secondary" style={{fontSize: '0.8em'}}>
-                        (Clinic Location: {currentLocation ? currentLocation.toUpperCase() : "Loading..."}
+                      <span
+                        className="ms-2 text-secondary"
+                        style={{ fontSize: "0.8em" }}
+                      >
+                        (Clinic Location:{" "}
+                        {currentLocation
+                          ? currentLocation.toUpperCase()
+                          : "Loading..."}
                         )
                       </span>
                     </h4>
                     {errors.location && (
-                        <p style={{ color: "red", fontWeight: "bold" }}>{errors.location}</p>
+                      <p style={{ color: "red", fontWeight: "bold" }}>
+                        {errors.location}
+                      </p>
                     )}
-                    
+
                     {/* --- ROW 1: Date, Enquiry Type, Doctor Name, Patient Name --- */}
                     <Row>
                       {/* Date (Maps to schema: date) */}
                       <Col md={3}>
                         <Form.Group className="mb-3">
-                          <Form.Label>Date <span className="required">*</span></Form.Label>
+                          <Form.Label>
+                            Date <span className="required">*</span>
+                          </Form.Label>
                           <DatePicker
                             selected={parseDate(formData.date)}
                             onChange={(date) => {
@@ -359,11 +380,13 @@ export default function Add_Enquiry() {
                           )}
                         </Form.Group>
                       </Col>
-                      
+
                       {/* Enquiry Type (Maps to schema: enquirytype) */}
                       <Col md={3}>
                         <Form.Group controlId="enquirytype">
-                          <Form.Label>Enquiry Type <span className="required">*</span></Form.Label>
+                          <Form.Label>
+                            Enquiry Type <span className="required">*</span>
+                          </Form.Label>
                           <Form.Control
                             as="select"
                             name="enquirytype"
@@ -399,11 +422,13 @@ export default function Add_Enquiry() {
                           )}
                         </Form.Group>
                       </Col>
-                      
+
                       {/* Doctor Name Dropdown (Maps state: doctorId to schema: doctor_id) */}
                       <Col md={3}>
                         <Form.Group className="mb-20">
-                          <Form.Label>Doctor Name <span className="required">*</span></Form.Label>
+                          <Form.Label>
+                            Doctor Name <span className="required">*</span>
+                          </Form.Label>
                           <Form.Select
                             name="doctorId"
                             value={formData.doctorId}
@@ -423,7 +448,9 @@ export default function Add_Enquiry() {
                               ))
                             ) : (
                               <option disabled>
-                                {currentLocation ? "No doctors available" : "Loading doctors..."}
+                                {currentLocation
+                                  ? "No doctors available"
+                                  : "Loading doctors..."}
                               </option>
                             )}
                           </Form.Select>
@@ -432,11 +459,13 @@ export default function Add_Enquiry() {
                           )}
                         </Form.Group>
                       </Col>
-                      
+
                       {/* Patient Name (Maps to schema: patient_name) */}
                       <Col md={3}>
                         <Form.Group controlId="patient_name">
-                          <Form.Label>Patient Name <span className="required">*</span></Form.Label>
+                          <Form.Label>
+                            Patient Name <span className="required">*</span>
+                          </Form.Label>
                           <Form.Control
                             type="text"
                             name="patient_name"
@@ -446,122 +475,136 @@ export default function Add_Enquiry() {
                             required
                           />
                           {errors.patient_name && (
-                            <p style={{ color: "red" }}>{errors.patient_name}</p>
+                            <p style={{ color: "red" }}>
+                              {errors.patient_name}
+                            </p>
                           )}
                         </Form.Group>
                       </Col>
                     </Row>
-                    
+
                     {/* --- ROW 2: Patient Type, Time, Mobile, Address --- */}
                     <Row>
-                       {/* ** Patient Type (Maps to schema: patient_type) ** */}
-                       <Col md={3} style={{marginBottom:"15px"}}>
-                            <Form.Group controlId="patient_type">
-                                <Form.Label>Patient Type <span className="required">*</span></Form.Label>
-                                <Form.Control
-                                    as="select"
-                                    name="patient_type"
-                                    value={formData.patient_type}
-                                    onChange={handleInputChange}
-                                    required
-                                >
-                                    <option value="">Select Type</option>
-                                    <option value="NEW">NEW</option>
-                                    <option value="EXISTING">EXISTING</option>
-                                    <option value="REFERRAL">REFERRAL</option>
-                                </Form.Control>
-                                {errors.patient_type && (
-                                    <p style={{ color: "red" }}>{errors.patient_type}</p>
-                                )}
-                            </Form.Group>
-                        </Col>
-                        
-                        {/* ** Time (Maps to schema: time) ** */}
-                        <Col md={3}>
-                            <Form.Group controlId="time">
-                                <Form.Label>Time (HH:MM) <span className="required">*</span></Form.Label>
-                                <Form.Control
-                                    type="text"
-                                    name="time"
-                                    // Use handleTimeChange to manage the specific format requirement 
-                                    value={formData.time.substring(0, 5)} 
-                                    onChange={handleTimeChange}
-                                    placeholder="e.g., 14:30"
-                                    maxLength={5} 
-                                    required
-                                />
-                                {errors.time && (
-                                    <p style={{ color: "red" }}>{errors.time}</p>
-                                )}
-                            </Form.Group>
-                        </Col>
-                        
-                        {/* Mobile Number (Maps to schema: patient_phone) */}
-                        <Col md={3}>
-                            <Form.Group controlId="patient_phone">
-                            <Form.Label>Mobile Number <span className="required">*</span></Form.Label>
-                            <Form.Control
-                                type="tel"
-                                name="patient_phone"
-                                value={formData.patient_phone}
-                                onChange={(e) => {
-                                const patient_phone = e.target.value.replace(
-                                    /\D/g,
-                                    ""
-                                ); // Remove non-digits
-                                const selectedCountryCode =
-                                    formData.countryCode || "+91"; // Default to India if none selected
-                                const limits =
-                                    countryNumberLimits[selectedCountryCode] ||
-                                    countryNumberLimits.default;
+                      {/* ** Patient Type (Maps to schema: patient_type) ** */}
+                      <Col md={3} style={{ marginBottom: "15px" }}>
+                        <Form.Group controlId="patient_type">
+                          <Form.Label>
+                            Patient Type <span className="required">*</span>
+                          </Form.Label>
+                          <Form.Control
+                            as="select"
+                            name="patient_type"
+                            value={formData.patient_type}
+                            onChange={handleInputChange}
+                            required
+                          >
+                            <option value="">Select Type</option>
+                            <option value="NEW">NEW</option>
+                            <option value="EXISTING">EXISTING</option>
+                            <option value="REFERRAL">REFERRAL</option>
+                          </Form.Control>
+                          {errors.patient_type && (
+                            <p style={{ color: "red" }}>
+                              {errors.patient_type}
+                            </p>
+                          )}
+                        </Form.Group>
+                      </Col>
 
-                                // Only update if the number is within limits or being deleted
-                                if (patient_phone.length <= limits.max) {
-                                    setFormData((prev) => ({
-                                    ...prev,
-                                    patient_phone: patient_phone,
-                                    }));
-                                }
-                                }}
-                                placeholder={`Enter ${
-                                countryNumberLimits["+91"].max
-                                } digit number`}
-                                maxLength={15}
-                                required
-                            />
-                            {errors.patient_phone && (
-                                <p style={{ color: "red" }}>
-                                {errors.patient_phone}
-                                </p>
-                            )}
-                            </Form.Group>
-                        </Col>
-                        
-                        {/* Address (Maps to schema: patient_location) */}
-                        <Col md={3}>
-                            <Form.Group controlId="patient_location">
-                            <Form.Label>Address <span className="required">*</span></Form.Label>
-                            <Form.Control
-                                type="text"
-                                name="patient_location"
-                                placeholder="Enter Address"
-                                value={formData.patient_location}
-                                onChange={handleInputChange}
-                                required
-                            />
-                            {errors.patient_location && (
-                                <p style={{ color: "red" }}>{errors.patient_location}</p>
-                            )}
-                            </Form.Group>
-                        </Col>
+                      {/* ** Time (Maps to schema: time) ** */}
+                      <Col md={3}>
+                        <Form.Group controlId="time">
+                          <Form.Label>
+                            Time (HH:MM) <span className="required">*</span>
+                          </Form.Label>
+                          <Form.Control
+                            type="text"
+                            name="time"
+                            // Use handleTimeChange to manage the specific format requirement
+                            value={formData.time.substring(0, 5)}
+                            onChange={handleTimeChange}
+                            placeholder="e.g., 14:30"
+                            maxLength={5}
+                            required
+                          />
+                          {errors.time && (
+                            <p style={{ color: "red" }}>{errors.time}</p>
+                          )}
+                        </Form.Group>
+                      </Col>
+
+                      {/* Mobile Number (Maps to schema: patient_phone) */}
+                      <Col md={3}>
+                        <Form.Group controlId="patient_phone">
+                          <Form.Label>
+                            Mobile Number <span className="required">*</span>
+                          </Form.Label>
+                          <Form.Control
+                            type="tel"
+                            name="patient_phone"
+                            value={formData.patient_phone}
+                            onChange={(e) => {
+                              const patient_phone = e.target.value.replace(
+                                /\D/g,
+                                ""
+                              ); // Remove non-digits
+                              const selectedCountryCode =
+                                formData.countryCode || "+91"; // Default to India if none selected
+                              const limits =
+                                countryNumberLimits[selectedCountryCode] ||
+                                countryNumberLimits.default;
+
+                              // Only update if the number is within limits or being deleted
+                              if (patient_phone.length <= limits.max) {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  patient_phone: patient_phone,
+                                }));
+                              }
+                            }}
+                            placeholder={`Enter ${countryNumberLimits["+91"].max} digit number`}
+                            maxLength={15}
+                            required
+                          />
+                          {errors.patient_phone && (
+                            <p style={{ color: "red" }}>
+                              {errors.patient_phone}
+                            </p>
+                          )}
+                        </Form.Group>
+                      </Col>
+
+                      {/* Address (Maps to schema: patient_location) */}
+                      <Col md={3}>
+                        <Form.Group controlId="patient_location">
+                          <Form.Label>
+                            Address <span className="required">*</span>
+                          </Form.Label>
+                          <Form.Control
+                            type="text"
+                            name="patient_location"
+                            placeholder="Enter Address"
+                            value={formData.patient_location}
+                            onChange={handleInputChange}
+                            required
+                          />
+                          {errors.patient_location && (
+                            <p style={{ color: "red" }}>
+                              {errors.patient_location}
+                            </p>
+                          )}
+                        </Form.Group>
+                      </Col>
                     </Row>
-                    
+
                     {/* --- ROW 3: Reference, FDE Name, Note --- */}
                     <Row>
                       <Col md={3}>
                         {/* Reference (Maps to schema: reference) */}
                         <Form.Group controlId="reference">
-                          <Form.Label>Reference <span className="required">*</span></Form.Label>
+                          <Form.Label>
+                            Reference <span className="required">*</span>
+                          </Form.Label>
                           <Form.Control
                             as="select"
                             name="reference"
@@ -593,11 +636,13 @@ export default function Add_Enquiry() {
                           )}
                         </Form.Group>
                       </Col>
-                      
+
                       {/* FDE Name (Maps to schema: FDE_Name) */}
                       <Col md={3}>
                         <Form.Group controlId="FDE_Name">
-                          <Form.Label>FDE Name <span className="required">*</span></Form.Label>
+                          <Form.Label>
+                            FDE Name <span className="required">*</span>
+                          </Form.Label>
                           <Form.Control
                             as="select"
                             name="FDE_Name"
@@ -659,11 +704,13 @@ export default function Add_Enquiry() {
                           )}
                         </Form.Group>
                       </Col>
-                      
+
                       {/* Note (Maps to schema: note) */}
                       <Col md={6}>
                         <Form.Group controlId="note">
-                          <Form.Label>Note <span className="required">*</span></Form.Label>
+                          <Form.Label>
+                            Note <span className="required">*</span>
+                          </Form.Label>
                           <Form.Control
                             as="textarea"
                             name="note"
@@ -680,13 +727,13 @@ export default function Add_Enquiry() {
                       </Col>
                     </Row>
                     <br />
-                    
+
                     {/* Submit Button */}
                     <Form.Group className="text-end mb-0">
                       <Button
                         variant="primary"
                         type="submit"
-                        disabled={loading || !currentLocation} 
+                        disabled={loading || !currentLocation}
                       >
                         {loading ? (
                           <>
@@ -713,4 +760,4 @@ export default function Add_Enquiry() {
       </div>
     </div>
   );
-};
+}
