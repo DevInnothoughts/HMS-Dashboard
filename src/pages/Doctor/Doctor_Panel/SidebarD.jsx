@@ -42,7 +42,6 @@ const menuPaths = {
     ],
 };
 export default function Sidebar() {
-  // Sidebar Menu
   const location = useLocation();
   const [activeIndex, setActiveIndex] = useState(null);
 
@@ -59,7 +58,6 @@ export default function Sidebar() {
     setActiveIndex((prevIndex) => (prevIndex === index ? null : index));
   };
 
-  // Sidebar Action
   const { toggleSidebar } = useSidebarContext();
   return (
     <div className="codex-sidebar">

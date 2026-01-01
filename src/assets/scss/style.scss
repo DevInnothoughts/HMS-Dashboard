@@ -44,107 +44,108 @@
 @import 'theme/responsive';
 
 .datatable-header-center th {
-    text-align: center !important;
+  text-align: center !important;
 }
 
 .datatable-header-center .p-column-header-content {
-    justify-content: center !important;
+  justify-content: center !important;
 }
 
-.p-datatable .p-datatable-tbody > tr.row-status-unconfirmed > td {
-  background-color: #ffffff !important; 
+.p-datatable .p-datatable-tbody>tr.row-status-unconfirmed>td {
+  background-color: #ffffff !important;
 }
 
-.p-datatable .p-datatable-tbody > tr.row-status-history > td {
+.p-datatable .p-datatable-tbody>tr.row-status-history>td {
   background-color: #FFA500 !important;
 }
 
-.p-datatable .p-datatable-tbody > tr.row-status-execution > td {
-  background-color: #FFFF00 !important; 
+.p-datatable .p-datatable-tbody>tr.row-status-execution>td {
+  background-color: #FFFF00 !important;
 }
 
-.p-datatable .p-datatable-tbody > tr.row-status-consultation > td {
+.p-datatable .p-datatable-tbody>tr.row-status-consultation>td {
   background-color: #800080 !important;
 }
 
-.p-datatable .p-datatable-tbody > tr.row-status-receipt > td {
+.p-datatable .p-datatable-tbody>tr.row-status-receipt>td {
   background-color: #008000 !important;
 }
 
-.p-datatable .p-datatable-tbody > tr > td {
-  color: #000000 !important; 
+.p-datatable .p-datatable-tbody>tr>td {
+  color: #000000 !important;
 }
 
-.p-datatable .p-datatable-tbody > tr.row-status-history > td {
-  background-color: #FFA500 !important; 
-  color: #000000 !important;           
+.p-datatable .p-datatable-tbody>tr.row-status-history>td {
+  background-color: #FFA500 !important;
+  color: #000000 !important;
 }
 
-.p-datatable .p-datatable-tbody > tr.row-status-consultation > td {
+.p-datatable .p-datatable-tbody>tr.row-status-consultation>td {
   background-color: #800080 !important;
-  color: #ffffff !important;           
+  color: #ffffff !important;
 }
 
-.p-datatable .p-datatable-tbody > tr.row-status-receipt > td {
+.p-datatable .p-datatable-tbody>tr.row-status-receipt>td {
   background-color: #008000 !important;
-  color: #ffffff !important;           
+  color: #ffffff !important;
 }
 
 .datatable-compact-style .p-datatable-header,
-.datatable-compact-style .p-datatable-thead > tr > th,
-.datatable-compact-style .p-datatable-tbody > tr > td {
-    font-size: 12px;
-    padding: 0.5rem 0.5rem; 
-    line-height: 1.2;
+.datatable-compact-style .p-datatable-thead>tr>th,
+.datatable-compact-style .p-datatable-tbody>tr>td {
+  font-size: 12px;
+  padding: 0.5rem 0.5rem;
+  line-height: 1.2;
+  color: #000000 !important;
 }
 
-.datatable-compact-style .p-datatable-tbody > tr > td .cart-action {
-    padding: 5px;
-    gap: 2px; 
-    border-width: 1px;
+.datatable-compact-style .p-datatable-tbody>tr>td .cart-action {
+  padding: 5px;
+  gap: 2px;
+  border-width: 1px;
 }
 
-.datatable-compact-style .p-datatable-tbody > tr > td .cart-action button {
-    padding: 3px 5px;
-    height: 30px;
-    width: 30px;
-    margin: 2px;
+.datatable-compact-style .p-datatable-tbody>tr>td .cart-action button {
+  padding: 3px 5px;
+  height: 30px;
+  width: 30px;
+  margin: 2px;
 }
 
-.datatable-compact-style .p-datatable-tbody > tr > td .cart-action .w-18 {
-    width: 14px; 
-    height: 14px; 
+.datatable-compact-style .p-datatable-tbody>tr>td .cart-action .w-18 {
+  width: 14px;
+  height: 14px;
 }
 
-.datatable-compact-style .p-datatable-tbody > tr {
-    height: auto !important; 
-    min-height: 0;
+.datatable-compact-style .p-datatable-tbody>tr {
+  height: auto !important;
+  min-height: 0;
 }
 
 .btn-extra-small {
-  padding: 0.1rem 0.25rem; 
-  font-size: 0.75rem; 
-  width: 24px; 
-  height: 24px; 
-  padding: 0; 
+  padding: 0.1rem 0.25rem;
+  font-size: 0.75rem;
+  width: 24px;
+  height: 24px;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .btn-icon.btn-extra-small {
-  width: 40px; 
-  height: 35px; 
+  width: 40px;
+  height: 35px;
   padding: 0;
 }
 
-.datatable-compact-style{
+.datatable-compact-style {
   padding: 0.1rem 0.1rem;
 }
 
 .invoicebtn {
   padding: 8px 12px;
-  border-radius: 20px; 
+  border-radius: 20px;
   align-items: center;
   justify-content: center;
   margin-right: 10px;
@@ -153,3 +154,21 @@
 .invoicebtn:last-child {
   margin-right: 0;
 }
+
+.custom-datepicker {
+  border: 2px solid rgb(77, 208, 225) !important;
+}
+
+.custom-datepicker:focus {
+  border-color: rgb(77, 208, 225);
+  box-shadow: 0 0 0 0.25rem rgba(77, 208, 225, 0.25);
+}
+
+.swal-clinical-btn {
+  border-radius: 10px !important;
+}
+
+.p-datatable .p-datatable-thead > tr > th {
+    background: none !important;
+}
+

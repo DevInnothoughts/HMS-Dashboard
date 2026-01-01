@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Row, Col, Form, Container, Card } from "react-bootstrap";
+import { Row, Col, Form, Container, Card, Button } from "react-bootstrap";
 import { useLocation, useParams } from "react-router-dom";
 import DatePicker from "react-datepicker";
+import FeatherIcon from "feather-icons-react";
 import "react-datepicker/dist/react-datepicker.css";
 import NavBarA from "../../components/NavbarA";
 import Swal from 'sweetalert2';
@@ -80,6 +81,7 @@ export default function Add_appointment() {
     treatment: "",
     date: new Date().toISOString().split("T")[0],
     patientName: "",
+    reference: "",
     patient_phone: "",
     patient_location: "",
     patient_type: "",
@@ -143,10 +145,16 @@ export default function Add_appointment() {
       }
 
       const data = await response.json();
-
       if (data.statusCode === 200 && data.data) {
         setIsExistingPatient(true);
-        alert(`${data.data.name} is already registered.`);
+
+        Swal.fire({
+          icon: 'info',
+          title: 'Patient Found',
+          text: `${data.data.name} is already registered.`,
+          confirmButtonColor: '#00bcd4',
+          timer: 3000
+        });
 
         setFormData((prev) => ({
           ...prev,
@@ -188,18 +196,52 @@ export default function Add_appointment() {
         fetchApi('treatmentDropdown').then(res => res.data),
         fetchApi('doctorDropdown').then(res => res.data),
         fetchApi('fdeDropdown').then(res => res.data),
-        fetchApi('departmentDropdown').then(res => res.data),
       ]);
 
       setTreatmentList(Array.isArray(treatmentData) ? treatmentData : []);
       setDoctors(Array.isArray(doctorData) ? doctorData : []);
       setFdeList(Array.isArray(fdeData) ? fdeData : []);
-      setDepartmentList(Array.isArray(departmentData) ? departmentData : []);
 
     } catch (error) {
       console.error("Error fetching dropdown data:", error.message);
     }
   }, [currentLocation]);
+
+  const handleReset = () => {
+    setFormData({
+      treatment: "",
+      date: new Date().toISOString().split("T")[0],
+      patientName: "",
+      reference: "",
+      patient_phone: "",
+      patient_location: "",
+      patient_type: "",
+      appointmentTime: new Date().toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      }),
+      note: "",
+      FDE_Name: "",
+      departmentName: "",
+      doctorName: "",
+      doctor_id: "",
+      consultationchk: 0,
+      confirm_time: 0,
+      status: "BOOKED",
+      patient_id: "",
+    });
+
+    setIsExistingPatient(false);
+    setErrors({});
+    setType("");
+
+    // Success notification
+    Toast.fire({
+      icon: 'success',
+      title: 'Form reset successful'
+    });
+  };
 
   useEffect(() => {
     if (phone && currentLocation) {
@@ -275,7 +317,7 @@ export default function Add_appointment() {
       "appointmentTime",
       "note",
       "FDE_Name",
-      "departmentName",
+      "reference",
       "doctor_id",
     ];
 
@@ -342,17 +384,14 @@ export default function Add_appointment() {
         saveType,
         countryCode: getCountryCode(formData.patient_phone),
       };
-      // --- END PAYLOAD MAPPING ---
 
-      // HIPAA: Generalized logging
-      console.log("Submitting appointment request");
+      console.log("Submitting appointment request.");
 
       try {
         const response = await fetch(
           `${BASE_URL}/V1/appointment/addAppointment?location=${currentLocation}`,
           {
             method: "POST",
-            // HIPAA: Assumed Authorization Header is configured globally
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
           }
@@ -360,40 +399,40 @@ export default function Add_appointment() {
 
         if (response.ok) {
           Swal.fire({
-                      icon: 'success',
-                      title: 'Success!',
-                      text: 'Appointment booked successfully.',
-                      confirmButtonColor: '#00bcd4'
-                    });
-                              setFormData({
-                      treatment: "", date: new Date().toISOString().split("T")[0], patientName: "",
-                      patient_phone: "", patient_location: "", patient_type: "", appointmentTime: "",
-                      note: "", FDE_Name: "", departmentName: "", doctorName: "", doctor_id: "",
-                      consultationchk: 0, confirm_time: 0, status: "BOOKED", patient_id: "",
-                    });
-                  } else {
-                    const errorData = await response.json();
-                    console.error(`Backend error: ${errorData.message}`);
+            icon: 'success',
+            title: 'Success!',
+            text: 'Appointment booked successfully.',
+            confirmButtonColor: '#00bcd4'
+          });
+          setFormData({
+            treatment: "", date: new Date().toISOString().split("T")[0], patientName: "",
+            patient_phone: "", patient_location: "", patient_type: "", appointmentTime: "",
+            note: "", FDE_Name: "", departmentName: "", doctorName: "", doctor_id: "",
+            consultationchk: 0, confirm_time: 0, status: "BOOKED", patient_id: "",
+          });
+        } else {
+          const errorData = await response.json();
+          console.error(`Backend error: ${errorData.message}`);
           Swal.fire({
-                      icon: 'error',
-                      title: 'Booking Failed',
-                      text: errorData.message || 'Failed to book appointment'
-                    });
-                          }
-                } catch (error) {
-                  console.error("Error adding appointment:", error.message);
-          Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'A network error occurred.'
-                  });
-                      } finally {
-                  setLoading(false);
-                }
-              } else {
-                Toast.fire({
-                  icon: 'warning',
-                  title: 'Please fill all required fields'
+            icon: 'error',
+            title: 'Booking Failed',
+            text: errorData.message || 'Failed to book appointment'
+          });
+        }
+      } catch (error) {
+        console.error("Error adding appointment:", error.message);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'A network error occurred.'
+        });
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      Toast.fire({
+        icon: 'warning',
+        title: 'Please fill all required fields'
       });
     }
   };
@@ -449,9 +488,8 @@ export default function Add_appointment() {
     });
   };
 
-  // Wrapper for fetchPatientDetails to handle incomplete phone number logic
   const handlePhoneNumberChange = (e) => {
-    const patient_phone = e.target.value.replace(/\D/g, ""); // Remove non-digits
+    const patient_phone = e.target.value.replace(/\D/g, "");
     const selectedCountryCode = "+91";
     const limits =
       countryNumberLimits[selectedCountryCode] ||
@@ -464,22 +502,22 @@ export default function Add_appointment() {
       }));
 
       if (patient_phone.length === limits.max && currentLocation) {
-        // HIPAA: Pass PHI only to secure function/API
         fetchPatientDetails(patient_phone);
       } else {
-        // Clear relevant data if the number is incomplete
         setIsExistingPatient(false);
         setFormData((prev) => ({
           ...prev,
           patientName: "",
           patient_type: "NEW",
           doctor_id: "",
-          patient_id: "", // CRITICAL: Clear patient_id if search fails/incomplete
+          patient_id: "",
         }));
       }
     }
   }
 
+  const labelStyle = "fw-bold text-muted small uppercase mb-2";
+  const inputStyle = { borderRadius: "8px", border: '2px solid rgb(77, 208, 225)', padding: "6px" };
 
   return (
     <div
@@ -491,12 +529,12 @@ export default function Add_appointment() {
         fontFamily: "'Poppins', Arial, sans-serif",
       }}
     >
-      <PageBreadcrumb pagename="Add New Appointment Page" />
+      <PageBreadcrumb pagename="Add Appointment Form" />
       <NavBarA pagename="Add Appointment" />
       <Container fluid>
         <Row>
           <Col>
-            <Card
+            {/* <Card
               style={{
                 borderRadius: "15px",
                 boxShadow: "0 10px 20px rgba(0,0,0,0.1)",
@@ -795,6 +833,295 @@ export default function Add_appointment() {
                         </button>
                       </Col>
                     </Row>
+                  </div>
+                </Form>
+              </Card.Body>
+            </Card> */}
+
+            <Card
+              style={{
+                borderRadius: "15px",
+                boxShadow: "0 10px 25px rgba(0, 0, 0, 0.08)",
+                border: "none",
+                background: "white",
+                overflow: "hidden",
+              }}
+            >
+              {/* Header Styling */}
+              <div style={{
+                backgroundColor: "#67c5cfff",
+                padding: "20px 25px",
+                borderBottom: "2px solid #1a5b61ff",
+                display: "flex",
+                alignItems: "center"
+              }}>
+                <FeatherIcon icon="calendar" size="24" style={{ color: "#1a5b61ff", marginRight: "12px" }} />
+                <h4 className="m-0" style={{ color: "#1a5b61ff", fontWeight: "600", fontSize: "1.25rem" }}>
+                  Add New Appointment Details
+                </h4>
+              </div>
+
+              <Card.Body style={{ padding: "20px" }}>
+                <Form>
+                  {errors.location && (
+                    <div className="alert alert-danger py-2 px-3 mb-4" style={{ borderRadius: "8px" }}>
+                      <FeatherIcon icon="alert-circle" size="18" className="me-2" />
+                      {errors.location}
+                    </div>
+                  )}
+
+                  {/* Primary Info Section */}
+                  <Row className="g-4 mb-4">
+                    <Col md={3}>
+                      <Form.Group>
+                        <Form.Label className="fw-bold text-muted small uppercase mb-2">Contact Number <span className="text-danger">*</span></Form.Label>
+                        <Form.Control
+                          type="tel"
+                          name="patient_phone"
+                          style={{ borderRadius: "8px", border: '2px solid rgb(77, 208, 225)', padding: "6px" }}
+                          value={formData.patient_phone}
+                          onChange={handlePhoneNumberChange}
+                          placeholder={`Enter ${countryNumberLimits["+91"].max} digits Contact Number`}
+                          maxLength={countryNumberLimits["+91"].max}
+                        />
+                        {errors.patient_phone && <p className="text-danger small mt-1">{errors.patient_phone}</p>}
+                      </Form.Group>
+                    </Col>
+
+                    <Col md={3}>
+                      <Form.Group>
+                        <Form.Label className="fw-bold text-muted small uppercase mb-2">Patient Type <span className="text-danger">*</span></Form.Label>
+                        <Form.Select
+                          name="patient_type"
+                          style={{ borderRadius: "8px", border: '2px solid rgb(77, 208, 225)', padding: "6px" }}
+                          value={formData.patient_type}
+                          onChange={(e) => {
+                            setType(e.target.value);
+                            setFormData((prev) => ({ ...prev, patient_type: e.target.value }));
+                          }}
+                        >
+                          <option value="">Select Type</option>
+                          {(isExistingPatient ? existingPatientTypes : newPatientTypes).map((type, index) => (
+                            <option key={index} value={type}>{type}</option>
+                          ))}
+                        </Form.Select>
+                        {errors.patient_type && <p className="text-danger small mt-1">{errors.patient_type}</p>}
+                      </Form.Group>
+                    </Col>
+
+                    <Col md={3}>
+                      <Form.Group>
+                        <Form.Label className="fw-bold text-muted small uppercase mb-2">Appointment Date <span className="text-danger">*</span></Form.Label>
+                        <div className="custom-datepicker-wrapper">
+                          <DatePicker
+                            selected={formData.date ? new Date(formData.date) : null}
+                            onChange={handleDateChange}
+                            className="form-control custom-datepicker"
+                            style={{ borderRadius: "8px", border: '2px solid rgb(77, 208, 225)' }}
+                            dateFormat="dd-MM-yyyy"
+                            placeholderText="Select Date"
+                          />
+                        </div>
+                        {errors.date && <p className="text-danger small mt-1">{errors.date}</p>}
+                      </Form.Group>
+                    </Col>
+
+                    <Col md={3}>
+                      <Form.Group>
+                        <Form.Label className="fw-bold text-muted small uppercase mb-2">Appointment Time <span className="text-danger">*</span></Form.Label>
+                        <Form.Select
+                          name="appointmentTime"
+                          style={{ borderRadius: "8px", border: '2px solid rgb(77, 208, 225)' }}
+                          value={formData.appointmentTime}
+                          onChange={handleInputChange}
+                        >
+                          <option value="">Select Time</option>
+                          {timeSlots.map((time, index) => (
+                            <option key={index} value={time}>{time}</option>
+                          ))}
+                        </Form.Select>
+                        {errors.appointmentTime && <p className="text-danger small mt-1">{errors.appointmentTime}</p>}
+                      </Form.Group>
+                    </Col>
+                  </Row>
+
+                  {/* Patient & Internal Details */}
+                  <Row className="g-4 mb-4">
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Label className="fw-bold text-muted small uppercase mb-2">Patient Name <span className="text-danger">*</span></Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="patientName"
+                          placeholder="Enter Patient Name"
+                          style={{ borderRadius: "8px", border: '2px solid rgb(77, 208, 225)' }}
+                          value={formData.patientName}
+                          onChange={handleInputChange}
+                        />
+                        {errors.patientName && <p className="text-danger small mt-1">{errors.patientName}</p>}
+                      </Form.Group>
+                    </Col>
+
+                    {(formData.patient_type === "OTHER" || formData.treatment) && (
+                      <Col md={4}>
+                        <Form.Group>
+                          <Form.Label className="fw-bold text-muted small uppercase mb-2">Treatment</Form.Label>
+                          <Form.Select
+                            name="treatment"
+                            style={{ borderRadius: "8px", border: '2px solid rgb(77, 208, 225)' }}
+                            value={formData.treatment}
+                            onChange={handleInputChange}
+                            disabled={!currentLocation}
+                          >
+                            <option value="">Select Treatment</option>
+                            {treatmentList?.map((t) => (
+                              <option key={t.treatment_name} value={t.treatment_name}>{t.treatment_name}</option>
+                            ))}
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                    )}
+
+                    {shouldShowAddressAndReference() && (
+                      <Col md={formData.patient_type === "OTHER" || formData.treatment ? 4 : 8}>
+                        <Form.Group>
+                          <Form.Label className="fw-bold text-muted small uppercase mb-2">Patient Address <span className="text-danger">*</span></Form.Label>
+                          <Form.Control
+                            type="text"
+                            name="patient_location"
+                            placeholder="Enter Patient Address"
+                            style={{ borderRadius: "8px", border: '2px solid rgb(77, 208, 225)' }}
+                            value={formData.patient_location}
+                            onChange={handleInputChange}
+                          />
+                          {errors.patient_location && <p className="text-danger small mt-1">{errors.patient_location}</p>}
+                        </Form.Group>
+                      </Col>
+                    )}
+
+                    {/* <Col md={4}>
+                      <Form.Group>
+                        <Form.Label className="fw-bold text-muted small uppercase mb-2">Department <span className="text-danger">*</span></Form.Label>
+                        <Form.Select
+                          name="departmentName"
+                          style={{ borderRadius: "8px", border: '2px solid rgb(77, 208, 225)' }}
+                          value={formData.departmentName}
+                          onChange={handleInputChange}
+                          disabled={!currentLocation}
+                        >
+                          <option value="">Select Department</option>
+                          {departmentList?.map((dept) => (
+                            <option key={dept.name} value={dept.name}>{dept.name}</option>
+                          ))}
+                        </Form.Select>
+                        {errors.departmentName && <p className="text-danger small mt-1">{errors.departmentName}</p>}
+                      </Form.Group>
+                    </Col> */}
+
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Label className="fw-bold text-muted small uppercase mb-2">Doctor Name <span className="text-danger">*</span></Form.Label>
+                        <Form.Select
+                          name="doctorName"
+                          style={{ borderRadius: "8px", border: '2px solid rgb(77, 208, 225)' }}
+                          value={formData.doctorName}
+                          onChange={handleInputChange}
+                          disabled={!currentLocation}
+                        >
+                          <option value="">Select Doctor</option>
+                          {doctors?.map((doctor) => (
+                            <option key={doctor.doctor_id} value={doctor.name}>{doctor.name}</option>
+                          ))}
+                        </Form.Select>
+                        {errors.doctorName && <p className="text-danger small mt-1">{errors.doctorName}</p>}
+                      </Form.Group>
+                    </Col>
+
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Label className="fw-bold text-muted small uppercase mb-2">FDE Name <span className="text-danger">*</span></Form.Label>
+                        <Form.Select
+                          name="FDE_Name"
+                          style={{ borderRadius: "8px", border: '2px solid rgb(77, 208, 225)' }}
+                          value={formData.FDE_Name}
+                          onChange={handleInputChange}
+                          disabled={!currentLocation}
+                        >
+                          <option value="">Select FDE...</option>
+                          {fdeList?.map((fde) => (
+                            <option key={fde.FDEID} value={fde.FDEID}>{fde.FDEName}</option>
+                          ))}
+                        </Form.Select>
+                        {errors.FDE_Name && <p className="text-danger small mt-1">{errors.FDE_Name}</p>}
+                      </Form.Group>
+                    </Col>
+                    <Col md={4}>
+                      <Form.Group>
+                        <Form.Label className={labelStyle}>Reference <span className="text-danger">*</span></Form.Label>
+                        <Form.Select
+                          name="reference"
+                          style={inputStyle}
+                          value={formData.reference}
+                          onChange={handleInputChange}
+                        >
+                          <option value="">Select Reference</option>
+                          {[
+                            "Family / Friends", "Referred By Another Doctor", "Referred By Another Patient",
+                            "Internet", "Social Media", "Entertainment Media", "TV Show",
+                            "Newspaper / Magazine", "Awareness Lecture", "HHC Board on building",
+                            "I was treated here in past ", "Healing Hands Clinic Branch",
+                            "Aggregators", "Other"
+                          ].map((ref) => (
+                            <option key={ref} value={ref}>{ref}</option>
+                          ))}
+                        </Form.Select>
+                        {errors.reference && <p className="text-danger small mt-1">{errors.reference}</p>}
+                      </Form.Group>
+                    </Col>
+                    <Col md={8} className="mb-10">
+                      <Form.Group>
+                        <Form.Label className="fw-bold text-muted small uppercase mb-2">Note </Form.Label>
+                        <Form.Control
+                          as="textarea"
+                          rows={3}
+                          name="note"
+                          placeholder="Enter additional remarks..."
+                          style={{ borderRadius: "10px", padding: "5px", border: '2px solid rgb(77, 208, 225)' }}
+                          value={formData.note}
+                          onChange={handleInputChange}
+                        />
+                        {errors.note && <p className="text-danger small mt-1">{errors.note}</p>}
+                      </Form.Group>
+                    </Col>
+                  </Row>
+
+                  {/* Footer Actions */}
+                  <div className="d-flex justify-content-end align-items-center">
+                    <Button
+                      style={{ borderRadius: "10px" }}
+                      variant="secondary"
+                      className="me-2 "
+                      onClick={handleReset}
+                    >
+                      Reset Form
+                    </Button>
+                    <Button
+                      className="px-4 py-13"
+                      style={{
+                        borderRadius: "10px",
+                        backgroundColor: "#00bcd4",
+                        border: "none",
+                        fontWeight: "600"
+                      }}
+                      onClick={() => handleSubmit("save")}
+                      disabled={loading || !currentLocation}
+                    >
+                      {loading ? (
+                        <>Adding...</>
+                      ) : (
+                        "Add Appointment"
+                      )}
+                    </Button>
                   </div>
                 </Form>
               </Card.Body>

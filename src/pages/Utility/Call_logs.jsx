@@ -59,7 +59,9 @@ export default function Call_logs() {
   const [selectedDate, setSelectedDate] = useState(null);
   const [enquiries, setEnquiries] = useState([]);
   const [currentLocation, setCurrentLocation] = useState('');
-  
+  const [rows, setRows] = useState(10);
+  const [first, setFirst] = useState(0);
+
   function formatDate(date) {
     return new Date(date);
   }
@@ -68,21 +70,18 @@ export default function Call_logs() {
   const [toDate, setToDate] = useState(new Date());
 
   useEffect(() => {
-      const token = localStorage.getItem('token');
-      if (token) {
-          const payload = decodeJwt(token);
-          if (payload && payload.jobLocation) {
-              // console.log(payload.jobLocation);
-              setCurrentLocation(payload.jobLocation);
-              // console.log(currentLocation);
-          }
+    const token = localStorage.getItem('token');
+    if (token) {
+      const payload = decodeJwt(token);
+      if (payload && payload.jobLocation) {
+        setCurrentLocation(payload.jobLocation);
       }
-    }, []);
-  
+    }
+  }, []);
+
 
   const handleAddAppointmentClick = (rowData) => {
     const today = new Date();
-    // HIPAA: Generalized logging to avoid showing full PHI on console.
     console.log("Opening Add Appointment Modal for IVR ID:", rowData.ivr_id);
 
     setFormData({
@@ -154,47 +153,47 @@ export default function Call_logs() {
       }
     } catch (error) {
       console.error("Error fetching call logs:", error);
-Toast.fire({
+      Toast.fire({
         icon: 'error',
         title: 'Failed to load call logs'
-      });    } finally {
+      });
+    } finally {
       setLoading(false);
     }
   };
 
   const fetchDropdownData = useCallback(async () => {
-      try {
-        const endpoints = [
-          `${BASE_URL}/V1/appointment/fdeDropdown?location=${currentLocation}`,
-          `${BASE_URL}/V1/appointment/doctorDropdown?location=${currentLocation}`,
-        ];
+    try {
+      const endpoints = [
+        `${BASE_URL}/V1/appointment/fdeDropdown?location=${currentLocation}`,
+        `${BASE_URL}/V1/appointment/doctorDropdown?location=${currentLocation}`,
+      ];
 
-        const [fdeResponse, doctorResponse] = await Promise.all(
-          endpoints.map(url =>
-            fetch(url, {
-              method: "GET",
-              headers: { "Content-Type": "application/json" },
-            }).then(res => res.json())
-          )
-        );
+      const [fdeResponse, doctorResponse] = await Promise.all(
+        endpoints.map(url =>
+          fetch(url, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+          }).then(res => res.json())
+        )
+      );
 
-        setFdeList(Array.isArray(fdeResponse.data) ? fdeResponse.data : []);
-        setDoctors(Array.isArray(doctorResponse.data) ? doctorResponse.data : []);
+      setFdeList(Array.isArray(fdeResponse.data) ? fdeResponse.data : []);
+      setDoctors(Array.isArray(doctorResponse.data) ? doctorResponse.data : []);
 
-      } catch (error) {
-        console.error("Error fetching dropdown data:", error.message);
-        toast.error("Failed to load selection data.");
-      }
-    }, [currentLocation]); 
+    } catch (error) {
+      console.error("Error fetching dropdown data:", error.message);
+      toast.error("Failed to load selection data.");
+    }
+  }, [currentLocation]);
 
-    // Wait until currentLocation is available before fetching
-    useEffect(() => {
-      if (!currentLocation) return; // ⛔ stop here until JWT is decoded
+  useEffect(() => {
+    if (!currentLocation) return;
 
-      fetchCallLogsData();
-      fetchDropdownData();
+    fetchCallLogsData();
+    fetchDropdownData();
 
-    }, [currentLocation, fromDate, toDate]);
+  }, [currentLocation, fromDate, toDate]);
 
 
   const handleInputChange = (e) => {
@@ -203,7 +202,7 @@ Toast.fire({
 
     if (name === "doctor_id") {
       const selectedDoctor = doctors.find((doc) => String(doc.doctor_id) === value);
-      
+
       setFormData((prev) => ({
         ...prev,
         doctor_id: value,
@@ -212,9 +211,9 @@ Toast.fire({
       return;
     }
 
-    if (name === "FDE_Name") { 
+    if (name === "FDE_Name") {
       const selectedFDE = fdeList.find((fde) => String(fde.FDEID) === value);
-      
+
       setFormData((prev) => ({
         ...prev,
         FDE_Name: value,
@@ -240,7 +239,7 @@ Toast.fire({
 
     if (name === "FDE_Name") {
       const selectedFDE = fdeList.find((fde) => String(fde.FDEID) === value);
-      
+
       setEnquiryForm((prev) => ({
         ...prev,
         FDE_Name: value,
@@ -321,28 +320,31 @@ Toast.fire({
 
         setShowNoteModal(false);
         Swal.fire({
-                  icon: 'success',
-                  title: 'Note Saved',
-                  text: 'The note has been updated successfully.',
-                  timer: 2000
-                });      } else {
-        Toast.fire({ icon: 'error', title: 'Failed to update note' });      }
-            } catch (error) {
-              console.error("Error updating note:", error);
-        Toast.fire({ icon: 'error', title: 'An error occurred while updating' });    }
-      };
-  
+          icon: 'success',
+          title: 'Note Saved',
+          text: 'The note has been updated successfully.',
+          timer: 2000
+        });
+      } else {
+        Toast.fire({ icon: 'error', title: 'Failed to update note' });
+      }
+    } catch (error) {
+      console.error("Error updating note:", error);
+      Toast.fire({ icon: 'error', title: 'An error occurred while updating' });
+    }
+  };
+
   const actionBodyTemplate = (rowData) => (
     <div
-        className="d-flex align-items-center justify-content-center"
+      className="d-flex align-items-center justify-content-center"
     >
-        <Button
+      <Button
         variant="primary"
         onClick={() => handleEnquiryClick(rowData)}
         className="enquiry-btn btn-primary btn-extra-small btn-icon me-2"
-        title="Enquiry"
+        title="Add Enquiry"
       >
-        <FeatherIcon icon="message-circle" size="14" />
+        <FeatherIcon icon="help-circle" size="16" />
       </Button>
 
       <Button
@@ -351,19 +353,19 @@ Toast.fire({
         className="appointment-btn btn-primary btn-extra-small btn-icon me-2"
         title="Add Appointment"
       >
-        <FeatherIcon icon="plus-square" size="14" />
+        <FeatherIcon icon="plus-square" size="16" />
       </Button>
 
       <Button
         variant="primary"
         onClick={() => handleNoteClick(rowData.note, rowData)}
-        className="note-btn btn-primary btn-extra-small btn-icon me-2"
-        title="Add Notes"
+        className="note-btn btn-primary btn-extra-small btn-icon"
+        title="Add Note"
       >
-        <FeatherIcon icon="file-text" size="14" />
+        <FeatherIcon icon="file-text" size="16" />
       </Button>
     </div>
-);
+  );
 
   const renderHeader = () => (
     <div
@@ -387,7 +389,36 @@ Toast.fire({
         <div
           style={{ display: "flex", alignItems: "center", gap: "15px" }}
         >
-          <Form.Group
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <span
+              style={{
+                marginRight: "8px",
+                fontSize: "13px",
+                fontWeight: "bold",
+                color: "#333",
+              }}
+            >
+              Show
+            </span>
+            <Form.Select
+              size="sm"
+              value={rows}
+              onChange={(e) => setRows(parseInt(e.target.value))}
+              style={{
+                width: "70px",
+                height: "40px",
+                border: "1px solid #4dd0e1",
+                borderRadius: "6px",
+                fontSize: "12px",
+              }}
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </Form.Select>
+          </div>
+          <Form.Group className="ms-2"
             style={{ display: "flex", alignItems: "center", margin: 0 }}
           >
             <span
@@ -418,6 +449,7 @@ Toast.fire({
                   border: "1px solid #4dd0e1",
                   padding: "5px 8px",
                   width: "200px",
+                  height: "40px",
                   fontSize: "12px",
                   transition: "all 0.3s ease",
                 }}
@@ -466,7 +498,7 @@ Toast.fire({
             />
           </div>
 
-          <div>
+          {/* <div>
             <div
               style={{ fontSize: "12px", fontWeight: "500", color: "#00838f", marginBottom: "3px" }}
             >
@@ -483,6 +515,7 @@ Toast.fire({
               dateFormat="dd-MM-yyyy"
               placeholderText="Select to date"
               minDate={fromDate ? new Date(fromDate) : null}
+              
               customInput={
                 <Form.Control
                   style={{ padding: '5px 8px', fontSize: '12px' }}
@@ -498,6 +531,32 @@ Toast.fire({
                   },
                 },
               ]}
+            />
+          </div> */}
+          <div style={{ position: "relative" }}>
+            <div
+              style={{ fontSize: "12px", fontWeight: "500", color: "#00838f", marginBottom: "3px" }}
+            >
+              To Date
+            </div>
+            <DatePicker
+              selected={toDate ? new Date(toDate) : null}
+              onChange={(date) => {
+                const formattedDate = date ? date.toISOString().split("T")[0] : "";
+                setToDate(formattedDate);
+              }}
+              dateFormat="dd-MM-yyyy"
+              placeholderText="Select to date"
+              minDate={fromDate ? new Date(fromDate) : null}
+
+              // Fix: Use consistent placement and remove the forced offset
+              popperPlacement="bottom-start"
+
+              customInput={
+                <Form.Control
+                  style={{ padding: '5px 8px', fontSize: '12px' }}
+                />
+              }
             />
           </div>
 
@@ -575,7 +634,7 @@ Toast.fire({
   }, [formData.date]);
 
   const handleSubmit = async (saveType) => {
-    
+
     const selectedFDE = fdeList.find((fde) => String(fde.FDEID) === formData.FDE_Name);
     const fdeName = selectedFDE ? selectedFDE.FDEName : "";
 
@@ -590,7 +649,7 @@ Toast.fire({
       appointment_time: formData.appointmentTime,
       patient_phone: formData.caller_no,
       patient_type: "NEW",
-      appointment_timestamp: moment(formData.date).format("YYYY-MM-DD"), 
+      appointment_timestamp: moment(formData.date).format("YYYY-MM-DD"),
       doctorName: doctorName,
       doctor_id: formData.doctor_id,
       note: formData.note,
@@ -615,20 +674,21 @@ Toast.fire({
       }
 
       const responseData = await response.json();
-Swal.fire({
-          icon: 'success',
-          title: 'Appointment Booked!',
-          text: 'The appointment has been recorded successfully.',
-          confirmButtonColor: '#00bcd4'
-        });      setShowAddModal(false);
+      Swal.fire({
+        icon: 'success',
+        title: 'Appointment Booked!',
+        text: 'The appointment has been recorded successfully.',
+        confirmButtonColor: '#00bcd4'
+      }); setShowAddModal(false);
 
     } catch (error) {
       console.error("Error adding appointment:", error.message);
-Swal.fire({
+      Swal.fire({
         icon: 'error',
         title: 'Booking Failed',
         text: 'Could not book the appointment. Please try again.'
-      });    } finally {
+      });
+    } finally {
       setLoading(false);
     }
   };
@@ -645,18 +705,17 @@ Swal.fire({
     }
 
     const payload = {
-      patient_location: currentLocation, // <-- NEW: Added from state
-      patient_type: enquiryForm.patient_type, // <-- Added from state (defaulted to 'NEW')
+      patient_location: currentLocation,
+      patient_type: enquiryForm.patient_type,
       date: moment(enquiryForm.date).format("YYYY-MM-DD"),
-      time: enquiryForm.time, // <-- NEW: Added time // Format date for service
-      doctor_id: enquiryForm.doctor_id || null, 
+      time: enquiryForm.time,
+      doctor_id: enquiryForm.doctor_id || null,
       patient_name: enquiryForm.patient_name,
       patient_phone: enquiryForm.caller_no,
       patient_type: "NEW",
-      // time: enquiryForm.call_time,
       enquirytype: enquiryForm.enquirytype,
       fdeId: enquiryForm.FDE_Name || null,
-      FDE_Name: enquiryForm.FDE_Name || null, 
+      FDE_Name: enquiryForm.FDE_Name || null,
       reference: enquiryForm.reference || null,
       note: enquiryForm.note || "",
     };
@@ -676,12 +735,12 @@ Swal.fire({
           `Error: ${response.status} - ${responseData.message || "Bad Request"}`
         );
       }
-Swal.fire({
-          icon: 'success',
-          title: 'Enquiry Added',
-          text: 'New enquiry has been registered.',
-          timer: 2000
-        });
+      Swal.fire({
+        icon: 'success',
+        title: 'Enquiry Added',
+        text: 'New enquiry has been registered.',
+        timer: 2000
+      });
       setEnquiryForm({
         date: "",
         doctor_id: "",
@@ -696,15 +755,15 @@ Swal.fire({
       setShowEnquiryModal(false);
     } catch (error) {
       console.error("Error adding enquiry:", error.message);
-Swal.fire({
+      Swal.fire({
         icon: 'error',
         title: 'Error',
         text: 'Failed to add enquiry.'
-      });    }
+      });
+    }
   };
 
   useEffect(() => {
-    // Console logs removed for PHI minimization
   }, [fdeList, enquiryTypes, formData]);
 
   const handleAddEnquiryClick = () => {
@@ -747,12 +806,13 @@ Swal.fire({
       <div
         className="themebody-wrap"
         style={{
-          backgroundColor: "#e0f7fa",
+          background: "linear-gradient(to right, #e0f7fa, #80deea)",
+          fontFamily: "'Poppins', Arial, sans-serif",
           minHeight: "100vh",
-          padding: "20px",
+          padding: "10px",
         }}
       >
-        <PageBreadcrumb pagename="Call List" />
+        <PageBreadcrumb pagename="Call Logs" />
         <div className="theme-body">
           <Container fluid>
             <Row>
@@ -763,7 +823,7 @@ Swal.fire({
                     boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
                     borderColor: "#00bcd4",
                     background: "white",
-                    border: "4px solid #00bcd4",
+                    border: "1.5px solid #00bcd4",
                   }}
                 >
                   <Card.Body>
@@ -771,7 +831,12 @@ Swal.fire({
                       <DataTable
                         value={CallLogs}
                         paginator
-                        rows={10}
+                        rows={rows}
+                        first={first} // This controls the current page offset
+                        onPage={(e) => {
+                          setFirst(e.first);
+                          setRows(e.rows);
+                        }}
                         filters={filters1}
                         header={renderHeader}
                         loading={loading}
@@ -789,29 +854,29 @@ Swal.fire({
                           "note",
                           "source",
                         ]}
+                        paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
                         currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
-                        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
                         responsiveLayout="scroll"
                         className="datatable-compact-style"
-                       
+
                       >
                         <Column
                           field="ivr_id"
-                          header="Sr No."
-                          sortable
+                          header="Sr No"
                           body={(rowData) => rowData.ivr_id || "-"}
                           headerClassName="datatable-header-center"
                           style={{
                             border: "1px solid #90caf9",
                             textAlign: "center",
                             padding: "0.75rem",
-                            width: "70px"
+                            width: "90px",
                           }}
                         />
 
-                        <Column
+                        {/* <Column
                           field="call_date"
                           header="Date"
+                          sortable
                           body={(rowData) => rowData.call_date || "-"}
                           headerClassName="datatable-header-center"
                           style={{
@@ -819,6 +884,27 @@ Swal.fire({
                             textAlign: "center",
                             padding: "0.75rem",
                             width: "80px"
+                          }}
+                        /> */}
+
+                        <Column
+                          field="call_date"
+                          header="Date"
+                          body={(rowData) => {
+                            const rawDate = rowData.call_date;
+                            if (!rawDate) return "-";
+                            const dateObj = moment(rawDate, ["YYYY-DD-MM", "YYYY-MM-DD", "DD-MM-YYYY"]);
+
+                            return dateObj.isValid()
+                              ? dateObj.format("DD-MM-YYYY")
+                              : rawDate;
+                          }}
+                          headerClassName="datatable-header-center"
+                          style={{
+                            border: "1px solid #90caf9",
+                            textAlign: "center",
+                            padding: "0.75rem",
+                            width: "120px"
                           }}
                         />
 
@@ -837,7 +923,7 @@ Swal.fire({
 
                         <Column
                           field="caller_no"
-                          header="Caller No."
+                          header="Caller No"
                           body={(rowData) => rowData.caller_no || "-"}
                           headerClassName="datatable-header-center"
                           style={{
@@ -850,7 +936,7 @@ Swal.fire({
 
                         <Column
                           field="destination_no"
-                          header="Destination No."
+                          header="Destination No"
                           body={(rowData) => rowData.destination_no || "-"}
                           headerClassName="datatable-header-center"
                           style={{
@@ -909,7 +995,7 @@ Swal.fire({
                             width: "130px",
                           }}
                         />
-                        <Column
+                        {/* <Column
                           field="status"
                           header="Status"
                           body={(rowData) => rowData.status || "-"}
@@ -932,7 +1018,7 @@ Swal.fire({
                             padding: "0.75rem",
                             width: "110px",
                           }}
-                        />
+                        /> */}
                         <Column
                           field="note"
                           header="Note"
@@ -955,7 +1041,7 @@ Swal.fire({
                             border: "1px solid #90caf9",
                             textAlign: "center",
                             padding: "0.75rem",
-                            width: "120px",
+                            width: "110px",
                           }}
                         />
                       </DataTable>
@@ -968,51 +1054,47 @@ Swal.fire({
         </div>
       </div>
 
-      <Modal
-        show={showAddModal}
-        onHide={() => setShowAddModal(false)}
-        size="lg"
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>Add Appointment</Modal.Title>
+      <Modal show={showAddModal} onHide={() => setShowAddModal(false)} size="lg" centered>
+        <Modal.Header closeButton style={{ backgroundColor: "#e0f7fa", borderBottom: "2px solid #00bcd4" }}>
+          <Modal.Title style={{ color: "#00838f", fontWeight: "bold" }}> <FeatherIcon icon="calendar" className="me-2" />Add Appointment</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
+        <Modal.Body style={{ padding: "25px" }}>
           <Form onSubmit={handleAddAppointment}>
-            <Row>
+            <Row className="g-3"> {/* Added gap between columns */}
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label>Appointment Date <span style={{color:"red"}} className="required">*</span></Form.Label>
+                  <Form.Label className="fw-bold">Appointment Date <span className="text-danger">*</span></Form.Label>
                   <DatePicker
-                    selected={
-                      formData.date ? new Date(formData.date) : new Date()
-                    }
-                    onChange={(date) => {
-                      if (date) {
-                        handleDateChange(date);
-                      } else {
-                        console.error("Invalid date selected");
-                      }
-                    }}
-                    className="form-control"
+                    style={{ border: '2px solid rgb(77, 208, 225)' }}
+                    selected={formData.date ? new Date(formData.date) : new Date()}
+                    onChange={(date) => date && handleDateChange(date)}
+                    className="form-control custom-datepicker"
                     dateFormat="dd-MM-yyyy"
-                    placeholderText="Select Date"
                     minDate={new Date()}
                   />
                 </Form.Group>
               </Col>
 
-               <Col md={6}>
-                <Form.Group className="mb-20">
-                  <Form.Label>Appointment Time <span style={{color:"red"}} className="required">*</span></Form.Label>
-                  <Form.Select
-                    name="appointmentTime"
-                    value={formData.appointmentTime}
-                    onChange={handleInputChange}
-                  >
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label className="fw-bold">Appointment Time <span className="text-danger">*</span></Form.Label>
+                  <Form.Select style={{ border: '2px solid rgb(77, 208, 225)' }} name="appointmentTime" value={formData.appointmentTime} onChange={handleInputChange}>
                     <option value="">Select Time</option>
                     {timeSlots.map((time, index) => (
-                      <option key={index} value={time}>
-                        {time}
+                      <option key={index} value={time}>{time}</option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label className="fw-bold">Doctor Name <span className="text-danger">*</span></Form.Label>
+                  <Form.Select style={{ border: '2px solid rgb(77, 208, 225)' }} name="doctor_id" value={formData.doctor_id} onChange={handleInputChange}>
+                    <option value="">Select a Doctor</option>
+                    {doctors.map((doctor) => (
+                      <option key={doctor.doctor_id} value={String(doctor.doctor_id)}>
+                        {doctor.name}
                       </option>
                     ))}
                   </Form.Select>
@@ -1020,34 +1102,13 @@ Swal.fire({
               </Col>
 
               <Col md={6}>
-                <Form.Group className="mb-20">
-                  <Form.Label>Doctor Name <span style={{color:"red"}} className="required">*</span></Form.Label>
-                  <Form.Select
-                    name="doctor_id"
-                    value={formData.doctor_id}
-                    onChange={handleInputChange}
-                  >
-                    <option value="">Select a Doctor</option>
-                    {doctors && doctors.length > 0 ? (
-                      doctors.map((doctor) => (
-                        <option key={doctor.doctor_id} value={String(doctor.doctor_id)}>
-                          {doctor.doctor_id} - {doctor.name}
-                        </option>
-                      ))
-                    ) : (
-                      <option disabled>No doctors available</option>
-                    )}
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-
-              <Col md={6}>
-                <Form.Group className="mb-20">
-                  <Form.Label>Patient Name <span style={{color:"red"}} className="required">*</span></Form.Label>
+                <Form.Group>
+                  <Form.Label className="fw-bold">Patient Name <span className="text-danger">*</span></Form.Label>
                   <Form.Control
+                    style={{ border: '2px solid rgb(77, 208, 225)' }}
                     type="text"
                     name="patientName"
-                    placeholder="Patient Name"
+                    placeholder="Enter full name"
                     value={formData.patientName}
                     onChange={handleInputChange}
                   />
@@ -1055,102 +1116,80 @@ Swal.fire({
               </Col>
 
               <Col md={6}>
-                <Form.Group className="mb-20">
-                  <Form.Label>Mobile Number <span style={{color:"red"}} className="required">*</span></Form.Label>
+                <Form.Group>
+                  <Form.Label className="fw-bold">Contact Number <span className="text-danger">*</span></Form.Label>
                   <Form.Control
+                    style={{ border: '2px solid rgb(77, 208, 225)' }}
                     type="text"
                     name="caller_no"
-                    placeholder="Mobile Number"
                     value={formData.caller_no}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      handleInputChange({
-                        target: {
-                          name: "caller_no",
-                          value: value,
-                        },
-                      });
-                    }}
+                    onChange={handleInputChange}
                   />
                 </Form.Group>
               </Col>
 
-              
               <Col md={6}>
-                <Form.Group className="mb-20">
-                  <Form.Label>FDE Name</Form.Label>
-                  <Form.Select
-                    name="FDE_Name"
-                    value={formData.FDE_Name}
-                    onChange={handleInputChange}
-                  >
-                    <option value="">Select FDE Name</option>
-                    {fdeList &&
-                      fdeList.length > 0 &&
-                      fdeList.map((fde) => (
-                        <option key={fde.FDEID} value={String(fde.FDEID)}>
-                          {fde.FDEID} - {fde.FDEName}
-                        </option>
-                      ))}
+                <Form.Group>
+                  <Form.Label className="fw-bold">FDE Name <span className="text-danger">*</span></Form.Label>
+                  <Form.Select style={{ border: '2px solid rgb(77, 208, 225)' }} name="FDE_Name" value={formData.FDE_Name} onChange={handleInputChange}>
+                    <option value="">Select FDE</option>
+                    {fdeList.map((fde) => (
+                      <option key={fde.FDEID} value={String(fde.FDEID)}>{fde.FDEName}</option>
+                    ))}
                   </Form.Select>
                 </Form.Group>
               </Col>
-              <Col md={15}>
-                <Form.Group className="mb-20">
-                  <Form.Label>Note</Form.Label>
+
+              <Col md={12}>
+                <Form.Group>
+                  <Form.Label className="fw-bold">Note</Form.Label>
                   <Form.Control
-                    type="text"
+                    style={{ border: '2px solid rgb(77, 208, 225)' }}
+                    as="textarea"
+                    rows={2}
                     name="note"
-                    placeholder="Note"
+                    placeholder="Additional details..."
                     value={formData.note}
                     onChange={handleInputChange}
                   />
                 </Form.Group>
               </Col>
-              <div className="d-flex justify-content-center">
-                <Col className="text-end">
-                  <button
-                    type="button"
-                    className="btn btn-primary me-2"
-                    onClick={() => handleSubmit("save")}
-                  >
-                    Book Appointment
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-danger"
-                    onClick={() => {
-                      setShowAddModal(false);
-                      setFormData({
-                        date: "",
-                        doctor_id: "",
-                        name: "",
-                        phone: "",
-                        appointmentTime: "",
-                        FDE_Name: "",
-                        fdeId: "",
-                        note: "",
-                      });
-                    }}
-                  >
-                    Cancel
-                  </button>
-                </Col>
-              </div>
             </Row>
+
+            <div className="d-flex justify-content-end mt-4 pt-3">
+              <Button
+                variant="danger"
+                className="me-2 px-4"
+                style={{ borderRadius: "10px" }}
+                onClick={() => setShowAddModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                className="px-4"
+                style={{ borderRadius: "10px", backgroundColor: "#00bcd4", border: "none" }}
+                onClick={() => handleSubmit("save")}
+              >
+               Add Appointment
+              </Button>
+            </div>
           </Form>
         </Modal.Body>
       </Modal>
+
       <Modal
         show={showNoteModal}
         onHide={() => setShowNoteModal(false)}
         size="lg"
       >
-        <Modal.Header closeButton>
-          <Modal.Title>Edit Note</Modal.Title>
+        <Modal.Header closeButton style={{ backgroundColor: "#e0f7fa", borderBottom: "2px solid #00bcd4" }}>
+          <Modal.Title style={{ color: "#00838f", fontWeight: "bold" }}> <FeatherIcon icon="file-text" className="me-2" />Add Note</Modal.Title>
         </Modal.Header>
         <Modal.Body>
+          <Form.Label>Note</Form.Label>
           <Form.Control
+            style={{ border: '2px solid rgb(77, 208, 225)' }}
             as="textarea"
             rows={5}
             name="note"
@@ -1160,14 +1199,17 @@ Swal.fire({
           />
         </Modal.Body>
         <Modal.Footer>
+
+          <Button className="px-3" style={{ borderRadius: "10px" }} variant="secondary" onClick={() => setShowNoteModal(false)}>
+            Cancel
+          </Button>
           <Button
+            className="px-4"
+            style={{ borderRadius: "10px" }}
             variant="primary"
             onClick={handleSaveNote}
           >
-            Save
-          </Button>
-          <Button variant="secondary" onClick={() => setShowNoteModal(false)}>
-            Cancel
+            Add Note
           </Button>
         </Modal.Footer>
       </Modal>
@@ -1177,19 +1219,19 @@ Swal.fire({
         onHide={() => setShowEnquiryModal(false)}
         size="lg"
       >
-        <Modal.Header closeButton>
-          <Modal.Title>Add Enquiry</Modal.Title>
+        <Modal.Header closeButton style={{ backgroundColor: "#e0f7fa", borderBottom: "2px solid #00bcd4" }}>
+          <Modal.Title style={{ color: "#00838f", fontWeight: "bold" }}>  <FeatherIcon icon="help-circle" className="me-2" />Add Enquiry</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <div>
-            <p>Enquiry for Call Log ID: {selectedCallLog?.ivr_id}</p>
+            {/* <p>Enquiry for Call Log ID: {selectedCallLog?.ivr_id}</p> */}
             <Form>
-              <br />
               <Row>
                 <Col md={6}>
                   <Form.Group className="mb-3">
-                    <Form.Label>Call Back Date</Form.Label>
+                    <Form.Label>Call Back Date <span style={{ color: "red" }} className="required">*</span></Form.Label>
                     <DatePicker
+                      style={{ border: '2px solid rgb(77, 208, 225)' }}
                       selected={selectedDate}
                       onChange={(date) => {
                         setSelectedDate(date);
@@ -1199,17 +1241,18 @@ Swal.fire({
                         }));
                       }}
                       dateFormat="dd-MM-yyyy"
-                      className="form-control"
+                      className="form-control custom-datepicker"
                       placeholderText="Select date"
                       value={enquiryForm.date}
                       minDate={new Date()}
                     />
                   </Form.Group>
                 </Col>
-                <Col md={6}>
+                {/* <Col md={6}>
                   <Form.Group className="mb-3">
-                    <Form.Label>Call Back Time (Required)</Form.Label>
+                    <Form.Label>Call Back Time (Required) <span style={{ color: "red" }} className="required">*</span></Form.Label>
                     <Form.Control
+                    style={{ border: '2px solid rgb(77, 208, 225)' }}
                       type="time"
                       name="time"
                       value={enquiryForm.time}
@@ -1217,11 +1260,12 @@ Swal.fire({
                       required
                     />
                   </Form.Group>
-                </Col>
+                </Col> */}
                 <Col md={6}>
                   <Form.Group className="mb-3">
-                    <Form.Label>Enquiry Type</Form.Label>
+                    <Form.Label>Enquiry Type <span style={{ color: "red" }} className="required">*</span></Form.Label>
                     <Form.Select
+                      style={{ border: '2px solid rgb(77, 208, 225)' }}
                       name="enquirytype"
                       value={enquiryForm.enquirytype}
                       onChange={handleEnquiryInputChange}
@@ -1256,8 +1300,9 @@ Swal.fire({
               <Row>
                 <Col md={6}>
                   <Form.Group>
-                    <Form.Label>Patient Name</Form.Label>
+                    <Form.Label>Patient Name <span style={{ color: "red" }} className="required">*</span></Form.Label>
                     <Form.Control
+                      style={{ border: '2px solid rgb(77, 208, 225)' }}
                       type="text"
                       name="patient_name"
                       value={enquiryForm.patient_name}
@@ -1268,20 +1313,22 @@ Swal.fire({
                 </Col>
                 <Col md={6}>
                   <Form.Group className="mb-20">
-                    <Form.Label>Mobile Number</Form.Label>
+                    <Form.Label>Contact Number <span style={{ color: "red" }} className="required">*</span></Form.Label>
                     <Form.Control
+                      style={{ border: '2px solid rgb(77, 208, 225)' }}
                       type="text"
                       name="caller_no"
-                      placeholder="Mobile Number"
+                      placeholder="Enter Contact Number"
                       value={selectedCallLog?.caller_no}
                       onChange={handleInputChange}
                     />
                   </Form.Group>
                 </Col>
-                <Col md={6}>
+                {/* <Col md={6}>
                 <Form.Group className="mb-20">
                   <Form.Label>Doctor Name</Form.Label>
                   <Form.Select
+                  style={{ border: '2px solid rgb(77, 208, 225)' }}
                    name="doctor_id"
                     value={enquiryForm.doctor_id}
                     onChange={handleEnquiryInputChange}
@@ -1298,11 +1345,12 @@ Swal.fire({
                     )}
                   </Form.Select>
                 </Form.Group>
-                </Col>
+                </Col> */}
                 <Col md={6}>
                   <Form.Group className="mb-20">
-                    <Form.Label>FDE Name</Form.Label>
+                    <Form.Label>FDE Name <span style={{ color: "red" }} className="required">*</span></Form.Label>
                     <Form.Select
+                      style={{ border: '2px solid rgb(77, 208, 225)' }}
                       name="FDE_Name"
                       value={enquiryForm.FDE_Name}
                       onChange={handleEnquiryInputChange}
@@ -1318,10 +1366,11 @@ Swal.fire({
                     </Form.Select>
                   </Form.Group>
                 </Col>
-                <Col md={6}>
+                {/* <Col md={6}>
                   <Form.Group className="mb-20">
                     <Form.Label>Reference</Form.Label>
                     <Form.Control
+                    style={{ border: '2px solid rgb(77, 208, 225)' }}
                       type="text"
                       name="reference"
                       value={enquiryForm.reference}
@@ -1329,11 +1378,12 @@ Swal.fire({
                       placeholder="e.g., Google, Friend, Walk-in"
                     />
                   </Form.Group>
-                </Col>
+                </Col> */}
                 <Col md={6}>
                   <Form.Group>
-                    <Form.Label>Add Note</Form.Label>
+                    <Form.Label>Note</Form.Label>
                     <Form.Control
+                      style={{ border: '2px solid rgb(77, 208, 225)' }}
                       as="textarea"
                       name="note"
                       value={enquiryForm.note}
@@ -1344,18 +1394,12 @@ Swal.fire({
                   </Form.Group>
                 </Col>
               </Row>
-              <div className="d-flex justify-content-center">
+              <div className="d-flex justify-content-center" style={{ marginTop: "10px" }}>
                 <Col className="text-end">
                   <button
+                    style={{ borderRadius: "10px" }}
                     type="button"
-                    className="btn btn-primary me-2"
-                    onClick={handleAddEnquirySubmit}
-                  >
-                    Add Enquiry
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-danger"
+                    className="btn btn-danger me-2"
                     onClick={() => {
                       setShowEnquiryModal(false);
                       setEnquiryForm({
@@ -1370,6 +1414,14 @@ Swal.fire({
                     }}
                   >
                     Cancel
+                  </button>
+                  <button
+                    style={{ borderRadius: "10px" }}
+                    type="button"
+                    className="btn btn-primary "
+                    onClick={handleAddEnquirySubmit}
+                  >
+                    Add Enquiry
                   </button>
                 </Col>
               </div>

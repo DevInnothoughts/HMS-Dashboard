@@ -7,6 +7,7 @@ import Swal from 'sweetalert2';
 import { useNavigate } from "react-router-dom";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import FeatherIcon from "feather-icons-react";
+import { FaUserMd } from 'react-icons/fa';
 import {
   Container,
   Row,
@@ -123,6 +124,8 @@ export default function Appointment_list() {
   const [consultationList, setConsultationList] = useState([]);
   const [timeSlots, setTimeSlots] = useState([]);
   const [billingItems, setBillingItems] = useState([{ label: "", amount: "" }]);
+  const [rows, setRows] = useState(10);
+  const [first, setFirst] = useState(0);
   const [receiptForm, setReceiptForm] = useState({
     consultationType: "",
     registrationType: "",
@@ -160,6 +163,7 @@ export default function Appointment_list() {
         appointment_date: moment(new Date()).format("DD-MM-YYYY"),
         consultations: consultationData,
         paymentmode: receiptForm.paymentMode,
+        regtype: receiptForm.registrationType,
         expectedamt: parseFloat(payable) || 0,
         discountamt: parseFloat(receiptForm.discountAmt) || 0,
         discountnote: receiptForm.discountNote || "",
@@ -167,7 +171,7 @@ export default function Appointment_list() {
         PosMachine: receiptForm.posTerminal,
         MachineType: "OPD"
     };
-
+    // console.log("check reg type:", payload);
     try {
         const response = await fetch(`${BASE_URL}/V1/appointment/saveReceipt?location=${currentLocation}`, {
             method: "POST",
@@ -180,7 +184,7 @@ export default function Appointment_list() {
         if (result.statusCode === 201 || result.statusCode === 200) { // This handles 200/201 (Cash/Instant Success)
           Swal.fire("Success", "Receipt Generated Successfully", "success");
           setShowReceiptModal(false);
-          navigate("/receipt-list");
+          navigate("/reports/receipts");
         } else if (result.statusCode === 202 && ( result.data?.result === 'success' || result.data?.stat === 'success')) {
             // This handles the "Pending Digital" case
             // showPaymentPendingPopup(result.data.transaction_id, payload, result.data.pos_tid);
@@ -316,13 +320,6 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
   });
 };
 
-  // const handleReceiptFormChange = (e) => {
-  //   const { name, value } = e.target;
-  //   setReceiptForm(prev => ({
-  //     ...prev,
-  //     [name]: value
-  //   }));
-  // };
 
   const handleReceiptFormChange = (e) => {
     const { name, value } = e.target;
@@ -338,6 +335,7 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
       setReceiptForm(prev => ({ ...prev, [name]: value }));
     }
   };
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     console.log("Token:", token);
@@ -547,23 +545,23 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
       console.error("Network Error:", error);
     }
   };
-  const handleProcessUpdate = async (appId, endpoint, patient_type, patient_phone, successMessage="Confirmed!") => {
+  const handleProcessUpdate = async (appId, endpoint, patient_type, patient_phone, successMessage = "Confirmed!") => {
     try {
       console.log(appId, endpoint, successMessage);
       let response = "";
-      if (!patient_phone && !patient_type){
+      if (!patient_phone && !patient_type) {
         response = await fetch(
           `${BASE_URL}/V1/appointment/${endpoint}?appId=${appId}&location=${currentLocation}`,
           { method: "PUT", headers: { "Content-Type": "application/json" } }
         );
         console.log(response);
       } else {
-      response = await fetch(
-        `${BASE_URL}/V1/appointment/${endpoint}?appId=${appId}&location=${currentLocation}&patientType=${patient_type}&patientPhone=${patient_phone}`,
-        { method: "PUT", headers: { "Content-Type": "application/json" } }
-      );
-      console.log(response);
-    }
+        response = await fetch(
+          `${BASE_URL}/V1/appointment/${endpoint}?appId=${appId}&location=${currentLocation}&patientType=${patient_type}&patientPhone=${patient_phone}`,
+          { method: "PUT", headers: { "Content-Type": "application/json" } }
+        );
+        console.log(response);
+      }
       const data = await response.json();
 
       if (response.ok) {
@@ -606,7 +604,7 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
   };
 
   const renderActionBody = (rowData) => {
-    const { appointment_id, confirm_time, historychk, executivechk, consultationchk , patient_phone, patient_type} = rowData;
+    const { appointment_id, confirm_time, historychk, executivechk, consultationchk, patient_phone, patient_type } = rowData;
     const isConfirmed = confirm_time != 0;
     const isHistoryDone = historychk === 3;
     const isExecutionDone = executivechk === 1 || executivechk === 4;
@@ -628,7 +626,7 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
 
         {!isConfirmed && (
           <>
-             <ActionButton
+            <ActionButton
               title="Edit"
               onClick={() => { setSelectedAppointment(rowData); setShowEditModal(true); }}
               disabled={isConfirmed}
@@ -717,7 +715,32 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
       >
 
         <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-          <Form.Group style={{ display: "flex", alignItems: "center", margin: 0 }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <span style={{ marginRight: "8px", fontSize: "13px", fontWeight: "bold", color: "#333" }}>
+              Show
+            </span>
+            <Form.Select
+              size="sm"
+              value={rows}
+              onChange={(e) => {
+                setRows(parseInt(e.target.value));
+                setFirst(0); // Reset to first page when changing row count
+              }}
+              style={{
+                width: "70px",
+                height: "40px",
+                border: "1px solid #4dd0e1",
+                borderRadius: "6px",
+                fontSize: "12px",
+              }}
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </Form.Select>
+          </div>
+          <Form.Group className="ms-2" style={{ display: "flex", alignItems: "center", margin: 0 }}>
             <span
               style={{
                 marginRight: "10px",
@@ -746,6 +769,7 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
                   border: "1px solid #4dd0e1",
                   padding: "5px 8px",
                   width: "200px",
+                  height: "40px",
                   fontSize: "12px",
                   transition: "all 0.3s ease",
                 }}
@@ -772,8 +796,9 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
             </div>
             <DatePicker
               selected={fromDate}
-              onChange={setFromDate}
+              onChange={(date) => setFromDate(date)}
               dateFormat="dd-MM-yyyy"
+              maxDate={new Date()}
               placeholderText="Select from date"
               customInput={<Form.Control style={{ padding: '5px 8px', fontSize: '12px' }} />}
             />
@@ -796,26 +821,31 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
             style={{
               backgroundColor: "#00bcd4",
               border: "none",
-              borderRadius: "6px",
-              padding: "8px 15px",
+              borderRadius: "8px",
+              padding: "6px 7px",
               fontSize: "12px",
               fontWeight: "500",
               color: "white",
               cursor: "pointer",
               transition: "all 0.3s ease",
               boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              marginTop: "15px",
+              marginTop: "13px",
+              ":hover": {
+                backgroundColor: "#00acc1",
+                transform: "translateY(-1px)",
+                boxShadow: "0 4px 8px rgba(0,0,0,0.15)",
+              },
             }}
-            disabled={currentLocation === 'default'}
           >
-            <FeatherIcon icon="refresh-ccw" size={16} className="me-2" />Refresh All Data
+            <FeatherIcon icon="refresh-ccw" size={13} className="me-2" />
+            Refresh
           </Button>
         </div>
       </div>
       <div style={{ marginTop: "15px" }}>
-        <Col xs={12}>
+        <Col xs={12} style={{ padding: "2px" }}>
           <div className="d-flex flex-wrap justify-content-start align-items-center">
-            <ColorLegend name="Appointment Confirmed" bgColor="#ffffff" />
+            <ColorLegend name="Appointment Confirm" bgColor="#ffffff" />
             <ColorLegend name="History Checked" bgColor="#FFA500" />
             <ColorLegend name="Executive Checked" bgColor="#FFFF00" />
             <ColorLegend name="Consultation Checked" bgColor="#800080" />
@@ -964,7 +994,7 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
                 style={{
                   marginLeft: "-10px",
                   marginRight: "-10px",
-                  borderRadius: "8px",
+                  borderRadius: "15px",
                   boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
                   borderColor: "#00bcd4",
                   background: "white",
@@ -982,86 +1012,117 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
                     <DataTable
                       value={appointmentData}
                       paginator
-                      rows={10}
+                      rows={rows}
+                      first={first}
+                      onPage={(e) => {
+                        setFirst(e.first);
+                        setRows(e.rows);
+                      }}
                       filters={filters}
                       header={renderHeader}
                       globalFilterFields={[
                         "appointment_id", "patient_name", "patient_phone", "doctor_name", "FDE_Name", "note",
                       ]}
+                      paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
                       currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
-                      paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown CurrentPageReport"
                       className="p-datatable-customers p-datatable-gridlines p-datatable-striped datatable-compact-style"
                       rowClassName={getRowClassName}
                     >
-                      <Column
+                      {/* <Column
                         field="appointment_id"
                         header="ID"
-                        sortable
                         style={getColumnStyle("88px")}
+                        body={(rowData) => rowData.appointment_id || "-"}
+                        headerClassName="datatable-header-center"
+                      /> */}
+                      <Column
+                        header="Sr No"
+                        style={{ ...getColumnStyle("50px"), border: "1px solid #90caf9" }}
+                        body={(rowData, { rowIndex }) => rowIndex + 1}
                         headerClassName="datatable-header-center"
                       />
+
                       <Column
                         field="appointment_timestamp"
                         header="Date"
-                        style={getColumnStyle("85px")}
-                        body={(rowData) => moment(rowData.appointment_timestamp).format("DD-MM-YYYY")}
+                        style={{ ...getColumnStyle("85px"), border: "1px solid #90caf9" }}
+                        body={(rowData) => rowData.appointment_timestamp ? moment(rowData.appointment_timestamp).format("DD-MM-YYYY") : "-"}
                         headerClassName="datatable-header-center"
                       />
+
                       <Column
                         field="appointment_time"
                         header="Appointment Time"
-                        style={getColumnStyle("83px")}
+                        style={{ ...getColumnStyle("83px"), border: "1px solid #90caf9" }}
+                        body={(rowData) => rowData.appointment_time || "-"}
                         headerClassName="datatable-header-center"
                       />
+
                       <Column
                         field="confirm_time"
                         header="Confirm Time"
-                        style={getColumnStyle("65px")}
+                        style={{ ...getColumnStyle("65px"), border: "1px solid #90caf9" }}
+                        body={(rowData) => rowData.confirm_time || "-"}
                         headerClassName="datatable-header-center"
                       />
+
                       <Column
                         field="patient_type"
                         header="Patient Type"
-                        style={getColumnStyle("75px")}
+                        style={{ ...getColumnStyle("75px"), border: "1px solid #90caf9" }}
+                        body={(rowData) => rowData.patient_type || "-"}
                         headerClassName="datatable-header-center"
                       />
+
                       <Column
                         field="patient_name"
                         header="Patient Name"
-
-                        style={getColumnStyle("120px")}
+                        style={{ ...getColumnStyle("120px"), border: "1px solid #90caf9" }}
+                        body={(rowData) => rowData.patient_name || "-"}
                         headerClassName="datatable-header-center"
                       />
+
                       <Column
                         field="patient_phone"
                         header="Contact No"
-                        style={getColumnStyle("110px")}
+                        style={{ ...getColumnStyle("110px"), border: "1px solid #90caf9" }}
+                        body={(rowData) => rowData.patient_phone || "-"}
                         headerClassName="datatable-header-center"
                       />
+
                       <Column
                         field="doctor_name"
                         header="Doctor"
-                        style={getColumnStyle("110px")}
+                        style={{ ...getColumnStyle("110px"), border: "1px solid #90caf9" }}
+                        body={(rowData) => rowData.doctor_name || "-"}
                         headerClassName="datatable-header-center"
                       />
+
                       <Column
                         field="FDE_Name"
-                        header="FDE"
-                        style={getColumnStyle("60px")}
+                        header="FDE Name"
+                        style={{ ...getColumnStyle("90px"), border: "1px solid #90caf9" }}
+                        body={(rowData) => rowData.FDE_Name || "-"}
                         headerClassName="datatable-header-center"
                       />
+
                       <Column
                         field="note"
                         header="Note"
-                        style={getColumnStyle("145px")}
-                        body={(rowData) => <div style={{ whiteSpace: 'normal', textAlign: "left" }}>{rowData.note}</div>}
+                        style={{ ...getColumnStyle("125px"), border: "1px solid #90caf9" }}
+                        body={(rowData) => (
+                          <div style={{ whiteSpace: 'normal', textAlign: "center" }}>
+                            {rowData.note || "-"}
+                          </div>
+                        )}
                         headerClassName="datatable-header-center"
                       />
+
                       <Column
                         header="Actions"
                         body={renderActionBody}
                         exportable={false}
-                        style={getColumnStyle("165px")}
+                        style={{ ...getColumnStyle("165px"), border: "1px solid #90caf9" }}
                         headerClassName="datatable-header-center"
                       />
                     </DataTable>
@@ -1074,14 +1135,14 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
       </div>
 
       <Modal show={showReceiptModal} onHide={() => setShowReceiptModal(false)} size="lg" centered>
-        <Modal.Header closeButton style={{ backgroundColor: "#e0f7fa", borderBottom: "1px solid #4dd0e1" }}>
+        <Modal.Header closeButton style={{ backgroundColor: "#e0f7fa", borderBottom: "2px solid #4dd0e1" }}>
           <Modal.Title style={{ fontSize: "18px", fontWeight: "600", color: "#00838f" }}>
             <FeatherIcon icon="credit-card" size={20} className="me-2" />
             Generate Receipt
           </Modal.Title>
         </Modal.Header>
 
-        <Modal.Body style={{ backgroundColor: "#f5fcfd", padding: "25px" }}>
+        <Modal.Body style={{ backgroundColor: "#f5fcfd", padding: "15px" }}>
           <Form>
             <div className="mb-4">
               <h6 style={{ color: "#00bcd4", borderBottom: "1px solid #00bcd4", paddingBottom: "5px", marginBottom: "5px", fontSize: "15px" }}>
@@ -1093,7 +1154,7 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
                   <Form.Control
                     readOnly
                     value={selectedAppointment?.patient_name || ""}
-                    style={{ fontSize: '13px', backgroundColor: "#eee" }}
+                    style={{ cursor: "not-allowed", fontSize: '13px', backgroundColor: "#eee", border: '2px solid rgb(77, 208, 225)' }}
                   />
                 </Col>
 
@@ -1102,7 +1163,7 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
                     <Form.Label style={{ fontSize: '13px', fontWeight: "500" }}>Doctor Name <span className="text-danger">*</span></Form.Label>
                     <Form.Select
                       name="doctorName"
-                      style={{ fontSize: '13px' }}
+                      style={{ fontSize: '13px', border: '2px solid rgb(77, 208, 225)' }}
                       value={receiptForm.doctorName || ""}
                       onChange={handleReceiptFormChange}
                     >
@@ -1118,16 +1179,38 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
               </Row>
 
               <Row className="mb-3">
-                <Col md={6}>
-                  <Form.Label style={{ fontSize: '13px', fontWeight: "500" }}>Registration Type </Form.Label>
-                  <Form.Select
-                    style={{ fontSize: '13px' }}
-                    name="registrationType"
-                    onChange={handleReceiptFormChange}
-                  >
-                    <option value="">Select Registration</option>
-                    {["DNC", "DNW", "DNP", "Only Registration"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </Form.Select>
+                <Col md={12} className="mb-3">
+                  <Form.Label style={{ fontSize: '13px', fontWeight: "500", display: 'block' }}>Registration Type</Form.Label>
+                  <div className="d-flex flex-wrap gap-3 p-2" style={{ border: '2px solid rgb(77, 208, 225)', borderRadius: '6px', backgroundColor: "#94e2eeff" }}>
+                    {["DNC", "DNW", "DNP", "Only Registration"].map(opt => (
+                      <Form.Check
+                        inline
+                        key={opt}
+                        label={opt}
+                        name="registrationType"
+                        type="radio"
+                        id={`reg-${opt}`}
+                        value={opt}
+                        checked={receiptForm.registrationType === opt}
+                        onChange={handleReceiptFormChange}
+                        style={{ fontSize: '13px', margin: "10px" }}
+                      />
+                    ))}
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      className="ms-auto"
+                      style={{
+                        fontSize: '11px',
+                        borderRadius: '5px',
+                        fontWeight: '600',
+                        textTransform: 'uppercase'
+                      }}
+                      onClick={() => setReceiptForm(prev => ({ ...prev, registrationType: "" }))}
+                    >
+                      Clear
+                    </Button>
+                  </div>
                 </Col>
               </Row>
 
@@ -1139,7 +1222,7 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
                     rows={1}
                     name="regComment"
                     placeholder="Enter notes..."
-                    style={{ fontSize: '13px' }}
+                    style={{ fontSize: '13px', border: '2px solid rgb(77, 208, 225)' }}
                     onChange={handleReceiptFormChange}
                   />
                 </Form.Group>
@@ -1148,7 +1231,7 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
 
             <div className="mb-4">
               <div className="d-flex justify-content-between align-items-center">
-                <h6 style={{ color: "#00bcd4", borderBottom: "1px solid #00bcd4", paddingBottom: "5px", marginTop: "20px", marginBottom: "5px", fontSize: "15px", flex: 1 }}>
+                <h6 style={{ color: "#00bcd4", borderBottom: "1px solid #00bcd4", paddingBottom: "5px", marginTop: "10px", marginBottom: "5px", fontSize: "15px", flex: 1 }}>
                   Billing Particulars
                 </h6>
               </div>
@@ -1208,7 +1291,7 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
                   <Col md={6}>
                     <Form.Label style={{ fontSize: '13px', fontWeight: "500" }}>Consultation Type </Form.Label>
                     <Form.Select
-                      style={{ fontSize: '13px' }}
+                      style={{ fontSize: '13px', border: '2px solid rgb(77, 208, 225)' }}
                       value={item.label}
                       onChange={(e) => {
                         const newItems = [...billingItems];
@@ -1226,9 +1309,11 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
                     <Form.Label style={{ fontSize: '12px' }}>Amount (₹)</Form.Label>
                     <Form.Control
                       type="number"
-                      style={{ fontSize: '13px' }}
+                      placeholder="E.g. 1000"
+                      style={{ fontSize: '13px', border: '2px solid rgb(77, 208, 225)' }}
                       value={receiptForm.registrationType ? 0 : item.amount}
                       disabled={!!receiptForm.registrationType}
+                      onWheel={(e) => e.target.blur()}
                       onChange={(e) => {
                         const newItems = [...billingItems];
                         newItems[index].amount = e.target.value;
@@ -1269,27 +1354,30 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
                   <Form.Control
                     type="number"
                     name="discountAmt"
-                    style={{ fontSize: '13px' }}
+                    placeholder="E.g. 1000"
+                    style={{ fontSize: '13px', border: '2px solid rgb(77, 208, 225)' }}
                     value={receiptForm.registrationType ? 0 : receiptForm.discountAmt}
                     disabled={!!receiptForm.registrationType}
+                    onWheel={(e) => e.target.blur()}
                     onChange={handleReceiptFormChange}
                   />
                 </Col>
                 <Col md={8}>
                   <Form.Label style={{ fontSize: '13px', fontWeight: "500" }}>Discount Note</Form.Label>
                   <Form.Control
+                    placeholder="Enter Discount Note"
                     name="discountNote"
-                    style={{ fontSize: '13px' }}
+                    style={{ fontSize: '13px', border: '2px solid rgb(77, 208, 225)' }}
                     onChange={handleReceiptFormChange}
                   />
                 </Col>
               </Row>
 
-              <Row className="mb-15">
-                <Col md={6}>
+              <Row>
+                <Col md={4}>
                   <Form.Label style={{ fontSize: '13px', fontWeight: "500" }}>Mode of Payment</Form.Label>
                   <Form.Select
-                    style={{ fontSize: '13px' }}
+                    style={{ fontSize: '13px', border: '2px solid rgb(77, 208, 225)' }}
                     name="paymentMode"
                     onChange={handleReceiptFormChange}
                   >
@@ -1297,21 +1385,30 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
                     {["card", "upi", "cash"].map(opt => <option key={opt} value={opt}>{opt.toUpperCase()}</option>)}
                   </Form.Select>
                 </Col>
-
-                <Col md={6}>
-                  <Form.Label style={{ fontSize: '13px', fontWeight: "500" }}>PoS Terminal </Form.Label>
-                  <Form.Select
-                    style={{ fontSize: '13px' }}
-                    name="posTerminal"
-                    onChange={handleReceiptFormChange}
-                  >
-                    <option value="">Select Terminal</option>
-                    {["HDFC","BharatPe", "BharatPe1", "BharatPe2", "PINE LABS","TEST", "OFFLINE"].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </Form.Select>
+                <Col md={8}>
+                  <Form.Label style={{ fontSize: '13px', fontWeight: "500", display: 'block' }}>PoS Terminal</Form.Label>
+                  <div className="d-flex flex-wrap gap-2 p-2" style={{ border: '2px solid rgb(77, 208, 225)', borderRadius: '6px', backgroundColor: '#94e2eeff' }}>
+                    {["HDFC", "BharatPe", "BharatPe1", "BharatPe2", "PINE LABS", "TEST", "OFFLINE"].map(opt => (
+                      <Form.Check
+                        inline
+                        key={opt}
+                        label={opt}
+                        name="posTerminal"
+                        type="radio"
+                        id={`pos-${opt}`}
+                        value={opt}
+                        checked={receiptForm.posTerminal === opt}
+                        onChange={handleReceiptFormChange}
+                        style={{ fontSize: '13px', margin: "5px" }}
+                      />
+                    ))}
+                  </div>
                 </Col>
               </Row>
+              <Row>
 
-              <div className="p-3 mb-3" style={{ backgroundColor: "#e0f7fa", borderRadius: "8px", border: "1px dashed #00bcd4", marginTop: "10px" }}>
+              </Row>
+              <div className="p-3" style={{ backgroundColor: "#e0f7fa", borderRadius: "8px", border: "1px dashed #00bcd4" }}>
                 <Row className="text-end">
                   <Col>
                     <div className="mb-2" style={{ borderBottom: "1px solid #b2ebf2", paddingBottom: "5px" }}>
@@ -1323,9 +1420,9 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
                         </div>
                       ))}
                     </div>
-                    <div style={{ fontSize: "13px", color: "#555" }}>Subtotal: <strong>₹ {calculateTotals().subtotal}</strong></div>
-                    <div style={{ fontSize: "13px", color: "#d32f2f", marginTop: "5px" }}>Discount: <strong>- ₹ {receiptForm.discountAmt || 0}</strong></div>
-                    <div style={{ fontSize: "16px", color: "#00838f", fontWeight: "bold", marginTop: "5px" }}>
+                    <div style={{ fontSize: "14px", color: "#555", marginTop: "5px" }}>Subtotal: <strong>₹ {calculateTotals().subtotal}</strong></div>
+                    <div style={{ fontSize: "14px", color: "#d32f2f", marginTop: "5px" }}>Discount: <strong>- ₹ {receiptForm.discountAmt || 0}</strong></div>
+                    <div style={{ fontSize: "18px", color: "#00838f", fontWeight: "bold", marginTop: "5px" }}>
                       Payable Amount: ₹ {calculateTotals().payable}
                     </div>
                   </Col>

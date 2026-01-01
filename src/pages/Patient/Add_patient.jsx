@@ -1,5 +1,4 @@
-/* eslint-disable no-unused-vars */
-import React, { useState, useEffect } from "react"; 
+import React, { useState, useEffect } from "react";
 import { Row, Col, Form, Container, Card } from "react-bootstrap";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import { decodeJwt } from "../../utils/decode-jwt";
@@ -13,17 +12,16 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import NavBarP from "../../components/NavbarP";
 
-// Professional Toast configuration for quick non-intrusive success alerts
 const Toast = Swal.mixin({
-    toast: true,
-    position: 'top-end',
-    showConfirmButton: false,
-    timer: 3000,
-    timerProgressBar: true,
-    didOpen: (toast) => {
-        toast.addEventListener('mouseenter', Swal.stopTimer)
-        toast.addEventListener('mouseleave', Swal.resumeTimer)
-    }
+  toast: true,
+  position: 'top-end',
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.addEventListener('mouseenter', Swal.stopTimer)
+    toast.addEventListener('mouseleave', Swal.resumeTimer)
+  }
 });
 
 const hospitalData = {
@@ -53,11 +51,9 @@ const hospitalData = {
 };
 
 const generateUID = () => {
-  // HIPAA: Ensure UID is generated securely and is unique on the server, not just client time.
   return `${Date.now()}`;
 };
 
-// Keeping the original API URL as requested, but noting the need for HTTPS.
 const BASE_URL = "http://localhost:5100/api";
 
 export default function Add_Patient() {
@@ -90,13 +86,12 @@ export default function Add_Patient() {
     city: "",
     patientHistory: "",
   });
-  // --- HIPAA: Fetch Current Location from JWT ---
   const dropdownStyle = {
     width: "100%",
-    height: "38px", // Standard Bootstrap input height
-    borderRadius: "6px", // Slightly softer corners to match
-    border: "2px solid #dee2e6", // Thinner border
-    fontSize: "14px", // Matches standard text size
+    height: "38px",
+    borderRadius: "6px",
+    border: "2px solid #dee2e6",
+    fontSize: "14px",
     color: "#495057",
     backgroundColor: "#fff",
     transition: "border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out",
@@ -106,14 +101,12 @@ export default function Add_Patient() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      // NOTE: Replace 'decodeJwt' with your actual JWT decoding utility
       const payload = decodeJwt(token);
       if (payload && payload.jobLocation) {
         setCurrentLocation(payload.jobLocation);
       }
     }
   }, []);
-  // ---------------------------------------------
 
   const categories =
     (selectedDepartment && hospitalData[selectedDepartment]?.categories) || [];
@@ -135,9 +128,7 @@ export default function Add_Patient() {
       "blood_group",
       "weight",
       "height",
-      "country",
-      "state",
-      "city",
+      "address",
       "patientHistory",
     ];
 
@@ -152,7 +143,6 @@ export default function Add_Patient() {
       newErrors.mobileNo = "Mobile number must be 10 digits";
     }
 
-    // HIPAA: Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (formData.email && !emailRegex.test(formData.email)) {
       newErrors.email = "Invalid email format";
@@ -165,11 +155,10 @@ export default function Add_Patient() {
     const { name, value } = e.target;
     setFormData((prevState) => ({
       ...prevState,
-      [name]: value.toUpperCase(), // Convert input to uppercase
+      [name]: value.toUpperCase(),
     }));
   };
 
-  // Add this function to format date to YYYY-MM-DD
   const formatDate = (dateString) => {
     if (!dateString) return "";
 
@@ -177,7 +166,7 @@ export default function Add_Patient() {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return "";
 
-      return date.toISOString().split("T")[0]; // Returns YYYY-MM-DD format
+      return date.toISOString().split("T")[0];
     } catch (error) {
       console.error("Error formatting date:", error);
       return "";
@@ -189,15 +178,13 @@ export default function Add_Patient() {
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length === 0) {
-      // HIPAA: Data Minimization in Logging - Log action, not full PHI payload
       console.log("Attempting to submit patient registration.");
 
       try {
         const payload = {
           ...formData,
           saveType,
-          patient_location: currentLocation, // Include location in the payload
-          // Explicitly ensuring PHI fields are present and correctly mapped for API
+          patient_location: currentLocation,
           patientName: formData.patientName,
           mobileNo: formData.mobileNo,
           email: formData.email,
@@ -205,10 +192,8 @@ export default function Add_Patient() {
 
         const response = await fetch(`${BASE_URL}/V1/patient/addPatient?location=${currentLocation}`, {
           method: "POST",
-          // HIPAA: Authorization header required for secure API calls
           headers: {
             "Content-Type": "application/json",
-            // "Authorization": `Bearer ${localStorage.getItem('token')}`, 
           },
           body: JSON.stringify(payload),
         });
@@ -219,7 +204,7 @@ export default function Add_Patient() {
             title: 'Success!',
             text: 'Patient profile created successfully.',
             confirmButtonColor: '#00bcd4'
-          });          // Reset form after successful submission (Data Minimization)
+          });
           setFormData({
             prefix: "",
             date: new Date().toISOString().split("T")[0],
@@ -248,7 +233,6 @@ export default function Add_Patient() {
 
         } else {
           const errorData = await response.json();
-          // ERROR ALERT FROM BACKEND
           Swal.fire({
             icon: 'error',
             title: 'Saving Failed',
@@ -256,15 +240,13 @@ export default function Add_Patient() {
           });
         }
       } catch (error) {
-        // NETWORK ERROR ALERT
         Swal.fire({
-            icon: 'error',
-            title: 'Connection Error',
-            text: 'A network error occurred while saving patient details.'
+          icon: 'error',
+          title: 'Connection Error',
+          text: 'A network error occurred while saving patient details.'
         });
       }
     } else {
-      // VALIDATION ALERT
       Toast.fire({
         icon: 'warning',
         title: 'Please correct the validation errors'
@@ -330,27 +312,26 @@ export default function Add_Patient() {
               style={{
                 borderRadius: "15px",
                 boxShadow: "0 10px 20px rgba(0,0,0,0.1)",
-                border: "4px solid #00bcd4",
+                border: "1.5px solid #00bcd4",
                 background: "white",
                 overflow: "hidden",
               }}
               show={showAddModal}
             >
-             <Card.Body style={{ padding: "20px" }}>
-                 <h4 className="section-title" style={{marginBottom:"15px"}}>
-                     Add New Patient Details
-                    </h4>
+              <Card.Body style={{ padding: "20px" }}>
+                <h4 className="section-title" style={{ marginBottom: "15px" }}>
+                  Add New Patient Details
+                </h4>
                 <Form>
-                  {/* Basic Information Section */}
                   <div className="form-section">
                     <h5 className="section-title"
                       style={{ marginBottom: "15px" }}>
                       <i className="fa fa-user-circle me-2"></i>
-                      Basic Information 
-                    </h5> 
+                      Basic Information
+                    </h5>
                     <Row>
                       <Col md={3}>
-                        <Form.Group className="mb-3">
+                        <Form.Group className="mb-1">
                           <Form.Label>
                             Patient UID <span style={styles.required}>*</span>
                           </Form.Label>
@@ -363,8 +344,8 @@ export default function Add_Patient() {
                           />
                         </Form.Group>
                       </Col>
-                      <Col md={2} className="mb-4">
-                        <Form.Group className="mb-3">
+                      <Col md={2}>
+                        <Form.Group >
                           <Form.Label className="d-block">
                             Date <span style={styles.required}>*</span>
                           </Form.Label>
@@ -393,7 +374,7 @@ export default function Add_Patient() {
                         </Form.Group>
                       </Col>
                       <Col md={3}>
-                        <Form.Group className="mb-3">
+                        <Form.Group>
                           <Form.Label>Title</Form.Label>
                           <Form.Control
                             as="select"
@@ -411,7 +392,7 @@ export default function Add_Patient() {
                       </Col>
 
                       <Col md={4}>
-                        <Form.Group className="mb-3">
+                        <Form.Group>
                           <Form.Label>
                             Patient Name <span style={styles.required}>*</span>
                           </Form.Label>
@@ -426,8 +407,8 @@ export default function Add_Patient() {
                     </Row>
                     <br />
                     <Row>
-                      <Col md={2}>
-                        <Form.Group className="mb-3">
+                      <Col md={3}>
+                        <Form.Group>
                           <Form.Label>
                             Gender <span style={styles.required}>*</span>
                           </Form.Label>
@@ -445,7 +426,7 @@ export default function Add_Patient() {
                         </Form.Group>
                       </Col>
                       <Col md={3}>
-                        <Form.Group className="mb-3">
+                        <Form.Group>
                           <Form.Label>
                             Age <span style={styles.required}>*</span>
                           </Form.Label>
@@ -499,7 +480,7 @@ export default function Add_Patient() {
                       <Col md={5}>
                         <Form.Group className="mb-3">
                           <Form.Label>
-                            Email 
+                            Email
                           </Form.Label>
                           <Form.Control
                             type="email"
@@ -516,15 +497,13 @@ export default function Add_Patient() {
                     </Row>
                   </div>
 
-                 <div className="form-section">
-                  <h5 className="section-title" style={{ marginBottom: "15px" }}>
-                    <i className="fa fa-map-marker me-2"></i>
-                    Address Information
-                  </h5>
-                  {/* Added g-4 for consistent spacing between columns */}
-                  <Row className="g-4"> 
-                    {/* xs={12} makes it full width on mobile, md={4} aligns 3 in a row on desktop */}
-                    <Col xs={12} md={4}>
+                  <div className="form-section">
+                    <h5 className="section-title" style={{ marginBottom: "15px" }}>
+                      <i className="fa fa-map-marker me-2"></i>
+                      Address Information
+                    </h5>
+                    <Row className="g-4">
+                      {/* <Col xs={12} md={4}>
                       <Form.Group>
                         <Form.Label>
                           Country <span style={styles.required}>*</span>
@@ -573,9 +552,29 @@ export default function Add_Patient() {
                         />
                         {errors.city && <p className="error-message">{errors.city}</p>}
                       </Form.Group>
-                    </Col>
-                  </Row>
-                </div>
+                    </Col> */}
+                      <Col md={12}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>
+                            Patient Address <span style={styles.required}>*</span>
+                          </Form.Label>
+                          <Form.Control
+                            as="textarea"
+                            rows={3}
+                            name="address"
+                            placeholder="Enter Full Patient Address"
+                            value={formData.address}
+                            onChange={handleInputChange}
+                          />
+                          {errors.address && (
+                            <p className="error-message" style={{ color: "red", fontSize: "12px" }}>
+                              {errors.address}
+                            </p>
+                          )}
+                        </Form.Group>
+                      </Col>
+                    </Row>
+                  </div>
 
                   <div className="form-section">
                     <h5 className="section-title" style={{ marginBottom: "15px" }}>
@@ -604,7 +603,7 @@ export default function Add_Patient() {
                           </Form.Control>
                         </Form.Group>
                       </Col>
-                      <Col md={2}>
+                      <Col md={3}>
                         <Form.Group className="mb-3">
                           <Form.Label>
                             Weight <span style={styles.required}>*</span>
@@ -620,7 +619,7 @@ export default function Add_Patient() {
                           )}
                         </Form.Group>
                       </Col>
-                      <Col md={2}>
+                      <Col md={3}>
                         <Form.Group className="mb-3">
                           <Form.Label>
                             Height <span style={styles.required}>*</span>
@@ -743,45 +742,45 @@ export default function Add_Patient() {
                   >
                     <button
                       type="button"
-                      className="btn btn-danger "
+                      className="btn btn-danger"
+                      style={{ borderRadius: "10px" }}
                       onClick={() => {
-                        // CANCEL CONFIRMATION
                         Swal.fire({
-                            title: 'Are you sure?',
-                            text: "All unsaved patient data will be lost.",
-                            icon: 'warning',
-                            showCancelButton: true,
-                            confirmButtonColor: '#d33',
-                            cancelButtonColor: '#aaa',
-                            confirmButtonText: 'Yes, Reset Form'
+                          title: 'Are you sure?',
+                          text: "All unsaved patient data will be lost.",
+                          icon: 'warning',
+                          showCancelButton: true,
+                          confirmButtonColor: '#d33',
+                          cancelButtonColor: '#aaa',
+                          confirmButtonText: 'Yes, Reset Form'
                         }).then((result) => {
-                            if (result.isConfirmed) {
-                                setFormData({
-                                    prefix: "",
-                                    date: new Date().toISOString().split("T")[0],
-                                    uid: generateUID(),
-                                    patientName: "",
-                                    sex: "",
-                                    mobileNo: "",
-                                    alternateNo: "",
-                                    age: "",
-                                    blood_group: "",
-                                    weight: "",
-                                    email: "",
-                                    height: "",
-                                    country: "",
-                                    state: "",
-                                    city: "",
-                                    patientHistory: "",
-                                });
-                                setCountry(null);
-                                setState(null);
-                                setCity(null);
-                                setSelectedDepartment("");
-                                setSelectedCategory("");
-                                setSelectedDoctor("");
-                                setErrors({});
-                            }
+                          if (result.isConfirmed) {
+                            setFormData({
+                              prefix: "",
+                              date: new Date().toISOString().split("T")[0],
+                              uid: generateUID(),
+                              patientName: "",
+                              sex: "",
+                              mobileNo: "",
+                              alternateNo: "",
+                              age: "",
+                              blood_group: "",
+                              weight: "",
+                              email: "",
+                              height: "",
+                              country: "",
+                              state: "",
+                              city: "",
+                              patientHistory: "",
+                            });
+                            setCountry(null);
+                            setState(null);
+                            setCity(null);
+                            setSelectedDepartment("");
+                            setSelectedCategory("");
+                            setSelectedDoctor("");
+                            setErrors({});
+                          }
                         });
                       }}
                     >
@@ -789,6 +788,7 @@ export default function Add_Patient() {
                     </button>
                     <button
                       type="button"
+                      style={{ borderRadius: "10px" }}
                       className="btn btn-primary ms-2"
                       onClick={() => handleSubmit("save")}
                     >
@@ -801,7 +801,6 @@ export default function Add_Patient() {
           </Col>
         </Row>
       </Container>
-      <style>{/* ... (Global CSS styles remain unchanged) ... */}</style>
     </div>
   );
 }

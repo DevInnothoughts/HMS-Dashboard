@@ -444,6 +444,9 @@ export default function EnquiryList() {
   const [enquiries, setEnquiries] = useState([]);
   const [filteredEnquiries, setFilteredEnquiries] = useState([]);
   const [loading, setLoading] = useState(false);
+  // Add these inside your component function
+const [rows, setRows] = useState(10);
+const [first, setFirst] = useState(0);
   
   // --- Filter State ---
   const [fromDate, setFromDate] = useState(moment().startOf('day').toDate());
@@ -570,7 +573,32 @@ export default function EnquiryList() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-          <Form.Group style={{ display: "flex", alignItems: "center", margin: 0 }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+          <span style={{ marginRight: "8px", fontSize: "13px", fontWeight: "bold", color: "#333" }}>
+            Show
+          </span>
+          <Form.Select
+            size="sm"
+            value={rows}
+            onChange={(e) => {
+                setRows(parseInt(e.target.value));
+                setFirst(0); // Reset to first page when changing row count
+            }}
+            style={{
+              width: "70px",
+              height: "40px",
+              border: "1px solid #4dd0e1",
+              borderRadius: "6px",
+              fontSize: "12px",
+            }}
+          >
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </Form.Select>
+        </div>
+          <Form.Group className="ms-2" style={{ display: "flex", alignItems: "center", margin: 0 }}>
             <span 
             
             style={{
@@ -593,6 +621,7 @@ export default function EnquiryList() {
                   border: "1px solid #4dd0e1",
                   padding: "5px 8px",
                   width: "200px",
+                  height:"40px",
                   fontSize: "12px",
                   transition: "all 0.3s ease",
                 }}
@@ -708,7 +737,12 @@ export default function EnquiryList() {
                     <DataTable
                       value={filteredEnquiries}
                       paginator
-                      rows={10}
+                      rows={rows}
+                      first={first}
+                      onPage={(e) => {
+                        setFirst(e.first);
+                        setRows(e.rows);
+                      }}
                       header={header}
                       filters={filters1}
                       globalFilterFields={[
@@ -719,6 +753,8 @@ export default function EnquiryList() {
                         "FDE_Name",
                       ]}
                       responsiveLayout="scroll"
+                      paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
+                      currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" 
                       className="p-datatable-customers datatable-compact-style" 
                       rowClassName={(rowData, { rowIndex }) => ({
                         style: {
@@ -736,11 +772,10 @@ export default function EnquiryList() {
                     >
                       <Column
                         field="srNo"
-                        header="Sr No."
+                        header="Sr No"
                         body={(rowData, { rowIndex }) => rowIndex + 1}
-                        sortable
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center", width:"80px" }}
+                        style={{ border: "1px solid #90caf9", textAlign: "center", width:"60px" }}
                       />
                       <Column
                         field="date"
@@ -751,7 +786,7 @@ export default function EnquiryList() {
                       />
                         <Column
                           field="patient_phone"
-                          header="Contact No."
+                          header="Contact No"
                           body={(rowData) => rowData.patient_phone || "-"}
                           headerClassName="datatable-header-center"
                           style={{ border: "1px solid #90caf9", textAlign: "center", width:"90px" }}
@@ -777,20 +812,20 @@ export default function EnquiryList() {
                         headerClassName="datatable-header-center"
                         style={{ border: "1px solid #90caf9", textAlign: "center", wordBreak:"break-word", width:"150px" }}
                       />
+                        <Column 
+                          field="doctorName" 
+                          header="Doctor Name" 
+                          body={(rowData) => rowData.doctorName || "-"}
+                          headerClassName="datatable-header-center"
+                          style={{ border: "1px solid #90caf9", textAlign: "center", width:"150px" }}
+                      />
                       <Column
                         field="FDE_Name"
                         header="FDE Name"
                         body={(rowData) => rowData.FDE_Name || "-"}
                         headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center", width:"130px", wordBreak:"break-word" }}
+                        style={{ border: "1px solid #90caf9", textAlign: "center", width:"120px", wordBreak:"break-word" }}
                       />
-                      <Column 
-                        field="doctorName" 
-                        header="Doctor Name" 
-                        body={(rowData) => rowData.doctorName || "-"}
-                        headerClassName="datatable-header-center"
-                        style={{ border: "1px solid #90caf9", textAlign: "center", width:"150px" }}
-                    />
                     </DataTable>
                   )}
                 </Card.Body>

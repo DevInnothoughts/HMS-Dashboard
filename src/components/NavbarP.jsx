@@ -58,7 +58,7 @@ export default function NavBarA() {
               }`}
             >
               <span className="nav-icon">➕</span>
-              Add Patient
+              Add New Patient
             </Link>
           </nav>
         </div>

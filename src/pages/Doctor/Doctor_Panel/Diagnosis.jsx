@@ -336,103 +336,103 @@ export default function Diagnosis() {
     if (storedPatientId) setPatientId(storedPatientId);
   }, []);
 
-  useEffect(() => {
-    if (!patientId) {
-      console.warn("No patientId found, skipping fetch");
-      return;
-    }
-    const fetchPatientData = async () => {
-      console.log(`Fetching data for patient ID: ${patientId}`);
-      try {
-        const response = await fetch(
-          `${BASE_URL}/V1/diagnosis/listDiagnosis/${patientId}`,
-          {
-            method: "GET",
-            headers: { "Content-Type": "application/json" },
-          }
-        );
+  // useEffect(() => {
+  //   if (!patientId) {
+  //     console.warn("No patientId found, skipping fetch");
+  //     return;
+  //   }
+  //   const fetchPatientData = async () => {
+  //     console.log(`Fetching data for patient ID: ${patientId}`);
+  //     try {
+  //       const response = await fetch(
+  //         `${BASE_URL}/V1/diagnosis/listDiagnosis/${patientId}`,
+  //         {
+  //           method: "GET",
+  //           headers: { "Content-Type": "application/json" },
+  //         }
+  //       );
 
-        if (!response.ok) {
-          console.error(
-            "API Response Error:",
-            response.status,
-            await response.text()
-          );
-          return;
-        }
+  //       if (!response.ok) {
+  //         console.error(
+  //           "API Response Error:",
+  //           response.status,
+  //           await response.text()
+  //         );
+  //         return;
+  //       }
 
-        const data = await response.json();
-        console.log("Fetched Data:", data.data.diagnosisData);
+  //       const data = await response.json();
+  //       console.log("Fetched Data:", data.data.diagnosisData);
 
-        // ❌ Don't update the form data automatically
-        if (!data?.data?.diagnosisData?.length) {
-          console.warn("No previous data found. Keeping the form empty.");
-          setFormData((prevData) => ({
-            ...prevData,
-            advice: "",
-            diagnosis: "",
-            symptoms: "",
-            date_diagnosis: "",
-            provisionaldiagnosis: "",
-            investigationorders: "",
-            diagnosisAdvice: {
-              medication: false,
-              surgery: false,
-              test: false,
-            },
-            // medicinesPrescribed: false,
-            medicines: {
-              aac: false,
-              antacid: false,
-              probiotics: false,
-              nsaids: false,
-              antibiotics: false,
-              other: "", // Add an "other" field for the textarea
-            },
-            medicineDetails: "",
-            surgicalAdvice: [],
-            comment: "",
-            adviceComment: "",
-            SurgicalDate: "",
-            RF: "",
-            Laser: "",
-            MW: "",
-            categoryComment: "",
-            medical_mx: {
-              mcdpa: false,
-              manometry: false,
-              diet: false,
-              echo: false,
-              uroflowmetry: false,
-              colo: false,
-              xray: false,
-              mri: false,
-              cht: false,
-              gastro: false,
-              ct: false,
-              doppler: false,
-              biofeedback: false,
-              labInvestigation: false,
-              ultrasonography: false,
-              EchoAnalImaging: false,
-            },
-            other: {
-              insurance: false,
-              reimbursement: false,
-              workshop: false,
-              pdc: false,
-            },
-            consultantDoctor: "",
-            assistanceDoctor: "",
-          }));
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
+  //       // ❌ Don't update the form data automatically
+  //       if (!data?.data?.diagnosisData?.length) {
+  //         console.warn("No previous data found. Keeping the form empty.");
+  //         setFormData((prevData) => ({
+  //           ...prevData,
+  //           advice: "",
+  //           diagnosis: "",
+  //           symptoms: "",
+  //           date_diagnosis: "",
+  //           provisionaldiagnosis: "",
+  //           investigationorders: "",
+  //           diagnosisAdvice: {
+  //             medication: false,
+  //             surgery: false,
+  //             test: false,
+  //           },
+  //           // medicinesPrescribed: false,
+  //           medicines: {
+  //             aac: false,
+  //             antacid: false,
+  //             probiotics: false,
+  //             nsaids: false,
+  //             antibiotics: false,
+  //             other: "", // Add an "other" field for the textarea
+  //           },
+  //           medicineDetails: "",
+  //           surgicalAdvice: [],
+  //           comment: "",
+  //           adviceComment: "",
+  //           SurgicalDate: "",
+  //           RF: "",
+  //           Laser: "",
+  //           MW: "",
+  //           categoryComment: "",
+  //           medical_mx: {
+  //             mcdpa: false,
+  //             manometry: false,
+  //             diet: false,
+  //             echo: false,
+  //             uroflowmetry: false,
+  //             colo: false,
+  //             xray: false,
+  //             mri: false,
+  //             cht: false,
+  //             gastro: false,
+  //             ct: false,
+  //             doppler: false,
+  //             biofeedback: false,
+  //             labInvestigation: false,
+  //             ultrasonography: false,
+  //             EchoAnalImaging: false,
+  //           },
+  //           other: {
+  //             insurance: false,
+  //             reimbursement: false,
+  //             workshop: false,
+  //             pdc: false,
+  //           },
+  //           consultantDoctor: "",
+  //           assistanceDoctor: "",
+  //         }));
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching data:", error);
+  //     }
+  //   };
 
-    fetchPatientData();
-  }, [patientId]);
+  //   fetchPatientData();
+  // }, [patientId]);
 
   // Fetch options from API
   useEffect(() => {
