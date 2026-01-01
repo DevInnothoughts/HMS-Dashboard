@@ -381,7 +381,7 @@ const LOCATIONS_LIST = [
   "Sarjapura",
   "Katraj",
   "lead",
-  "demo",
+  "Pratiksha Local",
   "Demo Server",
 ].sort();
 

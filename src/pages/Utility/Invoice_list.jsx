@@ -43,16 +43,13 @@ const getDynamicRowsFromInvoice = (invoice) => {
   if (!invoice) return { dynamicRows: [], Sub_Total: "0.00" };
 
   if (invoice.title && typeof invoice.title === "string") {
-    const entries = invoice.title.split(",");
-
-    entries.forEach((entry) => {
+    invoice.title.split(",").forEach((entry) => {
       const parts = entry.split(":");
       if (parts.length === 2) {
         const label = parts[0].trim();
-        const valueStr = parts[1].trim();
-        const value = parseFloat(valueStr) || 0;
+        const value = parseFloat(parts[1].trim()) || 0;
 
-        if (value > 0) {
+        if (label !== "") {
           dynamicRows.push({
             label: label,
             value: value.toFixed(2),
@@ -84,8 +81,10 @@ const getDynamicRowsFromInvoice = (invoice) => {
     ot_amt: "OT Charges",
   };
 
-  const Sub_Total = parseFloat(invoice.totalamt) || titleCalculatedTotal;
-
+  const Sub_Total =
+    titleCalculatedTotal > 0
+      ? titleCalculatedTotal
+      : parseFloat(invoice.totalamt) || 0;
   return { dynamicRows, Sub_Total: Sub_Total.toFixed(2) };
 };
 
@@ -360,7 +359,7 @@ const InvoiceList = () => {
       ...prevModalData,
       dynamicRows: [
         ...prevModalData.dynamicRows,
-        { label: "", value: "", field: "" },
+        { label: "", value: "0.00", field: "title_parsed" },
       ],
     }));
   };
@@ -440,9 +439,17 @@ const InvoiceList = () => {
       return;
     }
 
+    const titleString = modalInvoiceData.dynamicRows
+      .filter((row) => row.label.trim() !== "") // Remove empty rows
+      .map(
+        (row) => `${row.label.trim()}: ${parseFloat(row.value || 0).toFixed(2)}`
+      )
+      .join(", ");
+
     const payload = {
       ...selectedInvoice,
       ...modalInvoiceData,
+      title: titleString, // This is the crucial part for your backend
       location: currentLocation,
       totalamt: modalInvoiceData.Sub_Total,
       payable_amt: modalInvoiceData.payableAmount,
@@ -468,11 +475,11 @@ const InvoiceList = () => {
       const result = await response.json();
 
       if (response.ok) {
-        setInvoices((prevInvoices) =>
-          prevInvoices.map((invoice) =>
-            invoice.invoice_id === selectedInvoice.invoice_id
-              ? { ...invoice, ...payload }
-              : invoice
+        setInvoices((prev) =>
+          prev.map((inv) =>
+            inv.invoice_id === selectedInvoice.invoice_id
+              ? { ...inv, title: titleString }
+              : inv
           )
         );
         Swal.fire({
@@ -1645,7 +1652,7 @@ const InvoiceList = () => {
                           >
                             ₹{" "}
                             {parseFloat(
-                              selectedInvoice.payable_amt
+                              modalInvoiceData.payableAmount
                             ).toLocaleString()}
                           </span>
                         </div>

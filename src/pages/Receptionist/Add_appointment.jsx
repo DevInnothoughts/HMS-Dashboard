@@ -32,6 +32,21 @@ const getCountryCode = (patient_phone) => {
   return country ? country.value : "Unknown";
 };
 
+function to24HourFormat(time12h) {
+  const [time, modifier] = time12h.trim().split(" ");
+  let [hours, minutes] = time.split(":").map(Number);
+
+  if (modifier.toUpperCase() === "PM" && hours !== 12) {
+    hours += 12;
+  }
+  if (modifier.toUpperCase() === "AM" && hours === 12) {
+    hours = 0;
+  }
+
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+}
+
+
 const countryCodes = [
   { value: "+1", label: "🇺🇸 USA (+1)" },
   { value: "+91", label: "🇮🇳 India (+91)" },
@@ -405,7 +420,7 @@ export default function Add_appointment() {
         patient_type: formData.patient_type,
         patient_phone: formData.patient_phone,
         appointment_timestamp: formData.date,
-        appointment_time: formData.appointmentTime,
+        appointment_time: to24HourFormat(formData.appointmentTime),
         patient_location: formData.patient_location,
         FDE_Name: formData.FDE_Name,
         treatment_name: formData.treatment,
@@ -416,10 +431,12 @@ export default function Add_appointment() {
         is_deleted: 0,
         consultationchk: formData.consultationchk,
         patientName: formData.patientName,
+        reference: formData.reference,
         clinic_location: currentLocation,
         saveType,
         countryCode: getCountryCode(formData.patient_phone),
       };
+      console.log("Payoad:", payload);
 
       console.log("Submitting appointment request.");
 
