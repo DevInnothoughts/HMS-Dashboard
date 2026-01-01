@@ -1248,7 +1248,7 @@ export default function Call_logs() {
                     />
                   </Form.Group>
                 </Col>
-                {/* <Col md={6}>
+                <Col md={6}>
                   <Form.Group className="mb-3">
                     <Form.Label>Call Back Time (Required) <span style={{ color: "red" }} className="required">*</span></Form.Label>
                     <Form.Control
@@ -1260,7 +1260,7 @@ export default function Call_logs() {
                       required
                     />
                   </Form.Group>
-                </Col> */}
+                </Col>
                 <Col md={6}>
                   <Form.Group className="mb-3">
                     <Form.Label>Enquiry Type <span style={{ color: "red" }} className="required">*</span></Form.Label>
@@ -1324,7 +1324,7 @@ export default function Call_logs() {
                     />
                   </Form.Group>
                 </Col>
-                {/* <Col md={6}>
+                <Col md={6}>
                 <Form.Group className="mb-20">
                   <Form.Label>Doctor Name</Form.Label>
                   <Form.Select
@@ -1345,7 +1345,7 @@ export default function Call_logs() {
                     )}
                   </Form.Select>
                 </Form.Group>
-                </Col> */}
+                </Col>
                 <Col md={6}>
                   <Form.Group className="mb-20">
                     <Form.Label>FDE Name <span style={{ color: "red" }} className="required">*</span></Form.Label>
@@ -1366,7 +1366,7 @@ export default function Call_logs() {
                     </Form.Select>
                   </Form.Group>
                 </Col>
-                {/* <Col md={6}>
+                <Col md={6}>
                   <Form.Group className="mb-20">
                     <Form.Label>Reference</Form.Label>
                     <Form.Control
@@ -1378,7 +1378,7 @@ export default function Call_logs() {
                       placeholder="e.g., Google, Friend, Walk-in"
                     />
                   </Form.Group>
-                </Col> */}
+                </Col>
                 <Col md={6}>
                   <Form.Group>
                     <Form.Label>Note</Form.Label>
