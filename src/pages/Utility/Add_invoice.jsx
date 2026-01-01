@@ -64,6 +64,28 @@ const AddInvoice = () => {
     }
   }, []);
 
+  // Add this alongside your other dropdown fetching logic
+useEffect(() => {
+    if (!currentLocation) return;
+
+    const fetchNextId = async () => {
+        try {
+            const response = await fetch(`${BASE_URL}/V1/invoice/getNextInvoiceId?location=${currentLocation}`);
+            const data = await response.json();
+            if (response.ok) {
+                setFormData(prev => ({
+                    ...prev,
+                    invoice_id: data.nextId // Automatically set the next ID
+                }));
+            }
+        } catch (err) {
+            console.error("Failed to fetch next Invoice ID:", err);
+        }
+    };
+
+    fetchNextId();
+}, [currentLocation]);
+
   useEffect(() => {
     if (!currentLocation) return;
 
@@ -259,6 +281,9 @@ const AddInvoice = () => {
             confirmButtonColor: "#00acc1"
           });
           resetForm();
+          const nextIdRes = await fetch(`${BASE_URL}/V1/invoice/getNextInvoiceId?location=${currentLocation}`);
+          const nextIdData = await nextIdRes.json();
+          setFormData(prev => ({ ...prev, invoice_id: nextIdData.nextId }));
         } else {
           Swal.fire({
             title: "Ops...",
@@ -308,9 +333,17 @@ const AddInvoice = () => {
               <h5 style={sectionTitleStyle}>Patient & Admission Information</h5>
               <Row className="g-3">
                 <Col md={4} className="mb-10">
-                  <Form.Label className="small fw-bold text-muted">Invoice No <span className="text-danger">*</span></Form.Label>
-                  <Form.Control name="invoice_id" style={{ border: '1px solid rgb(77, 208, 225)' }} value={formData.invoice_id} onChange={handleInputChange} isInvalid={errors.invoice_id} placeholder="Enter Invoice ID" />
-                  <Form.Control.Feedback type="invalid">{errors.invoice_id}</Form.Control.Feedback>
+                <Form.Label className="small fw-bold text-muted">Invoice No</Form.Label>
+                <Form.Control 
+                  name="invoice_id" 
+                  value={formData.invoice_id} 
+                  onChange={handleInputChange} 
+                  isInvalid={errors.invoice_id} 
+                  placeholder="Fetching ID..." 
+                  readOnly // Prevents manual editing
+                  style={{ backgroundColor: "#e9ecef", cursor: "not-allowed" }}
+                />
+                <Form.Control.Feedback type="invalid">{errors.invoice_id}</Form.Control.Feedback>
                 </Col>
                 <Col md={4}>
                   <Form.Label className="small fw-bold text-muted">Admission No</Form.Label>
