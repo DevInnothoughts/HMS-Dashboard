@@ -87,6 +87,7 @@ export default function Add_appointment() {
   const [treatmentList, setTreatmentList] = useState([]);
   const [departmentList, setDepartmentList] = useState([]);
   const [isExistingPatient, setIsExistingPatient] = useState(false);
+  const [noPendingAppt, setNoPendingAppt] = useState(true);
   const [type, setType] = useState("");
   const location = useLocation();
   const { phone } = useParams();
@@ -147,16 +148,16 @@ export default function Add_appointment() {
         }));
         return;
       }
-
+  
       console.log("Fetching patient details...");
-
+  
       try {
         const url = `${BASE_URL}/V1/appointment/getPatientByMobile?patient_phone=${patient_phone}&location=${currentLocation}`;
         const response = await fetch(url, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
         });
-
+  
         if (!response.ok) {
           setIsExistingPatient(false);
           setFormData((prev) => ({
@@ -169,11 +170,45 @@ export default function Add_appointment() {
           }));
           return;
         }
-
+  
         const data = await response.json();
         if (data.statusCode === 200 && data.data) {
           setIsExistingPatient(true);
-
+  
+          // Nested try block
+          try {
+            const confirmUrl = `${BASE_URL}/V1/appointment/getPatientByApptConfirm?patient_phone=${patient_phone}&location=${currentLocation}`;
+            const confirmResponse = await fetch(confirmUrl, {
+              method: "GET",
+              headers: { "Content-Type": "application/json" },
+            });
+          
+            const confirmData = await confirmResponse.json();
+          
+            // If the status is 400, it means a pending appointment was found
+            if (confirmResponse.status === 400) {
+              Swal.fire({
+                icon: "warning",
+                title: "Duplicate Appointment",
+                text: confirmData.message || "This patient already has a pending appointment. Please complete it first.",
+                confirmButtonColor: "#f39c12",
+              });
+          
+              // Optionally: Stop the form from auto-filling or disable the submit button
+              setNoPendingAppt(false); // Or a specific state like setHasPendingAppt(true)
+              return; // Exit the function to prevent further processing
+            }
+            setNoPendingAppt(true);
+            if (!confirmResponse.ok) {
+              console.warn("Appointment confirmation fetch returned an error:", confirmResponse.status);
+            } else {
+              console.log("Eligibility check passed: No pending appointments.");
+            }
+          
+          } catch (innerError) {
+            console.error("Error in confirmation check API call:", innerError);
+          }
+  
           Swal.fire({
             icon: "info",
             title: "Patient Found",
@@ -181,7 +216,7 @@ export default function Add_appointment() {
             confirmButtonColor: "#00bcd4",
             timer: 3000,
           });
-
+  
           setFormData((prev) => ({
             ...prev,
             patientName: data.data.name || "",
@@ -1340,7 +1375,7 @@ export default function Add_appointment() {
                         fontWeight: "600",
                       }}
                       onClick={() => handleSubmit("save")}
-                      disabled={loading || !currentLocation}
+                      disabled={loading || !currentLocation || !noPendingAppt}
                     >
                       {loading ? <>Adding...</> : "Add Appointment"}
                     </Button>
