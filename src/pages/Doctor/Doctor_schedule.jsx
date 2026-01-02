@@ -19,7 +19,7 @@ import PageBreadcrumb from "../../components/PageBreadcrumb";
 // Initialize the localizer for React Big Calendar
 const localizer = momentLocalizer(moment);
 
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 export default function DoctorSchedule() {
   const [appointmentData, setAppointmentData] = useState([]);

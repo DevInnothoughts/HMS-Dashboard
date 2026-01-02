@@ -24,7 +24,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import moment from "moment";
 
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 const TYPE_LIST = ["NEW", "FOLLOW", "POST-OPERATIVE"];
 
 const Toast = Swal.mixin({

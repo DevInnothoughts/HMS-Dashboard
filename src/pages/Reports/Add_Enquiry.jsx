@@ -70,7 +70,7 @@
 //   default: { min: 7, max: 15 }, // Default limits
 // };
 
-// const BASE_URL = "http://194.195.117.79:5100/api";
+// const BASE_URL = "http://localhost:5100/api";
 // const formatDate = (date) => {
 //   const d = new Date(date);
 //   const day = String(d.getDate()).padStart(2, "0");
@@ -680,7 +680,7 @@ const countryCodes = [
   { value: "+34", label: "🇪🇸 Spain (+34)" },
 ];
 
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 const formatDate = (date) => {
   const d = new Date(date);
   const day = String(d.getDate()).padStart(2, "0");
