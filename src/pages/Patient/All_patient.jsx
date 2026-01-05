@@ -291,7 +291,7 @@ export default function All_patient() {
       console.log("Calling API with phone:", phone);
 
       const response = await fetch(
-        `${BASE_URL}/V1/Patients/listRefPatient/${phone}`,
+        `${BASE_URL}/V1/Patients/listRefPatient?phone=${phone}&location=${currentLocation}`,
         {
           method: "GET",
           headers: {
@@ -553,6 +553,22 @@ export default function All_patient() {
 
     const age = patient.age || calculateAge(formattedBirthDate) || "";
 
+    if (patient.reference_type === 'old_ref') {
+      const parts = (patient.ref || "").split(",");
+      setOldPatientDetails({
+          patient_ref_no: parts[0] || "",
+          old_patient_name: parts[1] || "",
+          old_patient_id_value: parts[2] || "",
+          old_patient_pincode: parts[3] || ""
+      });
+  } else {
+      // Populate the specific key in referenceDetails based on type
+      setReferenceDetails(prev => ({
+          ...prev,
+          [patient.reference_type]: patient.ref || ""
+      }));
+  }
+
     setFormData({
       // Uid_no: patient.uid || "",
       Uid_no: patient.Uid_no || patient.uid || "",
@@ -605,13 +621,13 @@ export default function All_patient() {
       return;
     }
 
-    let reference_type = "";
+    let reference_type = selectedPatient.ref;
     let ref = "";
 
     switch (selectedReference) {
       case "newspaper":
         reference_type = "newspaper";
-        ref = referenceDetails.newspaper || "";
+        ref = referenceDetails.newspaper || formData.ref || "";
         break;
       case "dr_ref":
         reference_type = "dr_ref";
@@ -677,7 +693,7 @@ export default function All_patient() {
         break;
       default:
         reference_type = null;
-        ref = null;
+        ref = referenceDetails[selectedReference] || formData.ref;;
     }
 
     console.log("Reference Type:", reference_type);
@@ -694,14 +710,14 @@ export default function All_patient() {
       birth_date: formData.birth_date,
       age: calculateAge(formData.birth_date),
       specific_work: specificWork,
-      reference_type,
-      ref,
+      reference_type: formData.reference_type,
+      ref: formData.ref
     };
 
     console.log("Updated Patient Data:", updatedPatientData);
     try {
       const response = await fetch(
-        `${BASE_URL}/V1/patient?patient_id=${selectedPatient.patient_id}&location=${location}`,
+        `${BASE_URL}/V1/patient/editPatient?patient_id=${selectedPatient.patient_id}&location=${currentLocation}`,
         {
           method: "PUT",
           headers: {
@@ -2123,13 +2139,12 @@ export default function All_patient() {
   };
 
   const handleReferenceChange = (e) => {
-    const { value } = e.target;
+    const { name, value } = e.target;
+    
     setSelectedReference(value);
-
     setFormData((prev) => ({
       ...prev,
       reference_type: value,
-      ref: "",
     }));
   };
 
