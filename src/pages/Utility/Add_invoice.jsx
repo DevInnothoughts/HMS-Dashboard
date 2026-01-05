@@ -374,7 +374,7 @@ const AddInvoice = () => {
               <Row className="g-3">
                 <Col md={4} className="mb-10">
                   <Form.Label className="small fw-bold text-muted">
-                    Invoice No
+                    Invoice No <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
                     name="invoice_id"

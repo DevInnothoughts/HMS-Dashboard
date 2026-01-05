@@ -452,18 +452,18 @@ export default function Header() {
                     alignItems: 'center',
                     gap: '7px',
                     padding: '10px 10px',
-                    background: 'rgba(71, 118, 230, 0.1)', 
-                    border: '1px solid rgba(71, 118, 230, 0.2)',
+                    background: 'rgba(26, 110, 124, 0.14)', 
+                    border: '1px solid #2a96d087',
                     borderRadius: '10px',
                     marginLeft: '15px'
                   }}
                 >
-                  <i className="fa fa-hospital-o" style={{ color: '#4776E6', fontSize: '16px' }}></i>
-                  <i className="fa fa-map-marker" style={{ color: '#4776E6', fontSize: '18px' }}></i>
+                  <i className="fa fa-hospital-o" style={{ color: '#2a96d0ff', fontSize: '16px' }}></i>
+                  <i className="fa fa-map-marker" style={{ color: '#2a96d0ff', fontSize: '18px' }}></i>
                   <span style={{ 
                     fontWeight: '600', 
                     fontSize: '13px', 
-                    color: '#4776E6',
+                    color: '#2a96d0ff',
                     textTransform: 'uppercase',
                     letterSpacing: '0.5px'
                   }}>
@@ -727,7 +727,7 @@ export default function Header() {
                     </div>
                   </div>
                 </Link>
-                <div className="hover-dropdown navprofile-drop">
+                {/* <div className="hover-dropdown navprofile-drop">
                   <ul>
                     <li>
                       <Link to="/support">
@@ -742,7 +742,7 @@ export default function Header() {
                       </Link>
                     </li>
                   </ul>
-                </div>
+                </div> */}
               </li>
               <li>
                 <button

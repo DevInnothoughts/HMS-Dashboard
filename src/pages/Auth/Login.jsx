@@ -383,6 +383,7 @@ const LOCATIONS_LIST = [
   "lead",
   "Pratiksha Local",
   "Demo Server",
+  "demo"
 ].sort();
 
 const BASE_URL = "http://localhost:5100/api";

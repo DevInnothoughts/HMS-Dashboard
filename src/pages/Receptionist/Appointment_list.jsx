@@ -7,7 +7,6 @@ import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import FeatherIcon from "feather-icons-react";
-import { FaUserMd } from "react-icons/fa";
 import {
   Container,
   Row,
@@ -25,7 +24,23 @@ import "react-datepicker/dist/react-datepicker.css";
 import moment from "moment";
 
 const BASE_URL = "http://localhost:5100/api";
-const TYPE_LIST = ["NEW", "FOLLOW", "POST-OPERATIVE"];
+const TYPE_LIST = ["NEW", "FOLLOW-UP", "POST-OPERATIVE", "OTHER"];
+const REFERENCE_OPTIONS = [
+  "Family / Friends",
+  "Referred By Another Doctor",
+  "Referred By Another Patient",
+  "Internet",
+  "Social Media",
+  "Entertainment Media",
+  "TV Show",
+  "Newspaper / Magazine",
+  "Awareness Lecture",
+  "HHC Board on building",
+  "I was treated here in past ",
+  "Healing Hands Clinic Branch",
+  "Aggregators",
+  "Other"
+];
 
 const Toast = Swal.mixin({
   toast: true,
@@ -51,9 +66,8 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
     padding: "4px 6px",
     minWidth: "35px",
     borderRadius: "4px",
-    border: `1px solid ${
-      disabled ? "#ddd" : isDanger ? "#dc3545" : defaultBorder
-    }`,
+    border: `1px solid ${disabled ? "#ddd" : isDanger ? "#dc3545" : defaultBorder
+      }`,
     backgroundColor: disabled ? "#f8f9fa" : isConfirm ? "#e6f7ea" : defaultBg,
     color: disabled ? "#aaa" : isDanger ? "#dc3545" : defaultColor,
     cursor: disabled ? "not-allowed" : "pointer",
@@ -69,10 +83,10 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
   const iconColor = disabled
     ? "#aaa"
     : isDanger
-    ? "#dc3545"
-    : isReceipt
-    ? "#007bff"
-    : defaultColor;
+      ? "#dc3545"
+      : isReceipt
+        ? "#007bff"
+        : defaultColor;
 
   const iconStyle = {
     margin: "2px",
@@ -86,9 +100,8 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
       e.currentTarget.style.backgroundColor = isDanger ? "#c82333" : "#e0e0e0";
       e.currentTarget.children[0].style.stroke = "white";
       e.currentTarget.style.color = isDanger ? "white" : defaultColor;
-      e.currentTarget.style.border = `1px solid ${
-        isDanger ? "#c82333" : "#b0b0b0"
-      }`;
+      e.currentTarget.style.border = `1px solid ${isDanger ? "#c82333" : "#b0b0b0"
+        }`;
     }
   };
 
@@ -96,9 +109,8 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
     if (!disabled) {
       e.currentTarget.style.backgroundColor = isConfirm ? "#e6f7ea" : defaultBg;
       e.currentTarget.children[0].style.stroke = iconColor;
-      e.currentTarget.style.border = `1px solid ${
-        isDanger ? "#dc3545" : defaultBorder
-      }`;
+      e.currentTarget.style.border = `1px solid ${isDanger ? "#dc3545" : defaultBorder
+        }`;
     }
   };
 
@@ -353,7 +365,7 @@ export default function Appointment_list() {
               Swal.fire(
                 "Error",
                 cancelResult?.message ||
-                  "Remote cancel failed. Please cancel manually on machine.",
+                "Remote cancel failed. Please cancel manually on machine.",
                 "error"
               );
             }
@@ -470,6 +482,9 @@ export default function Appointment_list() {
           endpoints.map((url) => fetch(url).then((res) => res.json()))
         );
 
+      console.log("Current Location:", currentLocation);
+      console.log("FDE API Full Response:", fdeResponse);
+
       setConsultationList(
         Array.isArray(consultationResponse.data)
           ? consultationResponse.data
@@ -568,8 +583,58 @@ export default function Appointment_list() {
     }
   };
 
+  // const handleDelete = async () => {
+  //   if (!appointmentIdToDelete) return;
+
+  //   try {
+  //     const response = await fetch(
+  //       `${BASE_URL}/V1/appointment/delete/${appointmentIdToDelete}?location=${currentLocation}`,
+  //       {
+  //         method: "DELETE",
+  //         headers: { "Content-Type": "application/json" },
+  //       }
+  //     );
+
+  //     if (response.ok) {
+  //       Swal.fire({
+  //         icon: "success",
+  //         title: "Cancelled",
+  //         text: "Appointment successfully cancelled.",
+  //         timer: 2000,
+  //       });
+  //       fetchAppointmentData();
+  //       setShowDeleteModal(false);
+  //       setCancellationReason("");
+  //     } else {
+  //       const errorData = await response.json();
+  //       Swal.fire({
+  //         icon: "error",
+  //         title: "Cancellation Failed",
+  //         text: errorData.message || "Unknown error",
+  //       });
+  //     }
+  //   } catch (error) {
+  //     Swal.fire({
+  //       icon: "error",
+  //       title: "Network Error",
+  //       text: "An error occurred while deleting the appointment.",
+  //     });
+  //     console.error("Network Error:", error);
+  //   }
+  // };
+
   const handleDelete = async () => {
     if (!appointmentIdToDelete) return;
+
+    if (!cancellationReason.trim()) {
+      Swal.fire({
+        icon: "warning",
+        title: "Reason Required",
+        text: "Please provide a reason for cancellation before submitting.",
+        confirmButtonColor: "#1a5b61ff",
+      });
+      return;
+    }
 
     try {
       const response = await fetch(
@@ -577,6 +642,7 @@ export default function Appointment_list() {
         {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reason: cancellationReason })
         }
       );
 
@@ -607,6 +673,7 @@ export default function Appointment_list() {
       console.error("Network Error:", error);
     }
   };
+
   const handleProcessUpdate = async (
     appId,
     endpoint,
@@ -871,7 +938,7 @@ export default function Appointment_list() {
               value={rows}
               onChange={(e) => {
                 setRows(parseInt(e.target.value));
-                setFirst(0); // Reset to first page when changing row count
+                setFirst(0);
               }}
               style={{
                 width: "70px",
@@ -1061,12 +1128,32 @@ export default function Appointment_list() {
         onHide={() => setShowDeleteModal(false)}
         centered
       >
-        <Modal.Header closeButton>
-          <Modal.Title>Reason of Cancellation</Modal.Title>
+        <Modal.Header style={{
+          backgroundColor: "#67c5cfff",
+          padding: "20px 25px",
+          borderBottom: "2px solid #1a5b61ff",
+          display: "flex",
+          alignItems: "center",
+        }} closeButton>
+          <Modal.Title style={{
+            color: "#1a5b61ff",
+            fontWeight: "600",
+            fontSize: "1.25rem",
+          }}><FeatherIcon
+              className="me-2"
+              icon="trash"
+              size="24"
+              style={{ color: "#1a5b61ff" }}
+            />Reason of Cancellation <span className="text-danger">*</span></Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p>Appointment ID: **{appointmentIdToDelete}**</p>
+          <p className="mb-10">Appointment ID: {appointmentIdToDelete}</p>
           <textarea
+            style={{
+              fontSize: "14px", borderRadius: "8px",
+              border: "2px solid rgb(77, 208, 225)",
+              padding: "6px"
+            }}
             className="form-control"
             placeholder="Enter the cancellation reason..."
             rows="4"
@@ -1076,7 +1163,7 @@ export default function Appointment_list() {
         </Modal.Body>
 
         <Modal.Footer>
-          <Button variant="danger" onClick={handleDelete}>
+          <Button variant="danger" style={{ borderRadius: "10px" }} onClick={handleDelete}>
             Submit & Cancel
           </Button>
         </Modal.Footer>
@@ -1088,21 +1175,85 @@ export default function Appointment_list() {
         size="lg"
         centered
       >
-        <Modal.Header closeButton>
-          <Modal.Title>Edit Appointment</Modal.Title>
+        <Modal.Header style={{
+          backgroundColor: "#67c5cfff",
+          padding: "20px 25px",
+          borderBottom: "2px solid #1a5b61ff",
+          display: "flex",
+          alignItems: "center",
+        }} closeButton>
+          <Modal.Title style={{
+            color: "#1a5b61ff",
+            fontWeight: "600",
+            fontSize: "1.25rem",
+          }}><FeatherIcon
+              className="me-2"
+              icon="edit"
+              size="24"
+              style={{ color: "#1a5b61ff" }}
+            />Edit Appointment</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {selectedAppointment ? (
             <Form>
               <Row>
+                <Col md={4}>
+                  <Form.Group className="mb-2">
+                    <Form.Label style={{ fontSize: "14px" }}>
+                      Appointment Date
+                    </Form.Label>
+                    <DatePicker
+                      selected={
+                        selectedAppointment.appointment_timestamp
+                          ? new Date(selectedAppointment.appointment_timestamp)
+                          : null
+                      }
+                      onChange={handleDateChange}
+                      dateFormat="dd-MM-yyyy"
+                      className="form-control custom-datepicker"
+                      placeholderText="Select Date"
+                      style={{ fontSize: "14px" }}
+                    />
+                  </Form.Group>
+                </Col>
+
+                <Col md={4}>
+                  <Form.Group className="mb-2">
+                    <Form.Label style={{ fontSize: "14px" }}>
+                      Appointment Time
+                    </Form.Label>
+                    <Form.Select
+                      name="appointmentTime"
+                      value={selectedAppointment.appointmentTime || ""}
+                      onChange={handleEditModalInputChange}
+                      style={{
+                        fontSize: "14px", borderRadius: "8px",
+                        border: "2px solid rgb(77, 208, 225)",
+                        padding: "6px"
+                      }}
+                    >
+                      <option value="">Select Time</option>
+                      {timeSlots.map((time, index) => (
+                        <option key={index} value={time}>
+                          {time}
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+
                 <Col md={4} className="mb-2">
                   <Form.Group className="mb-2">
-                    <Form.Label style={{ fontSize: "14px" }}>Type</Form.Label>
+                    <Form.Label style={{ fontSize: "14px" }}>Patient Type</Form.Label>
                     <Form.Select
                       name="patient_type"
                       value={selectedAppointment.patient_type || ""}
                       onChange={handleEditModalInputChange}
-                      style={{ fontSize: "14px" }}
+                      style={{
+                        fontSize: "14px", borderRadius: "8px",
+                        border: "2px solid rgb(77, 208, 225)",
+                        padding: "6px",
+                      }}
                     >
                       <option value="">Select Type</option>
                       {TYPE_LIST.map((type, index) => (
@@ -1123,7 +1274,11 @@ export default function Appointment_list() {
                       name="doctorName"
                       value={selectedAppointment.doctorName || ""}
                       onChange={handleEditModalInputChange}
-                      style={{ fontSize: "14px" }}
+                      style={{
+                        fontSize: "14px", borderRadius: "8px",
+                        border: "2px solid rgb(77, 208, 225)",
+                        padding: "6px",
+                      }}
                     >
                       <option value="">Select a Doctor</option>
                       {doctors.map((doctor) => (
@@ -1145,7 +1300,11 @@ export default function Appointment_list() {
                       name="patientName"
                       value={selectedAppointment.patientName || ""}
                       onChange={handleEditModalInputChange}
-                      style={{ fontSize: "14px" }}
+                      style={{
+                        fontSize: "14px", borderRadius: "8px",
+                        border: "2px solid rgb(77, 208, 225)",
+                        padding: "6px"
+                      }}
                     />
                   </Form.Group>
                 </Col>
@@ -1153,53 +1312,85 @@ export default function Appointment_list() {
                 <Col md={4}>
                   <Form.Group className="mb-2">
                     <Form.Label style={{ fontSize: "14px" }}>
-                      Contact No
+                      Contact Number
                     </Form.Label>
                     <Form.Control
                       type="text"
                       name="patient_phone"
                       value={selectedAppointment.patient_phone || ""}
                       onChange={handleEditModalInputChange}
-                      style={{ fontSize: "14px" }}
+                      style={{
+                        fontSize: "14px", borderRadius: "8px",
+                        border: "2px solid rgb(77, 208, 225)",
+                        padding: "6px"
+                      }}
                     />
                   </Form.Group>
                 </Col>
 
-                <Col md={4}>
-                  <Form.Group className="mb-2">
-                    <Form.Label style={{ fontSize: "14px" }}>
-                      Appointment Date
-                    </Form.Label>
-                    <DatePicker
-                      selected={
-                        selectedAppointment.appointment_timestamp
-                          ? new Date(selectedAppointment.appointment_timestamp)
-                          : null
-                      }
-                      onChange={handleDateChange}
-                      dateFormat="dd-MM-yyyy"
-                      className="form-control"
-                      placeholderText="Select Date"
-                      style={{ fontSize: "14px" }}
-                    />
-                  </Form.Group>
-                </Col>
-
-                <Col md={4}>
-                  <Form.Group className="mb-2">
-                    <Form.Label style={{ fontSize: "14px" }}>
-                      Appointment Time
-                    </Form.Label>
-                    <Form.Select
-                      name="appointmentTime"
-                      value={selectedAppointment.appointmentTime || ""}
+                <Col md={12}>
+                  <Form.Group>
+                    <Form.Label style={{ fontSize: "14px" }}>Patient Address</Form.Label>
+                    <Form.Control
+                      as="textarea"
+                      rows={2}
+                      name="patient_address"
+                      value={selectedAppointment?.patient_address || ""}
                       onChange={handleEditModalInputChange}
-                      style={{ fontSize: "14px" }}
+                      placeholder="Enter patient address"
+                      style={{
+                        fontSize: "14px",
+                        borderRadius: "8px",
+                        border: "2px solid rgb(77, 208, 225)",
+                        padding: "6px",
+                      }}
+                    />
+                  </Form.Group>
+                </Col>
+
+                <Col md={6}>
+                  <Form.Group className="mb-2">
+                    <Form.Label style={{ fontSize: "14px" }}>Reference</Form.Label>
+                    <Form.Select
+                      name="reference"
+                      value={selectedAppointment?.reference || ""}
+                      onChange={handleEditModalInputChange}
+                      style={{
+                        fontSize: "14px",
+                        borderRadius: "8px",
+                        border: "2px solid rgb(77, 208, 225)",
+                        padding: "6px",
+                      }}
                     >
-                      <option value="">Select Time</option>
-                      {timeSlots.map((time, index) => (
-                        <option key={index} value={time}>
-                          {time}
+                      <option value="">Select Reference</option>
+                      {REFERENCE_OPTIONS.map((opt, index) => (
+                        <option key={index} value={opt}>
+                          {opt}
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+
+                <Col md={6}>
+                  <Form.Group className="mb-2">
+                    <Form.Label style={{ fontSize: "14px" }}>FDE Name</Form.Label>
+                    <Form.Select
+                      name="FDE_Name"
+                      // Ensure the value matches the key in your selectedAppointment state
+                      value={selectedAppointment?.FDE_Name || ""}
+                      onChange={handleEditModalInputChange}
+                      style={{
+                        fontSize: "14px",
+                        borderRadius: "8px",
+                        border: "2px solid rgb(77, 208, 225)",
+                        padding: "6px",
+                      }}
+                    >
+                      <option value="">Select FDE</option>
+                      {fdeList.map((fde, index) => (
+                        <option key={index} value={fde.FDEName}>
+                          {fde.FDEName} 
                         </option>
                       ))}
                     </Form.Select>
@@ -1264,6 +1455,8 @@ export default function Appointment_list() {
                         "patient_phone",
                         "doctor_name",
                         "FDE_Name",
+                        "patient_address",
+                        "FDE_Name",
                         "note",
                       ]}
                       paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
@@ -1298,8 +1491,8 @@ export default function Appointment_list() {
                         body={(rowData) =>
                           rowData.appointment_timestamp
                             ? moment(rowData.appointment_timestamp).format(
-                                "DD-MM-YYYY"
-                              )
+                              "DD-MM-YYYY"
+                            )
                             : "-"
                         }
                         headerClassName="datatable-header-center"
@@ -1963,7 +2156,6 @@ export default function Appointment_list() {
               borderRadius: "10px",
             }}
           >
-            <FeatherIcon icon="file-text" size={14} className="me-2" />
             Generate & Save Receipt
           </Button>
         </Modal.Footer>

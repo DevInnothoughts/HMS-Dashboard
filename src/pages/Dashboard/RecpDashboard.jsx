@@ -47,7 +47,7 @@
 //     }
 // }
 
-// const BASE_URL = "http://localhost:5100/api";
+// const BASE_URL = "http://194.195.117.79:5100/api";
 
 // export default function ReceptionistDashboard() {
 //     const [appointments, setAppointments] = useState([]);
@@ -551,6 +551,20 @@
 //     );
 // }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { Link } from "react-router-dom";
 import FeatherIcon from "feather-icons-react";
@@ -617,7 +631,7 @@ function decodeJwt(token) {
   }
 }
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 export default function ReceptionistDashboard() {
   const [appointments, setAppointments] = useState([]);
@@ -642,8 +656,27 @@ export default function ReceptionistDashboard() {
     }
   }, []);
 
+  // const counts = useMemo(() => {
+  //   return appointments.reduce(
+  //     (acc, event) => {
+  //       const type = (event.patientType || "Other").toUpperCase();
+  //       acc[type] = (acc[type] || 0) + 1;
+  //       return acc;
+  //     },
+  //     { NEW: 0, FOLLOW: 0, POSTOPERATIVE: 0, OTHER: 0 }
+  //   );
+  // }, [appointments]);
+
   const counts = useMemo(() => {
-    return appointments.reduce(
+    const monthStart = moment(selectedDate).startOf('month');
+    const monthEnd = moment(selectedDate).endOf('month');
+    const visibleAppointments = appointments.filter(event => {
+      const eventDate = moment(event.start);
+      return eventDate.isSameOrAfter(monthStart, 'day') &&
+        eventDate.isSameOrBefore(monthEnd, 'day');
+    });
+
+    return visibleAppointments.reduce(
       (acc, event) => {
         const type = (event.patientType || "Other").toUpperCase();
         acc[type] = (acc[type] || 0) + 1;
@@ -651,22 +684,21 @@ export default function ReceptionistDashboard() {
       },
       { NEW: 0, FOLLOW: 0, POSTOPERATIVE: 0, OTHER: 0 }
     );
-  }, [appointments]);
+  }, [appointments, selectedDate]);
 
   const formatAppointments = useCallback((data) => {
     return data.map((app) => {
       const startTime = moment(
         moment(app.appointment_timestamp).format("YYYY-MM-DD") +
-          " " +
-          app.appointment_time,
+        " " +
+        app.appointment_time,
         "YYYY-MM-DD HH:mm"
       );
       const endTime = startTime.clone().add(30, "minutes");
 
       return {
-        title: `${app.appointment_time || "N/A"} — ${
-          app.patient_name || "Patient"
-        }`,
+        title: `${app.appointment_time || "N/A"} — ${app.patient_name || "Patient"
+          }`,
         start: startTime.toDate(),
         end: endTime.toDate(),
         phone: app.patient_phone,
@@ -1122,7 +1154,10 @@ export default function ReceptionistDashboard() {
             <Row className="align-items-center">
               <Col lg={7}>
                 <div className="legend-title">
-                  <h4 className="fw-bold mb-10">Live Appointment Statistics</h4>
+                  {/* <h4 className="fw-bold mb-10">Patient Appointment Live Statistics</h4> */}
+                  <h4 className="fw-bold mb-10">
+                   Patient Appointment Statistics for {moment(selectedDate).format("MMMM YYYY")}
+                  </h4>
                 </div>
                 <div className="d-flex align-items-center flex-wrap">
                   <div className="legend-item">
