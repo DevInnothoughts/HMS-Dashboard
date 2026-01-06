@@ -112,8 +112,8 @@ export default function Add_appointment() {
     patient_id: "",
   });
   const [errors, setErrors] = useState({});
-  const newPatientTypes = ["NEW"];
-  const existingPatientTypes = ["FOLLOW", "POSTOPERATIVE", "OTHER"];
+  const newPatientTypes = ["New"];
+  const existingPatientTypes = ["Follow", "Postoperative", "OTHER"];
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -143,7 +143,7 @@ export default function Add_appointment() {
           FDE_Name: "",
           departmentName: "",
           doctorName: "",
-          patient_type: "NEW",
+          patient_type: "New",
           doctor_id: "",
         }));
         return;
@@ -165,7 +165,7 @@ export default function Add_appointment() {
             patientName: "",
             patient_id: "",
             patient_location: "",
-            patient_type: "NEW",
+            patient_type: "New",
             doctor_id: "",
           }));
           return;
@@ -236,7 +236,7 @@ export default function Add_appointment() {
             ...prev,
             patientName: "",
             patient_id: "",
-            patient_type: "NEW",
+            patient_type: "New",
             doctor_id: "",
           }));
         }
@@ -247,7 +247,7 @@ export default function Add_appointment() {
           ...prev,
           patientName: "",
           patient_id: "",
-          patient_type: "NEW",
+          patient_type: "New",
           doctor_id: "",
         }));
       }
@@ -411,9 +411,9 @@ export default function Add_appointment() {
       requiredFields.push("treatment");
     }
 
-    if (formData.patient_type !== "NEW" && !formData.patient_id) {
+    if (formData.patient_type !== "New" && !formData.patient_id) {
       newErrors.patient_phone =
-        "Patient ID is required for existing patient types (FOLLOW, POSTOPERATIVE, OTHER). Please search by phone number.";
+        "Patient ID is required for existing patient types (Follow, Postoperative, OTHER). Please search by phone number.";
     }
 
     requiredFields.forEach((field) => {
@@ -540,8 +540,8 @@ export default function Add_appointment() {
   const shouldShowAddressAndReference = () => {
     return !(
       isExistingPatient &&
-      (formData.patient_type === "FOLLOW" ||
-        formData.patient_type === "POSTOPERATIVE" ||
+      (formData.patient_type === "Follow" ||
+        formData.patient_type === "Postoperative" ||
         formData.patient_type === "OTHER")
     );
   };
@@ -607,7 +607,7 @@ export default function Add_appointment() {
         setFormData((prev) => ({
           ...prev,
           patientName: "",
-          patient_type: "NEW",
+          patient_type: "New",
           doctor_id: "",
           patient_id: "",
         }));

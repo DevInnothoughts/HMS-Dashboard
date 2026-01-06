@@ -42,7 +42,7 @@ export default function Call_logs() {
     doctor_id: "",
     doctorName: "",
     date: new Date().toISOString().split("T")[0],
-    patient_type: "NEW", // Default value
+    patient_type: "New", // Default value
     patientName: "",
     caller_no: "",
     appointmentTime: "",
@@ -100,7 +100,7 @@ export default function Call_logs() {
       patientName: "",
       doctor_id: "",
       FDE_Name: "",
-      patient_type: "NEW", // Default
+      patient_type: "New", // Default
     }));
   
     if (!patient_phone) {
@@ -116,7 +116,7 @@ export default function Call_logs() {
       });
   
       if (!response.ok) {
-        setFormData((prev) => ({ ...prev, patient_type: "NEW" }));
+        setFormData((prev) => ({ ...prev, patient_type: "New" }));
         setShowAddModal(true);
         return;
       }
@@ -159,14 +159,14 @@ export default function Call_logs() {
         setFormData((prev) => ({
           ...prev,
           patientName: data.data.name || "",
-          patient_type: "FOLLOW", // Default for existing patient
+          patient_type: "Follow", // Default for existing patient
         }));
       } else {
-        setFormData((prev) => ({ ...prev, patient_type: "NEW" }));
+        setFormData((prev) => ({ ...prev, patient_type: "New" }));
       }
     } catch (error) {
       console.error("Error fetching patient details:", error);
-      setFormData((prev) => ({ ...prev, patient_type: "NEW" }));
+      setFormData((prev) => ({ ...prev, patient_type: "New" }));
     }
   
     setShowAddModal(true);
@@ -795,7 +795,7 @@ export default function Call_logs() {
       doctor_id: enquiryForm.doctor_id || null,
       patient_name: enquiryForm.patient_name,
       patient_phone: enquiryForm.caller_no,
-      patient_type: "NEW",
+      patient_type: "New",
       enquirytype: enquiryForm.enquirytype,
       fdeId: enquiryForm.FDE_Name || null,
       FDE_Name: enquiryForm.FDE_Name || null,
@@ -1209,11 +1209,11 @@ export default function Call_logs() {
                   <Form.Label className="fw-bold">
                     Patient Type <span className="text-danger">*</span>
                   </Form.Label>
-                  {formData.patient_type === "NEW" ? (
+                  {formData.patient_type === "New" ? (
                     <Form.Control
                       style={{ border: "2px solid #ccc", backgroundColor: "#f8f9fa" }}
                       type="text"
-                      value="NEW"
+                      value="New"
                       readOnly
                     />
                   ) : (
@@ -1223,8 +1223,8 @@ export default function Call_logs() {
                       value={formData.patient_type}
                       onChange={handleInputChange}
                     >
-                      <option value="FOLLOW">FOLLOW UP</option>
-                      <option value="POSTOPERATIVE">POST OPERATIVE</option>
+                      <option value="Follow">Follow UP</option>
+                      <option value="Postoperative">Postoperative</option>
                       <option value="OTHER">OTHER</option>
                     </Form.Select>
                   )}

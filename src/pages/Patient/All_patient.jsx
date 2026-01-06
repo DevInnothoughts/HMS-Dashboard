@@ -823,7 +823,7 @@ export default function All_patient() {
       patientName: formData.name,
       patient_phone: formData.phone,
       patient_id: formData.patient_id,
-      // patient_type: "FOLLOW",
+      // patient_type: "Follow",
       patient_type: formData.patient_type,
       appointment_time: formData.appointmentTime,
       FDE_Name: formData.FDE_Name,

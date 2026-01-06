@@ -463,7 +463,7 @@
 //                           required
 //                         >
 //                           <option value="">Select Type</option>
-//                           <option value="NEW">NEW</option>
+//                           <option value="New">New</option>
 //                           <option value="EXISTING">EXISTING</option>
 //                           <option value="REFERRAL">REFERRAL</option>
 //                         </Form.Control>
@@ -695,7 +695,7 @@ export default function Add_Enquiry() {
     date: formatDate(new Date()),
     doctorId: "",
     enquirytype: "",
-    patient_type: "NEW",
+    patient_type: "New",
     patient_name: "",
     patient_phone: "",
     time: new Date().toLocaleTimeString("en-US", {
@@ -778,7 +778,7 @@ export default function Add_Enquiry() {
       date: formatDate(new Date()),
       doctorId: "",
       enquirytype: "",
-      patient_type: "NEW",
+      patient_type: "New",
       patient_name: "",
       patient_phone: "",
       patient_location: "",

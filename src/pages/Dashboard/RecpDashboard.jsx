@@ -77,7 +77,7 @@
 //             const type = (event.patientType || 'Other').toUpperCase();
 //             acc[type] = (acc[type] || 0) + 1;
 //             return acc;
-//         }, { NEW: 0, FOLLOW: 0, POSTOPERATIVE: 0, OTHER: 0 });
+//         }, { New: 0, Follow: 0, Postoperative: 0, OTHER: 0 });
 //     }, [appointments]);
 
 //     const formatAppointments = useCallback((data) => {
@@ -349,9 +349,9 @@
 
 //     const eventStyleGetter = useCallback((event) => {
 //         const colorMap = {
-//             NEW: "#000000",
-//             FOLLOW: "#ff8000",
-//             POSTOPERATIVE: "#8000ff",
+//             New: "#000000",
+//             Follow: "#ff8000",
+//             Postoperative: "#8000ff",
 //             OTHER: "#ff0080"
 //         };
 
@@ -471,9 +471,9 @@
 //                         </Col>
 //                         <Col xs={12} className="mb-5" style={{ marginLeft: "10px", marginTop: "10px" }}>
 //                             <div className="d-flex flex-wrap justify-content-start">
-//                                 <ColorLegend name="New Patient" count={counts.NEW} bgColor="#000000" />
-//                                 <ColorLegend name="Follow Patient" count={counts.FOLLOW} bgColor="#ff8000" />
-//                                 <ColorLegend name="Postoperative Patient" count={counts.POSTOPERATIVE} bgColor="#8000ff" />
+//                                 <ColorLegend name="New Patient" count={counts.New} bgColor="#000000" />
+//                                 <ColorLegend name="Follow Patient" count={counts.Follow} bgColor="#ff8000" />
+//                                 <ColorLegend name="Postoperative Patient" count={counts.Postoperative} bgColor="#8000ff" />
 //                                 <ColorLegend name="Other Patient" count={counts.OTHER} bgColor="#ff0080" />
 //                             </div>
 //                         </Col>
@@ -649,7 +649,7 @@ export default function ReceptionistDashboard() {
   //       acc[type] = (acc[type] || 0) + 1;
   //       return acc;
   //     },
-  //     { NEW: 0, FOLLOW: 0, POSTOPERATIVE: 0, OTHER: 0 }
+  //     { New: 0, Follow: 0, Postoperative: 0, OTHER: 0 }
   //   );
   // }, [appointments]);
     const counts = useMemo(() => {
@@ -667,7 +667,7 @@ export default function ReceptionistDashboard() {
           acc[type] = (acc[type] || 0) + 1;
           return acc;
         },
-        { NEW: 0, FOLLOW: 0, POSTOPERATIVE: 0, OTHER: 0 }
+        { New: 0, Follow: 0, Postoperative: 0, OTHER: 0 }
       );
     }, [appointments, selectedDate]);
 
@@ -852,9 +852,9 @@ export default function ReceptionistDashboard() {
 
   const eventStyleGetter = useCallback((event) => {
     const colorMap = {
-      NEW: "#000000",
-      FOLLOW: "#ff8000",
-      POSTOPERATIVE: "#8000ff",
+      New: "#000000",
+      Follow: "#ff8000",
+      Postoperative: "#8000ff",
       OTHER: "#ff0080",
     };
     return {
@@ -1145,14 +1145,14 @@ export default function ReceptionistDashboard() {
                 <div className="d-flex align-items-center flex-wrap">
                   <div className="legend-item">
                     <span className="dot" style={{ background: "#000" }}></span>{" "}
-                    New <span className="cnt">({counts.NEW})</span>
+                    New <span className="cnt">({counts.New})</span>
                   </div>
                   <div className="legend-item">
                     <span
                       className="dot"
                       style={{ background: "#ff8000" }}
                     ></span>{" "}
-                    Follow-up <span className="cnt">({counts.FOLLOW})</span>
+                    Follow-up <span className="cnt">({counts.Follow})</span>
                   </div>
                   <div className="legend-item">
                     <span
@@ -1160,7 +1160,7 @@ export default function ReceptionistDashboard() {
                       style={{ background: "#8000ff" }}
                     ></span>{" "}
                     Post-Operative{" "}
-                    <span className="cnt">({counts.POSTOPERATIVE})</span>
+                    <span className="cnt">({counts.Postoperative})</span>
                   </div>
                   <div className="legend-item">
                     <span

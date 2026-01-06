@@ -25,7 +25,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import moment from "moment";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
-const TYPE_LIST = ["NEW", "FOLLOW", "POST-OPERATIVE"];
+const TYPE_LIST = ["New", "Follow", "Postoperative"];
 
 const Toast = Swal.mixin({
   toast: true,
@@ -1601,7 +1601,7 @@ export default function Appointment_list() {
                     onChange={handleReceiptFormChange}
                   >
                     <option value="">Select Type</option>
-                    {["CONSULTATION", "FOLLOW-UP", "PROCTOSCOPY", "MCDPA", "COLON HYDROTHERAPY", "COLONOSCOPY", "USG", "USG ABDOMEN AND PELVIS", "MANOMETRY", "BIOFEEDBACK", "ECHODEFECOGRAPHY", "USG SCROTUM", "UNILATERAL DOPPLER", "BILATERAL DOPPLER", "PROCEDURE", "GASTROSCOPY", "3D ENDO ANAL IMAGING", "OTHERS", "MRI FISTULOGRAM", "2D SCAN", "LAB", "POSTOPERATIVE", "BLOOD TESTS + ECG", "DIET", "UROFLOWMETRY", "DIET PLAN - 1 MONTH", "DIET PLAN - 3 MONTH", "DIET PLAN - 6 MONTH", "ENEMA", "MEDICINES", "DRESSING", "CYSTOSCOPY", "POST OPERATIVE FOLLOW UP", "POST OPERATIVE DRESSING + CONSULTATION"].map(item => (
+                    {["CONSULTATION", "Follow-UP", "PROCTOSCOPY", "MCDPA", "COLON HYDROTHERAPY", "COLONOSCOPY", "USG", "USG ABDOMEN AND PELVIS", "MANOMETRY", "BIOFEEDBACK", "ECHODEFECOGRAPHY", "USG SCROTUM", "UNILATERAL DOPPLER", "BILATERAL DOPPLER", "PROCEDURE", "GASTROSCOPY", "3D ENDO ANAL IMAGING", "OTHERS", "MRI FISTULOGRAM", "2D SCAN", "LAB", "Postoperative", "BLOOD TESTS + ECG", "DIET", "UROFLOWMETRY", "DIET PLAN - 1 MONTH", "DIET PLAN - 3 MONTH", "DIET PLAN - 6 MONTH", "ENEMA", "MEDICINES", "DRESSING", "CYSTOSCOPY", "Postoperative Follow UP", "Postoperative DRESSING + CONSULTATION"].map(item => (
                       <option key={item} value={item}>{item}</option>
                     ))}
                   </Form.Select>
@@ -1662,7 +1662,7 @@ export default function Appointment_list() {
                       <option value="">Select Type</option>
                       {[
                         "CONSULTATION",
-                        "FOLLOW-UP",
+                        "Follow-UP",
                         "PROCTOSCOPY",
                         "MCDPA",
                         "COLON HYDROTHERAPY",
@@ -1682,7 +1682,7 @@ export default function Appointment_list() {
                         "MRI FISTULOGRAM",
                         "2D SCAN",
                         "LAB",
-                        "POSTOPERATIVE",
+                        "Postoperative",
                         "BLOOD TESTS + ECG",
                         "DIET",
                         "UROFLOWMETRY",
@@ -1693,8 +1693,8 @@ export default function Appointment_list() {
                         "MEDICINES",
                         "DRESSING",
                         "CYSTOSCOPY",
-                        "POST OPERATIVE FOLLOW UP",
-                        "POST OPERATIVE DRESSING + CONSULTATION",
+                        "Postoperative Follow UP",
+                        "Postoperative DRESSING + CONSULTATION",
                       ].map((opt) => (
                         <option key={opt} value={opt}>
                           {opt}
