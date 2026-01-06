@@ -714,7 +714,8 @@ export default function Call_logs() {
       patient_location: currentLocation,
       patient_type: enquiryForm.patient_type,
       date: moment(enquiryForm.date).format("YYYY-MM-DD"),
-      time: enquiryForm.time,
+      // time: enquiryForm.time,
+      time: "0",
       doctor_id: enquiryForm.doctor_id || null,
       patient_name: enquiryForm.patient_name,
       patient_phone: enquiryForm.caller_no,
@@ -722,7 +723,8 @@ export default function Call_logs() {
       enquirytype: enquiryForm.enquirytype,
       fdeId: enquiryForm.FDE_Name || null,
       FDE_Name: enquiryForm.FDE_Name || null,
-      reference: enquiryForm.reference || null,
+      // reference: enquiryForm.reference || null,
+      reference: "0",
       note: enquiryForm.note || "",
     };
 
@@ -1339,7 +1341,7 @@ export default function Call_logs() {
                     />
                   </Form.Group>
                 </Col>
-                <Col md={6}>
+                {/* <Col md={6}>
                   <Form.Group className="mb-3">
                     <Form.Label>
                       Call Back Time (Required){" "}
@@ -1356,7 +1358,7 @@ export default function Call_logs() {
                       required
                     />
                   </Form.Group>
-                </Col>
+                </Col> */}
                 <Col md={6}>
                   <Form.Group className="mb-3">
                     <Form.Label>
@@ -1485,7 +1487,7 @@ export default function Call_logs() {
                     </Form.Select>
                   </Form.Group>
                 </Col>
-                <Col md={6}>
+                {/* <Col md={6}>
                   <Form.Group className="mb-20">
                     <Form.Label>Reference</Form.Label>
                     <Form.Control
@@ -1497,7 +1499,7 @@ export default function Call_logs() {
                       placeholder="e.g., Google, Friend, Walk-in"
                     />
                   </Form.Group>
-                </Col>
+                </Col> */}
                 <Col md={6}>
                   <Form.Group>
                     <Form.Label>Note</Form.Label>
