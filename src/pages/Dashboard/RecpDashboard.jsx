@@ -642,16 +642,34 @@ export default function ReceptionistDashboard() {
     }
   }, []);
 
-  const counts = useMemo(() => {
-    return appointments.reduce(
-      (acc, event) => {
-        const type = (event.patientType || "Other").toUpperCase();
-        acc[type] = (acc[type] || 0) + 1;
-        return acc;
-      },
-      { NEW: 0, FOLLOW: 0, POSTOPERATIVE: 0, OTHER: 0 }
-    );
-  }, [appointments]);
+  // const counts = useMemo(() => {
+  //   return appointments.reduce(
+  //     (acc, event) => {
+  //       const type = (event.patientType || "Other").toUpperCase();
+  //       acc[type] = (acc[type] || 0) + 1;
+  //       return acc;
+  //     },
+  //     { NEW: 0, FOLLOW: 0, POSTOPERATIVE: 0, OTHER: 0 }
+  //   );
+  // }, [appointments]);
+    const counts = useMemo(() => {
+      const monthStart = moment(selectedDate).startOf('month');
+      const monthEnd = moment(selectedDate).endOf('month');
+      const visibleAppointments = appointments.filter(event => {
+        const eventDate = moment(event.start);
+        return eventDate.isSameOrAfter(monthStart, 'day') &&
+          eventDate.isSameOrBefore(monthEnd, 'day');
+      });
+  
+      return visibleAppointments.reduce(
+        (acc, event) => {
+          const type = (event.patientType || "Other").toUpperCase();
+          acc[type] = (acc[type] || 0) + 1;
+          return acc;
+        },
+        { NEW: 0, FOLLOW: 0, POSTOPERATIVE: 0, OTHER: 0 }
+      );
+    }, [appointments, selectedDate]);
 
   const formatAppointments = useCallback((data) => {
     return data.map((app) => {
