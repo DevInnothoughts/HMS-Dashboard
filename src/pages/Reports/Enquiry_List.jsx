@@ -388,7 +388,17 @@
 //   );
 // }
 
-/* eslint-disable no-unused-vars */
+
+
+
+
+
+
+
+
+
+
+
 import React, { useState, useEffect, useCallback } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
@@ -571,7 +581,7 @@ export default function EnquiryList() {
             <span
               style={{
                 marginRight: "8px",
-                fontSize: "13px",
+                fontSize: "12px",
                 fontWeight: "bold",
                 color: "#333",
               }}
@@ -587,7 +597,7 @@ export default function EnquiryList() {
               }}
               style={{
                 width: "70px",
-                height: "40px",
+                height: "30px",
                 border: "1px solid #4dd0e1",
                 borderRadius: "6px",
                 fontSize: "12px",
@@ -606,7 +616,7 @@ export default function EnquiryList() {
             <span
               style={{
                 marginRight: "10px",
-                fontSize: "13px",
+                fontSize: "12px",
                 fontWeight: "bold",
                 color: "#333",
               }}
@@ -624,7 +634,7 @@ export default function EnquiryList() {
                   border: "1px solid #4dd0e1",
                   padding: "5px 8px",
                   width: "200px",
-                  height: "40px",
+                  height: "30px",
                   fontSize: "12px",
                   transition: "all 0.3s ease",
                 }}
@@ -778,7 +788,7 @@ export default function EnquiryList() {
                       responsiveLayout="scroll"
                       paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
                       currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
-                      className="p-datatable-customers datatable-compact-style"
+                      className="p-datatable-customers datatable-compact-style datatable-medium-small"
                       rowClassName={(rowData, { rowIndex }) => ({
                         style: {
                           backgroundColor:

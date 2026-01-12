@@ -14,6 +14,7 @@ import {
   Form,
   InputGroup,
   Button,
+  Spinner,
   Modal,
 } from "react-bootstrap";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
@@ -390,7 +391,7 @@ export default function Call_logs() {
             <span
               style={{
                 marginRight: "8px",
-                fontSize: "13px",
+                fontSize: "12px",
                 fontWeight: "bold",
                 color: "#333",
               }}
@@ -400,14 +401,11 @@ export default function Call_logs() {
             <Form.Select
               size="sm"
               value={rows}
-              onChange={(e) => setRows(parseInt(e.target.value))}
-              style={{
-                width: "70px",
-                height: "40px",
-                border: "1px solid #4dd0e1",
-                borderRadius: "6px",
-                fontSize: "12px",
+              onChange={(e) => {
+                setRows(parseInt(e.target.value));
+                setFirst(0); // Reset to first page when changing row count
               }}
+              style={{ width: "70px", height: "30px", border: "1px solid #4dd0e1", borderRadius: "6px", fontSize: "12px" }}
             >
               <option value={10}>10</option>
               <option value={25}>25</option>
@@ -422,7 +420,7 @@ export default function Call_logs() {
             <span
               style={{
                 marginRight: "10px",
-                fontSize: "13px",
+                fontSize: "12px",
                 fontWeight: "bold",
                 color: "#333",
               }}
@@ -447,7 +445,7 @@ export default function Call_logs() {
                   border: "1px solid #4dd0e1",
                   padding: "5px 8px",
                   width: "200px",
-                  height: "40px",
+                  height: "30px",
                   fontSize: "12px",
                   transition: "all 0.3s ease",
                 }}
@@ -497,41 +495,6 @@ export default function Call_logs() {
             />
           </div>
 
-          {/* <div>
-            <div
-              style={{ fontSize: "12px", fontWeight: "500", color: "#00838f", marginBottom: "3px" }}
-            >
-              To Date
-            </div>
-            <DatePicker
-              selected={toDate ? new Date(toDate) : null}
-              onChange={(date) => {
-                const formattedDate = date
-                  ? date.toISOString().split("T")[0]
-                  : "";
-                setToDate(formattedDate);
-              }}
-              dateFormat="dd-MM-yyyy"
-              placeholderText="Select to date"
-              minDate={fromDate ? new Date(fromDate) : null}
-              
-              customInput={
-                <Form.Control
-                  style={{ padding: '5px 8px', fontSize: '12px' }}
-                />
-              }
-              popperClassName="custom-popper"
-              popperPlacement="bottom-start"
-              popperModifiers={[
-                {
-                  name: "offset",
-                  options: {
-                    offset: [0, 8],
-                  },
-                },
-              ]}
-            />
-          </div> */}
           <div style={{ position: "relative" }}>
             <div
               style={{
@@ -554,7 +517,6 @@ export default function Call_logs() {
               dateFormat="dd-MM-yyyy"
               placeholderText="Select to date"
               minDate={fromDate ? new Date(fromDate) : null}
-              // Fix: Use consistent placement and remove the forced offset
               popperPlacement="bottom-start"
               customInput={
                 <Form.Control
@@ -712,17 +674,14 @@ export default function Call_logs() {
 
     const payload = {
       patient_location: currentLocation,
-      patient_type: enquiryForm.patient_type,
+      patient_type: "NEW",
       date: moment(enquiryForm.date).format("YYYY-MM-DD"),
-      time: enquiryForm.time,
       doctor_id: enquiryForm.doctor_id || null,
       patient_name: enquiryForm.patient_name,
       patient_phone: enquiryForm.caller_no,
-      patient_type: "NEW",
       enquirytype: enquiryForm.enquirytype,
       fdeId: enquiryForm.FDE_Name || null,
       FDE_Name: enquiryForm.FDE_Name || null,
-      reference: enquiryForm.reference || null,
       note: enquiryForm.note || "",
     };
 
@@ -772,23 +731,6 @@ export default function Call_logs() {
     }
   };
 
-  useEffect(() => {}, [fdeList, enquiryTypes, formData]);
-
-  const handleAddEnquiryClick = () => {
-    const today = new Date();
-    setFormData((prev) => ({
-      ...prev,
-      date: today.toISOString().split("T")[0],
-      time: today.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      }),
-    }));
-    setSelectedDate(today);
-    setShowAddModal(true);
-  };
-
   const fetchEnquiries = async () => {
     try {
       const response = await fetch(`${BASE_URL}/V1/enquiry/listEnquiry`);
@@ -832,230 +774,204 @@ export default function Call_logs() {
                     borderColor: "#00bcd4",
                     background: "white",
                     border: "1.5px solid #00bcd4",
+                    padding: "5px"
                   }}
                 >
                   <Card.Body>
                     <Row className="Product_list">
-                      <DataTable
-                        value={CallLogs}
-                        paginator
-                        rows={rows}
-                        first={first} // This controls the current page offset
-                        onPage={(e) => {
-                          setFirst(e.first);
-                          setRows(e.rows);
-                        }}
-                        filters={filters1}
-                        header={renderHeader}
-                        loading={loading}
-                        globalFilterFields={[
-                          "ivr_id",
-                          "call_date",
-                          "caller_no",
-                          "destination_no",
-                          "call_time",
-                          "call_type",
-                          "call_status",
-                          "call_duration",
-                          "circle_name",
-                          "status",
-                          "note",
-                          "source",
-                        ]}
-                        paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
-                        currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
-                        responsiveLayout="scroll"
-                        className="datatable-compact-style"
-                      >
-                        <Column
-                          field="ivr_id"
-                          header="Sr No"
-                          body={(rowData) => rowData.ivr_id || "-"}
-                          headerClassName="datatable-header-center"
-                          style={{
-                            border: "1px solid #90caf9",
-                            textAlign: "center",
-                            padding: "0.75rem",
-                            width: "90px",
+                      {loading ? (
+                        <div
+                          className="d-flex justify-content-center py-5"
+                          style={{ color: "#00bcd4" }}
+                        >
+                          <Spinner animation="border" role="status">
+                            <span className="visually-hidden">Loading...</span>
+                          </Spinner>
+                        </div>
+                      ) : (
+                        <DataTable
+                          value={CallLogs}
+                          paginator
+                          rows={rows}
+                          first={first}
+                          onPage={(e) => {
+                            setFirst(e.first);
+                            setRows(e.rows);
                           }}
-                        />
+                          filters={filters1}
+                          header={renderHeader}
+                          loading={loading}
+                          globalFilterFields={[
+                            "ivr_id",
+                            "call_date",
+                            "caller_no",
+                            "destination_no",
+                            "call_time",
+                            "call_type",
+                            "call_status",
+                            "call_duration",
+                            "circle_name",
+                            "status",
+                            "note",
+                            "source",
+                          ]}
+                          paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
+                          currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
+                          responsiveLayout="scroll"
+                          className="datatable-compact-style datatable-medium-small"
+                        >
+                          <Column
+                            field="ivr_id"
+                            header="Sr No"
+                            body={(rowData) => rowData.ivr_id || "-"}
+                            headerClassName="datatable-header-center"
+                            style={{
+                              border: "1px solid #90caf9",
+                              textAlign: "center",
+                              padding: "0.75rem",
+                              width: "90px",
+                            }}
+                          />
 
-                        {/* <Column
-                          field="call_date"
-                          header="Date"
-                          sortable
-                          body={(rowData) => rowData.call_date || "-"}
-                          headerClassName="datatable-header-center"
-                          style={{
-                            border: "1px solid #90caf9",
-                            textAlign: "center",
-                            padding: "0.75rem",
-                            width: "80px"
-                          }}
-                        /> */}
+                          <Column
+                            field="call_date"
+                            header="Date"
+                            body={(rowData) => {
+                              const rawDate = rowData.call_date;
+                              if (!rawDate) return "-";
+                              const dateObj = moment(rawDate, [
+                                "YYYY-DD-MM",
+                                "YYYY-MM-DD",
+                                "DD-MM-YYYY",
+                              ]);
 
-                        <Column
-                          field="call_date"
-                          header="Date"
-                          body={(rowData) => {
-                            const rawDate = rowData.call_date;
-                            if (!rawDate) return "-";
-                            const dateObj = moment(rawDate, [
-                              "YYYY-DD-MM",
-                              "YYYY-MM-DD",
-                              "DD-MM-YYYY",
-                            ]);
+                              return dateObj.isValid()
+                                ? dateObj.format("DD-MM-YYYY")
+                                : rawDate;
+                            }}
+                            headerClassName="datatable-header-center"
+                            style={{
+                              border: "1px solid #90caf9",
+                              textAlign: "center",
+                              padding: "0.75rem",
+                              width: "120px",
+                            }}
+                          />
 
-                            return dateObj.isValid()
-                              ? dateObj.format("DD-MM-YYYY")
-                              : rawDate;
-                          }}
-                          headerClassName="datatable-header-center"
-                          style={{
-                            border: "1px solid #90caf9",
-                            textAlign: "center",
-                            padding: "0.75rem",
-                            width: "120px",
-                          }}
-                        />
+                          <Column
+                            field="call_time"
+                            header="Time"
+                            body={(rowData) => rowData.call_time || "-"}
+                            headerClassName="datatable-header-center"
+                            style={{
+                              border: "1px solid #90caf9",
+                              textAlign: "center",
+                              padding: "0.75rem",
+                              width: "80px",
+                            }}
+                          />
 
-                        <Column
-                          field="call_time"
-                          header="Time"
-                          body={(rowData) => rowData.call_time || "-"}
-                          headerClassName="datatable-header-center"
-                          style={{
-                            border: "1px solid #90caf9",
-                            textAlign: "center",
-                            padding: "0.75rem",
-                            width: "80px",
-                          }}
-                        />
+                          <Column
+                            field="caller_no"
+                            header="Caller No"
+                            body={(rowData) => rowData.caller_no || "-"}
+                            headerClassName="datatable-header-center"
+                            style={{
+                              border: "1px solid #90caf9",
+                              textAlign: "center",
+                              padding: "0.75rem",
+                              width: "11  0px",
+                            }}
+                          />
 
-                        <Column
-                          field="caller_no"
-                          header="Caller No"
-                          body={(rowData) => rowData.caller_no || "-"}
-                          headerClassName="datatable-header-center"
-                          style={{
-                            border: "1px solid #90caf9",
-                            textAlign: "center",
-                            padding: "0.75rem",
-                            width: "11  0px",
-                          }}
-                        />
+                          <Column
+                            field="destination_no"
+                            header="Destination No"
+                            body={(rowData) => rowData.destination_no || "-"}
+                            headerClassName="datatable-header-center"
+                            style={{
+                              border: "1px solid #90caf9",
+                              textAlign: "center",
+                              padding: "0.75rem",
+                              width: "110px",
+                            }}
+                          />
 
-                        <Column
-                          field="destination_no"
-                          header="Destination No"
-                          body={(rowData) => rowData.destination_no || "-"}
-                          headerClassName="datatable-header-center"
-                          style={{
-                            border: "1px solid #90caf9",
-                            textAlign: "center",
-                            padding: "0.75rem",
-                            width: "110px",
-                          }}
-                        />
+                          <Column
+                            field="call_type"
+                            header="Call Type"
+                            body={(rowData) => rowData.call_type || "-"}
+                            headerClassName="datatable-header-center"
+                            style={{
+                              border: "1px solid #90caf9",
+                              textAlign: "center",
+                              padding: "0.75rem",
+                              width: "100px",
+                            }}
+                          />
+                          <Column
+                            field="call_status"
+                            header="Call Status"
+                            body={(rowData) => rowData.call_status || "-"}
+                            headerClassName="datatable-header-center"
+                            style={{
+                              border: "1px solid #90caf9",
+                              textAlign: "center",
+                              padding: "0.75rem",
+                              width: "100px",
+                            }}
+                          />
+                          <Column
+                            field="call_duration"
+                            header="Call Duration"
+                            body={(rowData) => rowData.call_duration || "-"}
+                            headerClassName="datatable-header-center"
+                            style={{
+                              border: "1px solid #90caf9",
+                              textAlign: "center",
+                              padding: "0.75rem",
+                              width: "100px",
+                            }}
+                          />
+                          <Column
+                            field="circle_name"
+                            header="Region"
+                            body={(rowData) => rowData.circle_name || "-"}
+                            headerClassName="datatable-header-center"
+                            style={{
+                              border: "1px solid #90caf9",
+                              textAlign: "center",
+                              padding: "0.75rem",
+                              width: "130px",
+                            }}
+                          />
+                          <Column
+                            field="note"
+                            header="Note"
+                            body={(rowData) => rowData.note || "-"}
+                            headerClassName="datatable-header-center"
+                            style={{
+                              border: "1px solid #90caf9",
+                              textAlign: "center",
+                              padding: "0.75rem",
+                              width: "180px",
+                            }}
+                          />
 
-                        <Column
-                          field="call_type"
-                          header="Call Type"
-                          body={(rowData) => rowData.call_type || "-"}
-                          headerClassName="datatable-header-center"
-                          style={{
-                            border: "1px solid #90caf9",
-                            textAlign: "center",
-                            padding: "0.75rem",
-                            width: "100px",
-                          }}
-                        />
-                        <Column
-                          field="call_status"
-                          header="Call Status"
-                          body={(rowData) => rowData.call_status || "-"}
-                          headerClassName="datatable-header-center"
-                          style={{
-                            border: "1px solid #90caf9",
-                            textAlign: "center",
-                            padding: "0.75rem",
-                            width: "100px",
-                          }}
-                        />
-                        <Column
-                          field="call_duration"
-                          header="Call Duration"
-                          body={(rowData) => rowData.call_duration || "-"}
-                          headerClassName="datatable-header-center"
-                          style={{
-                            border: "1px solid #90caf9",
-                            textAlign: "center",
-                            padding: "0.75rem",
-                            width: "100px",
-                          }}
-                        />
-                        <Column
-                          field="circle_name"
-                          header="Region"
-                          body={(rowData) => rowData.circle_name || "-"}
-                          headerClassName="datatable-header-center"
-                          style={{
-                            border: "1px solid #90caf9",
-                            textAlign: "center",
-                            padding: "0.75rem",
-                            width: "130px",
-                          }}
-                        />
-                        {/* <Column
-                          field="status"
-                          header="Status"
-                          body={(rowData) => rowData.status || "-"}
-                          headerClassName="datatable-header-center"
-                          style={{
-                            border: "1px solid #90caf9",
-                            textAlign: "center",
-                            padding: "0.75rem",
-                            width: "100px",
-                          }}
-                        />
-                        <Column
-                          field="source"
-                          header="Source"
-                          body={(rowData) => rowData.source || "-"}
-                          headerClassName="datatable-header-center"
-                          style={{
-                            border: "1px solid #90caf9",
-                            textAlign: "center",
-                            padding: "0.75rem",
-                            width: "110px",
-                          }}
-                        /> */}
-                        <Column
-                          field="note"
-                          header="Note"
-                          body={(rowData) => rowData.note || "-"}
-                          headerClassName="datatable-header-center"
-                          style={{
-                            border: "1px solid #90caf9",
-                            textAlign: "center",
-                            padding: "0.75rem",
-                            width: "180px",
-                          }}
-                        />
-
-                        <Column
-                          header="Actions"
-                          body={actionBodyTemplate}
-                          exportable={false}
-                          headerClassName="datatable-header-center"
-                          style={{
-                            border: "1px solid #90caf9",
-                            textAlign: "center",
-                            padding: "0.75rem",
-                            width: "110px",
-                          }}
-                        />
-                      </DataTable>
+                          <Column
+                            header="Actions"
+                            body={actionBodyTemplate}
+                            exportable={false}
+                            headerClassName="datatable-header-center"
+                            style={{
+                              border: "1px solid #90caf9",
+                              textAlign: "center",
+                              padding: "0.75rem",
+                              width: "110px",
+                            }}
+                          />
+                        </DataTable>
+                        )}
                     </Row>
                   </Card.Body>
                 </Card>
@@ -1064,7 +980,7 @@ export default function Call_logs() {
           </Container>
         </div>
       </div>
-
+      {/* 
       <Modal
         show={showAddModal}
         onHide={() => setShowAddModal(false)}
@@ -1079,19 +995,16 @@ export default function Call_logs() {
           }}
         >
           <Modal.Title style={{ color: "#00838f", fontWeight: "bold" }}>
-            {" "}
             <FeatherIcon icon="calendar" className="me-2" />
             Add Appointment
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body style={{ padding: "25px" }}>
+        <Modal.Body style={{ padding: "15px" }}>
           <Form onSubmit={handleAddAppointment}>
             <Row className="g-3">
-              {" "}
-              {/* Added gap between columns */}
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label className="fw-bold">
+                  <Form.Label>
                     Appointment Date <span className="text-danger">*</span>
                   </Form.Label>
                   <DatePicker
@@ -1108,7 +1021,7 @@ export default function Call_logs() {
               </Col>
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label className="fw-bold">
+                  <Form.Label >
                     Appointment Time <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Select
@@ -1128,7 +1041,7 @@ export default function Call_logs() {
               </Col>
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label className="fw-bold">
+                  <Form.Label >
                     Doctor Name <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Select
@@ -1151,7 +1064,7 @@ export default function Call_logs() {
               </Col>
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label className="fw-bold">
+                  <Form.Label >
                     Patient Name <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
@@ -1166,13 +1079,18 @@ export default function Call_logs() {
               </Col>
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label className="fw-bold">
+                  <Form.Label >
                     Contact Number <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
-                    style={{ border: "2px solid rgb(77, 208, 225)" }}
+                    style={{
+                      border: "2px solid rgb(77, 208, 225)",
+                      backgroundColor: "#e7ebebff",
+                      cursor: "not-allowed",
+                    }}
                     type="text"
                     name="caller_no"
+                    readOnly
                     value={formData.caller_no}
                     onChange={handleInputChange}
                   />
@@ -1180,7 +1098,7 @@ export default function Call_logs() {
               </Col>
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label className="fw-bold">
+                  <Form.Label>
                     FDE Name <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Select
@@ -1200,7 +1118,7 @@ export default function Call_logs() {
               </Col>
               <Col md={12}>
                 <Form.Group>
-                  <Form.Label className="fw-bold">Note</Form.Label>
+                  <Form.Label>Note </Form.Label>
                   <Form.Control
                     style={{ border: "2px solid rgb(77, 208, 225)" }}
                     as="textarea"
@@ -1238,9 +1156,196 @@ export default function Call_logs() {
             </div>
           </Form>
         </Modal.Body>
-      </Modal>
+      </Modal> */}
 
       <Modal
+        show={showAddModal}
+        onHide={() => setShowAddModal(false)}
+        size="lg"
+        centered
+      >
+        <Modal.Header
+          closeButton
+          style={{
+            backgroundColor: "#e0f7fa",
+            borderBottom: "2px solid #00bcd4",
+            padding: "10px 15px", // Compact padding
+          }}
+        >
+          <Modal.Title style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}>
+            <FeatherIcon icon="plus-square" className="me-2" size="18" />
+            Add Appointment
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ fontSize: "13px", padding: "15px" }}>
+          <Form onSubmit={handleAddAppointment}>
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-15">
+                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                    Appointment Date <span className="text-danger">*</span>
+                  </Form.Label>
+                  <DatePicker
+                    selected={formData.date ? new Date(formData.date) : new Date()}
+                    onChange={(date) => date && handleDateChange(date)}
+                    dateFormat="dd-MM-yyyy"
+                    minDate={new Date()}
+                    className="form-control form-control-sm"
+                    customInput={
+                      <Form.Control
+                        size="sm"
+                        style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                      />
+                    }
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-2">
+                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                    Appointment Time <span className="text-danger">*</span>
+                  </Form.Label>
+                  <Form.Select
+                    size="sm"
+                    name="appointmentTime"
+                    value={formData.appointmentTime}
+                    onChange={handleInputChange}
+                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                  >
+                    <option value="">Select Time</option>
+                    {timeSlots.map((time, index) => (
+                      <option key={index} value={time}>
+                        {time}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-15">
+                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                    Doctor Name <span className="text-danger">*</span>
+                  </Form.Label>
+                  <Form.Select
+                    size="sm"
+                    name="doctor_id"
+                    value={formData.doctor_id}
+                    onChange={handleInputChange}
+                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                  >
+                    <option value="">Select a Doctor</option>
+                    {doctors.map((doctor) => (
+                      <option key={doctor.doctor_id} value={String(doctor.doctor_id)}>
+                        {doctor.name}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-2">
+                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                    Patient Name <span className="text-danger">*</span>
+                  </Form.Label>
+                  <Form.Control
+                    size="sm"
+                    type="text"
+                    name="patientName"
+                    placeholder="Enter full name"
+                    value={formData.patientName}
+                    onChange={handleInputChange}
+                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-15">
+                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                    Contact Number <span className="text-danger">*</span>
+                  </Form.Label>
+                  <Form.Control
+                    size="sm"
+                    type="text"
+                    name="caller_no"
+                    readOnly
+                    value={formData.caller_no}
+                    style={{
+                      border: "2px solid rgb(77, 208, 225)",
+                      backgroundColor: "#f8f9fa",
+                      cursor: "not-allowed",
+                      fontSize: "12px"
+                    }}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-2">
+                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                    FDE Name <span className="text-danger">*</span>
+                  </Form.Label>
+                  <Form.Select
+                    size="sm"
+                    name="FDE_Name"
+                    value={formData.FDE_Name}
+                    onChange={handleInputChange}
+                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                  >
+                    <option value="">Select FDE</option>
+                    {fdeList.map((fde) => (
+                      <option key={fde.FDEID} value={String(fde.FDEID)}>
+                        {fde.FDEName}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+              <Col md={12}>
+                <Form.Group className="mb-5">
+                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>Note</Form.Label>
+                  <Form.Control
+                    size="sm"
+                    as="textarea"
+                    rows={2}
+                    name="note"
+                    placeholder="Additional details..."
+                    value={formData.note}
+                    onChange={handleInputChange}
+                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <div className="d-flex justify-content-end pt-2">
+              <Button
+                variant="danger"
+                size="sm"
+                className="me-2 px-3"
+                style={{ borderRadius: "10px", fontSize: "12px" }}
+                onClick={() => setShowAddModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                className="px-3"
+                style={{
+                  borderRadius: "10px",
+                  fontSize: "12px",
+                  backgroundColor: "#00bcd4",
+                  border: "none",
+                }}
+                onClick={() => handleSubmit("save")}
+              >
+                Add Appointment
+              </Button>
+            </div>
+          </Form>
+        </Modal.Body>
+      </Modal>
+
+      {/* <Modal
         show={showNoteModal}
         onHide={() => setShowNoteModal(false)}
         size="lg"
@@ -1253,13 +1358,12 @@ export default function Call_logs() {
           }}
         >
           <Modal.Title style={{ color: "#00838f", fontWeight: "bold" }}>
-            {" "}
             <FeatherIcon icon="file-text" className="me-2" />
             Add Note
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form.Label>Note</Form.Label>
+          <Form.Label>Note <span className="text-danger">*</span></Form.Label>
           <Form.Control
             style={{ border: "2px solid rgb(77, 208, 225)" }}
             as="textarea"
@@ -1288,9 +1392,76 @@ export default function Call_logs() {
             Add Note
           </Button>
         </Modal.Footer>
+      </Modal> */}
+
+      {/* --- ADD NOTE MODAL --- */}
+      <Modal
+        show={showNoteModal}
+        onHide={() => setShowNoteModal(false)}
+        size="md" // Changed to md for a better fit for a single textarea
+        centered
+      >
+        <Modal.Header
+          closeButton
+          style={{
+            backgroundColor: "#e0f7fa",
+            borderBottom: "2px solid #00bcd4",
+            padding: "10px 15px",
+          }}
+        >
+          <Modal.Title style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}>
+            <FeatherIcon icon="file-text" className="me-2" size="16" />
+            Add Note
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ padding: "10px" }}>
+          <Form.Group>
+            <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+              Note <span className="text-danger">*</span>
+            </Form.Label>
+            <Form.Control
+              style={{
+                border: "2px solid rgb(77, 208, 225)",
+                fontSize: "13px",
+                borderRadius: "8px"
+              }}
+              as="textarea"
+              rows={4}
+              name="note"
+              value={formData.note || ""}
+              onChange={handleInputChange}
+              placeholder="Enter note here..."
+            />
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer style={{ borderTop: "none", padding: "5px 10px" }}>
+          <Button
+            size="sm"
+            className="px-3"
+            style={{ borderRadius: "10px", fontSize: "12px" }}
+            variant="secondary"
+            onClick={() => setShowNoteModal(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            size="sm"
+            className="px-4"
+            style={{
+              borderRadius: "10px",
+              fontSize: "12px",
+              backgroundColor: "#00bcd4",
+              border: "none"
+            }}
+            variant="primary"
+            onClick={handleSaveNote}
+          >
+            Add Note
+          </Button>
+        </Modal.Footer>
       </Modal>
 
-      <Modal
+      {/* <Modal
         show={showEnquiryModal}
         onHide={() => setShowEnquiryModal(false)}
         size="lg"
@@ -1303,14 +1474,12 @@ export default function Call_logs() {
           }}
         >
           <Modal.Title style={{ color: "#00838f", fontWeight: "bold" }}>
-            {" "}
             <FeatherIcon icon="help-circle" className="me-2" />
             Add Enquiry
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <div>
-            {/* <p>Enquiry for Call Log ID: {selectedCallLog?.ivr_id}</p> */}
             <Form>
               <Row>
                 <Col md={6}>
@@ -1336,24 +1505,6 @@ export default function Call_logs() {
                       placeholderText="Select date"
                       value={enquiryForm.date}
                       minDate={new Date()}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>
-                      Call Back Time (Required){" "}
-                      <span style={{ color: "red" }} className="required">
-                        *
-                      </span>
-                    </Form.Label>
-                    <Form.Control
-                      style={{ border: "2px solid rgb(77, 208, 225)" }}
-                      type="time"
-                      name="time"
-                      value={enquiryForm.time}
-                      onChange={handleEnquiryInputChange}
-                      required
                     />
                   </Form.Group>
                 </Col>
@@ -1400,7 +1551,7 @@ export default function Call_logs() {
               </Row>
               <Row>
                 <Col md={6}>
-                  <Form.Group>
+                  <Form.Group className="mb-15">
                     <Form.Label>
                       Patient Name{" "}
                       <span style={{ color: "red" }} className="required">
@@ -1418,7 +1569,7 @@ export default function Call_logs() {
                   </Form.Group>
                 </Col>
                 <Col md={6}>
-                  <Form.Group className="mb-20">
+                  <Form.Group className="mb-3">
                     <Form.Label>
                       Contact Number{" "}
                       <span style={{ color: "red" }} className="required">
@@ -1426,17 +1577,21 @@ export default function Call_logs() {
                       </span>
                     </Form.Label>
                     <Form.Control
-                      style={{ border: "2px solid rgb(77, 208, 225)" }}
+                      style={{
+                        border: "2px solid rgb(77, 208, 225)",
+                        backgroundColor: "#e7ebebff",
+                        cursor: "not-allowed",
+                      }}
                       type="text"
+                      readOnly
                       name="caller_no"
                       placeholder="Enter Contact Number"
                       value={selectedCallLog?.caller_no}
-                      onChange={handleInputChange}
                     />
                   </Form.Group>
                 </Col>
                 <Col md={6}>
-                  <Form.Group className="mb-20">
+                  <Form.Group className="mb-3">
                     <Form.Label>Doctor Name</Form.Label>
                     <Form.Select
                       style={{ border: "2px solid rgb(77, 208, 225)" }}
@@ -1461,7 +1616,7 @@ export default function Call_logs() {
                   </Form.Group>
                 </Col>
                 <Col md={6}>
-                  <Form.Group className="mb-20">
+                  <Form.Group className="mb-15">
                     <Form.Label>
                       FDE Name{" "}
                       <span style={{ color: "red" }} className="required">
@@ -1485,20 +1640,7 @@ export default function Call_logs() {
                     </Form.Select>
                   </Form.Group>
                 </Col>
-                <Col md={6}>
-                  <Form.Group className="mb-20">
-                    <Form.Label>Reference</Form.Label>
-                    <Form.Control
-                      style={{ border: "2px solid rgb(77, 208, 225)" }}
-                      type="text"
-                      name="reference"
-                      value={enquiryForm.reference}
-                      onChange={handleEnquiryInputChange}
-                      placeholder="e.g., Google, Friend, Walk-in"
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
+                <Col md={12}>
                   <Form.Group>
                     <Form.Label>Note</Form.Label>
                     <Form.Control
@@ -1515,7 +1657,7 @@ export default function Call_logs() {
               </Row>
               <div
                 className="d-flex justify-content-center"
-                style={{ marginTop: "10px" }}
+                style={{ marginTop: "20px" }}
               >
                 <Col className="text-end">
                   <button
@@ -1540,7 +1682,7 @@ export default function Call_logs() {
                   <button
                     style={{ borderRadius: "10px" }}
                     type="button"
-                    className="btn btn-primary "
+                    className="btn btn-primary"
                     onClick={handleAddEnquirySubmit}
                   >
                     Add Enquiry
@@ -1550,7 +1692,239 @@ export default function Call_logs() {
             </Form>
           </div>
         </Modal.Body>
-        <Modal.Footer></Modal.Footer>
+      </Modal> */}
+
+      <Modal
+        show={showEnquiryModal}
+        onHide={() => setShowEnquiryModal(false)}
+        size="lg"
+        centered
+      >
+        <Modal.Header
+          closeButton
+          style={{
+            backgroundColor: "#e0f7fa",
+            borderBottom: "2px solid #00bcd4",
+            padding: "10px 15px", // Compact header padding
+          }}
+        >
+          <Modal.Title style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}>
+            <FeatherIcon icon="help-circle" className="me-2" size="18" />
+            Add Enquiry
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ fontSize: "13px", padding: "10px" }}>
+          <div>
+            <Form>
+              <Row>
+                <Col md={6}>
+                  <Form.Group className="mb-2">
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                      Call Back Date{" "}
+                      <span style={{ color: "red" }} className="required">*</span>
+                    </Form.Label>
+                    <DatePicker
+                      selected={selectedDate}
+                      onChange={(date) => {
+                        setSelectedDate(date);
+                        setEnquiryForm((prev) => ({
+                          ...prev,
+                          date: formatDate(date),
+                        }));
+                      }}
+                      dateFormat="dd-MM-yyyy"
+                      className="form-control form-control-sm" // Small input class
+                      placeholderText="Select date"
+                      value={enquiryForm.date}
+                      minDate={new Date()}
+                      customInput={
+                        <Form.Control
+                          size="sm"
+                          style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                        />
+                      }
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group className="mb-2">
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                      Enquiry Type{" "}
+                      <span style={{ color: "red" }} className="required">*</span>
+                    </Form.Label>
+                    <Form.Select
+                      size="sm" // Small selector
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                      name="enquirytype"
+                      value={enquiryForm.enquirytype}
+                      onChange={handleEnquiryInputChange}
+                      required
+                    >
+                      <option value="">Select Enquiry Type</option>
+                      {[
+                        "Call for Refund Amount",
+                        "Wrong Enquiry or Spam Call",
+                        "Enquiry for Test Charges",
+                        "Accounts Department",
+                        "Call for Another Branches",
+                        "Call for IPD Doctors",
+                        "Call for Assistant Doctors",
+                        "Call Regarding Job Vacancy",
+                        "Appointment Consultation",
+                        "Online Consultation",
+                        "SX Cost Enquiry",
+                        "Call for Lab Test Enquiry",
+                        "Medicines Availability at Pharmacy",
+                        "Patient is Coming Late for Appointment",
+                        "Insurance Related Queries",
+                      ].map((type) => (
+                        <option key={type} value={type}>
+                          {type}
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+              </Row>
+              <Row>
+                <Col md={6}>
+                  <Form.Group className="mb-15">
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                      Patient Name{" "}
+                      <span style={{ color: "red" }} className="required">*</span>
+                    </Form.Label>
+                    <Form.Control
+                      size="sm"
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                      type="text"
+                      name="patient_name"
+                      value={enquiryForm.patient_name}
+                      onChange={handleEnquiryInputChange}
+                      placeholder="Enter Patient Name"
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group className="mb-2">
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                      Contact Number{" "}
+                      <span style={{ color: "red" }} className="required">*</span>
+                    </Form.Label>
+                    <Form.Control
+                      size="sm"
+                      style={{
+                        border: "2px solid rgb(77, 208, 225)",
+                        backgroundColor: "#f8f9fa",
+                        cursor: "not-allowed",
+                        fontSize: "12px"
+                      }}
+                      type="text"
+                      readOnly
+                      name="caller_no"
+                      placeholder="Enter Contact Number"
+                      value={selectedCallLog?.caller_no}
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group className="mb-15">
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                      Doctor Name
+                    </Form.Label>
+                    <Form.Select
+                      size="sm"
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                      name="doctor_id"
+                      value={enquiryForm.doctor_id}
+                      onChange={handleEnquiryInputChange}
+                    >
+                      <option value="">Select a Doctor</option>
+                      {doctors && doctors.length > 0 ? (
+                        doctors.map((doctor) => (
+                          <option key={doctor.doctor_id} value={doctor.doctor_id}>
+                            {doctor.doctor_id} - {doctor.name}
+                          </option>
+                        ))
+                      ) : (
+                        <option disabled>No doctors available</option>
+                      )}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group className="mb-2">
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                      FDE Name{" "}
+                      <span style={{ color: "red" }} className="required">*</span>
+                    </Form.Label>
+                    <Form.Select
+                      size="sm"
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                      name="FDE_Name"
+                      value={enquiryForm.FDE_Name}
+                      onChange={handleEnquiryInputChange}
+                    >
+                      <option value="">Select FDE Name</option>
+                      {fdeList &&
+                        fdeList.length > 0 &&
+                        fdeList.map((fde) => (
+                          <option key={fde.FDEID} value={String(fde.FDEID)}>
+                            {fde.FDEID} - {fde.FDEName}
+                          </option>
+                        ))}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+                <Col md={12}>
+                  <Form.Group className="mb-3">
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                      Note
+                    </Form.Label>
+                    <Form.Control
+                      size="sm"
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                      as="textarea"
+                      name="note"
+                      value={enquiryForm.note}
+                      onChange={handleEnquiryInputChange}
+                      rows={2} // Reduced rows to stay compact
+                      placeholder="Enter Note"
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+              <div className="d-flex justify-content-end pt-2">
+                <button
+                  style={{ borderRadius: "10px", fontSize: "12px" }}
+                  type="button"
+                  className="btn btn-danger btn-sm me-2 px-3"
+                  onClick={() => {
+                    setShowEnquiryModal(false);
+                    setEnquiryForm({
+                      date: "",
+                      enquirytype: "",
+                      patient_name: "",
+                      caller_no: "",
+                      FDE_Name: "",
+                      fdeId: "",
+                      note: "",
+                    });
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  style={{ borderRadius: "10px", fontSize: "12px", backgroundColor: "#00bcd4", borderColor: "#00bcd4" }}
+                  type="button"
+                  className="btn btn-primary btn-sm px-3"
+                  onClick={handleAddEnquirySubmit}
+                >
+                  Add Enquiry
+                </button>
+              </div>
+            </Form>
+          </div>
+        </Modal.Body>
       </Modal>
     </>
   );

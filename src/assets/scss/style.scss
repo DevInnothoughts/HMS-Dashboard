@@ -94,7 +94,7 @@
 .datatable-compact-style .p-datatable-thead>tr>th,
 .datatable-compact-style .p-datatable-tbody>tr>td {
   font-size: 12px;
-  padding: 0.5rem 0.5rem;
+  padding: 0.5rem 0rem;
   line-height: 1.2;
   color: #000000 !important;
 }
@@ -134,8 +134,8 @@
 }
 
 .btn-icon.btn-extra-small {
-  width: 40px;
-  height: 35px;
+  width: 35px;
+  height: 30px;
   padding: 0;
 }
 
@@ -157,6 +157,7 @@
 
 .custom-datepicker {
   border: 2px solid rgb(77, 208, 225) !important;
+  font-size: 12px;
 }
 
 .custom-datepicker:focus {
@@ -168,7 +169,31 @@
   border-radius: 10px !important;
 }
 
-.p-datatable .p-datatable-thead > tr > th {
-    background: none !important;
+.p-datatable .p-datatable-thead>tr>th {
+  background: none !important;
 }
 
+.react-datepicker-wrapper {
+  display: block !important;
+  width: 100% !important;
+}
+
+.custom-datepicker {
+  width: 100% !important;
+  height: 31px !important;
+  padding: 0.375rem 0.75rem !important;
+  line-height: 1.5 !important;
+  border: 2px solid rgb(77, 208, 225) !important;
+  font-size: 12px !important;
+  vertical-align: middle !important;
+}
+
+.react-datepicker__input-container {
+  display: block !important;
+}
+
+.datatable-medium-small .p-datatable-thead>tr>th,
+.datatable-medium-small .p-datatable-tbody>tr>td {
+  font-size: 0.730rem !important;
+  padding: 0.5rem 0.5rem !important;
+}

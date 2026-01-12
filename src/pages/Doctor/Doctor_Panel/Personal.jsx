@@ -291,17 +291,14 @@ export default function Personal() {
         break;
       case "old_ref":
         reference_type = `old_ref`;
-        ref = `${oldPatientDetails.patient_ref_no || ""},${
-          oldPatientDetails.old_patient_name || ""
-        },${oldPatientDetails.old_patient_id_value || ""},${
-          oldPatientDetails.old_patient_pincode || ""
-        }`;
+        ref = `${oldPatientDetails.patient_ref_no || ""},${oldPatientDetails.old_patient_name || ""
+          },${oldPatientDetails.old_patient_id_value || ""},${oldPatientDetails.old_patient_pincode || ""
+          }`;
         break;
       case "family_friends":
         reference_type = `family_friends`;
-        ref = `${referenceDetails.friendname || ""},${
-          referenceDetails.friendno || ""
-        }`;
+        ref = `${referenceDetails.friendname || ""},${referenceDetails.friendno || ""
+          }`;
         break;
       case "hhc_board":
         reference_type = "hhc_board";
@@ -587,7 +584,7 @@ export default function Personal() {
                   <Row>
                     <Col md={3} className="mb-4">
                       <Form.Group className="mb-3">
-                        <Form.Label>UID No</Form.Label>
+                        <Form.Label>UHID No</Form.Label>
                         <Form.Control
                           type="text"
                           name="Uid_no"
@@ -1012,7 +1009,7 @@ export default function Personal() {
                                   name="Strenuous (Physical Activity)"
                                   checked={
                                     workPatterns[
-                                      "Strenuous (Physical Activity)"
+                                    "Strenuous (Physical Activity)"
                                     ]
                                   }
                                   onChange={handleWorkPatternChange}
@@ -1349,104 +1346,104 @@ export default function Personal() {
                                 {/* Search Results Dropdown */}
                                 {(isSearchingPatient ||
                                   patientSearchResults.length > 0) && (
-                                  <div
-                                    className="search-results"
-                                    style={{
-                                      position: "absolute",
-                                      zIndex: 1000,
-                                      backgroundColor: "white",
-                                      border: "1px solid #ddd",
-                                      borderRadius: "4px",
-                                      maxHeight: "300px", // Increased height
-                                      overflowY: "auto",
-                                      width: "100%", // You can adjust this width as needed
-                                      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                                    }}
-                                  >
-                                    {isSearchingPatient && (
-                                      <div>Searching...</div>
-                                    )}
-                                    {patientSearchResults.length > 0 ? (
-                                      patientSearchResults.map(
-                                        (patient, index) => {
-                                          console.log(
-                                            "Rendering patient:",
-                                            patient
-                                          ); // ✅ Debug
-                                          return (
-                                            <div
-                                              key={index}
-                                              className="search-result-item"
-                                              style={{
-                                                display: "flex", // Makes the content horizontal
-                                                padding: "10px",
-                                                cursor: "pointer",
-                                                borderBottom: "1px solid #eee",
-                                                backgroundColor: "#fff",
-                                                alignItems: "center", // Ensures the items align vertically in the center
-                                                justifyContent: "space-between", // Spreads out the content evenly
-                                              }}
-                                              onClick={() => {
-                                                console.log(
-                                                  "Selected patient:",
-                                                  patient
-                                                ); // ✅ Debug
-                                                setOldPatientDetails({
-                                                  patient_ref_no:
-                                                    patient.phone || "", // Fill phone number here
-                                                  old_patient_name:
-                                                    patient.name || "",
-                                                  old_patient_id_value:
-                                                    patient.patient_id || "",
-                                                  old_patient_pincode:
-                                                    patient.pincode || "",
-                                                });
-                                                setPatientSearchResults([]); // Clear search results after selection
-                                              }}
-                                            >
+                                    <div
+                                      className="search-results"
+                                      style={{
+                                        position: "absolute",
+                                        zIndex: 1000,
+                                        backgroundColor: "white",
+                                        border: "1px solid #ddd",
+                                        borderRadius: "4px",
+                                        maxHeight: "300px", // Increased height
+                                        overflowY: "auto",
+                                        width: "100%", // You can adjust this width as needed
+                                        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                                      }}
+                                    >
+                                      {isSearchingPatient && (
+                                        <div>Searching...</div>
+                                      )}
+                                      {patientSearchResults.length > 0 ? (
+                                        patientSearchResults.map(
+                                          (patient, index) => {
+                                            console.log(
+                                              "Rendering patient:",
+                                              patient
+                                            ); // ✅ Debug
+                                            return (
                                               <div
+                                                key={index}
+                                                className="search-result-item"
                                                 style={{
-                                                  fontWeight: "bold",
-                                                  flex: 2,
-                                                  fontSize: "1.1em",
+                                                  display: "flex", // Makes the content horizontal
+                                                  padding: "10px",
+                                                  cursor: "pointer",
+                                                  borderBottom: "1px solid #eee",
+                                                  backgroundColor: "#fff",
+                                                  alignItems: "center", // Ensures the items align vertically in the center
+                                                  justifyContent: "space-between", // Spreads out the content evenly
+                                                }}
+                                                onClick={() => {
+                                                  console.log(
+                                                    "Selected patient:",
+                                                    patient
+                                                  ); // ✅ Debug
+                                                  setOldPatientDetails({
+                                                    patient_ref_no:
+                                                      patient.phone || "", // Fill phone number here
+                                                    old_patient_name:
+                                                      patient.name || "",
+                                                    old_patient_id_value:
+                                                      patient.patient_id || "",
+                                                    old_patient_pincode:
+                                                      patient.pincode || "",
+                                                  });
+                                                  setPatientSearchResults([]); // Clear search results after selection
                                                 }}
                                               >
-                                                {patient.name}
+                                                <div
+                                                  style={{
+                                                    fontWeight: "bold",
+                                                    flex: 2,
+                                                    fontSize: "1.1em",
+                                                  }}
+                                                >
+                                                  {patient.name}
+                                                </div>
+                                                <div
+                                                  style={{
+                                                    fontSize: "0.9em",
+                                                    color: "#666",
+                                                    flex: 1,
+                                                  }}
+                                                >
+                                                  Pincode: {patient.pincode}
+                                                </div>
+                                                <div
+                                                  style={{
+                                                    fontSize: "0.9em",
+                                                    color: "#666",
+                                                    flex: 1,
+                                                  }}
+                                                >
+                                                  Phone: {patient.phone}
+                                                </div>
                                               </div>
-                                              <div
-                                                style={{
-                                                  fontSize: "0.9em",
-                                                  color: "#666",
-                                                  flex: 1,
-                                                }}
-                                              >
-                                                Pincode: {patient.pincode}
-                                              </div>
-                                              <div
-                                                style={{
-                                                  fontSize: "0.9em",
-                                                  color: "#666",
-                                                  flex: 1,
-                                                }}
-                                              >
-                                                Phone: {patient.phone}
-                                              </div>
-                                            </div>
-                                          );
-                                        }
-                                      )
-                                    ) : (
-                                      <div
-                                        style={{
-                                          padding: "10px",
-                                          color: "#666",
-                                        }}
-                                      >
-                                        No patient found
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
+                                            );
+                                          }
+                                        )
+                                      ) : (
+                                        <div
+                                          style={{
+                                            padding: "10px",
+                                            color: "#666",
+                                          }}
+                                        >
+                                          No patient found
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
 
                                 {/* Patient Details Inputs */}
                                 {/* <Col md={4}>

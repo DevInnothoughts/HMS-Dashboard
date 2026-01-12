@@ -14,8 +14,7 @@ export default function NavBarA() {
   // const formattedDate = today.toLocaleDateString();
     const [time, setTime] = useState(new Date().toLocaleTimeString());
     const today = new Date();
-    // Format the date as dd/mm/yyyy
-    const formattedDate = today.toLocaleDateString("en-GB"); // Use 'en-GB' for dd/mm/yyyy format
+    const formattedDate = today.toLocaleDateString("en-GB"); 
   const location = useLocation();
 
   useEffect(() => {
@@ -26,7 +25,7 @@ export default function NavBarA() {
   }, []);
 
   return (
-    <div className="navbar-container">
+    <div className="navbar-container" style={{border: "1.5px solid #00bcd4",}}>
       <Container fluid>
         <div className="navbar-content">
           <nav className="breadcrumb-nav">
@@ -89,7 +88,6 @@ export default function NavBarA() {
               <span className="nav-icon">➕</span>
               Add Enquiry
             </Link>
-            
           </nav>
         </div>
       </Container>
@@ -99,10 +97,10 @@ export default function NavBarA() {
         {`
           .navbar-container {
             background: linear-gradient(135deg, #ffffff 0%, #f0f4f8 100%);
-            padding: 15px 12px;
+            padding: 10px 25px;
             border-radius: 16px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            margin: 12px;
+            margin: 15px;
             border: 1px solid rgba(255, 255, 255, 0.8);
           }
 
@@ -126,7 +124,7 @@ export default function NavBarA() {
           .nav-link {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 10px;
             text-decoration: none;
             color: #2c3e50;
             padding: 8px 14px;
