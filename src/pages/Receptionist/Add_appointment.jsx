@@ -1258,13 +1258,21 @@ export default function Add_appointment() {
               Swal.fire({
                 icon: "warning",
                 title: "Duplicate Appointment",
-                text: confirmData.message || "This patient already has a pending appointment.",
+                text: confirmData.message || "This patient already has a pending appointment. Please complete it first.",
                 confirmButtonColor: "#f39c12",
               });
-              setNoPendingAppt(false);
-              return;
+          
+              // Optionally: Stop the form from auto-filling or disable the submit button
+              setNoPendingAppt(false); // Or a specific state like setHasPendingAppt(true)
+              return; // Exit the function to prevent further processing
             }
             setNoPendingAppt(true);
+            if (!confirmResponse.ok) {
+              console.warn("Appointment confirmation fetch returned an error:", confirmResponse.status);
+            } else {
+              console.log("Eligibility check passed: No pending appointments.");
+            }
+          
           } catch (innerError) {
             console.error("Error in confirmation check API call:", innerError);
           }
@@ -1366,6 +1374,12 @@ export default function Add_appointment() {
     setIsExistingPatient(false);
     setErrors({});
     setType("");
+
+    // Success notification
+    Toast.fire({
+      icon: "success",
+      title: "Form reset successful",
+    });
   };
 
   useEffect(() => {
@@ -1466,11 +1480,15 @@ export default function Add_appointment() {
         countryCode: getCountryCode(formData.patient_phone),
       };
       try {
-        const response = await fetch(`${BASE_URL}/V1/appointment/addAppointment?location=${currentLocation}`, {
+        const response = await fetch(
+          `${BASE_URL}/V1/appointment/addAppointment?location=${currentLocation}`,
+          {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
-        });
+          }
+        );
+
         if (response.ok) {
           Swal.fire({ icon: "success", title: "Success!", text: "Appointment booked successfully." });
           handleReset();
