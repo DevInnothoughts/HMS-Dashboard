@@ -575,7 +575,7 @@ export default function All_patient() {
       date: patient.date || "",
       prefix: patient.prefix || "",
       name: patient.name || "",
-      patient_type: Boolean(patient.patient_type),
+      patient_type: patient.patient_type? 1 : 0,
       email: patient.email || "",
       address: patient.address || "",
       // country: patient.country || "",
