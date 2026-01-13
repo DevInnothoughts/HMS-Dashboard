@@ -1307,7 +1307,11 @@ export default function Appointment_list() {
                       name="appointmentTime"
                       value={selectedAppointment.appointmentTime || ""}
                       onChange={handleEditModalInputChange}
-                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                              style={{
+                                fontSize: "14px", borderRadius: "8px",
+                                border: "2px solid rgb(77, 208, 225)",
+                                padding: "6px"
+                              }}
                     >
                       <option value="">Select Time</option>
                       {timeSlots.map((time, index) => (
