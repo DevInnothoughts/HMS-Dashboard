@@ -54,7 +54,7 @@ const generateUID = () => {
   return `${Date.now()}`;
 };
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 export default function Add_Patient() {
   const [errors, setErrors] = useState({});

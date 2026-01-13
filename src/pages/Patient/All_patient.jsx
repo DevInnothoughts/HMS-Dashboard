@@ -24,7 +24,7 @@ import DatePicker from "react-datepicker";
 // import NavBarP from "../../components/NavbarP";
 import logo from "../../assets/images/3.png";
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const Toast = Swal.mixin({
   toast: true,
@@ -820,7 +820,7 @@ export default function All_patient() {
       patientName: formData.name,
       patient_phone: formData.phone,
       patient_id: formData.patient_id,
-      // patient_type: "FOLLOW",
+      // patient_type: "Follow",
       patient_type: formData.patient_type,
       appointment_time: formData.appointmentTime,
       FDE_Name: formData.FDE_Name,

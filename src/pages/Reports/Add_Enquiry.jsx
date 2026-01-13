@@ -52,7 +52,7 @@
 //   { value: "+34", label: "🇪🇸 Spain (+34)" },
 // ];
 
-// const BASE_URL = "http://localhost:5100/api";
+// const BASE_URL = "http://194.195.117.79:5100/api";
 // const formatDate = (date) => {
 //   const d = new Date(date);
 //   const day = String(d.getDate()).padStart(2, "0");
@@ -67,7 +67,7 @@
 //     date: formatDate(new Date()),
 //     doctorId: "",
 //     enquirytype: "",
-//     patient_type: "NEW",
+//     patient_type: "New",
 //     patient_name: "",
 //     patient_phone: "",
 //     time: new Date().toLocaleTimeString("en-US", {
@@ -150,7 +150,7 @@
 //       date: formatDate(new Date()),
 //       doctorId: "",
 //       enquirytype: "",
-//       patient_type: "NEW",
+//       patient_type: "New",
 //       patient_name: "",
 //       patient_phone: "",
 //       patient_location: "",
@@ -693,7 +693,7 @@ const countryCodes = [
   { value: "+34", label: "🇪🇸 Spain (+34)" },
 ];
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 const formatDate = (date) => {
   const d = new Date(date);
   const day = String(d.getDate()).padStart(2, "0");
@@ -708,7 +708,7 @@ export default function Add_Enquiry() {
     date: formatDate(new Date()),
     doctorId: "",
     enquirytype: "",
-    patient_type: "NEW",
+    patient_type: "New",
     patient_name: "",
     patient_phone: "",
     time: new Date().toLocaleTimeString("en-US", {
@@ -790,7 +790,7 @@ export default function Add_Enquiry() {
       date: formatDate(new Date()),
       doctorId: "",
       enquirytype: "",
-      patient_type: "NEW",
+      patient_type: "New",
       patient_name: "",
       patient_phone: "",
       patient_location: "",

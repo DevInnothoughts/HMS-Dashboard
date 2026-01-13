@@ -51,8 +51,8 @@ const NoteCell = ({ note }) => {
     </div>
   );
 };
-const BASE_URL = "http://localhost:5100/api";
-const TYPE_LIST = ["NEW", "FOLLOW-UP", "POST-OPERATIVE", "OTHER"];
+const BASE_URL = "http://194.195.117.79:5100/api";
+const TYPE_LIST = ["New", "Follow-UP", "POST-OPERATIVE", "OTHER"];
 const REFERENCE_OPTIONS = [
   "Family / Friends",
   "Referred By Another Doctor",
@@ -1923,7 +1923,7 @@ export default function Appointment_list() {
                       <option value="">Select Type</option>
                       {[
                         "CONSULTATION",
-                        "FOLLOW-UP",
+                        "Follow-UP",
                         "PROCTOSCOPY",
                         "MCDPA",
                         "COLON HYDROTHERAPY",
@@ -1943,7 +1943,7 @@ export default function Appointment_list() {
                         "MRI FISTULOGRAM",
                         "2D SCAN",
                         "LAB",
-                        "POSTOPERATIVE",
+                        "Postoperative",
                         "BLOOD TESTS + ECG",
                         "DIET",
                         "UROFLOWMETRY",
@@ -1954,7 +1954,7 @@ export default function Appointment_list() {
                         "MEDICINES",
                         "DRESSING",
                         "CYSTOSCOPY",
-                        "POST OPERATIVE FOLLOW UP",
+                        "POST OPERATIVE Follow UP",
                         "POST OPERATIVE DRESSING + CONSULTATION",
                       ].map((opt) => (
                         <option key={opt} value={opt}>

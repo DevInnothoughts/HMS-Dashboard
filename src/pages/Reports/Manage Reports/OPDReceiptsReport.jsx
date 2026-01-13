@@ -156,9 +156,9 @@ const OPDReceiptsReport = () => {
                           value={consultation}
                           onChange={(e) => setConsultation(e.target.value)}
                         >
-                          <option value="">NEW</option>
-                          <option value="General">FOLLOW</option>
-                          <option value="Specialist">POSTOPERATIVE</option>
+                          <option value="">New</option>
+                          <option value="General">Follow</option>
+                          <option value="Specialist">Postoperative</option>
                         </Form.Control>
                       </Form.Group>
                     </Col>

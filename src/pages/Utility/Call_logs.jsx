@@ -23,7 +23,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import "../../styles/styles.css";
 import { toast } from "react-hot-toast";
 
-export const BASE_URL = "http://localhost:5100/api";
+export const BASE_URL = "http://194.195.117.79:5100/api";
 
 const Toast = Swal.mixin({
   toast: true,
@@ -601,7 +601,7 @@ export default function Call_logs() {
       FDE_Name: fdeName,
       appointment_time: formData.appointmentTime,
       patient_phone: formData.caller_no,
-      patient_type: "NEW",
+      patient_type: "New",
       appointment_timestamp: moment(formData.date).format("YYYY-MM-DD"),
       doctorName: doctorName,
       doctor_id: formData.doctor_id,
@@ -659,7 +659,7 @@ export default function Call_logs() {
 
     const payload = {
       patient_location: currentLocation,
-      patient_type: "NEW",
+      patient_type: "New",
       date: moment(enquiryForm.date).format("YYYY-MM-DD"),
       doctor_id: enquiryForm.doctor_id || null,
       patient_name: enquiryForm.patient_name,
