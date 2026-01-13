@@ -9,7 +9,7 @@
 // // Define the hardcoded list directly for use
 // const LOCATIONS_LIST = ["hms", "pune", "demo"]; // Added a couple more for better list view
 
-// const BASE_URL = "http://194.195.117.79:5100/api"; // BASE_URL is still needed for the handleSubmit fetch
+// const BASE_URL = "http://localhost:5100/api"; // BASE_URL is still needed for the handleSubmit fetch
 
 // export default function Login() {
 //   const navigate = useNavigate();
@@ -334,6 +334,10 @@
 //   );
 // }
 
+
+
+
+
 import React, { useState } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
 import { Button, Form, Spinner } from "react-bootstrap";
@@ -383,9 +387,10 @@ const LOCATIONS_LIST = [
   "lead",
   "Pratiksha Local",
   "Demo Server",
+  "demo"
 ].sort();
 
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -453,6 +458,8 @@ export default function Login() {
         localStorage.setItem("isAuthenticated", "true");
         localStorage.setItem("accountType", data.data.role);
         localStorage.setItem("token", data.data.token);
+        localStorage.setItem("department", formData.department);
+        localStorage.setItem("jobLocation", formData.jobLocation);
 
         navigate("/reception-dashboard", { replace: true });
       } else {
@@ -496,17 +503,17 @@ export default function Login() {
         </div>
 
         <div style={formSectionStyle}>
-          <div style={{ textAlign: "center", marginBottom: "30px" }}>
+          <div style={{ textAlign: "center", marginBottom: "20px" }}>
             <p style={welcomeTitleStyle}>Hospital Management System</p>
             <h2 style={brandTaglineStyle}>Staff Login</h2>
 
             {errorMessage ? (
               <div style={errorBannerStyle}>
-                <strong>Login Failed:</strong> {errorMessage}
+                <strong>Login Failed</strong>
               </div>
             ) : (
               <p
-                style={{ color: "#718096", fontSize: "14px", marginTop: "5px" }}
+                style={{ color: "#718096", fontSize: "13px", marginTop: "5px" }}
               >
                 Enter your credentials to continue
               </p>
@@ -514,7 +521,7 @@ export default function Login() {
           </div>
 
           <Form onSubmit={handleSubmit}>
-            <Form.Group className="mb-10">
+            <Form.Group className="mb-13">
               <Form.Label style={labelStyle}>Department Type</Form.Label>
               <Form.Select
                 name="department"
@@ -528,7 +535,7 @@ export default function Login() {
               </Form.Select>
             </Form.Group>
 
-            <Form.Group className="mb-10">
+            <Form.Group className="mb-13">
               <Form.Label style={labelStyle}>Account Type</Form.Label>
               <Form.Select
                 name="accountType"
@@ -546,7 +553,7 @@ export default function Login() {
               </Form.Select>
             </Form.Group>
 
-            <Form.Group className="mb-10">
+            <Form.Group className="mb-13">
               <Form.Label style={labelStyle}>Clinic Location</Form.Label>
               <Form.Select
                 name="jobLocation"
@@ -563,7 +570,7 @@ export default function Login() {
               </Form.Select>
             </Form.Group>
 
-            <Form.Group className="mb-10">
+            <Form.Group className="mb-13">
               <Form.Label style={labelStyle}>Email Address</Form.Label>
               <Form.Control
                 type="email"
@@ -610,6 +617,9 @@ export default function Login() {
                       size="sm"
                       role="status"
                       aria-hidden="true"
+                      justifyContent="center"
+                      alignItems="center"
+
                     />
                   </>
                 ) : (
@@ -733,7 +743,7 @@ const logoStyle = {
 };
 
 const brandTaglineStyle = {
-  fontSize: "20px",
+  fontSize: "18px",
   fontWeight: "500",
   marginTop: "5px",
 };
@@ -758,19 +768,19 @@ const welcomeTitleStyle = {
   fontSize: "22px",
   fontWeight: "700",
   color: "#178aaeff",
-  marginBottom: "8px",
+  marginBottom: "5px",
 };
 
 const labelStyle = {
   fontSize: "13px",
   fontWeight: "600",
   color: "#415066ff",
-  marginBottom: "8px",
-  marginLeft: "3px",
+  marginBottom: "5px",
+  marginLeft: "2px",
 };
 
 const inputStyle = {
-  padding: "6px 15px",
+  padding: "5px 15px",
   borderRadius: "12px",
   border: "1px solid #6db8c2ff",
   backgroundColor: "#fafdff",

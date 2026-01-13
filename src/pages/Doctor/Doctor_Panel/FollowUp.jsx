@@ -4,7 +4,7 @@ import NavBarD from "./NavbarD";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://194.195.117.79:5100/api"; // Update with your backend API base URL
+const BASE_URL = "http://localhost:5100/api"; // Update with your backend API base URL
 
 export default function FollowUp() {
   const [patientId, setPatientId] = useState(
@@ -208,7 +208,7 @@ export default function FollowUp() {
                   <Row>
                     <Col md={4} className="mb-4">
                       <Form.Group className="mb-3">
-                        <Form.Label>UID No.</Form.Label>
+                        <Form.Label>UHID No.</Form.Label>
                         <Form.Control
                           type="text"
                           name="Uid_no"
@@ -417,7 +417,7 @@ export default function FollowUp() {
                         <DatePicker
                           selected={
                             formData?.firstVisitDate &&
-                            !isNaN(new Date(formData.firstVisitDate))
+                              !isNaN(new Date(formData.firstVisitDate))
                               ? new Date(formData.firstVisitDate)
                               : null
                           }

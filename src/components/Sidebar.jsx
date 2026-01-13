@@ -6,91 +6,6 @@ import FeatherIcon from "feather-icons-react";
 import { useSidebarContext } from "../pages/api/useSidebarContext";
 import logo from "/src/assets/images/logo/icon-logo.png";
 
-// const SidebarLinesCSS = () => (
-//   <style>{`
-
-//    .codex-sidebar {
-//   width: 250px;
-//   transition: all 0.3s ease;
-// }
-
-// /* Sidebar collapsed width */
-// .codex-sidebar.collapsed {
-//   width: 80px; /* Adjust based on your icon size */
-// }
-
-// /* Hide text and arrows when collapsed */
-// .codex-sidebar.collapsed span, 
-// .codex-sidebar.collapsed .fa-angle-down,
-// .codex-sidebar.collapsed h5,
-// .codex-sidebar.collapsed h4,
-// .codex-sidebar.collapsed .submenu-list {
-//   display: none !important;
-// }
-
-// /* Center icons when collapsed */
-// .codex-sidebar.collapsed .menu-item {
-//   text-align: center;
-//   padding-left: 0;
-// }
-
-// .codex-sidebar.collapsed .icon-item {
-//   margin-right: 0;
-//   display: block;
-
-//     .submenu-list {
-//       position: relative;
-//       list-style: none;
-//       margin-left: 25px !important;
-//       padding-left: 0 !important;
-//     }
-
-//     /* Vertical line */
-//     .submenu-list::before {
-//       content: "";
-//       position: absolute;
-//       top: 0;
-//       left: 0;
-//       width: 2px;
-//       height: 100%;
-//       background-color: #00aaff;
-//     }
-
-//     .submenu-list li {
-//       position: relative;
-//       padding-left: -9px; 
-//       line-height: 15px;
-//       margin-bottom: 6px;
-//     }
-
-//     /* Horizontal line */
-//     .submenu-list li::before {
-//       content: "";
-//       position: absolute;
-//       top: 50%;
-//       left: 0;
-//       width: 15px; 
-//       height: 1px;
-//       background-color: #00aaff;
-//       transform: translateY(-50%);
-//     }
-
-//     /* Cut vertical line exactly at last item */
-//     .submenu-list li:last-child::after {
-//       content: "";
-//       position: absolute;
-//       left: -1px;
-//       top: 50%;
-//       width: 4px;
-//       height: 100%;
-//       background-color: #fff;
-//     }
-
-//     .submenu-list li:hover::before {
-//       background-color: #3b82f6;
-//     }
-//   `}</style>
-// );
 
 const SidebarLinesCSS = () => (
   <style>{`
@@ -169,6 +84,8 @@ export default function Sidebar() {
   const location = useLocation();
   const [activeIndex, setActiveIndex] = useState(null);
   const accountType = localStorage.getItem("accountType");
+  const department = localStorage.getItem("department");
+  const jobLocation = localStorage.getItem("jobLocation");
   const { toggleSidebar, isCollapsed } = useSidebarContext();
 
   useEffect(() => {
@@ -179,152 +96,12 @@ export default function Sidebar() {
     setActiveIndex((prevPath) => (prevPath === path ? null : path));
   };
 
-  // const renderReceptionistMenu = () => (
-  //   <ul>
-  //     <li className="cdxmenu-title">
-  //       <h5>Receptionist</h5>
-  //     </li>
-
-  //     <li className={`menu-item ${activeIndex === "/" ? "active" : ""}`}>
-  //       <Link to="#" onClick={() => handleMenuClick("/")}>
-  //         <div className="icon-item">
-  //           <FeatherIcon icon="grid" />
-  //         </div>
-  //         <span>Dashboard</span>
-  //         <i className="fa fa-angle-down"></i>
-  //       </Link>
-  //       <ul
-  //         className="submenu-list"
-  //         style={{ display: activeIndex === "/" ? "block" : "none" }}
-  //       >
-  //         {/* <li>
-  //           <Link to="/">Hospital Dashboard</Link>
-  //         </li> */}
-  //         <li>
-  //           <Link to="/reception-dashboard"> Rep. Dashboard</Link>
-  //         </li>
-  //         {/* <li>
-  //           <Link to="/doctor/schedule">Doctor Schedule</Link>
-  //         </li> */}
-  //         {/* <li>
-  //           <Link to="/dashboard3">Patient Dashboard</Link>
-  //         </li> */}
-  //       </ul>
-  //     </li>
-
-  //     <li
-  //       className={`menu-item ${
-  //         activeIndex === "/patients" ? "active" : ""
-  //       }`}
-  //     >
-  //       <Link to="/patients">
-  //         <div className="icon-item">
-  //           <i className="fa fa-wheelchair"></i>
-  //         </div>
-  //         Patients
-  //       </Link>
-  //     </li>
-
-  //     <li
-  //       className={`menu-item ${activeIndex === "/call-logs" ? "active" : ""}`}
-  //     >
-  //       <Link to="/call-logs">
-  //         <div className="icon-item">
-  //           <i className="fa fa-phone"></i>
-  //         </div>
-  //         Call Logs
-  //       </Link>
-  //     </li>
-
-  //     <li
-  //       className={`menu-item ${
-  //         activeIndex === "/appointments" ? "active" : ""
-  //       }`}
-  //     >
-  //       <Link to="/appointments">
-  //         <div className="icon-item">
-  //           <i className="fa fa-calendar"></i>
-  //         </div>
-  //         Manage Appointments
-  //       </Link>
-  //     </li>
-
-  //     <li
-  //       className={`menu-item ${
-  //         activeIndex === "/invoices" ? "active" : ""
-  //       }`}
-  //     >
-  //       <Link to="/invoices">
-  //         <div className="icon-item">
-  //           <FeatherIcon icon="file-text" />
-  //         </div>
-  //         Invoice List
-  //       </Link>
-  //     </li>
-
-  //     <li
-  //       className={`menu-item ${
-  //         activeIndex === "/manage-reports" ? "active" : ""
-  //       }`}
-  //     >
-  //       <Link to="#" onClick={() => handleMenuClick("/manage-reports")}>
-  //         <div className="icon-item">
-  //           <i className="fa fa-list-alt"></i>
-  //         </div>
-  //         Manage Reports
-  //         <i className="fa fa-angle-down"></i>
-  //       </Link>
-  //       <ul
-  //         className="submenu-list"
-  //         style={{
-  //           display: activeIndex === "/manage-reports" ? "block" : "none",
-  //         }}
-  //       >
-  //         <li>
-  //           <Link to="/dailyOPDReport">Daily OPD Report</Link>
-  //         </li>
-  //         <li>
-  //           <Link to="/birthdayAlert">Birthday Alert</Link>
-  //         </li>
-  //         <li>
-  //           <Link to="/appointmentConversion">Appointment Conversion</Link>
-  //         </li>
-  //         <li>
-  //           <Link to="/enquiryConversation">Enquiry Conversation</Link>
-  //         </li>
-  //         <li>
-  //           <Link to="/enquiryData">Enquiry Data</Link>
-  //         </li>
-  //         <li>
-  //           <Link to="/oPDReceiptsReport">OPD Receipts Report</Link>
-  //         </li>
-  //         <li>
-  //           <Link to="/BillingReport">Billing Report</Link>
-  //         </li>
-  //         <li>
-  //           <Link to="/IPDCollectionReport">IPD Collection Report</Link>
-  //         </li>
-  //         <li>
-  //           <Link to="/referenceReport"> Reference Report</Link>
-  //         </li>
-  //         <li>
-  //           <Link to="/conditionWiseReport">Condition Wise Report</Link>
-  //         </li>
-  //         <li>
-
-  //           </li>
-  //       </ul>
-  //     </li>
-  //   </ul>
-  // );
-
-  const renderReceptionistMenu = () => (
+  const renderIPDReceptionDemoMenu = () => (
     <ul>
       <li className="cdxmenu-title">
-        <h5>Receptionist</h5>
+        <h5>Receptionist(IPD)</h5>
       </li>
 
-      {/* Updated Dashboard Item: No submenu, direct link */}
       <li className={`menu-item ${activeIndex === "/reception-dashboard" ? "active" : ""}`}>
         <Link to="/reception-dashboard">
           <div className="icon-item">
@@ -334,26 +111,61 @@ export default function Sidebar() {
         </Link>
       </li>
 
-      {/* <li
-        className={`menu-item ${activeIndex === "/patients" ? "active" : ""
-          }`}
-      >
+      <li className={`menu-item ${activeIndex === "/search-by" ? "active" : ""}`}>
+        <Link to="/search-by">
+          <div className="icon-item">
+            <i className="fa fa-search"></i>
+          </div>
+          {!isCollapsed && <span>Search By</span>}
+        </Link>
+      </li>
+
+      <li className={`menu-item ${activeIndex === "/manage-admission" ? "active" : ""}`}>
+        <Link to="/manage-admission">
+          <div className="icon-item">
+            <i className="fa fa-hospital-o"></i>
+          </div>
+          {!isCollapsed && <span>Manage Admission</span>}
+        </Link>
+      </li>
+
+
+      <li className={`menu-item ${activeIndex === "/surgery" ? "active" : ""}`}>
+        <Link to="/surgery">
+          <div className="icon-item">
+            <i className="fa fa-stethoscope"></i>
+          </div>
+          {!isCollapsed && <span>Surgery</span>}
+        </Link>
+      </li>
+
+
+    </ul>
+  );
+
+  const renderReceptionistMenu = () => (
+    <ul>
+      <li className="cdxmenu-title">
+        <h5>Receptionist</h5>
+      </li>
+
+      <li className={`menu-item ${activeIndex === "/reception-dashboard" ? "active" : ""}`}>
+        <Link to="/reception-dashboard">
+          <div className="icon-item">
+            <FeatherIcon icon="grid" />
+          </div>
+          <span>Dashboard</span>
+        </Link>
+      </li>
+
+      <li className={`menu-item ${activeIndex === "/patients" ? "active" : ""}`}>
         <Link to="/patients">
           <div className="icon-item">
             <i className="fa fa-wheelchair"></i>
           </div>
-          Patients
+          {!isCollapsed && <span>Patients</span>}
         </Link>
-      </li> */}
-
-      <li className={`menu-item ${activeIndex === "/patients" ? "active" : ""}`}>
-  <Link to="/patients">
-    <div className="icon-item">
-      <i className="fa fa-wheelchair"></i>
-    </div>
-    {!isCollapsed && <span>Patients</span>}
-  </Link>
-</li>
+      </li>
 
       <li
         className={`menu-item ${activeIndex === "/call-logs" ? "active" : ""}`}
@@ -362,7 +174,7 @@ export default function Sidebar() {
           <div className="icon-item">
             <i className="fa fa-phone"></i>
           </div>
-            {!isCollapsed && <span>Call Logs</span>}
+          {!isCollapsed && <span>Call Logs</span>}
         </Link>
       </li>
 
@@ -477,13 +289,22 @@ export default function Sidebar() {
     </ul>
   );
 
+  const renderContent = () => {
+    if (department === "IPD" && accountType === "reception" && jobLocation === "demo") {
+      return renderIPDReceptionDemoMenu();
+    }
+    if (accountType === "doctor") {
+      return renderDoctorMenu();
+    }
+    return renderReceptionistMenu();
+  };
+
   return (
     <div className={`codex-sidebar ${isCollapsed ? "collapsed" : ""}`}>
       <SidebarLinesCSS />
       <div className="logo-gridwrap">
         <Link className="lightlogo" to="/">
           <img className="img-fluid" src={logo} alt="sidebar-lightlogo" />
-          {/* 3. Hide the text when collapsed */}
           {!isCollapsed && <span className="ms-2">HMS</span>}
         </Link>
         <div className="sidebar-action" onClick={toggleSidebar}>
@@ -492,9 +313,7 @@ export default function Sidebar() {
       </div>
 
       <SimpleBar className="codex-menu">
-        {accountType === "doctor"
-          ? renderDoctorMenu()
-          : renderReceptionistMenu()}
+        {renderContent()}
       </SimpleBar>
     </div>
   );

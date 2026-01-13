@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useCallback } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
@@ -27,7 +26,7 @@ import logo from "../../assets/images/3.png";
 import labLogo from "../../assets/images/1.png";
 import pharmacyLogo from "../../assets/images/2.png";
 import receiptLogo from "../../assets/images/4.png";
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 const LOCATION = "demo";
 
 const Toast = Swal.mixin({
@@ -480,7 +479,7 @@ export default function ReceiptList() {
             <span
               style={{
                 marginRight: "8px",
-                fontSize: "13px",
+                fontSize: "12px",
                 fontWeight: "bold",
                 color: "#333",
               }}
@@ -496,7 +495,7 @@ export default function ReceiptList() {
               }}
               style={{
                 width: "70px",
-                height: "40px",
+                height: "30px",
                 border: "1px solid #4dd0e1",
                 borderRadius: "6px",
                 fontSize: "12px",
@@ -515,7 +514,7 @@ export default function ReceiptList() {
             <span
               style={{
                 marginRight: "10px",
-                fontSize: "13px",
+                fontSize: "12px",
                 fontWeight: "bold",
                 color: "#333",
               }}
@@ -540,7 +539,7 @@ export default function ReceiptList() {
                   border: "1px solid #4dd0e1",
                   padding: "5px 8px",
                   width: "200px",
-                  height: "40px",
+                  height: "30px",
                   fontSize: "12px",
                   transition: "all 0.3s ease",
                 }}
@@ -691,7 +690,7 @@ export default function ReceiptList() {
                       responsiveLayout="scroll"
                       paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
                       currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
-                      className="datatable-compact-style"
+                      className="datatable-compact-style datatable-medium-small"
                       rowClassName={(rowData, { rowIndex }) => ({
                         style: {
                           backgroundColor:

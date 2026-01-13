@@ -7,7 +7,6 @@ import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import FeatherIcon from "feather-icons-react";
-import { FaUserMd } from "react-icons/fa";
 import {
   Container,
   Row,
@@ -24,8 +23,52 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import moment from "moment";
 
-const BASE_URL = "http://194.195.117.79:5100/api";
-const TYPE_LIST = ["New", "Follow", "Postoperative"];
+const NoteCell = ({ note }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  if (!note) return <span>-</span>;
+
+  const noteStyle = {
+    // Original styles from your file
+    whiteSpace: isExpanded ? "normal" : "nowrap",
+    textAlign: "center",
+    fontSize: "12px",
+    // Logic to hide overflow
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    maxWidth: "125px", // Match your column width
+    cursor: "pointer",
+    display: "block"
+  };
+
+  return (
+    <div
+      onClick={() => setIsExpanded(!isExpanded)}
+      title={!isExpanded ? "Click to expand" : "Click to collapse"}
+      style={noteStyle}
+    >
+      {note}
+    </div>
+  );
+};
+const BASE_URL = "http://localhost:5100/api";
+const TYPE_LIST = ["NEW", "FOLLOW-UP", "POST-OPERATIVE", "OTHER"];
+const REFERENCE_OPTIONS = [
+  "Family / Friends",
+  "Referred By Another Doctor",
+  "Referred By Another Patient",
+  "Internet",
+  "Social Media",
+  "Entertainment Media",
+  "TV Show",
+  "Newspaper / Magazine",
+  "Awareness Lecture",
+  "HHC Board on building",
+  "I was treated here in past ",
+  "Healing Hands Clinic Branch",
+  "Aggregators",
+  "Other"
+];
 
 const Toast = Swal.mixin({
   toast: true,
@@ -39,23 +82,107 @@ const Toast = Swal.mixin({
   },
 });
 
+// const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
+//   const defaultBg = "#f1f1f1";
+//   const defaultBorder = "#000000ff";
+//   const defaultColor = "#555";
+//   const isDanger = title === "Cancel";
+//   const isConfirm = title === "Confirm";
+//   const isReceipt = title === "Receipts";
+
+//   const baseStyle = {
+//     padding: "4px 6px",
+//     minWidth: "35px",
+//     borderRadius: "4px",
+//     border: `1px solid ${disabled ? "#ddd" : isDanger ? "#dc3545" : defaultBorder
+//       }`,
+//     backgroundColor: disabled ? "#f8f9fa" : isConfirm ? "#e6f7ea" : defaultBg,
+//     color: disabled ? "#aaa" : isDanger ? "#dc3545" : defaultColor,
+//     cursor: disabled ? "not-allowed" : "pointer",
+//     transition: "all 0.2s ease-in-out",
+//     display: "flex",
+//     alignItems: "center",
+//     justifyContent: "center",
+//     boxShadow: disabled ? "none" : "0 1px 3px rgba(0,0,0,0.05)",
+//     opacity: disabled ? 0.6 : 1,
+//     ...props.style,
+//   };
+
+//   const iconColor = disabled
+//     ? "#aaa"
+//     : isDanger
+//       ? "#dc3545"
+//       : isReceipt
+//         ? "#007bff"
+//         : defaultColor;
+
+//   const iconStyle = {
+//     margin: "2px",
+//     width: "18px",
+//     height: "18px",
+//     stroke: iconColor,
+//   };
+
+//   const handleMouseOver = (e) => {
+//     if (!disabled) {
+//       e.currentTarget.style.backgroundColor = isDanger ? "#c82333" : "#e0e0e0";
+//       e.currentTarget.children[0].style.stroke = "white";
+//       e.currentTarget.style.color = isDanger ? "white" : defaultColor;
+//       e.currentTarget.style.border = `1px solid ${isDanger ? "#c82333" : "#b0b0b0"
+//         }`;
+//     }
+//   };
+
+//   const handleMouseOut = (e) => {
+//     if (!disabled) {
+//       e.currentTarget.style.backgroundColor = isConfirm ? "#e6f7ea" : defaultBg;
+//       e.currentTarget.children[0].style.stroke = iconColor;
+//       e.currentTarget.style.border = `1px solid ${isDanger ? "#dc3545" : defaultBorder
+//         }`;
+//     }
+//   };
+
+//   return (
+//     <button
+//       title={title}
+//       onClick={onClick}
+//       disabled={disabled}
+//       style={baseStyle}
+//       onMouseOver={handleMouseOver}
+//       onMouseOut={handleMouseOut}
+//     >
+//       <FeatherIcon icon={icon} style={iconStyle} />
+//     </button>
+//   );
+// };
+
 const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
   const defaultBg = "#f1f1f1";
-  const defaultBorder = "#ccc";
+  const defaultBorder = "#000000ff";
   const defaultColor = "#555";
   const isDanger = title === "Cancel";
   const isConfirm = title === "Confirm";
-  const isReceipt = title === "Receipts";
+  const isEdit = title === "Edit";
+  const isBlueAction = ["Receipts", "History", "Executive", "Consultation"].includes(title);
 
   const baseStyle = {
-    padding: "4px 6px",
-    minWidth: "35px",
+    padding: "1px 3px",
+    minWidth: "33px",
     borderRadius: "4px",
-    border: `1px solid ${
-      disabled ? "#ddd" : isDanger ? "#dc3545" : defaultBorder
-    }`,
-    backgroundColor: disabled ? "#f8f9fa" : isConfirm ? "#e6f7ea" : defaultBg,
-    color: disabled ? "#aaa" : isDanger ? "#dc3545" : defaultColor,
+    border: `1px solid ${disabled ? "#ddd" :
+      isDanger ? "#dc3545" :
+        isEdit ? "#007bff" :
+          isConfirm ? "#28a745" :
+            isBlueAction ? "#0babb9ff" :
+              defaultBorder
+      }`,
+    backgroundColor: disabled ? "#f8f9fa" : defaultBg,
+    color: disabled ? "#aaa" :
+      isDanger ? "#dc3545" :
+        isEdit ? "#007bff" :
+          isConfirm ? "#28a745" :
+            isBlueAction ? "#0e8fb6ff" :
+              defaultColor,
     cursor: disabled ? "not-allowed" : "pointer",
     transition: "all 0.2s ease-in-out",
     display: "flex",
@@ -66,13 +193,12 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
     ...props.style,
   };
 
-  const iconColor = disabled
-    ? "#aaa"
-    : isDanger
-    ? "#dc3545"
-    : isReceipt
-    ? "#007bff"
-    : defaultColor;
+  const iconColor = disabled ? "#aaa" :
+    isDanger ? "#dc3545" :
+      isEdit ? "#007bff" :
+        isConfirm ? "#28a745" :
+          isBlueAction ? "#0d81b7ff" :
+            defaultColor;
 
   const iconStyle = {
     margin: "2px",
@@ -83,22 +209,43 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
 
   const handleMouseOver = (e) => {
     if (!disabled) {
-      e.currentTarget.style.backgroundColor = isDanger ? "#c82333" : "#e0e0e0";
-      e.currentTarget.children[0].style.stroke = "white";
-      e.currentTarget.style.color = isDanger ? "white" : defaultColor;
-      e.currentTarget.style.border = `1px solid ${
-        isDanger ? "#c82333" : "#b0b0b0"
-      }`;
+      e.currentTarget.style.backgroundColor =
+        isDanger ? "#c82333" :
+          isEdit ? "#007bff" :
+            isConfirm ? "#218838" :
+              isBlueAction ? "#15cbd8ff" : "#e0e0e0";
+
+      e.currentTarget.style.border = `1px solid ${isDanger ? "#c82333" :
+        isEdit ? "#007bff" :
+          isConfirm ? "#218838" :
+            isBlueAction ? "#007bff" : "#b0b0b0"
+        }`;
+
+      e.currentTarget.style.color = "white";
+      if (e.currentTarget.children[0]) {
+        e.currentTarget.children[0].style.stroke = "white";
+      }
     }
   };
 
   const handleMouseOut = (e) => {
     if (!disabled) {
-      e.currentTarget.style.backgroundColor = isConfirm ? "#e6f7ea" : defaultBg;
-      e.currentTarget.children[0].style.stroke = iconColor;
-      e.currentTarget.style.border = `1px solid ${
-        isDanger ? "#dc3545" : defaultBorder
-      }`;
+      e.currentTarget.style.backgroundColor = defaultBg;
+      e.currentTarget.style.color =
+        isDanger ? "#dc3545" :
+          isEdit ? "#007bff" :
+            isConfirm ? "#28a745" :
+              isBlueAction ? "#23adb2ff" : defaultColor;
+
+      e.currentTarget.style.border = `1px solid ${isDanger ? "#dc3545" :
+        isEdit ? "#007bff" :
+          isConfirm ? "#28a745" :
+            isBlueAction ? "#007bff" : defaultBorder
+        }`;
+
+      if (e.currentTarget.children[0]) {
+        e.currentTarget.children[0].style.stroke = iconColor;
+      }
     }
   };
 
@@ -202,7 +349,6 @@ export default function Appointment_list() {
       const result = await response.json();
       // console.log("SaVE receipt : ",result);
       if (result.statusCode === 201 || result.statusCode === 200) {
-        // This handles 200/201 (Cash/Instant Success)
         Swal.fire("Success", "Receipt Generated Successfully", "success");
         setShowReceiptModal(false);
         navigate("/reports/receipts");
@@ -210,7 +356,6 @@ export default function Appointment_list() {
         result.statusCode === 202 &&
         (result.data?.result === "success" || result.data?.stat === "success")
       ) {
-        // This handles the "Pending Digital" case
         // showPaymentPendingPopup(result.data.transaction_id, payload, result.data.pos_tid);
         showPaymentPendingPopup(
           result.data.transaction_id,
@@ -273,7 +418,6 @@ export default function Appointment_list() {
       confirmButtonColor: "#00bcd4",
       cancelButtonColor: "#cfd8dc",
       showLoaderOnConfirm: true,
-      // preConfirm handles the manual status check
       preConfirm: async () => {
         try {
           console.log(
@@ -287,9 +431,9 @@ export default function Appointment_list() {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                receiptData: originalPayload, // Wrap this so backend can destructure easily
+                receiptData: originalPayload,
                 reference_id: referenceId,
-                transaction_id: originalPayload.transaction_id, // From backend initiation
+                transaction_id: originalPayload.transaction_id,
                 PosMachine: originalPayload.PosMachine,
                 MachineType: originalPayload.MachineType,
               }),
@@ -298,7 +442,6 @@ export default function Appointment_list() {
 
           const result = await response.json();
           // console.log("status check backend response: ", result);
-          // Logic check: Backend ApiResponse usually has statusCode or success property
           if (response.ok && (result.success || result.statusCode === 201)) {
             return result;
           } else {
@@ -322,7 +465,6 @@ export default function Appointment_list() {
         setShowReceiptModal(false);
         navigate("/receipt-list");
       } else if (result.dismiss === Swal.DismissReason.cancel) {
-        // Show a confirm dialog specifically for cancellation to prevent accidental clicks
         const confirmCancel = await Swal.fire({
           title: "Are you sure?",
           text: "This will stop the payment request on the machine.",
@@ -348,12 +490,12 @@ export default function Appointment_list() {
             // console.log(cancelResult);
             if (cancelResult?.success || cancelResult?.status) {
               await Swal.fire("Cancelled", "POS request stopped.", "success");
-              setShowReceiptModal(false); // Close the main billing modal
+              setShowReceiptModal(false);
             } else {
               Swal.fire(
                 "Error",
                 cancelResult?.message ||
-                  "Remote cancel failed. Please cancel manually on machine.",
+                "Remote cancel failed. Please cancel manually on machine.",
                 "error"
               );
             }
@@ -361,7 +503,6 @@ export default function Appointment_list() {
             Swal.fire("Error", "Server error during cancellation", "error");
           }
         } else {
-          // If they click 'No, Wait', re-open the pending popup
           showPaymentPendingPopup(referenceId, originalPayload, apidata);
         }
       }
@@ -470,6 +611,9 @@ export default function Appointment_list() {
           endpoints.map((url) => fetch(url).then((res) => res.json()))
         );
 
+      console.log("Current Location:", currentLocation);
+      console.log("FDE API Full Response:", fdeResponse);
+
       setConsultationList(
         Array.isArray(consultationResponse.data)
           ? consultationResponse.data
@@ -571,12 +715,23 @@ export default function Appointment_list() {
   const handleDelete = async () => {
     if (!appointmentIdToDelete) return;
 
+    if (!cancellationReason.trim()) {
+      Swal.fire({
+        icon: "warning",
+        title: "Reason Required",
+        text: "Please provide a reason for cancellation before submitting.",
+        confirmButtonColor: "#1a5b61ff",
+      });
+      return;
+    }
+
     try {
       const response = await fetch(
         `${BASE_URL}/V1/appointment/delete/${appointmentIdToDelete}?location=${currentLocation}`,
         {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ reason: cancellationReason })
         }
       );
 
@@ -607,6 +762,7 @@ export default function Appointment_list() {
       console.error("Network Error:", error);
     }
   };
+
   const handleProcessUpdate = async (
     appId,
     endpoint,
@@ -814,8 +970,8 @@ export default function Appointment_list() {
     >
       <div
         style={{
-          width: "12px",
-          height: "12px",
+          width: "11px",
+          height: "11px",
           borderRadius: "3px",
           backgroundColor: bgColor,
           border: "1px solid #ccc",
@@ -826,7 +982,7 @@ export default function Appointment_list() {
         style={{
           display: "inline",
           margin: 0,
-          fontSize: "14px",
+          fontSize: "12px",
           color: "#000",
         }}
       >
@@ -859,7 +1015,7 @@ export default function Appointment_list() {
             <span
               style={{
                 marginRight: "8px",
-                fontSize: "13px",
+                fontSize: "12px",
                 fontWeight: "bold",
                 color: "#333",
               }}
@@ -871,11 +1027,11 @@ export default function Appointment_list() {
               value={rows}
               onChange={(e) => {
                 setRows(parseInt(e.target.value));
-                setFirst(0); // Reset to first page when changing row count
+                setFirst(0);
               }}
               style={{
                 width: "70px",
-                height: "40px",
+                height: "30px",
                 border: "1px solid #4dd0e1",
                 borderRadius: "6px",
                 fontSize: "12px",
@@ -894,7 +1050,7 @@ export default function Appointment_list() {
             <span
               style={{
                 marginRight: "10px",
-                fontSize: "13px",
+                fontSize: "12px",
                 fontWeight: "bold",
                 color: "#333",
               }}
@@ -919,7 +1075,7 @@ export default function Appointment_list() {
                   border: "1px solid #4dd0e1",
                   padding: "5px 8px",
                   width: "200px",
-                  height: "40px",
+                  height: "30px",
                   fontSize: "12px",
                   transition: "all 0.3s ease",
                 }}
@@ -1000,7 +1156,7 @@ export default function Appointment_list() {
               cursor: "pointer",
               transition: "all 0.3s ease",
               boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              marginTop: "13px",
+              marginTop: "15px",
               ":hover": {
                 backgroundColor: "#00acc1",
                 transform: "translateY(-1px)",
@@ -1008,7 +1164,7 @@ export default function Appointment_list() {
               },
             }}
           >
-            <FeatherIcon icon="refresh-ccw" size={13} className="me-2" />
+            <FeatherIcon icon="refresh-ccw" size={12} className="me-1" />
             Refresh
           </Button>
         </div>
@@ -1061,12 +1217,26 @@ export default function Appointment_list() {
         onHide={() => setShowDeleteModal(false)}
         centered
       >
-        <Modal.Header closeButton>
-          <Modal.Title>Reason of Cancellation</Modal.Title>
+        <Modal.Header style={{
+            backgroundColor: "#e0f7fa",
+            borderBottom: "2px solid #00bcd4",
+            padding: "10px 15px",
+          }}closeButton>
+          <Modal.Title  style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px"}}>
+            <FeatherIcon
+              className="me-2"
+              icon="trash"
+              size="17"
+              style={{ color: "#1a5b61ff" }}
+            />Reason of Cancellation <span className="text-danger">*</span></Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p>Appointment ID: **{appointmentIdToDelete}**</p>
           <textarea
+            style={{
+              fontSize: "12px", borderRadius: "10px",
+              border: "2px solid rgb(77, 208, 225)",
+              padding: "6px"
+            }}
             className="form-control"
             placeholder="Enter the cancellation reason..."
             rows="4"
@@ -1075,11 +1245,14 @@ export default function Appointment_list() {
           ></textarea>
         </Modal.Body>
 
-        <Modal.Footer>
-          <Button variant="danger" onClick={handleDelete}>
+           <div className="d-flex justify-content-end">
+          <Button variant="danger"
+                size="sm"
+                className="me-2 px-3 mb-5"
+                style={{ borderRadius: "10px", fontSize: "12px", padding: "10px" }}onClick={handleDelete}>
             Submit & Cancel
           </Button>
-        </Modal.Footer>
+        </div>
       </Modal>
 
       <Modal
@@ -1088,21 +1261,72 @@ export default function Appointment_list() {
         size="lg"
         centered
       >
-        <Modal.Header closeButton>
-          <Modal.Title>Edit Appointment</Modal.Title>
+        <Modal.Header style={{
+            backgroundColor: "#e0f7fa",
+            borderBottom: "2px solid #00bcd4",
+            padding: "10px 15px",
+          }} closeButton>
+          <Modal.Title style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}>
+            <FeatherIcon
+              className="me-2"
+              icon="edit"
+              size="18"
+              style={{ color: "#1a5b61ff" }}
+            />Edit Appointment</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {selectedAppointment ? (
             <Form>
               <Row>
+                <Col md={4}>
+                  <Form.Group className="mb-15">
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                      Appointment Date
+                    </Form.Label>
+                    <DatePicker
+                      selected={
+                        selectedAppointment.appointment_timestamp
+                          ? new Date(selectedAppointment.appointment_timestamp)
+                          : null
+                      }
+                      onChange={handleDateChange}
+                      dateFormat="dd-MM-yyyy"
+                      className="form-control custom-datepicker"
+                      placeholderText="Select Date"
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px", }}
+                    />
+                  </Form.Group>
+                </Col>
+
+                <Col md={4}>
+                  <Form.Group className="mb-2">
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                      Appointment Time
+                    </Form.Label>
+                    <Form.Select
+                      name="appointmentTime"
+                      value={selectedAppointment.appointmentTime || ""}
+                      onChange={handleEditModalInputChange}
+                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                    >
+                      <option value="">Select Time</option>
+                      {timeSlots.map((time, index) => (
+                        <option key={index} value={time}>
+                          {time}
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+
                 <Col md={4} className="mb-2">
                   <Form.Group className="mb-2">
-                    <Form.Label style={{ fontSize: "14px" }}>Type</Form.Label>
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>Patient Type</Form.Label>
                     <Form.Select
                       name="patient_type"
                       value={selectedAppointment.patient_type || ""}
                       onChange={handleEditModalInputChange}
-                      style={{ fontSize: "14px" }}
+                     style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
                     >
                       <option value="">Select Type</option>
                       {TYPE_LIST.map((type, index) => (
@@ -1115,15 +1339,22 @@ export default function Appointment_list() {
                 </Col>
 
                 <Col md={4}>
-                  <Form.Group className="mb-2">
-                    <Form.Label style={{ fontSize: "14px" }}>
+                  <Form.Group className="mb-15">
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
                       Doctor Name
                     </Form.Label>
                     <Form.Select
                       name="doctorName"
                       value={selectedAppointment.doctorName || ""}
-                      onChange={handleEditModalInputChange}
-                      style={{ fontSize: "14px" }}
+                      onChange={(e) => {
+                        const selectedDoc = doctors.find(doc => doc.name === e.target.value);
+                        setSelectedAppointment(prev => ({
+                          ...prev,
+                          doctorName: e.target.value,
+                          doctor_id: selectedDoc ? selectedDoc.doctor_id : prev.doctor_id
+                        }));
+                      }}
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
                     >
                       <option value="">Select a Doctor</option>
                       {doctors.map((doctor) => (
@@ -1137,82 +1368,139 @@ export default function Appointment_list() {
 
                 <Col md={4}>
                   <Form.Group className="mb-2">
-                    <Form.Label style={{ fontSize: "14px" }}>
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
                       Patient Name
                     </Form.Label>
                     <Form.Control
                       type="text"
                       name="patientName"
-                      value={selectedAppointment.patientName || ""}
-                      onChange={handleEditModalInputChange}
-                      style={{ fontSize: "14px" }}
+                      value={selectedAppointment.patient_name || ""}
+                      readOnly
+                      style={{
+                        fontSize: "12px",
+                        borderRadius: "9px",
+                        border: "2px solid rgb(77, 208, 225)",
+                        backgroundColor: "#e7ebebff",
+                        cursor: "not-allowed"
+                      }}
                     />
                   </Form.Group>
                 </Col>
 
                 <Col md={4}>
-                  <Form.Group className="mb-2">
-                    <Form.Label style={{ fontSize: "14px" }}>
-                      Contact No
+                  <Form.Group>
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                      Contact Number
                     </Form.Label>
                     <Form.Control
                       type="text"
                       name="patient_phone"
                       value={selectedAppointment.patient_phone || ""}
+                      readOnly
+                      style={{
+                        fontSize: "12px",
+                        borderRadius: "9px",
+                        border: "2px solid rgb(77, 208, 225)",
+                        backgroundColor: "#e7ebebff",
+                        cursor: "not-allowed"
+                      }}
+                    />
+                  </Form.Group>
+                </Col>
+
+                <Col md={12}>
+                  <Form.Group className="mb-15">
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>Patient Address</Form.Label>
+                    <Form.Control
+                      as="textarea"
+                      rows={2}
+                      name="patient_address"
+                      value={selectedAppointment?.patient_address || ""}
                       onChange={handleEditModalInputChange}
-                      style={{ fontSize: "14px" }}
+                      placeholder="Enter patient address"
+                      style={{
+                        fontSize: "12px",
+                        borderRadius: "9px",
+                        border: "2px solid rgb(77, 208, 225)",
+                      }}
                     />
                   </Form.Group>
                 </Col>
 
-                <Col md={4}>
-                  <Form.Group className="mb-2">
-                    <Form.Label style={{ fontSize: "14px" }}>
-                      Appointment Date
-                    </Form.Label>
-                    <DatePicker
-                      selected={
-                        selectedAppointment.appointment_timestamp
-                          ? new Date(selectedAppointment.appointment_timestamp)
-                          : null
-                      }
-                      onChange={handleDateChange}
-                      dateFormat="dd-MM-yyyy"
-                      className="form-control"
-                      placeholderText="Select Date"
-                      style={{ fontSize: "14px" }}
-                    />
-                  </Form.Group>
-                </Col>
-
-                <Col md={4}>
-                  <Form.Group className="mb-2">
-                    <Form.Label style={{ fontSize: "14px" }}>
-                      Appointment Time
-                    </Form.Label>
+                <Col md={6}>
+                  <Form.Group className="mb-10">
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>Reference</Form.Label>
                     <Form.Select
-                      name="appointmentTime"
-                      value={selectedAppointment.appointmentTime || ""}
+                      name="reference"
+                      value={selectedAppointment?.reference || ""}
                       onChange={handleEditModalInputChange}
-                      style={{ fontSize: "14px" }}
+                      style={{
+                        fontSize: "12px",
+                        borderRadius: "9px",
+                        border: "2px solid rgb(77, 208, 225)",
+                      }}
                     >
-                      <option value="">Select Time</option>
-                      {timeSlots.map((time, index) => (
-                        <option key={index} value={time}>
-                          {time}
+                      <option value="">Select Reference</option>
+                      {REFERENCE_OPTIONS.map((opt, index) => (
+                        <option key={index} value={opt}>
+                          {opt}
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+
+                <Col md={6}>
+                  <Form.Group className="mb-2">
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>FDE Name</Form.Label>
+                    <Form.Select
+                      name="FDE_Name"
+                      value={selectedAppointment?.FDE_Name || ""}
+                      onChange={handleEditModalInputChange}
+                      style={{
+                        fontSize: "12px",
+                        borderRadius: "9px",
+                        border: "2px solid rgb(77, 208, 225)",
+                      }}
+                    >
+                      <option value="">Select FDE</option>
+                      {fdeList.map((fde, index) => (
+                        <option key={index} value={fde.FDEName}>
+                          {fde.FDEName}
                         </option>
                       ))}
                     </Form.Select>
                   </Form.Group>
                 </Col>
               </Row>
-              <Button
-                variant="primary"
-                onClick={handleSaveChanges}
-                style={{ float: "right", marginTop: "10px" }}
-              >
-                Save Changes
-              </Button>
+              <div className="d-flex justify-content-end gap-2 mt-3">
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowEditModal(false)}
+                  style={{
+                    borderRadius: "10px",
+                    padding: "10px 20px",
+                    fontSize: "12px",
+                    padding: "10px"
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={handleSaveChanges}
+                  style={{
+                    backgroundColor: "#00bcd4",
+                    border: "none",
+                    borderRadius: "10px",
+                    padding: "10px 20px",
+                    fontSize: "12px",
+                    padding: "10px"
+                  }}
+                >
+                  Save Changes
+                </Button>
+              </div>
             </Form>
           ) : (
             <p>Loading appointment details...</p>
@@ -1251,6 +1539,7 @@ export default function Appointment_list() {
                       value={appointmentData}
                       paginator
                       rows={rows}
+                      sortOrder={-1}
                       first={first}
                       onPage={(e) => {
                         setFirst(e.first);
@@ -1264,20 +1553,16 @@ export default function Appointment_list() {
                         "patient_phone",
                         "doctor_name",
                         "FDE_Name",
+                        "patient_address",
+                        "FDE_Name",
                         "note",
                       ]}
                       paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
                       currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
-                      className="p-datatable-customers p-datatable-gridlines p-datatable-striped datatable-compact-style"
+                      className="p-datatable-customers p-datatable-gridlines p-datatable-striped datatable-compact-style datatable-medium-small"
                       rowClassName={getRowClassName}
                     >
-                      {/* <Column
-                        field="appointment_id"
-                        header="ID"
-                        style={getColumnStyle("88px")}
-                        body={(rowData) => rowData.appointment_id || "-"}
-                        headerClassName="datatable-header-center"
-                      /> */}
+
                       <Column
                         header="Sr No"
                         style={{
@@ -1298,8 +1583,8 @@ export default function Appointment_list() {
                         body={(rowData) =>
                           rowData.appointment_timestamp
                             ? moment(rowData.appointment_timestamp).format(
-                                "DD-MM-YYYY"
-                              )
+                              "DD-MM-YYYY"
+                            )
                             : "-"
                         }
                         headerClassName="datatable-header-center"
@@ -1312,7 +1597,11 @@ export default function Appointment_list() {
                           ...getColumnStyle("83px"),
                           border: "1px solid #90caf9",
                         }}
-                        body={(rowData) => rowData.appointment_time || "-"}
+                        body={(rowData) =>
+                          rowData.appointment_time
+                            ? moment(rowData.appointment_time, ["hh:mm A", "HH:mm"]).format("HH:mm")
+                            : "-"
+                        }
                         headerClassName="datatable-header-center"
                       />
 
@@ -1382,7 +1671,7 @@ export default function Appointment_list() {
                         headerClassName="datatable-header-center"
                       />
 
-                      <Column
+                      {/* <Column
                         field="note"
                         header="Note"
                         style={{
@@ -1399,6 +1688,17 @@ export default function Appointment_list() {
                             {rowData.note || "-"}
                           </div>
                         )}
+                        headerClassName="datatable-header-center"
+                      /> */}
+
+                      <Column
+                        field="note"
+                        header="Note"
+                        style={{
+                          ...getColumnStyle("125px"), // Keep your original width
+                          border: "1px solid #90caf9", // Keep your original border
+                        }}
+                        body={(rowData) => <NoteCell note={rowData.note} />}
                         headerClassName="datatable-header-center"
                       />
 
@@ -1432,33 +1732,34 @@ export default function Appointment_list() {
           style={{
             backgroundColor: "#e0f7fa",
             borderBottom: "2px solid #4dd0e1",
+            padding: "10px"
           }}
         >
           <Modal.Title
-            style={{ fontSize: "18px", fontWeight: "600", color: "#00838f" }}
+            style={{ fontSize: "16px", fontWeight: "600", color: "#00838f" }}
           >
-            <FeatherIcon icon="credit-card" size={20} className="me-2" />
+            <FeatherIcon icon="credit-card" size={16} className="me-2" />
             Generate Receipt
           </Modal.Title>
         </Modal.Header>
 
-        <Modal.Body style={{ backgroundColor: "#f5fcfd", padding: "15px" }}>
+        <Modal.Body style={{ backgroundColor: "#f5fcfd", padding: "12px" }}>
           <Form>
             <div className="mb-4">
               <h6
                 style={{
-                  color: "#00bcd4",
+                  color: "#05acc3ff",
                   borderBottom: "1px solid #00bcd4",
                   paddingBottom: "5px",
                   marginBottom: "5px",
-                  fontSize: "15px",
+                  fontSize: "14px",
                 }}
               >
                 Basic Details
               </h6>
-              <Row className="mb-10">
+              <Row className="mb-3">
                 <Col md={6}>
-                  <Form.Label style={{ fontSize: "13px", fontWeight: "500" }}>
+                  <Form.Label style={{ fontSize: "12px", fontWeight: "500" }}>
                     Patient Name <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
@@ -1466,22 +1767,24 @@ export default function Appointment_list() {
                     value={selectedAppointment?.patient_name || ""}
                     style={{
                       cursor: "not-allowed",
-                      fontSize: "13px",
+                      fontSize: "11px",
                       backgroundColor: "#eee",
                       border: "2px solid rgb(77, 208, 225)",
+                      borderRadius:"10px"
+                      
                     }}
                   />
                 </Col>
 
                 <Col>
-                  <Form.Group className="mb-2">
-                    <Form.Label style={{ fontSize: "13px", fontWeight: "500" }}>
+                  <Form.Group>
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "500" }}>
                       Doctor Name <span className="text-danger">*</span>
                     </Form.Label>
                     <Form.Select
                       name="doctorName"
                       style={{
-                        fontSize: "13px",
+                        fontSize: "12px",
                         border: "2px solid rgb(77, 208, 225)",
                       }}
                       value={receiptForm.doctorName || ""}
@@ -1498,11 +1801,11 @@ export default function Appointment_list() {
                 </Col>
               </Row>
 
-              <Row className="mb-3">
-                <Col md={12} className="mb-3">
+              <Row >
+                <Col md={12}>
                   <Form.Label
                     style={{
-                      fontSize: "13px",
+                      fontSize: "12px",
                       fontWeight: "500",
                       display: "block",
                     }}
@@ -1510,11 +1813,12 @@ export default function Appointment_list() {
                     Registration Type
                   </Form.Label>
                   <div
-                    className="d-flex flex-wrap gap-3 p-2"
+                    className="d-flex flex-wrap gap-3"
                     style={{
                       border: "2px solid rgb(77, 208, 225)",
                       borderRadius: "6px",
                       backgroundColor: "#94e2eeff",
+                         borderRadius:"10px"
                     }}
                   >
                     {["DNC", "DNW", "DNP", "Only Registration"].map((opt) => (
@@ -1537,7 +1841,7 @@ export default function Appointment_list() {
                       className="ms-auto"
                       style={{
                         fontSize: "11px",
-                        borderRadius: "5px",
+                        borderRadius: "8px",
                         fontWeight: "600",
                         textTransform: "uppercase",
                       }}
@@ -1555,22 +1859,25 @@ export default function Appointment_list() {
               </Row>
 
               {receiptForm.registrationType && (
-                <Form.Group className="mb-3">
-                  <Form.Label style={{ fontSize: "13px", fontWeight: "500" }}>
-                    Registration Comment Box
-                  </Form.Label>
-                  <Form.Control
-                    as="textarea"
-                    rows={1}
-                    name="regComment"
-                    placeholder="Enter notes..."
-                    style={{
-                      fontSize: "13px",
-                      border: "2px solid rgb(77, 208, 225)",
-                    }}
-                    onChange={handleReceiptFormChange}
-                  />
-                </Form.Group>
+                <Row>
+                  <Form.Group className="mb-3">
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "500" }}>
+                      Registration Comment Box
+                    </Form.Label>
+                    <Form.Control
+                      as="textarea"
+                      rows={1}
+                      name="regComment"
+                      placeholder="Enter notes..."
+                      style={{
+                        fontSize: "12px",
+                        border: "2px solid rgb(77, 208, 225)",
+                           borderRadius:"10px"
+                      }}
+                      onChange={handleReceiptFormChange}
+                    />
+                  </Form.Group>
+                </Row>
               )}
             </div>
 
@@ -1578,12 +1885,12 @@ export default function Appointment_list() {
               <div className="d-flex justify-content-between align-items-center">
                 <h6
                   style={{
-                    color: "#00bcd4",
+                    color: "#05acc3ff",
                     borderBottom: "1px solid #00bcd4",
                     paddingBottom: "5px",
-                    marginTop: "10px",
+                    marginTop: "5px",
                     marginBottom: "5px",
-                    fontSize: "15px",
+                    fontSize: "14px",
                     flex: 1,
                   }}
                 >
@@ -1591,65 +1898,15 @@ export default function Appointment_list() {
                 </h6>
               </div>
 
-              {/* {billingItems.map((item, index) => (
-                <Row key={index} className="mb-2 align-items-end">
-                   <Col md={6}>
-                  <Form.Label style={{ fontSize: '13px', fontWeight: "500" }}>Consultation Type <span className="text-danger">*</span></Form.Label>
-                  <Form.Select
-                    style={{ fontSize: '13px' }}
-                    name="consultationType"
-                    onChange={handleReceiptFormChange}
-                  >
-                    <option value="">Select Type</option>
-                    {["CONSULTATION", "Follow-UP", "PROCTOSCOPY", "MCDPA", "COLON HYDROTHERAPY", "COLONOSCOPY", "USG", "USG ABDOMEN AND PELVIS", "MANOMETRY", "BIOFEEDBACK", "ECHODEFECOGRAPHY", "USG SCROTUM", "UNILATERAL DOPPLER", "BILATERAL DOPPLER", "PROCEDURE", "GASTROSCOPY", "3D ENDO ANAL IMAGING", "OTHERS", "MRI FISTULOGRAM", "2D SCAN", "LAB", "Postoperative", "BLOOD TESTS + ECG", "DIET", "UROFLOWMETRY", "DIET PLAN - 1 MONTH", "DIET PLAN - 3 MONTH", "DIET PLAN - 6 MONTH", "ENEMA", "MEDICINES", "DRESSING", "CYSTOSCOPY", "Postoperative Follow UP", "Postoperative DRESSING + CONSULTATION"].map(item => (
-                      <option key={item} value={item}>{item}</option>
-                    ))}
-                  </Form.Select>
-                </Col>
-                  <Col md={2}>
-                    <Form.Label style={{ fontSize: '12px' }}>Amount (₹) <span className="text-danger">*</span></Form.Label>
-                    <Form.Control
-                      type="number"
-                      style={{ fontSize: '13px' }}
-                      value={item.amount}
-                      onChange={(e) => {
-                        const newItems = [...billingItems];
-                        newItems[index].amount = e.target.value;
-                        setBillingItems(newItems);
-                      }}
-                    />
-                  </Col>
-                  <Col md={4} className="d-flex mb-2">
-                    <Button
-                      variant="outline-danger"
-                      className="me-2 btn-sm"
-                      onClick={() => removeBillingRow(index)}
-                      style={{ padding: '10px 10px' }}
-                      disabled={billingItems.length <= 1}
-                    >
-                      - Delete Row
-                    </Button>
-                    <Button
-                      variant="outline-success"
-                      className="btn-sm"
-                      onClick={addBillingRow}
-                      style={{ padding: '10px 10px'}}
-                    >
-                      + Add Row
-                    </Button>
-                  </Col>
-                </Row>
-              ))} */}
-
               {billingItems.map((item, index) => (
                 <Row key={index} className="mb-10 align-items-end">
                   <Col md={6}>
-                    <Form.Label style={{ fontSize: "13px", fontWeight: "500" }}>
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "500" }}>
                       Consultation Type{" "}
                     </Form.Label>
                     <Form.Select
                       style={{
-                        fontSize: "13px",
+                        fontSize: "12px",
                         border: "2px solid rgb(77, 208, 225)",
                       }}
                       value={item.label}
@@ -1662,7 +1919,7 @@ export default function Appointment_list() {
                       <option value="">Select Type</option>
                       {[
                         "CONSULTATION",
-                        "Follow-UP",
+                        "FOLLOW-UP",
                         "PROCTOSCOPY",
                         "MCDPA",
                         "COLON HYDROTHERAPY",
@@ -1682,7 +1939,7 @@ export default function Appointment_list() {
                         "MRI FISTULOGRAM",
                         "2D SCAN",
                         "LAB",
-                        "Postoperative",
+                        "POSTOPERATIVE",
                         "BLOOD TESTS + ECG",
                         "DIET",
                         "UROFLOWMETRY",
@@ -1693,8 +1950,8 @@ export default function Appointment_list() {
                         "MEDICINES",
                         "DRESSING",
                         "CYSTOSCOPY",
-                        "Postoperative Follow UP",
-                        "Postoperative DRESSING + CONSULTATION",
+                        "POST OPERATIVE FOLLOW UP",
+                        "POST OPERATIVE DRESSING + CONSULTATION",
                       ].map((opt) => (
                         <option key={opt} value={opt}>
                           {opt}
@@ -1703,15 +1960,16 @@ export default function Appointment_list() {
                     </Form.Select>
                   </Col>
                   <Col md={2}>
-                    <Form.Label style={{ fontSize: "12px" }}>
+                    <Form.Label style={{ fontSize: "11px" }}>
                       Amount (₹)
                     </Form.Label>
                     <Form.Control
                       type="number"
                       placeholder="E.g. 1000"
                       style={{
-                        fontSize: "13px",
+                        fontSize: "11px",
                         border: "2px solid rgb(77, 208, 225)",
+                           borderRadius:"10px"
                       }}
                       value={receiptForm.registrationType ? 0 : item.amount}
                       disabled={!!receiptForm.registrationType}
@@ -1723,12 +1981,12 @@ export default function Appointment_list() {
                       }}
                     />
                   </Col>
-                  <Col md={4} className="d-flex mb-2">
+                  <Col md={4} className="d-flex">
                     <Button
                       variant="outline-danger"
                       className="me-2 btn-sm"
                       onClick={() => removeBillingRow(index)}
-                      style={{ padding: "10px 10px" }}
+                      style={{ padding: "8px 8px" }}
                       disabled={billingItems.length <= 1}
                     >
                       - Delete Row
@@ -1737,7 +1995,7 @@ export default function Appointment_list() {
                       variant="outline-success"
                       className="btn-sm"
                       onClick={addBillingRow}
-                      style={{ padding: "10px 10px" }}
+                      style={{ padding: "8px 8px" }}
                     >
                       + Add Row
                     </Button>
@@ -1749,19 +2007,19 @@ export default function Appointment_list() {
             <div className="mb-2">
               <h6
                 style={{
-                  color: "#00bcd4",
+                  color: "#05acc3ff",
                   borderBottom: "1px solid #00bcd4",
                   paddingBottom: "5px",
-                  marginTop: "20px",
+                  marginTop: "10px",
                   marginBottom: "5px",
-                  fontSize: "15px",
+                  fontSize: "14px",
                 }}
               >
                 Payment Details
               </h6>
-              <Row className="mb-10">
+              <Row>
                 <Col md={4}>
-                  <Form.Label style={{ fontSize: "13px", fontWeight: "500" }}>
+                  <Form.Label style={{ fontSize: "12px", fontWeight: "500" }}>
                     Discount Amount (₹)
                   </Form.Label>
                   <Form.Control
@@ -1769,8 +2027,9 @@ export default function Appointment_list() {
                     name="discountAmt"
                     placeholder="E.g. 1000"
                     style={{
-                      fontSize: "13px",
+                      fontSize: "12px",
                       border: "2px solid rgb(77, 208, 225)",
+                         borderRadius:"10px"
                     }}
                     value={
                       receiptForm.registrationType ? 0 : receiptForm.discountAmt
@@ -1781,14 +2040,15 @@ export default function Appointment_list() {
                   />
                 </Col>
                 <Col md={8}>
-                  <Form.Label style={{ fontSize: "13px", fontWeight: "500" }}>
+                  <Form.Label style={{ fontSize: "12px", fontWeight: "500" }}>
                     Discount Note
                   </Form.Label>
                   <Form.Control
                     placeholder="Enter Discount Note"
                     name="discountNote"
                     style={{
-                      fontSize: "13px",
+                      fontSize: "12px",
+                         borderRadius:"10px",
                       border: "2px solid rgb(77, 208, 225)",
                     }}
                     onChange={handleReceiptFormChange}
@@ -1798,13 +2058,14 @@ export default function Appointment_list() {
 
               <Row>
                 <Col md={4}>
-                  <Form.Label style={{ fontSize: "13px", fontWeight: "500" }}>
+                  <Form.Label style={{ fontSize: "12px", fontWeight: "500" }}>
                     Mode of Payment
                   </Form.Label>
                   <Form.Select
                     style={{
-                      fontSize: "13px",
+                      fontSize: "12px",
                       border: "2px solid rgb(77, 208, 225)",
+                         borderRadius:"10px"
                     }}
                     name="paymentMode"
                     onChange={handleReceiptFormChange}
@@ -1820,7 +2081,7 @@ export default function Appointment_list() {
                 <Col md={8}>
                   <Form.Label
                     style={{
-                      fontSize: "13px",
+                      fontSize: "12px",
                       fontWeight: "500",
                       display: "block",
                     }}
@@ -1833,6 +2094,7 @@ export default function Appointment_list() {
                       border: "2px solid rgb(77, 208, 225)",
                       borderRadius: "6px",
                       backgroundColor: "#94e2eeff",
+                         borderRadius:"10px"
                     }}
                   >
                     {[
@@ -1854,7 +2116,7 @@ export default function Appointment_list() {
                         value={opt}
                         checked={receiptForm.posTerminal === opt}
                         onChange={handleReceiptFormChange}
-                        style={{ fontSize: "13px", margin: "5px" }}
+                        style={{ fontSize: "12px", margin: "5px" }}
                       />
                     ))}
                   </div>
@@ -1910,7 +2172,7 @@ export default function Appointment_list() {
                     </div>
                     <div
                       style={{
-                        fontSize: "14px",
+                        fontSize: "13px",
                         color: "#555",
                         marginTop: "5px",
                       }}
@@ -1919,7 +2181,7 @@ export default function Appointment_list() {
                     </div>
                     <div
                       style={{
-                        fontSize: "14px",
+                        fontSize: "13px",
                         color: "#d32f2f",
                         marginTop: "5px",
                       }}
@@ -1929,7 +2191,7 @@ export default function Appointment_list() {
                     </div>
                     <div
                       style={{
-                        fontSize: "18px",
+                        fontSize: "16px",
                         color: "#00838f",
                         fontWeight: "bold",
                         marginTop: "5px",
@@ -1945,12 +2207,12 @@ export default function Appointment_list() {
         </Modal.Body>
 
         <Modal.Footer
-          style={{ backgroundColor: "#f5fcfd", borderTop: "1px solid #4dd0e1" }}
+          style={{ backgroundColor: "#f5fcfd", borderTop: "1px solid #4dd0e1", padding: "5px" }}
         >
           <Button
             variant="secondary"
             onClick={() => setShowReceiptModal(false)}
-            style={{ fontSize: "13px", borderRadius: "10px" }}
+            style={{ fontSize: "12px", borderRadius: "10px", padding:"9px"  }}
           >
             Cancel
           </Button>
@@ -1959,11 +2221,11 @@ export default function Appointment_list() {
             style={{
               backgroundColor: "#00bcd4",
               border: "none",
-              fontSize: "13px",
+              fontSize: "12px",
               borderRadius: "10px",
+              padding:"10px" 
             }}
           >
-            <FeatherIcon icon="file-text" size={14} className="me-2" />
             Generate & Save Receipt
           </Button>
         </Modal.Footer>

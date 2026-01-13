@@ -15,7 +15,7 @@ import {
 import PageBreadcrumb from "../../../componets/PageBreadcrumb";
 import * as XLSX from "xlsx";
 
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 export default function DiagnosisReport() {
   const [showModal, setShowModal] = useState(false);
@@ -46,30 +46,30 @@ export default function DiagnosisReport() {
       if (response.ok) {
         const result = Array.isArray(data.data)
           ? data.data.map((item, index) => ({
-              srNo: index + 1,
-              patient_id: item.patient_id,
-              date_diagnosis: item.date_diagnosis,
-              diagnosis: item.diagnosis,
-              diagnosisAdvice: item.diagnosisAdvice,
-              adviceComment: item.adviceComment,
-              consultantDoctor: item.consultantDoctor,
-              assistanceDoctor: item.assistanceDoctor,
-              feedback: item.feedback,
-              comment: item.comment,
-              // Patient details
-              Uid_no: item.patientDetail?.Uid_no,
-              prefix: item.patientDetail?.prefix,
-              name: `${item.patientDetail?.prefix} ${item.patientDetail?.name}`, // Concatenate prefix and name
-              age: item.patientDetail?.age,
-              sex: item.patientDetail?.sex,
-              phone: item.patientDetail?.phone,
-              mobile_2: item.patientDetail?.mobile_2,
-              occupation: item.patientDetail?.occupation,
-              address: item.patientDetail?.address,
-              ref: item.patientDetail?.ref,
-              // Patient history details
-              past_history: item.patientHistoryDetail?.past_history,
-            }))
+            srNo: index + 1,
+            patient_id: item.patient_id,
+            date_diagnosis: item.date_diagnosis,
+            diagnosis: item.diagnosis,
+            diagnosisAdvice: item.diagnosisAdvice,
+            adviceComment: item.adviceComment,
+            consultantDoctor: item.consultantDoctor,
+            assistanceDoctor: item.assistanceDoctor,
+            feedback: item.feedback,
+            comment: item.comment,
+            // Patient details
+            Uid_no: item.patientDetail?.Uid_no,
+            prefix: item.patientDetail?.prefix,
+            name: `${item.patientDetail?.prefix} ${item.patientDetail?.name}`, // Concatenate prefix and name
+            age: item.patientDetail?.age,
+            sex: item.patientDetail?.sex,
+            phone: item.patientDetail?.phone,
+            mobile_2: item.patientDetail?.mobile_2,
+            occupation: item.patientDetail?.occupation,
+            address: item.patientDetail?.address,
+            ref: item.patientDetail?.ref,
+            // Patient history details
+            past_history: item.patientHistoryDetail?.past_history,
+          }))
           : [];
 
         console.log("Mapped Results:", result);
@@ -367,7 +367,7 @@ export default function DiagnosisReport() {
 
                     <Column
                       field="Uid_no"
-                      header="Uid No"
+                      header="Uhid No"
                       sortable
                       style={{
                         border: "1px solid #90caf9",
