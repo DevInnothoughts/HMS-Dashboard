@@ -99,7 +99,7 @@ export default function Sidebar() {
   const renderIPDReceptionDemoMenu = () => (
     <ul>
       <li className="cdxmenu-title">
-        <h5>Receptionist (IPD)</h5>
+        <h5>Receptionist(IPD)</h5>
       </li>
 
       <li className={`menu-item ${activeIndex === "/reception-dashboard" ? "active" : ""}`}>

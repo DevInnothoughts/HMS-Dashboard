@@ -540,7 +540,7 @@ export default function Call_logs() {
               cursor: "pointer",
               transition: "all 0.3s ease",
               boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              marginTop: "13px",
+              marginTop: "16px",
               ":hover": {
                 backgroundColor: "#00acc1",
                 transform: "translateY(-1px)",
@@ -548,7 +548,7 @@ export default function Call_logs() {
               },
             }}
           >
-            <FeatherIcon icon="refresh-ccw" size={13} className="me-2" />
+            <FeatherIcon icon="refresh-ccw" size={12} className="me-1" />
             Refresh
           </Button>
         </div>
@@ -567,34 +567,19 @@ export default function Call_logs() {
 
   const generateTimeSlots = () => {
     const slots = [];
-    const startTime = new Date();
-    const endTime = new Date();
-    endTime.setHours(23, 45, 0);
+    // Start at 7:00 AM today
+    let start = moment().startOf('day').add(7, 'hours');
+    // End at 11:45 PM today
+    const end = moment().startOf('day').add(23, 'hours').add(45, 'minutes');
 
-    const isToday = moment(formData.date).isSame(moment(), "day");
-
-    if (isToday) {
-      startTime.setHours(
-        new Date().getHours(),
-        Math.ceil(new Date().getMinutes() / 15) * 15,
-        0
-      );
-    } else {
-      startTime.setHours(7, 0, 0);
+    while (start <= end) {
+      slots.push(start.format("hh:mm A"));
+      start.add(15, 'minutes'); // 15-minute gap
     }
-
-    while (startTime <= endTime) {
-      const timeString = startTime.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      });
-      slots.push(timeString);
-      startTime.setMinutes(startTime.getMinutes() + 15);
-    }
-
     return slots;
   };
+
+  // const timeSlots = generateTimeSlots();
 
   useEffect(() => {
     setTimeSlots(generateTimeSlots());
@@ -971,7 +956,7 @@ export default function Call_logs() {
                             }}
                           />
                         </DataTable>
-                        )}
+                      )}
                     </Row>
                   </Card.Body>
                 </Card>
@@ -980,184 +965,6 @@ export default function Call_logs() {
           </Container>
         </div>
       </div>
-      {/* 
-      <Modal
-        show={showAddModal}
-        onHide={() => setShowAddModal(false)}
-        size="lg"
-        centered
-      >
-        <Modal.Header
-          closeButton
-          style={{
-            backgroundColor: "#e0f7fa",
-            borderBottom: "2px solid #00bcd4",
-          }}
-        >
-          <Modal.Title style={{ color: "#00838f", fontWeight: "bold" }}>
-            <FeatherIcon icon="calendar" className="me-2" />
-            Add Appointment
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body style={{ padding: "15px" }}>
-          <Form onSubmit={handleAddAppointment}>
-            <Row className="g-3">
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label>
-                    Appointment Date <span className="text-danger">*</span>
-                  </Form.Label>
-                  <DatePicker
-                    style={{ border: "2px solid rgb(77, 208, 225)" }}
-                    selected={
-                      formData.date ? new Date(formData.date) : new Date()
-                    }
-                    onChange={(date) => date && handleDateChange(date)}
-                    className="form-control custom-datepicker"
-                    dateFormat="dd-MM-yyyy"
-                    minDate={new Date()}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label >
-                    Appointment Time <span className="text-danger">*</span>
-                  </Form.Label>
-                  <Form.Select
-                    style={{ border: "2px solid rgb(77, 208, 225)" }}
-                    name="appointmentTime"
-                    value={formData.appointmentTime}
-                    onChange={handleInputChange}
-                  >
-                    <option value="">Select Time</option>
-                    {timeSlots.map((time, index) => (
-                      <option key={index} value={time}>
-                        {time}
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label >
-                    Doctor Name <span className="text-danger">*</span>
-                  </Form.Label>
-                  <Form.Select
-                    style={{ border: "2px solid rgb(77, 208, 225)" }}
-                    name="doctor_id"
-                    value={formData.doctor_id}
-                    onChange={handleInputChange}
-                  >
-                    <option value="">Select a Doctor</option>
-                    {doctors.map((doctor) => (
-                      <option
-                        key={doctor.doctor_id}
-                        value={String(doctor.doctor_id)}
-                      >
-                        {doctor.name}
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label >
-                    Patient Name <span className="text-danger">*</span>
-                  </Form.Label>
-                  <Form.Control
-                    style={{ border: "2px solid rgb(77, 208, 225)" }}
-                    type="text"
-                    name="patientName"
-                    placeholder="Enter full name"
-                    value={formData.patientName}
-                    onChange={handleInputChange}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label >
-                    Contact Number <span className="text-danger">*</span>
-                  </Form.Label>
-                  <Form.Control
-                    style={{
-                      border: "2px solid rgb(77, 208, 225)",
-                      backgroundColor: "#e7ebebff",
-                      cursor: "not-allowed",
-                    }}
-                    type="text"
-                    name="caller_no"
-                    readOnly
-                    value={formData.caller_no}
-                    onChange={handleInputChange}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label>
-                    FDE Name <span className="text-danger">*</span>
-                  </Form.Label>
-                  <Form.Select
-                    style={{ border: "2px solid rgb(77, 208, 225)" }}
-                    name="FDE_Name"
-                    value={formData.FDE_Name}
-                    onChange={handleInputChange}
-                  >
-                    <option value="">Select FDE</option>
-                    {fdeList.map((fde) => (
-                      <option key={fde.FDEID} value={String(fde.FDEID)}>
-                        {fde.FDEName}
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-              <Col md={12}>
-                <Form.Group>
-                  <Form.Label>Note </Form.Label>
-                  <Form.Control
-                    style={{ border: "2px solid rgb(77, 208, 225)" }}
-                    as="textarea"
-                    rows={2}
-                    name="note"
-                    placeholder="Additional details..."
-                    value={formData.note}
-                    onChange={handleInputChange}
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-
-            <div className="d-flex justify-content-end mt-4 pt-3">
-              <Button
-                variant="danger"
-                className="me-2 px-4"
-                style={{ borderRadius: "10px" }}
-                onClick={() => setShowAddModal(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="primary"
-                className="px-4"
-                style={{
-                  borderRadius: "10px",
-                  backgroundColor: "#00bcd4",
-                  border: "none",
-                }}
-                onClick={() => handleSubmit("save")}
-              >
-                Add Appointment
-              </Button>
-            </div>
-          </Form>
-        </Modal.Body>
-      </Modal> */}
-
       <Modal
         show={showAddModal}
         onHide={() => setShowAddModal(false)}
@@ -1194,13 +1001,13 @@ export default function Call_logs() {
                     customInput={
                       <Form.Control
                         size="sm"
-                        style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                        style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
                       />
                     }
                   />
                 </Form.Group>
               </Col>
-              <Col md={6}>
+              {/* <Col md={6}>
                 <Form.Group className="mb-2">
                   <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
                     Appointment Time <span className="text-danger">*</span>
@@ -1211,6 +1018,24 @@ export default function Call_logs() {
                     value={formData.appointmentTime}
                     onChange={handleInputChange}
                     style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                  >
+                    <option value="">Select Time</option>
+                    {timeSlots.map((time, index) => (
+                      <option key={index} value={time}>
+                        {time}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Col> */}
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>Appointment Time</Form.Label>
+                  <Form.Select
+                    name="appointmentTime"
+                    value={formData.appointmentTime}
+                    onChange={handleInputChange}
+                     style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
                   >
                     <option value="">Select Time</option>
                     {timeSlots.map((time, index) => (
@@ -1231,7 +1056,7 @@ export default function Call_logs() {
                     name="doctor_id"
                     value={formData.doctor_id}
                     onChange={handleInputChange}
-                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
                   >
                     <option value="">Select a Doctor</option>
                     {doctors.map((doctor) => (
@@ -1254,7 +1079,7 @@ export default function Call_logs() {
                     placeholder="Enter full name"
                     value={formData.patientName}
                     onChange={handleInputChange}
-                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
                   />
                 </Form.Group>
               </Col>
@@ -1273,7 +1098,7 @@ export default function Call_logs() {
                       border: "2px solid rgb(77, 208, 225)",
                       backgroundColor: "#f8f9fa",
                       cursor: "not-allowed",
-                      fontSize: "12px"
+                      fontSize: "12px", borderRadius:"10px"
                     }}
                   />
                 </Form.Group>
@@ -1288,7 +1113,7 @@ export default function Call_logs() {
                     name="FDE_Name"
                     value={formData.FDE_Name}
                     onChange={handleInputChange}
-                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
                   >
                     <option value="">Select FDE</option>
                     {fdeList.map((fde) => (
@@ -1310,7 +1135,7 @@ export default function Call_logs() {
                     placeholder="Additional details..."
                     value={formData.note}
                     onChange={handleInputChange}
-                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
                   />
                 </Form.Group>
               </Col>
@@ -1321,7 +1146,7 @@ export default function Call_logs() {
                 variant="danger"
                 size="sm"
                 className="me-2 px-3"
-                style={{ borderRadius: "10px", fontSize: "12px" }}
+                style={{ borderRadius: "10px", fontSize: "12px", padding:"10px" }}
                 onClick={() => setShowAddModal(false)}
               >
                 Cancel
@@ -1334,7 +1159,8 @@ export default function Call_logs() {
                   borderRadius: "10px",
                   fontSize: "12px",
                   backgroundColor: "#00bcd4",
-                  border: "none",
+                  border: "none", 
+                  padding:"10px"
                 }}
                 onClick={() => handleSubmit("save")}
               >
@@ -1345,60 +1171,10 @@ export default function Call_logs() {
         </Modal.Body>
       </Modal>
 
-      {/* <Modal
-        show={showNoteModal}
-        onHide={() => setShowNoteModal(false)}
-        size="lg"
-      >
-        <Modal.Header
-          closeButton
-          style={{
-            backgroundColor: "#e0f7fa",
-            borderBottom: "2px solid #00bcd4",
-          }}
-        >
-          <Modal.Title style={{ color: "#00838f", fontWeight: "bold" }}>
-            <FeatherIcon icon="file-text" className="me-2" />
-            Add Note
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form.Label>Note <span className="text-danger">*</span></Form.Label>
-          <Form.Control
-            style={{ border: "2px solid rgb(77, 208, 225)" }}
-            as="textarea"
-            rows={5}
-            name="note"
-            value={formData.note || ""}
-            onChange={handleInputChange}
-            placeholder="Enter note"
-          />
-        </Modal.Body>
-        <Modal.Footer>
-          <Button
-            className="px-3"
-            style={{ borderRadius: "10px" }}
-            variant="secondary"
-            onClick={() => setShowNoteModal(false)}
-          >
-            Cancel
-          </Button>
-          <Button
-            className="px-4"
-            style={{ borderRadius: "10px" }}
-            variant="primary"
-            onClick={handleSaveNote}
-          >
-            Add Note
-          </Button>
-        </Modal.Footer>
-      </Modal> */}
-
-      {/* --- ADD NOTE MODAL --- */}
       <Modal
         show={showNoteModal}
         onHide={() => setShowNoteModal(false)}
-        size="md" // Changed to md for a better fit for a single textarea
+        size="md"
         centered
       >
         <Modal.Header
@@ -1422,8 +1198,8 @@ export default function Call_logs() {
             <Form.Control
               style={{
                 border: "2px solid rgb(77, 208, 225)",
-                fontSize: "13px",
-                borderRadius: "8px"
+                fontSize: "12px",
+                borderRadius: "10px"
               }}
               as="textarea"
               rows={4}
@@ -1434,11 +1210,11 @@ export default function Call_logs() {
             />
           </Form.Group>
         </Modal.Body>
-        <Modal.Footer style={{ borderTop: "none", padding: "5px 10px" }}>
+        <Modal.Footer style={{ borderTop: "none", padding: "0px 5px" }}>
           <Button
             size="sm"
             className="px-3"
-            style={{ borderRadius: "10px", fontSize: "12px" }}
+            style={{ borderRadius: "10px", fontSize: "12px", padding:"10px" }}
             variant="secondary"
             onClick={() => setShowNoteModal(false)}
           >
@@ -1451,7 +1227,7 @@ export default function Call_logs() {
               borderRadius: "10px",
               fontSize: "12px",
               backgroundColor: "#00bcd4",
-              border: "none"
+              border: "none", padding:"10px" 
             }}
             variant="primary"
             onClick={handleSaveNote}
@@ -1460,239 +1236,6 @@ export default function Call_logs() {
           </Button>
         </Modal.Footer>
       </Modal>
-
-      {/* <Modal
-        show={showEnquiryModal}
-        onHide={() => setShowEnquiryModal(false)}
-        size="lg"
-      >
-        <Modal.Header
-          closeButton
-          style={{
-            backgroundColor: "#e0f7fa",
-            borderBottom: "2px solid #00bcd4",
-          }}
-        >
-          <Modal.Title style={{ color: "#00838f", fontWeight: "bold" }}>
-            <FeatherIcon icon="help-circle" className="me-2" />
-            Add Enquiry
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <div>
-            <Form>
-              <Row>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>
-                      Call Back Date{" "}
-                      <span style={{ color: "red" }} className="required">
-                        *
-                      </span>
-                    </Form.Label>
-                    <DatePicker
-                      style={{ border: "2px solid rgb(77, 208, 225)" }}
-                      selected={selectedDate}
-                      onChange={(date) => {
-                        setSelectedDate(date);
-                        setEnquiryForm((prev) => ({
-                          ...prev,
-                          date: formatDate(date),
-                        }));
-                      }}
-                      dateFormat="dd-MM-yyyy"
-                      className="form-control custom-datepicker"
-                      placeholderText="Select date"
-                      value={enquiryForm.date}
-                      minDate={new Date()}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>
-                      Enquiry Type{" "}
-                      <span style={{ color: "red" }} className="required">
-                        *
-                      </span>
-                    </Form.Label>
-                    <Form.Select
-                      style={{ border: "2px solid rgb(77, 208, 225)" }}
-                      name="enquirytype"
-                      value={enquiryForm.enquirytype}
-                      onChange={handleEnquiryInputChange}
-                      required
-                    >
-                      <option value="">Select Enquiry Type</option>
-                      {[
-                        "Call for Refund Amount",
-                        "Wrong Enquiry or Spam Call",
-                        "Enquiry for Test Charges",
-                        "Accounts Department",
-                        "Call for Another Branches",
-                        "Call for IPD Doctors",
-                        "Call for Assistant Doctors",
-                        "Call Regarding Job Vacancy",
-                        "Appointment Consultation",
-                        "Online Consultation",
-                        "SX Cost Enquiry",
-                        "Call for Lab Test Enquiry",
-                        "Medicines Availability at Pharmacy",
-                        "Patient is Coming Late for Appointment",
-                        "Insurance Related Queries",
-                      ].map((type) => (
-                        <option key={type} value={type}>
-                          {type}
-                        </option>
-                      ))}
-                    </Form.Select>
-                  </Form.Group>
-                </Col>
-              </Row>
-              <Row>
-                <Col md={6}>
-                  <Form.Group className="mb-15">
-                    <Form.Label>
-                      Patient Name{" "}
-                      <span style={{ color: "red" }} className="required">
-                        *
-                      </span>
-                    </Form.Label>
-                    <Form.Control
-                      style={{ border: "2px solid rgb(77, 208, 225)" }}
-                      type="text"
-                      name="patient_name"
-                      value={enquiryForm.patient_name}
-                      onChange={handleEnquiryInputChange}
-                      placeholder="Enter Patient Name"
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>
-                      Contact Number{" "}
-                      <span style={{ color: "red" }} className="required">
-                        *
-                      </span>
-                    </Form.Label>
-                    <Form.Control
-                      style={{
-                        border: "2px solid rgb(77, 208, 225)",
-                        backgroundColor: "#e7ebebff",
-                        cursor: "not-allowed",
-                      }}
-                      type="text"
-                      readOnly
-                      name="caller_no"
-                      placeholder="Enter Contact Number"
-                      value={selectedCallLog?.caller_no}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Doctor Name</Form.Label>
-                    <Form.Select
-                      style={{ border: "2px solid rgb(77, 208, 225)" }}
-                      name="doctor_id"
-                      value={enquiryForm.doctor_id}
-                      onChange={handleEnquiryInputChange}
-                    >
-                      <option value="">Select a Doctor</option>
-                      {doctors && doctors.length > 0 ? (
-                        doctors.map((doctor) => (
-                          <option
-                            key={doctor.doctor_id}
-                            value={doctor.doctor_id}
-                          >
-                            {doctor.doctor_id} - {doctor.name}
-                          </option>
-                        ))
-                      ) : (
-                        <option disabled>No doctors available</option>
-                      )}
-                    </Form.Select>
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group className="mb-15">
-                    <Form.Label>
-                      FDE Name{" "}
-                      <span style={{ color: "red" }} className="required">
-                        *
-                      </span>
-                    </Form.Label>
-                    <Form.Select
-                      style={{ border: "2px solid rgb(77, 208, 225)" }}
-                      name="FDE_Name"
-                      value={enquiryForm.FDE_Name}
-                      onChange={handleEnquiryInputChange}
-                    >
-                      <option value="">Select FDE Name</option>
-                      {fdeList &&
-                        fdeList.length > 0 &&
-                        fdeList.map((fde) => (
-                          <option key={fde.FDEID} value={String(fde.FDEID)}>
-                            {fde.FDEID} - {fde.FDEName}
-                          </option>
-                        ))}
-                    </Form.Select>
-                  </Form.Group>
-                </Col>
-                <Col md={12}>
-                  <Form.Group>
-                    <Form.Label>Note</Form.Label>
-                    <Form.Control
-                      style={{ border: "2px solid rgb(77, 208, 225)" }}
-                      as="textarea"
-                      name="note"
-                      value={enquiryForm.note}
-                      onChange={handleEnquiryInputChange}
-                      rows={3}
-                      placeholder="Enter Note"
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
-              <div
-                className="d-flex justify-content-center"
-                style={{ marginTop: "20px" }}
-              >
-                <Col className="text-end">
-                  <button
-                    style={{ borderRadius: "10px" }}
-                    type="button"
-                    className="btn btn-danger me-2"
-                    onClick={() => {
-                      setShowEnquiryModal(false);
-                      setEnquiryForm({
-                        date: "",
-                        enquirytype: "",
-                        patient_name: "",
-                        caller_no: "",
-                        FDE_Name: "",
-                        fdeId: "",
-                        note: "",
-                      });
-                    }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    style={{ borderRadius: "10px" }}
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={handleAddEnquirySubmit}
-                  >
-                    Add Enquiry
-                  </button>
-                </Col>
-              </div>
-            </Form>
-          </div>
-        </Modal.Body>
-      </Modal> */}
 
       <Modal
         show={showEnquiryModal}
@@ -1705,7 +1248,7 @@ export default function Call_logs() {
           style={{
             backgroundColor: "#e0f7fa",
             borderBottom: "2px solid #00bcd4",
-            padding: "10px 15px", // Compact header padding
+            padding: "10px 15px", 
           }}
         >
           <Modal.Title style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}>
@@ -1733,19 +1276,20 @@ export default function Call_logs() {
                         }));
                       }}
                       dateFormat="dd-MM-yyyy"
-                      className="form-control form-control-sm" // Small input class
+                      className="form-control form-control-sm"
                       placeholderText="Select date"
                       value={enquiryForm.date}
                       minDate={new Date()}
                       customInput={
                         <Form.Control
                           size="sm"
-                          style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                          style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
                         />
                       }
                     />
                   </Form.Group>
                 </Col>
+
                 <Col md={6}>
                   <Form.Group className="mb-2">
                     <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
@@ -1753,12 +1297,11 @@ export default function Call_logs() {
                       <span style={{ color: "red" }} className="required">*</span>
                     </Form.Label>
                     <Form.Select
-                      size="sm" // Small selector
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                      size="sm" 
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
                       name="enquirytype"
                       value={enquiryForm.enquirytype}
                       onChange={handleEnquiryInputChange}
-                      required
                     >
                       <option value="">Select Enquiry Type</option>
                       {[
@@ -1786,6 +1329,7 @@ export default function Call_logs() {
                   </Form.Group>
                 </Col>
               </Row>
+
               <Row>
                 <Col md={6}>
                   <Form.Group className="mb-15">
@@ -1795,7 +1339,7 @@ export default function Call_logs() {
                     </Form.Label>
                     <Form.Control
                       size="sm"
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
                       type="text"
                       name="patient_name"
                       value={enquiryForm.patient_name}
@@ -1804,6 +1348,7 @@ export default function Call_logs() {
                     />
                   </Form.Group>
                 </Col>
+
                 <Col md={6}>
                   <Form.Group className="mb-2">
                     <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
@@ -1816,7 +1361,8 @@ export default function Call_logs() {
                         border: "2px solid rgb(77, 208, 225)",
                         backgroundColor: "#f8f9fa",
                         cursor: "not-allowed",
-                        fontSize: "12px"
+                        fontSize: "12px",
+                        borderRadius:"10px"
                       }}
                       type="text"
                       readOnly
@@ -1826,31 +1372,7 @@ export default function Call_logs() {
                     />
                   </Form.Group>
                 </Col>
-                <Col md={6}>
-                  <Form.Group className="mb-15">
-                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
-                      Doctor Name
-                    </Form.Label>
-                    <Form.Select
-                      size="sm"
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
-                      name="doctor_id"
-                      value={enquiryForm.doctor_id}
-                      onChange={handleEnquiryInputChange}
-                    >
-                      <option value="">Select a Doctor</option>
-                      {doctors && doctors.length > 0 ? (
-                        doctors.map((doctor) => (
-                          <option key={doctor.doctor_id} value={doctor.doctor_id}>
-                            {doctor.doctor_id} - {doctor.name}
-                          </option>
-                        ))
-                      ) : (
-                        <option disabled>No doctors available</option>
-                      )}
-                    </Form.Select>
-                  </Form.Group>
-                </Col>
+               
                 <Col md={6}>
                   <Form.Group className="mb-2">
                     <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
@@ -1859,7 +1381,7 @@ export default function Call_logs() {
                     </Form.Label>
                     <Form.Select
                       size="sm"
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
                       name="FDE_Name"
                       value={enquiryForm.FDE_Name}
                       onChange={handleEnquiryInputChange}
@@ -1875,27 +1397,29 @@ export default function Call_logs() {
                     </Form.Select>
                   </Form.Group>
                 </Col>
-                <Col md={12}>
+
+                <Col md={6}>
                   <Form.Group className="mb-3">
                     <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
                       Note
                     </Form.Label>
                     <Form.Control
                       size="sm"
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
                       as="textarea"
                       name="note"
                       value={enquiryForm.note}
                       onChange={handleEnquiryInputChange}
-                      rows={2} // Reduced rows to stay compact
+                      rows={2}
                       placeholder="Enter Note"
                     />
                   </Form.Group>
                 </Col>
               </Row>
+
               <div className="d-flex justify-content-end pt-2">
                 <button
-                  style={{ borderRadius: "10px", fontSize: "12px" }}
+                  style={{ borderRadius: "10px", fontSize: "12px", padding:"10px"  }}
                   type="button"
                   className="btn btn-danger btn-sm me-2 px-3"
                   onClick={() => {
@@ -1914,7 +1438,7 @@ export default function Call_logs() {
                   Cancel
                 </button>
                 <button
-                  style={{ borderRadius: "10px", fontSize: "12px", backgroundColor: "#00bcd4", borderColor: "#00bcd4" }}
+                  style={{ borderRadius: "10px", fontSize: "12px", backgroundColor: "#00bcd4", borderColor: "#00bcd4", padding:"10px"  }}
                   type="button"
                   className="btn btn-primary btn-sm px-3"
                   onClick={handleAddEnquirySubmit}

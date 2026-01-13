@@ -1245,7 +1245,8 @@ const AddInvoice = () => {
   const inputStyle = {
     fontSize: "11px", // Medium-small input text
     border: "1px solid rgb(77, 208, 225)",
-    padding: "6px 10px"
+    padding: "6px 10px",
+    borderRadius:"10px",
   };
 
   const cardStyle = {
@@ -1493,7 +1494,7 @@ const AddInvoice = () => {
                     <Col md={3}>
                       <Form.Label style={labelStyle}>Insurance Co</Form.Label>
                       <Form.Select style={inputStyle} name="insurance" value={formData.insurance} onChange={handleInputChange}>
-                        <option value="">CHOOSE</option>
+                        <option value="">SELECT COMPANY</option>
                         {insurance.map((i) => (<option key={i._id} value={i.companyname}>{i.companyname}</option>))}
                       </Form.Select>
                     </Col>
@@ -1520,11 +1521,11 @@ const AddInvoice = () => {
                   <>
                     <Col md={4}>
                       <Form.Label style={labelStyle}>Cheque No</Form.Label>
-                      <Form.Control style={inputStyle} type="number" name="chequeno" value={formData.chequeno} onChange={handleInputChange} />
+                      <Form.Control style={inputStyle} placeholder="Enter cheque No" type="number" name="chequeno" value={formData.chequeno} onChange={handleInputChange} />
                     </Col>
                     <Col md={4}>
                       <Form.Label style={labelStyle}>PDC Amount (₹)</Form.Label>
-                      <Form.Control style={inputStyle} type="number" name="pdc" value={formData.pdc} onChange={handleInputChange} />
+                      <Form.Control style={inputStyle} placeholder="Enter PDC Amount" type="number" name="pdc" value={formData.pdc} onChange={handleInputChange} />
                     </Col>
                   </>
                 )}
@@ -1532,20 +1533,20 @@ const AddInvoice = () => {
                 {formData.bill_Type === "non_insurance" && (
                   <Col md={4}>
                     <Form.Label style={labelStyle}>Discount Amount</Form.Label>
-                    <Form.Control style={inputStyle} type="number" name="discount" value={formData.discount} onChange={handleInputChange} />
+                    <Form.Control style={inputStyle} placeholder="e.g. 1000" type="number" name="discount" value={formData.discount} onChange={handleInputChange} />
                   </Col>
                 )}
 
                 {formData.bill_Type === "charity" && (
                   <Col md={4}>
                     <Form.Label style={labelStyle}>Charity Discount</Form.Label>
-                    <Form.Control style={inputStyle} type="number" name="discountAmount" value={formData.discountAmount} onChange={handleInputChange} />
+                    <Form.Control style={inputStyle} placeholder="e.g. 100" type="number" name="discountAmount" value={formData.discountAmount} onChange={handleInputChange} />
                   </Col>
                 )}
 
                 <Col md={10}>
                   <Form.Label style={labelStyle}>Note</Form.Label>
-                  <Form.Control style={inputStyle} as="textarea" rows={2} name="note" value={formData.note} onChange={handleInputChange} />
+                  <Form.Control style={inputStyle} as="textarea" placeholder="Enter clinical note..." rows={2} name="note" value={formData.note} onChange={handleInputChange} />
                 </Col>
               </Row>
 

@@ -778,9 +778,9 @@ const InvoiceList = () => {
           <Button
             variant="primary"
             onClick={() => fetchInvoices()}
-            style={{ backgroundColor: "#00bcd4", border: "none", borderRadius: "8px", padding: "6px 7px", fontSize: "12px", marginTop: "13px" }}
+            style={{ backgroundColor: "#00bcd4", border: "none", borderRadius: "8px", padding: "6px 7px", fontSize: "12px", marginTop: "18px" }}
           >
-            <FeatherIcon icon="refresh-ccw" size={13} className="me-2" />
+            <FeatherIcon icon="refresh-ccw" size={12} className="me-1" />
             Refresh
           </Button>
         </div>
@@ -814,7 +814,7 @@ const InvoiceList = () => {
               <Card.Body>
                 <div className="d-flex justify-content-end">
                   <Link to="/invoice/add">
-                    <Button variant="primary" style={{ marginBottom: "7px", fontSize:"12px" }}>
+                    <Button variant="primary" style={{ padding:"12px", marginBottom: "7px", fontSize:"12px" }}>
                       <FaPlus /> Add New Invoice
                     </Button>
                   </Link>
@@ -888,7 +888,7 @@ const InvoiceList = () => {
                     <Column
                       headerClassName="datatable-header-center"
                       field="patient_phone"
-                      header="Contact"
+                      header="Contact No"
                       style={{ width: "130px", border: "1px solid #4dd0e1" }}
                     />
                     <Column
@@ -1008,14 +1008,14 @@ const InvoiceList = () => {
                   <Row className="g-2">
                     <Col md={4}>
                       <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px"}} className="text-muted">
-                        Invoice Number
+                        Invoice Number <span style={{ color: "red" }} className="required">*</span>
                       </Form.Label>
                       <Form.Control
                         size="sm"
                         type="text"
                         value={selectedInvoice.invoice_id}
                         readOnly
-                        style={{ fontSize: "12px", cursor: "not-allowed", backgroundColor: "#f0f0f0", border: "1px solid #4dd0e1" }}
+                        style={{   borderRadius:"10px", fontSize: "12px", cursor: "not-allowed", backgroundColor: "#f0f0f0", border: "1px solid #4dd0e1" }}
                       />
                     </Col>
                     <Col md={4}>
@@ -1027,53 +1027,53 @@ const InvoiceList = () => {
                         type="text"
                         value={selectedInvoice.admission_no}
                         readOnly
-                        style={{ fontSize: "12px", cursor: "not-allowed", backgroundColor: "#f0f0f0", border: "1px solid #4dd0e1" }}
+                        style={{ borderRadius:"10px", fontSize: "12px", cursor: "not-allowed", backgroundColor: "#f0f0f0", border: "1px solid #4dd0e1" }}
                       />
                     </Col>
                     <Col md={4}>
                       <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
-                        Patient Name
+                        Patient Name <span style={{ color: "red" }} className="required">*</span>
                       </Form.Label>
                       <Form.Control
                         size="sm"
                         type="text"
                         value={selectedInvoice.patient_name}
                         readOnly
-                        style={{ fontSize: "12px", cursor: "not-allowed", backgroundColor: "#f0f0f0", border: "1px solid #4dd0e1" }}
+                        style={{borderRadius:"10px", fontSize: "12px", cursor: "not-allowed", backgroundColor: "#f0f0f0", border: "1px solid #4dd0e1" }}
                       />
                     </Col>
                     <Col md={3}>
                       <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
-                        Admission Date
+                        Admission Date <span style={{ color: "red" }} className="required">*</span>
                       </Form.Label>
                       <Form.Control
                         size="sm"
                         type="date"
-                        style={{ fontSize: "12px", border: "1px solid #4dd0e1" }}
+                        style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                         value={selectedInvoice.creation_date}
                         onChange={(e) => setSelectedInvoice({ ...selectedInvoice, creation_date: e.target.value })}
                       />
                     </Col>
                     <Col md={3}>
                       <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
-                        Admission Time
+                        Admission Time <span style={{ color: "red" }} className="required">*</span>
                       </Form.Label>
                       <Form.Control
                         size="sm"
                         type="time"
-                        style={{ fontSize: "12px", border: "1px solid #4dd0e1" }}
+                        style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                         value={selectedInvoice.admissiontime}
                         onChange={(e) => setSelectedInvoice({ ...selectedInvoice, admissiontime: e.target.value })}
                       />
                     </Col>
                     <Col md={3}>
                       <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
-                        Discharge Date
+                        Discharge Date <span style={{ color: "red" }} className="required">*</span>
                       </Form.Label>
                       <Form.Control
                         size="sm"
                         type="date"
-                        style={{ fontSize: "12px", border: "1px solid #4dd0e1" }}
+                        style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                         value={selectedInvoice.due_date}
                         min={selectedInvoice.creation_date}
                         onChange={(e) => setSelectedInvoice({ ...selectedInvoice, due_date: e.target.value })}
@@ -1081,12 +1081,12 @@ const InvoiceList = () => {
                     </Col>
                     <Col md={3}>
                       <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
-                        Discharge Time
+                        Discharge Time <span style={{ color: "red" }} className="required">*</span>
                       </Form.Label>
                       <Form.Control
                         size="sm"
                         type="time"
-                        style={{ fontSize: "12px", border: "1px solid #4dd0e1" }}
+                        style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                         value={selectedInvoice.dischargetime}
                         onChange={(e) => setSelectedInvoice({ ...selectedInvoice, dischargetime: e.target.value })}
                       />
@@ -1108,10 +1108,10 @@ const InvoiceList = () => {
                   <h6 style={{ fontSize: "0.95rem", fontWeight: "600", color: "#00838f"}}>Clinical Staff</h6>
                   <Row className="g-2">
                     <Col md={4}>
-                      <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">Consultant Name</Form.Label>
+                      <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">Consultant Name <span style={{ color: "red" }} className="required">*</span></Form.Label>
                       <Form.Select
                         size="sm"
-                        style={{ fontSize: "12px", border: "1px solid #4dd0e1" }}
+                        style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                         value={selectedInvoice?.consultant || ""}
                         onChange={(e) => setSelectedInvoice({ ...selectedInvoice, consultant: e.target.value })}
                       >
@@ -1123,7 +1123,7 @@ const InvoiceList = () => {
                       <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">Surgeon Name</Form.Label>
                       <Form.Select
                         size="sm"
-                        style={{ fontSize: "12px", border: "1px solid #4dd0e1" }}
+                        style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                         value={selectedInvoice?.prepared_doctor || ""}
                         onChange={(e) => setSelectedInvoice({ ...selectedInvoice, prepared_doctor: e.target.value })}
                       >
@@ -1132,10 +1132,10 @@ const InvoiceList = () => {
                       </Form.Select>
                     </Col>
                     <Col md={4}>
-                      <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">Bed Category</Form.Label>
+                      <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">Bed Category <span style={{ color: "red" }} className="required">*</span></Form.Label>
                       <Form.Control
                         size="sm"
-                        style={{ fontSize: "12px", border: "1px solid #4dd0e1" }}
+                        style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                         type="text"
                         value={selectedInvoice.bed_desc}
                         onChange={(e) => setSelectedInvoice({ ...selectedInvoice, bed_desc: e.target.value })}
@@ -1163,7 +1163,7 @@ const InvoiceList = () => {
                         <Form.Control
                           size="sm"
                           placeholder="e.g. Medicines"
-                          style={{ fontSize: "12px", border: "1px solid #4dd0e1" }}
+                          style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                           type="text"
                           value={row.label || ""}
                           onChange={(e) => handleDynamicRowChange(index, "label", e.target.value)}
@@ -1175,7 +1175,7 @@ const InvoiceList = () => {
                           size="sm"
                           onWheel={(e) => e.target.blur()}
                           placeholder="0.00"
-                          style={{ fontSize: "12px", border: "1px solid #4dd0e1" }}
+                          style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                           type="number"
                           value={row.value || ""}
                           onChange={(e) => handleDynamicRowChange(index, "value", e.target.value)}
@@ -1206,7 +1206,6 @@ const InvoiceList = () => {
                   ))}
                 </Card.Body>
               </Card>
-
              
                 <Col md={12}>
                   <Card
@@ -1221,10 +1220,10 @@ const InvoiceList = () => {
                       <h6 style={{ fontSize: "0.95rem", fontWeight: "600", color: "#00838f"}}>Billing Settings</h6>
                       <Row className="g-2">
                         <Col md={3}>
-                          <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">Bill Type</Form.Label>
+                          <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">Bill Type <span style={{ color: "red" }} className="required">*</span></Form.Label>
                           <Form.Select
                             size="sm"
-                            style={{ fontSize: "12px", border: "1px solid #4dd0e1" }}
+                            style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                             value={selectedInvoice.bill_Type}
                             onChange={(e) => {
                               setSelectedInvoice({
@@ -1251,7 +1250,7 @@ const InvoiceList = () => {
                               <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">Insurance Company</Form.Label>
                               <Form.Select
                                 size="sm"
-                                style={{ fontSize: "12px", border: "1px solid #4dd0e1" }}
+                                style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                                 value={selectedInvoice?.insurancecompany || ""}
                                 onChange={(e) => setSelectedInvoice({ ...selectedInvoice, insurancecompany: e.target.value })}
                               >
@@ -1263,7 +1262,7 @@ const InvoiceList = () => {
                               <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">TPA</Form.Label>
                               <Form.Select
                                 size="sm"
-                                style={{ fontSize: "12px", border: "1px solid #4dd0e1" }}
+                                style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                                 value={selectedInvoice?.tpa || ""}
                                 onChange={(e) => setSelectedInvoice({ ...selectedInvoice, tpa: e.target.value })}
                               >
@@ -1277,7 +1276,7 @@ const InvoiceList = () => {
                               <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">Bill Method</Form.Label>
                               <Form.Select
                                 size="sm"
-                                style={{ fontSize: "12px", border: "1px solid #4dd0e1" }}
+                                style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                                 value={selectedInvoice.bill_method || ""}
                                 onChange={(e) => {
                                   const method = e.target.value;
@@ -1302,7 +1301,7 @@ const InvoiceList = () => {
                                   <Form.Control
                                     size="sm"
                                     type="text"
-                                    style={{ fontSize: "12px", border: "1px solid #4dd0e1" }}
+                                    style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                                     value={selectedInvoice.chequeno || ""}
                                     onChange={(e) => setSelectedInvoice({ ...selectedInvoice, chequeno: e.target.value })}
                                   />
@@ -1312,7 +1311,7 @@ const InvoiceList = () => {
                                   <Form.Control
                                     size="sm"
                                     type="number"
-                                    style={{ fontSize: "12px", border: "1px solid #4dd0e1" }}
+                                    style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                                     value={selectedInvoice.pdc || ""}
                                     onChange={(e) => {
                                       const val = e.target.value;
@@ -1334,7 +1333,7 @@ const InvoiceList = () => {
                             <Form.Control
                               size="sm"
                               type="number"
-                              style={{ fontSize: "12px", border: "1px solid #4dd0e1" }}
+                              style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                               value={selectedInvoice.discount}
                               onChange={(e) => {
                                 const disc = parseFloat(e.target.value) || 0;
@@ -1353,7 +1352,7 @@ const InvoiceList = () => {
                             size="sm"
                             as="textarea"
                             rows={1}
-                            style={{ fontSize: "12px", border: "1px solid #4dd0e1" }}
+                            style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                             value={selectedInvoice.note}
                             onChange={(e) => setSelectedInvoice({ ...selectedInvoice, note: e.target.value })}
                           />
@@ -1429,7 +1428,7 @@ const InvoiceList = () => {
             size="sm"
             variant="secondary"
             onClick={handleCloseModal}
-            style={{ borderRadius: "6px", fontSize: "13px" }}
+            style={{ borderRadius: "10px", fontSize: "13px", padding: "10px" }}
           >
             Cancel
           </Button>
@@ -1437,7 +1436,7 @@ const InvoiceList = () => {
             size="sm"
             variant="primary"
             onClick={handleSaveChanges}
-            style={{ borderRadius: "6px", fontSize: "13px" }}
+            style={{ borderRadius: "10px", fontSize: "13px", padding: "10px" }}
           >
             Save Changes
           </Button>

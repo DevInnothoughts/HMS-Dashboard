@@ -758,6 +758,7 @@ export default function All_patient() {
     }
   };
 
+
   const statusBodyTemplate = (formData) => (
     <span
       className={`badge ${formData.status
@@ -2294,7 +2295,7 @@ export default function All_patient() {
               cursor: "pointer",
               transition: "all 0.3s ease",
               boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              marginTop: "13px",
+              marginTop: "15px",
               ":hover": {
                 backgroundColor: "#00acc1",
                 transform: "translateY(-1px)",
@@ -2302,7 +2303,7 @@ export default function All_patient() {
               },
             }}
           >
-            <FeatherIcon icon="refresh-ccw" size={13} className="me-2" />
+            <FeatherIcon icon="refresh-ccw" size={12} className="me-1" />
             Refresh
           </Button>
         </div>
@@ -2320,34 +2321,48 @@ export default function All_patient() {
     }));
   };
 
+  // const generateTimeSlots = () => {
+  //   const slots = [];
+  //   const startTime = new Date();
+  //   const endTime = new Date();
+  //   endTime.setHours(23, 45, 0);
+
+  //   const isToday = formData.date === new Date().toISOString().split("T")[0];
+
+  //   if (isToday) {
+  //     startTime.setHours(
+  //       new Date().getHours(),
+  //       Math.ceil(new Date().getMinutes() / 15) * 15,
+  //       0
+  //     );
+  //   } else {
+  //     startTime.setHours(7, 0, 0);
+  //   }
+
+  //   while (startTime <= endTime) {
+  //     const timeString = startTime.toLocaleTimeString("en-US", {
+  //       hour: "2-digit",
+  //       minute: "2-digit",
+  //       hour12: true,
+  //     });
+  //     slots.push(timeString);
+  //     startTime.setMinutes(startTime.getMinutes() + 15);
+  //   }
+
+  //   return slots;
+  // };
+
+  // const timeSlots = generateTimeSlots();
+
   const generateTimeSlots = () => {
     const slots = [];
-    const startTime = new Date();
-    const endTime = new Date();
-    endTime.setHours(23, 45, 0);
+    let start = moment("07:00", "HH:mm"); // Start Time
+    const end = moment("23:45", "HH:mm");   // End Time
 
-    const isToday = formData.date === new Date().toISOString().split("T")[0];
-
-    if (isToday) {
-      startTime.setHours(
-        new Date().getHours(),
-        Math.ceil(new Date().getMinutes() / 15) * 15,
-        0
-      );
-    } else {
-      startTime.setHours(7, 0, 0);
+    while (start <= end) {
+      slots.push(start.format("hh:mm A"));
+      start.add(15, "minutes"); // Change interval as needed
     }
-
-    while (startTime <= endTime) {
-      const timeString = startTime.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      });
-      slots.push(timeString);
-      startTime.setMinutes(startTime.getMinutes() + 15);
-    }
-
     return slots;
   };
 
@@ -2440,200 +2455,6 @@ export default function All_patient() {
     >
       <PageBreadcrumb pagename="Patient List" />
       {/* <NavBarP pagename="All Registered Patients" /> */}
-
-      {/* <Modal
-        show={showAddModal}
-        onHide={() => setShowAddModal(false)}
-        size="lg"
-        centered
-      >
-        <Modal.Header
-          closeButton
-          style={{
-            backgroundColor: "#e0f7fa",
-            borderBottom: "2px solid #00bcd4",
-          }}
-        >
-          <Modal.Title style={{ color: "#00838f", fontWeight: "bold" }}>
-            <FeatherIcon icon="calendar" className="me-2" />
-            Add Patient Appointment
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body style={{ backgroundColor: "#f8fbfc" }}>
-          <Form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSubmit();
-            }}
-          >
-            <Row className="g-4">
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label>
-                    Appointment Date <span className="text-danger">*</span>
-                  </Form.Label>
-                  <div className="custom-datepicker-container">
-                    <DatePicker
-                      style={{ border: "2px solid rgb(77, 208, 225)" }}
-                      selected={formData.date}
-                      onChange={(date) => setFormData({ ...formData, date })}
-                      className="form-control custom-datepicker"
-                      dateFormat="dd-MM-yyyy"
-                    />
-                  </div>
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label>
-                    Appointment Time <span className="text-danger">*</span>
-                  </Form.Label>
-                  <Form.Control
-                    type="time"
-                    name="appointmentTime"
-                    value={formData.appointmentTime}
-                    onChange={handleInputChange}
-                    style={{ border: "2px solid rgb(77, 208, 225)" }}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label>
-                    Doctor Name <span className="text-danger">*</span>
-                  </Form.Label>
-                  <Form.Select
-                    name="doctor_id"
-                    value={formData.doctor_id}
-                    onChange={handleInputChange}
-                    style={{ border: "2px solid rgb(77, 208, 225)" }}
-                  >
-                    <option value="">Choose Doctor...</option>
-                    {doctors.map((doc) => (
-                      <option key={doc.doctor_id} value={doc.doctor_id}>
-                        {doc.name}
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label>
-                    Patient Type{" "}
-                    <span style={{ color: "red" }} className="required">
-                      *
-                    </span>
-                  </Form.Label>
-                  <Form.Select
-                    style={{ border: "2px solid rgb(77, 208, 225)" }}
-                    name="patient_type"
-                    value={formData.patient_type}
-                    onChange={handleInputChange}
-                  >
-                    <option value="">Select Patient type</option>
-                    <option value="Follow">Follow Up </option>
-                    <option value="Postoperative">Post Operative </option>
-                    <option value="Other">Other</option>
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label>
-                    Patient Name <span className="text-danger">*</span>
-                  </Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    readOnly
-                    style={{
-                      backgroundColor: "#e7ebebff", cursor: "not-allowed",
-                      cursor: "not-allowed",
-                      border: "2px solid rgb(77, 208, 225)",
-                    }}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label>
-                    Contact Number <span className="text-danger">*</span>
-                  </Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="phone"
-                    placeholder="Enter Contact Number"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    style={{ border: "2px solid rgb(77, 208, 225)" }}
-                  />
-                </Form.Group>
-              </Col>
-
-              <Col md={6}>
-                <Form.Group>
-                  <Form.Label>
-                    FDE Name <span className="text-danger">*</span>
-                  </Form.Label>
-                  <Form.Select
-                    name="FDE_Name"
-                    value={formData.FDE_Name}
-                    onChange={handleInputChange}
-                    style={{ border: "2px solid rgb(77, 208, 225)" }}
-                  >
-                    <option value="">Select FDE...</option>
-                    {fdeList.map((fde) => (
-                      <option key={fde.FDEID} value={fde.FDEID}>
-                        {fde.FDEName}
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group className="mb-5">
-                  <Form.Label>
-                    Note <span className="text-danger">*</span>
-                  </Form.Label>
-                  <Form.Control
-                    as="textarea"
-                    rows={3}
-                    name="note"
-                    value={formData.note}
-                    onChange={handleInputChange}
-                    placeholder="Enter clinical notes..."
-                    style={{ border: "2px solid rgb(77, 208, 225)" }}
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-            <div className="d-flex justify-content-end mt-4">
-              <Button
-                variant="secondary"
-                className="me-2"
-                onClick={() => setShowAddModal(false)}
-                style={{ borderRadius: "10px" }}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                style={{
-                  backgroundColor: "rgb(77, 208, 225)",
-                  borderColor: "rgb(77, 208, 225)",
-                  color: "white",
-                  borderRadius: "10px",
-                }}
-              >
-                Add Appointment
-              </Button>
-            </div>
-          </Form>
-        </Modal.Body>
-      </Modal> */}
-
       <Modal
         show={showAddModal}
         onHide={() => setShowAddModal(false)}
@@ -2659,6 +2480,54 @@ export default function All_patient() {
               <Col md={6}>
                 <Form.Group className="mb-2">
                   <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                    Appointment Date <span style={{ color: "red" }}>*</span>
+                  </Form.Label>
+                  <DatePicker
+                    selected={formData.date ? new Date(formData.date) : null}
+                    onChange={(date) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        date: formatDateToLocal(date),
+                      }))
+                    }
+                    dateFormat="dd-MM-yyyy"
+                    className="form-control form-control-sm"
+                    placeholderText="Select Date"
+                    minDate={new Date()}
+                    customInput={
+                      <Form.Control
+                        size="sm"
+                        style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
+                      />
+                    }
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                    Appointment Time <span style={{ color: "red" }}>*</span></Form.Label>
+                  <Form.Select
+                    name="appointmentTime"
+                    value={formData.appointmentTime}
+                    onChange={handleInputChange}
+                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
+                  >
+                    <option value="">Select Time</option>
+                    {timeSlots.map((time, index) => (
+                      <option key={index} value={time}>
+                        {time}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-2">
+                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
                     Patient Name <span style={{ color: "red" }}>*</span>
                   </Form.Label>
                   <Form.Control
@@ -2668,7 +2537,7 @@ export default function All_patient() {
                     value={formData.patientName}
                     onChange={handleInputChange}
                     placeholder="Enter Patient Name"
-                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
                     required
                   />
                 </Form.Group>
@@ -2688,7 +2557,7 @@ export default function All_patient() {
                       border: "2px solid rgb(77, 208, 225)",
                       backgroundColor: "#f8f9fa",
                       cursor: "not-allowed",
-                      fontSize: "12px"
+                      fontSize: "12px", borderRadius:"10px"
                     }}
                   />
                 </Form.Group>
@@ -2706,7 +2575,7 @@ export default function All_patient() {
                     name="doctor_id"
                     value={formData.doctor_id}
                     onChange={handleInputChange}
-                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
                     required
                   >
                     <option value="">Select a Doctor</option>
@@ -2721,35 +2590,6 @@ export default function All_patient() {
               <Col md={6}>
                 <Form.Group className="mb-2">
                   <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
-                    Appointment Date <span style={{ color: "red" }}>*</span>
-                  </Form.Label>
-                  <DatePicker
-                    selected={formData.date ? new Date(formData.date) : null}
-                    onChange={(date) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        date: formatDateToLocal(date),
-                      }))
-                    }
-                    dateFormat="dd-MM-yyyy"
-                    className="form-control form-control-sm"
-                    placeholderText="Select Date"
-                    minDate={new Date()}
-                    customInput={
-                      <Form.Control
-                        size="sm"
-                        style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
-                      />
-                    }
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-
-            <Row>
-              <Col md={6}>
-                <Form.Group className="mb-2">
-                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
                     FDE Name <span style={{ color: "red" }}>*</span>
                   </Form.Label>
                   <Form.Select
@@ -2757,7 +2597,7 @@ export default function All_patient() {
                     name="FDE_Name" // Match your handleInputChange logic
                     value={formData.FDE_Name}
                     onChange={handleInputChange}
-                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
                     required
                   >
                     <option value="">Select FDE Name</option>
@@ -2769,6 +2609,9 @@ export default function All_patient() {
                   </Form.Select>
                 </Form.Group>
               </Col>
+            </Row>
+
+            <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>Note</Form.Label>
@@ -2780,19 +2623,18 @@ export default function All_patient() {
                     onChange={handleInputChange}
                     rows={2}
                     placeholder="Enter Note"
-                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
                   />
                 </Form.Group>
               </Col>
             </Row>
-
 
             <div className="d-flex justify-content-end pt-2" >
               <Button
                 size="sm"
                 variant="danger"
                 className="me-2 px-3"
-                style={{ borderRadius: "10px", fontSize: "12px" }}
+                style={{ borderRadius: "10px", fontSize: "12px", padding:"10px"  }}
                 onClick={() => setShowAddModal(false)}
               >
                 Cancel
@@ -2805,7 +2647,7 @@ export default function All_patient() {
                   borderRadius: "10px",
                   fontSize: "12px",
                   backgroundColor: "#00bcd4",
-                  borderColor: "#00bcd4"
+                  borderColor: "#00bcd4", padding:"10px" 
                 }}
                 onClick={() => handleSubmit("save")}
               >
@@ -2870,7 +2712,7 @@ export default function All_patient() {
                         backgroundColor: "#e7ebebff",
                         cursor: "not-allowed",
                         border: "2px solid rgb(77, 208, 225)",
-                        fontSize: "12px"
+                        fontSize: "12px", borderRadius:"10px"
                       }}
                     />
                   </Form.Group>
@@ -2884,7 +2726,7 @@ export default function All_patient() {
                       name="prefix"
                       value={formData.prefix || ""}
                       onChange={handleInputChange}
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
                     >
                       <option value="">Select Prefix</option>
                       <option value="Mr">Mr</option>
@@ -2905,7 +2747,7 @@ export default function All_patient() {
                       value={formData.name || ""}
                       onChange={handleInputChange}
                       placeholder="Enter Patient Name"
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
                     />
                   </Form.Group>
                 </Col>
@@ -2971,7 +2813,7 @@ export default function All_patient() {
                       value={formData.email || ""}
                       onChange={handleInputChange}
                       placeholder="Enter Email"
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
                     />
                   </Form.Group>
                 </Col>
@@ -2984,7 +2826,7 @@ export default function All_patient() {
                       name="sex"
                       value={formData.sex || ""}
                       onChange={handleInputChange}
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
                     >
                       <option value="">Select</option>
                       <option value="Male">Male</option>
@@ -3004,7 +2846,7 @@ export default function All_patient() {
                       value={formData.phone}
                       onChange={handleInputChange}
                       placeholder="Enter Contact Number"
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
                     />
                   </Form.Group>
                 </Col>
@@ -3019,7 +2861,7 @@ export default function All_patient() {
                       value={formData.mobile_2}
                       onChange={handleInputChange}
                       placeholder="Enter Secondary Contact No"
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
                     />
                   </Form.Group>
                 </Col>
@@ -3034,7 +2876,7 @@ export default function All_patient() {
                       value={formData.address || ""}
                       onChange={handleInputChange}
                       placeholder="Enter Residential Address"
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
                     />
                   </Form.Group>
                 </Col>
@@ -3049,7 +2891,7 @@ export default function All_patient() {
                       value={formData.pincode || ""}
                       onChange={handleInputChange}
                       placeholder="Enter Pincode"
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
                     />
                   </Form.Group>
                 </Col>
@@ -3081,7 +2923,7 @@ export default function All_patient() {
                         formData.identity ? formData.identity.split(",")[0] : ""
                       }
                       onChange={handleInputChange}
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
                     >
                       <option value="">Select Document</option>
                       <option value="Aadhaar No">Aadhaar No</option>
@@ -3107,7 +2949,7 @@ export default function All_patient() {
                       }
                       onChange={handleInputChange}
                       placeholder="Enter ID Number"
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
                     />
                   </Form.Group>
                 </Col>
@@ -3120,7 +2962,7 @@ export default function All_patient() {
                       name="blood_group"
                       value={formData.blood_group || ""}
                       onChange={handleInputChange}
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
                     >
                       <option value="">Select Blood Group</option>
                       <option value="A+">A+</option>
@@ -3158,7 +3000,7 @@ export default function All_patient() {
                       showYearDropdown
                       dropdownMode="select"
                       maxDate={new Date()}
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
                     />
                   </Form.Group>
                 </Col>
@@ -3170,10 +3012,10 @@ export default function All_patient() {
                       value={formData.age || ""}
                       readOnly
                       style={{
-                        backgroundColor: "#f1f3f4",
+                        backgroundColor: "#e7ebebff",
                         cursor: "not-allowed",
                         border: "2px solid rgb(77, 208, 225)",
-                        fontSize: "12px"
+                        fontSize: "12px", borderRadius:"10px"
                       }}
                     />
                   </Form.Group>
@@ -3189,7 +3031,7 @@ export default function All_patient() {
                       placeholder="Enter Occupation"
                       value={formData.occupation || ""}
                       onChange={handleInputChange}
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
                     />
                   </Form.Group>
                 </Col>
@@ -3204,7 +3046,7 @@ export default function All_patient() {
                       placeholder="Enter Company Name"
                       value={formData.companyname || ""}
                       onChange={handleInputChange}
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
                     />
                   </Form.Group>
                 </Col>
@@ -3282,7 +3124,7 @@ export default function All_patient() {
                       style={{
                         border: "2px solid rgb(77, 208, 225)",
                         minWidth: "270px",
-                        fontSize: "12px"
+                        fontSize: "12px", borderRadius:"10px"
                       }}
                     >
                       <option value="">Choose Reference</option>
@@ -3324,7 +3166,8 @@ export default function All_patient() {
               borderRadius: "10px",
               backgroundColor: "#00bcd4",
               borderColor: "#00bcd4",
-              fontSize: "12px"
+              fontSize: "12px",
+              padding:"10px"
             }}
             onClick={() => handlePrint(selectedPatient)}
           >
@@ -3334,7 +3177,7 @@ export default function All_patient() {
           <Button
             variant="secondary"
             className="px-3"
-            style={{ borderRadius: "10px", fontSize: "12px" }}
+            style={{ borderRadius: "10px", fontSize: "12px", padding:"10px" }}
             onClick={() => {
               setShowEditPatientModal(false);
               setSelectedPatient(null);
@@ -3375,7 +3218,7 @@ export default function All_patient() {
               borderColor: "rgb(77, 208, 225)",
               color: "white",
               borderRadius: "10px",
-              fontSize: "12px"
+              fontSize: "12px" ,padding:"10px"
             }}
             onClick={handleSaveChanges}
           >
@@ -3383,7 +3226,6 @@ export default function All_patient() {
           </Button>
         </Modal.Footer>
       </Modal>
-
 
       <div
         className="theme-body"

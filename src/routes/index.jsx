@@ -1,4 +1,3 @@
-/* index.js */
 import React from "react";
 import { Routes } from "react-router-dom";
 import { AuthRoutes } from "./AuthRoutes";
@@ -9,6 +8,7 @@ import { ReceptionistRoutes } from "./ReceptionistRoutes";
 import { ReportRoutes } from "./ReportsRoutes";
 import { SettingsRoutes } from "./SettingsRoutes";
 import { UtilityRoutes } from "./UtilityRoutes";
+import { IpdRoutes } from "./IpdRoutes";
 
 export default function AppRoutes() {
   return (
@@ -16,6 +16,7 @@ export default function AppRoutes() {
       {AuthRoutes}
       {DashboardRoutes}
       {DoctorRoutes}
+      {IpdRoutes}
       {PatientRoutes}
       {ReceptionistRoutes}
       {ReportRoutes}

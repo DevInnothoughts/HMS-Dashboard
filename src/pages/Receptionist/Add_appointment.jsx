@@ -1520,7 +1520,7 @@ export default function Add_appointment() {
 
   const inputStyle = {
     fontSize: "12px",
-    borderRadius: "8px",
+    borderRadius: "10px",
     border: "2px solid rgb(77, 208, 225)",
     padding: "5px 10px",
   };

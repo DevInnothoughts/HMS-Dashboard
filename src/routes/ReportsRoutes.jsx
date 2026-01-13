@@ -5,6 +5,7 @@ import EnquiryList from "../pages/Reports/Enquiry_List";
 import ReceiptList from "../pages/Reports/ReceiptList";
 import Payment_list from "../pages/Reports/Payment_list";
 import FDE_details_list from "../pages/Reports/fde_details_list";
+import DailyOPDReport from "../pages/Reports/Manage Reports/DailyOPDReport.jsx";
 
 export const ReportRoutes = (
   <>
@@ -13,5 +14,6 @@ export const ReportRoutes = (
     <Route path="/reports/payment" element={<Payment_list />} />
     <Route path="/reports/receipts" element={<ReceiptList />} />
     <Route path="/reports/fde" element={<FDE_details_list />} />
+    <Route path="/dailyOPDReport" element={<DailyOPDReport />} />
   </>
 );

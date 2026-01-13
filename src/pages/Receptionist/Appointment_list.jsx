@@ -1156,7 +1156,7 @@ export default function Appointment_list() {
               cursor: "pointer",
               transition: "all 0.3s ease",
               boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              marginTop: "13px",
+              marginTop: "15px",
               ":hover": {
                 backgroundColor: "#00acc1",
                 transform: "translateY(-1px)",
@@ -1164,7 +1164,7 @@ export default function Appointment_list() {
               },
             }}
           >
-            <FeatherIcon icon="refresh-ccw" size={13} className="me-2" />
+            <FeatherIcon icon="refresh-ccw" size={12} className="me-1" />
             Refresh
           </Button>
         </div>
@@ -1218,28 +1218,22 @@ export default function Appointment_list() {
         centered
       >
         <Modal.Header style={{
-          backgroundColor: "#67c5cfff",
-          padding: "20px 25px",
-          borderBottom: "2px solid #1a5b61ff",
-          display: "flex",
-          alignItems: "center",
-        }} closeButton>
-          <Modal.Title style={{
-            color: "#1a5b61ff",
-            fontWeight: "600",
-            fontSize: "1.25rem",
-          }}><FeatherIcon
+            backgroundColor: "#e0f7fa",
+            borderBottom: "2px solid #00bcd4",
+            padding: "10px 15px",
+          }}closeButton>
+          <Modal.Title  style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px"}}>
+            <FeatherIcon
               className="me-2"
               icon="trash"
-              size="24"
+              size="17"
               style={{ color: "#1a5b61ff" }}
             />Reason of Cancellation <span className="text-danger">*</span></Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p className="mb-10">Appointment ID: {appointmentIdToDelete}</p>
           <textarea
             style={{
-              fontSize: "14px", borderRadius: "8px",
+              fontSize: "12px", borderRadius: "10px",
               border: "2px solid rgb(77, 208, 225)",
               padding: "6px"
             }}
@@ -1251,11 +1245,14 @@ export default function Appointment_list() {
           ></textarea>
         </Modal.Body>
 
-        <Modal.Footer>
-          <Button variant="danger" style={{ borderRadius: "10px" }} onClick={handleDelete}>
+           <div className="d-flex justify-content-end">
+          <Button variant="danger"
+                size="sm"
+                className="me-2 px-3 mb-5"
+                style={{ borderRadius: "10px", fontSize: "12px", padding: "10px" }}onClick={handleDelete}>
             Submit & Cancel
           </Button>
-        </Modal.Footer>
+        </div>
       </Modal>
 
       <Modal
@@ -1265,20 +1262,15 @@ export default function Appointment_list() {
         centered
       >
         <Modal.Header style={{
-          backgroundColor: "#67c5cfff",
-          padding: "20px 25px",
-          borderBottom: "2px solid #1a5b61ff",
-          display: "flex",
-          alignItems: "center",
-        }} closeButton>
-          <Modal.Title style={{
-            color: "#1a5b61ff",
-            fontWeight: "600",
-            fontSize: "1.25rem",
-          }}><FeatherIcon
+            backgroundColor: "#e0f7fa",
+            borderBottom: "2px solid #00bcd4",
+            padding: "10px 15px",
+          }} closeButton>
+          <Modal.Title style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}>
+            <FeatherIcon
               className="me-2"
               icon="edit"
-              size="24"
+              size="18"
               style={{ color: "#1a5b61ff" }}
             />Edit Appointment</Modal.Title>
         </Modal.Header>
@@ -1288,7 +1280,7 @@ export default function Appointment_list() {
               <Row>
                 <Col md={4}>
                   <Form.Group className="mb-15">
-                    <Form.Label style={{ fontSize: "14px" }}>
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
                       Appointment Date
                     </Form.Label>
                     <DatePicker
@@ -1301,25 +1293,21 @@ export default function Appointment_list() {
                       dateFormat="dd-MM-yyyy"
                       className="form-control custom-datepicker"
                       placeholderText="Select Date"
-                      style={{ fontSize: "14px" }}
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px", }}
                     />
                   </Form.Group>
                 </Col>
 
                 <Col md={4}>
                   <Form.Group className="mb-2">
-                    <Form.Label style={{ fontSize: "14px" }}>
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
                       Appointment Time
                     </Form.Label>
                     <Form.Select
                       name="appointmentTime"
                       value={selectedAppointment.appointmentTime || ""}
                       onChange={handleEditModalInputChange}
-                      style={{
-                        fontSize: "14px", borderRadius: "8px",
-                        border: "2px solid rgb(77, 208, 225)",
-                        padding: "6px"
-                      }}
+                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
                     >
                       <option value="">Select Time</option>
                       {timeSlots.map((time, index) => (
@@ -1333,16 +1321,12 @@ export default function Appointment_list() {
 
                 <Col md={4} className="mb-2">
                   <Form.Group className="mb-2">
-                    <Form.Label style={{ fontSize: "14px" }}>Patient Type</Form.Label>
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>Patient Type</Form.Label>
                     <Form.Select
                       name="patient_type"
                       value={selectedAppointment.patient_type || ""}
                       onChange={handleEditModalInputChange}
-                      style={{
-                        fontSize: "14px", borderRadius: "8px",
-                        border: "2px solid rgb(77, 208, 225)",
-                        padding: "6px",
-                      }}
+                     style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
                     >
                       <option value="">Select Type</option>
                       {TYPE_LIST.map((type, index) => (
@@ -1356,7 +1340,7 @@ export default function Appointment_list() {
 
                 <Col md={4}>
                   <Form.Group className="mb-15">
-                    <Form.Label style={{ fontSize: "14px" }}>
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
                       Doctor Name
                     </Form.Label>
                     <Form.Select
@@ -1370,11 +1354,7 @@ export default function Appointment_list() {
                           doctor_id: selectedDoc ? selectedDoc.doctor_id : prev.doctor_id
                         }));
                       }}
-                      style={{
-                        fontSize: "14px", borderRadius: "8px",
-                        border: "2px solid rgb(77, 208, 225)",
-                        padding: "6px",
-                      }}
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
                     >
                       <option value="">Select a Doctor</option>
                       {doctors.map((doctor) => (
@@ -1388,7 +1368,7 @@ export default function Appointment_list() {
 
                 <Col md={4}>
                   <Form.Group className="mb-2">
-                    <Form.Label style={{ fontSize: "14px" }}>
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
                       Patient Name
                     </Form.Label>
                     <Form.Control
@@ -1397,10 +1377,9 @@ export default function Appointment_list() {
                       value={selectedAppointment.patient_name || ""}
                       readOnly
                       style={{
-                        fontSize: "14px",
-                        borderRadius: "8px",
+                        fontSize: "12px",
+                        borderRadius: "9px",
                         border: "2px solid rgb(77, 208, 225)",
-                        padding: "6px",
                         backgroundColor: "#e7ebebff",
                         cursor: "not-allowed"
                       }}
@@ -1410,7 +1389,7 @@ export default function Appointment_list() {
 
                 <Col md={4}>
                   <Form.Group>
-                    <Form.Label style={{ fontSize: "14px" }}>
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
                       Contact Number
                     </Form.Label>
                     <Form.Control
@@ -1419,10 +1398,9 @@ export default function Appointment_list() {
                       value={selectedAppointment.patient_phone || ""}
                       readOnly
                       style={{
-                        fontSize: "14px",
-                        borderRadius: "8px",
+                        fontSize: "12px",
+                        borderRadius: "9px",
                         border: "2px solid rgb(77, 208, 225)",
-                        padding: "6px",
                         backgroundColor: "#e7ebebff",
                         cursor: "not-allowed"
                       }}
@@ -1432,7 +1410,7 @@ export default function Appointment_list() {
 
                 <Col md={12}>
                   <Form.Group className="mb-15">
-                    <Form.Label style={{ fontSize: "14px" }}>Patient Address</Form.Label>
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>Patient Address</Form.Label>
                     <Form.Control
                       as="textarea"
                       rows={2}
@@ -1441,10 +1419,9 @@ export default function Appointment_list() {
                       onChange={handleEditModalInputChange}
                       placeholder="Enter patient address"
                       style={{
-                        fontSize: "14px",
-                        borderRadius: "8px",
+                        fontSize: "12px",
+                        borderRadius: "9px",
                         border: "2px solid rgb(77, 208, 225)",
-                        padding: "6px",
                       }}
                     />
                   </Form.Group>
@@ -1452,16 +1429,15 @@ export default function Appointment_list() {
 
                 <Col md={6}>
                   <Form.Group className="mb-10">
-                    <Form.Label style={{ fontSize: "14px" }}>Reference</Form.Label>
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>Reference</Form.Label>
                     <Form.Select
                       name="reference"
                       value={selectedAppointment?.reference || ""}
                       onChange={handleEditModalInputChange}
                       style={{
-                        fontSize: "14px",
-                        borderRadius: "8px",
+                        fontSize: "12px",
+                        borderRadius: "9px",
                         border: "2px solid rgb(77, 208, 225)",
-                        padding: "6px",
                       }}
                     >
                       <option value="">Select Reference</option>
@@ -1476,16 +1452,15 @@ export default function Appointment_list() {
 
                 <Col md={6}>
                   <Form.Group className="mb-2">
-                    <Form.Label style={{ fontSize: "14px" }}>FDE Name</Form.Label>
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>FDE Name</Form.Label>
                     <Form.Select
                       name="FDE_Name"
                       value={selectedAppointment?.FDE_Name || ""}
                       onChange={handleEditModalInputChange}
                       style={{
-                        fontSize: "14px",
-                        borderRadius: "8px",
+                        fontSize: "12px",
+                        borderRadius: "9px",
                         border: "2px solid rgb(77, 208, 225)",
-                        padding: "6px",
                       }}
                     >
                       <option value="">Select FDE</option>
@@ -1505,7 +1480,8 @@ export default function Appointment_list() {
                   style={{
                     borderRadius: "10px",
                     padding: "10px 20px",
-                    fontSize: "14px"
+                    fontSize: "12px",
+                    padding: "10px"
                   }}
                 >
                   Cancel
@@ -1518,7 +1494,8 @@ export default function Appointment_list() {
                     border: "none",
                     borderRadius: "10px",
                     padding: "10px 20px",
-                    fontSize: "14px"
+                    fontSize: "12px",
+                    padding: "10px"
                   }}
                 >
                   Save Changes
@@ -1790,9 +1767,11 @@ export default function Appointment_list() {
                     value={selectedAppointment?.patient_name || ""}
                     style={{
                       cursor: "not-allowed",
-                      fontSize: "12px",
+                      fontSize: "11px",
                       backgroundColor: "#eee",
                       border: "2px solid rgb(77, 208, 225)",
+                      borderRadius:"10px"
+                      
                     }}
                   />
                 </Col>
@@ -1839,6 +1818,7 @@ export default function Appointment_list() {
                       border: "2px solid rgb(77, 208, 225)",
                       borderRadius: "6px",
                       backgroundColor: "#94e2eeff",
+                         borderRadius:"10px"
                     }}
                   >
                     {["DNC", "DNW", "DNP", "Only Registration"].map((opt) => (
@@ -1861,7 +1841,7 @@ export default function Appointment_list() {
                       className="ms-auto"
                       style={{
                         fontSize: "11px",
-                        borderRadius: "5px",
+                        borderRadius: "8px",
                         fontWeight: "600",
                         textTransform: "uppercase",
                       }}
@@ -1892,6 +1872,7 @@ export default function Appointment_list() {
                       style={{
                         fontSize: "12px",
                         border: "2px solid rgb(77, 208, 225)",
+                           borderRadius:"10px"
                       }}
                       onChange={handleReceiptFormChange}
                     />
@@ -1988,6 +1969,7 @@ export default function Appointment_list() {
                       style={{
                         fontSize: "11px",
                         border: "2px solid rgb(77, 208, 225)",
+                           borderRadius:"10px"
                       }}
                       value={receiptForm.registrationType ? 0 : item.amount}
                       disabled={!!receiptForm.registrationType}
@@ -2047,6 +2029,7 @@ export default function Appointment_list() {
                     style={{
                       fontSize: "12px",
                       border: "2px solid rgb(77, 208, 225)",
+                         borderRadius:"10px"
                     }}
                     value={
                       receiptForm.registrationType ? 0 : receiptForm.discountAmt
@@ -2065,6 +2048,7 @@ export default function Appointment_list() {
                     name="discountNote"
                     style={{
                       fontSize: "12px",
+                         borderRadius:"10px",
                       border: "2px solid rgb(77, 208, 225)",
                     }}
                     onChange={handleReceiptFormChange}
@@ -2081,6 +2065,7 @@ export default function Appointment_list() {
                     style={{
                       fontSize: "12px",
                       border: "2px solid rgb(77, 208, 225)",
+                         borderRadius:"10px"
                     }}
                     name="paymentMode"
                     onChange={handleReceiptFormChange}
@@ -2109,6 +2094,7 @@ export default function Appointment_list() {
                       border: "2px solid rgb(77, 208, 225)",
                       borderRadius: "6px",
                       backgroundColor: "#94e2eeff",
+                         borderRadius:"10px"
                     }}
                   >
                     {[
@@ -2226,7 +2212,7 @@ export default function Appointment_list() {
           <Button
             variant="secondary"
             onClick={() => setShowReceiptModal(false)}
-            style={{ fontSize: "12px", borderRadius: "10px" }}
+            style={{ fontSize: "12px", borderRadius: "10px", padding:"9px"  }}
           >
             Cancel
           </Button>
@@ -2237,6 +2223,7 @@ export default function Appointment_list() {
               border: "none",
               fontSize: "12px",
               borderRadius: "10px",
+              padding:"10px" 
             }}
           >
             Generate & Save Receipt
