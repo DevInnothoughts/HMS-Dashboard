@@ -3310,7 +3310,7 @@ export default function All_patient() {
                       <Column
                         field="Uid_no"
                         header="UHID No"
-                        body={(rowData) =>
+                          body={(rowData) =>
                           rowData.Uid_no ? rowData.Uid_no : "-"
                         }
                         headerClassName="datatable-header-center"
