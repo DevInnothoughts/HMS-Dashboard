@@ -96,7 +96,7 @@ export default function ReceptionistDashboard() {
   //       acc[type] = (acc[type] || 0) + 1;
   //       return acc;
   //     },
-  //     { NEW: 0, FOLLOW: 0, POSTOPERATIVE: 0, OTHER: 0 }
+  //     { New: 0, Follow: 0, Postoperative: 0, OTHER: 0 }
   //   );
   // }, [appointments]);
 
@@ -115,7 +115,7 @@ export default function ReceptionistDashboard() {
         acc[type] = (acc[type] || 0) + 1;
         return acc;
       },
-      { NEW: 0, FOLLOW: 0, POSTOPERATIVE: 0, OTHER: 0 }
+      { New: 0, Follow: 0, Postoperative: 0, OTHER: 0 }
     );
   }, [appointments, selectedDate]);
 
@@ -299,9 +299,9 @@ export default function ReceptionistDashboard() {
 
   const eventStyleGetter = useCallback((event) => {
     const colorMap = {
-      NEW: "#000000",
-      FOLLOW: "#ff8000",
-      POSTOPERATIVE: "#8000ff",
+      New: "#000000",
+      Follow: "#ff8000",
+      Postoperative: "#8000ff",
       OTHER: "#ff0080",
     };
     return {
@@ -597,14 +597,14 @@ export default function ReceptionistDashboard() {
                 <div className="d-flex align-items-center flex-wrap">
                   <div className="legend-item">
                     <span className="dot" style={{ background: "#000" }}></span>{" "}
-                    New <span className="cnt">({counts.NEW})</span>
+                    New <span className="cnt">({counts.New})</span>
                   </div>
                   <div className="legend-item">
                     <span
                       className="dot"
                       style={{ background: "#ff8000" }}
                     ></span>{" "}
-                    Follow-up <span className="cnt">({counts.FOLLOW})</span>
+                    Follow-up <span className="cnt">({counts.Follow})</span>
                   </div>
                   <div className="legend-item">
                     <span
@@ -612,7 +612,7 @@ export default function ReceptionistDashboard() {
                       style={{ background: "#8000ff" }}
                     ></span>{" "}
                     Post-Operative{" "}
-                    <span className="cnt">({counts.POSTOPERATIVE})</span>
+                    <span className="cnt">({counts.Postoperative})</span>
                   </div>
                   <div className="legend-item">
                     <span

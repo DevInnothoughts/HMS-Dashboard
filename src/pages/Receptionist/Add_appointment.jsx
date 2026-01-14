@@ -78,7 +78,7 @@
 //   default: { min: 7, max: 15 },
 // };
 
-// const BASE_URL = "http://localhost:5100/api";
+// const BASE_URL = "http://194.195.117.79:5100/api";
 
 // export default function Add_appointment() {
 //   const [loading, setLoading] = useState(false);
@@ -112,8 +112,8 @@
 //     patient_id: "",
 //   });
 //   const [errors, setErrors] = useState({});
-//   const newPatientTypes = ["NEW"];
-//   const existingPatientTypes = ["FOLLOW", "POSTOPERATIVE", "OTHER"];
+//   const newPatientTypes = ["New"];
+//   const existingPatientTypes = ["Follow", "Postoperative", "OTHER"];
 
 //   useEffect(() => {
 //     const token = localStorage.getItem("token");
@@ -143,7 +143,7 @@
 //           FDE_Name: "",
 //           departmentName: "",
 //           doctorName: "",
-//           patient_type: "NEW",
+//           patient_type: "New",
 //           doctor_id: "",
 //         }));
 //         return;
@@ -165,7 +165,7 @@
 //             patientName: "",
 //             patient_id: "",
 //             patient_location: "",
-//             patient_type: "NEW",
+//             patient_type: "New",
 //             doctor_id: "",
 //           }));
 //           return;
@@ -236,7 +236,7 @@
 //             ...prev,
 //             patientName: "",
 //             patient_id: "",
-//             patient_type: "NEW",
+//             patient_type: "New",
 //             doctor_id: "",
 //           }));
 //         }
@@ -247,7 +247,7 @@
 //           ...prev,
 //           patientName: "",
 //           patient_id: "",
-//           patient_type: "NEW",
+//           patient_type: "New",
 //           doctor_id: "",
 //         }));
 //       }
@@ -410,9 +410,9 @@
 //       requiredFields.push("treatment");
 //     }
 
-//     if (formData.patient_type !== "NEW" && !formData.patient_id) {
+//     if (formData.patient_type !== "New" && !formData.patient_id) {
 //       newErrors.patient_phone =
-//         "Patient ID is required for existing patient types (FOLLOW, POSTOPERATIVE, OTHER). Please search by phone number.";
+//         "Patient ID is required for existing patient types (Follow, Postoperative, OTHER). Please search by phone number.";
 //     }
 
 //     requiredFields.forEach((field) => {
@@ -537,8 +537,8 @@
 //   const shouldShowAddressAndReference = () => {
 //     return !(
 //       isExistingPatient &&
-//       (formData.patient_type === "FOLLOW" ||
-//         formData.patient_type === "POSTOPERATIVE" ||
+//       (formData.patient_type === "Follow" ||
+//         formData.patient_type === "Postoperative" ||
 //         formData.patient_type === "OTHER")
 //     );
 //   };
@@ -604,7 +604,7 @@
 //         setFormData((prev) => ({
 //           ...prev,
 //           patientName: "",
-//           patient_type: "NEW",
+//           patient_type: "New",
 //           doctor_id: "",
 //           patient_id: "",
 //         }));
@@ -1184,8 +1184,8 @@ export default function Add_appointment() {
     patient_id: "",
   });
   const [errors, setErrors] = useState({});
-  const newPatientTypes = ["NEW"];
-  const existingPatientTypes = ["FOLLOW-UP", "POST-OPERATIVE", "OTHER"];
+  const newPatientTypes = ["New"];
+  const existingPatientTypes = ["Follow-UP", "POST-OPERATIVE", "OTHER"];
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -1215,7 +1215,7 @@ export default function Add_appointment() {
           FDE_Name: "",
           departmentName: "",
           doctorName: "",
-          patient_type: "NEW",
+          patient_type: "New",
           doctor_id: "",
         }));
         return;
@@ -1235,7 +1235,7 @@ export default function Add_appointment() {
             patientName: "",
             patient_id: "",
             patient_location: "",
-            patient_type: "NEW",
+            patient_type: "New",
             doctor_id: "",
           }));
           return;
@@ -1296,7 +1296,7 @@ export default function Add_appointment() {
             ...prev,
             patientName: "",
             patient_id: "",
-            patient_type: "NEW",
+            patient_type: "New",
             doctor_id: "",
           }));
         }
@@ -1405,7 +1405,7 @@ export default function Add_appointment() {
   // const validate = () => {
   //   const newErrors = {};
   //   const requiredFields = ["date", "patientName", "patient_type", "patient_phone", "appointmentTime", "note", "FDE_Name", "reference", "doctor_id"];
-  //   if (!(isExistingPatient && (formData.patient_type === "FOLLOW" || formData.patient_type === "POSTOPERATIVE" || formData.patient_type === "OTHER"))) {
+  //   if (!(isExistingPatient && (formData.patient_type === "Follow" || formData.patient_type === "Postoperative" || formData.patient_type === "OTHER"))) {
   //     requiredFields.push("patient_location");
   //   }
   //   if (formData.patient_type === "OTHER") requiredFields.push("treatment");
@@ -1422,7 +1422,7 @@ export default function Add_appointment() {
     const newErrors = {};
     const requiredFields = ["date", "patientName", "patient_type", "patient_phone", "appointmentTime", "FDE_Name", "doctor_id"];
 
-    if (formData.patient_type === "NEW") {
+    if (formData.patient_type === "New") {
       requiredFields.push("patient_location");
       requiredFields.push("reference");
     }
@@ -1466,11 +1466,15 @@ export default function Add_appointment() {
         countryCode: getCountryCode(formData.patient_phone),
       };
       try {
-        const response = await fetch(`${BASE_URL}/V1/appointment/addAppointment?location=${currentLocation}`, {
+        const response = await fetch(
+          `${BASE_URL}/V1/appointment/addAppointment?location=${currentLocation}`,
+          {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
-        });
+          }
+        );
+
         if (response.ok) {
           Swal.fire({ icon: "success", title: "Success!", text: "Appointment booked successfully." });
           handleReset();
@@ -1604,13 +1608,13 @@ export default function Add_appointment() {
                         </Form.Select>
                       </Col>
                     )}
-                    {/* {!(isExistingPatient && (formData.patient_type === "FOLLOW" || formData.patient_type === "POSTOPERATIVE" || formData.patient_type === "OTHER")) && (
+                    {/* {!(isExistingPatient && (formData.patient_type === "Follow" || formData.patient_type === "Postoperative" || formData.patient_type === "OTHER")) && (
                       <Col md={formData.patient_type === "OTHER" ? 4 : 8}>
                         <Form.Label style={labelStyle}>Patient Address <span className="text-danger">*</span></Form.Label>
                         <Form.Control style={inputStyle} type="text" name="patient_location" value={formData.patient_location} onChange={handleInputChange} placeholder="Enter Address" />
                       </Col>
                     )} */}
-                    {formData.patient_type === "NEW" && (
+                    {formData.patient_type === "New" && (
                       <Col md={8}>
                         <Form.Label style={labelStyle}>
                           Patient Address <span className="text-danger">*</span>
@@ -1664,7 +1668,7 @@ export default function Add_appointment() {
                             "Other",].map(r => <option key={r} value={r}>{r}</option>)}
                       </Form.Select>
                     </Col> */}
-                    {formData.patient_type === "NEW" && (
+                    {formData.patient_type === "New" && (
                       <Col md={4}>
                         <Form.Label style={labelStyle}>
                           Reference <span className="text-danger">*</span>

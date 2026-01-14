@@ -80,20 +80,90 @@ export default function Call_logs() {
     }
   }, []);
 
-  const handleAddAppointmentClick = (rowData) => {
+  const handleAddAppointmentClick = async (rowData) => {
+    console.log("OPening add appointment modal:");
     const today = new Date();
-    console.log("Opening Add Appointment Modal for IVR ID:", rowData.ivr_id);
-
-    setFormData({
-      date: formatDate(today),
-      doctor_id: "",
-      doctorName: "",
-      patientName: "",
-      caller_no: rowData.caller_no || "",
+    const patient_phone = rowData.caller_no || "";
+  
+    // Reset/Set initial data
+    setFormData((prev) => ({
+      ...prev,
+      date: moment(today).format("YYYY-MM-DD"),
+      caller_no: patient_phone,
       appointmentTime: rowData.call_time || "",
-      FDE_Name: "",
       note: rowData.note || "",
-    });
+      patientName: "",
+      doctor_id: "",
+      FDE_Name: "",
+      patient_type: "New", // Default
+    }));
+  
+    if (!patient_phone) {
+      setShowAddModal(true);
+      return;
+    }
+  
+    try {
+      const url = `${BASE_URL}/V1/appointment/getPatientByMobile?patient_phone=${patient_phone}&location=${currentLocation}`;
+      const response = await fetch(url, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+  
+      if (!response.ok) {
+        setFormData((prev) => ({ ...prev, patient_type: "New" }));
+        setShowAddModal(true);
+        return;
+      }
+  
+      const data = await response.json();
+      if (data.statusCode === 200 && data.data) {
+        // --- NESTED CHECK: PENDING APPOINTMENTS ---
+        try {
+          const confirmUrl = `${BASE_URL}/V1/appointment/getPatientByApptConfirm?patient_phone=${patient_phone}&location=${currentLocation}`;
+          const confirmResponse = await fetch(confirmUrl, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+          });
+  
+          const confirmData = await confirmResponse.json();
+  
+          // If status 400, a pending appointment exists
+          if (confirmResponse.status === 400) {
+            Swal.fire({
+              icon: "warning",
+              title: "Duplicate Appointment",
+              text: confirmData.message || "This patient already has a pending appointment. Please complete it first.",
+              confirmButtonColor: "#f39c12",
+            });
+            return; // STOP: Do not open modal
+          }
+        } catch (innerError) {
+          console.error("Error in confirmation check API call:", innerError);
+        }
+  
+        // If we reached here, patient exists and has NO pending appointments
+        Swal.fire({
+          icon: "info",
+          title: "Patient Found",
+          text: `${data.data.name} is already registered.`,
+          confirmButtonColor: "#00bcd4",
+          timer: 2000,
+        });
+  
+        setFormData((prev) => ({
+          ...prev,
+          patientName: data.data.name || "",
+          patient_type: "Follow", // Default for existing patient
+        }));
+      } else {
+        setFormData((prev) => ({ ...prev, patient_type: "New" }));
+      }
+    } catch (error) {
+      console.error("Error fetching patient details:", error);
+      setFormData((prev) => ({ ...prev, patient_type: "New" }));
+    }
+  
     setShowAddModal(true);
   };
 
@@ -601,7 +671,7 @@ export default function Call_logs() {
       FDE_Name: fdeName,
       appointment_time: formData.appointmentTime,
       patient_phone: formData.caller_no,
-      patient_type: "NEW",
+      patient_type: formData.patient_type, // Now dynamic
       appointment_timestamp: moment(formData.date).format("YYYY-MM-DD"),
       doctorName: doctorName,
       doctor_id: formData.doctor_id,
@@ -661,12 +731,17 @@ export default function Call_logs() {
       patient_location: currentLocation,
       patient_type: "NEW",
       date: moment(enquiryForm.date).format("YYYY-MM-DD"),
+      // time: enquiryForm.time,
+      time: "0",
       doctor_id: enquiryForm.doctor_id || null,
       patient_name: enquiryForm.patient_name,
       patient_phone: enquiryForm.caller_no,
+      // patient_type: "New",
       enquirytype: enquiryForm.enquirytype,
       fdeId: enquiryForm.FDE_Name || null,
       FDE_Name: enquiryForm.FDE_Name || null,
+      // reference: enquiryForm.reference || null,
+      reference: "0",
       note: enquiryForm.note || "",
     };
 
