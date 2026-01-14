@@ -354,13 +354,32 @@ export default function ReceptionistDashboard() {
         <div className="clinical-body">
           <div className="data-item-inline">
             <label>
-              <FeatherIcon icon="user" size={14} /> Patient:
+              <FeatherIcon icon="user" size={14} /> Name:
             </label>
             <span className="data-value fw-bold">
               {selectedEvent.patientName}
             </span>
           </div>
+          <div className="data-item-inline">
+            <label>
+              <FeatherIcon icon="phone" size={14} /> Contact:
+            </label>
+            <span className="data-value fw-bold">{selectedEvent.phone}</span>
+          </div>
 
+          <div className="data-item-inline">
+            <label>
+              <FeatherIcon icon="calendar" size={14} />Apt Date:
+            </label>
+            <span className="data-value fw-bold">{selectedEvent.date}</span>
+          </div>
+
+          <div className="data-item-inline">
+            <label>
+              <FeatherIcon icon="clock" size={14} /> Apt Time:
+            </label>
+            <span className="data-value fw-bold">{selectedEvent.time}</span>
+          </div>
           <div className="data-item-inline">
             <label>
               <FeatherIcon icon="tag" size={14} /> Type:
@@ -377,27 +396,6 @@ export default function ReceptionistDashboard() {
                 {selectedEvent.patientType.toUpperCase()}
               </Badge>
             </span>
-          </div>
-
-          <div className="data-item-inline">
-            <label>
-              <FeatherIcon icon="clock" size={14} /> Time:
-            </label>
-            <span className="data-value fw-bold">{selectedEvent.time}</span>
-          </div>
-
-          <div className="data-item-inline">
-            <label>
-              <FeatherIcon icon="calendar" size={14} /> Date:
-            </label>
-            <span className="data-value fw-bold">{selectedEvent.date}</span>
-          </div>
-
-          <div className="data-item-inline">
-            <label>
-              <FeatherIcon icon="phone" size={14} /> Contact:
-            </label>
-            <span className="data-value fw-bold">{selectedEvent.phone}</span>
           </div>
 
           <div className="data-item-inline">
@@ -478,44 +476,105 @@ export default function ReceptionistDashboard() {
       style={{ background: "#f0f2f5", minHeight: "100vh" }}
     >
       <style>{`
-                    .dashboard-header-bar {
-                        background: #fff; border-radius: 12px;
-                        box-shadow: 0 40px 10px rgba(0,0,0,0.03); margin-bottom: 10px;
-                        border: 2px solid rgb(77, 208, 225);
-                    }
-                        
-                    .legend-title { font-size: 7px; color: #1eb3caff; font-weight: 700; margin-bottom: 5px; letter-spacing: 0.5px; }
-                    .legend-item { display: flex; align-items: center; margin-right: 22px; font-size: 13px; font-weight: 600; color: #295261ff; }
-                    .dot { width: 9px; height:9px; border-radius: 50%; margin-right: 6px; }
-                    .cnt { font-size: 12px; color: #000000ff; margin-left: 4px; }
+                    /* --- 1. Layout & Stacking Contexts --- */
+.sidebar-wrapper, 
+.header-wrapper, 
+.page-main-header { 
+    z-index: 9999 !important; 
+}
 
-                    .rbc-calendar { background: #fff; border-radius: 12px; padding: 3px }
-                    .rbc-header { padding: 12px 0 !important; font-weight: 700 !important; color: #454b53ff !important; border-bottom: 2px solid #f1f5f9 !important; }
-                    .rbc-show-more { color: #016f69ff !important; background: #b0eff3ff !important; border-radius: 4px !important; font-weight: 900 !important; font-size: 11px !important; padding: 0px 6px !important; }
-                    .rbc-overlay { z-index: 1000 !important;
-                   
-                    .clinical-header-centered {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    padding-bottom: 20px;
-                    border-bottom: 1px solid #f1f5f9;
-                 }
+.theme-body { 
+    position: relative; 
+    z-index: 1; 
+}
 
-                 .theme-body { position: relative; z-index: 1; }
+/* --- 2. Dashboard Header & Legend --- */
+.dashboard-header-bar {
+    background: #fff; 
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.03); 
+    margin-bottom: 10px;
+    border: 2px solid rgb(77, 208, 225);
+    padding: 1px;
+    position: relative;
+    z-index: 5;
+}
 
-                 .sidebar-wrapper, .header-wrapper, .page-main-header { z-index: 9999 !important; }
+.legend-title { 
+    font-size: 7px; 
+    color: #1eb3caff; 
+    font-weight: 700; 
+    margin-bottom: 5px; 
+    letter-spacing: 0.5px; 
+    text-transform: uppercase;
+}
+
+.legend-item { 
+    display: flex; 
+    align-items: center; 
+    margin-right: 22px; 
+    font-size: 13px; 
+    font-weight: 600; 
+    color: #295261ff; 
+}
+
+.dot { 
+    width: 9px; 
+    height: 9px; 
+    border-radius: 50%; 
+    margin-right: 6px; 
+}
+
+/* --- 3. Calendar Specific Fixes --- */
+.rbc-calendar { 
+    background: #fff; 
+    border-radius: 12px; 
+    padding: 3px;
+    position: relative;
+    z-index: 1;
+    overflow: visible !important; /* Critical to prevent clipping popups */
+}
+
+.rbc-header { 
+    padding: 12px 0 !important; 
+    font-weight: 700 !important; 
+    color: #454b53ff !important; 
+    border-bottom: 2px solid #f1f5f9 !important; 
+}
+
+.rbc-show-more { 
+    color: #016f69ff !important; 
+    background: #b0eff3ff !important; 
+    border-radius: 4px !important; 
+    font-weight: 900 !important; 
+    font-size: 11px !important; 
+    padding: 2px 6px !important; 
+}
+
+/* The popup that appears when clicking '+ more' */
+.rbc-overlay { 
+    position: absolute !important;
+    z-index: 10000 !important; /* Must be higher than dashboard-header-bar */
+    background: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+/* --- 4. Patient & Clinical Data Styling --- */
+.clinical-header-centered {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #f1f5f9;
+}
 
 .patient-name { 
     margin: 5px 0; 
     font-weight: 700; 
     color: #0447a5ff; 
     font-size: 15px;
-}
-
-.data-value{
-   font-size: 14px;
 }
 
 .data-item-inline {
@@ -532,44 +591,9 @@ export default function ReceptionistDashboard() {
     color: #575d66ff;
     font-weight: 600;
     margin-bottom: 0;
-    text-transform: none;
 }
 
-.data-item-inline label svg {
-    margin-right: 9px;
-    color: #575d66ff;
-}
-
-.data-item-inline span {
-    font-weight: 500;
-    flex: 1;
-}
-
-.note-section-modern label {
-    display: flex;
-    align-items: center;
-    font-size: 12px;
-    font-weight: 700;
-    color: #64748b;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-}
-
-.note-section-modern label svg { margin-right: 6px; }
-
-.note-box-modern {
-    background: #f8fafc;
-    border: 1px solid #d0d8e3ff;
-    padding: 5px;      
-    border-radius: 8px;
-    font-size: 13px;
-    line-height: 1.5;
-    min-height: 60px;
-    height: auto;    
-    word-wrap: break-word;   
-    word-break: break-word; 
-    white-space: pre-wrap;  
-}
+.data-item-inline label svg { margin-right: 9px; }
 
 .arrival-badge { 
     background: #baf8ccff; 
@@ -580,6 +604,40 @@ export default function ReceptionistDashboard() {
     font-weight: 700; 
     font-size: 13px; 
     border: 1px solid #bbf7d0; 
+}
+
+/* --- 5. Notes Section --- */
+.note-section-modern label {
+    display: flex;
+    align-items: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.note-box-modern {
+    background: #f8fafc;
+    border: 1px solid #d0d8e3ff;
+    padding: 5px;      
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.5;
+    min-height: 60px;
+    white-space: pre-wrap;   
+    word-break: break-word; 
+}
+
+.rbc-row-segment .rbc-show-more {
+    margin-top: 2px;
+    display: block;
+    text-align: center;
+}
+
+/* Optional: Slight padding adjustment for the event rows */
+.rbc-month-row {
+    overflow: visible !important;
 }
                 `}</style>
       <PageBreadcrumb pagename="Receptionist Dashboard" />
@@ -597,14 +655,14 @@ export default function ReceptionistDashboard() {
                 <div className="d-flex align-items-center flex-wrap">
                   <div className="legend-item">
                     <span className="dot" style={{ background: "#000" }}></span>{" "}
-                    New <span className="cnt">({counts.New})</span>
+                    New <span className="cnt">({counts.NEW})</span>
                   </div>
                   <div className="legend-item">
                     <span
                       className="dot"
                       style={{ background: "#ff8000" }}
                     ></span>{" "}
-                    Follow-up <span className="cnt">({counts.Follow})</span>
+                    Follow-up <span className="cnt">({counts.FOLLOW})</span>
                   </div>
                   <div className="legend-item">
                     <span
@@ -612,7 +670,7 @@ export default function ReceptionistDashboard() {
                       style={{ background: "#8000ff" }}
                     ></span>{" "}
                     Post-Operative{" "}
-                    <span className="cnt">({counts.Postoperative})</span>
+                    <span className="cnt">({counts.POSTOPERATIVE})</span>
                   </div>
                   <div className="legend-item">
                     <span
@@ -701,6 +759,13 @@ export default function ReceptionistDashboard() {
                     components={{ event: CustomEvent }}
                     style={{ height: 770 }}
                     popup={true}
+                    views={{
+                      month: true, 
+                      week: true, 
+                      day: true  
+                    }}
+                    length={3}
+                    maxEvents={3}
                   />
                 </Card.Body>
               </Card>

@@ -39,7 +39,7 @@ const Toast = Swal.mixin({
   },
 });
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const getDynamicRowsFromInvoice = (invoice) => {
   const dynamicRows = [];
@@ -436,6 +436,20 @@ const InvoiceList = () => {
     setShowModal(true);
   };
 
+  const generateTimeOptions = () => {
+    const times = [];
+    for (let hour = 0; hour < 24; hour++) {
+      for (let min = 0; min < 60; min += 15) {
+        const h = hour.toString().padStart(2, "0");
+        const m = min.toString().padStart(2, "0");
+        times.push(`${h}:${m}`); // Format: HH:mm (24h format for the value)
+      }
+    }
+    return times;
+  };
+
+  const timeOptions = generateTimeOptions();
+
   const handleCloseModal = () => {
     setShowModal(false);
     setSelectedInvoice(null);
@@ -814,7 +828,7 @@ const InvoiceList = () => {
               <Card.Body>
                 <div className="d-flex justify-content-end">
                   <Link to="/invoice/add">
-                    <Button variant="primary" style={{ padding:"12px", marginBottom: "7px", fontSize:"12px" }}>
+                    <Button variant="primary" style={{ padding: "12px", marginBottom: "7px", fontSize: "12px" }}>
                       <FaPlus /> Add New Invoice
                     </Button>
                   </Link>
@@ -883,7 +897,7 @@ const InvoiceList = () => {
                       headerClassName="datatable-header-center"
                       field="patient_name"
                       header="Patient Name"
-                      style={{ width: "200px", border: "1px solid #4dd0e1", wordBreak:"break-word" }}
+                      style={{ width: "200px", border: "1px solid #4dd0e1", wordBreak: "break-word" }}
                     />
                     <Column
                       headerClassName="datatable-header-center"
@@ -1007,7 +1021,7 @@ const InvoiceList = () => {
                   </h6>
                   <Row className="g-2">
                     <Col md={4}>
-                      <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px"}} className="text-muted">
+                      <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
                         Invoice Number <span style={{ color: "red" }} className="required">*</span>
                       </Form.Label>
                       <Form.Control
@@ -1015,7 +1029,7 @@ const InvoiceList = () => {
                         type="text"
                         value={selectedInvoice.invoice_id}
                         readOnly
-                        style={{   borderRadius:"10px", fontSize: "12px", cursor: "not-allowed", backgroundColor: "#f0f0f0", border: "1px solid #4dd0e1" }}
+                        style={{ borderRadius: "10px", fontSize: "12px", cursor: "not-allowed", backgroundColor: "#f0f0f0", border: "1px solid #4dd0e1" }}
                       />
                     </Col>
                     <Col md={4}>
@@ -1027,7 +1041,7 @@ const InvoiceList = () => {
                         type="text"
                         value={selectedInvoice.admission_no}
                         readOnly
-                        style={{ borderRadius:"10px", fontSize: "12px", cursor: "not-allowed", backgroundColor: "#f0f0f0", border: "1px solid #4dd0e1" }}
+                        style={{ borderRadius: "10px", fontSize: "12px", cursor: "not-allowed", backgroundColor: "#f0f0f0", border: "1px solid #4dd0e1" }}
                       />
                     </Col>
                     <Col md={4}>
@@ -1039,7 +1053,7 @@ const InvoiceList = () => {
                         type="text"
                         value={selectedInvoice.patient_name}
                         readOnly
-                        style={{borderRadius:"10px", fontSize: "12px", cursor: "not-allowed", backgroundColor: "#f0f0f0", border: "1px solid #4dd0e1" }}
+                        style={{ borderRadius: "10px", fontSize: "12px", cursor: "not-allowed", backgroundColor: "#f0f0f0", border: "1px solid #4dd0e1" }}
                       />
                     </Col>
                     <Col md={3}>
@@ -1049,7 +1063,7 @@ const InvoiceList = () => {
                       <Form.Control
                         size="sm"
                         type="date"
-                        style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                        style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                         value={selectedInvoice.creation_date}
                         onChange={(e) => setSelectedInvoice({ ...selectedInvoice, creation_date: e.target.value })}
                       />
@@ -1061,7 +1075,7 @@ const InvoiceList = () => {
                       <Form.Control
                         size="sm"
                         type="time"
-                        style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                        style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                         value={selectedInvoice.admissiontime}
                         onChange={(e) => setSelectedInvoice({ ...selectedInvoice, admissiontime: e.target.value })}
                       />
@@ -1073,7 +1087,7 @@ const InvoiceList = () => {
                       <Form.Control
                         size="sm"
                         type="date"
-                        style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                        style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                         value={selectedInvoice.due_date}
                         min={selectedInvoice.creation_date}
                         onChange={(e) => setSelectedInvoice({ ...selectedInvoice, due_date: e.target.value })}
@@ -1083,13 +1097,28 @@ const InvoiceList = () => {
                       <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
                         Discharge Time <span style={{ color: "red" }} className="required">*</span>
                       </Form.Label>
-                      <Form.Control
+                      <Form.Select
                         size="sm"
-                        type="time"
-                        style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                        style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                         value={selectedInvoice.dischargetime}
                         onChange={(e) => setSelectedInvoice({ ...selectedInvoice, dischargetime: e.target.value })}
-                      />
+                      >
+                        <option value="">Select Time</option>
+                        {timeOptions.map((time) => {
+                          // Logic to display 12-hour format while keeping 24-hour value
+                          const [hour, minute] = time.split(':');
+                          const h = parseInt(hour);
+                          const ampm = h >= 12 ? 'PM' : 'AM';
+                          const displayHour = h % 12 || 12;
+                          const displayTime = `${displayHour}:${minute} ${ampm}`;
+
+                          return (
+                            <option key={time} value={time}>
+                              {displayTime}
+                            </option>
+                          );
+                        })}
+                      </Form.Select>
                     </Col>
                   </Row>
                 </Card.Body>
@@ -1105,13 +1134,13 @@ const InvoiceList = () => {
                 }}
               >
                 <Card.Body style={{ padding: "10px" }}>
-                  <h6 style={{ fontSize: "0.95rem", fontWeight: "600", color: "#00838f"}}>Clinical Staff</h6>
+                  <h6 style={{ fontSize: "0.95rem", fontWeight: "600", color: "#00838f" }}>Clinical Staff</h6>
                   <Row className="g-2">
                     <Col md={4}>
                       <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">Consultant Name <span style={{ color: "red" }} className="required">*</span></Form.Label>
                       <Form.Select
                         size="sm"
-                        style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                        style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                         value={selectedInvoice?.consultant || ""}
                         onChange={(e) => setSelectedInvoice({ ...selectedInvoice, consultant: e.target.value })}
                       >
@@ -1123,7 +1152,7 @@ const InvoiceList = () => {
                       <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">Surgeon Name</Form.Label>
                       <Form.Select
                         size="sm"
-                        style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                        style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                         value={selectedInvoice?.prepared_doctor || ""}
                         onChange={(e) => setSelectedInvoice({ ...selectedInvoice, prepared_doctor: e.target.value })}
                       >
@@ -1135,7 +1164,7 @@ const InvoiceList = () => {
                       <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">Bed Category <span style={{ color: "red" }} className="required">*</span></Form.Label>
                       <Form.Control
                         size="sm"
-                        style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                        style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                         type="text"
                         value={selectedInvoice.bed_desc}
                         onChange={(e) => setSelectedInvoice({ ...selectedInvoice, bed_desc: e.target.value })}
@@ -1163,7 +1192,7 @@ const InvoiceList = () => {
                         <Form.Control
                           size="sm"
                           placeholder="e.g. Medicines"
-                          style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                          style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                           type="text"
                           value={row.label || ""}
                           onChange={(e) => handleDynamicRowChange(index, "label", e.target.value)}
@@ -1175,7 +1204,7 @@ const InvoiceList = () => {
                           size="sm"
                           onWheel={(e) => e.target.blur()}
                           placeholder="0.00"
-                          style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                          style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                           type="number"
                           value={row.value || ""}
                           onChange={(e) => handleDynamicRowChange(index, "value", e.target.value)}
@@ -1184,17 +1213,17 @@ const InvoiceList = () => {
                       <Col md={4} className="d-flex gap-2">
                         <Button
                           size="sm"
-                          variant="danger"
+                          variant="outline-danger"
                           disabled={modalInvoiceData.dynamicRows.length <= 1}
                           style={{ fontSize: "12px", padding: "9px 8px" }}
                           onClick={() => deleteDynamicRow(index)}
                         >
-                         - Delete Item
+                          - Delete Item
                         </Button>
                         {index === modalInvoiceData.dynamicRows.length - 1 && (
                           <Button
                             size="sm"
-                            variant="success"
+                            variant="outline-success"
                             style={{ fontSize: "12px", padding: "9px 8px" }}
                             onClick={addDynamicRow}
                           >
@@ -1206,176 +1235,176 @@ const InvoiceList = () => {
                   ))}
                 </Card.Body>
               </Card>
-             
-                <Col md={12}>
-                  <Card
-                    style={{
-                      border: "none",
-                      borderRadius: "10px",
-                      borderTop: "3px solid #00bcd4",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-                    }}
-                  >
-                    <Card.Body style={{ padding: "10px" }}>
-                      <h6 style={{ fontSize: "0.95rem", fontWeight: "600", color: "#00838f"}}>Billing Settings</h6>
-                      <Row className="g-2">
-                        <Col md={3}>
-                          <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">Bill Type <span style={{ color: "red" }} className="required">*</span></Form.Label>
-                          <Form.Select
-                            size="sm"
-                            style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
-                            value={selectedInvoice.bill_Type}
-                            onChange={(e) => {
-                              setSelectedInvoice({
-                                ...selectedInvoice,
-                                bill_Type: e.target.value,
-                                bill_method: "",
-                                chequeno: "",
-                                pdc: "0.00",
-                                insurancecompany: "",
-                                tpa: "",
-                              });
-                            }}
-                          >
-                            <option value="">Select Type</option>
-                            <option value="insurance">Insurance</option>
-                            <option value="non_insurance">Non-Insurance</option>
-                            <option value="charity">Charity</option>
-                          </Form.Select>
-                        </Col>
 
-                        {selectedInvoice.bill_Type === "insurance" && (
-                          <>
-                            <Col md={9}>
-                              <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">Insurance Company</Form.Label>
-                              <Form.Select
-                                size="sm"
-                                style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
-                                value={selectedInvoice?.insurancecompany || ""}
-                                onChange={(e) => setSelectedInvoice({ ...selectedInvoice, insurancecompany: e.target.value })}
-                              >
-                                <option value="">Select Company</option>
-                                {insurance.map((co) => <option key={co.companyname} value={co.companyname}>{co.companyname}</option>)}
-                              </Form.Select>
-                            </Col>
-                            <Col md={8}>
-                              <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">TPA</Form.Label>
-                              <Form.Select
-                                size="sm"
-                                style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
-                                value={selectedInvoice?.tpa || ""}
-                                onChange={(e) => setSelectedInvoice({ ...selectedInvoice, tpa: e.target.value })}
-                              >
-                                <option value="">Select TPA</option>
-                                {[...new Set([...invoices.map((i) => i.tpa), ...tpa.map((t) => t.companyname)])].map((name, i) => (
-                                  <option key={i} value={name}>{name}</option>
-                                ))}
-                              </Form.Select>
-                            </Col>
-                            <Col md={4}>
-                              <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">Bill Method</Form.Label>
-                              <Form.Select
-                                size="sm"
-                                style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
-                                value={selectedInvoice.bill_method || ""}
-                                onChange={(e) => {
-                                  const method = e.target.value;
-                                  setSelectedInvoice({
-                                    ...selectedInvoice,
-                                    bill_method: method,
-                                    ...(method !== "PDC" && { chequeno: "", pdc: "0.00" }),
-                                  });
-                                }}
-                              >
-                                <option value="">SELECT BILL METHOD</option>
-                                <option value="cashless">Cashless</option>
-                                <option value="PDC">PDC</option>
-                                <option value="reimbursement">Reimbursement</option>
-                              </Form.Select>
-                            </Col>
+              <Col md={12}>
+                <Card
+                  style={{
+                    border: "none",
+                    borderRadius: "10px",
+                    borderTop: "3px solid #00bcd4",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+                  }}
+                >
+                  <Card.Body style={{ padding: "10px" }}>
+                    <h6 style={{ fontSize: "0.95rem", fontWeight: "600", color: "#00838f" }}>Billing Settings</h6>
+                    <Row className="g-2">
+                      <Col md={3}>
+                        <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">Bill Type <span style={{ color: "red" }} className="required">*</span></Form.Label>
+                        <Form.Select
+                          size="sm"
+                          style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                          value={selectedInvoice.bill_Type}
+                          onChange={(e) => {
+                            setSelectedInvoice({
+                              ...selectedInvoice,
+                              bill_Type: e.target.value,
+                              bill_method: "",
+                              chequeno: "",
+                              pdc: "0.00",
+                              insurancecompany: "",
+                              tpa: "",
+                            });
+                          }}
+                        >
+                          <option value="">Select Type</option>
+                          <option value="insurance">Insurance</option>
+                          <option value="non_insurance">Non-Insurance</option>
+                          <option value="charity">Charity</option>
+                        </Form.Select>
+                      </Col>
 
-                            {selectedInvoice.bill_method === "PDC" && (
-                              <>
-                                <Col md={6}>
-                                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">Cheque No.</Form.Label>
-                                  <Form.Control
-                                    size="sm"
-                                    type="text"
-                                    style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
-                                    value={selectedInvoice.chequeno || ""}
-                                    onChange={(e) => setSelectedInvoice({ ...selectedInvoice, chequeno: e.target.value })}
-                                  />
-                                </Col>
-                                <Col md={6}>
-                                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">PDC Amt (₹)</Form.Label>
-                                  <Form.Control
-                                    size="sm"
-                                    type="number"
-                                    style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
-                                    value={selectedInvoice.pdc || ""}
-                                    onChange={(e) => {
-                                      const val = e.target.value;
-                                      const subTotal = parseFloat(modalInvoiceData.Sub_Total) || 0;
-                                      const newPayable = Math.max(0, subTotal - (parseFloat(val) || 0)).toFixed(2);
-                                      setSelectedInvoice({ ...selectedInvoice, pdc: val, payable_amt: newPayable });
-                                      setModalInvoiceData((prev) => ({ ...prev, pdc: val, payableAmount: newPayable }));
-                                    }}
-                                  />
-                                </Col>
-                              </>
-                            )}
-                          </>
-                        )}
-
-                        {(selectedInvoice.bill_Type === "non_insurance" || selectedInvoice.bill_Type === "charity") && (
-                          <Col md={8}>
-                            <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">Discount Amount (₹)</Form.Label>
-                            <Form.Control
+                      {selectedInvoice.bill_Type === "insurance" && (
+                        <>
+                          <Col md={9}>
+                            <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">Insurance Company</Form.Label>
+                            <Form.Select
                               size="sm"
-                              type="number"
-                              style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
-                              value={selectedInvoice.discount}
-                              onChange={(e) => {
-                                const disc = parseFloat(e.target.value) || 0;
-                                const subTotal = parseFloat(modalInvoiceData.Sub_Total) || 0;
-                                const newPayable = Math.max(0, subTotal - disc).toFixed(2);
-                                setModalInvoiceData((prev) => ({ ...prev, discount: disc, payableAmount: newPayable }));
-                                setSelectedInvoice((prev) => ({ ...prev, discount: disc, payable_amt: newPayable }));
-                              }}
-                            />
+                              style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                              value={selectedInvoice?.insurancecompany || ""}
+                              onChange={(e) => setSelectedInvoice({ ...selectedInvoice, insurancecompany: e.target.value })}
+                            >
+                              <option value="">Select Company</option>
+                              {insurance.map((co) => <option key={co.companyname} value={co.companyname}>{co.companyname}</option>)}
+                            </Form.Select>
                           </Col>
-                        )}
+                          <Col md={8}>
+                            <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">TPA</Form.Label>
+                            <Form.Select
+                              size="sm"
+                              style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                              value={selectedInvoice?.tpa || ""}
+                              onChange={(e) => setSelectedInvoice({ ...selectedInvoice, tpa: e.target.value })}
+                            >
+                              <option value="">Select TPA</option>
+                              {[...new Set([...invoices.map((i) => i.tpa), ...tpa.map((t) => t.companyname)])].map((name, i) => (
+                                <option key={i} value={name}>{name}</option>
+                              ))}
+                            </Form.Select>
+                          </Col>
+                          <Col md={4}>
+                            <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">Bill Method</Form.Label>
+                            <Form.Select
+                              size="sm"
+                              style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                              value={selectedInvoice.bill_method || ""}
+                              onChange={(e) => {
+                                const method = e.target.value;
+                                setSelectedInvoice({
+                                  ...selectedInvoice,
+                                  bill_method: method,
+                                  ...(method !== "PDC" && { chequeno: "", pdc: "0.00" }),
+                                });
+                              }}
+                            >
+                              <option value="">SELECT BILL METHOD</option>
+                              <option value="cashless">Cashless</option>
+                              <option value="PDC">PDC</option>
+                              <option value="reimbursement">Reimbursement</option>
+                            </Form.Select>
+                          </Col>
 
-                        <Col md={9}>
-                          <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">Note</Form.Label>
+                          {selectedInvoice.bill_method === "PDC" && (
+                            <>
+                              <Col md={6}>
+                                <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">Cheque No.</Form.Label>
+                                <Form.Control
+                                  size="sm"
+                                  type="text"
+                                  style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                                  value={selectedInvoice.chequeno || ""}
+                                  onChange={(e) => setSelectedInvoice({ ...selectedInvoice, chequeno: e.target.value })}
+                                />
+                              </Col>
+                              <Col md={6}>
+                                <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">PDC Amt (₹)</Form.Label>
+                                <Form.Control
+                                  size="sm"
+                                  type="number"
+                                  style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                                  value={selectedInvoice.pdc || ""}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    const subTotal = parseFloat(modalInvoiceData.Sub_Total) || 0;
+                                    const newPayable = Math.max(0, subTotal - (parseFloat(val) || 0)).toFixed(2);
+                                    setSelectedInvoice({ ...selectedInvoice, pdc: val, payable_amt: newPayable });
+                                    setModalInvoiceData((prev) => ({ ...prev, pdc: val, payableAmount: newPayable }));
+                                  }}
+                                />
+                              </Col>
+                            </>
+                          )}
+                        </>
+                      )}
+
+                      {(selectedInvoice.bill_Type === "non_insurance" || selectedInvoice.bill_Type === "charity") && (
+                        <Col md={8}>
+                          <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">Discount Amount (₹)</Form.Label>
                           <Form.Control
                             size="sm"
-                            as="textarea"
-                            rows={1}
-                            style={{borderRadius:"10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
-                            value={selectedInvoice.note}
-                            onChange={(e) => setSelectedInvoice({ ...selectedInvoice, note: e.target.value })}
+                            type="number"
+                            style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                            value={selectedInvoice.discount}
+                            onChange={(e) => {
+                              const disc = parseFloat(e.target.value) || 0;
+                              const subTotal = parseFloat(modalInvoiceData.Sub_Total) || 0;
+                              const newPayable = Math.max(0, subTotal - disc).toFixed(2);
+                              setModalInvoiceData((prev) => ({ ...prev, discount: disc, payableAmount: newPayable }));
+                              setSelectedInvoice((prev) => ({ ...prev, discount: disc, payable_amt: newPayable }));
+                            }}
                           />
                         </Col>
-                      </Row>
-                    </Card.Body>
-                  </Card>
-                </Col>
+                      )}
 
-                <Col md={12}>
-                  <Card
-                    style={{
-                      border: "none",
-                      borderRadius: "10px",
-                      borderTop: "3px solid #00bcd4",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-                      height: "100%",
-                    }}
-                  >
-                    <Card.Body style={{ padding: "12px", display: "flex", flexDirection: "column" }}>
-                      <h6 style={{ fontSize: "0.95rem", fontWeight: "600", color: "#00838f", marginBottom: "7px" }}>Summary</h6>
-                      <div style={{ flexGrow: 1, maxHeight: "120px", overflowY: "auto", marginBottom: "5px" }}>
-                         <h6
+                      <Col md={9}>
+                        <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">Note</Form.Label>
+                        <Form.Control
+                          size="sm"
+                          as="textarea"
+                          rows={1}
+                          style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                          value={selectedInvoice.note}
+                          onChange={(e) => setSelectedInvoice({ ...selectedInvoice, note: e.target.value })}
+                        />
+                      </Col>
+                    </Row>
+                  </Card.Body>
+                </Card>
+              </Col>
+
+              <Col md={12}>
+                <Card
+                  style={{
+                    border: "none",
+                    borderRadius: "10px",
+                    borderTop: "3px solid #00bcd4",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+                    height: "100%",
+                  }}
+                >
+                  <Card.Body style={{ padding: "12px", display: "flex", flexDirection: "column" }}>
+                    <h6 style={{ fontSize: "0.95rem", fontWeight: "600", color: "#00838f", marginBottom: "7px" }}>Summary</h6>
+                    <div style={{ flexGrow: 1, maxHeight: "120px", overflowY: "auto", marginBottom: "5px" }}>
+                      <h6
                         style={{
                           fontSize: "12px",
                           textAlign: "left",
@@ -1385,40 +1414,40 @@ const InvoiceList = () => {
                       >
                         Charge Breakdown:
                       </h6>
-                        {modalInvoiceData.dynamicRows.filter((r) => r.value > 0).map((row, i) => (
-                          <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#555", padding: "2px 0" }}>
-                            <span>{row.label || "Service"}</span>
-                            <span>₹ {parseFloat(row.value).toLocaleString()}</span>
-                          </div>
-                        ))}
+                      {modalInvoiceData.dynamicRows.filter((r) => r.value > 0).map((row, i) => (
+                        <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#555", padding: "2px 0" }}>
+                          <span>{row.label || "Service"}</span>
+                          <span>₹ {parseFloat(row.value).toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ borderTop: "1px dashed #00bcd4", paddingTop: "8px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px", fontSize: "13px" }}>
+                        <span>Sub-Total:</span>
+                        <span style={{ fontWeight: "600" }}>₹ {parseFloat(modalInvoiceData.Sub_Total).toLocaleString()}</span>
                       </div>
-                      <div style={{ borderTop: "1px dashed #00bcd4", paddingTop: "8px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px", fontSize: "13px" }}>
-                          <span>Sub-Total:</span>
-                          <span style={{ fontWeight: "600" }}>₹ {parseFloat(modalInvoiceData.Sub_Total).toLocaleString()}</span>
-                        </div>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", color: "#d32f2f", fontSize: "13px" }}>
-                          <span>Discount:</span>
-                          <span style={{ fontWeight: "600" }}>- ₹ {parseFloat(selectedInvoice.discount || 0).toLocaleString()}</span>
-                        </div>
-                        <div
-                          style={{
-                            backgroundColor: "#00bcd4",
-                            color: "#ffffff",
-                            padding: "10px",
-                            borderRadius: "6px",
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                          }}
-                        >
-                          <span style={{ fontSize: "13px", fontWeight: "500" }}>Payable:</span>
-                          <span style={{ fontSize: "16px", fontWeight: "700" }}>₹ {parseFloat(modalInvoiceData.payableAmount).toLocaleString()}</span>
-                        </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", color: "#d32f2f", fontSize: "13px" }}>
+                        <span>Discount:</span>
+                        <span style={{ fontWeight: "600" }}>- ₹ {parseFloat(selectedInvoice.discount || 0).toLocaleString()}</span>
                       </div>
-                    </Card.Body>
-                  </Card>
-                </Col>
+                      <div
+                        style={{
+                          backgroundColor: "#00bcd4",
+                          color: "#ffffff",
+                          padding: "10px",
+                          borderRadius: "6px",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        <span style={{ fontSize: "13px", fontWeight: "500" }}>Payable:</span>
+                        <span style={{ fontSize: "16px", fontWeight: "700" }}>₹ {parseFloat(modalInvoiceData.payableAmount).toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
             </Form>
           )}
         </Modal.Body>

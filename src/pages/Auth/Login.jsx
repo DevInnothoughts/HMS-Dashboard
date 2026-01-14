@@ -9,7 +9,7 @@
 // // Define the hardcoded list directly for use
 // const LOCATIONS_LIST = ["hms", "pune", "demo"]; // Added a couple more for better list view
 
-// const BASE_URL = "http://localhost:5100/api"; // BASE_URL is still needed for the handleSubmit fetch
+// const BASE_URL = "http://194.195.117.79:5100/api"; // BASE_URL is still needed for the handleSubmit fetch
 
 // export default function Login() {
 //   const navigate = useNavigate();
@@ -390,7 +390,7 @@ const LOCATIONS_LIST = [
   "demo"
 ].sort();
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 export default function Login() {
   const navigate = useNavigate();

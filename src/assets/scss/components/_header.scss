@@ -291,3 +291,13 @@
       box-shadow: 0 0 0 10px rgba($theme-primary, 0);
     }
   }
+
+.codex-header {
+    position: fixed;
+    top: 0;   
+    left: 0;
+    /* ... other styles ... */
+    z-index: 1000; /* Increased from 4 */
+    background-color: var(--#{$prefix}body-bg);    
+    /* Ensure background isn't transparent so content doesn't "ghost" through */
+}

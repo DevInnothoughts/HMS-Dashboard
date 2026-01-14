@@ -193,6 +193,15 @@
     }
   }
 }
+
+.codex-sidebar {
+  position: fixed;
+  top: 0;
+  inset-inline-start: 0;
+  /* ... other styles ... */
+  z-index: 1001; /* Set slightly higher than header if they overlap each other */
+  background-color: var(--bs-sidebar-bg);
+}
 /****************
 SIDEBAR END
 *****************/

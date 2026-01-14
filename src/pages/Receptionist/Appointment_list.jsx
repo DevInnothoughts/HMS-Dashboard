@@ -2098,12 +2098,11 @@ export default function Appointment_list() {
                     }}
                   >
                     {[
+                      "KOTAK",
                       "HDFC",
-                      "BharatPe",
                       "BharatPe1",
                       "BharatPe2",
-                      "PINE LABS",
-                      "TEST",
+                      "PINE LABS", 
                       "OFFLINE",
                     ].map((opt) => (
                       <Form.Check
