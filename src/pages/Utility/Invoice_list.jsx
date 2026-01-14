@@ -5,6 +5,7 @@ import { Paginator } from 'primereact/paginator';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { InputGroup } from "react-bootstrap";
+import { clinincLoc } from "../../utils/clinic_locations";
 import {
   Container,
   Row,
@@ -558,6 +559,11 @@ const InvoiceList = () => {
       return;
     }
 
+    const clinicAddr = clinincLoc["Mysore"] || {
+      address: "Healing Hands Clinic",
+      phone: "8888288884"
+    };    
+    
     const { dynamicRows, Sub_Total } = getDynamicRowsFromInvoice(invoice);
     const printWindow = window.open("", "_blank", "width=900,height=900");
     const getBase64Image = (imgUrl) => {
@@ -627,7 +633,7 @@ const InvoiceList = () => {
             <img src="${mainLogo}" alt="Healing Hands Clinic">
             <div class="clinic-info">
               Healing Hands Clinic <br>
-              ${invoice.patient_location || "N/A"}getDynamicRowsFromInvoice
+              ${clinicAddr.address || "N/A"}
             </div>
           </div>
 

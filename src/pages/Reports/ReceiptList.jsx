@@ -4,6 +4,7 @@ import { Column } from "primereact/column";
 import { decodeJwt } from "../../utils/decode-jwt";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import Swal from "sweetalert2";
+import { clinincLoc } from "../../utils/clinic_locations";
 import {
   Container,
   Row,
@@ -213,7 +214,11 @@ export default function ReceiptList() {
         showConfirmButton: false,
       });
       return;
-    }
+    } 
+    const clinicAddr = clinincLoc[currentLocation] || {
+      address: "Healing Hands Clinic",
+      phone: "8888288884"
+    };
 
     const receiptWindow = window.open("", "_blank", "width=800,height=800");
     if (!receiptWindow) {
@@ -357,10 +362,7 @@ export default function ReceiptList() {
                                   In Words: &nbsp;<b>${amountInWords}</b><br><br>
                                   <b>Next Appointment: </b>No appointment scheduled<br>
                                   <br>
-                                  Healing Hands Clinic Pvt Ltd,<br>
-                                  Dhole Patil Road,<br>
-                                  DP Road, Ground Floor, Millenium Star Extension,<br>
-                                  Adjacent to Ruby Hall Clinic, Pune, 411001.
+                                  ${clinicAddr.address}
                                 </td>
                                 <td style="width:40%; vertical-align: top;">
                                   <div class="amount-box-container">

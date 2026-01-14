@@ -21,6 +21,40 @@ const AdverseDrugCorrectiveActionForm = ({ onSubmit, patientData }) => {
         verifiedTime: ''
     });
 
+    const [isListening, setIsListening] = useState(false);
+
+    const handleVoiceToText = () => {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (!SpeechRecognition) {
+            alert("Your browser does not support voice recognition. Please try Chrome.");
+            return;
+        }
+
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-IN';
+
+        recognition.onstart = () => setIsListening(true);
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            setFormData(prev => ({
+                ...prev,
+                medicalDirectorComments: prev.medicalDirectorComments
+                    ? `${prev.medicalDirectorComments} ${transcript}`
+                    : transcript
+            }));
+            setIsListening(false);
+        };
+
+        recognition.onerror = () => setIsListening(false);
+        recognition.onend = () => setIsListening(false);
+
+        recognition.start();
+    };
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -36,6 +70,18 @@ const AdverseDrugCorrectiveActionForm = ({ onSubmit, patientData }) => {
 
     return (
         <div className="medical-form-container">
+            <style>
+            {`
+                @keyframes pulse {
+                    0% { opacity: 1; }
+                    50% { opacity: 0.5; }
+                    100% { opacity: 1; }
+                }
+                .listening-animation {
+                    animation: pulse 1.5s infinite;
+                }
+            `}
+        </style>
             <form onSubmit={handleSubmit} className="medical-form">
                 <h2 className="form-title">
                     ADVERSE DRUG REPORT – CORRECTIVE & PREVENTIVE ACTION
@@ -83,13 +129,37 @@ const AdverseDrugCorrectiveActionForm = ({ onSubmit, patientData }) => {
                     />
                 </div>
 
-                <Textarea
+                {/* <Textarea
                     label="Medical Director’s Comments"
                     name="medicalDirectorComments"
                     value={formData.medicalDirectorComments}
                     onChange={handleChange}
                     rows={4}
-                />
+                /> */}
+                <div style={{ position: 'relative' }}>
+                    <Textarea
+                        label="Medical Director’s Comments"
+                        name="medicalDirectorComments"
+                        value={formData.medicalDirectorComments}
+                        onChange={handleChange}
+                        rows={4}
+                    />
+                    <button
+                        type="button"
+                        onClick={handleVoiceToText}
+                        style={{
+                            position: 'absolute',
+                            right: '10px',
+                            top: '35px', // Adjust based on your label height
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            color: isListening ? 'red' : 'inherit'
+                        }}
+                    >
+                        {isListening ? '🛑' : '🎤'}
+                    </button>
+                </div>
 
                 <div className="two-col">
                     <SignatureInput

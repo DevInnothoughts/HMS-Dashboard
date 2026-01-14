@@ -1,38 +1,99 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import PageBreadcrumb from "../../../components/PageBreadcrumb";
-import { Row, Col, Card, Container, Table, Button } from "react-bootstrap";
+import { Row, Col, Card, Container, Table, Button, Spinner } from "react-bootstrap";
+import { decodeJwt } from "../../../utils/decode-jwt";
 
-const reportData = {
-  opdCounts: [
-    { type: "New", count: 0 },
-    { type: "Follow UP", count: 0 },
-    { type: "PO", count: 0 },
-    { type: "PROCTOSCOPY", count: 0 },
-    { type: "TOTAL", count: 0 },
-  ],
-  opdDetails: [
-    { type: "DNC", new: 0, followUp: 0, po: 0, total: 0 },
-    { type: "DNP", new: 0, followUp: 0, po: 0, total: 0 },
-    { type: "DNW", new: 0, followUp: 0, po: 0, total: 0 },
-    { type: "DNT", new: 0, followUp: 0, po: 0, total: 0 },
-    { type: "WALK IN", new: 0, followUp: 0, po: 0, total: 0 },
-  ],
-  collectionDetails: [
-    { method: "Cash", amount: 0 },
-    { method: "Card", amount: 0 },
-    { method: "Online", amount: 0 },
-    { method: "Paytm", amount: 0 },
-    { method: "TOTAL", amount: 0 },
-  ],
-  testDetails: [{ testName: "Test A", amount: 0 }],
+export const BASE_URL = "http://194.195.117.79:5100/api";
+
+const initialReportState = {
+  opdCounts: [],
+  opdDetails: [],
+  collectionDetails: [],
+  testDetails: [],
 };
 
 const DailyOPDReport = () => {
+  const [reportData, setReportData] = useState(initialReportState);
+  const [loading, setLoading] = useState(true);
+  const [currentLocation, setCurrentLocation] = useState("");
+
+  // 1. Memoize or format the date only once, or handle it inside the fetch
   const today = new Date();
-  const formattedDate = `${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${today.getFullYear()}`;
+  const formattedDate = `${String(today.getDate()).padStart(2, "0")}-${String(today.getMonth() + 1).padStart(2, "0")}-${today.getFullYear()}`;
+
+  // 2. Remove 'selectedDate' from the useCallback dependencies
+  const fetchDailyReport = useCallback(async (location) => {
+    try {
+      setLoading(true);
+      
+      // Define the static date string here so it doesn't trigger re-renders
+      const apiDate = new Date().toISOString().split('T')[0]; 
+      
+      const response = await fetch(
+        `${BASE_URL}/V1/appointment/daily-opd?location=${location}&date=${apiDate}`
+      );
+      const result = await response.json();
+
+      if (result.statusCode === 200) {
+        const d = result.description;
+        setReportData({
+          opdCounts: [
+            { type: "New", count: d.dailyOPDReport[0][0] },
+            { type: "Follow UP", count: d.dailyOPDReport[0][1] },
+            { type: "PO", count: d.dailyOPDReport[0][2] },
+            { type: "PROCTOSCOPY", count: d.dailyOPDReport[0][3] },
+            { type: "TOTAL", count: d.dailyOPDReport[0][4] },
+          ],
+          opdDetails: d.detailedData.map((row, index) => {
+            const labels = ["DNC", "DNP", "DNW", "DNT", "WALK IN"];
+            return {
+              type: labels[index],
+              new: row[0],
+              followUp: row[1],
+              po: row[2],
+              total: row[3],
+            };
+          }),
+          collectionDetails: d.overallCollection.map((item) => ({
+            method: item[0],
+            amount: item[1],
+          })),
+          testDetails: d.testReport.map((test) => ({
+            testName: test[0],
+            amount: test[1],
+          })),
+        });
+      }
+    } catch (error) {
+      console.error("Error setting report data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []); // Empty dependency array means this function is created only once
+
+  // 3. Effect triggers only when the function or identity changes (which is now never)
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const payload = decodeJwt(token);
+      if (payload?.jobLocation) {
+        setCurrentLocation(payload.jobLocation);
+        fetchDailyReport(payload.jobLocation);
+      }
+    }
+  }, [fetchDailyReport]);
+
   const handlePrint = () => {
     window.print();
   };
+
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: "100vh" }}>
+        <Spinner animation="border" variant="info" />
+      </div>
+    );
+  }
 
   return (
     <div

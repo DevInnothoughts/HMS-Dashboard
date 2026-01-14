@@ -102,14 +102,14 @@ export default function Sidebar() {
         <h5>Receptionist(IPD)</h5>
       </li>
 
-      <li className={`menu-item ${activeIndex === "/reception-dashboard" ? "active" : ""}`}>
+      {/* <li className={`menu-item ${activeIndex === "/reception-dashboard" ? "active" : ""}`}>
         <Link to="/reception-dashboard">
           <div className="icon-item">
             <FeatherIcon icon="grid" />
           </div>
           <span>Dashboard</span>
         </Link>
-      </li>
+      </li> */}
 
       <li className={`menu-item ${activeIndex === "/search-by" ? "active" : ""}`}>
         <Link to="/search-by">
