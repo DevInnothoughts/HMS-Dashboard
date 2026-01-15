@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import FeatherIcon from "feather-icons-react";
 import Swal from "sweetalert2";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
+import { decodeJwt } from "../../utils/decode-jwt";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
 
@@ -15,13 +16,25 @@ export default function SearchBy() {
     const [editFormData, setEditFormData] = useState({});
     const [verifiedHistory, setVerifiedHistory] = useState([]);
     const [historySearchTerm, setHistorySearchTerm] = useState("");
+    const [currentLocation, setCurrentLocation] = useState("default");
+    
 
     useEffect(() => {
         const history = JSON.parse(localStorage.getItem("verifiedPatients") || "[]");
         setVerifiedHistory(history);
     }, []);
 
-    const handleSearch = (e) => {
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (token) {
+          const payload = decodeJwt(token);
+          if (payload && payload.jobLocation) {
+            setCurrentLocation(payload.jobLocation);
+          }
+        }
+      }, []);
+
+    const handleSearch = async (e) => { // Added async
         e.preventDefault();
         if (!uhid) {
             Swal.fire("Error", "Please enter a UHID number", "error");
@@ -29,38 +42,51 @@ export default function SearchBy() {
         }
 
         try {
-            const patientResponse = await fetch(
+            const response = await fetch( // Added await
               `${BASE_URL}/V1/ipd/admin/checkPatientOPD?location=${currentLocation}&uidNo=${uhid}`,
               {
                 method: "GET",
-                headers: {
-                  "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json" },
               }
             );
       
-            if (patientResponse.ok) {
-              const patientData = await patientResponse.json();
-              console.log("Patients API Response:", patientData);
-            //   setDoctors(Array.isArray(patientData.data ? patientData.data : []);
+            if (response.ok) {
+              const data = await response.json(); // Added await
+              console.log("Patients API Response:", data[0]);
+              
+              if (data[0]) {
+                const patData = {
+                    uhid: uhid,
+                    name: data[0].name,
+                    contact: data[0].phone,
+                    HMSId: data[0].patient_id,
+
+                    global_id: data[0].global_id,
+                    address: data[0].address,
+                    age: data[0].age,
+                    gender: data[0].sex
+                  };
+                  setPatientData(patData);
+              } else {
+                  // Fallback to Mock Data only if API succeeds but returns no patient
+                  const mockData = {
+                    uhid: uhid,
+                    name: "John Doe",
+                    contact: "9876543210",
+                    address: "123, Street Name, Pune",
+                    age: "35",
+                    gender: "Male",
+                  };
+                  setPatientData(mockData);
+              }
             } else {
-              console.error("Failed to fetch doctors:", doctorResponse.statusText);
+              console.error("Failed to fetch patient:", response.statusText);
+              Swal.fire("Error", "Failed to fetch patient data", "error");
             }
           } catch (error) {
-            console.error("Error fetching dropdown data:", error.message);
+            console.error("Error fetching data:", error.message);
+            Swal.fire("Error", "Server connection failed", "error");
           }
-        };
-
-        // Mock patient data
-        const mockData = {
-            uhid: uhid,
-            name: "John Doe",
-            contact: "9876543210",
-            address: "123, Street Name, Pune",
-            age: "35",
-            gender: "Male",
-        };
-        setPatientData(mockData);
     };
 
     const openEditModal = () => {
@@ -80,29 +106,63 @@ export default function SearchBy() {
         Swal.fire("Success", "Patient details updated", "success");
     };
 
-    const handleVerifyAndSubmit = () => {
-        const today = new Date();
-        const d = String(today.getDate()).padStart(2, '0');
-        const m = String(today.getMonth() + 1).padStart(2, '0');
-        const y = today.getFullYear();
-        const formattedDate = `${d}-${m}-${y}`;
+    const handleVerifyAndSubmit = async () => {
+        // 1. Prepare data for the backend API
+        const payload = {
+            global_id: patientData.global_id,
+            patient_id: patientData.HMSId,
+            phone: patientData.contact,
+            Uid_no: patientData.uhid,
+            location: currentLocation // Adding location as it's standard in your other calls
+        };
+        try {
+            // 2. Call the backend API
+            const response = await fetch(`${BASE_URL}/V1/ipd/admin/registerPatientIPD?location=${currentLocation}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    // Add Authorization header if your API requires the token
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`
+                },
+                body: JSON.stringify(payload)
+            });
 
-        const verifiedPatient = { ...patientData, verifiedDate: formattedDate };
+            console.log(payload);
 
-        const existing = JSON.parse(localStorage.getItem("verifiedPatients") || "[]");
-        const updatedHistory = [...existing, verifiedPatient];
-        localStorage.setItem("verifiedPatients", JSON.stringify(updatedHistory));
-        setVerifiedHistory(updatedHistory);
+            const result = await response.json();
 
-        Swal.fire({
-            icon: "success",
-            title: "Verified!",
-            text: "Patient data has been sent to Manage Admission.",
-            timer: 1500,
-            showConfirmButton: false,
-        }).then(() => {
-            navigate("/manage-admission");
-        });
+            if (response.ok) {
+                // 3. Logic for Local History (Existing functionality)
+                // const today = new Date();
+                // const d = String(today.getDate()).padStart(2, '0');
+                // const m = String(today.getMonth() + 1).padStart(2, '0');
+                // const y = today.getFullYear();
+                // const formattedDate = `${d}-${m}-${y}`;
+
+                // const verifiedPatient = { ...patientData, verifiedDate: formattedDate };
+                // const existing = JSON.parse(localStorage.getItem("verifiedPatients") || "[]");
+                // const updatedHistory = [...existing, verifiedPatient];
+                
+                // localStorage.setItem("verifiedPatients", JSON.stringify(updatedHistory));
+                // setVerifiedHistory(updatedHistory);
+
+                // 4. Success Message and Navigation
+                Swal.fire({
+                    icon: "success",
+                    title: "Verified!",
+                    text: "Patient data has been verified and synced with the server.",
+                    timer: 1500,
+                    showConfirmButton: false,
+                }).then(() => {
+                    navigate("/manage-admission");
+                });
+            } else {
+                Swal.fire("Error", result.message || "Failed to verify patient on server", "error");
+            }
+        } catch (error) {
+            console.error("Verification Error:", error);
+            Swal.fire("Error", "Server connection failed during verification", "error");
+        }
     };
 
     const filteredHistory = verifiedHistory.filter((p) =>
@@ -202,6 +262,9 @@ export default function SearchBy() {
                                             {[
                                                 { label: "UHID No.", value: patientData.uhid, name: "uhid" },
                                                 { label: "Patient Name", value: patientData.name, name: "name" },
+                                                { label: "Patient HMS ID", value: patientData.HMSId, name: "HMSId" },
+                                                { label: "Patient Global ID", value: patientData.global_id, name: "global_id" },
+
                                                 { label: "Contact Number", value: patientData.contact, name: "contact" },
                                                 { label: "Address", value: patientData.address, name: "address" },
                                                 { label: "Age", value: patientData.age, name: "age" },

@@ -1,17 +1,79 @@
-import React, { useState, useEffect } from "react";
-import { Container, Row, Col, Card, Table, Button, Form, InputGroup, Badge } from "react-bootstrap";
+import React, { useState, useEffect, useCallback } from "react";
+import { Container, Row, Col, Card, Table, Button, Form, InputGroup, Badge, Spinner } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 import Swal from "sweetalert2";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
+import { decodeJwt } from "../../utils/decode-jwt";
+
+const BASE_URL = "http://localhost:5100/api";
 
 export default function ManageAdmission() {
     const [patients, setPatients] = useState([]);
+    const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
+    const [currentLocation, setCurrentLocation] = useState("default");
+
+    // 1. Initialize Location from JWT
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (token) {
+            const payload = decodeJwt(token);
+            if (payload && payload.jobLocation) {
+                setCurrentLocation(payload.jobLocation);
+            }
+        }
+    }, []);
+
+    // 2. Fetch Logic
+    const fetchVerifiedPatients = useCallback(async () => {
+        if (currentLocation === "default") return;
+        
+        setLoading(true);
+        try {
+            const response = await fetch(`${BASE_URL}/V1/ipd/admin/listVerifiedPatients?location=${currentLocation}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`
+                }
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                console.log(result);
+                // Map API data to your component's expected structure
+                const formattedData = result.map(p => ({
+                    uhid: p.uid,
+                    name: p.name,
+                    contact: p.patient_phone,
+                    age: p.age,
+                    gender: p.sex,
+                    verifiedDate: p.created_at,
+                    admissionNo: (p.admission_no === 0 || p.admission_no === "0") ? null : p.admission_no,                    
+                    patient_id: p.patient_id,
+                    global_id: p.global_id
+                }));
+                console.log(formattedData);
+                setPatients(formattedData);
+            } else {
+                console.error("Failed to fetch verified patients");
+            }
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        } finally {
+            setLoading(false);
+        }
+    }, [currentLocation]);
 
     useEffect(() => {
-        const data = JSON.parse(localStorage.getItem("verifiedPatients") || "[]");
-        setPatients(data);
-    }, []);
+        fetchVerifiedPatients();
+    }, [fetchVerifiedPatients]);
+
+    // 3. Search Filtering
+    const filteredPatients = patients.filter(p =>
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.uhid.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     const handleConfirm = (uhid) => {
         Swal.fire({
@@ -23,63 +85,28 @@ export default function ManageAdmission() {
             cancelButtonText: "Cancel",
             confirmButtonColor: "#15ab56ff",
             cancelButtonColor: "#dc1818ff",
-            didOpen: () => {
-                const container = Swal.getActions();
-                const confirmBtn = Swal.getConfirmButton();
-                const cancelBtn = Swal.getCancelButton();
-                container.style.flexDirection = "row-reverse";
-                container.style.justifyContent = "center";
-                confirmBtn.style.borderRadius = "10px";
-                cancelBtn.style.borderRadius = "10px";
-            }
-        }).then((result) => {
+        }).then(async (result) => {
             if (result.isConfirmed) {
-                const updatedPatients = [...patients];
-                const patientIdx = updatedPatients.findIndex(p => p.uhid === uhid);
+                try {
+                    // Call backend to update status and generate Admission No
+                    const response = await fetch(`${BASE_URL}/V1/ipd/admin/confirmAdmissionEntry`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ uhid, location: currentLocation })
+                    });
 
-                if (patientIdx === -1) return;
-
-                const patient = updatedPatients[patientIdx];
-
-                const surgeryData = JSON.parse(localStorage.getItem("surgeryPatients") || "[]");
-                let nextNum = 1;
-                if (surgeryData.length > 0) {
-                    const numbers = surgeryData
-                        .map(p => {
-                            if (!p.admissionNo) return 0;
-                            const match = p.admissionNo.match(/\d+/);
-                            return match ? parseInt(match[0]) : 0;
-                        })
-                        .filter(n => !isNaN(n));
-                    if (numbers.length > 0) {
-                        nextNum = Math.max(...numbers) + 1;
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log(data);
+                        Swal.fire("Confirmed!", `Admission No: ${data.admissionNo} generated.`, "success");
+                        fetchVerifiedPatients(); // Refresh the list
                     }
+                } catch (error) {
+                    Swal.fire("Error", "Could not confirm admission", "error");
                 }
-                const admissionNo = `ADM-${nextNum}`;
-
-                patient.status = "Submitted for Surgery";
-                patient.admissionNo = admissionNo;
-
-                localStorage.setItem("surgeryPatients", JSON.stringify([...surgeryData, patient]));
-                localStorage.setItem("verifiedPatients", JSON.stringify(updatedPatients));
-                setPatients(updatedPatients);
-
-                Swal.fire({
-                    title: "Confirmed!",
-                    text: `Patient admission confirmed For Admission No: ${admissionNo}.`,
-                    icon: "success",
-                    didOpen: () => {
-                        Swal.getConfirmButton().style.borderRadius = "10px";
-                    }
-                });
             }
         });
     };
-
-    const filteredPatients = patients.filter((p) =>
-        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.uhid.toLowerCase().includes(searchTerm.toLowerCase())
-    );
 
     return (
         <div
@@ -97,23 +124,8 @@ export default function ManageAdmission() {
                 <Container fluid>
                     <Row>
                         <Col>
-                            <Card
-                                style={{
-                                    borderRadius: "15px",
-                                    boxShadow: "0 10px 25px rgba(0, 0, 0, 0.08)",
-                                    border: "none",
-                                    background: "white",
-                                    overflow: "hidden"
-                                }}
-                            >
-                                <div style={{
-                                    backgroundColor: "#67c5cfff",
-                                    padding: "12px 15px",
-                                    borderBottom: "2px solid #1a5b61ff",
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    alignItems: "center"
-                                }}>
+                            <Card style={{ borderRadius: "15px", boxShadow: "0 10px 25px rgba(0, 0, 0, 0.08)", border: "none", background: "white", overflow: "hidden" }}>
+                                <div style={{ backgroundColor: "#67c5cfff", padding: "12px 15px", borderBottom: "2px solid #1a5b61ff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                     <div className="d-flex align-items-center">
                                         <FeatherIcon icon="users" size="18" style={{ color: "#1a5b61ff", marginRight: "10px" }} />
                                         <h4 className="m-0" style={{ color: "#1a5b61ff", fontWeight: "600", fontSize: "1.1rem" }}>Verified Patients Queue</h4>
@@ -133,35 +145,50 @@ export default function ManageAdmission() {
                                     </div>
                                 </div>
                                 <Card.Body className="p-0">
-                                    <Table responsive hover className="mb-0">
-                                        <thead style={{ backgroundColor: "#f8f9fa", borderBottom: "2px solid #e9ecef" }}>
-                                            <tr>
-                                                <th className="py-7 px-4 border-0 uppercase fw-bold">Verified Date</th>
-                                                <th className="py-7 px-4 border-0 uppercase fw-bold">UHID</th>
-                                                <th className="py-7 px-4 border-0 uppercase fw-bold">Patient Name</th>
-                                                <th className="py-7 px-4 border-0 uppercase fw-bold">Age/Gender</th>
-                                                <th className="py-7 px-4 border-0 uppercase fw-bold">Contact</th>
-                                                <th className="py-7 px-4 border-0 text-center uppercase fw-bold">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {filteredPatients.length > 0 ? (
-                                                [...filteredPatients].reverse().map((patient, index) => (
-                                                    <tr key={index} style={{ verticalAlign: "middle", fontSize: "0.9rem" }}>
-                                                        <td className="py-3 px-4" style={{ fontSize: "14px" }}>{patient.verifiedDate || "N/A"}</td>
-                                                        <td className="py-3 px-4 fw-bold" style={{ color: "#178aaeff" }}>{patient.uhid}</td>
-                                                        <td className="py-3 px-4 ">{patient.name}</td>
-                                                        <td className="py-3 px-4">{patient.age} / {patient.gender}</td>
-                                                        <td className="py-3 px-4">{patient.contact}</td>
-                                                        <td className="py-3 px-4">
-                                                            <div className="d-flex justify-content-center gap-2">
-                                                                {patient.status === "Submitted for Surgery" ? (
-                                                                    <Badge bg="success" style={{ padding: "5px 10px", borderRadius: "6px", fontSize: "10px" }}>
-                                                                        <FeatherIcon icon="check-circle" size={12} className="me-1" />
-                                                                        {patient.admissionNo}
-                                                                    </Badge>
-                                                                ) : (
-                                                                    <>
+                                    {loading ? (
+                                        <div className="text-center py-5">
+                                            <Spinner animation="border" variant="info" />
+                                            <p className="mt-2 text-muted">Loading queue...</p>
+                                        </div>
+                                    ) : (
+                                        <Table responsive hover className="mb-0">
+                                            <thead style={{ backgroundColor: "#f8f9fa", borderBottom: "2px solid #e9ecef" }}>
+                                                <tr>
+                                                    <th className="py-3 px-4 border-0 uppercase fw-bold">Verified Date</th>
+                                                    <th className="py-3 px-4 border-0 uppercase fw-bold">UHID</th>
+                                                    <th className="py-3 px-4 border-0 uppercase fw-bold">Patient Name</th>
+                                                    <th className="py-3 px-4 border-0 uppercase fw-bold">Age/Gender</th>
+                                                    <th className="py-3 px-4 border-0 uppercase fw-bold">Contact</th>
+                                                    <th className="py-3 px-4 border-0 text-center uppercase fw-bold">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {filteredPatients.length > 0 ? (
+                                                    filteredPatients.map((patient, index) => (
+                                                        <tr key={index} style={{ verticalAlign: "middle", fontSize: "0.9rem" }}>
+                                                            <td className="py-3 px-4">{patient.verifiedDate || "N/A"}</td>
+                                                            <td className="py-3 px-4 fw-bold" style={{ color: "#178aaeff" }}>{patient.uhid}</td>
+                                                            <td className="py-3 px-4">{patient.name}</td>
+                                                            <td className="py-3 px-4">{patient.age} / {patient.gender}</td>
+                                                            <td className="py-3 px-4">{patient.contact}</td>
+                                                            <td className="py-3 px-4">
+                                                                <div className="d-flex justify-content-center gap-2">
+                                                                {patient.admissionNo ? (
+                                                                        <Badge 
+                                                                            bg="success" 
+                                                                            style={{ 
+                                                                                padding: "8px 12px", 
+                                                                                borderRadius: "6px", 
+                                                                                fontSize: "12px",
+                                                                                display: "flex",
+                                                                                alignItems: "center"
+                                                                            }}
+                                                                        >
+                                                                            <FeatherIcon icon="check-circle" size={14} className="me-2" />
+                                                                            {patient.admissionNo}
+                                                                        </Badge>
+                                                                    ) : (
+                                                                        <>
                                                                         <Button
                                                                             variant="outline-primary"
                                                                             size="sm"
@@ -173,32 +200,27 @@ export default function ManageAdmission() {
                                                                             variant="outline-success"
                                                                             size="sm"
                                                                             onClick={() => handleConfirm(patient.uhid)}
-                                                                            style={{
-                                                                                borderRadius: "6px",
-                                                                                border: "none",
-                                                                                padding: "5px 10px",
-                                                                                fontWeight: "600",
-                                                                                margin: "3px"
-                                                                            }}
+                                                                            style={{ borderRadius: "6px", fontWeight: "600" }}
                                                                         >
-                                                                            Confirm
+                                                                            Confirm Admission
                                                                         </Button>
-                                                                    </>
-                                                                )}
-                                                            </div>
+                                                                        </>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    ))
+                                                ) : (
+                                                    <tr>
+                                                        <td colSpan="6" className="text-center py-5 text-muted">
+                                                            <FeatherIcon icon="info" size={40} className="mb-3 opacity-20" />
+                                                            <p className="m-0">No verified patients found.</p>
                                                         </td>
                                                     </tr>
-                                                ))
-                                            ) : (
-                                                <tr>
-                                                    <td colSpan="6" className="text-center py-5 text-muted">
-                                                        <FeatherIcon icon="info" size={40} className="mb-3 opacity-20" />
-                                                        <p className="m-0">No verified patients found.</p>
-                                                    </td>
-                                                </tr>
-                                            )}
-                                        </tbody>
-                                    </Table>
+                                                )}
+                                            </tbody>
+                                        </Table>
+                                    )}
                                 </Card.Body>
                             </Card>
                         </Col>
