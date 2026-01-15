@@ -5,6 +5,8 @@ import FeatherIcon from "feather-icons-react";
 import Swal from "sweetalert2";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 
+const BASE_URL = "http://194.195.117.79:5100/api";
+
 export default function SearchBy() {
     const navigate = useNavigate();
     const [uhid, setUhid] = useState("");
@@ -25,6 +27,29 @@ export default function SearchBy() {
             Swal.fire("Error", "Please enter a UHID number", "error");
             return;
         }
+
+        try {
+            const patientResponse = await fetch(
+              `${BASE_URL}/V1/ipd/admin/checkPatientOPD?location=${currentLocation}&uidNo=${uhid}`,
+              {
+                method: "GET",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+      
+            if (patientResponse.ok) {
+              const patientData = await patientResponse.json();
+              console.log("Patients API Response:", patientData);
+            //   setDoctors(Array.isArray(patientData.data ? patientData.data : []);
+            } else {
+              console.error("Failed to fetch doctors:", doctorResponse.statusText);
+            }
+          } catch (error) {
+            console.error("Error fetching dropdown data:", error.message);
+          }
+        };
 
         // Mock patient data
         const mockData = {
