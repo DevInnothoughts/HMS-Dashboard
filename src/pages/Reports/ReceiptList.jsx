@@ -363,6 +363,8 @@ export default function ReceiptList() {
                                   <b>Next Appointment: </b>No appointment scheduled<br>
                                   <br>
                                   ${clinicAddr.address}
+                                  <br>
+                                  ${clinicAddr.phone}
                                 </td>
                                 <td style="width:40%; vertical-align: top;">
                                   <div class="amount-box-container">
@@ -389,7 +391,7 @@ export default function ReceiptList() {
                                 <table width='100%' border='0'>
                             <tr>
                               <td>
-                                <i class="fa fa-phone"></i>&nbsp;8888288884&nbsp;|&nbsp;020-26164488/99
+                                <i class="fa fa-phone"></i>&nbsp;${clinicAddr.phone}&nbsp;|&nbsp;020-26164488/99
                               </td>
                             </tr>
                           </table>

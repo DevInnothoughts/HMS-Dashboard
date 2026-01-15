@@ -559,7 +559,7 @@ const InvoiceList = () => {
       return;
     }
 
-    const clinicAddr = clinincLoc["DP Road"] || {
+    const clinicAddr = clinincLoc[currentLocation] || {
       address: "Healing Hands Clinic",
       phone: "8888288884"
     };    
@@ -853,7 +853,7 @@ const InvoiceList = () => {
       <div class="footer">
         <table class="footer-table">
           <tr>
-            <td>For queries call ${clinicAddr.helpline || '7774099753'}</td>
+            <td>For queries call ${clinicAddr.phone || '7774099753'}</td>
             <td style="text-align:right;">For Emergency SMS ${clinicAddr.emergency || '7774053187'}</td>
           </tr>
         </table>
