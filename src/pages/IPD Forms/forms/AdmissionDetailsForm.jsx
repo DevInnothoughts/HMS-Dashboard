@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import TextInput from '../inputs/TextInput';
 import DateInput from '../inputs/DateInput';
 import SelectInput from '../inputs/SelectInput';
@@ -6,10 +6,66 @@ import RadioGroup from '../inputs/RadioGroup';
 import FileInput from '../inputs/FileInput';
 import MuiDateTimePicker from '../inputs/MuiDateTimePicker';
 import './Forms.css';
+import { decodeJwt } from '../../../utils/decode-jwt';
+import Swal from "sweetalert2";
+
+const BASE_URL = "http://localhost:5100/api";
+
+
+// admissionJSON = {
+//     "admission_details": {
+//       "admission_date": null,
+//       "admission_time": null,
+//       "surgery_procedure_date": null,
+//       "provisional_diagnosis": "",
+//       "final_diagnosis": "",
+//       "plan": "",
+//       "allergies": "",
+//       "special_consideration": ""
+//     },
+//     "lab_investigations": {
+//       "tests_done_outside": null,
+//       "sample_collected_for_lab": null,
+//       "investigation_orders": "",
+//       "pre_op_imaging_orders": {
+//         "status": "Pending",
+//         "checked_by_rmo": false
+//       }
+//     },
+//     "patient_status": {
+//       "nbm_status": {
+//         "is_nbm": false,
+//         "nbm_since": null
+//       },
+//       "had_food_before_arrival": false
+//     },
+//     "billing_administration": {
+//       "payment_method": {
+//         "cash": false,
+//         "insurance": false,
+//         "reimbursement": false
+//       },
+//       "cash_verification": {
+//         "advance_paid": false,
+//         "pending": false
+//       },
+//       "insurance_verification": {
+//         "pre_approval_received": null
+//       },
+//       "coordinator_details": {
+//         "name_and_signature": "",
+//         "date_and_time": null
+//       }
+//     },
+//     "document_metadata": {
+//       "form_code": "AAC-F-2.2-01",
+//       "page_number": 1
+//     }
+//   }
 
 const AdmissionDetailsForm = ({ onSubmit, patientData }) => {
+    const [currentLocation, setCurrentLocation] = useState(null);
     const [formData, setFormData] = useState({
-        // Admission Details (RMO)
         admissionDateTime: '',
         surgeryDate: '',
         provisionalDiagnosis: '',
@@ -17,34 +73,28 @@ const AdmissionDetailsForm = ({ onSubmit, patientData }) => {
         icdCoding: '',
         plan: '',
         allergies: '',
-
-        // Special Consideration
-        labTests: '', // Done outside, Done, Not done
+        labTests: '', 
         labReports: null,
-        labStatus: '', // Sample collected, Not collected
-
-        // Investigation Orders
-        investigationOrders: '', // Followed, Pending, NA
-
-        // NBM Status
-        nbmStatus: '', // NBM since
-        nbmSince: '',
+        labStatus: '', 
+        investigationOrders: '', 
+        nbmStatus: '', 
         hadFoodBeforeComing: false,
-
-        // Payment Method
-        paymentMethod: '', // Cash, Insurance, Reimbursement
-
-        // Cash verification
-        cashVerification: '', // Advance paid, Pending
-
-        // Insurance verification
-        insuranceVerification: '', // Pre approval received, Not received
-
-        // Coordinator
+        paymentMethod: '', 
+        cashVerification: '', 
+        insuranceVerification: '', 
         coordinatorName: '',
-        coordinatorSignature: '',
         coordinatorDateTime: ''
     });
+
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (token) {
+            const payload = decodeJwt(token);
+            if (payload && payload.jobLocation) {
+                setCurrentLocation(payload.jobLocation);
+            }
+        }
+    }, []);
 
     const handleChange = (e) => {
         const { name, value, type, checked, files } = e.target;
@@ -54,9 +104,101 @@ const AdmissionDetailsForm = ({ onSubmit, patientData }) => {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        onSubmit && onSubmit({ ...formData, patientHeader: patientData });
+
+        // Mapping to your required nested JSON structure
+        const finalPayload = { 
+            "admission-details" : {
+                "admission_details": {
+                    "admission_date": formData.admissionDateTime ? formData.admissionDateTime.split(' ')[0] : null,
+                    "admission_time": formData.admissionDateTime ? formData.admissionDateTime.split(' ')[1] : null,
+                    "surgery_procedure_date": formData.surgeryDate || null,
+                    "provisional_diagnosis": formData.provisionalDiagnosis,
+                    "final_diagnosis": formData.finalDiagnosis,
+                    "icd_coding": formData.icdCoding,
+                    "plan": formData.plan,
+                    "allergies": formData.allergies
+                },
+                "lab_investigations": {
+                    "tests_done_outside": formData.labTests === 'Done outside',
+                    "sample_collected_for_lab": formData.labStatus === 'Sample collected for lab',
+                    "investigation_orders": formData.investigationOrders
+                },
+                "patient_status": {
+                    "nbm_status": {
+                        "is_nbm": formData.nbmStatus === 'NBM since',
+                        "status_text": formData.nbmStatus
+                    },
+                    "had_food_before_arrival": formData.hadFoodBeforeComing
+                },
+                "billing_administration": {
+                    "payment_method": {
+                        "cash": formData.paymentMethod === 'Cash',
+                        "insurance": formData.paymentMethod === 'Insurance',
+                        "reimbursement": formData.paymentMethod === 'Reimbursement'
+                    },
+                    "cash_verification": {
+                        "advance_paid": formData.cashVerification === 'Advance paid',
+                        "pending": formData.cashVerification === 'Pending'
+                    },
+                    "insurance_verification": {
+                        "pre_approval_received": formData.insuranceVerification === 'Pre approval received'
+                    },
+                    "coordinator_details": {
+                        "name": formData.coordinatorName,
+                        "date_and_time": formData.coordinatorDateTime
+                    }
+                },
+                "document_metadata": {
+                    "form_code": "AAC-F-2.2-01",
+                    "page_number": 1
+                }
+            }       
+        };
+
+        try {
+            Swal.fire({
+                title: 'Saving Admission Form...',
+                didOpen: () => { Swal.showLoading(); },
+                allowOutsideClick: false
+            });
+
+            const bodyPayload = {
+                title: "admission-details", // Unique key for this form in the JSON column
+                location: currentLocation,
+                patient_id: patientData.uhid,
+                admissionData: finalPayload
+            };
+            console.log(finalPayload);
+            const response = await fetch(`${BASE_URL}/V1/ipd/admission/insertAdmission`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`
+                },
+                body: JSON.stringify(bodyPayload)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                Swal.fire({
+                    icon: "success",
+                    title: "Saved!",
+                    text: "Admission Details have been submitted successfully.",
+                    timer: 2000,
+                    showConfirmButton: false,
+                }).then(() => {
+                    if (onSubmit) onSubmit(result);
+                });
+            } else {
+                throw new Error(result.message || "Failed to save data");
+            }
+        } catch (error) {
+            console.error("Submission Error:", error);
+            Swal.fire("Error", error.message || "Server connection failed", "error");
+        }
     };
 
     return (
