@@ -3,7 +3,6 @@ import TextInput from '../inputs/TextInput';
 import Textarea from '../inputs/Textarea';
 import SignatureInput from '../inputs/SignatureInput';
 import MuiDateTimePicker from '../inputs/MuiDateTimePicker';
-import './Forms.css';
 
 const AdverseDrugCorrectiveActionForm = ({ onSubmit, patientData }) => {
     const [formData, setFormData] = useState({
@@ -87,46 +86,24 @@ const AdverseDrugCorrectiveActionForm = ({ onSubmit, patientData }) => {
                     ADVERSE DRUG REPORT – CORRECTIVE & PREVENTIVE ACTION
                 </h2>
 
-                {/* Compact Patient Header */}
-                {patientData && (
-                    <div className="patient-compact-header">
-                        <div className="info-item">
-                            <span className="info-label">UHID</span>
-                            <span className="info-value">{patientData.uhid}</span>
-                        </div>
-                        <div className="info-item">
-                            <span className="info-label">Patient Name</span>
-                            <span className="info-value">{patientData.name}</span>
-                        </div>
-                        <div className="info-item">
-                            <span className="info-label">Age</span>
-                            <span className="info-value">{patientData.age}</span>
-                        </div>
-                        <div className="info-item">
-                            <span className="info-label">Gender</span>
-                            <span className="info-value">{patientData.gender}</span>
-                        </div>
-                        <div className="info-item">
-                            <span className="info-label">IP No</span>
-                            <span className="info-value">{patientData.ipNo}</span>
-                        </div>
-                    </div>
-                )}
+            {/* Patient Header */}
+            <div className="patient-compact-header" style={{ marginBottom: '30px' }}>
+                <div className="info-item"><span className="info-label">UHID</span><span className="info-value">{formData.uhid || '—'}</span></div>
+                <div className="info-item"><span className="info-label">Patient Name</span><span className="info-value">{formData.name || '—'}</span></div>
+                <div className="info-item"><span className="info-label">Age</span><span className="info-value">{formData.age || '—'}</span></div>
+                <div className="info-item"><span className="info-label">Gender</span><span className="info-value">{formData.gender || '—'}</span></div>
+                <div className="info-item"><span className="info-label">IP No</span><span className="info-value">{formData.ipNo || '—'}</span></div>
+            </div>
 
-                {/* Medical Administrator */}
-                <div className="two-col">
-                    <TextInput
-                        label="Medical Administrator Name"
-                        name="medicalAdministratorName"
-                        value={formData.medicalAdministratorName}
-                        onChange={handleChange}
-                    />
-                    <MuiDateTimePicker
-                        label="Date & Time"
-                        name="adminDateTime"
-                        value={formData.adminDateTime}
-                        onChange={handleChange}
-                    />
+            {/* Administrator Header */}
+            <div style={{ ...cardStyle, padding: '0', border: '1px solid #333' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', borderBottom: '1px solid #333' }}>
+                    <div style={{ padding: '10px', borderRight: '1px solid #333' }}>
+                        <TextInput label="Medical administrator Name:" name="medicalAdministratorName" value={formData.medicalAdministratorName} onChange={handleChange} />
+                    </div>
+                    <div style={{ padding: '10px' }}>
+                        <MuiDateTimePicker label="Date & Time:" name="adminDateTime" value={formData.adminDateTime} onChange={handleChange} />
+                    </div>
                 </div>
 
                 {/* <Textarea
@@ -177,61 +154,39 @@ const AdverseDrugCorrectiveActionForm = ({ onSubmit, patientData }) => {
                     />
                 </div>
 
-                {/* Actions */}
-                <div className="two-col">
-                    <Textarea
-                        label="Corrective Action"
-                        name="correctiveAction"
-                        value={formData.correctiveAction}
-                        onChange={handleChange}
-                        rows={3}
-                    />
-                    <Textarea
-                        label="Preventive Action"
-                        name="preventiveAction"
-                        value={formData.preventiveAction}
-                        onChange={handleChange}
-                        rows={3}
-                    />
+                {/* Actions Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: '1px solid #333' }}>
+                    <div style={{ padding: '10px', borderRight: '1px solid #333' }}>
+                        <Textarea label="Corrective action-" name="correctiveAction" value={formData.correctiveAction} onChange={handleChange} rows={5} />
+                    </div>
+                    <div style={{ padding: '10px' }}>
+                        <Textarea label="Preventive action-" name="preventiveAction" value={formData.preventiveAction} onChange={handleChange} rows={5} />
+                    </div>
                 </div>
 
-                <Textarea
-                    label="Action Plan"
-                    name="actionPlan"
-                    value={formData.actionPlan}
-                    onChange={handleChange}
-                    rows={3}
-                />
-
-                {/* Verification */}
-                <h3 className="form-section-title">Action Verified By</h3>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1.5fr', gap: '1.5rem', alignItems: 'end' }}>
-                    <TextInput
-                        label="Name"
-                        name="verifiedByName"
-                        value={formData.verifiedByName}
-                        onChange={handleChange}
-                    />
-                    <SignatureInput
-                        label="Signature"
-                        name="verifiedBySign"
-                        value={formData.verifiedBySign}
-                        onChange={handleChange}
-                    />
-                    <MuiDateTimePicker
-                        label="Verification Date & Time"
-                        name="verifiedDate"
-                        value={formData.verifiedDate}
-                        onChange={handleChange}
-                    />
+                {/* Plan and Verification Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+                    <div style={{ padding: '10px', borderRight: '1px solid #333' }}>
+                        <Textarea label="Action plan:" name="actionPlan" value={formData.actionPlan} onChange={handleChange} rows={6} />
+                    </div>
+                    <div style={{ padding: '10px' }}>
+                        <div style={{ fontWeight: '600', marginBottom: '10px', color: '#333' }}>Action verified by:</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            <TextInput label="Name:" name="verifiedByName" value={formData.verifiedByName} onChange={handleChange} />
+                            <TextInput label="Sign:" name="verifiedBySign" value={formData.verifiedBySign} onChange={handleChange} />
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                <MuiDateTimePicker label="Date:" name="verifiedDate" value={formData.verifiedDate} onChange={handleChange} type="date" />
+                                <MuiDateTimePicker label="Time" name="verifiedTime" value={formData.verifiedTime} onChange={handleChange} type="time" />
+                            </div>
+                        </div>
+                    </div>
                 </div>
+            </div>
 
-                <button type="submit" className="submit-btn">
-                    Submit Corrective Action Report
-                </button>
-            </form>
-        </div>
+            <button type="submit" className="submit-btn" style={{ width: '100%', padding: '15px', marginTop: '20px' }}>
+                Save Report & Actions
+            </button>
+        </form>
     );
 };
 

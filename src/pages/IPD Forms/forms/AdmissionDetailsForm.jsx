@@ -104,6 +104,52 @@ const AdmissionDetailsForm = ({ onSubmit, patientData }) => {
         }));
     };
 
+    const labTestOptions = [
+        { value: 'Done outside', label: 'Done outside' },
+        { value: 'Not done', label: 'Not done' }
+    ];
+
+    const sampleOptions = [
+        { value: 'Sample collected for lab', label: 'Sample collected' },
+        { value: 'Not collected', label: 'Not collected' }
+    ];
+
+    const investigationOptions = [
+        { value: 'Followed', label: 'Followed' },
+        { value: 'Pending', label: 'Pending' },
+        { value: 'NA', label: 'NA' }
+    ];
+
+    const nbmOptions = [
+        { value: 'NBM since', label: 'NBM since' },
+        { value: 'Patient had food before coming', label: 'Had food' }
+    ];
+
+    const paymentOptions = [
+        { value: 'Cash', label: 'Cash' },
+        { value: 'Insurance', label: 'Insurance' },
+        { value: 'Reimbursement', label: 'Reimbursement' }
+    ];
+
+    const cardStyle = {
+        padding: '20px',
+        borderRadius: '12px',
+        backgroundColor: '#fff',
+        boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
+        marginBottom: '25px',
+        border: '1px solid #e0f7fa'
+    };
+
+    const sectionHeaderStyle = {
+        fontSize: '1rem',
+        fontWeight: 'bold',
+        color: '#00838f',
+        marginBottom: '15px',
+        borderBottom: '2px solid #80deea',
+        paddingBottom: '5px'
+    };
+
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -202,192 +248,142 @@ const AdmissionDetailsForm = ({ onSubmit, patientData }) => {
     };
 
     return (
-        <div className="medical-form-container">
-            <h2 className="form-title">ADMISSION FORM</h2>
-
-            {/* Compact Patient Header */}
-            {patientData && (
-                <div className="patient-compact-header">
-                    <div className="info-item">
-                        <span className="info-label">UHID</span>
-                        <span className="info-value">{patientData.uhid}</span>
-                    </div>
-                    <div className="info-item">
-                        <span className="info-label">Patient Name</span>
-                        <span className="info-value">{patientData.name}</span>
-                    </div>
-                    <div className="info-item">
-                        <span className="info-label">Age</span>
-                        <span className="info-value">{patientData.age}</span>
-                    </div>
-                    <div className="info-item">
-                        <span className="info-label">Gender</span>
-                        <span className="info-value">{patientData.gender}</span>
-                    </div>
-                    <div className="info-item">
-                        <span className="info-label">IP No</span>
-                        <span className="info-value">{patientData.ipNo}</span>
-                    </div>
+            <form onSubmit={handleSubmit} className="medical-form" style={{ maxWidth: '1000px', margin: '0 auto', backgroundColor: '#fcfcfc', padding: '20px' }}>
+                <h2 className="form-title" style={{ textAlign: 'center', backgroundColor: '#80deea', color: 'white', padding: '15px', borderRadius: '8px', margin: '0 0 40px 0', fontSize: '1.6rem', fontWeight: 'bold' }}>
+                    ADMISSION FORM
+                </h2>
+    
+                {/* Patient Header */}
+                <div className="patient-compact-header" style={{ marginBottom: '40px' }}>
+                    <div className="info-item"><span className="info-label">UHID</span><span className="info-value">{formData.uhid || '—'}</span></div>
+                    <div className="info-item"><span className="info-label">Patient Name</span><span className="info-value">{formData.name || '—'}</span></div>
+                    <div className="info-item"><span className="info-label">Age</span><span className="info-value">{formData.age || '—'}</span></div>
+                    <div className="info-item"><span className="info-label">Gender</span><span className="info-value">{formData.gender || '—'}</span></div>
+                    <div className="info-item"><span className="info-label">IP No</span><span className="info-value">{formData.ipNo || '—'}</span></div>
                 </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="form-content">
-                <section className="form-section">
-                    <h3 className="form-section-title">Admission details (to be filled by RMO)</h3>
-                    <MuiDateTimePicker label="Admission Date & Time" name="admissionDateTime" value={formData.admissionDateTime} onChange={handleChange} required />
-
-                    <div className="two-col" style={{ marginTop: '1.5rem' }}>
-                        <DateInput label="Surgery/Procedure Date" name="surgeryDate" value={formData.surgeryDate} onChange={handleChange} allowFuture={true} />
+    
+                {/* Admission Details (to be filled by RMO) */}
+                <div style={cardStyle}>
+                    <div style={sectionHeaderStyle}>Admission details (to be filled by RMO)</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                        <MuiDateTimePicker label="Admission Date" name="admissionDate" value={formData.admissionDate} onChange={handleChange} type="date" />
+                        <MuiDateTimePicker label="Admission Time" name="admissionTime" value={formData.admissionTime} onChange={handleChange} type="time" />
+                    </div>
+                    <MuiDateTimePicker label="Surgery/Procedure Date" name="surgeryProcedureDate" value={formData.surgeryProcedureDate} onChange={handleChange} type="date" />
+                    <div style={{ marginTop: '20px' }}>
                         <TextInput label="Provisional diagnosis" name="provisionalDiagnosis" value={formData.provisionalDiagnosis} onChange={handleChange} />
-                    </div>
-
-                    <div className="two-col">
                         <TextInput label="Final diagnosis" name="finalDiagnosis" value={formData.finalDiagnosis} onChange={handleChange} />
-                        <TextInput label="ICD-10 coding" name="icdCoding" value={formData.icdCoding} onChange={handleChange} />
-                    </div>
-
-                    <div className="two-col">
-                        <TextInput label="Plan" name="plan" value={formData.plan} onChange={handleChange} />
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                            <TextInput label="ICD-10 coding" name="icd10Coding" value={formData.icd10Coding} onChange={handleChange} />
+                            <TextInput label="Plan" name="plan" value={formData.plan} onChange={handleChange} />
+                        </div>
                         <TextInput label="Allergies if any" name="allergies" value={formData.allergies} onChange={handleChange} />
                     </div>
-                </section>
-
-                <section className="form-section">
-                    <h3 className="form-section-title">Special consideration</h3>
-
-                    <div className="form-field">
-                        <RadioGroup
-                            label="Lab tests"
-                            name="labTests"
-                            value={formData.labTests}
-                            onChange={handleChange}
-                            options={['Done outside', 'Not done']}
-                        />
-                        <p style={{ fontSize: '0.85rem', marginBottom: '0.5rem' }}>If done - Attach lab reports to file.</p>
+                </div>
+    
+                {/* Lab & Investigation Section */}
+                <div style={cardStyle}>
+                    {/* Lab Tests */}
+                    <div style={{ marginBottom: '25px' }}>
+                        <div style={{ fontWeight: '600', color: '#00838f', marginBottom: '10px' }}>Lab tests</div>
+                        <RadioGroup name="labTests" value={formData.labTests} onChange={handleChange} options={labTestOptions} />
+    
+                        {formData.labTests === 'Done outside' && (
+                            <div style={{ marginTop: '12px', padding: '15px', backgroundColor: '#f0faff', borderRadius: '8px', border: '1px dashed #80deea' }}>
+                                <div style={{ fontSize: '0.85rem', color: '#006064', marginBottom: '8px', fontWeight: 'bold' }}>If done - Attach lab reports to file.</div>
+                                <input
+                                    type="file"
+                                    id="labReportImport"
+                                    style={{ display: 'none' }}
+                                    onChange={(e) => alert('Reports imported successfully!')}
+                                />
+                                <button
+                                    type="button"
+                                    className="secondary-btn"
+                                    onClick={() => document.getElementById('labReportImport').click()}
+                                    style={{ fontSize: '0.8rem', padding: '6px 15px' }}
+                                >
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                    Import Lab Reports
+                                </button>
+                            </div>
+                        )}
+    
+                        {formData.labTests === 'Not done' && (
+                            <div style={{ marginTop: '12px', padding: '15px', backgroundColor: '#fff9f9', borderRadius: '8px', border: '1px dashed #ffcdd2' }}>
+                                <div style={{ fontSize: '0.85rem', color: '#c62828', marginBottom: '10px', fontWeight: 'bold' }}>If not done:</div>
+                                <RadioGroup name="sampleCollected" value={formData.sampleCollected} onChange={handleChange} options={sampleOptions} />
+                                <div style={{ marginTop: '8px', fontSize: '0.75rem', color: '#7f8c8d', fontStyle: 'italic' }}>
+                                    * If not collected - RMO to give orders to nursing staff & write in progress sheet
+                                </div>
+                            </div>
+                        )}
                     </div>
-
-                    {(formData.labTests === 'Done outside') && (
-                        <div style={{ margin: '1rem 0', padding: '1.5rem', background: '#f0fdfa', borderRadius: '12px', border: '1px dashed var(--primary-color)' }}>
-                            <FileInput
-                                label="Attach lab reports"
-                                name="labReports"
-                                onChange={handleChange}
-                                multiple={true}
-                            />
+    
+                    {/* Investigation Orders */}
+                    <div style={{ marginBottom: '25px', paddingTop: '15px', borderTop: '1px solid #eee' }}>
+                        <div style={{ fontWeight: '600', color: '#00838f', marginBottom: '10px' }}>Investigation orders - RMO to check pre op orders for imaging</div>
+                        <RadioGroup name="investigationOrders" value={formData.investigationOrders} onChange={handleChange} options={investigationOptions} />
+                        <div style={{ marginTop: '8px', fontSize: '0.75rem', color: '#546e7a' }}>
+                            * RMO to act - In case pending or any additional test is required.
+                        </div>
+                    </div>
+    
+                    {/* NBM Status */}
+                    <div style={{ marginBottom: '25px', paddingTop: '15px', borderTop: '1px solid #eee' }}>
+                        <div style={{ fontWeight: '600', color: '#00838f', marginBottom: '10px' }}>NBM status</div>
+                        <RadioGroup name="nbmStatus" value={formData.nbmStatus} onChange={handleChange} options={nbmOptions} />
+                    </div>
+                </div>
+    
+                {/* Payment & Coordinator Verification */}
+                <div style={cardStyle}>
+                    <div style={sectionHeaderStyle}>Payment & Coordinator Verification</div>
+    
+                    <TextInput label="Estimated length of stay" name="estimatedStay" value={formData.estimatedStay} onChange={handleChange} />
+    
+                    <div style={{ marginTop: '20px' }}>
+                        <div style={{ fontWeight: '600', color: '#00838f', marginBottom: '10px' }}>Payment method</div>
+                        <RadioGroup name="paymentMethod" value={formData.paymentMethod} onChange={handleChange} options={paymentOptions} />
+                    </div>
+    
+                    {formData.paymentMethod === 'Cash' && (
+                        <div style={{ marginTop: '15px', padding: '15px', backgroundColor: '#f5f7f9', borderRadius: '10px', borderLeft: '4px solid #80deea' }}>
+                            <div style={{ fontWeight: 'bold', fontSize: '0.85rem', marginBottom: '10px' }}>In case of cash payment, floor coordinator to verify:</div>
+                            <RadioGroup name="cashPaymentStatus" value={formData.cashPaymentStatus} onChange={handleChange} options={[{ value: 'Advance paid', label: 'Advance paid' }, { value: 'Pending', label: 'Pending' }]} />
                         </div>
                     )}
-
-                    <div className="form-field">
-                        <RadioGroup
-                            label="If not done -"
-                            name="labStatus"
-                            value={formData.labStatus}
-                            onChange={handleChange}
-                            options={['Sample collected for lab', 'Not collected']}
-                        />
-                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem', fontStyle: 'italic' }}>If not collected-RMO to give orders to nursing staff & write in progress sheet</p>
-                    </div>
-                </section>
-
-                <section className="form-section">
-                    <div className="form-field">
-                        <RadioGroup
-                            label="Investigation orders - RMO to check pre op orders for imaging"
-                            name="investigationOrders"
-                            value={formData.investigationOrders}
-                            onChange={handleChange}
-                            options={['Followed', 'Pending', 'NA']}
-                        />
-                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem', fontStyle: 'italic' }}>RMO to act- in case pending or any additional test is required.</p>
-                    </div>
-                </section >
-
-                <div className="two-col">
-                    <section className="form-section">
-                        <h3 className="form-section-title">NBM status</h3>
-                        <div className="d-flex flex-column gap-2">
-                            <div className="d-flex align-items-center gap-2">
-                                <label className="checkbox-option mb-0">
-                                    <input
-                                        type="checkbox"
-                                        name="nbmStatus"
-                                        value="NBM since"
-                                        checked={formData.nbmStatus === 'NBM since'}
-                                        onChange={(e) => handleChange({ target: { name: 'nbmStatus', value: e.target.checked ? 'NBM since' : '' } })}
-                                    />
-                                    <span>NBM since</span>
-                                </label>
-                                {/* <input
-                                    type="text"
-                                    name="nbmSince"
-                                    value={formData.nbmSince}
-                                    onChange={handleChange}
-                                    disabled={formData.nbmStatus !== 'NBM since'}
-                                    style={{
-                                        border: 'none',
-                                        borderBottom: '1px solid #ccc',
-                                        padding: '0 5px',
-                                        outline: 'none',
-                                        width: '100px'
-                                    }}
-                                /> */}
-                            </div>
-                            <label className="checkbox-option">
-                                <input
-                                    type="checkbox"
-                                    name="hadFoodBeforeComing"
-                                    checked={formData.nbmStatus === 'Patient had food before coming'}
-                                    onChange={(e) => handleChange({ target: { name: 'nbmStatus', value: e.target.checked ? 'Patient had food before coming' : '' } })}
-                                />
-                                <span>Patient had food before coming</span>
-                            </label>
+    
+                    {formData.paymentMethod === 'Insurance' && (
+                        <div style={{ marginTop: '15px', padding: '15px', backgroundColor: '#f5f7f9', borderRadius: '10px', borderLeft: '4px solid #80deea' }}>
+                            <div style={{ fontWeight: 'bold', fontSize: '0.85rem', marginBottom: '10px' }}>In case of insurance, floor coordinator to verify:</div>
+                            <RadioGroup name="insuranceApprovalStatus" value={formData.insuranceApprovalStatus} onChange={handleChange} options={[{ value: 'Pre approval received', label: 'Pre approval received' }, { value: 'Not received', label: 'Not received' }]} />
                         </div>
-                    </section>
-
-                    <section className="form-section">
-                        <h3 className="form-section-title">Payment method</h3>
-                        <RadioGroup
-                            label="Select Method"
-                            name="paymentMethod"
-                            value={formData.paymentMethod}
-                            onChange={handleChange}
-                            options={['Cash', 'Insurance', 'Reimbursement']}
-                        />
-                    </section>
+                    )}
+    
+                    <div style={{ marginTop: '30px', borderTop: '1px solid #efefef', paddingTop: '20px' }}>
+                        <TextInput label="Name & Sign of the floor coordinator" name="coordinatorNameSign" value={formData.coordinatorNameSign} onChange={handleChange} />
+                        <div style={{ maxWidth: '300px' }}>
+                            <MuiDateTimePicker label="Date & Time" name="coordinatorDateTime" value={formData.coordinatorDateTime} onChange={handleChange} />
+                        </div>
+                    </div>
                 </div>
-
-                <section style={{ margin: '2rem 0', background: '#f8fafc', padding: '1.5rem', border: '2px dashed var(--border-color)', borderRadius: '12px' }}>
-                    <div className="form-field">
-                        <RadioGroup
-                            label="In case of cash payment, floor coordinator to verify"
-                            name="cashVerification"
-                            value={formData.cashVerification}
-                            onChange={handleChange}
-                            options={['Advance paid', 'Pending']}
-                        />
+    
+                {/* Final Footer */}
+                <div style={{ ...cardStyle, borderTop: '4px solid #80deea' }}>
+                    <TextInput label="Admission done by (Name & Sign)" name="admissionDoneByNameSign" value={formData.admissionDoneByNameSign} onChange={handleChange} />
+                    <div style={{ display: 'flex', gap: '20px', marginTop: '15px' }}>
+                        <div style={{ flex: 1 }}><MuiDateTimePicker label="Date" name="admissionDoneDate" value={formData.admissionDoneDate} onChange={handleChange} type="date" /></div>
+                        <div style={{ flex: 1 }}><MuiDateTimePicker label="Time" name="admissionDoneTime" value={formData.admissionDoneTime} onChange={handleChange} type="time" /></div>
                     </div>
-                    <div className="form-field">
-                        <RadioGroup
-                            label="In case of insurance, floor coordinator to verify"
-                            name="insuranceVerification"
-                            value={formData.insuranceVerification}
-                            onChange={handleChange}
-                            options={['Pre approval received', 'Not received']}
-                        />
-                    </div>
-                </section>
-
-                <footer className="form-footer">
-                    <div className="two-col">
-                        <TextInput label="Name & Sign of the floor coordinator" name="coordinatorName" value={formData.coordinatorName} onChange={handleChange} />
-                        <MuiDateTimePicker label="Date & Time" name="coordinatorDateTime" value={formData.coordinatorDateTime} onChange={handleChange} />
-                    </div>
-                </footer>
-
-                <button type="submit" className="submit-btn">Submit Admission Form</button>
-            </form >
-        </div >
-    );
-};
-
-export default AdmissionDetailsForm;
+                </div>
+    
+                <button type="submit" className="submit-btn" style={{ width: '100%', padding: '15px', fontSize: '1.1rem', backgroundColor: '#80deea', fontWeight: 'bold' }}>
+                    Complete Admission Verification
+                </button>
+            </form>
+        );
+    };
+    
+    export default AdmissionDetailsForm;
+    

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import TextInput from '../inputs/TextInput';
 import MuiDateTimePicker from '../inputs/MuiDateTimePicker';
-import './Forms.css';
 
 const MedicationTherapyForm = ({ onSubmit, patientData }) => {
     const [formData, setFormData] = useState({
@@ -43,67 +42,24 @@ const MedicationTherapyForm = ({ onSubmit, patientData }) => {
         onSubmit && onSubmit({ ...formData, patientHeader: patientData });
     };
 
-    const TableSection = ({ title, section, columns }) => (
-        <div style={{ marginBottom: '3rem' }}>
-            <h3 className="form-section-title">{title}</h3>
-            <div style={{ overflowX: 'auto', border: '1px solid var(--border-color)', borderRadius: '12px', overflow: 'hidden' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '850px' }}>
-                    <thead>
-                        <tr style={{ backgroundColor: '#f1f5f9' }}>
-                            {columns.map((col, idx) => (
-                                <th key={idx} style={{ padding: '12px', textAlign: 'left', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)', borderBottom: '1.5px solid var(--border-color)' }}>
-                                    {col.label}
-                                </th>
-                            ))}
-                            <th style={{ width: '50px', borderBottom: '1.5px solid var(--border-color)' }}></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {formData[section].map((row, i) => (
-                            <tr key={i} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                                {columns.map((col, idx) => (
-                                    <td key={idx} style={{ padding: '8px' }}>
-                                        {col.type === 'datetime' ? (
-                                            <MuiDateTimePicker
-                                                value={row[col.field] || ''}
-                                                onChange={e => handleTableChange(section, i, col.field, e.target.value)}
-                                                hideLabel
-                                            />
-                                        ) : (
-                                            <TextInput
-                                                value={row[col.field] || ''}
-                                                onChange={e => handleTableChange(section, i, col.field, e.target.value)}
-                                                hideLabel
-                                                placeholder={col.label}
-                                            />
-                                        )}
-                                    </td>
-                                ))}
-                                <td style={{ textAlign: 'center' }}>
-                                    <button
-                                        type="button"
-                                        onClick={() => removeRow(section, i)}
-                                        style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '1.25rem', cursor: 'pointer', visibility: formData[section].length > 1 ? 'visible' : 'hidden' }}
-                                    >
-                                        &times;
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.75rem' }}>
-                <button type="button" onClick={() => addRow(section)} style={{ background: 'none', border: 'none', color: 'var(--primary-color)', fontSize: '0.875rem', fontWeight: '700', cursor: 'pointer' }}>
-                    + Add Row
-                </button>
-            </div>
-        </div>
-    );
+    const gridContainerStyle = {
+        overflowX: 'auto',
+        marginBottom: '25px',
+        paddingBottom: '5px'
+    };
+
+    const gridRowStyle = {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(5, 1fr) auto',
+        gap: '10px',
+        alignItems: 'center',
+        marginBottom: '10px',
+        minWidth: '900px'
+    };
 
     return (
-        <div className="medical-form-container">
-            <h2 className="form-title">
+        <form onSubmit={handleSubmit} className="medical-form compact-form">
+            <h2 className="form-title" style={{ textAlign: 'center', backgroundColor: '#80deea', color: 'white', padding: '15px', borderRadius: '8px', marginBottom: '30px' }}>
                 MEDICATION & THERAPY RECORD
             </h2>
 
@@ -133,84 +89,120 @@ const MedicationTherapyForm = ({ onSubmit, patientData }) => {
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="medical-form">
-                <div className="form-field">
-                    <TextInput
-                        label="Allergy (if any)"
-                        name="allergy"
-                        value={formData.allergy}
-                        onChange={handleChange}
-                        placeholder="Specify allergies or N.A."
-                    />
-                </div>
-
-                <TableSection
-                    title="(STAT) Once Only Medicines"
-                    section="statMeds"
-                    columns={[
-                        { label: 'Date', field: 'date', type: 'datetime' },
-                        { label: 'Drug Name', field: 'drug' },
-                        { label: 'Dose', field: 'dose' },
-                        { label: 'Route', field: 'route' },
-                        { label: 'Nurse Sign', field: 'nurse' }
-                    ]}
+            <div style={{ marginBottom: '30px' }}>
+                <TextInput
+                    label="Allergy (if any)"
+                    name="allergy"
+                    value={formData.allergy}
+                    onChange={handleChange}
+                    placeholder="Specify allergies or N.A."
                 />
+            </div>
 
-                <TableSection
-                    title="Intravenous Infusion Therapy"
-                    section="ivInfusion"
-                    columns={[
-                        { label: 'Date', field: 'date', type: 'datetime' },
-                        { label: 'IV Fluid', field: 'fluid' },
-                        { label: 'Rate', field: 'rate' },
-                        { label: 'Doctor Sign', field: 'doctor' },
-                        { label: 'Nurse Sign', field: 'nurse' }
-                    ]}
-                />
+            {/* STAT Medicines */}
+            <h3 style={{ color: '#00796b', borderBottom: '2px solid #80deea', paddingBottom: '8px', marginBottom: '15px', fontWeight: 'bold' }}>
+                (STAT) Once Only Medicines
+            </h3>
+            <div style={gridContainerStyle}>
+                {formData.statMeds.map((row, i) => (
+                    <div key={i} style={gridRowStyle}>
+                        <MuiDateTimePicker label="Date" name="date" value={row.date || ''} onChange={e => handleTableChange('statMeds', i, 'date', e.target.value)} hideLabel />
+                        <TextInput label="Drug Name" value={row.drug || ''} onChange={e => handleTableChange('statMeds', i, 'drug', e.target.value)} hideLabel placeholder="Drug Name" />
+                        <TextInput label="Dose" value={row.dose || ''} onChange={e => handleTableChange('statMeds', i, 'dose', e.target.value)} hideLabel placeholder="Dose" />
+                        <TextInput label="Route" value={row.route || ''} onChange={e => handleTableChange('statMeds', i, 'route', e.target.value)} hideLabel placeholder="Route" />
+                        <TextInput label="Nurse Sign" value={row.nurse || ''} onChange={e => handleTableChange('statMeds', i, 'nurse', e.target.value)} hideLabel placeholder="Nurse Sign" />
+                        <button type="button" onClick={() => removeRow('statMeds', i)} className="remove-btn" title="Remove Row" style={{ visibility: formData.statMeds.length > 1 ? 'visible' : 'hidden' }}>×</button>
+                    </div>
+                ))}
+                <button type="button" onClick={() => addRow('statMeds')} className="secondary-btn">+ Add Row</button>
+            </div>
 
-                <TableSection
-                    title="For Verbal Orders Only"
-                    section="verbalOrders"
-                    columns={[
-                        { label: 'Date', field: 'date', type: 'datetime' },
-                        { label: 'Drug', field: 'drug' },
-                        { label: 'Dose', field: 'dose' },
-                        { label: 'Doctor', field: 'doctor' },
-                        { label: 'Remarks', field: 'remarks' }
-                    ]}
-                />
+            <hr style={{ margin: '30px 0', border: 'none', borderTop: '1px solid #e0f7fa' }} />
 
-                <TableSection
-                    title="Blood Sugar & Insulin Record"
-                    section="bloodSugar"
-                    columns={[
-                        { label: 'BSL', field: 'bsl' },
-                        { label: 'Drug', field: 'drug' },
-                        { label: 'Dose', field: 'dose' },
-                        { label: 'Doctor', field: 'doctor' },
-                        { label: 'Nurse', field: 'nurse' }
-                    ]}
-                />
+            {/* IV Infusion */}
+            <h3 style={{ color: '#00796b', borderBottom: '2px solid #80deea', paddingBottom: '8px', marginBottom: '15px', fontWeight: 'bold' }}>
+                Intravenous Infusion Therapy
+            </h3>
+            <div style={gridContainerStyle} id="iv-infusion-section">
+                {formData.ivInfusion.map((row, i) => (
+                    <div key={i} style={gridRowStyle}>
+                        <MuiDateTimePicker label="Date" name="date" value={row.date || ''} onChange={e => handleTableChange('ivInfusion', i, 'date', e.target.value)} hideLabel />
+                        <TextInput label="IV Fluid" value={row.fluid || ''} onChange={e => handleTableChange('ivInfusion', i, 'fluid', e.target.value)} hideLabel placeholder="IV Fluid" />
+                        <TextInput label="Rate" value={row.rate || ''} onChange={e => handleTableChange('ivInfusion', i, 'rate', e.target.value)} hideLabel placeholder="Rate" />
+                        <TextInput label="Doctor Sign" value={row.doctor || ''} onChange={e => handleTableChange('ivInfusion', i, 'doctor', e.target.value)} hideLabel placeholder="Doctor Sign" />
+                        <TextInput label="Nurse Sign" value={row.nurse || ''} onChange={e => handleTableChange('ivInfusion', i, 'nurse', e.target.value)} hideLabel placeholder="Nurse Sign" />
+                        <button type="button" onClick={() => removeRow('ivInfusion', i)} className="remove-btn" title="Remove Row" style={{ visibility: formData.ivInfusion.length > 1 ? 'visible' : 'hidden' }}>×</button>
+                    </div>
+                ))}
+                <button type="button" onClick={() => addRow('ivInfusion')} className="secondary-btn">+ Add Row</button>
+            </div>
 
-                <TableSection
-                    title="High Risk Medication"
-                    section="highRiskMeds"
-                    columns={[
-                        { label: 'Drug', field: 'drug' },
-                        { label: 'Dose', field: 'dose' },
-                        { label: 'Doctor', field: 'doctor' },
-                        { label: 'Nurse', field: 'nurse' },
-                        { label: 'Remarks', field: 'remarks' }
-                    ]}
-                />
+            <hr style={{ margin: '30px 0', border: 'none', borderTop: '1px solid #e0f7fa' }} />
 
-                <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'center' }}>
-                    <button type="submit" className="submit-btn" style={{ minWidth: '320px' }}>
-                        Complete Medication Review
-                    </button>
-                </div>
-            </form>
-        </div>
+            {/* Verbal Orders */}
+            <h3 style={{ color: '#00796b', borderBottom: '2px solid #80deea', paddingBottom: '8px', marginBottom: '15px', fontWeight: 'bold' }}>
+                For Verbal Orders Only
+            </h3>
+            <div style={gridContainerStyle}>
+                {formData.verbalOrders.map((row, i) => (
+                    <div key={i} style={gridRowStyle}>
+                        <MuiDateTimePicker label="Date" name="date" value={row.date || ''} onChange={e => handleTableChange('verbalOrders', i, 'date', e.target.value)} hideLabel />
+                        <TextInput label="Drug" value={row.drug || ''} onChange={e => handleTableChange('verbalOrders', i, 'drug', e.target.value)} hideLabel placeholder="Drug" />
+                        <TextInput label="Dose" value={row.dose || ''} onChange={e => handleTableChange('verbalOrders', i, 'dose', e.target.value)} hideLabel placeholder="Dose" />
+                        <TextInput label="Doctor" value={row.doctor || ''} onChange={e => handleTableChange('verbalOrders', i, 'doctor', e.target.value)} hideLabel placeholder="Doctor" />
+                        <TextInput label="Remarks" value={row.remarks || ''} onChange={e => handleTableChange('verbalOrders', i, 'remarks', e.target.value)} hideLabel placeholder="Remarks" />
+                        <button type="button" onClick={() => removeRow('verbalOrders', i)} className="remove-btn" title="Remove Row" style={{ visibility: formData.verbalOrders.length > 1 ? 'visible' : 'hidden' }}>×</button>
+                    </div>
+                ))}
+                <button type="button" onClick={() => addRow('verbalOrders')} className="secondary-btn">+ Add Row</button>
+            </div>
+
+            <hr style={{ margin: '30px 0', border: 'none', borderTop: '1px solid #e0f7fa' }} />
+
+            {/* Blood Sugar */}
+            <h3 style={{ color: '#00796b', borderBottom: '2px solid #80deea', paddingBottom: '8px', marginBottom: '15px', fontWeight: 'bold' }}>
+                Blood Sugar & Insulin Record
+            </h3>
+            <div style={gridContainerStyle}>
+                {formData.bloodSugar.map((row, i) => (
+                    <div key={i} style={gridRowStyle}>
+                        <TextInput label="BSL" value={row.bsl || ''} onChange={e => handleTableChange('bloodSugar', i, 'bsl', e.target.value)} hideLabel placeholder="BSL" />
+                        <TextInput label="Drug" value={row.drug || ''} onChange={e => handleTableChange('bloodSugar', i, 'drug', e.target.value)} hideLabel placeholder="Drug" />
+                        <TextInput label="Dose" value={row.dose || ''} onChange={e => handleTableChange('bloodSugar', i, 'dose', e.target.value)} hideLabel placeholder="Dose" />
+                        <TextInput label="Doctor" value={row.doctor || ''} onChange={e => handleTableChange('bloodSugar', i, 'doctor', e.target.value)} hideLabel placeholder="Doctor" />
+                        <TextInput label="Nurse" value={row.nurse || ''} onChange={e => handleTableChange('bloodSugar', i, 'nurse', e.target.value)} hideLabel placeholder="Nurse" />
+                        <button type="button" onClick={() => removeRow('bloodSugar', i)} className="remove-btn" title="Remove Row" style={{ visibility: formData.bloodSugar.length > 1 ? 'visible' : 'hidden' }}>×</button>
+                    </div>
+                ))}
+                <button type="button" onClick={() => addRow('bloodSugar')} className="secondary-btn">+ Add Row</button>
+            </div>
+
+            <hr style={{ margin: '30px 0', border: 'none', borderTop: '1px solid #e0f7fa' }} />
+
+            {/* High Risk */}
+            <h3 style={{ color: '#00796b', borderBottom: '2px solid #80deea', paddingBottom: '8px', marginBottom: '15px', fontWeight: 'bold' }}>
+                High Risk Medication
+            </h3>
+            <div style={gridContainerStyle}>
+                {formData.highRiskMeds.map((row, i) => (
+                    <div key={i} style={gridRowStyle}>
+                        <TextInput label="Drug" value={row.drug || ''} onChange={e => handleTableChange('highRiskMeds', i, 'drug', e.target.value)} hideLabel placeholder="Drug" />
+                        <TextInput label="Dose" value={row.dose || ''} onChange={e => handleTableChange('highRiskMeds', i, 'dose', e.target.value)} hideLabel placeholder="Dose" />
+                        <TextInput label="Doctor" value={row.doctor || ''} onChange={e => handleTableChange('highRiskMeds', i, 'doctor', e.target.value)} hideLabel placeholder="Doctor" />
+                        <TextInput label="Nurse" value={row.nurse || ''} onChange={e => handleTableChange('highRiskMeds', i, 'nurse', e.target.value)} hideLabel placeholder="Nurse" />
+                        <TextInput label="Remarks" value={row.remarks || ''} onChange={e => handleTableChange('highRiskMeds', i, 'remarks', e.target.value)} hideLabel placeholder="Remarks" />
+                        <button type="button" onClick={() => removeRow('highRiskMeds', i)} className="remove-btn" title="Remove Row" style={{ visibility: formData.highRiskMeds.length > 1 ? 'visible' : 'hidden' }}>×</button>
+                    </div>
+                ))}
+                <button type="button" onClick={() => addRow('highRiskMeds')} className="secondary-btn">+ Add Row</button>
+            </div>
+
+            <div style={{ marginTop: '40px', display: 'flex', justifyContent: 'center' }}>
+                <button type="submit" className="submit-btn" style={{ minWidth: '300px' }}>
+                    Complete Medication Review
+                </button>
+            </div>
+        </form>
     );
 };
 

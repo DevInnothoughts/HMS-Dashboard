@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import TextInput from '../inputs/TextInput';
 import Textarea from '../inputs/Textarea';
-import MuiDateTimePicker from '../inputs/MuiDateTimePicker';
-import './Forms.css';
+import RadioGroup from '../inputs/RadioGroup';
+import CheckboxGroup from '../inputs/CheckboxGroup';
+import SelectInput from '../inputs/SelectInput';
 
 const PhysicianAssessmentForm = ({ onSubmit, patientData = {} }) => {
     const [formData, setFormData] = useState({
@@ -14,95 +15,66 @@ const PhysicianAssessmentForm = ({ onSubmit, patientData = {} }) => {
 
         allergies: '',
         surgeryPlanned: '',
-        medicalHistoryNone: false,
-        hasDM: '',
-        hasHypertension: '',
-        hasAllergies: '',
-        hasThyroid: '',
-        hasAsthma: '',
-        dmDuration: '',
-        hypertensionDuration: '',
-        allergiesDuration: '',
-        thyroidDuration: '',
-        asthmaDuration: '',
         medicalHistory: '',
-
         habits: [],
         habitsOther: '',
 
         reviewOfSystems: {
-            constitutionalNone: false,
-            constitutionalDetails: '',
-            headNeckNone: false,
-            headNeckDetails: '',
-            heartDiseaseNone: false,
-            heartDisease: [],
-            dyspneaClass: '',
-            respirationNone: false,
-            respiration: [],
-            gastrointestinalNone: false,
-            gastrointestinalDetails: '',
-            genitoUrinaryNone: false,
-            genitoUrinaryDetails: '',
-            hematologicNone: false,
-            hematologic: [],
-            neurologicNone: false,
-            neurologicDetails: '',
-            psychiatricNone: false,
-            psychiatricDetails: '',
-            endocrineNone: false,
-            endocrine: [],
-            endocrineOther: ''
+            constitutional: { status: '', details: '' },
+            headNeck: { status: '', details: '' },
+            heartDisease: { options: [], dyspneaClass: '' },
+            respiration: { options: [] },
+            gastrointestinal: { status: '', details: '' },
+            genitoUrinary: { status: '', details: '' },
+            hematologic: { options: [] },
+            neurologic: { status: '', details: '' },
+            psychiatric: { status: '', details: '' },
+            endocrine: { options: [], other: '' }
         },
 
-        presentMedicationsNone: false,
-        presentMedicationsYes: false,
-        medications: Array(4).fill({ drug: '', dose: '', freq: '', route: '' }),
+        presentMedications: {
+            status: '',
+            list: [{ medication: '', dose: '', freq: '', lastDose: '' }]
+        },
 
         investigations: {
-            details: ''
+            echo2D: '',
+            ecg: '',
+            xray: '',
+            other: ''
         },
 
-        physicalExam: {
-            bp: '',
-            pulse: '',
-            rr: '',
-            temp: ''
-        },
-
+        physicalExam: { bp: '', pulse: '', rr: '', temp: '' },
         riskAssessment: '',
-        factorsMedicalConditions: '',
+        medicalConditionsStatus: '',
         result: '',
-        resultDetails: '',
-
-        physicianName: '',
-        assessmentDateTime: ''
+        resultNote: ''
     });
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         if (name.includes('.')) {
-            const [section, field] = name.split('.');
-            setFormData(prev => ({
-                ...prev,
-                [section]: {
-                    ...prev[section],
-                    [field]: value
+            const keys = name.split('.');
+            setFormData(prev => {
+                let updated = { ...prev };
+                let current = updated;
+                for (let i = 0; i < keys.length - 1; i++) {
+                    current[keys[i]] = { ...current[keys[i]] };
+                    current = current[keys[i]];
                 }
-            }));
+                current[keys[keys.length - 1]] = value;
+                return updated;
+            });
         } else {
-            setFormData(prev => ({
-                ...prev,
-                [name]: value
-            }));
+            setFormData(prev => ({ ...prev, [name]: value }));
         }
     };
 
-    const handleCheckboxChange = (name, value) => {
+    const handleCheckboxArrayChange = (name, value) => {
         setFormData(prev => {
             const current = prev[name] || [];
             const updated = current.includes(value)
-                ? current.filter(item => item !== value)
+                ? current.filter(v => v !== value)
                 : [...current, value];
             return { ...prev, [name]: updated };
         });
@@ -110,25 +82,31 @@ const PhysicianAssessmentForm = ({ onSubmit, patientData = {} }) => {
 
     const handleNestedCheckboxChange = (section, field, value) => {
         setFormData(prev => {
-            const current = prev[section][field] || [];
+            const current = prev.reviewOfSystems[section][field] || [];
             const updated = current.includes(value)
-                ? current.filter(item => item !== value)
+                ? current.filter(v => v !== value)
                 : [...current, value];
             return {
                 ...prev,
-                [section]: {
-                    ...prev[section],
-                    [field]: updated
+                reviewOfSystems: {
+                    ...prev.reviewOfSystems,
+                    [section]: {
+                        ...prev.reviewOfSystems[section],
+                        [field]: updated
+                    }
                 }
             };
         });
     };
 
-    const handleMedTableChange = (index, field, value) => {
+    const handleMedRowChange = (index, field, value) => {
         setFormData(prev => {
-            const updatedMeds = [...prev.medications];
-            updatedMeds[index] = { ...updatedMeds[index], [field]: value };
-            return { ...prev, medications: updatedMeds };
+            const newList = [...prev.presentMedications.list];
+            newList[index] = { ...newList[index], [field]: value };
+            return {
+                ...prev,
+                presentMedications: { ...prev.presentMedications, list: newList }
+            };
         });
     };
 
@@ -137,279 +115,163 @@ const PhysicianAssessmentForm = ({ onSubmit, patientData = {} }) => {
         onSubmit && onSubmit(formData);
     };
 
-    return (
-        <div className="medical-form-container">
-            <h2 className="form-title">PHYSICIAN ASSESSMENT FOR SURGICAL FITNESS</h2>
+    const noneYesOptions = [
+        { value: 'None', label: 'None' },
+        { value: 'Yes', label: 'Yes' }
+    ];
 
-            {/* Compact Patient Header */}
-            <div className="patient-compact-header">
-                <div className="info-item">
-                    <span className="info-label">UHID</span>
-                    <span className="info-value">{formData.uhid || '—'}</span>
-                </div>
-                <div className="info-item">
-                    <span className="info-label">Patient Name</span>
-                    <span className="info-value">{formData.name || '—'}</span>
-                </div>
-                <div className="info-item">
-                    <span className="info-label">Age</span>
-                    <span className="info-value">{formData.age || '—'}</span>
-                </div>
-                <div className="info-item">
-                    <span className="info-label">Gender</span>
-                    <span className="info-value">{formData.gender || '—'}</span>
-                </div>
-                <div className="info-item">
-                    <span className="info-label">IP No</span>
-                    <span className="info-value">{formData.ipNo || '—'}</span>
+    const riskOptions = [
+        { value: 'High', label: 'High' },
+        { value: 'Moderate', label: 'Moderate' },
+        { value: 'Low', label: 'Low' }
+    ];
+
+    const medicalStatusOptions = [
+        { value: 'Controlled', label: 'Controlled' },
+        { value: 'Partially controlled', label: 'Partially controlled' },
+        { value: 'Uncontrolled', label: 'Uncontrolled' }
+    ];
+
+    return (
+        <form onSubmit={handleSubmit} className="medical-form" style={{ maxWidth: '950px', margin: '0 auto' }}>
+            <h2 className="form-title" style={{ textAlign: 'center', backgroundColor: '#80deea', color: 'white', padding: '10px', borderRadius: '4px', margin: '0 0 30px 0', fontSize: '1.4rem' }}>
+                PHYSICIAN ASSESSMENT FORM FOR SURGICAL FITNESS
+            </h2>
+
+            {/* Patient Header */}
+            <div className="patient-compact-header" style={{ marginBottom: '30px' }}>
+                <div className="info-item"><span className="info-label">UHID</span><span className="info-value">{formData.uhid || '—'}</span></div>
+                <div className="info-item"><span className="info-label">Patient Name</span><span className="info-value">{formData.name || '—'}</span></div>
+                <div className="info-item"><span className="info-label">Age</span><span className="info-value">{formData.age || '—'}</span></div>
+                <div className="info-item"><span className="info-label">Gender</span><span className="info-value">{formData.gender || '—'}</span></div>
+                <div className="info-item"><span className="info-label">IP No</span><span className="info-value">{formData.ipNo || '—'}</span></div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                <TextInput label="Allergies" name="allergies" value={formData.allergies} onChange={handleChange} />
+                <TextInput label="Surgery planned" name="surgeryPlanned" value={formData.surgeryPlanned} onChange={handleChange} />
+            </div>
+
+            <TextInput label="Medical history" name="medicalHistory" value={formData.medicalHistory} onChange={handleChange} />
+
+            <div style={{ padding: '15px', border: '1px solid #efefef', borderRadius: '8px', marginBottom: '30px' }}>
+                <label style={{ fontWeight: 'bold', fontSize: '0.9rem', display: 'block', marginBottom: '10px' }}>Habits:</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
+                    {['Smoking', 'Alcohol', 'Tobacco', 'None'].map(opt => (
+                        <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.85rem', cursor: 'pointer' }}>
+                            <input type="checkbox" checked={formData.habits.includes(opt)} onChange={() => handleCheckboxArrayChange('habits', opt)} />
+                            {opt}
+                        </label>
+                    ))}
+                    <div style={{ flex: 1, minWidth: '200px' }}>
+                        <TextInput label="Other if any" name="habitsOther" value={formData.habitsOther} onChange={handleChange} />
+                    </div>
                 </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="medical-form">
-                <div className="two-col">
-                    <TextInput label="Allergies (if any)" name="allergies" value={formData.allergies} onChange={handleChange} />
-                    <TextInput label="Surgery Planned" name="surgeryPlanned" value={formData.surgeryPlanned} onChange={handleChange} />
+            <div style={{ marginBottom: '30px' }}>
+                <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '15px', borderBottom: '1px solid #80deea', paddingBottom: '5px' }}>Review of Systems</label>
+
+                {['constitutional', 'headNeck', 'gastrointestinal', 'genitoUrinary', 'neurologic', 'psychiatric'].map(sys => (
+                    <div key={sys} style={{ display: 'grid', gridTemplateColumns: '150px 150px 1fr', gap: '20px', marginBottom: '15px', alignItems: 'center' }}>
+                        <span style={{ fontWeight: '500', textTransform: 'capitalize' }}>{sys.replace(/([A-Z])/g, ' $1')}:</span>
+                        <RadioGroup name={`reviewOfSystems.${sys}.status`} value={formData.reviewOfSystems[sys].status} onChange={handleChange} options={noneYesOptions} />
+                        <TextInput label="Details" name={`reviewOfSystems.${sys}.details`} value={formData.reviewOfSystems[sys].details} onChange={handleChange} />
+                    </div>
+                ))}
+
+                <div style={{ padding: '15px', backgroundColor: '#f9f9f9', borderRadius: '8px', marginBottom: '15px' }}>
+                    <label style={{ fontWeight: '500', display: 'block', marginBottom: '10px' }}>Heart Disease:</label>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
+                        {['HTN', 'CAD', 'Vascular', 'Exercise intolerance', 'Angina'].map(opt => (
+                            <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.85rem' }}>
+                                <input type="checkbox" checked={formData.reviewOfSystems.heartDisease.options.includes(opt)} onChange={() => handleNestedCheckboxChange('heartDisease', 'options', opt)} />
+                                {opt}
+                            </label>
+                        ))}
+                    </div>
+                    <div style={{ marginTop: '10px' }}>
+                        <TextInput label="Dyspnea on exertion (Class)" name="reviewOfSystems.heartDisease.dyspneaClass" value={formData.reviewOfSystems.heartDisease.dyspneaClass} onChange={handleChange} />
+                    </div>
                 </div>
 
-                <div className="form-body-split">
-                    <div className="left-side">
-                        <h3 className="form-section-title">Medical History</h3>
-                        <div className="section-box">
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-                                <span style={{ fontWeight: '700' }}>History Present?</span>
-                                <label className={`checkbox-option ${formData.medicalHistoryNone ? 'selected' : ''}`}>
-                                    <input
-                                        type="checkbox"
-                                        checked={formData.medicalHistoryNone}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, medicalHistoryNone: e.target.checked }))}
-                                    />
-                                    <span>None</span>
-                                </label>
-                            </div>
+                <div style={{ padding: '15px', backgroundColor: '#f9f9f9', borderRadius: '8px', marginBottom: '15px' }}>
+                    <label style={{ fontWeight: '500', display: 'block', marginBottom: '10px' }}>Respiration:</label>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px' }}>
+                        {['None', 'Cough', "Koch's", 'Asthma', 'COPD', 'Pleural effusion'].map(opt => (
+                            <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.85rem' }}>
+                                <input type="checkbox" checked={formData.reviewOfSystems.respiration.options.includes(opt)} onChange={() => handleNestedCheckboxChange('respiration', 'options', opt)} />
+                                {opt}
+                            </label>
+                        ))}
+                    </div>
+                </div>
+            </div>
 
-                            {!formData.medicalHistoryNone && (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                                    {[
-                                        { label: 'DM', name: 'hasDM', duration: 'dmDuration' },
-                                        { label: 'HTN', name: 'hasHypertension', duration: 'hypertensionDuration' },
-                                        { label: 'Allergies', name: 'hasAllergies', duration: 'allergiesDuration' },
-                                        { label: 'Thyroid', name: 'hasThyroid', duration: 'thyroidDuration' },
-                                        { label: 'Asthma', name: 'hasAsthma', duration: 'asthmaDuration' }
-                                    ].map((item) => (
-                                        <div key={item.name} style={{ padding: '0.75rem', border: '1px solid var(--border-color)', borderRadius: '8px', background: '#f8fafc' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span style={{ fontWeight: '600' }}>{item.label}</span>
-                                                <div className="radio-group" style={{ margin: 0 }}>
-                                                    {['Yes', 'No'].map(opt => (
-                                                        <label key={opt} className={`radio-option ${formData[item.name] === opt ? 'selected' : ''}`} style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem' }}>
-                                                            <input type="radio" name={item.name} value={opt} checked={formData[item.name] === opt} onChange={handleChange} />
-                                                            <span>{opt}</span>
-                                                        </label>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                            {formData[item.name] === 'Yes' && (
-                                                <TextInput
-                                                    hideLabel
-                                                    name={item.duration}
-                                                    value={formData[item.duration]}
-                                                    onChange={handleChange}
-                                                    placeholder="Duration/Details..."
-                                                />
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                            <div style={{ marginTop: '1rem' }}>
-                                <TextInput label="Other History Notes" name="medicalHistory" value={formData.medicalHistory} onChange={handleChange} />
-                            </div>
-                        </div>
-
-                        <div className="section-box">
-                            <label className="field-label">Social Habits</label>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
-                                {['Smoking', 'Alcohol', 'Tobacco', 'None'].map(habit => (
-                                    <label key={habit} className={`checkbox-option ${formData.habits.includes(habit) ? 'selected' : ''}`} style={{ padding: '0.3rem 0.6rem' }}>
-                                        <input type="checkbox" checked={formData.habits.includes(habit)} onChange={() => handleCheckboxChange('habits', habit)} />
-                                        <span>{habit}</span>
-                                    </label>
+            <div style={{ marginBottom: '30px' }}>
+                <RadioGroup label="Present medications" name="presentMedications.status" value={formData.presentMedications.status} onChange={handleChange} options={noneYesOptions} />
+                {formData.presentMedications.status === 'Yes' && (
+                    <div style={{ marginTop: '10px' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #eee' }}>
+                            <thead style={{ backgroundColor: '#f5f5f5' }}>
+                                <tr>
+                                    <th style={{ padding: '8px', border: '1px solid #eee' }}>Medication</th>
+                                    <th style={{ padding: '8px', border: '1px solid #eee' }}>Dose</th>
+                                    <th style={{ padding: '8px', border: '1px solid #eee' }}>Freq</th>
+                                    <th style={{ padding: '8px', border: '1px solid #eee' }}>Last taken</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {formData.presentMedications.list.map((row, idx) => (
+                                    <tr key={idx}>
+                                        <td style={{ padding: '2px', border: '1px solid #eee' }}><input type="text" value={row.medication} onChange={(e) => handleMedRowChange(idx, 'medication', e.target.value)} style={{ width: '100%', border: 'none', padding: '5px' }} /></td>
+                                        <td style={{ padding: '2px', border: '1px solid #eee' }}><input type="text" value={row.dose} onChange={(e) => handleMedRowChange(idx, 'dose', e.target.value)} style={{ width: '100%', border: 'none', padding: '5px' }} /></td>
+                                        <td style={{ padding: '2px', border: '1px solid #eee' }}><input type="text" value={row.freq} onChange={(e) => handleMedRowChange(idx, 'freq', e.target.value)} style={{ width: '100%', border: 'none', padding: '5px' }} /></td>
+                                        <td style={{ padding: '2px', border: '1px solid #eee' }}><input type="text" value={row.lastDose} onChange={(e) => handleMedRowChange(idx, 'lastDose', e.target.value)} style={{ width: '100%', border: 'none', padding: '5px' }} /></td>
+                                    </tr>
                                 ))}
-                            </div>
-                            <div style={{ marginTop: '0.5rem' }}>
-                                <TextInput hideLabel name="habitsOther" value={formData.habitsOther} onChange={handleChange} placeholder="Other habits details..." />
-                            </div>
-                        </div>
+                            </tbody>
+                        </table>
                     </div>
+                )}
+            </div>
 
-                    <div className="right-side">
-                        <h3 className="form-section-title">Review of Systems</h3>
-                        <div className="section-box">
-                            {[
-                                { label: 'Constitutional', field: 'constitutional' },
-                                { label: 'Head & Neck', field: 'headNeck' },
-                                { label: 'Gastrointestinal', field: 'gastrointestinal' },
-                                { label: 'Genito-Urinary', field: 'genitoUrinary' },
-                                { label: 'Neurologic', field: 'neurologic' },
-                                { label: 'Psychiatric', field: 'psychiatric' }
-                            ].map(sys => (
-                                <div key={sys.field} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '0.6rem 0', borderBottom: '1px solid var(--border-color)' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span style={{ fontWeight: '600' }}>{sys.label}</span>
-                                        <label className={`checkbox-option ${formData.reviewOfSystems[`${sys.field}None`] ? 'selected' : ''}`} style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem' }}>
-                                            <input type="checkbox" checked={formData.reviewOfSystems[`${sys.field}None`]} onChange={(e) => handleChange({ target: { name: `reviewOfSystems.${sys.field}None`, value: e.target.checked } })} />
-                                            <span>None</span>
-                                        </label>
-                                    </div>
-                                    <TextInput
-                                        hideLabel
-                                        placeholder="Findings/Details..."
-                                        value={formData.reviewOfSystems[`${sys.field}Details`]}
-                                        onChange={(e) => handleChange({ target: { name: `reviewOfSystems.${sys.field}Details`, value: e.target.value } })}
-                                    />
-                                </div>
-                            ))}
-
-                            <div style={{ padding: '0.75rem 0', borderBottom: '1px solid var(--border-color)' }}>
-                                <span style={{ fontWeight: '600' }}>Heart Disease</span>
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.5rem' }}>
-                                    <label className={`checkbox-option ${formData.reviewOfSystems.heartDiseaseNone ? 'selected' : ''}`} style={{ padding: '0.2rem 0.5rem' }}>
-                                        <input type="checkbox" checked={formData.reviewOfSystems.heartDiseaseNone} onChange={(e) => handleChange({ target: { name: 'reviewOfSystems.heartDiseaseNone', value: e.target.checked } })} />
-                                        <span>None</span>
-                                    </label>
-                                    {['HTN', 'CAD', 'Angina'].map(opt => (
-                                        <label key={opt} className={`checkbox-option ${formData.reviewOfSystems.heartDisease.includes(opt) ? 'selected' : ''}`} style={{ padding: '0.2rem 0.5rem' }}>
-                                            <input type="checkbox" checked={formData.reviewOfSystems.heartDisease.includes(opt)} onChange={() => handleNestedCheckboxChange('reviewOfSystems', 'heartDisease', opt)} />
-                                            <span>{opt}</span>
-                                        </label>
-                                    ))}
-                                </div>
-                                <div style={{ marginTop: '0.5rem' }}>
-                                    <TextInput label="Dyspnea Class" name="reviewOfSystems.dyspneaClass" value={formData.reviewOfSystems.dyspneaClass} onChange={handleChange} hideLabel placeholder="Dyspnea class..." />
-                                </div>
-                            </div>
-
-                            <div style={{ padding: '0.75rem 0' }}>
-                                <span style={{ fontWeight: '600' }}>Respiration</span>
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.5rem' }}>
-                                    <label className={`checkbox-option ${formData.reviewOfSystems.respirationNone ? 'selected' : ''}`} style={{ padding: '0.2rem 0.5rem' }}>
-                                        <input type="checkbox" checked={formData.reviewOfSystems.respirationNone} onChange={(e) => handleChange({ target: { name: 'reviewOfSystems.respirationNone', value: e.target.checked } })} />
-                                        <span>None</span>
-                                    </label>
-                                    {['Cough', 'Asthma', 'COPD'].map(opt => (
-                                        <label key={opt} className={`checkbox-option ${formData.reviewOfSystems.respiration.includes(opt) ? 'selected' : ''}`} style={{ padding: '0.2rem 0.5rem' }}>
-                                            <input type="checkbox" checked={formData.reviewOfSystems.respiration.includes(opt)} onChange={() => handleNestedCheckboxChange('reviewOfSystems', 'respiration', opt)} />
-                                            <span>{opt}</span>
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <h3 className="form-section-title">Vitals & Meds</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+            <div style={{ marginBottom: '30px' }}>
+                <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>Physical examination:</label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px' }}>
                     <TextInput label="BP" name="physicalExam.bp" value={formData.physicalExam.bp} onChange={handleChange} />
                     <TextInput label="Pulse" name="physicalExam.pulse" value={formData.physicalExam.pulse} onChange={handleChange} />
                     <TextInput label="RR" name="physicalExam.rr" value={formData.physicalExam.rr} onChange={handleChange} />
                     <TextInput label="Temp" name="physicalExam.temp" value={formData.physicalExam.temp} onChange={handleChange} />
                 </div>
+            </div>
 
-                <div className="section-box">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '1rem' }}>
-                        <span style={{ fontWeight: '700' }}>Present Medications?</span>
-                        <div className="radio-group" style={{ margin: 0 }}>
-                            <label className={`radio-option ${formData.presentMedicationsNone ? 'selected' : ''}`}>
-                                <input type="checkbox" checked={formData.presentMedicationsNone} onChange={(e) => setFormData(prev => ({ ...prev, presentMedicationsNone: e.target.checked, presentMedicationsYes: !e.target.checked }))} />
-                                <span>None</span>
-                            </label>
-                            <label className={`radio-option ${formData.presentMedicationsYes ? 'selected' : ''}`}>
-                                <input type="checkbox" checked={formData.presentMedicationsYes} onChange={(e) => setFormData(prev => ({ ...prev, presentMedicationsYes: e.target.checked, presentMedicationsNone: !e.target.checked }))} />
-                                <span>Yes</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    {formData.presentMedicationsYes && (
-                        <div style={{ border: '1px solid var(--border-color)', borderRadius: '10px', overflow: 'hidden' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                <thead style={{ background: '#f8fafc' }}>
-                                    <tr>
-                                        {['DRUG', 'DOSE', 'FREQ', 'ROUTE'].map(h => <th key={h} style={{ padding: '8px', fontSize: '0.7rem', textAlign: 'left', borderBottom: '1px solid var(--border-color)' }}>{h}</th>)}
-                                        <th style={{ width: '30px', borderBottom: '1px solid var(--border-color)' }}></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {formData.medications.map((med, idx) => (
-                                        <tr key={idx} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                                            {['drug', 'dose', 'freq', 'route'].map(f => (
-                                                <td key={f} style={{ padding: '2px' }}>
-                                                    <input type="text" value={med[f]} onChange={(e) => handleMedTableChange(idx, f, e.target.value)} style={{ width: '100%', border: 'none', padding: '6px', fontSize: '0.8rem', background: 'transparent' }} />
-                                                </td>
-                                            ))}
-                                            <td style={{ textAlign: 'center' }}>
-                                                <button type="button" onClick={() => setFormData(prev => ({ ...prev, medications: prev.medications.filter((_, i) => i !== idx) }))} style={{ color: '#ef4444', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '1.2rem' }}>&times;</button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                            <button type="button" onClick={() => setFormData(prev => ({ ...prev, medications: [...prev.medications, { drug: '', dose: '', freq: '', route: '' }] }))} className="secondary-btn" style={{ margin: '0.75rem', fontSize: '0.75rem' }}>+ Add Row</button>
-                        </div>
-                    )}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', marginBottom: '30px' }}>
+                <div style={{ padding: '15px', border: '1px solid #efefef', borderRadius: '8px' }}>
+                    <RadioGroup label="Risk assessment" name="riskAssessment" value={formData.riskAssessment} onChange={handleChange} options={riskOptions} />
                 </div>
-
-                <div className="two-col" style={{ marginTop: '1.5rem' }}>
-                    <div className="form-field">
-                        <label className="field-label">Risk Assessment</label>
-                        <div className="radio-group">
-                            {['High', 'Moderate', 'Low'].map(opt => (
-                                <label key={opt} className={`radio-option ${formData.riskAssessment === opt ? 'selected' : ''}`} style={{ padding: '0.3rem 0.6rem' }}>
-                                    <input type="radio" name="riskAssessment" value={opt} checked={formData.riskAssessment === opt} onChange={handleChange} />
-                                    <span>{opt}</span>
-                                </label>
-                            ))}
-                        </div>
-                    </div>
-                    <div className="form-field">
-                        <label className="field-label">Medical Control</label>
-                        <div className="radio-group">
-                            {['Controlled', 'Partially', 'Uncontrolled'].map(opt => (
-                                <label key={opt} className={`radio-option ${formData.factorsMedicalConditions === opt ? 'selected' : ''}`} style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }}>
-                                    <input type="radio" name="factorsMedicalConditions" value={opt} checked={formData.factorsMedicalConditions === opt} onChange={handleChange} />
-                                    <span>{opt}</span>
-                                </label>
-                            ))}
-                        </div>
-                    </div>
+                <div style={{ padding: '15px', border: '1px solid #efefef', borderRadius: '8px' }}>
+                    <RadioGroup label="Medical conditions status" name="medicalConditionsStatus" value={formData.medicalConditionsStatus} onChange={handleChange} options={medicalStatusOptions} />
                 </div>
+            </div>
 
-                <div className="section-box" style={{ padding: '1.5rem', marginTop: '1.5rem', borderLeft: '6px solid var(--primary-color)' }}>
-                    <h3 style={{ textTransform: 'uppercase', fontSize: '0.9rem', fontWeight: '800', marginBottom: '1rem', color: 'var(--primary-color)' }}>Fitness Determination</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                        <label className={`radio-option ${formData.result === 'Fit' ? 'selected' : ''}`} style={{ padding: '0.6rem 1rem' }}>
-                            <input type="radio" name="result" value="Fit" checked={formData.result === 'Fit'} onChange={handleChange} />
-                            <span style={{ fontWeight: '700' }}>FIT for surgery</span>
-                        </label>
-                        <label className={`radio-option ${formData.result === 'NotFit' ? 'selected' : ''}`} style={{ padding: '0.6rem 1rem' }}>
-                            <input type="radio" name="result" value="NotFit" checked={formData.result === 'NotFit'} onChange={handleChange} />
-                            <span style={{ fontWeight: '700' }}>NOT FIT</span>
-                        </label>
-                        {formData.result === 'NotFit' && <Textarea label="Advise Details" name="resultDetails" value={formData.resultDetails} onChange={handleChange} rows={2} />}
-                    </div>
-
-                    <div className="two-col" style={{ marginTop: '1.5rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
-                        <TextInput label="Physician" name="physicianName" value={formData.physicianName} onChange={handleChange} />
-                        <MuiDateTimePicker label="Date & Time" name="assessmentDateTime" value={formData.assessmentDateTime} onChange={handleChange} />
-                    </div>
+            <div style={{ borderTop: '2px solid #80deea', paddingTop: '20px' }}>
+                <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>Result:</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem', cursor: 'pointer' }}>
+                        <input type="radio" name="result" value="Fit" checked={formData.result === 'Fit'} onChange={handleChange} />
+                        Fit to undergo surgical procedure within next 24hrs
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem', cursor: 'pointer' }}>
+                        <input type="radio" name="result" value="Not Fit" checked={formData.result === 'Not Fit'} onChange={handleChange} />
+                        Not fit, advise as follows:
+                    </label>
+                    {formData.result === 'Not Fit' && <Textarea name="resultNote" value={formData.resultNote} onChange={handleChange} />}
                 </div>
+            </div>
 
-                <button type="submit" className="submit-btn">
-                    Finalize Fitness Report
-                </button>
-            </form>
-        </div>
+            <button type="submit" className="submit-btn" style={{ marginTop: '40px', width: '100%' }}>Complete Physician Assessment</button>
+        </form>
     );
 };
 

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import TextInput from '../inputs/TextInput';
 import MuiDateTimePicker from '../inputs/MuiDateTimePicker';
-import './Forms.css';
 
 const SurgeryConsentForm = ({ onSubmit, patientData }) => {
     const [formData, setFormData] = useState({
@@ -18,15 +17,22 @@ const SurgeryConsentForm = ({ onSubmit, patientData }) => {
 
         agreementChecked: false,
 
+        patientSign: '',
+        patientSignDateTime: '',
         patientSignDate: '',
         patientSignTime: '',
 
         witnessName: '',
+        witnessSign: '',
         relationWithPatient: '',
+        witnessDateTime: '',
         witnessDate: '',
         witnessTime: '',
 
         surgeonName: patientData?.doctorName || '',
+        surgeonSign: '',
+        surgeonStamp: '',
+        surgeonDateTime: '',
         surgeonDate: '',
         surgeonTime: ''
     });
@@ -49,128 +55,115 @@ const SurgeryConsentForm = ({ onSubmit, patientData }) => {
     };
 
     return (
-        <div className="medical-form-container">
-            <h2 className="form-title">
-                INFORMED CONSENT FOR SURGERY / PROCEDURE
+        <div className="medical-form surgery-consent-form" style={{ maxWidth: '950px', margin: '0 auto', fontSize: '0.9rem', padding: '40px 20px' }}>
+            {/* Blank Top Header Area */}
+            <div style={{ height: '80px' }}></div>
+
+            <h2 className="form-title" style={{ textAlign: 'center', backgroundColor: '#80deea', color: 'white', padding: '12px', borderRadius: '4px', margin: '0 0 40px 0', fontSize: '1.6rem', fontWeight: 'bold' }}>
+                CONSENT FOR SURGERY
             </h2>
 
-            {/* Compact Patient Header */}
-            <div className="patient-compact-header">
-                <div className="info-item">
-                    <span className="info-label">UHID</span>
-                    <span className="info-value">{formData.uhid}</span>
-                </div>
-                <div className="info-item">
-                    <span className="info-label">Patient Name</span>
-                    <span className="info-value">{formData.patientName}</span>
-                </div>
-                <div className="info-item">
-                    <span className="info-label">Age</span>
-                    <span className="info-value">{formData.age}</span>
-                </div>
-                <div className="info-item">
-                    <span className="info-label">Gender</span>
-                    <span className="info-value">{formData.gender}</span>
-                </div>
-                <div className="info-item">
-                    <span className="info-label">IP No</span>
-                    <span className="info-value">{formData.ipNo}</span>
-                </div>
-            </div>
-
-            <form onSubmit={handleSubmit} className="medical-form">
-                <div className="section-box" style={{ padding: '2rem', marginBottom: '2rem' }}>
-                    <p style={{ lineHeight: '1.8', color: 'var(--text-main)', marginBottom: '1.5rem' }}>
-                        I/We hereby authorize
-                        <span style={{ display: 'inline-block', minWidth: '200px', margin: '0 10px' }}>
-                            <TextInput hideLabel name="authorizingDr" value={formData.authorizingDr} onChange={handleChange} placeholder="Dr. Name" />
-                        </span>
-                        and his/her assistants to perform the following operation/procedure:
-                    </p>
-                    <TextInput
-                        label="Proposed Procedure"
-                        name="procedureName"
-                        value={formData.procedureName}
-                        onChange={handleChange}
-                        placeholder="Detailed surgical procedure name..."
-                    />
-
-                    <div style={{ marginTop: '2rem' }}>
-                        <label className="field-label">Significant Risks / Complications associated with this procedure:</label>
-                        <TextInput
-                            hideLabel
-                            name="specificRisks"
-                            value={formData.specificRisks}
-                            onChange={handleChange}
-                            placeholder="Specify procedure-specific risks communicated..."
-                        />
+            <form onSubmit={handleSubmit}>
+                {/* Compact Patient Header */}
+                <div className="patient-compact-header">
+                    <div className="info-item">
+                        <span className="info-label">UHID</span>
+                        <span className="info-value">{formData.uhid}</span>
+                    </div>
+                    <div className="info-item">
+                        <span className="info-label">Patient Name</span>
+                        <span className="info-value">{formData.patientName}</span>
+                    </div>
+                    <div className="info-item">
+                        <span className="info-label">Age</span>
+                        <span className="info-value">{formData.age}</span>
+                    </div>
+                    <div className="info-item">
+                        <span className="info-label">Gender</span>
+                        <span className="info-value">{formData.gender}</span>
+                    </div>
+                    <div className="info-item">
+                        <span className="info-label">IP No</span>
+                        <span className="info-value">{formData.ipNo}</span>
                     </div>
                 </div>
 
-                <div className="section-box" style={{ background: '#f0fdfa', border: '1px solid #99f6e4', padding: '1.5rem', marginBottom: '3rem' }}>
-                    <label className={`checkbox-option ${formData.agreementChecked ? 'selected' : ''}`} style={{ alignSelf: 'center', fontSize: '1rem', fontWeight: '700', color: '#0f766e' }}>
-                        <input
-                            type="checkbox"
-                            name="agreementChecked"
-                            checked={formData.agreementChecked}
-                            onChange={handleChange}
-                            required
-                        />
-                        <span>I have been explained the procedure, its benefits, risks, and alternatives in a language I understand. I give my voluntary consent.</span>
-                    </label>
+                {/* Authorization Details Section */}
+                <div style={{ padding: '20px', backgroundColor: '#f9f9f9', borderRadius: '8px', marginBottom: '30px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                        <TextInput label="1) I (patient or guardian):" name="authorizedPerson" value={formData.authorizedPerson} onChange={handleChange} placeholder="Enter name" />
+                        <TextInput label="authorise Dr:" name="authorizingDr" value={formData.authorizingDr} onChange={handleChange} placeholder="Enter doctor's name" />
+                    </div>
+                    <TextInput label="to perform (operation / procedure):" name="procedureName" value={formData.procedureName} onChange={handleChange} placeholder="Enter procedure details" />
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3rem' }}>
-                    <div className="sign-column">
-                        <h3 className="form-section-title">Patient / Guardian</h3>
-                        <div className="section-box" style={{ padding: '1.5rem' }}>
-                            <TextInput label="Responsible Person Name" name="authorizedPerson" value={formData.authorizedPerson} onChange={handleChange} />
-                            <div className="two-col" style={{ marginTop: '1rem' }}>
+                {/* Specific Risks Section */}
+                <div style={{ marginBottom: '40px' }}>
+                    <TextInput label="2) Some significant and substantial risks of this particular operation are:" name="specificRisks" value={formData.specificRisks} onChange={handleChange} placeholder="Specify risks if any" />
+                </div>
+
+                {/* Patient Signature Block */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', padding: '20px', borderTop: '2px solid #80deea', paddingTop: '30px', marginTop: '30px' }}>
+                    <div className="left-signs" style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                        <div>
+                            <div style={{ height: '60px', borderBottom: '1px solid #333', marginBottom: '8px' }}></div>
+                            <small style={{ color: '#666', fontWeight: '600' }}>Patient's signature</small>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '15px' }}>
                                 <MuiDateTimePicker type="date" label="Date" name="patientSignDate" value={formData.patientSignDate} onChange={handleChange} />
                                 <MuiDateTimePicker type="time" label="Time" name="patientSignTime" value={formData.patientSignTime} onChange={handleChange} />
                             </div>
                         </div>
 
-                        <h3 className="form-section-title" style={{ marginTop: '2rem' }}>Witness</h3>
-                        <div className="section-box" style={{ padding: '1.5rem' }}>
-                            <TextInput label="Full Name" name="witnessName" value={formData.witnessName} onChange={handleChange} />
-                            <TextInput label="Relationship" name="relationWithPatient" value={formData.relationWithPatient} onChange={handleChange} />
-                            <div className="two-col" style={{ marginTop: '1rem' }}>
+                        <div>
+                            <TextInput label="Name of surgeon:" name="surgeonName" value={formData.surgeonName} onChange={handleChange} />
+                            <div style={{ height: '60px', borderBottom: '1px solid #333', marginBottom: '8px', marginTop: '10px' }}></div>
+                            <small style={{ color: '#666', fontWeight: '600' }}>Signature & Stamp</small>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '15px' }}>
+                                <MuiDateTimePicker type="date" label="Date" name="surgeonDate" value={formData.surgeonDate} onChange={handleChange} />
+                                <MuiDateTimePicker type="time" label="Time" name="surgeonTime" value={formData.surgeonTime} onChange={handleChange} />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="right-signs" style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                        <div>
+                            <TextInput label="Witness name:" name="witnessName" value={formData.witnessName} onChange={handleChange} />
+                            <div style={{ height: '60px', borderBottom: '1px solid #333', marginBottom: '8px', marginTop: '10px' }}></div>
+                            <small style={{ color: '#666', fontWeight: '600' }}>Witness sign</small>
+                        </div>
+
+                        <div style={{ marginTop: 'auto' }}>
+                            <TextInput label="Relation with patient:" name="relationWithPatient" value={formData.relationWithPatient} onChange={handleChange} />
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '15px' }}>
                                 <MuiDateTimePicker type="date" label="Date" name="witnessDate" value={formData.witnessDate} onChange={handleChange} />
                                 <MuiDateTimePicker type="time" label="Time" name="witnessTime" value={formData.witnessTime} onChange={handleChange} />
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <div className="sign-column">
-                        <h3 className="form-section-title">Surgeon Declaration</h3>
-                        <div className="section-box" style={{ padding: '1.5rem', height: '100%' }}>
-                            <TextInput label="Surgeon Name" name="surgeonName" value={formData.surgeonName} onChange={handleChange} />
-                            <div className="two-col" style={{ marginTop: '1rem' }}>
-                                <MuiDateTimePicker type="date" label="Date" name="surgeonDate" value={formData.surgeonDate} onChange={handleChange} />
-                                <MuiDateTimePicker type="time" label="Time" name="surgeonTime" value={formData.surgeonTime} onChange={handleChange} />
-                            </div>
-                            <div style={{ marginTop: '2rem', border: '1px dashed var(--border-color)', borderRadius: '12px', height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-light)', fontSize: '0.8rem' }}>
-                                ( Surgeon Signature & Stamp )
-                            </div>
-                        </div>
+                {/* Final Agreement Section */}
+                <div style={{ marginTop: '40px', padding: '25px', backgroundColor: '#f0fbfa', border: '1px solid #80deea', borderRadius: '10px' }}>
+                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                        <input
+                            type="checkbox"
+                            name="agreementChecked"
+                            id="surgeryAgreementChecked"
+                            checked={formData.agreementChecked}
+                            onChange={handleChange}
+                            style={{ width: '28px', height: '28px', cursor: 'pointer' }}
+                            required
+                        />
+                        <label htmlFor="surgeryAgreementChecked" style={{ cursor: 'pointer', fontSize: '1.1rem', fontWeight: 'bold', color: '#008b8b' }}>
+                            I have read, understood and agree to the consent terms for surgery.
+                        </label>
                     </div>
                 </div>
 
-                <button type="submit" className="submit-btn" style={{ marginTop: '4rem' }}>
-                    Accept & Finalize Consent
+                <button type="submit" className="submit-btn" style={{ marginTop: '40px' }}>
+                    Confirm Surgery Consent
                 </button>
             </form>
-
-            <style>{`
-                .section-box {
-                    background: #ffffff;
-                    border: 1px solid var(--border-color);
-                    border-radius: 16px;
-                    padding: 1.5rem;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-                }
-            `}</style>
         </div>
     );
 };

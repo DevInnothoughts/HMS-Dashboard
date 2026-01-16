@@ -23,12 +23,12 @@ const MuiDateTimePicker = ({ label, value, onChange, name, required = false, typ
     return (
         <ThemeProvider theme={theme}>
             <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <div className="form-field" style={{ marginBottom: hideLabel ? '0' : '10px', display: 'flex', flexDirection: 'column', ...style }}>
+                <div className="form-field" style={{ marginBottom: hideLabel ? '0' : '20px', display: 'flex', flexDirection: 'column', ...style }}>
                     {!hideLabel && label && (
                         <label style={{
                             fontWeight: '600',
-                            marginBottom: '4px',
-                            fontSize: '0.75rem',
+                            marginBottom: '8px',
+                            fontSize: '0.85rem',
                             color: '#34495e',
                             display: 'block'
                         }}>
@@ -61,11 +61,11 @@ const MuiDateTimePicker = ({ label, value, onChange, name, required = false, typ
                                 size: 'small',
                                 sx: {
                                     '& .MuiOutlinedInput-root, & .MuiInputBase-root': {
-                                        borderRadius: '5px',
+                                        borderRadius: '6px',
                                         backgroundColor: '#ffffff !important',
                                         '& fieldset': {
-                                            borderWidth: '1.5px',
-                                            borderColor: '#e2e8f0',
+                                            borderWidth: '2px',
+                                            borderColor: '#e1e8ed',
                                         },
                                         '&:hover fieldset': {
                                             borderColor: '#cbd5e0',
@@ -75,8 +75,8 @@ const MuiDateTimePicker = ({ label, value, onChange, name, required = false, typ
                                         },
                                     },
                                     '& .MuiInputBase-input': {
-                                        padding: '6px 10px',
-                                        fontSize: '0.8rem',
+                                        padding: '8px 12px',
+                                        fontSize: '0.85rem',
                                         height: 'auto',
                                         backgroundColor: '#ffffff !important',
                                     }

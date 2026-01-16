@@ -77,7 +77,7 @@ const BASE_URL = "http://localhost:5100/api";
 const theme = createTheme({
     palette: {
         primary: {
-            main: '#00acc1',
+            main: '#80deea',
         },
     },
     typography: {
@@ -246,11 +246,10 @@ const AdmissionChecklist = ({ onSubmit, patientData }) => {
     return (
         <ThemeProvider theme={theme}>
             <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <div className="medical-form-container">
-                    <form onSubmit={handleSubmit} className="medical-form compact-form">
-                        <h2 className="form-title">
-                            ADMISSION CHECKLIST
-                        </h2>
+            <form onSubmit={handleSubmit} className="medical-form compact-form">
+                    <h2 className="form-title" style={{ textAlign: 'center', marginBottom: '30px', color: '#80deea', borderBottom: '2px solid #80deea', paddingBottom: '10px' }}>
+                        ADMISSION CHECKLIST
+                    </h2>
 
                         {/* Compact Patient Header */}
                         {patientData && (
@@ -279,10 +278,16 @@ const AdmissionChecklist = ({ onSubmit, patientData }) => {
                         )}
 
                         {/* Admission Date & Time */}
-                        <div className="form-field">
-                            <label className="field-label fw-bold" style={{ fontSize: "13px" }}>
-                                1] Admission Date & Time <span className="required">*</span>
-                            </label>
+                        <div className="form-field" style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column' }}>
+                        <label style={{
+                            fontWeight: '600',
+                            marginBottom: '8px',
+                            fontSize: '0.85rem',
+                            color: '#34495e',
+                            display: 'block'
+                        }}>
+                            Admission Date & Time <span style={{ color: '#e74c3c' }}>*</span>
+                        </label>
                             <DateTimePicker
                                 value={formData.admissionDateTime ? dayjs(formData.admissionDateTime, ['DD-MM-YYYY HH:mm', 'YYYY-MM-DDTHH:mm:ss.SSSZ']) : null}
                                 format="DD-MM-YYYY HH:mm"
@@ -307,22 +312,22 @@ const AdmissionChecklist = ({ onSubmit, patientData }) => {
                                         size: 'small',
                                         sx: {
                                             '& .MuiOutlinedInput-root, & .MuiInputBase-root': {
-                                                borderRadius: '5px',
+                                                borderRadius: '6px',
                                                 backgroundColor: '#ffffff !important',
                                                 '& fieldset': {
-                                                    borderWidth: '1.5px',
-                                                    borderColor: '#e2e8f0',
+                                                    borderWidth: '2px',
+                                                    borderColor: '#e1e8ed',
                                                 },
                                                 '&:hover fieldset': {
                                                     borderColor: '#cbd5e0',
                                                 },
                                                 '&.Mui-focused fieldset': {
-                                                    borderColor: '#00acc1',
+                                                    borderColor: '#80deea',
                                                 },
                                             },
                                             '& .MuiInputBase-input': {
-                                                padding: '6px 10px',
-                                                fontSize: '0.8rem',
+                                                padding: '8px 12px',
+                                                fontSize: '0.85rem',
                                                 height: 'auto',
                                                 backgroundColor: '#ffffff !important',
                                             }
@@ -330,35 +335,37 @@ const AdmissionChecklist = ({ onSubmit, patientData }) => {
                                     }
                                 }}
                             />
-                        </div> <br></br>
-
+                        </div>
+    
                         {/* General Consent */}
-                        <div className="form-field d-flex align-items-center gap-2">
-                            <label className="field-label mb-0 fw-bold" style={{ fontSize: "13px" }}>
-                                2] General consent of admission taken:
+                        <div className="form-field">
+                            <label className="field-label">
+                                General Consent for Admission <span className="required">*</span>
                             </label>
-                            <div className="checkbox-group mt-0">
-                                <label className={`checkbox-option ${formData.consentTaken.includes('Yes') ? 'selected' : ''}`} style={{ padding: '2px', border: 'none', background: 'transparent' }}>
-                                    <input
-                                        type="checkbox"
-                                        name="consentTaken"
-                                        value="Yes"
-                                        checked={formData.consentTaken.includes('Yes')}
-                                        onChange={() => handleCheckboxChange('consentTaken', 'Yes', formData.consentTaken)}
-                                        style={{ margin: 0 }}
-                                    />
-                                </label>
+                            <div className="checkbox-group">
+                                {['Yes', 'No'].map((option, index) => (
+                                    <label key={index} className="checkbox-option">
+                                        <input
+                                            type="checkbox"
+                                            name="consentTaken"
+                                            value={option}
+                                            checked={formData.consentTaken.includes(option)}
+                                            onChange={() => handleCheckboxChange('consentTaken', option, formData.consentTaken)}
+                                        />
+                                        <span>{option}</span>
+                                    </label>
+                                ))}
                             </div>
-                        </div> <br></br>
-
+                        </div>
+    
                         {/* Room Category */}
                         <div className="form-field">
-                            <label className="field-label fw-bold" style={{ fontSize: "13px" }}>
-                                3] Allotment of room as per category-
+                            <label className="field-label">
+                                Room Category <span className="required">*</span>
                             </label>
-                            <div className="checkbox-group" style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-                                {['General', 'Semi-private', 'Private', 'Deluxe', 'Super-deluxe', 'Suite'].map((option, index) => (
-                                    <label key={index} className={`checkbox-option ${formData.roomCategory.includes(option) ? 'selected' : ''}`} style={{ width: '100%', border: 'none', background: 'transparent', padding: '2px' }}>
+                            <div className="checkbox-group">
+                                {['General', 'Semi-Private', 'Private', 'Deluxe', 'Super Deluxe', 'Suite'].map((option, index) => (
+                                    <label key={index} className="checkbox-option">
                                         <input
                                             type="checkbox"
                                             name="roomCategory"
@@ -366,42 +373,42 @@ const AdmissionChecklist = ({ onSubmit, patientData }) => {
                                             checked={formData.roomCategory.includes(option)}
                                             onChange={() => handleCheckboxChange('roomCategory', option, formData.roomCategory)}
                                         />
-                                        <span style={{ marginLeft: '8px' }}>{option}</span>
+                                        <span>{option}</span>
                                     </label>
                                 ))}
                             </div>
-                        </div> <br></br>
-
+                        </div>
+    
                         {/* ALL Basic Amenities */}
                         <div className="form-field">
-                            <label className="field-label fw-bold" style={{ fontSize: "13px" }}>
-                                4] Basic amenities given (as per room): Admission
+                            <label className="field-label">
+                                Basic Amenities Provided (as per room)
                             </label>
-                            <div className="checkbox-group three-col">
+                            <div className="checkbox-group">
                                 {[
                                     'Paper napkins',
                                     'Soap',
-                                    'Room orientation',
                                     'Water mug with glass',
                                     'Pillow cover & bed sheet',
                                     'Dress of patient',
                                     'T.V with remote',
-                                    'A.C. with remote',
+                                    'A.C with remote',
                                     'Geyser in condition',
                                     'Mug, bucket & dustbin',
                                     'Spoons',
                                     'Plates',
                                     'Dental kit',
                                     'Cup and bowls',
-                                    'Trey & kettles',
+                                    'Tray & kettles',
                                     'Tissue paper & stands',
                                     'Dish TV with remote',
                                     'Slippers',
                                     'Door mats',
                                     'Call bell',
-                                    'Wifi password'
+                                    'Wifi password',
+                                    'Room orientation'
                                 ].map((option, index) => (
-                                    <label key={index} className={`checkbox-option ${formData.amenities.includes(option) ? 'selected' : ''}`} style={{ border: 'none', background: 'transparent', padding: '2px' }}>
+                                    <label key={index} className="checkbox-option">
                                         <input
                                             type="checkbox"
                                             name="amenities"
@@ -409,20 +416,20 @@ const AdmissionChecklist = ({ onSubmit, patientData }) => {
                                             checked={formData.amenities.includes(option)}
                                             onChange={() => handleCheckboxChange('amenities', option, formData.amenities)}
                                         />
-                                        <span style={{ marginLeft: '8px' }}>{option}</span>
+                                        <span>{option}</span>
                                     </label>
                                 ))}
                             </div>
                         </div>
-
+    
                         <button type="submit" className="submit-btn">
                             Complete Admission Checklist
                         </button>
                     </form>
-                </div>
-            </LocalizationProvider>
-        </ThemeProvider>
-    );
-};
-
-export default AdmissionChecklist;
+                </LocalizationProvider>
+            </ThemeProvider>
+        );
+    };
+    
+    export default AdmissionChecklist;
+    

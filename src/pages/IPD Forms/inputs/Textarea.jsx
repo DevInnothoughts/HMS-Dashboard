@@ -48,14 +48,10 @@ const Textarea = ({
     const displayError = error || localError;
 
     return (
-        <div className="form-field" style={{ marginBottom: hideLabel ? 0 : '10px', ...style }}>
+        <div className="form-field" style={{ marginBottom: hideLabel ? 0 : '20px', ...style }}>
             {!hideLabel && (
-                <label
-                    htmlFor={name}
-                    className="fw-bold text-muted small uppercase mb-1 d-block"
-                    style={{ fontSize: '0.75rem', letterSpacing: '0.5px' }}
-                >
-                    {label} {required && <span className="text-danger">*</span>}
+                <label htmlFor={name}>
+                    {label} {required && <span className="required">*</span>}
                 </label>
             )}
             <textarea
@@ -68,27 +64,17 @@ const Textarea = ({
                 rows={rows}
                 maxLength={maxLength}
                 required={required}
-                className={`form-control ${displayError && touched ? 'is-invalid' : ''}`}
-                style={{
-                    borderRadius: "5px",
-                    border: "1px solid #6db8c2ff",
-                    padding: "6px 10px",
-                    fontSize: "0.8rem",
-                    backgroundColor: "#fafdff",
-                    minHeight: "80px",
-                    ...textareaStyle
-                }}
+                className={displayError && touched ? 'error' : ''}
+                style={textareaStyle}
             />
-            <div className="d-flex justify-content-between align-items-center mt-1">
-                {touched && displayError ? (
-                    <div className="text-danger" style={{ fontSize: '0.7rem' }}>{displayError}</div>
-                ) : <div />}
-                {!hideLabel && (
-                    <div className="text-muted small" style={{ fontSize: '0.65rem' }}>
-                        {value.length} / {maxLength}
-                    </div>
-                )}
-            </div>
+            {!hideLabel && (
+                <div className="char-count">
+                    {value.length} / {maxLength}
+                </div>
+            )}
+            {touched && displayError && (
+                <span className="error-message">{displayError}</span>
+            )}
         </div>
     );
 };

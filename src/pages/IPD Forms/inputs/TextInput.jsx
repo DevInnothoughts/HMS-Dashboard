@@ -51,14 +51,10 @@ const TextInput = ({
   const displayError = error || localError;
 
   return (
-    <div className="form-field" style={{ marginBottom: hideLabel ? 0 : '10px' }}>
+    <div className="form-field" style={{ marginBottom: hideLabel ? 0 : '20px' }}>
       {!hideLabel && (
-        <label
-          htmlFor={name}
-          className="fw-bold text-muted small uppercase mb-1 d-block"
-          style={{ fontSize: '0.75rem', letterSpacing: '0.5px' }}
-        >
-          {label} {required && <span className="text-danger">*</span>}
+        <label htmlFor={name}>
+          {label} {required && <span className="required">*</span>}
         </label>
       )}
       <input
@@ -70,18 +66,10 @@ const TextInput = ({
         onBlur={handleBlur}
         placeholder={placeholder}
         required={required}
-        className={`form-control ${displayError && touched ? 'is-invalid' : ''}`}
-        style={{
-          borderRadius: "5px",
-          border: "1px solid #6db8c2ff",
-          padding: "5px 10px",
-          fontSize: "0.8rem",
-          backgroundColor: "#fafdff",
-          transition: "border-color 0.2s ease-in-out"
-        }}
+        className={displayError && touched ? 'error' : ''}
       />
       {touched && displayError && (
-        <div className="text-danger" style={{ fontSize: '0.7rem', marginTop: '2px' }}>{displayError}</div>
+        <span className="error-message">{displayError}</span>
       )}
     </div>
   );

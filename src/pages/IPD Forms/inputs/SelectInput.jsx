@@ -37,13 +37,9 @@ const SelectInput = ({
     const displayError = error || localError;
 
     return (
-        <div className="form-field" style={{ marginBottom: '10px' }}>
-            <label
-                htmlFor={name}
-                className="fw-bold text-muted small uppercase mb-1 d-block"
-                style={{ fontSize: '0.75rem', letterSpacing: '0.5px' }}
-            >
-                {label} {required && <span className="text-danger">*</span>}
+        <div className="form-field">
+            <label htmlFor={name}>
+                {label} {required && <span className="required">*</span>}
             </label>
             <select
                 id={name}
@@ -52,15 +48,7 @@ const SelectInput = ({
                 onChange={handleChange}
                 onBlur={handleBlur}
                 required={required}
-                className={`form-select ${displayError && touched ? 'is-invalid' : ''}`}
-                style={{
-                    borderRadius: "5px",
-                    border: "1px solid #6db8c2ff",
-                    padding: "6px 10px",
-                    fontSize: "0.8rem",
-                    backgroundColor: "#fafdff",
-                    cursor: "pointer"
-                }}
+                className={displayError && touched ? 'error' : ''}
             >
                 <option value="">{placeholder}</option>
                 {options.map((option, index) => (
@@ -70,7 +58,7 @@ const SelectInput = ({
                 ))}
             </select>
             {touched && displayError && (
-                <div className="text-danger" style={{ fontSize: '0.7rem', marginTop: '2px' }}>{displayError}</div>
+                <span className="error-message">{displayError}</span>
             )}
         </div>
     );

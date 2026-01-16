@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import TextInput from '../inputs/TextInput';
 import Textarea from '../inputs/Textarea';
-import './Forms.css';
 
 const OperativeNotesForm = ({ onSubmit, patientData }) => {
     const [formData, setFormData] = useState({
@@ -24,9 +23,9 @@ const OperativeNotesForm = ({ onSubmit, patientData }) => {
     };
 
     return (
-        <div className="medical-form-container">
-            <h2 className="form-title">
-                OPERATIVE NOTES
+        <div className="medical-form operative-notes-form">
+            <h2 className="form-title" style={{ textAlign: 'center', marginBottom: '30px', color: '#80deea', borderBottom: '2px solid #80deea', paddingBottom: '10px' }}>
+                OT NOTES
             </h2>
 
             {/* Compact Patient Header */}
@@ -55,35 +54,35 @@ const OperativeNotesForm = ({ onSubmit, patientData }) => {
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="medical-form">
+            <form onSubmit={handleSubmit} className="compact-form">
                 <TextInput
-                    label="Surgical Procedure"
+                    label="Procedure:"
                     name="procedure"
                     value={formData.procedure}
                     onChange={handleChange}
-                    placeholder="Enter procedure name..."
+                    placeholder="Enter procedure..."
                 />
 
-                <div style={{ marginTop: '2rem' }}>
-                    <label className="field-label">Detailed Operative Notes</label>
+                <div className="notes-container" style={{ position: 'relative', marginTop: '15px' }}>
                     <Textarea
                         name="operativeNotesDetails"
                         value={formData.operativeNotesDetails}
                         onChange={handleChange}
                         rows={20}
-                        placeholder="Type detailed intra-operative notes here..."
-                        textareaStyle={{
-                            lineHeight: '1.8',
-                            padding: '1.5rem',
+                        placeholder="Enter operative notes here..."
+                        style={{
+                            lineHeight: '32px',
+                            padding: '8px 15px',
+                            border: '2px solid #e1e8ed',
+                            borderRadius: '6px',
+                            width: '100%',
                             fontSize: '1rem',
-                            minHeight: '600px',
-                            backgroundImage: 'linear-gradient(#f1f5f9 1.1px, transparent 1.1px)',
-                            backgroundSize: '100% 1.8em'
+                            minHeight: '500px'
                         }}
                     />
                 </div>
 
-                <button type="submit" className="submit-btn" style={{ marginTop: '3rem' }}>
+                <button type="submit" className="submit-btn">
                     Save Operative Notes
                 </button>
             </form>
