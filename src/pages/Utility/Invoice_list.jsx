@@ -15,12 +15,13 @@ import {
   Card,
   Modal,
   Form,
+  Spinner
 } from "react-bootstrap";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import Swal from "sweetalert2";
 import { decodeJwt } from "../../utils/decode-jwt";
 import { Link } from "react-router-dom";
-import logo from "../../assets/images/3.png";
+import logo from "../../assets/images/logo/hhc.png";
 import { toast } from "react-hot-toast";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
@@ -549,7 +550,6 @@ const InvoiceList = () => {
   };
 
   const handlePrint = (invoice) => {
-    console.log(invoice);
     if (!invoice || typeof invoice !== "object" || !invoice.invoice_id) {
       Toast.fire({
         icon: "info",
@@ -559,13 +559,14 @@ const InvoiceList = () => {
       return;
     }
 
-    const clinicAddr = clinincLoc["Mysore"] || {
+    const clinicAddr = clinincLoc[currentLocation] || {
       address: "Healing Hands Clinic",
       phone: "8888288884"
-    };    
-    
+    };
+
     const { dynamicRows, Sub_Total } = getDynamicRowsFromInvoice(invoice);
     const printWindow = window.open("", "_blank", "width=900,height=900");
+
     const getBase64Image = (imgUrl) => {
       return new Promise((resolve) => {
         const img = new Image();
@@ -584,121 +585,216 @@ const InvoiceList = () => {
 
     getBase64Image(logo).then((mainLogo) => {
       const printContent = `
-    <html>
-      <head>
-        <title>Invoice - ${invoice.invoice_id}</title>
-        <style>
-          /* ... (CSS Styles remain unchanged) ... */
-          body { font-family: Arial, sans-serif; font-size: 12px; margin: 30px; }
-          .container { border: 1px solid #ccc; padding: 20px; border-radius: 10px; background: white; }
-          .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; border-bottom: 2px solid #2b9163; }
-          .header img { width: 170px; }
-          .clinic-info { text-align: right; font-size: 14px; font-weight: bold; }
-          .title { text-align: center; font-size: 16px; font-weight: bold; margin-top: 10px; }
-          .section-title { font-size: 14px; font-weight: bold; border-bottom: 1px solid #2b9163; margin-bottom: 5px; padding-bottom: 3px; color: #2b9163; }
-          .details-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-          .details-table td { padding: 6px; font-size: 12px; }
-          .details-table td:first-child { font-weight: bold; width: 25%; }
-          .summary-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; border: 1px solid #000; }
-          .summary-table th, .summary-table td { padding: 8px; border: 1px solid black; font-size: 12px; }
-          .total-row { font-weight: bold; font-size: 14px; }
-          .footer { text-align: center; font-size: 12px; color: grey; margin-top: 20px; }
-          .btn-container { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
-          .print-btn, .docuclip-btn { display: inline-block; padding: 10px 20px; font-size: 14px; font-weight: bold; border: none; border-radius: 5px; cursor: pointer; }
-          .print-btn { 
-            background-color: #2b9163;
-            border: none;
-            border-radius: 8px;
-            padding: 8px 20px;
-            font-size: 14px;
-            font-weight: 500;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-top: 20px;
-          }
-            .print-btn:hover {
-              background-color:rgb(35, 141, 93);
-              transform: translateY(-1px);
-              box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-            }
+  <html>
+    <head>
+      <title>Invoice - ${invoice.invoice_id}</title>
+      <style>
+        body { margin: 0; padding: 20px; background: #fff; }
+        body, table, tr, td, p { 
+          font-family: Arial, sans-serif; 
+          font-size: 10px !important; 
+          color: #000;
+        }
 
-          @media print { .btn-container { display: none; } }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <img src="${mainLogo}" alt="Healing Hands Clinic">
-            <div class="clinic-info">
-              Healing Hands Clinic <br>
-              ${clinicAddr.address || "N/A"}
-            </div>
-          </div>
+.page-border {
+          border: 1px solid #000; /* Solid border like the image */
+          padding: 20px;
+          margin: 0 auto;
+          min-height: 95vh;
+          display: flex;
+          flex-direction: column;
+          box-sizing: border-box;
+        }
+        
+        .header-table { 
+  width: auto; 
+  margin-bottom: 20px; 
+}
 
-          <table class="details-table">
-            <tr><td>Bill No:</td><td>${invoice.invoice_id
-        }</td><td>Bill Date:</td><td>${formatDateForDisplay(
-          invoice.creation_date
-        )}</td></tr>
-            <tr><td>Patient Name:</td><td>${invoice.patient_name
-        }</td><td>Gender / Age:</td><td>${invoice.gender || "N/A"} / ${invoice.age || "N/A"
-        }</td></tr>
-            <tr><td>Admission No:</td><td>${invoice.admission_no
-        }</td><td>Bed Category:</td><td>${invoice.bed_desc || "N/A"
-        }</td></tr>
-            <tr><td>Doctor Name:</td><td>${invoice.consultant || "N/A"
-        }</td><td>Surgeon Name:</td><td>${invoice.prepared_doctor || "N/A"
-        }</td></tr>
-            <tr>
-    <td>Admission Date & Time:</td><td>${formatDateForDisplay(
-          invoice.creation_date
-        )} ${invoice.admissiontime}</td>
-    <td>Discharge Date & Time:</td><td>${formatDateForDisplay(
-          invoice.due_date
-        )} ${invoice.dischargetime}</td>
+.header-logo { 
+  padding-right: 15px; 
+  vertical-align: middle;
+}
+
+.header-logo img {
+  width: 150px;    
+  height: auto;    
+  max-height: 200px; 
+  display: block;
+}
+
+.header-address { 
+  text-align: left; 
+  font-weight: bold; 
+  font-size: 12px !important; 
+  vertical-align: middle;
+  line-height: 1.2;
+}
+  
+        .details-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        .details-table td { padding: 6px 10px; width: 25%; vertical-align: top; border-bottom: 0.5px solid #f2f2f2; }
+        .details-table td:nth-child(odd) { font-weight: normal; color: #000000; } 
+        .details-table td:nth-child(even) { font-weight: 500; }
+  
+        .bill-title { text-align: center; font-weight: 700; padding: 10px 0; font-size: 12px !important; }
+  
+        .section-header-table { width: 100%; margin-top: 5px; }
+        .section-header-table td { width: 50%; text-align: center; font-weight: bold; }
+  
+        .summary-container-table { width: 100%; border-collapse: collapse; }
+        .left_align { text-align: left; width: 25%; }
+        .right_align { text-align: right !important; width: 25%; }
+        
+        .itemized-table { width: 100%; border-collapse: collapse; }
+        .itemized-table td { width: 50%; display: inline-block; padding: 4px 0; border-bottom: 1px solid #eee; }
+        .itemized-table td:nth-child(even) { text-align: right; }
+  
+        .total-row-container { width: 100%; border: 1px solid #000; margin-top: 10px; border-collapse: collapse; }
+        .total-row-container td { padding: 8px 10px; }
+  
+        .footer { margin-top: 20px; border-top: 1px solid #4b897e; padding-top: 5px; }
+        .footer-table { width: 100%; color: #000; }
+        
+        .btn-container { display: flex; justify-content: center; margin-top: 20px; }
+        .print-btn { background: #2b9163; color: white; padding: 8px 20px; border: none; border-radius: 5px; cursor: pointer; }
+  
+        @media print { 
+          .btn-container { display: none; } 
+          body { margin: 10px; }
+          .details-table td { border-bottom: none; }
+        }
+      </style>
+    </head>
+    <body>
+      <table class="header-table">
+        <tr>
+          <td class="header-logo"><img src="${mainLogo}" alt="Logo"></td>
+          <td class="header-address">${clinicAddr.address || "<b>Healing Hands Clinic</b>"}</td>
+        </tr>
+      </table>
+  
+      <table class="details-table">
+        <tr>
+          <td>Bill No:</td><td>${invoice.invoice_id}</td>
+          <td>Bill Date:</td><td>${formatDateForDisplay(invoice.due_date)}</td>
+        </tr>
+        <tr>
+          <td>Patient Name:</td><td>${invoice.prefix || ''} ${invoice.patient_name || invoice.name}</td>
+          <td>Gender / Age:</td><td>${invoice.sex || invoice.gender || "N/A"} / ${invoice.age}</td>
+        </tr>
+        <tr>
+          <td>Patient ID:</td><td>${invoice.admission_no}</td>
+          <td>Admission No:</td><td>${invoice.admission_no}</td>
+        </tr>
+        <tr>
+          <td>Insurance Name:</td><td>${invoice.status === 'Cashless' ? (invoice.insurance_company || '') : ''}</td>
+          <td>Bed Category:</td><td>${invoice.bed_desc || invoice.bed_no || "N/A"}</td>
+        </tr>
+        <tr>
+          <td>TPA Name:</td><td>${invoice.status === 'Cashless' ? (invoice.tpa_company || '') : ''}</td>
+          <td>Admission Date & Time:</td><td>${formatDateForDisplay(invoice.creation_date)} &nbsp; ${invoice.admissiontime}</td>
+        </tr>
+        <tr>
+          <td>Doctor Name:</td><td>${invoice.consultant}</td>
+          <td>Discharge Date & Time:</td><td>${formatDateForDisplay(invoice.due_date)} &nbsp; ${invoice.dischargetime}</td>
+        </tr>
+        <tr>
+          <td>Surgeon Name:</td><td>${invoice.prepared_doctor}</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  
+      <div class="bill-title">FINAL BILL</div>
+      <hr style="margin: 5px 0;">
+  
+      <table class="section-header-table">
+        <tr>
+          <td>Itemized Details</td>
+          <td>Account Summary</td>
+        </tr>
+      </table>
+  
+      <table width="100%">
+        <tr>
+          <td style="width: 50%; vertical-align: top; border-right: 1px solid #eee;">
+            <table class="itemized-table">
+              <tr><td style="font-weight:normal; color:#555;">Items/Services</td><td style="font-weight:normal; color:#555; text-align:right;">Amount (INR)</td></tr>
+              ${dynamicRows.map(row => `
+                <tr>
+                  <td>${row.label}</td>
+                  <td>${parseFloat(row.value).toFixed(2)}</td>
+                </tr>
+              `).join("")}
+            </table>
+          </td>
+          <td style="width: 50%; vertical-align: top; padding-left: 10px;">
+            <table width="100%">
+              <tr><td style="font-weight:normal; color:#555;">Heading</td><td style="font-weight:normal; color:#555; text-align:right;">Amount (INR)</td></tr>
+              <tr>
+                <td style="padding-top:5px;">Total ${invoice.discount > 0 ? '<br>Discount' : ''}</td>
+                <td style="text-align:right; padding-top:5px;">
+                  ${parseFloat(invoice.totalamt).toLocaleString()}.00
+                  ${invoice.discount > 0 ? '<br>' + parseFloat(invoice.discount).toLocaleString() + '.00' : ''}
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+  
+      <p style="padding: 10px 0;">* ${invoice.note || ''}</p>
+  
+      <table class="total-row-container" border="1">
+        <tr>
+          <td class="left_align" style="border-right:0;">Total</td>
+          <td class="right_align" style="border-left:0;">${parseFloat(invoice.totalamt).toLocaleString()}.00</td>
+          <td class="left_align" style="border-right:0;">Please Pay</td>
+          <td class="right_align" style="border-left:0; font-weight:bold;">
+            ${parseFloat(invoice.payable_amt).toLocaleString()}.00
+          </td>
+        </tr>
+      </table>
+  
+<table width="100%" style="margin-top: 60px; table-layout: fixed;">
+  <tr>
+    <td style="text-align: center; vertical-align: bottom;">
+      <div style="border-top: 1px solid #000; padding-top: 5px; margin: 0 10px;">
+        Prepared By
+      </div>
+    </td>
+    <td style="text-align: center; vertical-align: bottom;">
+      <div style="border-top: 1px solid #000; padding-top: 5px; margin: 0 10px;">
+        Checked By
+      </div>
+    </td>
+     <td style="text-align: center; vertical-align: bottom;">
+     <div style="border-top: 1px solid #000; padding-top: 5px; margin: 0 10px;">
+        For Healing Hands Clinic
+      </div>
+    </td>
+    <td style="text-align: center; vertical-align: bottom;">
+      <div style="border-top: 1px solid #000; padding-top: 5px; margin: 0 10px;">
+        Person Making Payment
+      </div>
+    </td>
   </tr>
-          </table>
+</table>
+  
+      <div class="footer">
+        <table class="footer-table">
+          <tr>
+            <td>For queries call ${clinicAddr.phone || '7774099753'}</td>
+            <td style="text-align:right;">For Emergency SMS ${clinicAddr.emergency || '7774053187'}</td>
+          </tr>
+        </table>
+      </div>
 
-          <div class="title">FINAL BILL</div>
-
-          <div class="section-title">Itemized Details</div>
-          <table class="summary-table">
-            <tr><th>Items/Services</th><th>Amount (INR)</th></tr>
-            ${dynamicRows
-          .map(
-            (row) => `<tr><td>${row.label}</td><td>${row.value}</td></tr>`
-          )
-          .join("")}
-          </table>
-
-          <div class="section-title">Account Summary</div>
-          <table class="summary-table">
-            <tr><th>Heading</th><th>Amount (INR)</th></tr>
-            <tr><td>Total Charge (Gross)</td><td>${Sub_Total}</td></tr>
-            <tr><td>Advance Paid</td><td>${invoice.advance_amt || "0.00"
-        }</td></tr>
-            <tr><td>Discount Applied</td><td>${invoice.discount || "0.00"
-        }</td></tr>
-            <tr class="total-row"><td>NET PAYABLE (Less Advance & Discount)</td><td>${invoice.payable_amt
-        }</td></tr>
-          </table>
-
-          <div class="btn-container">
-            <button variant="primary" class="print-btn" onclick="window.print()">Print</button>
-          </div>
-
-          <div class="footer">
-            <hr>
-            For queries call 7774099753 | For Emergency SMS 7774053187
-            <br>
-            &copy;2025 <a target="_blank" href="http://www.innothoughts.com/" style="color:grey;">Innothoughts System Pvt. Ltd</a>
-          </div>
-        </div>
-      </body>
-    </html>
-    `;
+      <div class="btn-container">
+        <button class="print-btn" onclick="window.print()">Print Invoice</button>
+      </div>
+    </body>
+  </html>
+  `;
       printWindow.document.write(printContent);
       printWindow.document.close();
       setTimeout(() => {
@@ -840,9 +936,16 @@ const InvoiceList = () => {
                   </Link>
                 </div>
                 {renderHeader()}
-                {loading && <p>Loading invoices...</p>}
-                {error && <p style={{ color: "red" }}>{error}</p>}
-                {!loading && !error && invoices.length > 0 && (
+                {loading ? (
+                  <div
+                    className="d-flex justify-content-center py-5"
+                    style={{ color: "#00bcd4" }}
+                  >
+                    <Spinner animation="border" role="status">
+                      <span className="visually-hidden">Loading...</span>
+                    </Spinner>
+                  </div>
+                ) : (
                   <DataTable
                     value={filteredInvoices}
                     paginator

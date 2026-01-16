@@ -203,58 +203,12 @@ export default function ReceiptList() {
     return result.trim() + " Rupees Only";
   };
 
-  // Handles the complex logic of fetching images, creating the HTML, and printing
   const handlePrintReceipt = (selectedReceipt) => {
-    if (!selectedReceipt) {
-      Swal.fire({
-        title: "Preparing Print",
-        text: `Opening receipt for ${receipt.patient_name}`,
-        icon: "info",
-        timer: 1500,
-        showConfirmButton: false,
-      });
-      return;
-    } 
+    if (!selectedReceipt) return;
+
     const clinicAddr = clinincLoc[currentLocation] || {
-      address: "Healing Hands Clinic",
-      phone: "8888288884"
-    };
-
-    const receiptWindow = window.open("", "_blank", "width=800,height=800");
-    if (!receiptWindow) {
-      alert("Please allow pop-ups to print the receipt.");
-      return;
-    }
-
-    const handleDeleteReceipt = async (receiptId) => {
-      const result = await Swal.fire({
-        title: "Are you sure?",
-        text: "You won't be able to revert this receipt deletion!",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#d33",
-        cancelButtonColor: "#3085d6",
-        confirmButtonText: "Yes, delete it!",
-      });
-
-      if (result.isConfirmed) {
-        try {
-          const response = await fetch(
-            `${BASE_URL}/V1/receipt/delete/${receiptId}?location=${currentLocation}`,
-            {
-              method: "DELETE",
-            }
-          );
-          if (response.ok) {
-            Swal.fire("Deleted!", "Receipt has been deleted.", "success");
-            fetchReceipts();
-          } else {
-            Toast.fire({ icon: "error", title: "Delete failed" });
-          }
-        } catch (error) {
-          Toast.fire({ icon: "error", title: "Error connecting to server" });
-        }
-      }
+      address: "Healing Hands Clinic Pvt Ltd, DP Road, Ground Floor, Millenium Star Extension, Adjacent to Ruby Hall Clinic, Pune 411001",
+      phone: "8888288884 | 020-26164488/99"
     };
 
     const getBase64Image = (imgUrl) => {
@@ -276,152 +230,217 @@ export default function ReceiptList() {
 
     Promise.all([
       getBase64Image(logo),
-      getBase64Image(labLogo),
-      getBase64Image(pharmacyLogo),
-      getBase64Image(receiptLogo),
-    ])
-      .then(
-        ([mainLogo, labLogoBase64, pharmacyLogoBase64, receiptLogoBase64]) => {
-          const amountInWords = numberToWords(
-            selectedReceipt.totalamt - selectedReceipt.discountamt
-          );
+      getBase64Image(receiptLogo)
+    ]).then(([mainLogo, horizontalReceiptLogo]) => {
+      const receiptWindow = window.open("", "_blank", "width=800,height=850");
+      if (!receiptWindow) return;
 
-          const receiptContent = `
-            <html>
-                <head>
-                <title>Receipt- Healing Hands</title>
-                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-                <style>
-                  body, table, tr, td, p {
-                    font-size: 13px !important;
-                    margin: 0;
-                    padding: 0;
-                  }
-                  .bgdiv { background: #2b9163; padding: 15px; }
-                  .maindiv { background: white; border: 1px solid white; border-radius: 15px; padding: 10px; }
-                  .Lablogo, .Medicologo { margin-right: 10px; width: 60px; }
-                  .HHClogo { width: 200px; }
-                  .receipt { width: 80%; height: 380px; }
-                  .fa-phone { padding: 3px 4px; border: 1px solid grey; border-radius: 50%; }
-                  .amount-box-container { display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-start; }
-                  .amount-box { border: 1px solid #ccc; padding: 10px; width: 180px; text-align: center; background-color: #f9f9f9; }
-                  .print-btn { display: block; width: 20%; padding: 10px; background-color: #2b9163; color: white; text-align: center; font-size: 14px; font-weight: bold; cursor: pointer; border: none; border-radius: 5px; margin-top: 10px; }
-                  @media print { .print-btn { display: none; } .bgdiv { background-color: #2b9163 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-                </style>
-              </head>
-              <body>
-                <div class="bgdiv">
-                  <div class="maindiv">
-                    <table width='100%' border='0'>
-                      <tr>
-                        <td style="width:30%;"><img src="${mainLogo}" class="HHClogo"></td>
-                        <td style="width:15%; text-align:right;"><img src="${labLogoBase64}" class="Lablogo"></td>
-                        <td style="width:15%; text-align:center; "><img src="${pharmacyLogoBase64}" class="Medicologo"></td>
-                        <td style="width:40%;">
-                          <table width='100%' border='0' style= "margin-left:180px;">
-                          <tr><td>Date:&nbsp;<b>${moment(
-                            selectedReceipt.receipt_date
-                          ).format("DD-MM-YYYY")}</b></td></tr>
-                          <tr margin><td>Receipt No:&nbsp;<b>${
-                            selectedReceipt.receipt_id
-                          }</b></td></tr>
-                          </table>
-                        </td>
-                      </tr>
-                    </table>
-                    <br>
-                    <table width='100%' border='0'>
-                      <tr>
-                        <td style="width:15%;"><img src="${receiptLogoBase64}" class="receipt"></td>
-                        <td style="width:85%;">
-                          <table width='100%' border='0'>
-                        <tr>
-                        <td style="width:85px; line-height:40px;">Received From: </td>
-                        <td><p style="font-weight: 600; text-transform: uppercase;">${
-                          selectedReceipt.patientName
-                        }</p></td>
-                        </tr>
-                         </table>
-                          <table width='100%' border='0'>
-                            <tr>
-                              <td>
-                                For:  <span style="font-weight:600; text-transform:uppercase;">${
-                                  selectedReceipt.consultation
-                                }</span>
-                              </td>
-                            </tr>
-                          </table>                         
-                          <br>
-                          <table width='100%' border='0'>
-                            <tbody>
-                              <tr>
-                                <td style="width:60%; vertical-align: top;">
-                                  Payment Mode: &nbsp;<b>${
-                                    selectedReceipt.paymentmode
-                                  }</b><br>
-                                  In Words: &nbsp;<b>${amountInWords}</b><br><br>
-                                  <b>Next Appointment: </b>No appointment scheduled<br>
-                                  <br>
-                                  ${clinicAddr.address}
-                                </td>
-                                <td style="width:40%; vertical-align: top;">
-                                  <div class="amount-box-container">
-                                    <div class="amount-box"><b>Total:</b> Rs. ${
-                                      selectedReceipt.totalamt
-                                    }/-</div>
-                                    <div class="amount-box" style="margin-top: 5px;"><b>Discount:</b> Rs. ${
-                                      selectedReceipt.discountamt
-                                    }/-</div>
-                                    <div class="amount-box" style="margin-top: 5px;"><b>Net Amount:</b> Rs. ${
-                                      selectedReceipt.totalamt -
-                                      selectedReceipt.discountamt
-                                    }/-</div>
-                                  </div>
-                                </td>
-                              </tr>
-                            </tbody>
-                          </table>
-                          <table width='100%' border='0'>
-                            <tr>
-                              <td style="width:100%;" colspan="3">
-                                <br>
-                                <p>In case you have not received the correct receipt for the paid amount. Please contact the clinic.</p>
-                                <table width='100%' border='0'>
-                            <tr>
-                              <td>
-                                <i class="fa fa-phone"></i>&nbsp;8888288884&nbsp;|&nbsp;020-26164488/99
-                              </td>
-                            </tr>
-                          </table>
-                          <table width='100%' border='0'>
-                            <tr>
-                            <td> 
-                            <i class="fa fa-envelope-open"></i>&nbsp;info@healinghandsclinic.co.in
-                            </td>
-                          </tr>
-                          </table>
-                            <table width='100%' border='0'>
-                            <tr>
-                            <td> 
-                            <i class="fa fa-globe"></i>&nbsp;www.healinghandsclinic.co.in</td></tr>
-                          </table>
-                              </td>
-                            </tr>
-                          </table>
-                        </td>
-                      </tr>
-                    </table>
+      const netAmount = (parseFloat(selectedReceipt.totalamt) - parseFloat(selectedReceipt.discountamt || 0)).toFixed(2);
+      const amountInWords = numberToWords(netAmount);
+
+      // Inside handlePrintReceipt, update the <style> section and the footer HTML structure:
+
+      const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Receipt - Healing Hands</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        <style>
+          body { 
+            font-family: 'Poppins', Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            font-size: 10.5px !important; 
+          }
+          
+          .receipt-border { 
+            border: 10px solid #2b9163;
+            width: 720px; 
+            padding: 20px; 
+            box-sizing: border-box;
+            background: #fff;
+          }
+
+          .addr-cell {
+      padding-left: 2px; 
+      vertical-align: top;
+      line-height: 1.5;
+      margin-top: 5px;
+      margin-right: 40px; 
+      display: block;
+    }
+
+          .header-table { 
+            width: 100%; 
+            border-bottom: 1px dotted #ccc; 
+            padding-bottom: 10px; 
+            margin-bottom: 15px; 
+          }
+
+          .content-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+          }
+          
+          .receipt-label-cell { 
+            width: 12%; 
+            vertical-align: top; 
+          }
+          
+          .receipt-label-img { 
+            width: 100%; 
+            height: auto; 
+            display: block;
+          }
+
+          /* Reduced padding-top to bring labels closer to the top of the receipt image */
+          .data-cell { 
+            width: 88%; 
+            padding-left: 25px; 
+            vertical-align: top; 
+            padding-top: 10px; 
+          }
+
+          /* Added specific margin to fine-tune the gap from the top */
+          .meta-table { 
+            width: 100%; 
+            margin-top: 5px; 
+            margin-bottom: 20px; 
+          }
+          
+          .meta-table td { 
+            padding-bottom: 8px; 
+          }
+
+          .items-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+          .items-table th { background: #f4f4f4; padding: 6px; text-align: left; border-bottom: 1px solid #ddd; }
+          .items-table td { padding: 8px; border-bottom: 1px dotted #eee; }
+
+          .summary-section { float: right; width: 220px; text-align: right; margin-top: 10px; line-height: 1.6; }
+          
+          .footer-details { 
+            margin-top: 40px; 
+            clear: both; 
+          }
+
+          .flex-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end; 
+            margin-top: 5px;
+          }
+
+          .legal-text { 
+            margin-top: 25px; 
+            font-size: 9.5px; 
+            color: #333; 
+            border-top: 1px solid #eee; 
+            padding-top: 10px;
+            line-height: 1.4;
+          }
+
+         .signature-area { 
+  text-align: center; 
+  width: 140px; 
+  font-weight: bold;
+  border-top: 1px solid #000; /* Adds the signature line */
+  padding-top: 8px;           /* Adjusts label lower relative to the line */
+  margin-left: 20px;         /* Adjusts the label slightly to the right/inward */
+  margin-top: 15px;        /* Pushes it slightly lower in the footer block */
+}
+
+          @media print { .no-print { display: none; } }
+          .print-btn { padding: 10px 20px; background: #2b9163; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px; }
+        </style>
+      </head>
+      <body>
+        <div class="receipt-border">
+          <table class="header-table">
+            <tr>
+              <td class="logo-cell"><img src="${mainLogo}" style="width: 160px;"></td>
+              <td class="addr-cell">
+                <b style="font-size: 11px;">
+                ${clinicAddr.address}<br>
+                <i class="fa fa-phone"></i> ${clinicAddr.phone}
+              </td>
+            </tr>
+          </table>
+
+          <table class="content-table">
+            <tr>
+              <td class="receipt-label-cell">
+                <img src="${horizontalReceiptLogo}" class="receipt-label-img">
+              </td>
+              <td class="data-cell">
+                <table class="meta-table">
+                  <tr>
+                    <td width="55%">Patient Name : <b style="text-transform: uppercase;">${selectedReceipt.patientName}</b></td>
+                    <td width="45%">Receipt No : <b>${selectedReceipt.receipt_id}</b></td>
+                  </tr>
+                  <tr>
+                    <td>Doctor Name : <b>${selectedReceipt.doctorName || '-'}</b></td>
+                    <td>Date : <b>${moment(selectedReceipt.receipt_date).format("DD-MM-YYYY")}</b></td>
+                  </tr>
+                </table>
+
+                <table class="items-table">
+                  <thead>
+                    <tr>
+                      <th width="15%">Sr. No</th>
+                      <th width="60%">Description</th>
+                      <th width="25%" align="right">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>1</td>
+                     <td>
+  ${selectedReceipt.consultation
+          ?.split(",")
+          .map(item => item.trim())
+          .join("<br/>")
+        }
+</td>
+                      <td align="right"><b>${parseFloat(selectedReceipt.totalamt).toFixed(2)}</b></td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <div class="summary-section">
+                  Sub Total : <b>${parseFloat(selectedReceipt.totalamt).toFixed(2)}</b><br>
+                  Discount (If Any) : <b>${parseFloat(selectedReceipt.discountamt || 0).toFixed(2)}</b><br>
+                  Payable Amount : <b>${netAmount}</b>
+                </div>
+
+                <div class="footer-details">
+                  In Words : <b>${amountInWords}</b><br>
+                  <div class="flex-footer">
+                    <div>Payment Mode : <span style="text-transform: capitalize;"><b>${selectedReceipt.paymentmode}</b></span></div>
+                    <div class="signature-area">Signature</div>
                   </div>
                 </div>
-                <button class="print-btn" onclick="window.print()" style="margin-left:40%; margin-top:20px;">Print</button >
-              </body>
-            </html>
-          `;
-          receiptWindow.document.write(receiptContent);
-          receiptWindow.document.close();
-        }
-      )
-      .catch((error) => console.error("Error loading images:", error));
+
+                <div class="legal-text">
+                  In case you have not received the correct receipt for the paid amount, or for any discrepancies in transaction please write us on info@healinghandsclinic.co.in or whatsapp on +91 8888988882
+                </div>
+              </td>
+            </tr>
+          </table>
+        </div>
+        <div class="btn-container no-print">
+          <button onclick="window.print()" class="print-btn">Print Receipt</button>
+        </div>
+      </body>
+      </html>
+    `;
+
+      receiptWindow.document.write(htmlContent);
+      receiptWindow.document.close();
+    });
   };
 
   const sendMail = (receipt) => {
