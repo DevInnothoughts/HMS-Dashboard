@@ -27,7 +27,7 @@ import logo from "../../assets/images/3.png";
 import labLogo from "../../assets/images/1.png";
 import pharmacyLogo from "../../assets/images/2.png";
 import receiptLogo from "../../assets/images/4.png";
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 const LOCATION = "demo";
 
 const Toast = Swal.mixin({
