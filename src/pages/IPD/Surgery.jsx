@@ -74,8 +74,9 @@ export default function Surgery() {
         p.admissionNo.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const handleForms = (admissionNo) => {
-        navigate(`/surgery/forms/${admissionNo}`);
+    const handleForms = (patientData) => {
+        console.log("admission number", patientData);
+        navigate(`/surgery/forms`, { state: { patientData: patientData } });
     };
 
     return (
@@ -148,7 +149,7 @@ export default function Surgery() {
                                                                     <Button
                                                                         variant="primary"
                                                                         size="sm"
-                                                                        onClick={() => handleForms(patient.admissionNo)}
+                                                                        onClick={() => handleForms(patient)}
                                                                         title="All Forms"
                                                                         style={{ borderRadius: "6px", backgroundColor: "#178aaeff", border: "none", padding: "8px 12px", margin: "3px" }}
                                                                     >

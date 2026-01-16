@@ -10,6 +10,6 @@ export const IpdRoutes = (
         <Route path="/search-by" element={<SearchBy />} />
         <Route path="/manage-admission" element={<ManageAdmission />} />
         <Route path="/surgery" element={<Surgery />} />
-        <Route path="/surgery/forms/:admissionNo" element={<IPDFormsContainer />} />
+        <Route path="/surgery/forms" element={<IPDFormsContainer />} />
     </> 
 )
