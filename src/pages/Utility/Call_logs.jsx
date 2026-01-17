@@ -49,7 +49,8 @@ export default function Call_logs() {
   const [enquiryTypes, setEnquiryTypes] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [filters1, setFilters1] = useState({
-    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    // global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    global: { value: null, matchMode: FilterMatchMode.EQUALS }
   });
   const [loading, setLoading] = useState(false);
   const [showNoteModal, setShowNoteModal] = useState(false);
@@ -84,7 +85,7 @@ export default function Call_logs() {
     console.log("OPening add appointment modal:");
     const today = new Date();
     const patient_phone = rowData.caller_no || "";
-  
+
     // Reset/Set initial data
     setFormData((prev) => ({
       ...prev,
@@ -97,25 +98,25 @@ export default function Call_logs() {
       FDE_Name: "",
       patient_type: "New", // Default
     }));
-  
+
     if (!patient_phone) {
       setShowAddModal(true);
       return;
     }
-  
+
     try {
       const url = `${BASE_URL}/V1/appointment/getPatientByMobile?patient_phone=${patient_phone}&location=${currentLocation}`;
       const response = await fetch(url, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });
-  
+
       if (!response.ok) {
         setFormData((prev) => ({ ...prev, patient_type: "New" }));
         setShowAddModal(true);
         return;
       }
-  
+
       const data = await response.json();
       if (data.statusCode === 200 && data.data) {
         // --- NESTED CHECK: PENDING APPOINTMENTS ---
@@ -125,9 +126,9 @@ export default function Call_logs() {
             method: "GET",
             headers: { "Content-Type": "application/json" },
           });
-  
+
           const confirmData = await confirmResponse.json();
-  
+
           // If status 400, a pending appointment exists
           if (confirmResponse.status === 400) {
             Swal.fire({
@@ -141,7 +142,7 @@ export default function Call_logs() {
         } catch (innerError) {
           console.error("Error in confirmation check API call:", innerError);
         }
-  
+
         // If we reached here, patient exists and has NO pending appointments
         Swal.fire({
           icon: "info",
@@ -150,7 +151,7 @@ export default function Call_logs() {
           confirmButtonColor: "#00bcd4",
           timer: 2000,
         });
-  
+
         setFormData((prev) => ({
           ...prev,
           patientName: data.data.name || "",
@@ -163,7 +164,7 @@ export default function Call_logs() {
       console.error("Error fetching patient details:", error);
       setFormData((prev) => ({ ...prev, patient_type: "New" }));
     }
-  
+
     setShowAddModal(true);
   };
 
@@ -863,18 +864,10 @@ export default function Call_logs() {
                           header={renderHeader}
                           loading={loading}
                           globalFilterFields={[
-                            "ivr_id",
                             "call_date",
                             "caller_no",
                             "destination_no",
-                            "call_time",
-                            "call_type",
-                            "call_status",
-                            "call_duration",
                             "circle_name",
-                            "status",
-                            "note",
-                            "source",
                           ]}
                           paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
                           currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
@@ -1060,15 +1053,16 @@ export default function Call_logs() {
             Add Appointment
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body style={{ fontSize: "13px", padding: "15px" }}>
+        <Modal.Body style={{ fontSize: "13px", padding: "10px" }}>
           <Form onSubmit={handleAddAppointment}>
             <Row>
               <Col md={6}>
-                <Form.Group className="mb-15">
+                <Form.Group className="mb-10">
                   <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
                     Appointment Date <span className="text-danger">*</span>
                   </Form.Label>
                   <DatePicker
+                    required
                     selected={formData.date ? new Date(formData.date) : new Date()}
                     onChange={(date) => date && handleDateChange(date)}
                     dateFormat="dd-MM-yyyy"
@@ -1077,33 +1071,12 @@ export default function Call_logs() {
                     customInput={
                       <Form.Control
                         size="sm"
-                        style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
+                        style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
                       />
                     }
                   />
                 </Form.Group>
               </Col>
-              {/* <Col md={6}>
-                <Form.Group className="mb-2">
-                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
-                    Appointment Time <span className="text-danger">*</span>
-                  </Form.Label>
-                  <Form.Select
-                    size="sm"
-                    name="appointmentTime"
-                    value={formData.appointmentTime}
-                    onChange={handleInputChange}
-                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
-                  >
-                    <option value="">Select Time</option>
-                    {timeSlots.map((time, index) => (
-                      <option key={index} value={time}>
-                        {time}
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Form.Group>
-              </Col> */}
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>Appointment Time</Form.Label>
@@ -1111,7 +1084,7 @@ export default function Call_logs() {
                     name="appointmentTime"
                     value={formData.appointmentTime}
                     onChange={handleInputChange}
-                     style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
+                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
                   >
                     <option value="">Select Time</option>
                     {timeSlots.map((time, index) => (
@@ -1123,16 +1096,17 @@ export default function Call_logs() {
                 </Form.Group>
               </Col>
               <Col md={6}>
-                <Form.Group className="mb-15">
+                <Form.Group className="mb-10">
                   <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
                     Doctor Name <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Select
+                    required
                     size="sm"
                     name="doctor_id"
                     value={formData.doctor_id}
                     onChange={handleInputChange}
-                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
+                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
                   >
                     <option value="">Select a Doctor</option>
                     {doctors.map((doctor) => (
@@ -1149,18 +1123,19 @@ export default function Call_logs() {
                     Patient Name <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
+                    required
                     size="sm"
                     type="text"
                     name="patientName"
                     placeholder="Enter full name"
                     value={formData.patientName}
                     onChange={handleInputChange}
-                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
+                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
                   />
                 </Form.Group>
               </Col>
               <Col md={6}>
-                <Form.Group className="mb-15">
+                <Form.Group className="mb-10">
                   <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
                     Contact Number <span className="text-danger">*</span>
                   </Form.Label>
@@ -1172,9 +1147,9 @@ export default function Call_logs() {
                     value={formData.caller_no}
                     style={{
                       border: "2px solid rgb(77, 208, 225)",
-                      backgroundColor: "#f8f9fa",
+                      backgroundColor: "#e7ebebff",
                       cursor: "not-allowed",
-                      fontSize: "12px", borderRadius:"10px"
+                      fontSize: "12px", borderRadius: "10px"
                     }}
                   />
                 </Form.Group>
@@ -1185,11 +1160,12 @@ export default function Call_logs() {
                     FDE Name <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Select
+                    required
                     size="sm"
                     name="FDE_Name"
                     value={formData.FDE_Name}
                     onChange={handleInputChange}
-                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
+                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
                   >
                     <option value="">Select FDE</option>
                     {fdeList.map((fde) => (
@@ -1200,8 +1176,8 @@ export default function Call_logs() {
                   </Form.Select>
                 </Form.Group>
               </Col>
-              <Col md={12}>
-                <Form.Group className="mb-5">
+              <Col md={6}>
+                <Form.Group className="mb-2">
                   <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>Note</Form.Label>
                   <Form.Control
                     size="sm"
@@ -1211,7 +1187,7 @@ export default function Call_logs() {
                     placeholder="Additional details..."
                     value={formData.note}
                     onChange={handleInputChange}
-                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
+                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
                   />
                 </Form.Group>
               </Col>
@@ -1222,7 +1198,7 @@ export default function Call_logs() {
                 variant="danger"
                 size="sm"
                 className="me-2 px-3"
-                style={{ borderRadius: "10px", fontSize: "12px", padding:"10px" }}
+                style={{ borderRadius: "10px", fontSize: "12px", padding: "10px" }}
                 onClick={() => setShowAddModal(false)}
               >
                 Cancel
@@ -1235,8 +1211,8 @@ export default function Call_logs() {
                   borderRadius: "10px",
                   fontSize: "12px",
                   backgroundColor: "#00bcd4",
-                  border: "none", 
-                  padding:"10px"
+                  border: "none",
+                  padding: "10px"
                 }}
                 onClick={() => handleSubmit("save")}
               >
@@ -1272,6 +1248,7 @@ export default function Call_logs() {
               Note <span className="text-danger">*</span>
             </Form.Label>
             <Form.Control
+              required
               style={{
                 border: "2px solid rgb(77, 208, 225)",
                 fontSize: "12px",
@@ -1290,7 +1267,7 @@ export default function Call_logs() {
           <Button
             size="sm"
             className="px-3"
-            style={{ borderRadius: "10px", fontSize: "12px", padding:"10px" }}
+            style={{ borderRadius: "10px", fontSize: "12px", padding: "10px" }}
             variant="secondary"
             onClick={() => setShowNoteModal(false)}
           >
@@ -1303,7 +1280,7 @@ export default function Call_logs() {
               borderRadius: "10px",
               fontSize: "12px",
               backgroundColor: "#00bcd4",
-              border: "none", padding:"10px" 
+              border: "none", padding: "10px"
             }}
             variant="primary"
             onClick={handleSaveNote}
@@ -1324,7 +1301,7 @@ export default function Call_logs() {
           style={{
             backgroundColor: "#e0f7fa",
             borderBottom: "2px solid #00bcd4",
-            padding: "10px 15px", 
+            padding: "10px 15px",
           }}
         >
           <Modal.Title style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}>
@@ -1337,12 +1314,13 @@ export default function Call_logs() {
             <Form>
               <Row>
                 <Col md={6}>
-                  <Form.Group className="mb-2">
+                  <Form.Group>
                     <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
                       Call Back Date{" "}
                       <span style={{ color: "red" }} className="required">*</span>
                     </Form.Label>
                     <DatePicker
+                      required
                       selected={selectedDate}
                       onChange={(date) => {
                         setSelectedDate(date);
@@ -1359,7 +1337,7 @@ export default function Call_logs() {
                       customInput={
                         <Form.Control
                           size="sm"
-                          style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
+                          style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
                         />
                       }
                     />
@@ -1373,8 +1351,9 @@ export default function Call_logs() {
                       <span style={{ color: "red" }} className="required">*</span>
                     </Form.Label>
                     <Form.Select
-                      size="sm" 
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
+                      required
+                      size="sm"
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
                       name="enquirytype"
                       value={enquiryForm.enquirytype}
                       onChange={handleEnquiryInputChange}
@@ -1414,8 +1393,9 @@ export default function Call_logs() {
                       <span style={{ color: "red" }} className="required">*</span>
                     </Form.Label>
                     <Form.Control
+                      required
                       size="sm"
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
                       type="text"
                       name="patient_name"
                       value={enquiryForm.patient_name}
@@ -1426,7 +1406,7 @@ export default function Call_logs() {
                 </Col>
 
                 <Col md={6}>
-                  <Form.Group className="mb-2">
+                  <Form.Group>
                     <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
                       Contact Number{" "}
                       <span style={{ color: "red" }} className="required">*</span>
@@ -1435,10 +1415,10 @@ export default function Call_logs() {
                       size="sm"
                       style={{
                         border: "2px solid rgb(77, 208, 225)",
-                        backgroundColor: "#f8f9fa",
+                        backgroundColor: "#e7ebebff",
                         cursor: "not-allowed",
                         fontSize: "12px",
-                        borderRadius:"10px"
+                        borderRadius: "10px"
                       }}
                       type="text"
                       readOnly
@@ -1448,16 +1428,17 @@ export default function Call_logs() {
                     />
                   </Form.Group>
                 </Col>
-               
+
                 <Col md={6}>
-                  <Form.Group className="mb-2">
+                  <Form.Group >
                     <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
                       FDE Name{" "}
                       <span style={{ color: "red" }} className="required">*</span>
                     </Form.Label>
                     <Form.Select
+                      required
                       size="sm"
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
                       name="FDE_Name"
                       value={enquiryForm.FDE_Name}
                       onChange={handleEnquiryInputChange}
@@ -1481,7 +1462,7 @@ export default function Call_logs() {
                     </Form.Label>
                     <Form.Control
                       size="sm"
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius:"10px" }}
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
                       as="textarea"
                       name="note"
                       value={enquiryForm.note}
@@ -1495,7 +1476,7 @@ export default function Call_logs() {
 
               <div className="d-flex justify-content-end pt-2">
                 <button
-                  style={{ borderRadius: "10px", fontSize: "12px", padding:"10px"  }}
+                  style={{ borderRadius: "10px", fontSize: "12px", padding: "10px" }}
                   type="button"
                   className="btn btn-danger btn-sm me-2 px-3"
                   onClick={() => {
@@ -1514,7 +1495,7 @@ export default function Call_logs() {
                   Cancel
                 </button>
                 <button
-                  style={{ borderRadius: "10px", fontSize: "12px", backgroundColor: "#00bcd4", borderColor: "#00bcd4", padding:"10px"  }}
+                  style={{ borderRadius: "10px", fontSize: "12px", backgroundColor: "#00bcd4", borderColor: "#00bcd4", padding: "10px" }}
                   type="button"
                   className="btn btn-primary btn-sm px-3"
                   onClick={handleAddEnquirySubmit}

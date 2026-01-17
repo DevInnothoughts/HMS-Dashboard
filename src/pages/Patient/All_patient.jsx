@@ -8,6 +8,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { decodeJwt } from "../../utils/decode-jwt";
 import Swal from "sweetalert2";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
+import vipIconImg from "../../assets/images/logo/vip.png";
 import {
   Container,
   Row,
@@ -24,7 +25,41 @@ import DatePicker from "react-datepicker";
 // import NavBarP from "../../components/NavbarP";
 import logo from "../../assets/images/3.png";
 
+const countries = [
+  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan",
+  "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi",
+  "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic",
+  "Denmark", "Djibouti", "Dominica", "Dominican Republic",
+  "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia",
+  "Fiji", "Finland", "France",
+  "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guyana",
+  "Haiti", "Honduras", "Hungary",
+  "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Ivory Coast",
+  "Jamaica", "Japan", "Jordan",
+  "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan",
+  "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg",
+  "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar",
+  "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "Norway",
+  "Oman",
+  "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal",
+  "Qatar",
+  "Romania", "Russia", "Rwanda",
+  "Saint Kitts and Nevis", "Saint Lucia", "Samoa", "San Marino", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria",
+  "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu",
+  "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan",
+  "Vanuatu", "Vatican City", "Venezuela", "Vietnam",
+  "Yemen",
+  "Zambia", "Zimbabwe"
+];
+
 const BASE_URL = "http://localhost:5100/api";
+
+const formatDateToLocal = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  if (isNaN(date)) return dateString;
+  return date.toLocaleDateString();
+};
 
 const Toast = Swal.mixin({
   toast: true,
@@ -43,7 +78,6 @@ const formatDate = (dateString) => {
   const date = new Date(dateString);
   if (isNaN(date)) return dateString;
 
-  // Manually format to dd-mm-yyyy
   const day = String(date.getDate()).padStart(2, "0");
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const year = date.getFullYear();
@@ -91,10 +125,13 @@ export default function All_patient() {
     reference_type: "",
     ref: "",
     patient_id: "",
+    nationality: "",
+    language: "",
   });
   const navigate = useNavigate();
   const [filters1, setFilters1] = useState({
-    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    // global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    global: { value: null, matchMode: FilterMatchMode.EQUALS },
   });
   const [fromDate, setFromDate] = useState(new Date());
   const [toDate, setToDate] = useState(new Date());
@@ -562,7 +599,6 @@ export default function All_patient() {
         old_patient_pincode: parts[3] || ""
       });
     } else {
-      // Populate the specific key in referenceDetails based on type
       setReferenceDetails(prev => ({
         ...prev,
         [patient.reference_type]: patient.ref || ""
@@ -596,6 +632,8 @@ export default function All_patient() {
       // specific_work: Boolean(patient.specific_work) || "",
       specific_work: patient.specific_work || "",
       patient_id: patient.patient_id || "",
+      nationality: patient.nationality || "",
+      language: patient.language || "",
     });
 
     setWorkPatterns({
@@ -707,8 +745,10 @@ export default function All_patient() {
       birth_date: formData.birth_date,
       age: calculateAge(formData.birth_date),
       specific_work: specificWork,
-      reference_type: formData.reference_type,
-      ref: formData.ref
+      // reference_type: formData.reference_type,
+      // ref: formData.ref
+      reference_type: reference_type,
+      ref: ref
     };
 
     console.log("Updated Patient Data:", updatedPatientData);
@@ -889,548 +929,164 @@ export default function All_patient() {
     setShowAddModal(true);
   };
 
-  // const handlePrint = (patient) => {
-  //   const printWindow = window.open("", "_blank", "width=800,height=800");
+  const handlePrint = (patient) => {
+    const printWindow = window.open("", "_blank", "width=800,height=900");
+    const vipIcon = (patient.patient_type == 1)
+      ? `<img src="${vipIconImg}" class="vip-logo-img" alt="(VIP)" />`
+      : '';
 
-  //   const getBase64Image = (imgUrl) => {
-  //     return new Promise((resolve) => {
-  //       const img = new Image();
-  //       img.crossOrigin = "anonymous";
-  //       img.onload = () => {
-  //         const canvas = document.createElement("canvas");
-  //         canvas.width = img.width;
-  //         canvas.height = img.height;
-  //         const ctx = canvas.getContext("2d");
-  //         ctx.drawImage(img, 0, 0);
-  //         resolve(canvas.toDataURL("image/png"));
-  //       };
-  //       img.src = imgUrl;
-  //     });
-  //   };
+    const location = currentLocation || "";
 
-  //   Promise.all([getBase64Image(logo)]).then(([mainLogo]) => {
-  //     const printContent = `
-  //     <html>
-  //       <head>
-  //         <title>Registration Form - Healing Hands</title>
-  //         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-  //         <style>
-  //           body {
-  //             font-family: Arial, sans-serif;
-  //             font-size: 10px;
-  //             margin: 20px;
-  //           }
-  //           .container {
-  //             background: white;
-  //             border-radius: 10px;
-  //             padding: 10px;
-  //           }
-  //           .header {
-  //             display: flex;
-  //             align-items: center;
-  //             justify-content: space-between;
-  //             border-bottom: 2px solid #2b9163;
-  //             padding-bottom: 10px;
-  //             margin-bottom: 10px;
-  //           }
-  //           .header img {
-  //             width: 180px;
-  //             height: auto;
-  //           }
-  //           .header .reg-info {
-  //             text-align: right;
-  //             font-size: 25px;
-  //             color: #2b9163;
-  //             font-weight: bold;
-  //           }
-  //           .section-title {
-  //             font-size: 12px;
-  //             font-weight: bold;
-  //             color: #2b9163;
-  //             margin-bottom: 5px;
-  //             border-bottom: 1px solid #2b9163;
-  //             padding-bottom: 3px;
-  //           }
-  //           .details-table {
-  //             width: 100%;
-  //             border-collapse: collapse;
-  //           }
-  //           .details-table td {
-  //             padding: 2px 5px; /* Reduced padding */
-  //             font-size: 10.5px; /* Smaller text for patient details */
-  //           }
-  //           .details-table td:first-child {
-  //             font-weight: bold;
-  //             width: 30%;
-  //           }
-  //           .row {
-  //             display: flex;
-  //             justify-content: space-between;
-  //             width: 100%;
-  //           }
-  //           .col {
-  //             width: 48%;
-  //           }
-  //           .consent-box {
-  //             border: 2px solid #2b9163;
-  //             padding: 8px;
-  //             margin-top: 10px;
-  //             border-radius: 5px;
-  //             font-size: 12px;
-  //           }
+    let regionalConsent = "";
+    let regionalPatientNameLabel = "<p><b>Patients Name :</b>:</p>";
+    let regionalPatientSignature = "<p><b>Patients Signature:</b></p>";
+    let regionalWitnessSignature = "<p><b>Witness Signature:</b></p>";
+    let regionalTimeDate = "Time & Date :";
 
-  //           .consent-title{
-  //             text-align: right;
-  //             font-size: 20px;
-  //             color: #2b9163;
-  //             font-weight: bold;
-  //           } 
-
-  //           .signature-box {
-  //             display: flex;
-  //             justify-content: space-between;
-  //             margin-top: 5px;
-  //           }
-
-  //           .signature-box p {
-  //             border-top: 1px solid black;
-  //             width: 30%;
-  //             text-align: center;
-  //             padding-top: 3px;
-  //           }
-
-  //           .time-date{
-  //             display: flex;
-  //             justify-content: space-between;
-  //             margin-top: 5px;
-  //             }
-  //             .time-date p{
-  //             border-top: 1px solid black;
-  //             width: 20%;
-  //             text-align: center;
-  //             padding-top: 3px;
-  //             }
-
-  //           .footer {
-  //             text-align: center;
-  //             font-size: 10px;
-  //             color: grey;
-  //             margin-top: 15px;
-  //           }
-
-  //           .print-btn {
-  //             display: block;
-  //             width: 20%;
-  //             padding: 10px;
-  //             background-color: #2b9163;
-  //             color: white;
-  //             text-align: center;
-  //             font-size: 14px;
-  //             font-weight: bold;
-  //             cursor: pointer;
-  //             border: none;
-  //             border-radius: 5px;
-
-  //           }
-  //           /* Hide print button when printing */
-  //           @media print {
-  //             .print-btn {
-  //               display: none;
-  //             }
-  //           }
-  //         </style>
-  //       </head>
-  //       <body>
-  //         <div class="container">
-  //           <div class="header">
-  //             <img src="${mainLogo}" alt="Healing Hands Clinic">
-  //             <div class="reg-info">
-  //               <p>Registration Form</p>
-  //             </div>
-  //           </div>
-
-  //           <div class="section-title">Patient Details</div>
-  //           <div class="row">
-  //             <div class="col">
-  //               <table class="details-table">	
-  //                 <tr><td>Reg No:</td><td>${patient.Uid_no}</td></tr>
-  //                 <tr><td>Name:</td><td>${patient.name}</td></tr>
-  //                 <tr><td>Gender:</td><td>${patient.sex}</td></tr>
-  //                 <tr><td>DOB (Age):</td><td>${patient.birth_date} (${patient.age
-  //       })</td></tr>
-  //        <tr><td>Reffered By:</td><td>${patient.reference_type}</td></tr>	 
-
-  //               </table>
-  //             </div>
-  //             <div class="col">
-  //               <table class="details-table">
-  //                 <tr><td>Date:</td><td>${formatToApiDate(new Date())}</td></tr>
-  //                 <tr><td>Address:</td><td>${patient.address}</td></tr>
-  //                 <tr><td>Contact No:</td><td>${patient.phone}</td></tr>
-  //                 <tr><td>Email:</td><td>${patient.email}</td></tr>
-  //                   	<tr><td>Occupation:</td><td>${patient.occupation}</td></tr>	 
-  //               </table>
-  //             </div>
-  //           </div>
-
-  //           <div class="consent-box">
-  //           <div class="consent-title">OPD CONCENT FORM</div>
-  //             <p>I, the undersigned patient or responsible relative ....................................................................................................................................
-  //             	  hereby give consent and authority to Healing Hands Clinic physicians, surgeons and medical person administer and perform medical examinations, investigations, medical treatments and out-patient procedure during the course of the medical care as an out-patient, as deemed advisable or necessary.
-  //             	  I understand and accept Healing Hands Clinic policies and agree to abide by them. I also give consent to the clinic for contacting me/him/her by telephone if needed regarding appointments and follow-ups.| allow the clinic and the doctors to discuss about my/his/her medical issues amongst themselves knowing that privacy will be maintained.
-  //             	  I undersigned, give permission for using any observed/discussed/new information found during my consultation/treatment to be used for study purposes/research in future.
-  //             	  </p>
-  //             <p>मी खाली सही करणारा रुग्ण / रुग्णाचा जबाबदार पालक/ नातेवाईक ..........................................................................................................
-  //             	  हीलींग हॅन्डस् क्लिनीक येथिल चिकिसक शल्यविशाराद व वैधकीय कर्मचारी याना बाहय रुग्ण म्हणून सदर रुग्णाच्या हितासाठी / आरोग्यासाठी आवश्यक त्या सर्व नैदानिक तपासण्या परीक्षणे, वैद्यकीय औषधोपचार व लघुशस्त्रक्रिया करण्यास परवानगी देतो. मला हीलींग हॅन्डस क्लिनीकची सर्व धोरणे ज्ञात सून मी त्याचे पालन करण्यास तयार आहे.
-  //             	  मी खाली सही करणार अशी ही संमती देतो की मला तपासणीच्या वेळेतील बदल किंवा फेरतपासणीबाबतच्या वेळेतील व इतर अन्य बदल कळविण्याकरीता केलेल्या दूरध्वनी संपर्कबद्दल मला आक्षेप असणार नाही. मी, क्लिनिक व डॉक्टर यांना माझ्या / त्याच्या/ तिच्या वैदयकिय समस्थाची आपआपसांत चर्चा करण्याची परवानगी देत आहे तसेच यांची गोपनियता राखण्यात येईल याची मला माहीती दिलेली आहे. मी खाली सही करणारा/करणारी,
-  //             	  माझ्या उपचाराच्या दरम्यान प्राप्त झालेली / सापडलेली कोणत्याही प्रकारच्या माहितीचे उपयोग भविष्यकालीन अभ्यासासाठी / संशोधनासाठी करण्याची परवानगी देत आहे.
-  //             	  </p>
-  //                 <p>Patients Name (रुग्णाचे नाव)::</p><br>
-  //             <div class="signature-box">
-  //               <p>Patient's Signature(रुग्णाची सही)</p>
-
-  //               <p>Witness Signature(साक्षीदाराची सही)</p>
-
-  //             </div><br>
-  //             <div class="time-date">
-  //               <p>Time Date
-  //               <br>(वेळ व दिनांक)
-  //               </p>
-  //               <p>Time Date
-  //               <br>(वेळ व दिनांक)
-  //               </p>
-  //               </div>
-  //           </div>
-  //         </div>
-  //           <!-- Print Button -->
-  //           <button class="print-btn" onclick="window.print()">Print</button>
-  //         <div class="footer">
-  //           <hr />
-  //           &copy;2025 <a target="_blank" href="http://www.innothoughts.com/" style="color:grey;">Innothoughts System Pvt. Ltd</a>
-  //         </div>
-  //       </body>
-  //     </html>
-  //   `;
-
-  //     printWindow.document.write(printContent);
-  //     printWindow.document.close();
-
-  //     setTimeout(() => {
-  //       printWindow.print();
-  //     }, 1000);
-  //   });
-  // };
-
- const handlePrint = (patient) => {
-  const printWindow = window.open("", "_blank", "width=800,height=900");
-
-  const getBase64Image = (imgUrl) => {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0);
-        resolve(canvas.toDataURL("image/png"));
-      };
-      img.src = imgUrl;
-    });
-  };
-
-  Promise.all([getBase64Image(logo)]).then(([mainLogo]) => {
-    // Get current location for language selection
-    const location = currentLocation;
-    
-    // Determine which consent text to show based on location
-    let consentText = {
-      english: "",
-      regional: "",
-      patientNameLabel: "Patients Name :",
-      patientSignatureLabel: "Patients Signature:",
-      witnessSignatureLabel: "Witness Signature:",
-      timeDateLabel: "Time Date :"
-    };
-    
-    // Set consent text based on location (matching PHP logic)
     if (location === 'Hyderabad' || location === 'Secunderabad') {
-      consentText.english = `I, the undersigned patient or responsible relative ....................................................................................................................................<br> hereby give consent and authority to Healing Hands Clinic physicians, surgeons and medical person administer and perform medical examinations, investigations, medical treatments and out-patient procedure during the course of the medical care as an out-patient, as deemed advisable or necessary.<br>
-      I understand and accept Healing Hands Clinic policies and agree to abide by them. I also give consent to the clinic for contacting me/him/her by telephone if needed regarding appointments and follow-ups.| allow the clinic and the doctors to discuss about my/his/her medical issues amongst themselves knowing that privacy will be maintained. <br>
-      I undersigned, give permission for using any observed/discussed/new information found during my consultation/treatment to be used for study purposes/research in future.`;
-      
-      consentText.regional = `నేను, కింద సంతకం చేసిన రోగి / బాధ్యతగల బంధువు ..........................................................................................................<br> ఇందుమూలంగా హీలింగ్ హ్యాండ్స్ క్లినిక్ వైద్యులు, సర్జన్లు మరియు
-      వైద్యపరమైన వ్యక్తికి ఔట్-పేషెంట్ గా నాకు మంచిది లేదా అవసరమైనట్లు
-      భావిస్తే వైద్య సంరక్షణలో వైద్య పరీక్షలు, పరిశోధనలు మరియు చికిత్స
-      చేయటానికి సమ్మతి మరియు అధికారాన్ని ఇస్తున్నాను.<br>నేను హీలింగ్ హ్యాండ్స్ క్లినిక్ విధానాలను అర్థం చేసుకున్నాను మరియు వాటికి
-      కట్టుబడి ఉండటానికి అంగీకరిస్తున్నాను. అపాయింట్‌మెంట్‌లు మరియు ఫాలో-
-      అప్‌లకు సంబంధించి అవసరమైతే నన్ను/అతన్ని/ఆమెను టెలిఫోన్ ద్వారా
-      సంప్రదించడానికి నేను క్లినిక్‌కి సమ్మతిని కూడా ఇస్తున్నాను. నా యోక్క వైద్య
-      స్థితి గోప్యంగా ఉంచబడుతుందని తెలిసి నా/అతని/ఆమె వైద్య సమస్యల గురించి
-      తమలో తాము చర్చించుకోవడానికి క్లినిక్ మరియు డాక్టర్లను అనుమతిస్తున్నాను.<br>నేను, నా సంప్రదింపులు/చికిత్స సమయంలో కనుగొనబడిన ఏదైనా
-      గమనించిన/చర్చించిన/కొత్త సమాచారాన్ని భవిష్యత్తులో అధ్యయన
-      ప్రయోజనాల/పరిశోధన కోసం ఉపయోగించేందుకు అనుమతిని ఇస్తున్నాను.`;
-      
-      consentText.patientNameLabel = "Patients Name (రొగి పేరు):";
-      consentText.patientSignatureLabel = "Patients Signature:<br>(రోగి సంతకం)";
-      consentText.witnessSignatureLabel = "Witness Signature:<br>(సాక్షి సంతకం)";
-      consentText.timeDateLabel = "Time Date:<br>(సమయం మరియూ తేదీ)";
-    } 
-    else if (location === 'Bangalore' || location === 'Indiranagar' || location === 'HSR' || location === 'Sahakarnagar' || location === 'Rajajinagar' || location === 'Sarjapura' || location === 'Belagavi' || location === 'Mysore' || location === 'Kalaburagi') {
-      consentText.english = `I, the undersigned patient or responsible relative ....................................................................................................................................<br> hereby give consent and authority to Healing Hands Clinic physicians, surgeons and medical person administer and perform medical examinations, investigations, medical treatments and out-patient procedure during the course of the medical care as an out-patient, as deemed advisable or necessary.<br>
-      I understand and accept Healing Hands Clinic policies and agree to abide by them. I also give consent to the clinic for contacting me/him/her by telephone if needed regarding appointments and follow-ups.| allow the clinic and the doctors to discuss about my/his/her medical issues amongst themselves knowing that privacy will be maintained. <br>
-      I undersigned, give permission for using any observed/discussed/new information found during my consultation/treatment to be used for study purposes/research in future.`;
-      
-      consentText.regional = `ನಾನು, ಕೆಳಗೆ ಸಹಿ ಮಾಡಿದ ರೋಗಿ ಅಥವಾ ಜವಾಬ್ದಾರಿಯುತ ಸಂಬಂಧಿ ..........................................................................................................<br> ಈ ಮೂಲಕ ಹೀಲಿಂಗ್ ಹ್ಯಾಂಡ್ಸ್ ಕ್ಲಿನಿಕ್ ವೈದ್ಯರಿಗೆ ಒಪ್ಪಿಗೆ ಮತ್ತು ಅಧಿಕಾರವನ್ನು ನೀಡಿ , ಶಸ್ತ್ರಚಿಕಿತ್ಸಕರು ಮತ್ತು ವೈದ್ಯಕೀಯ ವ್ಯಕ್ತಿಗಳು ವೈದ್ಯಕೀಯ ಪರೀಕ್ಷೆಗಳು, ತನಿಖೆಗಳು, ವೈದ್ಯಕೀಯ ಚಿಕಿತ್ಸೆಗಳು ಮತ್ತು ಹೊರರೋಗಿ ಕಾರ್ಯವಿಧಾನವನ್ನು ಹೊರರೋಗಿಯಾಗಿ, ಸಲಹೆ ಅಥವಾ ಅಗತ್ಯವೆಂದು ಪರಿಗಣಿಸಿ ವೈದ್ಯಕೀಯ ಆರೈಕೆಯ ಸಮಯದಲ್ಲಿ ನಿರ್ವಹಿಸುತ್ತಾರೆ ಮತ್ತು ನಿರ್ವಹಿಸುತ್ತಾರೆ.<br>ನಾನು ಹೀಲಿಂಗ್ ಹ್ಯಾಂಡ್ಸ್ ಕ್ಲಿನಿಕ್ ನೀತಿಗಳನ್ನು ಅರ್ಥಮಾಡಿಕೊಂಡಿದ್ದೇನೆ ಮತ್ತು ಸ್ವೀಕರಿಸುತ್ತೇನೆ ಮತ್ತು ಅವುಗಳನ್ನು ಪಾಲಿಸಲು ಒಪ್ಪುತ್ತೇನೆ. ಅಪಾಯಿಂಟ್‌ಮೆಂಟ್‌ಗಳು ಮತ್ತು ಫಾಲೋ-ಅಪ್‌ಗಳ ಬಗ್ಗೆ ಅಗತ್ಯವಿದ್ದರೆ ನನ್ನನ್ನು/ಅವನನ್ನು/ಅವಳನ್ನು ದೂರವಾಣಿ ಮೂಲಕ ಸಂಪರ್ಕಿಸಲು ನಾನು ಕ್ಲಿನಿಕ್‌ಗೆ ಒಪ್ಪಿಗೆ ನೀಡುತ್ತೇನೆ.| ಖಾಸಗಿತನವನ್ನು ಕಾಪಾಡಿಕೊಳ್ಳಲಾಗುವುದು ಎಂದು ತಿಳಿದುಕೊಂಡು ಕ್ಲಿನಿಕ್ ಮತ್ತು ವೈದ್ಯರು ನನ್ನ/ಅವನ/ಅವಳ ವೈದ್ಯಕೀಯ ಸಮಸ್ಯೆಗಳ ಬಗ್ಗೆ ಚರ್ಚಿಸಲು ಅವಕಾಶ ಮಾಡಿಕೊಡಿ.<br>ನಾನು ಕೆಳಗೆ ಸಹಿ ಮಾಡಿದ್ದೇನೆ, ನನ್ನ ಸಮಾಲೋಚನೆ/ಚಿಕಿತ್ಸೆಯ ಸಮಯದಲ್ಲಿ ಕಂಡುಬರುವ ಯಾವುದೇ ಗಮನಿಸಿದ/ಚರ್ಚಿತ/ಹೊಸ ಮಾಹಿತಿಯನ್ನು ಭವಿಷ್ಯದಲ್ಲಿ ಅಧ್ಯಯನ ಉದ್ದೇಶಗಳಿಗೆ/ಸಂಶೋಧನೆಗಾಗಿ ಬಳಸಲು ಅನುಮತಿಯನ್ನು ನೀಡುತ್ತೇನೆ`;
-      
-      consentText.patientNameLabel = "Patients Name :";
-      consentText.patientSignatureLabel = "Patients Signature:";
-      consentText.witnessSignatureLabel = "Witness Signature:";
-      consentText.timeDateLabel = "Time Date :";
+      regionalConsent = `<p>నేను, కింద సంతకం చేసిన రోగి / బాధ్యతగల బంధువు ..........................................................................................................<br> ఇందుమూలంగా హీలింగ్ హ్యాండ్స్ క్లినిక్ వైద్యులు, సర్జన్లు మరియు
+									వైద్యపరమైన వ్యక్తికి ఔట్-పేషెంట్ గా నాకు మంచిది లేదా అవసరమైనట్లు
+									భావిస్తే వైద్య సంరక్షణలో వైద్య పరీక్షలు, పరిశోధనలు మరియు చికిత్స
+									చేయటానికి సమ్మతి మరియు అధికారాన్ని ఇస్తున్నాను.<br>నేను హీలింగ్ హ్యాండ్స్ క్లినిక్ విధానాలను అర్థం చేసుకున్నాను మరియు వాటికి
+									కట్టుబడి ఉండటానికి అంగీకరిస్తున్నాను. అపాయింట్‌మెంట్‌లు మరియు ఫాలో-
+									అప్‌లకు సంబంధించి అవసరమైతే నన్ను/అతన్ని/ఆమెను టెలిఫోన్ ద్వారా
+									సంప్రదించడానికి నేను క్లినిక్‌కి సమ్మతిని కూడా ఇస్తున్నాను. నా యోక్క వైద్య
+									స్థితి గోప్యంగా ఉంచబడుతుందని తెలిసి నా/అతని/ఆమె వైద్య సమస్యల గురించి
+									తమలో తాము చర్చించుకోవడానికి క్లినిక్ మరియు డాక్టర్లను అనుమతిస్తున్నాను.<br>నేను, నా సంప్రదింపులు/చికిత్స సమయంలో కనుగొనబడిన ఏదైనా
+									గమనించిన/చర్చించిన/కొత్త సమాచారాన్ని భవిష్యత్తులో అధ్యయన
+									ప్రయోజనాల/పరిశోధన కోసం ఉపయోగించేందుకు అనుమతిని ఇస్తున్నాను.</p>`;
+      regionalPatientNameLabel = `<p><b>Patients Name (రొగి పేరు):</b>:</p>`;
+      regionalPatientSignature = `<p><b>Patients Signature:<br>(రోగి సంతకం)</b></p>`;
+      regionalWitnessSignature = `<p><b>Witness Signature:<br>(సాక్షి సంతకం)</b></p>`;
+      regionalTimeDate = `Time & Date:<br>(సమయం మరియూ తేదీ)`;
     }
-    else if (location === 'DP Road' || location === 'Baner' || location === 'Tilak Road' || location === 'Salunkhe-Vihar' || location === 'Pimpri-Chinchwad' || location === 'Chakan' || location === 'Dighi' || location === 'Katraj' || location === 'Navi-Mumbai' || location === 'Kemps-Corner' || location === 'Andheri' || location === 'Thane' || location === 'Kolhapur' || location === 'Latur' || location === 'Nashik' || location === 'Undri' || location === 'Hinjewadi' || location === 'Vashi') {
-      consentText.english = `I, the undersigned patient or responsible relative ....................................................................................................................................<br> hereby give consent and authority to Healing Hands Clinic physicians, surgeons and medical person administer and perform medical examinations, investigations, medical treatments and out-patient procedure during the course of the medical care as an out-patient, as deemed advisable or necessary.<br>
-      I understand and accept Healing Hands Clinic policies and agree to abide by them. I also give consent to the clinic for contacting me/him/her by telephone if needed regarding appointments and follow-ups.| allow the clinic and the doctors to discuss about my/his/her medical issues amongst themselves knowing that privacy will be maintained. <br>
-      I undersigned, give permission for using any observed/discussed/new information found during my consultation/treatment to be used for study purposes/research in future.`;
-      
-      consentText.regional = `मी खाली सही करणारा रुग्ण / रुग्णाचा जबाबदार पालक/ नातेवाईक ..........................................................................................................<br> हीलींग हॅन्डस् क्लिनीक येथिल चिकिसक शल्यविशाराद व वैधकीय कर्मचारी याना बाहय रुग्ण म्हणून सदर रुग्णाच्या हितासाठी / आरोग्यासाठी आवश्यक त्या सर्व नैदानिक तपासण्या परीक्षणे, वैद्यकीय औषधोपचार व लघुशस्त्रक्रिया करण्यास परवानगी देतो. मला हीलींग हॅन्डस क्लिनीकची सर्व धोरणे ज्ञात सून मी त्याचे पालन करण्यास तयार आहे. मी खाली सही करणार अशी ही संमती देतो की मला तपासणीच्या वेळेतील बदल किंवा फेरतपासणीबाबतच्या वेळेतील व इतर अन्य बदल कळविण्याकरीता केलेल्या दूरध्वनी संपर्कबद्दल मला आक्षेप असणार नाही. मी, क्लिनिक व डॉक्टर यांना माझ्या / त्याच्या/ तिच्या वैदयकिय समस्थाची आपआपसांत चर्चा करण्याची परवानगी देत आहे तसेच यांची गोपनियता राखण्यात येईल याची मला माहीती दिलेली आहे. मी खाली सही करणारा/करणारी, माझ्या उपचाराच्या दरम्यान प्राप्त झालेली / सापडलेली कोणत्याही प्रकारच्या माहितीचे उपयोग भविष्यकालीन अभ्यासासाठी / संशोधनासाठी करण्याची परवानगी देत आहे.`;
-      
-      consentText.patientNameLabel = "Patients Name (रुग्णाचे नाव):";
-      consentText.patientSignatureLabel = "Patients Signature:<br>(रुग्णाची सही)";
-      consentText.witnessSignatureLabel = "Witness Signature:<br>(साक्षीदाराची सही)";
-      consentText.timeDateLabel = "Time Date:<br>(वेळ व दिनांक)";
+    else if (['Bangalore', 'Indiranagar', 'HSR', 'Sahakarnagar', 'Rajajinagar', 'Sarjapura', 'Belagavi', 'Mysore', 'Kalaburagi'].includes(location)) {
+      regionalConsent = `<p>ನಾನು, ಕೆಳಗೆ ಸಹಿ ಮಾಡಿದ ರೋಗಿ ಅಥವಾ ಜವಾಬ್ದಾರಿಯುತ ಸಂಬಂಧಿ ..........................................................................................................<br> ಈ ಮೂಲಕ ಹೀಲಿಂಗ್ ಹ್ಯಾಂಡ್ಸ್ ಕ್ಲಿನಿಕ್ ವೈದ್ಯರಿಗೆ ಒಪ್ಪಿಗೆ ಮತ್ತು ಅಧಿಕಾರವನ್ನು ನೀಡಿ , ಶಸ್ತ್ರಚಿಕಿತ್ಸಕರು ಮತ್ತು ವೈದ್ಯಕೀಯ ವ್ಯಕ್ತಿಗಳು ವೈದ್ಯಕೀಯ ಪರೀಕ್ಷೆಗಳು, ತನಿಖೆಗಳು, ವೈದ್ಯಕೀಯ ಚಿಕಿತ್ಸೆಗಳು ಮತ್ತು ಹೊರರೋಗಿ ಕಾರ್ಯವಿಧಾನವನ್ನು ಹೊರರೋಗಿಯಾಗಿ, ಸಲಹೆ ಅಥವಾ ಅಗತ್ಯವೆಂದು ಪರಿಗಣಿಸಿ ವೈದ್ಯಕೀಯ ಆರೈಕೆಯ ಸಮಯದಲ್ಲಿ ನಿರ್ವಹಿಸುತ್ತಾರೆ ಮತ್ತು ನಿರ್ವಹಿಸುತ್ತಾರೆ.<br>ನಾನು ಹೀಲಿಂಗ್ ಹ್ಯಾಂಡ್ಸ್ ಕ್ಲಿನಿಕ್ ನೀತಿಗಳನ್ನು ಅರ್ಥಮಾಡಿಕೊಂಡಿದ್ದೇನೆ ಮತ್ತು ಸ್ವೀಕರಿಸುತ್ತೇನೆ ಮತ್ತು ಅವುಗಳನ್ನು ಪಾಲಿಸಲು ಒಪ್ಪುತ್ತೇನೆ. ಅಪಾಯಿಂಟ್‌ಮೆಂಟ್‌ಗಳು ಮತ್ತು ಫಾಲೋ-ಅಪ್‌ಗಳ ಬಗ್ಗೆ ಅಗತ್ಯವಿದ್ದರೆ ನನ್ನನ್ನು/ಅವನನ್ನು/ಅವಳನ್ನು ದೂರವಾಣಿ ಮೂಲಕ ಸಂಪರ್ಕಿಸಲು ನಾನು ಕ್ಲಿನಿಕ್‌ಗೆ ಒಪ್ಪಿಗೆ ನೀಡುತ್ತೇನೆ.| ಖಾಸಗಿತನವನ್ನು ಕಾಪಾಡಿಕೊಳ್ಳಲಾಗುವುದು ಎಂದು ತಿಳಿದುಕೊಂಡು ಕ್ಲಿನಿಕ್ ಮತ್ತು ವೈದ್ಯರು ನನ್ನ/ಅವನ/ಅವಳ ವೈದ್ಯಕೀಯ ಸಮಸ್ಯೆಗಳ ಬಗ್ಗೆ ಚರ್ಚಿಸಲು ಅವಕಾಶ ಮಾಡಿಕೊಡಿ.<br>ನಾನು ಕೆಳಗೆ ಸಹಿ ಮಾಡಿದ್ದೇನೆ, ನನ್ನ ಸಮಾಲೋಚನೆ/ಚಿಕಿತ್ಸೆಯ ಸಮಯದಲ್ಲಿ ಕಂಡುಬರುವ ಯಾವುದೇ ಗಮನಿಸಿದ/ಚರ್ಚಿತ/ಹೊಸ ಮಾಹಿತಿಯನ್ನು ಭವಿಷ್ಯದಲ್ಲಿ ಅಧ್ಯಯನ ಉದ್ದೇಶಗಳಿಗೆ/ಸಂಶೋಧನೆಗಾಗಿ ಬಳಸಲು ಅನುಮತಿಯನ್ನು ನೀಡುತ್ತೇನೆ</p>`;
+    }
+    else if (['DP Road', 'Baner', 'Tilak Road', 'Salunkhe-Vihar', 'Pimpri-Chinchwad', 'Chakan', 'Dighi', 'Katraj', 'Navi-Mumbai', 'Kemps-Corner', 'Andheri', 'Thane', 'Kolhapur', 'Latur', 'Nashik', 'Undri', 'Hinjewadi', 'Vashi'].includes(location)) {
+      regionalConsent = `<p>मी खाली सही करणारा रुग्ण / रुग्णाचा जबाबदार पालक/ नातेवाईक ..........................................................................................................<br> हीलींग हॅन्डस् क्लिनीक येथिल चिकिसक शल्यविशाराद व वैधकीय कर्मचारी याना बाहय रुग्ण म्हणून सदर रुग्णाच्या हितासाठी / आरोग्यासाठी आवश्यक त्या सर्व नैदानिक तपासण्या परीक्षणे, वैद्यकीय औषधोपचार व लघुशस्त्रक्रिया करण्यास परवानगी देतो. मला हीलींग हॅन्डस क्लिनीकची सर्व धोरणे ज्ञात सून मी त्याचे पालन करण्यास तयार आहे. मी खाली सही करणार अशी ही संमती देतो की मला तपासणीच्या वेळेतील बदल किंवा फेरतपासणीबाबतच्या वेळेतील व इतर अन्य बदल कळविण्याकरीता केलेल्या दूरध्वनी संपर्कबद्दल मला आक्षेप असणार नाही. मी, क्लिनिक व डॉक्टर यांना माझ्या / त्याच्या/ तिच्या वैदयकिय समस्थाची आपआपसांत चर्चा करण्याची परवानगी देत आहे तसेच यांची गोपनियता राखण्यात येईल याची मला माहीती दिलेली आहे. मी खाली सही करणारा/करणारी, माझ्या उपचाराच्या दरम्यान प्राप्त झालेली / सापडलेली कोणत्याही प्रकारच्या माहितीचे उपयोग भविष्यकालीन अभ्यासासाठी / संशोधनासाठी करण्याची परवानगी देत आहे.</p>`;
+      regionalPatientNameLabel = `<p><b>Patients Name (रुग्णाचे नाव):</b>:</p>`;
+      regionalPatientSignature = `<p><b>Patients Signature:<br>(रुग्णाची सही)</b></p>`;
+      regionalWitnessSignature = `<p><b>Witness Signature:<br>(साक्षीदाराची सही)</b></p>`;
+      regionalTimeDate = `Time & Date:<br>(वेळ व दिनांक)`;
     }
     else {
-      consentText.english = `I, the undersigned patient or responsible relative ....................................................................................................................................<br> hereby give consent and authority to Healing Hands Clinic physicians, surgeons and medical person administer and perform medical examinations, investigations, medical treatments and out-patient procedure during the course of the medical care as an out-patient, as deemed advisable or necessary.<br>
-      I understand and accept Healing Hands Clinic policies and agree to abide by them. I also give consent to the clinic for contacting me/him/her by telephone if needed regarding appointments and follow-ups.| allow the clinic and the doctors to discuss about my/his/her medical issues amongst themselves knowing that privacy will be maintained. <br>
-      I undersigned, give permission for using any observed/discussed/new information found during my consultation/treatment to be used for study purposes/research in future.`;
-      
-      consentText.regional = `मैं, निम्नलिखित मरीज या जिम्मेदार रिश्तेदार ..........................................................................................................<br> यहाँ इलाज के दौरान चिकित्सक, सर्जन और चिकित्सा व्यक्तियों को अनुमति और अधिकार देता हूँ कि वे चिकित्सा परीक्षण, जांच, चिकित्सा उपचार और बाह्य दूरस्थ प्रक्रिया कार्यान्वित करें, जो उपयुक्त या आवश्यक माने जाते हैं।<br>मैं हीलिंग हैंड्स क्लिनिक की नीतियों को समझता और स्वीकार करता हूँ और उनका पालन करने के लिए सहमत हूँ। मैं यह भी स्वीकार करता हूँ कि क्लिनिक को मुझसे / उससे फोन पर संपर्क करने की अनुमति है यदि अपॉइंटमेंट और फॉलो-अप के संबंध में जरूरत हो। मैं क्लिनिक और डॉक्टरों को यहाँ बताए गए चिकित्सा मुद्दों के बारे में चर्चा करने की अनुमति देता हूँ, जानते हुए कि गोपनीयता का पालन किया जाएगा।<br>मैं, नीचे लिखे गए, अपनी परमिशन देता हूँ कि मेरी परामर्श / उपचार के दौरान किसी भी देखी गई / चर्चित / नई जानकारी का भविष्य में अध्ययन के उद्देश्यों / अनुसंधान के लिए उपयोग किया जा सकता है।`;
-      
-      consentText.patientNameLabel = "Patients Name :";
-      consentText.patientSignatureLabel = "Patients Signature:";
-      consentText.witnessSignatureLabel = "Witness Signature:";
-      consentText.timeDateLabel = "Time Date :";
+      regionalConsent = `<p>मैं, निम्नलिखित मरीज या जिम्मेदार रिश्तेदार ..........................................................................................................<br> यहाँ इलाज के दौरान चिकित्सक, सर्जन और चिकित्सा व्यक्तियों को अनुमति और अधिकार देता हूँ कि वे चिकित्सा परीक्षण, जांच, चिकित्सा उपचार और बाह्य दूरस्थ प्रक्रिया कार्यान्वित करें, जो उपयुक्त या आवश्यक माने जाते हैं।<br>मैं हीलिंग हैंड्स क्लिनिक की नीतियों को समझता और स्वीकार करता हूँ और उनका पालन करने के लिए सहमत हूँ। मैं यह भी स्वीकार करता हूँ कि क्लिनिक को मुझसे / उससे फोन पर संपर्क करने की अनुमति है यदि अपॉइंटमेंट और फॉलो-अप के संबंध में जरूरत हो। मैं क्लिनिक और डॉक्टरों को यहाँ बताए गए चिकित्सा मुद्दों के बारे में चर्चा करने की अनुमति देता हूँ, जानते हुए कि गोपनीयता का पालन किया जाएगा।<br>मैं, नीचे लिखे गए, अपनी परमिशन देता हूँ कि मेरी परामर्श / उपचार के दौरान किसी भी देखी गई / चर्चित / नई जानकारी का भविष्य में अध्ययन के उद्देश्यों / अनुसंधान के लिए उपयोग किया जा सकता है।</p>`;
     }
 
-    // Get current date
-    const today = new Date();
-    const formattedDate = today.toISOString().split('T')[0];
-    
-    // Format patient name with prefix
-    const patientName = patient.prefix ? `${patient.prefix}. ${patient.name}` : patient.name;
-    
-    // Add VIP icon if patient is VIP
-    const vipIcon = patient.patient_type == 1 ? '<img src="uploads/vip.png" style="width: 20px; height: 20px; margin-left: 5px;">' : '';
-    
-    // Get reference details
-    let referenceText = "";
-    if (patient.reference_type === 'dr_ref') {
-      referenceText = `Doctor Ref : ${patient.ref_doctor_name || ''}, ${patient.ref_doctor_phone || ''}`;
-    } else if (patient.reference_type === 'old_ref') {
-      const oldPatient = patient.ref ? patient.ref.split(",") : [];
-      referenceText = `Old Patient Ref : ${oldPatient[1] || ''}, ${oldPatient[0] || ''}`;
-    } else {
-      referenceText = patient.reference_type ? 
-        (patient.reference_type.charAt(0).toUpperCase() + patient.reference_type.slice(1).replace(/_/g, ' ')) + 
-        (patient.ref ? ` (${patient.ref})` : '') : 
-        '';
-    }
+    const patientName = `${patient.prefix ? patient.prefix + '.' : ''}${patient.name || ''}`;
+    const today = new Date().toISOString().split('T')[0];
 
-    const printContent = `
-      <html>
-        <head>
-          <title>Registration Form</title>
-          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-          <style>
-            body, table, tr, td, p {
-              font-size: 11px !important;
-              text-align: justify;
-              font-family: Arial, sans-serif;
-              margin: 0;
-              padding: 0;
-            }
-            
-            .sidebar-background, .primary-sidebar, .area-top, .navbar {
-              display: none;
-            }
-            
-            .main-content {
-              margin-left: 0px;
-            }
-            
-            .HHClogo {
-              width: 50%;
-            }
-            
-            .bgdiv {
-              padding: 10px;
-            }
-            
-            h1 {
-              font-size: 22px;
-              text-align: right;
-              color: #4b897e;
-              font-weight: 600;
-              margin: 0;
-            }
-            
-            h2 {
-              font-size: 18px;
-              text-align: right;
-              color: #4b897e;
-              font-weight: 600;
-              margin: 0;
-            }
-            
-            hr {
-              margin: 10px 0;
-              border: 0;
-              border-top: 1px solid rgb(75, 137, 126);
-              border-bottom: 1px solid rgb(75, 137, 126);
-            }
-            
-            table {
-              width: 100%;
-              border-collapse: collapse;
-            }
-            
-            td {
-              vertical-align: top;
-              padding: 5px;
-            }
-            
-            b {
-              font-weight: bold;
-            }
-            
-            .print-btn {
-              display: none;
-            }
-            
-            @media print {
-              body {
-                font-size: 11px !important;
-              }
-              .print-btn {
-                display: none !important;
-              }
-            }
+    printWindow.document.write(`
+    <html>
+      <head>
+        <title>Print Registration Form</title>
+        <style>
+.vip-logo-img {
+    width: 20px; 
+    height: auto;
+    vertical-align: middle;
+    margin-bottom:1.5px;
+}
+          body, table, tr, td, p { font-size: 11px !important; text-align: justify; font-family: Arial, sans-serif; }
+          .HHClogo { width: 50%; }
+          .bgdiv { padding: 10px; }
+          h1 { font-size: 22px; text-align: right; color: #509286; font-weight: 600; margin: 0; }
+          h2 { font-size: 18px; text-align: right; color: #509286; font-weight: 600; margin: 0; }
+          hr { margin: 10px 0; border: 0; border-top: 1px solid rgb(75,137,126); border-bottom: 1px solid rgb(75,137,126); }
+          @media print {
+  .no-print {
+    display: none !important;
+  }
+}
+.print-btn-container {
+  text-align: center;
+  padding: 20px;
+}
+.actual-print-button {
+  padding: 10px 10px;
+  background-color: #427269;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+}
           </style>
-        </head>
-        <body>
-          <div class="bgdiv">
-            <table width='100%' border='0'>
-              <tbody>
-                <tr>
-                  <td style="width:50%;">
-                    <img src='${mainLogo}' class="HHClogo" alt="Healing Hands Clinic">
-                  </td>
-                  <td style="width:50%;">
-                    <h1>Registration Form</h1>
-                    <b>Date: </b>${formattedDate}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            <br><br>
-            
-            <table width='100%' border='0'>
-              <tbody>
-                <tr>
-                  <td style="width:50%;">
-                    <p><b>UID No :- </b>${patient.Uid_no || ''}</p>
-                    <p><b>NAME :- </b>${patientName}${vipIcon}</p>
-                    <p><b>GENDER :- </b>${patient.sex || ''}</p>
-                    <p><b>Address :- </b>${patient.address || ''}</p>  
-                    <p><b>Mobile No. :- </b>${patient.phone || ''}</p>
-                    <p><b>Email :- </b>${patient.email || ''}</p>
-                    <p><b>Reffered By :- </b>${referenceText}</p>
-                  </td>
-                  <td style="width:50%;">
-                    <p><b>D.O.B :- </b>${patient.birth_date || ''}</p>
-                    <p><b>Age :- </b>${patient.age || calculateAge(patient.birth_date) || ''}</p>
-                    <p><b>Mobile No. :-</b>${patient.mobile_2 || ''}</p>
-                    <p><b>Occupation :- </b>${patient.occupation || ''}</p>
-                    ${patient.companyname ? `<p><b>Company Name :- </b>${patient.companyname}</p>` : ''}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            
-            <hr>
-            
-            <table width='100%' border='0'>
-              <tbody>
-                <tr>
-                  <td style="width:100%;">
-                    <h2>OPD CONSENT FORM</h2>
-                  </td>                        
-                </tr>
-                <tr>
-                  <td style="width:100%;">
-                    <p>${consentText.english}</p>
-                    <p>${consentText.regional}</p>                  
-                  </td>                        
-                </tr>
-              </tbody>
-            </table>
-            <br>
-            
-            <table width='100%' border='0'>
-              <tbody>
-                <tr>
-                  <td style="width:100%;">
-                    <p><b>${consentText.patientNameLabel}</b></p>
-                  </td>
-                </tr>                
-              </tbody>
-            </table>
-            <br>
-            
-            <table width='100%' border='0'>
-              <tbody>                
-                <tr>
-                  <td style="width:60%;">
-                    <p><b>${consentText.patientSignatureLabel}</b></p>
-                  </td>
-                  <td style="width:40%;">
-                    <p><b>${consentText.witnessSignatureLabel}</b></p>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="width:60%;">
-                    ${consentText.timeDateLabel}
-                  </td>
-                  <td style="width:40%;">
-                    ${consentText.timeDateLabel}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          
-          <button class="print-btn" onclick="window.print()">Print</button>
-          
-          <script>
-            window.onload = function() {
-              window.print();
-            };
-          </script>
-        </body>
-      </html>
-    `;
-
-    printWindow.document.write(printContent);
+      </head>
+      <body>
+        <div class="bgdiv">
+          <table width="100%" border="0">
+            <tr>
+              <td style="width:50%;"><img src="${logo}" class="HHClogo"></td>
+              <td style="width:50%;">
+                <h1>Registration Form</h1>
+                <p style="text-align:right"><b>Date:</b> ${today}</p>
+              </td>
+            </tr>
+          </table>
+          <br><br>
+          <table width="100%" border="0">
+            <tr>
+  <td style="width:50%; vertical-align: top; line-height: 1.3;">
+    <p><b>UID No :-</b>&nbsp;&nbsp;${patient.Uid_no || '-'}</p>
+    <p style="margin:0;"><b>Name :-</b>&nbsp;&nbsp;${patientName} ${vipIcon}</p>
+    <p><b>Gender :-</b>&nbsp;&nbsp;${patient.sex || '-'}</p>
+    <p><b>Address :-</b>&nbsp;&nbsp;${patient.address || '-'}</p>
+    <p><b>Contact No :-</b>&nbsp;&nbsp;${patient.phone || '-'}</p>
+    <p><b>Alternate Contact No :-</b>&nbsp;&nbsp;${patient.mobile_2 || '-'}</p>
+  </td>
+  <td style="width:50%; vertical-align: top; line-height: 1.3;">
+ <p><b>D.O.B :-</b>&nbsp;&nbsp;${patient.birth_date || '-'}</p>
+    <p><b>Age :-</b>&nbsp;&nbsp;${patient.age || '-'}</p>
+    <p><b>Email :-</b>&nbsp;&nbsp;${patient.email || '-'}</p>
+    <p><b>Occupation :-</b>&nbsp;&nbsp;${patient.occupation || '-'}</p>
+    ${patient.companyname ? `<p><b>Company Name :-</b>&nbsp;&nbsp;${patient.companyname}</p>` : ''}
+    ${patient.ref ? `<p><b>Reference :-</b>&nbsp;&nbsp;${patient.ref}</p>` : ''}
+  </td>
+</tr>
+          </table>
+          <hr>
+          <table width="100%" border="0">
+            <tr><td><h2 style="margin-top:10px;">OPD CONSENT FORM</h2></td></tr>
+            <tr>
+              <td>
+                <p style="margin-top:15px; line-height: 1.3;">I, the undersigned patient or responsible relative ....................................................................................................................................<br> hereby give consent and authority to Healing Hands Clinic physicians, surgeons and medical person administer and perform medical examinations, investigations, medical treatments and out-patient procedure during the course of the medical care as an out-patient, as deemed advisable or necessary.<br>
+                I understand and accept Healing Hands Clinic policies and agree to abide by them. I also give consent to the clinic for contacting me/him/her by telephone if needed regarding appointments and follow-ups.| allow the clinic and the doctors to discuss about my/his/her medical issues amongst themselves knowing that privacy will be maintained. <br>
+                I undersigned, give permission for using any observed/discussed/new information found during my consultation/treatment to be used for study purposes/research in future.</p>
+                ${regionalConsent}
+              </td>
+            </tr>
+          </table>
+          <br>
+          <table width="100%" border="0" >
+            <tr ><td>${regionalPatientNameLabel}</td></tr>
+          </table>
+          <br>
+          <table width="100%" border="0">
+            <tr>
+              <td style="width:60%;">${regionalPatientSignature}</td>
+              <td style="width:40%;">${regionalWitnessSignature}</td>
+            </tr>
+            <tr>
+              <td style="width:60%;">${regionalTimeDate}</td>
+              <td style="width:40%;">${regionalTimeDate}</td>
+            </tr>
+          </table>
+        </div>
+        <div class="print-btn-container no-print">
+  <button class="actual-print-button" onclick="window.print()">Print</button>
+</div>
+        <script>
+         window.onload = function() {
+  };
+        </script>
+      </body>
+    </html>
+  `);
     printWindow.document.close();
-
-    // Auto-print after a short delay
-    setTimeout(() => {
-      printWindow.print();
-    }, 500);
-  });
-};
+  };
 
   const actionBodyTemplate = (patient) => (
     <div className="d-flex align-items-center justify-content-center">
@@ -1462,7 +1118,6 @@ export default function All_patient() {
   );
 
   const renderReferenceDetails = () => {
-    // switch (selectedReference) {
     switch (formData.reference_type) {
       case "newspaper":
         return (
@@ -1481,7 +1136,6 @@ export default function All_patient() {
             <div
               className="controls"
               style={{
-                //  display: "flex",
                 alignItems: "center",
                 gap: "10px",
                 flexWrap: "wrap",
@@ -1522,7 +1176,6 @@ export default function All_patient() {
                             reference_type: "newspaper",
                           }));
                         }}
-                        // checked={referenceDetails.newspaper === paper}
                         checked={formData.ref === paper}
                         style={{ marginRight: "5px" }}
                       />
@@ -1532,7 +1185,7 @@ export default function All_patient() {
                 )}
               </ul>
               <input
-                style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
                 className="form-control"
                 type="text"
                 name="Other_Newspaper"
@@ -1566,7 +1219,7 @@ export default function All_patient() {
                 className="form-control"
                 type="text"
                 placeholder="Friend Name"
-                style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
                 value={referenceDetails.friendname || ""}
                 onChange={(e) => {
                   const name = e.target.value;
@@ -1582,7 +1235,7 @@ export default function All_patient() {
                 className="form-control"
                 type="text"
                 placeholder="Friend Number"
-                style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
                 value={referenceDetails.friendno || ""}
                 onChange={(e) => {
                   const no = e.target.value;
@@ -1646,7 +1299,7 @@ export default function All_patient() {
                   flex: "1",
                   minWidth: "200px",
                   border: "2px solid rgb(77, 208, 225)",
-                  fontSize: "12px"
+                  fontSize: "12px", borderRadius: "10px"
                 }}
               />
 
@@ -1720,7 +1373,7 @@ export default function All_patient() {
                   flex: "1",
                   minWidth: "200px",
                   border: "2px solid rgb(77, 208, 225)",
-                  fontSize: "12px"
+                  fontSize: "12px", borderRadius: "10px"
                 }}
               />
 
@@ -1745,7 +1398,7 @@ export default function All_patient() {
                   flex: "1",
                   minWidth: "200px",
                   border: "2px solid rgb(77, 208, 225)",
-                  fontSize: "12px"
+                  fontSize: "12px", borderRadius: "10px"
                 }}
               />
             </div>
@@ -1999,7 +1652,7 @@ export default function All_patient() {
                   flex: "1",
                   minWidth: "150px",
                   border: "2px solid rgb(77, 208, 225)",
-                  fontSize: "12px"
+                  fontSize: "12px", borderRadius: "10px"
                 }}
                 value={referenceDetails.dr_name || ""}
                 onChange={(e) => {
@@ -2019,7 +1672,7 @@ export default function All_patient() {
                   flex: "1",
                   minWidth: "150px",
                   border: "2px solid rgb(77, 208, 225)",
-                  fontSize: "12px"
+                  fontSize: "12px", borderRadius: "10px"
                 }}
                 value={referenceDetails.dr_contact || ""}
               />
@@ -2034,7 +1687,7 @@ export default function All_patient() {
                   flex: "1",
                   minWidth: "150px",
                   border: "2px solid rgb(77, 208, 225)",
-                  fontSize: "12px"
+                  fontSize: "12px", borderRadius: "10px"
                 }}
                 value={referenceDetails.dr_specialty || ""}
               />
@@ -2049,7 +1702,7 @@ export default function All_patient() {
                   flex: "1",
                   minWidth: "150px",
                   border: "2px solid rgb(77, 208, 225)",
-                  fontSize: "12px"
+                  fontSize: "12px", borderRadius: "10px"
                 }}
                 value={referenceDetails.dr_location || ""}
               />
@@ -2071,13 +1724,11 @@ export default function All_patient() {
                     name="hhc_board_radio"
                     value="HHC Board"
                     onChange={(e) => {
-                      // This updates the main form data for submission
                       setFormData((prev) => ({
                         ...prev,
                         ref: e.target.value,
                         reference_type: "hhc_board",
                       }));
-                      // This ensures the radio stays "checked" visually
                       setReferenceDetails((prev) => ({
                         ...prev,
                         HHC_board: e.target.value,
@@ -2136,7 +1787,7 @@ export default function All_patient() {
                 type="text"
                 name="other_detail"
                 placeholder="Enter other details"
-                style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px" }}
+                style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
                 value={referenceDetails.other || ""}
                 onChange={(e) => {
                   const val = e.target.value;
@@ -2200,11 +1851,9 @@ export default function All_patient() {
                 placeholder="Other"
                 style={{
                   border: "2px solid rgb(77, 208, 225)",
-                  fontSize: "12px",
+                  fontSize: "12px", borderRadius: "10px"
                 }}
-                // Ensure value is controlled by referenceDetails or formData
                 value={referenceDetails.awareness_lecture || ""}
-                // Added onChange to make it writeable
                 onChange={(e) => {
                   const val = e.target.value;
                   setReferenceDetails((prev) => ({
@@ -2302,6 +1951,7 @@ export default function All_patient() {
                 style={{
                   border: "2px solid rgb(77, 208, 225)",
                   fontSize: "12px",
+                  borderRadius: "10px"
                 }}
                 value={referenceDetails.hhc_branch || ""}
                 onChange={(e) => {
@@ -2367,19 +2017,16 @@ export default function All_patient() {
                       value={aggregator}
                       onChange={(e) => {
                         const val = e.target.value;
-                        // Updates local reference state
                         setReferenceDetails((prev) => ({
                           ...prev,
                           aggregators: val,
                         }));
-                        // Updates main form data for the API request
                         setFormData((prev) => ({
                           ...prev,
                           ref: val,
                           reference_type: "aggregators",
                         }));
                       }}
-                      // Ensures the radio button shows as selected
                       checked={formData.ref === aggregator}
                       style={{ marginRight: "1px" }}
                     />
@@ -2632,47 +2279,14 @@ export default function All_patient() {
     }));
   };
 
-  // const generateTimeSlots = () => {
-  //   const slots = [];
-  //   const startTime = new Date();
-  //   const endTime = new Date();
-  //   endTime.setHours(23, 45, 0);
-
-  //   const isToday = formData.date === new Date().toISOString().split("T")[0];
-
-  //   if (isToday) {
-  //     startTime.setHours(
-  //       new Date().getHours(),
-  //       Math.ceil(new Date().getMinutes() / 15) * 15,
-  //       0
-  //     );
-  //   } else {
-  //     startTime.setHours(7, 0, 0);
-  //   }
-
-  //   while (startTime <= endTime) {
-  //     const timeString = startTime.toLocaleTimeString("en-US", {
-  //       hour: "2-digit",
-  //       minute: "2-digit",
-  //       hour12: true,
-  //     });
-  //     slots.push(timeString);
-  //     startTime.setMinutes(startTime.getMinutes() + 15);
-  //   }
-
-  //   return slots;
-  // };
-
-  // const timeSlots = generateTimeSlots();
-
   const generateTimeSlots = () => {
     const slots = [];
-    let start = moment("07:00", "HH:mm"); // Start Time
-    const end = moment("23:45", "HH:mm");   // End Time
+    let start = moment("07:00", "HH:mm");
+    const end = moment("23:45", "HH:mm");
 
     while (start <= end) {
       slots.push(start.format("hh:mm A"));
-      start.add(15, "minutes"); // Change interval as needed
+      start.add(15, "minutes");
     }
     return slots;
   };
@@ -2785,11 +2399,11 @@ export default function All_patient() {
             Add Appointment
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body style={{ fontSize: "13px", padding: "15px" }}>
+        <Modal.Body style={{ fontSize: "13px", padding: "10px" }}>
           <Form>
             <Row>
               <Col md={6}>
-                <Form.Group className="mb-2">
+                <Form.Group>
                   <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
                     Appointment Date <span style={{ color: "red" }}>*</span>
                   </Form.Label>
@@ -2802,23 +2416,26 @@ export default function All_patient() {
                       }))
                     }
                     dateFormat="dd-MM-yyyy"
+                    required
                     className="form-control form-control-sm"
                     placeholderText="Select Date"
                     minDate={new Date()}
                     customInput={
                       <Form.Control
                         size="sm"
-                        style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
+                        style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "11px", borderRadius: "10px" }}
                       />
                     }
                   />
                 </Form.Group>
               </Col>
+
               <Col md={6}>
-                <Form.Group className="mb-3">
+                <Form.Group>
                   <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
                     Appointment Time <span style={{ color: "red" }}>*</span></Form.Label>
                   <Form.Select
+                    required
                     name="appointmentTime"
                     value={formData.appointmentTime}
                     onChange={handleInputChange}
@@ -2837,24 +2454,46 @@ export default function All_patient() {
 
             <Row>
               <Col md={6}>
-                <Form.Group className="mb-2">
+                <Form.Group controlId="patient_type">
+                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>Patient Type</Form.Label>
+                  <Form.Select
+                    name="patient_type"
+                    value={formData.patient_type}
+                    onChange={handleInputChange}
+                    required
+                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
+                  >
+                    <option value="">Select Patient Type</option>
+                    <option value="FOLLOW-UP">FOLLOW-UP</option>
+                    <option value="POST-OPERATIVE">POST-OPERATIVE</option>
+                    <option value="OTHER">OTHER</option>
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+
+              <Col md={6}>
+                <Form.Group >
                   <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
                     Patient Name <span style={{ color: "red" }}>*</span>
                   </Form.Label>
                   <Form.Control
                     size="sm"
                     type="text"
-                    name="patientName" // Match the key in your formData state
-                    value={formData.patientName}
+                    name="patientName"
+                    value={formData.name}
                     onChange={handleInputChange}
+                    readOnly
                     placeholder="Enter Patient Name"
-                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
+                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "11px", borderRadius: "10px", cursor: "not-allowed", backgroundColor: "#e7ebebff", }}
                     required
                   />
                 </Form.Group>
               </Col>
+            </Row>
+
+            <Row>
               <Col md={6}>
-                <Form.Group className="mb-2">
+                <Form.Group >
                   <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
                     Contact Number <span style={{ color: "red" }}>*</span>
                   </Form.Label>
@@ -2866,18 +2505,16 @@ export default function All_patient() {
                     readOnly
                     style={{
                       border: "2px solid rgb(77, 208, 225)",
-                      backgroundColor: "#f8f9fa",
+                      backgroundColor: "#e7ebebff",
                       cursor: "not-allowed",
-                      fontSize: "12px", borderRadius: "10px"
+                      fontSize: "11px", borderRadius: "10px"
                     }}
                   />
                 </Form.Group>
               </Col>
-            </Row>
 
-            <Row>
               <Col md={6}>
-                <Form.Group className="mb-2">
+                <Form.Group>
                   <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
                     Doctor Name <span style={{ color: "red" }}>*</span>
                   </Form.Label>
@@ -2898,14 +2535,17 @@ export default function All_patient() {
                   </Form.Select>
                 </Form.Group>
               </Col>
+            </Row>
+
+            <Row>
               <Col md={6}>
-                <Form.Group className="mb-2">
+                <Form.Group >
                   <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
                     FDE Name <span style={{ color: "red" }}>*</span>
                   </Form.Label>
                   <Form.Select
                     size="sm"
-                    name="FDE_Name" // Match your handleInputChange logic
+                    name="FDE_Name"
                     value={formData.FDE_Name}
                     onChange={handleInputChange}
                     style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
@@ -2920,11 +2560,9 @@ export default function All_patient() {
                   </Form.Select>
                 </Form.Group>
               </Col>
-            </Row>
 
-            <Row>
               <Col md={6}>
-                <Form.Group className="mb-3">
+                <Form.Group>
                   <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>Note</Form.Label>
                   <Form.Control
                     size="sm"
@@ -2990,9 +2628,8 @@ export default function All_patient() {
           </Modal.Title>
         </Modal.Header>
 
-        <Modal.Body style={{ backgroundColor: "#f8fbfc", fontSize: "13px", }}>
+        <Modal.Body style={{ backgroundColor: "#f8fbfc", fontSize: "13px", padding: "5px" }}>
           <Form>
-            {/* SECTION 1: PRIMARY IDENTIFICATION */}
             <div
               className="p-3 mb-4 bg-white rounded shadow-sm border"
               style={{ borderLeft: "5px solid rgb(77, 208, 225)" }}
@@ -3012,7 +2649,7 @@ export default function All_patient() {
                 <Col md={3} className="mb-3">
                   <Form.Group>
                     <Form.Label className="small fw-bold mb-3" style={{ fontSize: "12px" }}>
-                      UHID No <span className="text-danger">*</span>
+                      UID No <span className="text-danger">*</span>
                     </Form.Label>
                     <Form.Control
                       type="text"
@@ -3034,6 +2671,7 @@ export default function All_patient() {
                       Prefix <span className="text-danger">*</span>
                     </Form.Label>
                     <Form.Select
+                      required
                       name="prefix"
                       value={formData.prefix || ""}
                       onChange={handleInputChange}
@@ -3055,6 +2693,7 @@ export default function All_patient() {
                     <Form.Control
                       type="text"
                       name="name"
+                      required
                       value={formData.name || ""}
                       onChange={handleInputChange}
                       placeholder="Enter Patient Name"
@@ -3080,12 +2719,16 @@ export default function All_patient() {
                       type="checkbox"
                       id="patient_type"
                       name="patient_type"
-                      checked={!!formData.patient_type}
+                      // checked={!!formData.patient_type}
+                      // onChange={(e) => {
+                      //   setFormData((prev) => ({
+                      //     ...prev,
+                      //     patient_type: e.target.checked,
+                      //   }));
+                      // }}
+                      checked={formData.patient_type === 1 || formData.patient_type === true}
                       onChange={(e) => {
-                        setFormData((prev) => ({
-                          ...prev,
-                          patient_type: e.target.checked,
-                        }));
+                        setFormData({ ...formData, patient_type: e.target.checked ? 1 : 0 });
                       }}
                       style={{
                         transform: "scale(1.4)",
@@ -3099,7 +2742,6 @@ export default function All_patient() {
               </Row>
             </div>
 
-            {/* SECTION 2: CONTACT & DEMOGRAPHICS */}
             <div className="p-3 mb-4 bg-white rounded shadow-sm border">
               <h4
                 style={{
@@ -3119,6 +2761,7 @@ export default function All_patient() {
                       Email ID <span className="text-danger">*</span>
                     </Form.Label>
                     <Form.Control
+                      required
                       type="email"
                       name="email"
                       value={formData.email || ""}
@@ -3134,6 +2777,7 @@ export default function All_patient() {
                       Gender <span className="text-danger">*</span>
                     </Form.Label>
                     <Form.Select
+                      required
                       name="sex"
                       value={formData.sex || ""}
                       onChange={handleInputChange}
@@ -3152,6 +2796,7 @@ export default function All_patient() {
                       Contact Number <span className="text-danger">*</span>
                     </Form.Label>
                     <Form.Control
+                      required
                       type="number"
                       name="phone"
                       value={formData.phone}
@@ -3176,12 +2821,38 @@ export default function All_patient() {
                     />
                   </Form.Group>
                 </Col>
-                <Col md={9} className="mb-3">
+                <Col md={3} className="mb-15">
+                  <Form.Group>
+                    <Form.Label className="small fw-bold mb-3" style={{ fontSize: "12px" }}>
+                      Nationality <span className="text-danger">*</span>
+                    </Form.Label>
+                    <Form.Select
+                      name="nationality"
+                      value={formData.nationality}
+                      onChange={handleInputChange}
+                      style={{
+                        border: "2px solid rgb(77, 208, 225)",
+                        fontSize: "12px",
+                        borderRadius: "10px"
+                      }}
+                      required
+                    >
+                      <option value="">Select Nationality</option>
+                      {countries.map((country) => (
+                        <option key={country} value={country}>
+                          {country}
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+                <Col md={7} className="mb-3">
                   <Form.Group>
                     <Form.Label className="small fw-bold mb-3" style={{ fontSize: "12px" }}>
                       Address <span className="text-danger">*</span>
                     </Form.Label>
                     <Form.Control
+                      required
                       type="text"
                       name="address"
                       value={formData.address || ""}
@@ -3191,12 +2862,13 @@ export default function All_patient() {
                     />
                   </Form.Group>
                 </Col>
-                <Col md={3} className="mb-3">
+                <Col md={2} className="mb-3">
                   <Form.Group>
                     <Form.Label className="small fw-bold mb-3" style={{ fontSize: "12px" }}>
                       Pincode <span className="text-danger">*</span>
                     </Form.Label>
                     <Form.Control
+                      required
                       type="number"
                       name="pincode"
                       value={formData.pincode || ""}
@@ -3209,7 +2881,6 @@ export default function All_patient() {
               </Row>
             </div>
 
-            {/* SECTION 3: IDENTITY & MEDICAL */}
             <div className="p-3 mb-4 bg-white rounded shadow-sm border">
               <h4
                 style={{
@@ -3241,7 +2912,7 @@ export default function All_patient() {
                       <option value="Passport No">Passport No</option>
                       <option value="Voter No">Voter No</option>
                       <option value="Pan No">PAN No</option>
-                      <option value="Pan No">DRIVING LICENCE No</option>
+                      <option value="Driving Licence No">Driving Licence No</option>
                     </Form.Select>
                   </Form.Group>
                 </Col>
@@ -3270,6 +2941,7 @@ export default function All_patient() {
                       Blood Group <span className="text-danger">*</span>
                     </Form.Label>
                     <Form.Select
+                      required
                       name="blood_group"
                       value={formData.blood_group || ""}
                       onChange={handleInputChange}
@@ -3293,6 +2965,7 @@ export default function All_patient() {
                       Birth Date <span className="text-danger">*</span>
                     </Form.Label>
                     <DatePicker
+                      required
                       selected={
                         formData?.birth_date
                           ? parseDate(formData.birth_date)
@@ -3331,7 +3004,7 @@ export default function All_patient() {
                     />
                   </Form.Group>
                 </Col>
-                <Col md={5} className="mb-3">
+                <Col md={3} className="mb-3">
                   <Form.Group>
                     <Form.Label className="small fw-bold mb-3" style={{ fontSize: "12px" }}>
                       Occupation
@@ -3346,7 +3019,7 @@ export default function All_patient() {
                     />
                   </Form.Group>
                 </Col>
-                <Col md={5} className="mb-3">
+                <Col md={4} className="mb-3">
                   <Form.Group>
                     <Form.Label className="small fw-bold mb-3" style={{ fontSize: "12px" }}>
                       Company Name
@@ -3361,10 +3034,47 @@ export default function All_patient() {
                     />
                   </Form.Group>
                 </Col>
+                <Col md={3} className="mb-3">
+                  <Form.Group>
+                    <Form.Label className="small fw-bold mb-3" style={{ fontSize: "12px" }}>
+                      Preferred Language
+                    </Form.Label>
+                    <Form.Select
+                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
+                      name="language"
+                      value={formData.language}
+                      onChange={handleInputChange}
+                    >
+                      <option value="">Select Language</option>
+                      <option value="English">English</option>
+                      <option value="Hindi">Hindi</option>
+                      <option value="Assamese">Assamese</option>
+                      <option value="Bengali">Bengali</option>
+                      <option value="Bodo">Bodo</option>
+                      <option value="Dogri">Dogri</option>
+                      <option value="Gujarati">Gujarati</option>
+                      <option value="Kannada">Kannada</option>
+                      <option value="Kashmiri">Kashmiri</option>
+                      <option value="Konkani">Konkani</option>
+                      <option value="Maithili">Maithili</option>
+                      <option value="Malayalam">Malayalam</option>
+                      <option value="Manipuri">Manipuri</option>
+                      <option value="Marathi">Marathi</option>
+                      <option value="Nepali">Nepali</option>
+                      <option value="Odia">Odia</option>
+                      <option value="Punjabi">Punjabi</option>
+                      <option value="Sanskrit">Sanskrit</option>
+                      <option value="Santali">Santali</option>
+                      <option value="Sindhi">Sindhi</option>
+                      <option value="Tamil">Tamil</option>
+                      <option value="Telugu">Telugu</option>
+                      <option value="Urdu">Urdu</option>
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
               </Row>
             </div>
 
-            {/* SECTION 4: WORK PATTERN & REFERENCE */}
             <div className="p-3 bg-white rounded shadow-sm border">
               <h4
                 style={{
@@ -3469,7 +3179,7 @@ export default function All_patient() {
           </Form>
         </Modal.Body>
 
-        <Modal.Footer style={{ backgroundColor: "#f1f4f6" }}>
+        <Modal.Footer style={{ backgroundColor: "#f1f4f6", padding: "5px" }}>
           <Button
             variant="info"
             className="px-3"
@@ -3583,12 +3293,7 @@ export default function All_patient() {
                       globalFilterFields={[
                         "Uid_no",
                         "name",
-                        "date",
-                        "age",
-                        "sex",
                         "phone",
-                        "email",
-                        "status",
                       ]}
                       paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
                       currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
@@ -3620,7 +3325,7 @@ export default function All_patient() {
                       />
                       <Column
                         field="Uid_no"
-                        header="UHID No"
+                        header="UID No"
                         body={(rowData) =>
                           rowData.Uid_no ? rowData.Uid_no : "-"
                         }

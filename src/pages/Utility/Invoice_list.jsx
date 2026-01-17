@@ -163,7 +163,8 @@ const InvoiceList = () => {
     payableAmount: "0.00",
   });
   const [filters1, setFilters1] = useState({
-    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    // global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    global: { value: null, matchMode: FilterMatchMode.EQUALS }
   });
 
   useEffect(() => {
@@ -414,6 +415,30 @@ const InvoiceList = () => {
     setError("");
   };
 
+  // const handleEditInvoice = (invoice) => {
+  //   const { dynamicRows, Sub_Total } = getDynamicRowsFromInvoice(invoice);
+
+  //   const displayRows =
+  //     dynamicRows.length > 0
+  //       ? dynamicRows
+  //       : [{ label: "", value: "", field: "" }];
+
+  //   const payableAmount = calculatePayableAmt(invoice);
+
+  //   setSelectedInvoice(invoice);
+  //   setModalInvoiceData({
+  //     dynamicRows: displayRows,
+  //     Sub_Total: Sub_Total,
+  //     discount: invoice.discount || "0.00",
+  //     pdc: parseFloat(invoice.pdc) || "0.00",
+  //     payableAmount: payableAmount,
+  //     bill_method: invoice.bill_method || "non_insurance",
+  //     bill_Type: invoice.bill_Type || "non_insurance",
+  //   });
+
+  //   setShowModal(true);
+  // };
+
   const handleEditInvoice = (invoice) => {
     const { dynamicRows, Sub_Total } = getDynamicRowsFromInvoice(invoice);
 
@@ -424,7 +449,29 @@ const InvoiceList = () => {
 
     const payableAmount = calculatePayableAmt(invoice);
 
-    setSelectedInvoice(invoice);
+    /**
+     * Helper to format dates specifically for <input type="date">
+     * Requires YYYY-MM-DD format
+     */
+    const formatForInput = (dateValue) => {
+      if (!dateValue) return "";
+      const date = new Date(dateValue);
+      // Ensure it's a valid date before formatting
+      if (isNaN(date.getTime())) return "";
+
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    setSelectedInvoice({
+      ...invoice,
+      // Explicitly format these for the modal inputs
+      creation_date: formatForInput(invoice.creation_date),
+      due_date: formatForInput(invoice.due_date)
+    });
+
     setModalInvoiceData({
       dynamicRows: displayRows,
       Sub_Total: Sub_Total,
@@ -596,7 +643,7 @@ const InvoiceList = () => {
           color: #000;
         }
 
-.page-border {
+        .page-border {
           border: 1px solid #000; /* Solid border like the image */
           padding: 20px;
           margin: 0 auto;
@@ -607,9 +654,9 @@ const InvoiceList = () => {
         }
         
         .header-table { 
-  width: auto; 
-  margin-bottom: 20px; 
-}
+         width: auto; 
+         margin-bottom: 20px; 
+        }
 
 .header-logo { 
   padding-right: 15px; 
@@ -632,13 +679,13 @@ const InvoiceList = () => {
 }
   
         .details-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-        .details-table td { padding: 6px 10px; width: 25%; vertical-align: top; border-bottom: 0.5px solid #f2f2f2; }
-        .details-table td:nth-child(odd) { font-weight: normal; color: #000000; } 
+        .details-table td { padding: 6px 10px; width: 25%; vertical-align: top; }
+        .details-table td:nth-child(odd) { font-weight: normal; color: #000000; font-weight: bold } 
         .details-table td:nth-child(even) { font-weight: 500; }
   
         .bill-title { text-align: center; font-weight: 700; padding: 10px 0; font-size: 12px !important; }
   
-        .section-header-table { width: 100%; margin-top: 5px; }
+        .section-header-table { width: 100%; margin-top: 5px; margin-bottom: 10px }
         .section-header-table td { width: 50%; text-align: center; font-weight: bold; }
   
         .summary-container-table { width: 100%; border-collapse: collapse; }
@@ -649,7 +696,7 @@ const InvoiceList = () => {
         .itemized-table td { width: 50%; display: inline-block; padding: 4px 0; border-bottom: 1px solid #eee; }
         .itemized-table td:nth-child(even) { text-align: right; }
   
-        .total-row-container { width: 100%; border: 1px solid #000; margin-top: 10px; border-collapse: collapse; }
+        .total-row-container { width: 100%; border: 2px solid #000; margin-top: 10px; border-collapse: collapse; }
         .total-row-container td { padding: 8px 10px; }
   
         .footer { margin-top: 20px; border-top: 1px solid #4b897e; padding-top: 5px; }
@@ -705,7 +752,7 @@ const InvoiceList = () => {
       </table>
   
       <div class="bill-title">FINAL BILL</div>
-      <hr style="margin: 5px 0;">
+      <hr style="margin: 5px 0; border-top: 3px solid #4b897e; margin-bottom:5px">
   
       <table class="section-header-table">
         <tr>
@@ -718,7 +765,10 @@ const InvoiceList = () => {
         <tr>
           <td style="width: 50%; vertical-align: top; border-right: 1px solid #eee;">
             <table class="itemized-table">
-              <tr><td style="font-weight:normal; color:#555;">Items/Services</td><td style="font-weight:normal; color:#555; text-align:right;">Amount (INR)</td></tr>
+              <tr>
+              <td style="font-weight:bold; color:#000;">Items/Services</td>
+              <td style="font-weight:bold; color:#000; text-align:right;">Amount (INR)</td>
+              </tr>
               ${dynamicRows.map(row => `
                 <tr>
                   <td>${row.label}</td>
@@ -729,11 +779,11 @@ const InvoiceList = () => {
           </td>
           <td style="width: 50%; vertical-align: top; padding-left: 10px;">
             <table width="100%">
-              <tr><td style="font-weight:normal; color:#555;">Heading</td><td style="font-weight:normal; color:#555; text-align:right;">Amount (INR)</td></tr>
+              <tr><td style="font-weight:bold; color:#000;">Heading</td><td style="font-weight:bold; color:#000; text-align:right;">Amount (INR)</td></tr>
               <tr>
-                <td style="padding-top:5px;">Total ${invoice.discount > 0 ? '<br>Discount' : ''}</td>
+                <td style="padding-top:5px;">Total<br> ${invoice.discount > 0 ? '<br>Discount' : ''}</td>
                 <td style="text-align:right; padding-top:5px;">
-                  ${parseFloat(invoice.totalamt).toLocaleString()}.00
+                  ${parseFloat(invoice.totalamt).toLocaleString()}.00 <br>
                   ${invoice.discount > 0 ? '<br>' + parseFloat(invoice.discount).toLocaleString() + '.00' : ''}
                 </td>
               </tr>
@@ -1041,7 +1091,7 @@ const InvoiceList = () => {
                         <div className="d-flex justify-content-center gap-2">
                           <Button
                             style={{
-                              borderRadius: "6px",
+                              borderRadius: "8px",
                               padding: "7px 11px",
                               fontSize: "14px",
                               alignItems: "center",
@@ -1055,7 +1105,7 @@ const InvoiceList = () => {
                           <Button
                             style={{
                               variant: "primary",
-                              borderRadius: "6px",
+                              borderRadius: "8px",
                               padding: "7px 11px",
                               fontSize: "14px",
                               alignItems: "center",
@@ -1170,6 +1220,7 @@ const InvoiceList = () => {
                         Admission Date <span style={{ color: "red" }} className="required">*</span>
                       </Form.Label>
                       <Form.Control
+                        required
                         size="sm"
                         type="date"
                         style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
@@ -1181,19 +1232,35 @@ const InvoiceList = () => {
                       <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
                         Admission Time <span style={{ color: "red" }} className="required">*</span>
                       </Form.Label>
-                      <Form.Control
+                      <Form.Select
+                        required
                         size="sm"
-                        type="time"
                         style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                         value={selectedInvoice.admissiontime}
                         onChange={(e) => setSelectedInvoice({ ...selectedInvoice, admissiontime: e.target.value })}
-                      />
+                      >
+                        <option value="">Select Time</option>
+                        {timeOptions.map((time) => {
+                          const [hour, minute] = time.split(':');
+                          const h = parseInt(hour);
+                          const ampm = h >= 12 ? 'PM' : 'AM';
+                          const displayHour = h % 12 || 12;
+                          const displayTime = `${displayHour}:${minute} ${ampm}`;
+
+                          return (
+                            <option key={time} value={time}>
+                              {displayTime}
+                            </option>
+                          );
+                        })}
+                      </Form.Select>
                     </Col>
                     <Col md={3}>
                       <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
                         Discharge Date <span style={{ color: "red" }} className="required">*</span>
                       </Form.Label>
                       <Form.Control
+                        required
                         size="sm"
                         type="date"
                         style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
@@ -1207,6 +1274,7 @@ const InvoiceList = () => {
                         Discharge Time <span style={{ color: "red" }} className="required">*</span>
                       </Form.Label>
                       <Form.Select
+                        required
                         size="sm"
                         style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                         value={selectedInvoice.dischargetime}
@@ -1214,7 +1282,6 @@ const InvoiceList = () => {
                       >
                         <option value="">Select Time</option>
                         {timeOptions.map((time) => {
-                          // Logic to display 12-hour format while keeping 24-hour value
                           const [hour, minute] = time.split(':');
                           const h = parseInt(hour);
                           const ampm = h >= 12 ? 'PM' : 'AM';
@@ -1248,6 +1315,7 @@ const InvoiceList = () => {
                     <Col md={4}>
                       <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">Consultant Name <span style={{ color: "red" }} className="required">*</span></Form.Label>
                       <Form.Select
+                        required
                         size="sm"
                         style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                         value={selectedInvoice?.consultant || ""}
@@ -1272,6 +1340,7 @@ const InvoiceList = () => {
                     <Col md={4}>
                       <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">Bed Category <span style={{ color: "red" }} className="required">*</span></Form.Label>
                       <Form.Control
+                        required
                         size="sm"
                         style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                         type="text"
@@ -1360,6 +1429,7 @@ const InvoiceList = () => {
                       <Col md={3}>
                         <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">Bill Type <span style={{ color: "red" }} className="required">*</span></Form.Label>
                         <Form.Select
+                          required
                           size="sm"
                           style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                           value={selectedInvoice.bill_Type}

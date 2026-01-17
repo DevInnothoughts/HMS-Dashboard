@@ -265,7 +265,7 @@ export default function Add_Enquiry() {
     display: "block"
   };
 
-  const  inputStyle = {
+  const inputStyle = {
     fontSize: "12px",
     borderRadius: "10px",
     border: "2px solid rgb(77, 208, 225)",
@@ -320,7 +320,7 @@ export default function Add_Enquiry() {
                     fontSize: "1rem",
                   }}
                 >
-                Add New Enquiry Detail
+                  Add New Enquiry Detail
                 </h4>
               </div>
 
@@ -339,6 +339,7 @@ export default function Add_Enquiry() {
                           Enquiry Date <span className="text-danger">*</span>
                         </Form.Label>
                         <DatePicker
+                          required
                           selected={parseDate(formData.date)}
                           onChange={(date) =>
                             date &&
@@ -367,6 +368,7 @@ export default function Add_Enquiry() {
                           Enquiry Type <span className="text-danger">*</span>
                         </Form.Label>
                         <Form.Select
+                          required
                           name="enquirytype"
                           style={inputStyle}
                           value={formData.enquirytype}
@@ -407,6 +409,7 @@ export default function Add_Enquiry() {
                           Doctor Name <span className="text-danger">*</span>
                         </Form.Label>
                         <Form.Select
+                          required
                           name="doctorId"
                           style={inputStyle}
                           value={formData.doctorId}
@@ -436,6 +439,7 @@ export default function Add_Enquiry() {
                           Patient Name <span className="text-danger">*</span>
                         </Form.Label>
                         <Form.Control
+                          required
                           type="text"
                           name="patient_name"
                           placeholder="Enter Patient Name"
@@ -457,6 +461,7 @@ export default function Add_Enquiry() {
                           Contact Number <span className="text-danger">*</span>
                         </Form.Label>
                         <Form.Control
+                          required
                           type="tel"
                           name="patient_phone"
                           value={formData.patient_phone}
@@ -485,6 +490,7 @@ export default function Add_Enquiry() {
                           Address <span className="text-danger">*</span>
                         </Form.Label>
                         <Form.Control
+                          required
                           type="text"
                           name="patient_location"
                           placeholder="Enter Address"
@@ -508,6 +514,7 @@ export default function Add_Enquiry() {
                           FDE Name <span className="text-danger">*</span>
                         </Form.Label>
                         <Form.Select
+                          required
                           name="FDE_Name"
                           style={inputStyle}
                           value={formData.FDE_Name}
@@ -515,8 +522,13 @@ export default function Add_Enquiry() {
                           disabled={!currentLocation || fdeList.length === 0}
                         >
                           <option value="">Select FDE Name</option>
-                          {fdeList.map((fde) => (
+                          {/* {fdeList.map((fde) => (
                             <option key={fde.FDEID} value={fde.FDEID}>
+                              {fde.FDEName}
+                            </option>
+                          ))} */}
+                          {fdeList.map((fde) => (
+                            <option key={fde.FDEID} value={fde.FDEName}>
                               {fde.FDEName}
                             </option>
                           ))}
@@ -535,6 +547,7 @@ export default function Add_Enquiry() {
                           Reference <span className="text-danger">*</span>
                         </Form.Label>
                         <Form.Select
+                          required
                           name="reference"
                           style={inputStyle}
                           value={formData.reference}

@@ -155,7 +155,6 @@ const AddInvoice = () => {
       "surgeonName",
       "Sub_Total",
       "bill_Type",
-      "note",
     ];
 
     requiredFields.forEach((field) => {
@@ -263,15 +262,36 @@ const AddInvoice = () => {
     setErrors({});
   };
 
+  // const getChargeBreakdown = () => {
+  //   const subTotal = parseFloat(formData.Sub_Total) || 0;
+  //   const discount = parseFloat(formData.discountAmount) || 0;
+  //   const payable = subTotal - discount;
+
+  //   return {
+  //     subTotal: subTotal.toFixed(2),
+  //     discount: discount.toFixed(2),
+  //     payable: payable.toFixed(2),
+  //   };
+  // };
+
   const getChargeBreakdown = () => {
     const subTotal = parseFloat(formData.Sub_Total) || 0;
-    const discount = parseFloat(formData.discountAmount) || 0;
+
+    let discount = 0;
+    if (formData.bill_Type === "charity") {
+      discount = parseFloat(formData.discountAmount) || 0;
+    } else if (formData.bill_Type === "non_insurance") {
+      discount = parseFloat(formData.discount) || 0;
+    } else if (formData.bill_method === "PDC") {
+      discount = parseFloat(formData.pdc) || 0;
+    }
+
     const payable = subTotal - discount;
 
     return {
       subTotal: subTotal.toFixed(2),
       discount: discount.toFixed(2),
-      payable: payable.toFixed(2),
+      payable: Math.max(payable, 0).toFixed(2),
     };
   };
 
@@ -285,7 +305,7 @@ const AddInvoice = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    console.log(formData);
     const validationErrors = validate();
     setErrors(validationErrors);
 
@@ -305,7 +325,7 @@ const AddInvoice = () => {
         );
 
         const data = await response.json();
-
+        console.log(data);
         if (response.ok) {
           Swal.fire({
             title: "Success!",
@@ -424,6 +444,7 @@ const AddInvoice = () => {
                     Patient ID <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
+                    required
                     name="patient_id"
                     style={inputStyle}
                     value={formData.patient_id}
@@ -437,6 +458,7 @@ const AddInvoice = () => {
                     Admission Date <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
+                    required
                     type="date"
                     style={inputStyle}
                     name="admission_date"
@@ -446,23 +468,39 @@ const AddInvoice = () => {
                   />
                 </Col>
                 <Col md={3}>
-                  <Form.Label style={labelStyle}>
-                    Admission Time <span className="text-danger">*</span>
+                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
+                    Admission Time <span style={{ color: "red" }} className="required">*</span>
                   </Form.Label>
-                  <Form.Control
-                    type="time"
-                    style={inputStyle}
-                    name="admissiontime"
+                  <Form.Select
+                    required
+                    size="sm"
+                    style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                     value={formData.admissiontime}
+                    name="admissiontime"
                     onChange={handleInputChange}
-                    isInvalid={errors.admissiontime}
-                  />
+                  >
+                    <option value="">Select Time</option>
+                    {timeOptions.map((time) => {
+                      const [hour, minute] = time.split(':');
+                      const h = parseInt(hour);
+                      const ampm = h >= 12 ? 'PM' : 'AM';
+                      const displayHour = h % 12 || 12;
+                      const displayTime = `${displayHour}:${minute} ${ampm}`;
+
+                      return (
+                        <option key={time} value={time}>
+                          {displayTime}
+                        </option>
+                      );
+                    })}
+                  </Form.Select>
                 </Col>
                 <Col md={3}>
                   <Form.Label style={labelStyle}>
                     Discharge Date <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
+                    required
                     type="date"
                     style={inputStyle}
                     name="discharge_date"
@@ -477,6 +515,7 @@ const AddInvoice = () => {
                     Discharge Time <span style={{ color: "red" }}>*</span>
                   </Form.Label>
                   <Form.Select
+                    required
                     size="sm"
                     style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                     value={formData.dischargetime}
@@ -504,6 +543,7 @@ const AddInvoice = () => {
                     Bed Category <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
+                    required
                     name="bed_category"
                     style={inputStyle}
                     placeholder="Enter Bed Category"
@@ -517,6 +557,7 @@ const AddInvoice = () => {
                     Consultant Name <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Select
+                    required
                     style={inputStyle}
                     name="consultantName"
                     value={formData.consultantName}
@@ -608,6 +649,7 @@ const AddInvoice = () => {
                     Bill Type <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Select
+                    required
                     style={inputStyle}
                     name="bill_Type"
                     value={formData.bill_Type}
@@ -664,14 +706,14 @@ const AddInvoice = () => {
 
                 {formData.bill_Type === "non_insurance" && (
                   <Col md={4}>
-                    <Form.Label style={labelStyle}>Discount Amount</Form.Label>
+                    <Form.Label style={labelStyle}>Discount Amount (₹)</Form.Label>
                     <Form.Control style={inputStyle} placeholder="e.g. 1000" type="number" name="discount" value={formData.discount} onChange={handleInputChange} />
                   </Col>
                 )}
 
                 {formData.bill_Type === "charity" && (
                   <Col md={4}>
-                    <Form.Label style={labelStyle}>Charity Discount</Form.Label>
+                    <Form.Label style={labelStyle}>Charity Discount (₹)</Form.Label>
                     <Form.Control style={inputStyle} placeholder="e.g. 100" type="number" name="discountAmount" value={formData.discountAmount} onChange={handleInputChange} />
                   </Col>
                 )}

@@ -43,7 +43,6 @@ const Toast = Swal.mixin({
 });
 
 export default function ReceiptList() {
-  // --- State Management ---
   const [currentLocation, setCurrentLocation] = useState("default");
   const [receipts, setReceipts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -52,16 +51,14 @@ export default function ReceiptList() {
   const [rows, setRows] = useState(10);
   const [first, setFirst] = useState(0);
   const [filters, setFilters] = useState({
-    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    // global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    global: { value: null, matchMode: FilterMatchMode.EQUALS }
   });
 
   useEffect(() => {
-    // 1. Get the token
     const token = localStorage.getItem("token");
     if (token) {
-      // 2. Decode the token
       const payload = decodeJwt(token);
-      // 3. Set the location state from the payload
       if (payload && payload.jobLocation) {
         setCurrentLocation(payload.jobLocation);
         console.log(`Location set from JWT: ${payload.jobLocation}`);
@@ -70,9 +67,7 @@ export default function ReceiptList() {
       console.warn("JWT Token not found in localStorage.");
     }
   }, []);
-  // ------------------------- API & Data Fetching -------------------------
 
-  // Helper to format Date objects to YYYY-MM-DD string for API
   const formatToYYYYMMDD = (date) => {
     return moment(date).format("YYYY-MM-DD");
   };
@@ -88,16 +83,14 @@ export default function ReceiptList() {
 
       const finalFromDate = formatToYYYYMMDD(fromDate);
       const finalToDate = formatToYYYYMMDD(toDate);
-
       const url = new URL(`${BASE_URL}/V1/appointment/listReceipt`);
 
       const params = {
         from: finalFromDate,
         to: finalToDate,
-        location: currentLocation, // <--- Use the state location here
+        location: currentLocation, 
       };
 
-      // Ensure the dates are formatted correctly for the API, then append all params
       Object.keys(params).forEach((key) =>
         url.searchParams.append(key, params[key])
       );
@@ -134,17 +127,12 @@ export default function ReceiptList() {
     }
   }, [fromDate, toDate, currentLocation]);
 
-  // Load data on date filter change or component mount
   useEffect(() => {
-    // Check currentLocation dependency here
     if (currentLocation !== "default") {
       fetchReceiptsData();
     }
   }, [fetchReceiptsData, currentLocation]);
 
-  // ------------------------- Print & Action Logic -------------------------
-
-  // Helper function for converting number to words (kept isolated)
   const numberToWords = (num) => {
     const ones = [
       "",
@@ -195,7 +183,6 @@ export default function ReceiptList() {
 
     let result = toWords(Math.round(num));
     if (num >= 100000) {
-      // Simple logic for Lakhs (adjust based on required regional format)
       const lakhs = Math.floor(num / 100000);
       const remainder = num % 100000;
       result = toWords(lakhs) + " Lakh " + toWords(remainder);
@@ -237,8 +224,6 @@ export default function ReceiptList() {
 
       const netAmount = (parseFloat(selectedReceipt.totalamt) - parseFloat(selectedReceipt.discountamt || 0)).toFixed(2);
       const amountInWords = numberToWords(netAmount);
-
-      // Inside handlePrintReceipt, update the <style> section and the footer HTML structure:
 
       const htmlContent = `
       <!DOCTYPE html>
@@ -297,7 +282,6 @@ export default function ReceiptList() {
             display: block;
           }
 
-          /* Reduced padding-top to bring labels closer to the top of the receipt image */
           .data-cell { 
             width: 88%; 
             padding-left: 25px; 
@@ -305,7 +289,6 @@ export default function ReceiptList() {
             padding-top: 10px; 
           }
 
-          /* Added specific margin to fine-tune the gap from the top */
           .meta-table { 
             width: 100%; 
             margin-top: 5px; 
@@ -347,10 +330,10 @@ export default function ReceiptList() {
   text-align: center; 
   width: 140px; 
   font-weight: bold;
-  border-top: 1px solid #000; /* Adds the signature line */
-  padding-top: 8px;           /* Adjusts label lower relative to the line */
-  margin-left: 20px;         /* Adjusts the label slightly to the right/inward */
-  margin-top: 15px;        /* Pushes it slightly lower in the footer block */
+  border-top: 1px solid #000; 
+  padding-top: 8px;           
+  margin-left: 20px;       
+  margin-top: 15px;      
 }
 
           @media print { .no-print { display: none; } }
@@ -387,28 +370,32 @@ export default function ReceiptList() {
                   </tr>
                 </table>
 
-                <table class="items-table">
-                  <thead>
-                    <tr>
-                      <th width="15%">Sr. No</th>
-                      <th width="60%">Description</th>
-                      <th width="25%" align="right">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>1</td>
-                     <td>
-  ${selectedReceipt.consultation
-          ?.split(",")
-          .map(item => item.trim())
-          .join("<br/>")
-        }
-</td>
-                      <td align="right"><b>${parseFloat(selectedReceipt.totalamt).toFixed(2)}</b></td>
-                    </tr>
-                  </tbody>
-                </table>
+        <table class="items-table">
+  <thead>
+    <tr>
+      <th width="15%">Sr. No</th>
+      <th width="60%">Description</th>
+      <th width="25%" align="right">Amount (₹)</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${selectedReceipt.consultation
+      ? selectedReceipt.consultation.split(",").map((item, index) => {
+          const amounts = selectedReceipt.totalamt.toString().split(",");
+          const currentAmount = amounts[index] || (index === 0 ? selectedReceipt.totalamt : "0.00");
+
+          return `
+            <tr>
+              <td>${index + 1}</td>
+              <td>${item.trim()}</td>
+              <td align="right"><b>${parseFloat(currentAmount).toFixed(2)}</b></td>
+            </tr>
+          `;
+        }).join("")
+      : `<tr><td>1</td><td>-</td><td align="right">0.00</td></tr>`
+    }
+  </tbody>
+</table>
 
                 <div class="summary-section">
                   Sub Total : <b>${parseFloat(selectedReceipt.totalamt).toFixed(2)}</b><br>
@@ -446,7 +433,6 @@ export default function ReceiptList() {
   const sendMail = (receipt) => {
     Swal.fire({
       title: "Feature Coming Soon!",
-      // text: `Emailing receipt for ID: ${receipt.receipt_id} is currently under development.`,
       text: `Emailing receipt feature is currently under development.`,
       icon: "info",
       confirmButtonColor: "#00bcd4",
@@ -512,7 +498,7 @@ export default function ReceiptList() {
               value={rows}
               onChange={(e) => {
                 setRows(parseInt(e.target.value));
-                setFirst(0); // Reset to first page when changing row count
+                setFirst(0);
               }}
               style={{
                 width: "70px",
@@ -706,7 +692,6 @@ export default function ReceiptList() {
                         "patientName",
                         "consultation",
                         "doctorName",
-                        "totalamt",
                       ]}
                       responsiveLayout="scroll"
                       paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
