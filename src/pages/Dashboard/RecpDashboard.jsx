@@ -655,14 +655,14 @@ export default function ReceptionistDashboard() {
                 <div className="d-flex align-items-center flex-wrap">
                   <div className="legend-item">
                     <span className="dot" style={{ background: "#000" }}></span>{" "}
-                    New <span className="cnt">({counts.NEW})</span>
+                    New <span className="cnt">({counts.NEW || counts.New})</span>
                   </div>
                   <div className="legend-item">
                     <span
                       className="dot"
                       style={{ background: "#ff8000" }}
                     ></span>{" "}
-                    Follow-up <span className="cnt">({counts.FOLLOW})</span>
+                    Follow-up <span className="cnt">({counts.FOLLOW || counts.Follow})</span>
                   </div>
                   <div className="legend-item">
                     <span
@@ -670,7 +670,7 @@ export default function ReceptionistDashboard() {
                       style={{ background: "#8000ff" }}
                     ></span>{" "}
                     Post-Operative{" "}
-                    <span className="cnt">({counts.POSTOPERATIVE})</span>
+                    <span className="cnt">({counts.POSTOPERATIVE || counts.Postoperative})</span>
                   </div>
                   <div className="legend-item">
                     <span
