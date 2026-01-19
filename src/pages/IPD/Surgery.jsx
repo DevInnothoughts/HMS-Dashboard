@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import { decodeJwt } from "../../utils/decode-jwt";
 
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 export default function Surgery() {
     const navigate = useNavigate();
@@ -13,6 +13,15 @@ export default function Surgery() {
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [currentLocation, setCurrentLocation] = useState("default");
+
+    const formatDate = (dateString) => {
+        if (!dateString) return "N/A";
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+    };
 
     // 1. Get Location from JWT on load
     useEffect(() => {
@@ -26,6 +35,43 @@ export default function Surgery() {
     }, []);
 
     // 2. Fetch Admitted Patients from Backend
+    // const fetchAdmittedPatients = useCallback(async () => {
+    //     if (currentLocation === "default") return;
+
+    //     setLoading(true);
+    //     try {
+    //         const response = await fetch(`${BASE_URL}/V1/ipd/admin/listAdmittedPatients?location=${currentLocation}`, {
+    //             method: "GET",
+    //             headers: {
+    //                 "Content-Type": "application/json",
+    //                 "Authorization": `Bearer ${localStorage.getItem("token")}`
+    //             }
+    //         });
+
+    //         if (response.ok) {
+    //             const result = await response.json();
+    //             // Mapping backend database fields to your frontend table keys
+    //             const formattedData = result.map(p => ({
+    //                 uhid: p.uid,
+    //                 admissionNo: p.admission_no,
+    //                 name: p.name,
+    //                 contact: p.patient_phone,
+    //                 age: p.age,
+    //                 gender: p.sex,
+    //                 verifiedDate: p.created_at, // This represents the admission date here
+    //                 patient_id: p.patient_id
+    //             }));
+    //             setPatients(formattedData);
+    //         } else {
+    //             console.error("Failed to fetch admitted patients");
+    //         }
+    //     } catch (error) {
+    //         console.error("Error fetching surgery list:", error);
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // }, [currentLocation]);
+
     const fetchAdmittedPatients = useCallback(async () => {
         if (currentLocation === "default") return;
 
@@ -41,17 +87,20 @@ export default function Surgery() {
 
             if (response.ok) {
                 const result = await response.json();
-                // Mapping backend database fields to your frontend table keys
-                const formattedData = result.map(p => ({
+
+                const sortedData = result.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+                const formattedData = sortedData.map(p => ({
                     uhid: p.uid,
                     admissionNo: p.admission_no,
                     name: p.name,
                     contact: p.patient_phone,
                     age: p.age,
                     gender: p.sex,
-                    verifiedDate: p.created_at, // This represents the admission date here
+                    verifiedDate: formatDate(p.created_at), 
                     patient_id: p.patient_id
                 }));
+
                 setPatients(formattedData);
             } else {
                 console.error("Failed to fetch admitted patients");

@@ -5,7 +5,7 @@ import Swal from "sweetalert2";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import { decodeJwt } from "../../utils/decode-jwt";
 
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 export default function ManageAdmission() {
     const [patients, setPatients] = useState([]);
@@ -24,10 +24,59 @@ export default function ManageAdmission() {
         }
     }, []);
 
+    const formatDate = (dateString) => {
+        if (!dateString) return "N/A";
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+    };
+
     // 2. Fetch Logic
+    // const fetchVerifiedPatients = useCallback(async () => {
+    //     if (currentLocation === "default") return;
+
+    //     setLoading(true);
+    //     try {
+    //         const response = await fetch(`${BASE_URL}/V1/ipd/admin/listVerifiedPatients?location=${currentLocation}`, {
+    //             method: "GET",
+    //             headers: {
+    //                 "Content-Type": "application/json",
+    //                 "Authorization": `Bearer ${localStorage.getItem("token")}`
+    //             }
+    //         });
+
+    //         if (response.ok) {
+    //             const result = await response.json();
+    //             console.log(result);
+    //             // Map API data to your component's expected structure
+    //             const formattedData = result.map(p => ({
+    //                 uhid: p.uid,
+    //                 name: p.name,
+    //                 contact: p.patient_phone,
+    //                 age: p.age,
+    //                 gender: p.sex,
+    //                 verifiedDate: formatDate(p.created_at),
+    //                 admissionNo: (p.admission_no === 0 || p.admission_no === "0") ? null : p.admission_no,
+    //                 patient_id: p.patient_id,
+    //                 global_id: p.global_id
+    //             }));
+    //             console.log(formattedData);
+    //             setPatients(formattedData);
+    //         } else {
+    //             console.error("Failed to fetch verified patients");
+    //         }
+    //     } catch (error) {
+    //         console.error("Error fetching data:", error);
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // }, [currentLocation]);
+
     const fetchVerifiedPatients = useCallback(async () => {
         if (currentLocation === "default") return;
-        
+
         setLoading(true);
         try {
             const response = await fetch(`${BASE_URL}/V1/ipd/admin/listVerifiedPatients?location=${currentLocation}`, {
@@ -40,20 +89,25 @@ export default function ManageAdmission() {
 
             if (response.ok) {
                 const result = await response.json();
-                console.log(result);
-                // Map API data to your component's expected structure
-                const formattedData = result.map(p => ({
+
+                // 1. Sort the raw data by date (Descending: Newest first)
+                const sortedData = result.sort((a, b) => {
+                    return new Date(b.created_at) - new Date(a.created_at);
+                });
+
+                // 2. Map the sorted data to your formatted structure
+                const formattedData = sortedData.map(p => ({
                     uhid: p.uid,
                     name: p.name,
                     contact: p.patient_phone,
                     age: p.age,
                     gender: p.sex,
-                    verifiedDate: p.created_at,
-                    admissionNo: (p.admission_no === 0 || p.admission_no === "0") ? null : p.admission_no,                    
+                    verifiedDate: formatDate(p.created_at), // Using the formatter from previous step
+                    admissionNo: (p.admission_no === 0 || p.admission_no === "0") ? null : p.admission_no,
                     patient_id: p.patient_id,
                     global_id: p.global_id
                 }));
-                console.log(formattedData);
+
                 setPatients(formattedData);
             } else {
                 console.error("Failed to fetch verified patients");
@@ -173,12 +227,12 @@ export default function ManageAdmission() {
                                                             <td className="py-3 px-4">{patient.contact}</td>
                                                             <td className="py-3 px-4">
                                                                 <div className="d-flex justify-content-center gap-2">
-                                                                {patient.admissionNo ? (
-                                                                        <Badge 
-                                                                            bg="success" 
-                                                                            style={{ 
-                                                                                padding: "8px 12px", 
-                                                                                borderRadius: "6px", 
+                                                                    {patient.admissionNo ? (
+                                                                        <Badge
+                                                                            bg="success"
+                                                                            style={{
+                                                                                padding: "8px 12px",
+                                                                                borderRadius: "6px",
                                                                                 fontSize: "12px",
                                                                                 display: "flex",
                                                                                 alignItems: "center"
@@ -189,21 +243,21 @@ export default function ManageAdmission() {
                                                                         </Badge>
                                                                     ) : (
                                                                         <>
-                                                                        <Button
-                                                                            variant="outline-primary"
-                                                                            size="sm"
-                                                                            style={{ borderRadius: "6px", fontWeight: "600", margin: "3px" }}
-                                                                        >
-                                                                            Edit
-                                                                        </Button>
-                                                                        <Button
-                                                                            variant="outline-success"
-                                                                            size="sm"
-                                                                            onClick={() => handleConfirm(patient.uhid)}
-                                                                            style={{ borderRadius: "6px", fontWeight: "600" }}
-                                                                        >
-                                                                            Confirm Admission
-                                                                        </Button>
+                                                                            <Button
+                                                                                variant="outline-primary"
+                                                                                size="sm"
+                                                                                style={{ borderRadius: "6px", fontWeight: "600", margin: "3px" }}
+                                                                            >
+                                                                                Edit
+                                                                            </Button>
+                                                                            <Button
+                                                                                variant="outline-success"
+                                                                                size="sm"
+                                                                                onClick={() => handleConfirm(patient.uhid)}
+                                                                                style={{ borderRadius: "6px", fontWeight: "600" }}
+                                                                            >
+                                                                                Confirm Admission
+                                                                            </Button>
                                                                         </>
                                                                     )}
                                                                 </div>
