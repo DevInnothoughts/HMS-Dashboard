@@ -64,7 +64,7 @@ function decodeJwt(token) {
   }
 }
 
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 export default function ReceptionistDashboard() {
   const [appointments, setAppointments] = useState([]);
@@ -103,30 +103,33 @@ export default function ReceptionistDashboard() {
   const counts = useMemo(() => {
     const monthStart = moment(selectedDate).startOf('month');
     const monthEnd = moment(selectedDate).endOf('month');
+    
     const visibleAppointments = appointments.filter(event => {
       const eventDate = moment(event.start);
       return eventDate.isSameOrAfter(monthStart, 'day') &&
-        eventDate.isSameOrBefore(monthEnd, 'day');
+             eventDate.isSameOrBefore(monthEnd, 'day');
     });
-
+  
     return visibleAppointments.reduce(
       (acc, event) => {
-        const type = (event.patientType || "Other").toUpperCase();
+        let type = (event.patientType || "Other").toUpperCase();
+        // Map common variations to standard keys
+        if (type === "NEW PATIENT") type = "NEW";
+        if (type === "FOLLOW-UP") type = "FOLLOW";
+        
         acc[type] = (acc[type] || 0) + 1;
         return acc;
       },
-      { New: 0, Follow: 0, Postoperative: 0, OTHER: 0 }
+      { NEW: 0, FOLLOW: 0, POSTOPERATIVE: 0, OTHER: 0 } // Use consistent Uppercase keys
     );
   }, [appointments, selectedDate]);
 
   const formatAppointments = useCallback((data) => {
     return data.map((app) => {
-      const startTime = moment(
-        moment(app.appointment_timestamp).format("YYYY-MM-DD") +
-        " " +
-        app.appointment_time,
-        "YYYY-MM-DD HH:mm"
-      );
+      // Ensure we take the date part correctly
+      const datePart = moment(app.appointment_timestamp).format("YYYY-MM-DD");
+      // Parse combined string with format helper
+      const startTime = moment(`${datePart} ${app.appointment_time}`, "YYYY-MM-DD hh:mm A");
       const endTime = startTime.clone().add(30, "minutes");
 
       return {
@@ -190,6 +193,7 @@ export default function ReceptionistDashboard() {
 
         const response = await fetch(url);
         const data = await response.json();
+        console.log(data);
         if (data.statusCode === 200 && Array.isArray(data.data)) {
           let filteredData = data.data;
           if (doctorId) {
@@ -299,9 +303,9 @@ export default function ReceptionistDashboard() {
 
   const eventStyleGetter = useCallback((event) => {
     const colorMap = {
-      New: "#000000",
-      Follow: "#ff8000",
-      Postoperative: "#8000ff",
+      NEW: "#000000",
+      FOLLOW: "#ff8000",
+      POSTOPERATIVE: "#8000ff",
       OTHER: "#ff0080",
     };
     return {
@@ -653,24 +657,17 @@ export default function ReceptionistDashboard() {
                   </h4>
                 </div>
                 <div className="d-flex align-items-center flex-wrap">
-                  <div className="legend-item">
+                <div className="legend-item">
                     <span className="dot" style={{ background: "#000" }}></span>{" "}
-                    New <span className="cnt">({counts.NEW || counts.New})</span>
+                    New <span className="cnt">({counts.NEW || 0})</span>
                   </div>
                   <div className="legend-item">
-                    <span
-                      className="dot"
-                      style={{ background: "#ff8000" }}
-                    ></span>{" "}
-                    Follow-up <span className="cnt">({counts.FOLLOW || counts.Follow})</span>
+                    <span className="dot" style={{ background: "#ff8000" }}></span>{" "}
+                    Follow-up <span className="cnt">({counts.FOLLOW || 0})</span>
                   </div>
                   <div className="legend-item">
-                    <span
-                      className="dot"
-                      style={{ background: "#8000ff" }}
-                    ></span>{" "}
-                    Post-Operative{" "}
-                    <span className="cnt">({counts.POSTOPERATIVE || counts.Postoperative})</span>
+                    <span className="dot" style={{ background: "#8000ff" }}></span>{" "}
+                    Post-Operative <span className="cnt">({counts.POSTOPERATIVE || 0})</span>
                   </div>
                   <div className="legend-item">
                     <span
