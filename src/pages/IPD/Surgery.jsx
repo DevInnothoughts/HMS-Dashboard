@@ -90,6 +90,7 @@ export default function Surgery() {
 
                 const sortedData = result.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
+                // Inside fetchAdmittedPatients
                 const formattedData = sortedData.map(p => ({
                     uhid: p.uid,
                     admissionNo: p.admission_no,
@@ -97,7 +98,7 @@ export default function Surgery() {
                     contact: p.patient_phone,
                     age: p.age,
                     gender: p.sex,
-                    verifiedDate: formatDate(p.created_at), 
+                    verifiedDate: p.created_at, // Keep the raw ISO string from the DB
                     patient_id: p.patient_id
                 }));
 
@@ -187,10 +188,10 @@ export default function Surgery() {
                                                 {filteredPatients.length > 0 ? (
                                                     filteredPatients.map((patient, index) => (
                                                         <tr key={index} style={{ verticalAlign: "middle", fontSize: "0.9rem" }}>
-                                                            <td className="py-3 px-4">{new Date(patient.verifiedDate).toLocaleDateString('en-GB')}</td>
+                                                            <td className="py-3 px-4"> {formatDate(patient.verifiedDate)}</td>
                                                             <td className="py-3 px-4 fw-bold" style={{ color: "#178aaeff" }}>{patient.admissionNo}</td>
                                                             <td className="py-3 px-4 fw-bold" style={{ color: "#178aaeff" }}>{patient.uhid}</td>
-                                                            <td className="py-3 px-4 fw-bold">{patient.name}</td>
+                                                            <td className="py-3 px-4">{patient.name}</td>
                                                             <td className="py-3 px-4">{patient.contact}</td>
                                                             <td className="py-3 px-4">{patient.age} / {patient.gender}</td>
                                                             <td className="py-3 px-4">
