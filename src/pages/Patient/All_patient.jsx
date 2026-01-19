@@ -278,7 +278,9 @@ export default function All_patient() {
 
   const [doctorSearchResults, setDoctorSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+
   const searchDoctorByName = async (name) => {
+    // Only search if user has typed at least 3 characters
     if (!name || name.length < 3) {
       setDoctorSearchResults([]);
       return;
@@ -286,28 +288,19 @@ export default function All_patient() {
 
     setIsSearching(true);
     try {
+      // Sending typed value directly to your API
       const response = await fetch(
-        `${BASE_URL}/V1/Patients/listDoctor?name=${name}`,
+        `${BASE_URL}/V1/Patients/listDoctor?name=${encodeURIComponent(name)}&location=${currentLocation}`,
         {
           method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
         }
       );
 
       if (response.ok) {
         const data = await response.json();
-        const filteredResults = data.data.filter(
-          (doctor) =>
-            doctor.ref_doctor_name.toLowerCase().includes(name.toLowerCase()) ||
-            (doctor.reference_doctor_speciality &&
-              doctor.reference_doctor_speciality
-                .toLowerCase()
-                .includes(name.toLowerCase()))
-        );
-        console.log("Filtered doctor results:", filteredResults);
-        setDoctorSearchResults(filteredResults);
+        // Assume API returns array of doctors matching the name
+        setDoctorSearchResults(data.data || []);
       }
     } catch (error) {
       console.error("Error searching doctor:", error);
@@ -315,6 +308,7 @@ export default function All_patient() {
       setIsSearching(false);
     }
   };
+
 
   const [patientSearchResults, setPatientSearchResults] = useState([]);
   const [isSearchingPatient, setIsSearchingPatient] = useState(false);
@@ -669,9 +663,13 @@ export default function All_patient() {
         ref = referenceDetails.newspaper || formData.ref || "";
         break;
       case "dr_ref":
-        reference_type = "dr_ref";
-        ref = referenceDetails.dr_ref || "";
-        break;
+        // Inside handleSaveChanges switch block...
+case "dr_ref":
+      reference_type = "dr_ref";
+      // Use the name of the doctor selected/typed in the referenceDetails state
+      ref = referenceDetails.dr_name || ""; 
+      break;
+        // break;
       case "internet":
         reference_type = "internet";
         ref = referenceDetails.internet || "";
@@ -1629,87 +1627,66 @@ export default function All_patient() {
           </div>
         );
 
-      case "dr_ref":
-        return (
-          <div className="control-group">
-            <label
-              className="control-label"
-              style={{
-                marginTop: "20px",
-                fontSize: "12px",
-                fontWeight: "bold",
-                marginBottom: "5px",
-              }}
-            >
-              Doctor Reference
-            </label>
-            <div className="controls" style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-              <input
-                className="form-control"
-                type="text"
-                name="dr_name"
-                placeholder="Doctor Name"
-                style={{
-                  flex: "1",
-                  minWidth: "150px",
-                  border: "2px solid rgb(77, 208, 225)",
-                  fontSize: "12px", borderRadius: "10px"
-                }}
-                value={referenceDetails.dr_name || ""}
-                onChange={(e) => {
-                  const name = e.target.value;
-                  setReferenceDetails(prev => ({ ...prev, dr_name: name }));
-                  setFormData(prev => ({ ...prev, ref: name, reference_type: "dr_ref" }));
-                }}
-              />
-
-              <input
-                className="form-control"
-                type="text"
-                placeholder="Doctor Contact No"
-                readOnly
-                style={{
-                  backgroundColor: "#e7ebebff",
-                  flex: "1",
-                  minWidth: "150px",
-                  border: "2px solid rgb(77, 208, 225)",
-                  fontSize: "12px", borderRadius: "10px"
-                }}
-                value={referenceDetails.dr_contact || ""}
-              />
-
-              <input
-                className="form-control"
-                type="text"
-                placeholder="Medical Speciailities"
-                readOnly
-                style={{
-                  backgroundColor: "#e7ebebff",
-                  flex: "1",
-                  minWidth: "150px",
-                  border: "2px solid rgb(77, 208, 225)",
-                  fontSize: "12px", borderRadius: "10px"
-                }}
-                value={referenceDetails.dr_specialty || ""}
-              />
-
-              <input
-                className="form-control"
-                type="text"
-                placeholder="Doctor Location"
-                readOnly
-                style={{
-                  backgroundColor: "#e7ebebff",
-                  flex: "1",
-                  minWidth: "150px",
-                  border: "2px solid rgb(77, 208, 225)",
-                  fontSize: "12px", borderRadius: "10px"
-                }}
-                value={referenceDetails.dr_location || ""}
-              />
+        case "dr_ref":
+          return (
+            <div className="control-group">
+              <label className="control-label" style={{ marginTop: "20px", fontSize: "12px", fontWeight: "bold", marginBottom: "5px" }}>
+                Doctor Reference (Search as you type)
+              </label>
+              <div className="controls" style={{ position: "relative" }}>
+                <input
+                  className="form-control"
+                  type="text"
+                  autoComplete="off"
+                  placeholder="Type Doctor Name (min. 3 chars)"
+                  style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
+                  value={referenceDetails.dr_name || ""}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setReferenceDetails(prev => ({ ...prev, dr_name: val }));
+                    searchDoctorByName(val);
+                  }}
+                />
+  
+                {/* Suggestions Dropdown */}
+                {(isSearching || doctorSearchResults.length > 0) && (
+                  <div style={{
+                    position: "absolute", zIndex: 1000, top: "40px", width: "100%",
+                    backgroundColor: "white", border: "1px solid #ddd", borderRadius: "8px",
+                    maxHeight: "200px", overflowY: "auto", boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
+                  }}>
+                    {isSearching && <div className="p-2 text-muted">Searching...</div>}
+                    {doctorSearchResults.map((doc, idx) => (
+                      <div
+                        key={idx}
+                        style={{ cursor: "pointer", borderBottom: "1px solid #eee", padding: "10px" }}
+                        onClick={() => {
+                          setReferenceDetails({
+                            dr_name: doc.ref_doctor_name,
+                            dr_contact: doc.ref_doctor_phone || doc.reference_doctor_no,
+                            dr_specialty: doc.reference_doctor_speciality,
+                            dr_location: doc.reference_doctor_location
+                          });
+                          setFormData(prev => ({ ...prev, ref: doc.ref_doctor_name }));
+                          setDoctorSearchResults([]);
+                        }}
+                      >
+                        <div className="fw-bold" style={{fontSize: "13px"}}>{doc.ref_doctor_name}</div>
+                        <div className="text-muted small">{doc.reference_doctor_speciality} | {doc.reference_doctor_location}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+  
+                {/* Read-only details of selected doctor */}
+                <div className="mt-3 d-flex gap-2 flex-wrap">
+                  <input className="form-control" readOnly placeholder="Contact" value={referenceDetails.dr_contact || ""} style={{ backgroundColor: "#e7ebebff", flex: "1", fontSize: "12px", borderRadius: "10px" }} />
+                  <input className="form-control" readOnly placeholder="Specialty" value={referenceDetails.dr_specialty || ""} style={{ backgroundColor: "#e7ebebff", flex: "1", fontSize: "12px", borderRadius: "10px" }} />
+                  <input className="form-control" readOnly placeholder="Location" value={referenceDetails.dr_location || ""} style={{ backgroundColor: "#e7ebebff", flex: "1", fontSize: "12px", borderRadius: "10px" }} />
+                </div>
+              </div>
             </div>
-          </div>
-        );
+          );
 
       case "hhc_board":
         return (
