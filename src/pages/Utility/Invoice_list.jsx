@@ -607,7 +607,6 @@ const InvoiceList = () => {
     }
 
     const clinicAddr = clinincLoc[currentLocation] || {
-    const clinicAddr = clinincLoc[currentLocation] || {
       address: "Healing Hands Clinic",
       phone: "8888288884"
     };
