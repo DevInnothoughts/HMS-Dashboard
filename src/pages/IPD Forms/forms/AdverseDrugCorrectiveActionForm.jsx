@@ -187,6 +187,7 @@ const AdverseDrugCorrectiveActionForm = ({ onSubmit, patientData }) => {
                 Save Report & Actions
             </button>
         </form>
+        </div>
     );
 };
 
