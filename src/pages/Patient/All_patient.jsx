@@ -140,6 +140,7 @@ export default function All_patient() {
   const [showEditPatientModal, setShowEditPatientModal] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [currentLocation, setCurrentLocation] = useState("default");
+  
   const formatToApiDate = (date) => {
     const validDate = date instanceof Date ? date : new Date(date);
     if (isNaN(validDate)) return null;

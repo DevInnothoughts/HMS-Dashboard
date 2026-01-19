@@ -1,245 +1,269 @@
 import React, { useState } from 'react';
 import TextInput from '../inputs/TextInput';
 import MuiDateTimePicker from '../inputs/MuiDateTimePicker';
-import RadioGroup from '../inputs/RadioGroup';
-import Textarea from '../inputs/Textarea';
-import './Forms.css';
 
 const BloodTransfusionRecordForm = ({ onSubmit, patientData }) => {
-    const [formData, setFormData] = useState({
-        routeLocation: '',
-        cannulaGauge: '',
-        nsReady: '',
-        bloodTemp: '',
-        bloodContains: '',
-        orderedHours: '',
-        orderedMinutes: '',
-        dripRate: '',
-        preMedication: '',
-        bloodBagNo: '',
-        btLocation: '',
-        btStartTime: '',
-        btEndTime: '',
-        monitoring: [{ time: '', bp: '', pulse: '', rr: '', temp: '', drip: '', uo: '' }]
-    });
+  const [formData, setFormData] = useState({
+    routeLocation: '',
+    routeOk: '',
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
+    cannulaGauge: '',
+    gaugeOk: '',
 
-    const handleMonitoringChange = (index, field, value) => {
-        const updated = [...formData.monitoring];
-        updated[index] = { ...updated[index], [field]: value };
-        setFormData(prev => ({ ...prev, monitoring: updated }));
-    };
+    nsText: '',
+    nsOk: '',
 
-    const addMonitoringRow = () => {
-        setFormData(prev => ({
-            ...prev,
-            monitoring: [...prev.monitoring, { time: '', bp: '', pulse: '', rr: '', temp: '', drip: '', uo: '' }]
-        }));
-    };
+    bloodTemp: { room: false, cold: false, ok: '' },
+    bagContains: { whole: false, pcv: false, ffp: false, ok: '' },
 
-    const removeMonitoringRow = (index) => {
-        if (formData.monitoring.length > 1) {
-            const updated = formData.monitoring.filter((_, i) => i !== index);
-            setFormData(prev => ({ ...prev, monitoring: updated }));
-        }
-    };
+    orderedHrs: '',
+    orderedMin: '',
+    orderedOk: '',
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        onSubmit && onSubmit({ ...formData, patientHeader: patientData });
-    };
+    dripRate: '',
+    dripOk: '',
 
-    return (
-        <div className="medical-form-container">
-            <form onSubmit={handleSubmit} className="medical-form">
-                <h2 className="form-title">
-                    BLOOD TRANSFUSION RECORD & MONITORING
-                </h2>
+    preMedOrdered: '',
+    preMedStatus: '',
+    preMedOk: '',
 
-                {/* Compact Patient Header */}
-                {patientData && (
-                    <div className="patient-compact-header">
-                        <div className="info-item">
-                            <span className="info-label">UHID</span>
-                            <span className="info-value">{patientData.uhid}</span>
-                        </div>
-                        <div className="info-item">
-                            <span className="info-label">Patient Name</span>
-                            <span className="info-value">{patientData.name}</span>
-                        </div>
-                        <div className="info-item">
-                            <span className="info-label">Age</span>
-                            <span className="info-value">{patientData.age}</span>
-                        </div>
-                        <div className="info-item">
-                            <span className="info-label">Gender</span>
-                            <span className="info-value">{patientData.gender}</span>
-                        </div>
-                        <div className="info-item">
-                            <span className="info-label">IP No</span>
-                            <span className="info-value">{patientData.ipNo}</span>
-                        </div>
-                    </div>
-                )}
+    bloodBagNo: '',
+    bloodBagOk: '',
 
-                {/* Nurse’s Checklist */}
-                <h3 className="form-section-title">Nurse's Checklist</h3>
-                <div className="two-col">
-                    <TextInput label="Route / Location" name="routeLocation" value={formData.routeLocation} onChange={handleChange} />
-                    <TextInput label="Cannula Gauge" name="cannulaGauge" value={formData.cannulaGauge} onChange={handleChange} />
-                </div>
+    btLocation: '',
+    btLocationOk: '',
 
-                <div className="two-col">
-                    <RadioGroup
-                        label="NS 0.9% Available on IV Stand"
-                        name="nsReady"
-                        value={formData.nsReady}
-                        onChange={handleChange}
-                        options={[
-                            { label: 'Yes', value: 'yes' },
-                            { label: 'No', value: 'no' }
-                        ]}
-                    />
+    btStartTime: '',
+    btEndTime: '',
 
-                    <RadioGroup
-                        label="Blood Bag Temperature"
-                        name="bloodTemp"
-                        value={formData.bloodTemp}
-                        onChange={handleChange}
-                        options={[
-                            { label: 'Room Temperature', value: 'room' },
-                            { label: 'Cold', value: 'cold' }
-                        ]}
-                    />
-                </div>
+    monitoring: [
+      { time: '', bp: '', pulse: '', rr: '', temp: '', drip: '', uo: '' }
+    ]
+  });
 
-                <div className="form-field">
-                    <TextInput label="Blood Contains (Whole Blood / PCV / FFP)" name="bloodContains" value={formData.bloodContains} onChange={handleChange} />
-                </div>
+  const set = (key, value) =>
+    setFormData(prev => ({ ...prev, [key]: value }));
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr', gap: '1.5rem', alignItems: 'end' }}>
-                    <TextInput label="Drip Rate (drops/min)" name="dripRate" value={formData.dripRate} onChange={handleChange} />
-                    <TextInput label="Ordered Time (Hours)" name="orderedHours" value={formData.orderedHours} onChange={handleChange} />
-                    <TextInput label="Ordered Time (Minutes)" name="orderedMinutes" value={formData.orderedMinutes} onChange={handleChange} />
-                </div>
+  const setNested = (section, key, value) =>
+    setFormData(prev => ({
+      ...prev,
+      [section]: { ...prev[section], [key]: value }
+    }));
 
-                <div className="form-field">
-                    <RadioGroup
-                        label="Pre-medication Ordered"
-                        name="preMedication"
-                        value={formData.preMedication}
-                        onChange={handleChange}
-                        options={[
-                            { label: 'Ready', value: 'ready' },
-                            { label: 'Given', value: 'given' }
-                        ]}
-                    />
-                </div>
+  const yesNo = (name, value, setter) => (
+    <>
+      <label>
+        <input
+          type="radio"
+          name={name}
+          checked={value === 'yes'}
+          onChange={() => setter('yes')}
+        /> Yes
+      </label>
+      <label style={{ marginLeft: 10 }}>
+        <input
+          type="radio"
+          name={name}
+          checked={value === 'no'}
+          onChange={() => setter('no')}
+        /> No
+      </label>
+    </>
+  );
 
-                <TextInput label="Blood Bag Number" name="bloodBagNo" value={formData.bloodBagNo} onChange={handleChange} />
+  /* ===== Monitoring logic (UNCHANGED) ===== */
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr', gap: '1.5rem', alignItems: 'end' }}>
-                    <TextInput label="BT Started At (OT / Ward)" name="btLocation" value={formData.btLocation} onChange={handleChange} />
-                    <MuiDateTimePicker type="time" label="BT Start Time" name="btStartTime" value={formData.btStartTime} onChange={handleChange} />
-                    <MuiDateTimePicker type="time" label="BT End Time" name="btEndTime" value={formData.btEndTime} onChange={handleChange} />
-                </div>
+  const handleMonitoringChange = (i, field, value) => {
+    const updated = [...formData.monitoring];
+    updated[i][field] = value;
+    setFormData(prev => ({ ...prev, monitoring: updated }));
+  };
 
-                <hr style={{ margin: '2.5rem 0', border: 'none', borderTop: '1px solid var(--border-color)' }} />
+  const addMonitoringRow = () => {
+    setFormData(prev => ({
+      ...prev,
+      monitoring: [
+        ...prev.monitoring,
+        { time: '', bp: '', pulse: '', rr: '', temp: '', drip: '', uo: '' }
+      ]
+    }));
+  };
 
-                {/* Monitoring Chart */}
-                <h3 className="form-section-title">BT MONITORING CHART</h3>
+  const removeMonitoringRow = (i) => {
+    if (formData.monitoring.length > 1) {
+      setFormData(prev => ({
+        ...prev,
+        monitoring: prev.monitoring.filter((_, idx) => idx !== i)
+      }));
+    }
+  };
 
-                <div style={{ overflowX: 'auto', border: '1px solid var(--border-color)', borderRadius: '12px', overflow: 'hidden', marginBottom: '1.5rem' }}>
-                    <div style={{ minWidth: '800px' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr 1fr 1fr 1fr 1fr 50px', gap: '10px', padding: '12px', backgroundColor: '#f1f5f9', fontWeight: 'bold', color: 'var(--text-main)', fontSize: '0.85rem', textAlign: 'center' }}>
-                            <div>Time</div>
-                            <div>BP</div>
-                            <div>Pulse</div>
-                            <div>RR</div>
-                            <div>Temp</div>
-                            <div>Drip Rate</div>
-                            <div>U/O</div>
-                            <div></div>
-                        </div>
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit && onSubmit({ ...formData, patientHeader: patientData });
+  };
 
-                        {formData.monitoring.map((row, index) => (
-                            <div
-                                key={index}
-                                style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: '120px 1fr 1fr 1fr 1fr 1fr 1fr 50px',
-                                    gap: '10px',
-                                    padding: '10px 12px',
-                                    borderTop: '1px solid var(--border-color)',
-                                    alignItems: 'center'
-                                }}
-                            >
-                                <MuiDateTimePicker hideLabel type="time" value={row.time} onChange={e => handleMonitoringChange(index, 'time', e.target.value)} />
-                                <TextInput hideLabel value={row.bp} onChange={e => handleMonitoringChange(index, 'bp', e.target.value)} placeholder="BP" />
-                                <TextInput hideLabel value={row.pulse} onChange={e => handleMonitoringChange(index, 'pulse', e.target.value)} placeholder="P" />
-                                <TextInput hideLabel value={row.rr} onChange={e => handleMonitoringChange(index, 'rr', e.target.value)} placeholder="RR" />
-                                <TextInput hideLabel value={row.temp} onChange={e => handleMonitoringChange(index, 'temp', e.target.value)} placeholder="T" />
-                                <TextInput hideLabel value={row.drip} onChange={e => handleMonitoringChange(index, 'drip', e.target.value)} placeholder="Drip" />
-                                <TextInput hideLabel value={row.uo} onChange={e => handleMonitoringChange(index, 'uo', e.target.value)} placeholder="U/O" />
-                                <div style={{ textAlign: 'center' }}>
-                                    {formData.monitoring.length > 1 && (
-                                        <button
-                                            type="button"
-                                            onClick={() => removeMonitoringRow(index)}
-                                            style={{
-                                                background: '#fee2e2',
-                                                color: '#ef4444',
-                                                border: 'none',
-                                                borderRadius: '50%',
-                                                width: '24px',
-                                                height: '24px',
-                                                cursor: 'pointer',
-                                                fontWeight: 'bold',
-                                                lineHeight: '24px'
-                                            }}
-                                            title="Remove Entry"
-                                        >
-                                            &times;
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+  return (
+    <form onSubmit={handleSubmit} className="medical-form compact-form">
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '2rem' }}>
-                    <button
-                        type="button"
-                        onClick={addMonitoringRow}
-                        style={{
-                            padding: '0.625rem 1.25rem',
-                            background: '#f0fdf4',
-                            color: '#16a34a',
-                            border: '1.5px solid #bbf7d0',
-                            borderRadius: '8px',
-                            cursor: 'pointer',
-                            fontSize: '0.875rem',
-                            fontWeight: '600'
-                        }}
-                    >
-                        + Add Monitoring Entry
-                    </button>
-                </div>
+      <h2 className="form-title" style={{ textAlign: 'center' }}>
+        BLOOD TRANSFUSION RECORD & MONITORING
+      </h2>
 
-                <button type="submit" className="submit-btn">
-                    Submit Blood Transfusion Record
-                </button>
-            </form>
+      {/* Patient Header */}
+      {patientData && (
+        <div className="patient-compact-header">
+          <div>UHID: {patientData.uhid}</div>
+          <div>Name: {patientData.name}</div>
+          <div>Age: {patientData.age}</div>
+          <div>Gender: {patientData.gender}</div>
+          <div>IP No: {patientData.ipNo}</div>
         </div>
-    );
+      )}
+
+      {/* ================= NURSE’S PART (TABLE) ================= */}
+      <h3>Nurse’s Part</h3>
+
+      <table className="medical-table">
+        <thead>
+          <tr>
+            <th>Check point</th>
+            <th>Requirement / compliance</th>
+            <th>OK / NO</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <tr>
+            <td>Route / Location</td>
+            <td><input value={formData.routeLocation} onChange={e => set('routeLocation', e.target.value)} /></td>
+            <td>{yesNo('routeOk', formData.routeOk, v => set('routeOk', v))}</td>
+          </tr>
+
+          <tr>
+            <td>Cannula with BT set</td>
+            <td>Gauge no. <input style={{ width: 80 }} value={formData.cannulaGauge} onChange={e => set('cannulaGauge', e.target.value)} /></td>
+            <td>{yesNo('gaugeOk', formData.gaugeOk, v => set('gaugeOk', v))}</td>
+          </tr>
+
+          <tr>
+            <td>NS 0.9% available on IV stand</td>
+            <td><input value={formData.nsText} onChange={e => set('nsText', e.target.value)} /></td>
+            <td>{yesNo('nsOk', formData.nsOk, v => set('nsOk', v))}</td>
+          </tr>
+
+          <tr>
+            <td>Blood bag temperature</td>
+            <td>
+              <label><input type="checkbox" onChange={e => setNested('bloodTemp', 'room', e.target.checked)} /> Room Temp</label>
+              <label style={{ marginLeft: 10 }}><input type="checkbox" onChange={e => setNested('bloodTemp', 'cold', e.target.checked)} /> Cold</label>
+            </td>
+            <td>{yesNo('bloodTempOk', formData.bloodTemp.ok, v => setNested('bloodTemp', 'ok', v))}</td>
+          </tr>
+
+          <tr>
+            <td>Bag contains</td>
+            <td>
+              <label><input type="checkbox" onChange={e => setNested('bagContains', 'whole', e.target.checked)} /> Whole blood</label>
+              <label><input type="checkbox" onChange={e => setNested('bagContains', 'pcv', e.target.checked)} /> PCV</label>
+              <label><input type="checkbox" onChange={e => setNested('bagContains', 'ffp', e.target.checked)} /> FFP</label>
+            </td>
+            <td>{yesNo('bagContainsOk', formData.bagContains.ok, v => setNested('bagContains', 'ok', v))}</td>
+          </tr>
+
+          <tr>
+            <td>Transfusion ordered time</td>
+            <td>
+              Hrs <input style={{ width: 50 }} value={formData.orderedHrs} onChange={e => set('orderedHrs', e.target.value)} />
+              Min <input style={{ width: 50 }} value={formData.orderedMin} onChange={e => set('orderedMin', e.target.value)} />
+            </td>
+            <td>{yesNo('orderedOk', formData.orderedOk, v => set('orderedOk', v))}</td>
+          </tr>
+
+          <tr>
+            <td>Drip rate as ordered</td>
+            <td>Drops/min <input style={{ width: 80 }} value={formData.dripRate} onChange={e => set('dripRate', e.target.value)} /></td>
+            <td>{yesNo('dripOk', formData.dripOk, v => set('dripOk', v))}</td>
+          </tr>
+
+          <tr>
+            <td>Pre-medication ordered</td>
+            <td>
+              {yesNo('preMedOrdered', formData.preMedOrdered, v => set('preMedOrdered', v))}
+              <br />
+              <label><input type="radio" name="preMedStatus" onChange={() => set('preMedStatus', 'ready')} /> Ready</label>
+              <label><input type="radio" name="preMedStatus" onChange={() => set('preMedStatus', 'given')} /> Given</label>
+            </td>
+            <td>{yesNo('preMedOk', formData.preMedOk, v => set('preMedOk', v))}</td>
+          </tr>
+
+          <tr>
+            <td>Blood bag no.</td>
+            <td><input value={formData.bloodBagNo} onChange={e => set('bloodBagNo', e.target.value)} /></td>
+            <td>{yesNo('bloodBagOk', formData.bloodBagOk, v => set('bloodBagOk', v))}</td>
+          </tr>
+
+          <tr>
+            <td>Location BT started</td>
+            <td>
+              <label><input type="radio" name="btLoc" onChange={() => set('btLocation', 'OT')} /> OT</label>
+              <label><input type="radio" name="btLoc" onChange={() => set('btLocation', 'Ward')} /> Ward</label>
+            </td>
+            <td>{yesNo('btLocationOk', formData.btLocationOk, v => set('btLocationOk', v))}</td>
+          </tr>
+
+        </tbody>
+      </table>
+
+      {/* ================= BT MONITORING CHART (UNCHANGED) ================= */}
+      <hr style={{ margin: '30px 0' }} />
+
+      <h3>BT Monitoring Chart</h3>
+
+      <div style={{ overflowX: 'auto', border: '1px solid #80deea', borderRadius: '8px' }}>
+        <div style={{ minWidth: '800px' }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '120px 1fr 1fr 1fr 1fr 1fr 1fr 50px',
+            padding: '10px',
+            background: '#e0f7fa',
+            fontWeight: 'bold'
+          }}>
+            <div>Time</div><div>BP</div><div>Pulse</div><div>RR</div>
+            <div>Temp</div><div>Drip</div><div>U/O</div><div></div>
+          </div>
+
+          {formData.monitoring.map((row, i) => (
+            <div key={i} style={{
+              display: 'grid',
+              gridTemplateColumns: '120px 1fr 1fr 1fr 1fr 1fr 1fr 50px',
+              padding: '8px'
+            }}>
+              <MuiDateTimePicker hideLabel type="time" value={row.time} onChange={e => handleMonitoringChange(i, 'time', e.target.value)} />
+              <TextInput hideLabel value={row.bp} onChange={e => handleMonitoringChange(i, 'bp', e.target.value)} />
+              <TextInput hideLabel value={row.pulse} onChange={e => handleMonitoringChange(i, 'pulse', e.target.value)} />
+              <TextInput hideLabel value={row.rr} onChange={e => handleMonitoringChange(i, 'rr', e.target.value)} />
+              <TextInput hideLabel value={row.temp} onChange={e => handleMonitoringChange(i, 'temp', e.target.value)} />
+              <TextInput hideLabel value={row.drip} onChange={e => handleMonitoringChange(i, 'drip', e.target.value)} />
+              <TextInput hideLabel value={row.uo} onChange={e => handleMonitoringChange(i, 'uo', e.target.value)} />
+              {formData.monitoring.length > 1 && (
+                <button type="button" onClick={() => removeMonitoringRow(i)}>×</button>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <button type="button" onClick={addMonitoringRow} style={{ marginTop: 10 }}>
+        + Add Monitoring Entry
+      </button>
+
+      <button type="submit" className="submit-btn" style={{ marginTop: 20 }}>
+        Submit Blood Transfusion Record
+      </button>
+
+    </form>
+  );
 };
 
 export default BloodTransfusionRecordForm;

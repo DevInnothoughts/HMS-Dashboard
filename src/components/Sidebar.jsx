@@ -290,7 +290,7 @@ export default function Sidebar() {
   );
 
   const renderContent = () => {
-    if (department === "IPD" && accountType === "reception" ) {
+    if (department === "IPD" && accountType === "reception") {
       return renderIPDReceptionDemoMenu();
     }
     if (accountType === "doctor") {

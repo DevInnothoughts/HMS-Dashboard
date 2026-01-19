@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import TextInput from '../inputs/TextInput';
 import MuiDateTimePicker from '../inputs/MuiDateTimePicker';
 import Textarea from '../inputs/Textarea';
-import './Forms.css';
 
 const ProgressNotesForm = ({ onSubmit, patientData }) => {
     const [formData, setFormData] = useState({
@@ -25,8 +24,8 @@ const ProgressNotesForm = ({ onSubmit, patientData }) => {
     };
 
     return (
-        <div className="medical-form-container">
-            <h2 className="form-title">
+        <div className="medical-form progress-notes-form">
+            <h2 className="form-title" style={{ textAlign: 'center', marginBottom: '20px', color: '#80deea', borderBottom: '2px solid #80deea', paddingBottom: '10px' }}>
                 DOCTOR'S PROGRESS NOTES
             </h2>
 
@@ -56,41 +55,37 @@ const ProgressNotesForm = ({ onSubmit, patientData }) => {
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="medical-form">
-                <div style={{ maxWidth: '300px', marginBottom: '1rem' }}>
-                    <MuiDateTimePicker
-                        label="Date & Time"
-                        name="progressDateTime"
-                        value={formData.progressDateTime}
-                        onChange={handleChange}
-                    />
-                </div>
+            <form onSubmit={handleSubmit} className="compact-form">
+                <MuiDateTimePicker
+                    label="Progress Date & Time"
+                    name="progressDateTime"
+                    value={formData.progressDateTime}
+                    onChange={handleChange}
+                />
 
-                <div className="notes-canvas">
-                    <label className="field-label" style={{ marginBottom: '0.5rem' }}>Clinical Observations</label>
+                <div className="notes-container" style={{ position: 'relative' }}>
                     <Textarea
+                        label="Clinical Notes / Progress"
                         name="clinicalNotes"
                         value={formData.clinicalNotes}
                         onChange={handleChange}
-                        rows={15}
-                        placeholder="Type progression notes..."
-                        textareaStyle={{
-                            lineHeight: '1.6',
-                            padding: '1.2rem',
-                            fontSize: '0.9rem',
-                            minHeight: '400px',
-                            background: '#fff',
-                            backgroundImage: 'linear-gradient(var(--border-color) 1.1px, transparent 1.1px)',
-                            backgroundSize: '100% 1.6em',
-                            border: '1px solid var(--border-color)',
-                            borderRadius: '8px'
+                        rows={25}
+                        placeholder="Enter clinical progress notes here..."
+                        style={{
+                            lineHeight: '32px',
+                            padding: '8px 15px',
+                            border: '2px solid #e1e8ed',
+                            borderRadius: '6px',
+                            width: '100%',
+                            fontSize: '1rem',
+                            minHeight: '600px'
                         }}
                     />
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
-                    <button type="submit" className="submit-btn" style={{ maxWidth: '300px' }}>Save Entry</button>
-                </div>
+                <button type="submit" className="submit-btn">
+                    Save Progress Notes
+                </button>
             </form>
         </div>
     );

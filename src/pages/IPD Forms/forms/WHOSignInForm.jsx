@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
+import RadioGroup from '../inputs/RadioGroup';
 import TextInput from '../inputs/TextInput';
 import SignatureInput from '../inputs/SignatureInput';
 import MuiDateTimePicker from '../inputs/MuiDateTimePicker';
-import './Forms.css';
 
 const WHOSignInForm = ({ onSubmit, patientData }) => {
     const [formData, setFormData] = useState({
@@ -31,9 +31,9 @@ const WHOSignInForm = ({ onSubmit, patientData }) => {
     };
 
     return (
-        <div className="medical-form-container">
-            <h2 className="form-title">
-                WHO SURGICAL SAFETY CHECKLIST: SIGN IN
+        <form onSubmit={handleSubmit} className="medical-form compact-form">
+            <h2 className="form-title" style={{ textAlign: 'center', backgroundColor: '#80deea', color: 'white', padding: '8px', borderRadius: '4px', margin: '10px 0 20px 0', fontSize: '1.2rem' }}>
+                WHO SURGICAL SAFETY CHECKLIST - SIGN IN
             </h2>
 
             {/* Compact Patient Header */}
@@ -62,121 +62,114 @@ const WHOSignInForm = ({ onSubmit, patientData }) => {
                 </div>
             )}
 
-            <div style={{ textAlign: 'center', margin: '2rem 0' }}>
-                <h3 style={{ margin: 0, color: 'var(--primary-color)', fontWeight: '800' }}>PHASE 1: BEFORE INDUCTION OF ANAESTHESIA</h3>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-light)', fontStyle: 'italic', marginTop: '0.5rem' }}>
-                    Requirement: Presence of at least Nurse and Anaesthetist
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+                <h3 style={{ margin: '0' }}>Before induction of anaesthesia (Sign in)</h3>
+                <p style={{ fontSize: '0.85rem', color: '#666', fontStyle: 'italic', margin: '5px 0' }}>
+                    (With at least nurse and anaesthetist)
                 </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="medical-form">
-                <div className="section-box" style={{ padding: '2rem' }}>
-                    <div className="form-field">
-                        <label className="field-label">Patient has confirmed Identity, Site, Procedure & Consent?</label>
-                        <div className="radio-group">
-                            {['Yes', 'No'].map(opt => (
-                                <label key={opt} className={`radio-option ${formData.confirmedIdentity === opt ? 'selected' : ''}`}>
-                                    <input type="radio" name="confirmedIdentity" value={opt} checked={formData.confirmedIdentity === opt} onChange={handleChange} />
-                                    <span>{opt}</span>
-                                </label>
-                            ))}
-                        </div>
-                    </div>
+            <div className="form-section">
+                <RadioGroup
+                    label="Has Patient confirmed his/her identity, site, procedure, and consent?"
+                    name="confirmedIdentity"
+                    value={formData.confirmedIdentity}
+                    onChange={handleChange}
+                    options={['Yes', 'No']}
+                />
 
-                    <div className="form-field">
-                        <label className="field-label">Is the surgical site marked?</label>
-                        <div className="radio-group">
-                            {['Yes', 'Not applicable'].map(opt => (
-                                <label key={opt} className={`radio-option ${formData.siteMarked === opt ? 'selected' : ''}`}>
-                                    <input type="radio" name="siteMarked" value={opt} checked={formData.siteMarked === opt} onChange={handleChange} />
-                                    <span>{opt}</span>
-                                </label>
-                            ))}
-                        </div>
-                    </div>
+                <RadioGroup
+                    label="Is the site marked?"
+                    name="siteMarked"
+                    value={formData.siteMarked}
+                    onChange={handleChange}
+                    options={['Yes', 'Not applicable']}
+                />
 
-                    <div className="form-field">
-                        <label className="field-label">Anaesthesia machine and medication check complete?</label>
-                        <div className="radio-group">
-                            {['Yes', 'No'].map(opt => (
-                                <label key={opt} className={`radio-option ${formData.anaesthesiaCheck === opt ? 'selected' : ''}`}>
-                                    <input type="radio" name="anaesthesiaCheck" value={opt} checked={formData.anaesthesiaCheck === opt} onChange={handleChange} />
-                                    <span>{opt}</span>
-                                </label>
-                            ))}
-                        </div>
-                    </div>
+                <RadioGroup
+                    label="Is the anaesthesia machine and medication check complete?"
+                    name="anaesthesiaCheck"
+                    value={formData.anaesthesiaCheck}
+                    onChange={handleChange}
+                    options={['Yes', 'No']}
+                />
 
-                    <h4 style={{ margin: '2rem 0 1rem', color: 'var(--primary-color)', fontWeight: '700', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem' }}>Risk Assessment</h4>
+                <p style={{ fontWeight: '600', fontSize: '0.9rem', marginBottom: '10px' }}>Does the patient have:</p>
 
-                    <div className="form-field">
-                        <label className="field-label">Does the patient have a known allergy?</label>
-                        <div className="radio-group">
-                            {['No', 'Yes'].map(opt => (
-                                <label key={opt} className={`radio-option ${formData.knownAllergy === opt ? 'selected' : ''}`}>
-                                    <input type="radio" name="knownAllergy" value={opt} checked={formData.knownAllergy === opt} onChange={handleChange} />
-                                    <span>{opt}</span>
-                                </label>
-                            ))}
-                        </div>
-                    </div>
+                <div style={{ paddingLeft: '20px' }}>
+                    <RadioGroup
+                        label="1) Known allergy?"
+                        name="knownAllergy"
+                        value={formData.knownAllergy}
+                        onChange={handleChange}
+                        options={['No', 'Yes']}
+                    />
 
-                    <div className="form-field">
-                        <label className="field-label">Difficult airway or aspiration risk?</label>
-                        <div className="radio-group">
-                            {['No', 'Yes and equipment/assistance available'].map(opt => (
-                                <label key={opt} className={`radio-option ${formData.difficultAirway === opt ? 'selected' : ''}`}>
-                                    <input type="radio" name="difficultAirway" value={opt} checked={formData.difficultAirway === opt} onChange={handleChange} />
-                                    <span>{opt}</span>
-                                </label>
-                            ))}
-                        </div>
-                    </div>
+                    <RadioGroup
+                        label="2) Difficult airway or aspiration risk?"
+                        name="difficultAirway"
+                        value={formData.difficultAirway}
+                        onChange={handleChange}
+                        options={['No', 'Yes and equipment / assistance available']}
+                    />
 
-                    <div className="form-field">
-                        <label className="field-label">Risk of &gt;500ml blood loss (7ml/kg in children)?</label>
-                        <div className="radio-group">
-                            {['No', 'Yes and two IV/Central access and fluids planned'].map(opt => (
-                                <label key={opt} className={`radio-option ${formData.bloodLossRisk === opt ? 'selected' : ''}`}>
-                                    <input type="radio" name="bloodLossRisk" value={opt} checked={formData.bloodLossRisk === opt} onChange={handleChange} />
-                                    <span>{opt}</span>
-                                </label>
-                            ))}
-                        </div>
-                    </div>
+                    <RadioGroup
+                        label="3) Risk of >500ml blood loss (7ml/kg in children)?"
+                        name="bloodLossRisk"
+                        value={formData.bloodLossRisk}
+                        onChange={handleChange}
+                        options={['No', 'Yes and two i.v. / central access and fluids planned']}
+                    />
                 </div>
+            </div>
 
-                <div className="two-col" style={{ marginTop: '3rem' }}>
-                    <div className="section-box" style={{ padding: '1.5rem', borderLeft: '4px solid var(--primary-color)' }}>
-                        <h4 style={{ margin: '0 0 1.5rem', fontWeight: '800', fontSize: '0.9rem' }}>CIRCULATING NURSE</h4>
-                        <TextInput label="Name" name="circulatingNurse" value={formData.circulatingNurse} onChange={handleChange} />
-                        <SignatureInput label="Digital Signature" name="circulatingSignature" value={formData.circulatingSignature} onChange={handleChange} />
-                        <MuiDateTimePicker label="Signed On" name="circulatingDate" value={formData.circulatingDate} onChange={handleChange} />
-                    </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr', gap: '10px', marginTop: '30px', borderTop: '1px solid #eee', paddingTop: '20px' }}>
+                <TextInput
+                    label="Circulating Nurse Name"
+                    name="circulatingNurse"
+                    value={formData.circulatingNurse}
+                    onChange={handleChange}
+                />
+                <SignatureInput
+                    label="Signature"
+                    name="circulatingSignature"
+                    value={formData.circulatingSignature}
+                    onChange={handleChange}
+                />
+                <MuiDateTimePicker
+                    label="Date & Time"
+                    name="circulatingDate"
+                    value={formData.circulatingDate}
+                    onChange={handleChange}
+                />
+            </div>
 
-                    <div className="section-box" style={{ padding: '1.5rem', borderLeft: '4px solid #10b981' }}>
-                        <h4 style={{ margin: '0 0 1.5rem', fontWeight: '800', fontSize: '0.9rem' }}>ANAESTHETIST</h4>
-                        <TextInput label="Dr. Name" name="anaesthetistName" value={formData.anaesthetistName} onChange={handleChange} />
-                        <SignatureInput label="Digital Signature" name="anaesthetistSignature" value={formData.anaesthetistSignature} onChange={handleChange} />
-                        <MuiDateTimePicker label="Signed On" name="anaesthetistDate" value={formData.anaesthetistDate} onChange={handleChange} />
-                    </div>
-                </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr', gap: '10px', marginTop: '10px' }}>
+                <TextInput
+                    label="Anaesthetist's Name: Dr."
+                    name="anaesthetistName"
+                    value={formData.anaesthetistName}
+                    onChange={handleChange}
+                    placeholder="Enter Name"
+                />
+                <SignatureInput
+                    label="Signature"
+                    name="anaesthetistSignature"
+                    value={formData.anaesthetistSignature}
+                    onChange={handleChange}
+                />
+                <MuiDateTimePicker
+                    label="Date & Time"
+                    name="anaesthetistDate"
+                    value={formData.anaesthetistDate}
+                    onChange={handleChange}
+                />
+            </div>
 
-                <button type="submit" className="submit-btn" style={{ marginTop: '4rem' }}>
-                    Complete Sign In Checklist
-                </button>
-            </form>
-
-            <style>{`
-                .section-box {
-                    background: #ffffff;
-                    border: 1px solid var(--border-color);
-                    border-radius: 16px;
-                    padding: 1.5rem;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-                }
-            `}</style>
-        </div>
+            <button type="submit" className="submit-btn" style={{ marginTop: '30px' }}>
+                Submit Sign In
+            </button>
+        </form>
     );
 };
 

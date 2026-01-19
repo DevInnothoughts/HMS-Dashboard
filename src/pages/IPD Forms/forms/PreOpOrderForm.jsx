@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import TextInput from '../inputs/TextInput';
 import MuiDateTimePicker from '../inputs/MuiDateTimePicker';
-import './Forms.css';
 
 const PreOpOrderForm = ({ onSubmit, patientData = {} }) => {
     const [formData, setFormData] = useState({
@@ -78,9 +77,12 @@ const PreOpOrderForm = ({ onSubmit, patientData = {} }) => {
         onSubmit && onSubmit(formData);
     };
 
+    const checkboxStyle = { border: 'none', padding: '4px 0', fontSize: '0.85rem' };
+    const gridStyle = { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' };
+
     return (
-        <div className="medical-form-container">
-            <h2 className="form-title">PRE OPERATIVE ORDERS (PRE-OP)</h2>
+        <form onSubmit={handleSubmit} className="medical-form">
+            <h2 style={{ color: '#80deea', borderBottom: '2px solid #80deea', paddingBottom: '10px', marginBottom: '25px' }}>PRE OP ORDER</h2>
 
             {/* Compact Patient Header */}
             <div className="patient-compact-header">
@@ -106,144 +108,141 @@ const PreOpOrderForm = ({ onSubmit, patientData = {} }) => {
                 </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="medical-form">
-                <div className="form-body-split">
-                    <div className="left-side">
-                        <div className="section-box">
-                            <h3 className="form-section-title" style={{ marginTop: 0 }}>Vitals & Preparation</h3>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
-                                <TextInput label="Temp (°F)" name="vitals.temp" value={formData.vitals.temp} onChange={handleChange} />
-                                <TextInput label="Pulse" name="vitals.pulse" value={formData.vitals.pulse} onChange={handleChange} />
-                                <TextInput label="Resp" name="vitals.resp" value={formData.vitals.resp} onChange={handleChange} />
-                                <TextInput label="BP" name="vitals.bp" value={formData.vitals.bp} onChange={handleChange} />
-                            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+                <TextInput label="TEMP" name="vitals.temp" value={formData.vitals.temp} onChange={handleChange} />
+                <TextInput label="PULSE" name="vitals.pulse" value={formData.vitals.pulse} onChange={handleChange} />
+                <TextInput label="RESP" name="vitals.resp" value={formData.vitals.resp} onChange={handleChange} />
+                <TextInput label="BP" name="vitals.bp" value={formData.vitals.bp} onChange={handleChange} />
+            </div>
 
-                            <div className="form-field" style={{ marginTop: '1rem' }}>
-                                <label className="field-label">Part Preparation</label>
-                                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                                    {[
-                                        ['enema', 'Enema'], ['colonHydrotherapy', 'Hydrotherapy']
-                                    ].map(([key, label]) => (
-                                        <label key={key} className={`checkbox-option ${formData.preparation[key] ? 'selected' : ''}`} style={{ padding: '0.2rem 0.6rem', fontSize: '0.75rem' }}>
-                                            <input type="checkbox" name={`preparation.${key}`} checked={formData.preparation[key]} onChange={handleChange} />
-                                            <span>{label}</span>
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="section-box">
-                            <h3 className="form-section-title" style={{ marginTop: 0 }}>Consents obtained</h3>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-                                {[
-                                    ['highRisk', 'High Risk'], ['surgery', 'Surgery'],
-                                    ['anesthesia', 'Anesthesia'], ['implant', 'Implant']
-                                ].map(([key, label]) => (
-                                    <label key={key} className={`checkbox-option ${formData.consents[key] ? 'selected' : ''}`} style={{ padding: '0.2rem 0.6rem', fontSize: '0.75rem' }}>
-                                        <input type="checkbox" name={`consents.${key}`} checked={formData.consents[key]} onChange={handleChange} />
-                                        <span>{label}</span>
-                                    </label>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="section-box">
-                            <h3 className="form-section-title" style={{ marginTop: 0 }}>Fitness Clearance</h3>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
-                                {['ANESTHESIA', 'PHYSICIAN', 'CARDIAC'].map(item => (
-                                    <label key={item} className={`checkbox-option ${formData.fitness.includes(item) ? 'selected' : ''}`} style={{ padding: '0.2rem 0.6rem', fontSize: '0.75rem' }}>
-                                        <input type="checkbox" checked={formData.fitness.includes(item)} onChange={() => handleListChange('fitness', item)} />
-                                        <span>{item}</span>
-                                    </label>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="right-side">
-                        <div className="section-box">
-                            <h3 className="form-section-title" style={{ marginTop: 0 }}>Investigations</h3>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.4rem' }}>
-                                {[
-                                    'CBC', 'BSL', 'Creatinine', 'BT/CT', 'PT/INR', 'HIV',
-                                    'HBsAg', 'HCV', 'USG', 'ECG', 'Doppler',
-                                    'CT Scan', 'X-Ray', '2D Echo', 'MRI'
-                                ].map(item => (
-                                    <label key={item} className={`checkbox-option ${formData.investigations.includes(item) ? 'selected' : ''}`} style={{ fontSize: '0.7rem', padding: '0.3rem' }}>
-                                        <input type="checkbox" checked={formData.investigations.includes(item)} onChange={() => handleListChange('investigations', item)} />
-                                        <span>{item}</span>
-                                    </label>
-                                ))}
-                            </div>
-                            <div style={{ marginTop: '0.75rem' }}>
-                                <TextInput label="Other" name="investigationsOther" value={formData.investigationsOther} onChange={handleChange} />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="section-box" style={{ marginTop: '1.5rem', borderLeft: '6px solid var(--primary-color)' }}>
-                    <h3 className="form-section-title">IV Antibiotics & Meds</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
-                        {[
-                            'Inj. CEFTRIAXONE 1GM', 'Inj. METRONIDAZOLE 100MG',
-                            'Inj. AMOXI-CLAV 1.2 GM', 'Inj. DEXAMETHASONE 4MG',
-                            'Inj. HYDROCORTISONE 100 MG', 'Inj. AVIL 2ML',
-                            'Inj. CEFOTAXIME 1GM', 'Inj. CEFUROXIME 1.5 GM',
-                            'Inj. AMIKACIN 750 MG'
-                        ].map(item => (
-                            <label key={item} className={`checkbox-option ${formData.medications.antibiotics.includes(item) ? 'selected' : ''}`} style={{ fontSize: '0.7rem', padding: '0.4rem 0.6rem' }}>
-                                <input type="checkbox" checked={formData.medications.antibiotics.includes(item)} onChange={() => handleListChange('antibiotics', item)} />
-                                <span>{item}</span>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '10px' }}>
+                <div className="form-field">
+                    <label className="field-label">CONSENT</label>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                        {[['highRisk', 'HIGH RISK'], ['surgery', 'SURGERY'], ['anesthesia', 'ANESTHESIA'], ['implant', 'IMPLANT']].map(([key, label]) => (
+                            <label key={key} className="checkbox-label" style={checkboxStyle}>
+                                <input type="checkbox" name={`consents.${key}`} checked={formData.consents[key]} onChange={handleChange} />
+                                <span style={{ marginLeft: '4px' }}>{label}</span>
                             </label>
                         ))}
                     </div>
-
-                    <div className="two-col" style={{ marginTop: '1rem' }}>
-                        <div className="form-field">
-                            <label className="field-label">Antacids</label>
-                            <div style={{ display: 'flex', gap: '0.4rem' }}>
-                                {['Inj. PANTO 40MG', 'Inj. RANITIDINE'].map(item => (
-                                    <label key={item} className={`checkbox-option ${formData.medications.antacid.includes(item) ? 'selected' : ''}`} style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}>
-                                        <input type="checkbox" checked={formData.medications.antacid.includes(item)} onChange={() => handleListChange('antacid', item)} />
-                                        <span>{item}</span>
-                                    </label>
-                                ))}
-                            </div>
-                        </div>
-                        <div className="form-field">
-                            <label className="field-label">Fluids</label>
-                            <div style={{ display: 'flex', gap: '0.4rem' }}>
-                                {['RL', 'NS', 'DNS'].map(item => (
-                                    <label key={item} className={`checkbox-option ${formData.medications.fluids.includes(item) ? 'selected' : ''}`} style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}>
-                                        <input type="checkbox" checked={formData.medications.fluids.includes(item)} onChange={() => handleListChange('fluids', item)} />
-                                        <span>{item}</span>
-                                    </label>
-                                ))}
-                            </div>
-                        </div>
+                </div>
+                <div className="form-field">
+                    <label className="field-label">PART PREPARATION</label>
+                    <div style={{ display: 'flex', gap: '15px' }}>
+                        {[['enema', 'ENEMA'], ['colonHydrotherapy', 'COLON HYDROTHERAPY']].map(([key, label]) => (
+                            <label key={key} className="checkbox-label" style={checkboxStyle}>
+                                <input type="checkbox" name={`preparation.${key}`} checked={formData.preparation[key]} onChange={handleChange} />
+                                <span style={{ marginLeft: '4px' }}>{label}</span>
+                            </label>
+                        ))}
                     </div>
                 </div>
+            </div>
 
-                <div className="two-col" style={{ marginTop: '2rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
-                    <TextInput label="Doctor Name" name="doctorName" value={formData.doctorName} onChange={handleChange} />
-                    <MuiDateTimePicker label="Order Date & Time" name="dateTime" value={formData.dateTime} onChange={handleChange} />
+            <h3>PRE-OP INVESTIGATIONS</h3>
+            <div style={gridStyle}>
+                {['CBC', 'BSL', 'CREATININE LEVEL', 'BT CT', 'PT/INR', 'HIV', 'HBsAg', 'HCV', 'USG', 'ECG', 'VENOUS DOPPLER', 'CT SCAN', 'X-RAY', '2D ECHO', 'MRI'].map(item => (
+                    <label key={item} className="checkbox-label" style={checkboxStyle}>
+                        <input type="checkbox" checked={formData.investigations.includes(item)} onChange={() => handleListChange('investigations', item)} />
+                        <span style={{ marginLeft: '4px' }}>{item}</span>
+                    </label>
+                ))}
+                <TextInput placeholder="OTHER" name="investigationsOther" value={formData.investigationsOther} onChange={handleChange} style={{ gridColumn: 'span 2' }} />
+            </div>
+
+            <div style={{ display: 'flex', gap: '20px', margin: '10px 0', alignItems: 'center' }}>
+                <label className="field-label" style={{ marginBottom: 0 }}>FITNESS:</label>
+                {['ANESTHESIA', 'PHYSICIAN', 'CARD AC'].map(item => (
+                    <label key={item} className="checkbox-label" style={checkboxStyle}>
+                        <input type="checkbox" checked={formData.fitness.includes(item)} onChange={() => handleListChange('fitness', item)} />
+                        <span style={{ marginLeft: '4px' }}>{item}</span>
+                    </label>
+                ))}
+            </div>
+
+            <h3>MEDICATIONS: IV ANTIBIOTICS</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                {[
+                    'Inj. CEFTRIAXONE 1GM IV STAT', 'Inj. METRONIDAZOLE 100MG IV STAT', 'Inj. AMOXICILLIN + CLAVULANIC ACID 1.2 GM IV STAT',
+                    'Inj. DEXAMETHASONE 4MG', 'Inj. HYDROCORTISONE 100 MG', 'Inj. AVIL (PHENIRAMINE) 2ML',
+                    'Inj. CEFOTAXIME 1GM IV STAT', 'Inj. CEFUROXIME 1.5 GM IV STAT', 'Inj. AMIKACIN 750 MG IV STAT'
+                ].map(item => (
+                    <label key={item} className="checkbox-label" style={checkboxStyle}>
+                        <input type="checkbox" checked={formData.medications.antibiotics.includes(item)} onChange={() => handleListChange('antibiotics', item)} />
+                        <span style={{ marginLeft: '4px', fontSize: '0.75rem' }}>{item}</span>
+                    </label>
+                ))}
+                <label className="checkbox-label" style={checkboxStyle}>
+                    <input type="checkbox" checked={formData.medications.antibiotics.includes('Other')} onChange={() => handleListChange('antibiotics', 'Other')} />
+                    <span style={{ marginLeft: '4px', fontSize: '0.75rem' }}>Other</span>
+                </label>
+            </div>
+            {formData.medications.antibiotics.includes('Other') && (
+                <div style={{ marginTop: '5px' }}>
+                    <TextInput
+                        placeholder="Specify other antibiotics"
+                        name="medications.antibioticsOther"
+                        value={formData.medications.antibioticsOther}
+                        onChange={handleChange}
+                    />
                 </div>
+            )}
 
-                <button type="submit" className="submit-btn" style={{ marginTop: '3rem' }}>Authorize Pre-Op Orders</button>
-            </form>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '10px' }}>
+                <div className="form-field">
+                    <label className="field-label">PRE-OP ANTACID</label>
+                    <label className="checkbox-label" style={checkboxStyle}>
+                        <input type="checkbox" checked={formData.medications.antacid.includes('Inj. PAN-40 MG IV STAT')} onChange={() => handleListChange('antacid', 'Inj. PAN-40 MG IV STAT')} />
+                        <span style={{ marginLeft: '4px' }}>Inj. PAN-40 MG IV STAT</span>
+                    </label>
+                </div>
+                <div className="form-field">
+                    <label className="field-label">IV FLUIDS FOR MAINTENANCE</label>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                        {['IVF RL 500ML', 'IVF NS 500ML', 'IVF DNS 500ML'].map(item => (
+                            <label key={item} className="checkbox-label" style={checkboxStyle}>
+                                <input type="checkbox" checked={formData.medications.fluids.includes(item)} onChange={() => handleListChange('fluids', item)} />
+                                <span style={{ marginLeft: '4px', fontSize: '0.8rem' }}>{item}</span>
+                            </label>
+                        ))}
+                        <label className="checkbox-label" style={checkboxStyle}>
+                            <input type="checkbox" checked={formData.medications.fluids.includes('Other')} onChange={() => handleListChange('fluids', 'Other')} />
+                            <span style={{ marginLeft: '4px', fontSize: '0.8rem' }}>Other</span>
+                        </label>
+                    </div>
+                    {formData.medications.fluids.includes('Other') && (
+                        <div style={{ marginTop: '5px' }}>
+                            <TextInput
+                                placeholder="Specify other fluids"
+                                name="medications.fluidsOther"
+                                value={formData.medications.fluidsOther}
+                                onChange={handleChange}
+                            />
+                        </div>
+                    )}
+                </div>
+            </div>
 
-            <style>{`
-                .section-box {
-                    background: #ffffff;
-                    border: 1px solid var(--border-color);
-                    border-radius: 16px;
-                    padding: 1.5rem;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-                }
-            `}</style>
-        </div>
+            <div className="form-field">
+                <label className="field-label">IF REQUIRED</label>
+                <div style={gridStyle}>
+                    {['Inj. HUMAN ACTRAPID INSULIN', 'BSL MONITORING', 'BLOOD TRANSFUSION', 'INFORM SOS', 'SHIFT TO OT ON CALL'].map(item => (
+                        <label key={item} className="checkbox-label" style={checkboxStyle}>
+                            <input type="checkbox" checked={formData.specialRequirements.includes(item)} onChange={() => handleListChange('specialRequirements', item)} />
+                            <span style={{ marginLeft: '4px', fontSize: '0.75rem' }}>{item}</span>
+                        </label>
+                    ))}
+                </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginTop: '20px' }}>
+                <TextInput label="CHECKED BY DOCTOR'S NAME" name="doctorName" value={formData.doctorName} onChange={handleChange} />
+                <MuiDateTimePicker label="DATE & TIME" name="dateTime" value={formData.dateTime} onChange={handleChange} />
+            </div>
+
+            <button type="submit" className="submit-btn">Submit Pre Op Order</button>
+        </form >
     );
 };
 

@@ -1,183 +1,271 @@
 import React, { useState } from 'react';
-import TextInput from '../inputs/TextInput';
-import RadioGroup from '../inputs/RadioGroup';
-import CheckboxGroup from '../inputs/CheckboxGroup';
-import SignatureInput from '../inputs/SignatureInput';
-import MuiDateTimePicker from '../inputs/MuiDateTimePicker';
-import './Forms.css';
 
-const NursingInitialAssessmentFallRiskForm = ({ onSubmit, patientData }) => {
-    const [formData, setFormData] = useState({
-        morseFallScore: '',
-        riskLevel: '',
-        painScore: '',
-        painLocation: '',
-        bradenScore: '',
-        pressureSore: '',
-        devices: [],
-        centralLineDate: '',
-        foleyDate: '',
-        peripheralDate: '',
-        rtDate: '',
-        otherDeviceDate: '',
-        assessedBy: '',
-        assessmentDate: '',
-        assessmentTime: ''
-    });
+const NursingInitialAssessment = ({ onSubmit, patientData }) => {
+  const [formData, setFormData] = useState({
+    morseFallScale: {
+      historyOfFalling: '',
+      secondaryDiagnosis: '',
+      ambulatoryAid: '',
+      ivHeparin: '',
+      gait: '',
+      mentalStatus: ''
+    },
+    painScore: '',
+    painLocation: '',
+    bradenScore: '',
+    pressureSore: {
+      existing: false,
+      prospective: false
+    },
+    devices: {
+      centralLine: { present: '', date: '' },
+      foleys: { present: '', date: '' },
+      peripheralLine: { present: '', date: '' },
+      rt: { present: '', date: '' },
+      other: { present: '', date: '' }
+    },
+    assessmentBy: '',
+    assessmentDate: '',
+    assessmentTime: ''
+  });
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        onSubmit && onSubmit({ ...formData, patientHeader: patientData });
-    };
+  const handleDeviceChange = (device, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      devices: {
+        ...prev.devices,
+        [device]: {
+          ...prev.devices[device],
+          [field]: value
+        }
+      }
+    }));
+  };
 
-    return (
-        <div className="medical-form-container">
-            <h2 className="form-title">
-                NURSING INITIAL ASSESSMENT (FALL RISK)
-            </h2>
+  const handleMorseChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      morseFallScale: {
+        ...prev.morseFallScale,
+        [field]: value
+      }
+    }));
+  };
 
-            {/* Compact Patient Header */}
-            {patientData && (
-                <div className="patient-compact-header">
-                    <div className="info-item">
-                        <span className="info-label">UHID</span>
-                        <span className="info-value">{patientData.uhid}</span>
-                    </div>
-                    <div className="info-item">
-                        <span className="info-label">Patient Name</span>
-                        <span className="info-value">{patientData.name}</span>
-                    </div>
-                    <div className="info-item">
-                        <span className="info-label">Age</span>
-                        <span className="info-value">{patientData.age}</span>
-                    </div>
-                    <div className="info-item">
-                        <span className="info-label">Gender</span>
-                        <span className="info-value">{patientData.gender}</span>
-                    </div>
-                    <div className="info-item">
-                        <span className="info-label">IP No</span>
-                        <span className="info-value">{patientData.ipNo}</span>
-                    </div>
-                </div>
-            )}
+  const morseScores = {
+    historyOfFalling: { Yes: 25, No: 0 },
+    secondaryDiagnosis: { Yes: 15, No: 0 },
+    ambulatoryAid: {
+      'Bed rest / Nurse assist': 0,
+      'Crutches / cane / walker': 15,
+      Furniture: 30
+    },
+    ivHeparin: { Yes: 20, No: 0 },
+    gait: {
+      'Normal / Bedrest / Immobile': 0,
+      Weak: 10,
+      Impaired: 20
+    },
+    mentalStatus: {
+      'Oriented to own ability': 0,
+      'Forgets limitation': 15
+    }
+  };
 
-            <form onSubmit={handleSubmit} className="medical-form">
-                <h3 className="form-section-title">Fall Risk Assessment (Morse Scale)</h3>
-                <div className="two-col">
-                    <TextInput
-                        label="Morse Fall Scale Score"
-                        name="morseFallScore"
-                        value={formData.morseFallScore}
-                        onChange={handleChange}
-                        placeholder="Enter total score"
-                    />
-                    <RadioGroup
-                        label="Fall Risk Level"
-                        name="riskLevel"
-                        value={formData.riskLevel}
-                        onChange={handleChange}
-                        options={[
-                            { label: 'No Risk (0–24)', value: 'no-risk' },
-                            { label: 'Low Risk (25–50)', value: 'low-risk' },
-                            { label: 'High Risk (>50)', value: 'high-risk' }
-                        ]}
-                    />
-                </div>
+  const totalMorseScore =
+    (morseScores.historyOfFalling[formData.morseFallScale.historyOfFalling] || 0) +
+    (morseScores.secondaryDiagnosis[formData.morseFallScale.secondaryDiagnosis] || 0) +
+    (morseScores.ambulatoryAid[formData.morseFallScale.ambulatoryAid] || 0) +
+    (morseScores.ivHeparin[formData.morseFallScale.ivHeparin] || 0) +
+    (morseScores.gait[formData.morseFallScale.gait] || 0) +
+    (morseScores.mentalStatus[formData.morseFallScale.mentalStatus] || 0);
 
-                {/* Pain & Skin */}
-                <h3 className="form-section-title">Pain & Skin Assessment</h3>
-                <div className="two-col">
-                    <div className="form-grid">
-                        <TextInput
-                            label="Pain Score"
-                            name="painScore"
-                            value={formData.painScore}
-                            onChange={handleChange}
-                        />
-                        <TextInput
-                            label="Pain Location"
-                            name="painLocation"
-                            value={formData.painLocation}
-                            onChange={handleChange}
-                        />
-                    </div>
-                    <div className="form-grid">
-                        <TextInput
-                            label="Braden Score"
-                            name="bradenScore"
-                            value={formData.bradenScore}
-                            onChange={handleChange}
-                        />
-                        <RadioGroup
-                            label="Pressure Sore"
-                            name="pressureSore"
-                            value={formData.pressureSore}
-                            onChange={handleChange}
-                            options={[
-                                { label: 'Existing', value: 'existing' },
-                                { label: 'Prospective', value: 'prospective' }
-                            ]}
-                        />
-                    </div>
-                </div>
+  const morseRisk =
+    totalMorseScore >= 50 ? 'High Risk'
+    : totalMorseScore >= 25 ? 'Low Risk'
+    : 'No Risk';
 
-                {/* Devices */}
-                <h3 className="form-section-title">Medical Devices</h3>
-                <div className="form-field">
-                    <CheckboxGroup
-                        label="Patient Having Devices"
-                        name="devices"
-                        value={formData.devices}
-                        onChange={(vals) => setFormData(prev => ({ ...prev, devices: vals }))}
-                        options={[
-                            'Central Line',
-                            'Foleys Catheter',
-                            'Peripheral Line',
-                            'RT',
-                            'Any Other'
-                        ]}
-                    />
-                </div>
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit && onSubmit({ ...formData, patientHeader: patientData });
+  };
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginTop: '1rem' }}>
-                    <MuiDateTimePicker type="date" label="Central Line Date" name="centralLineDate" value={formData.centralLineDate} onChange={handleChange} />
-                    <MuiDateTimePicker type="date" label="Foleys Catheter Date" name="foleyDate" value={formData.foleyDate} onChange={handleChange} />
-                    <MuiDateTimePicker type="date" label="Peripheral Line Date" name="peripheralDate" value={formData.peripheralDate} onChange={handleChange} />
-                    <MuiDateTimePicker type="date" label="RT Date" name="rtDate" value={formData.rtDate} onChange={handleChange} />
-                </div>
+  return (
+    <form className="medical-form compact-form" onSubmit={handleSubmit}>
 
-                {/* Assessment */}
-                <h3 className="form-section-title">Verification</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '1.5rem', alignItems: 'end' }}>
-                    <TextInput
-                        label="Assessment Done By (Name)"
-                        name="assessedBy"
-                        value={formData.assessedBy}
-                        onChange={handleChange}
-                    />
-                    <MuiDateTimePicker
-                        label="Assessment Date & Time"
-                        name="assessmentDate"
-                        value={formData.assessmentDate}
-                        onChange={handleChange}
-                    />
-                </div>
+      <h2 className="form-title">NURSING INITIAL ASSESSMENT</h2>
 
-                <button type="submit" className="submit-btn" style={{ marginTop: '2.5rem' }}>
-                    Submit Nursing Assessment
-                </button>
-            </form>
+      {/* Patient Header (DB driven) */}
+      {patientData && (
+        <div className="patient-compact-header">
+          <div>UHID: {patientData.uhid}</div>
+          <div>Name: {patientData.name}</div>
+          <div>Age: {patientData.age}</div>
+          <div>Gender: {patientData.gender}</div>
+          <div>IP No: {patientData.ipNo}</div>
         </div>
-    );
+      )}
+
+      {/* ================= Morse Fall Scale ================= */}
+      <h3>Morse Fall Scale</h3>
+
+      {[
+        ['historyOfFalling', 'History of falling (last 3 months)'],
+        ['secondaryDiagnosis', 'Secondary diagnosis'],
+        ['ambulatoryAid', 'Ambulatory aid'],
+        ['ivHeparin', 'IV / Heparin Lock'],
+        ['gait', 'Gait / Transferring'],
+        ['mentalStatus', 'Mental status']
+      ].map(([field, label]) => (
+        <fieldset key={field}>
+          <legend>{label}</legend>
+          {Object.keys(morseScores[field]).map(option => (
+            <label key={option}>
+              <input
+                type="radio"
+                name={field}
+                checked={formData.morseFallScale[field] === option}
+                onChange={() => handleMorseChange(field, option)}
+              />
+              {option} ({morseScores[field][option]})
+            </label>
+          ))}
+        </fieldset>
+      ))}
+
+      <div style={{ fontWeight: 'bold', marginTop: '10px' }}>
+        Total Morse Score: {totalMorseScore}
+      </div>
+      <div>
+        Risk Level: <strong>{morseRisk}</strong>
+      </div>
+
+      {/* ================= Pain & Pressure ================= */}
+      <h3>Pain & Pressure Assessment</h3>
+
+      <label>
+        Pain Score
+        <input name="painScore" value={formData.painScore} onChange={handleChange} />
+      </label>
+
+      <label>
+        Pain Location
+        <input name="painLocation" value={formData.painLocation} onChange={handleChange} />
+      </label>
+
+      <label>
+        Braden Score
+        <input name="bradenScore" value={formData.bradenScore} onChange={handleChange} />
+      </label>
+
+      <div>
+        <strong>Pressure Sore:</strong>
+        <label style={{ marginLeft: '10px' }}>
+          <input
+            type="checkbox"
+            checked={formData.pressureSore.existing}
+            onChange={(e) =>
+              setFormData(prev => ({
+                ...prev,
+                pressureSore: { ...prev.pressureSore, existing: e.target.checked }
+              }))
+            }
+          /> Existing
+        </label>
+
+        <label style={{ marginLeft: '15px' }}>
+          <input
+            type="checkbox"
+            checked={formData.pressureSore.prospective}
+            onChange={(e) =>
+              setFormData(prev => ({
+                ...prev,
+                pressureSore: { ...prev.pressureSore, prospective: e.target.checked }
+              }))
+            }
+          /> Prospective
+        </label>
+      </div>
+
+      {/* ================= Devices ================= */}
+      <h3>Patient Having Devices</h3>
+
+      {Object.keys(formData.devices).map(device => (
+        <fieldset key={device}>
+          <legend>{device}</legend>
+
+          <label>
+            <input
+              type="radio"
+              checked={formData.devices[device].present === 'Yes'}
+              onChange={() => handleDeviceChange(device, 'present', 'Yes')}
+            /> Yes
+          </label>
+
+          <label>
+            <input
+              type="radio"
+              checked={formData.devices[device].present === 'No'}
+              onChange={() => handleDeviceChange(device, 'present', 'No')}
+            /> No
+          </label>
+
+          {formData.devices[device].present === 'Yes' && (
+            <input
+              type="date"
+              value={formData.devices[device].date}
+              onChange={(e) =>
+                handleDeviceChange(device, 'date', e.target.value)
+              }
+            />
+          )}
+        </fieldset>
+      ))}
+
+      {/* ================= Assessment (ONE LINE) ================= */}
+      <h3>Assessment</h3>
+
+      <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <label style={{ flex: 2 }}>
+          Assessment done by (Name & Sign)
+          <input
+            name="assessmentBy"
+            value={formData.assessmentBy}
+            onChange={handleChange}
+          />
+        </label>
+
+        <label style={{ flex: 1 }}>
+          Date
+          <input
+            type="date"
+            name="assessmentDate"
+            value={formData.assessmentDate}
+            onChange={handleChange}
+          />
+        </label>
+
+        <label style={{ flex: 1 }}>
+          Time
+          <input
+            type="time"
+            name="assessmentTime"
+            value={formData.assessmentTime}
+            onChange={handleChange}
+          />
+        </label>
+      </div>
+
+      <button type="submit" className="submit-btn">
+        Submit Nursing Initial Assessment
+      </button>
+    </form>
+  );
 };
 
-export default NursingInitialAssessmentFallRiskForm;
+export default NursingInitialAssessment;

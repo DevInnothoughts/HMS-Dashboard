@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import TextInput from '../inputs/TextInput';
 import Textarea from '../inputs/Textarea';
 import SignatureInput from '../inputs/SignatureInput';
-import './Forms.css';
 
 const PostOperativeAdviceForm = ({ onSubmit, patientData }) => {
     const [formData, setFormData] = useState({
@@ -26,8 +25,8 @@ const PostOperativeAdviceForm = ({ onSubmit, patientData }) => {
     };
 
     return (
-        <div className="medical-form-container">
-            <h2 className="form-title">
+        <div className="medical-form post-operative-advice-form">
+            <h2 className="form-title" style={{ textAlign: 'center', marginBottom: '30px', color: '#80deea', borderBottom: '2px solid #80deea', paddingBottom: '10px' }}>
                 POST OPERATIVE ADVICE
             </h2>
 
@@ -57,60 +56,48 @@ const PostOperativeAdviceForm = ({ onSubmit, patientData }) => {
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="medical-form">
-                <div style={{ marginTop: '1rem' }}>
-                    <label className="field-label">Post Operative Advice & Instructions</label>
+            <form onSubmit={handleSubmit} className="compact-form">
+                <div className="notes-container" style={{ position: 'relative', marginTop: '10px' }}>
                     <Textarea
+                        label="POST OPERATIVE ADVICE"
                         name="postOperativeAdviceDetails"
                         value={formData.postOperativeAdviceDetails}
                         onChange={handleChange}
-                        rows={22}
-                        placeholder="Enter detailed post-operative advice..."
-                        textareaStyle={{
-                            lineHeight: '1.8',
-                            padding: '1.5rem',
+                        rows={20}
+                        placeholder="Enter post operative advice here..."
+                        style={{
+                            lineHeight: '32px',
+                            padding: '8px 15px',
+                            border: '2px solid #e1e8ed',
+                            borderRadius: '6px',
+                            width: '100%',
                             fontSize: '1rem',
-                            minHeight: '600px',
-                            background: '#fff',
-                            backgroundImage: 'linear-gradient(#f1f5f9 1.1px, transparent 1.1px)',
-                            backgroundSize: '100% 1.8em',
-                            border: '1px solid var(--border-color)',
-                            borderRadius: '12px'
+                            minHeight: '500px'
                         }}
                     />
                 </div>
 
-                <div className="section-box" style={{ marginTop: '3rem', padding: '2rem' }}>
-                    <div className="two-col">
-                        <TextInput
-                            label="Name of Surgeon"
-                            name="surgeonName"
-                            value={formData.surgeonName}
-                            onChange={handleChange}
-                        />
-                        <SignatureInput
-                            label="Surgeon Signature"
-                            name="surgeonSignature"
-                            value={formData.surgeonSignature}
-                            onChange={handleChange}
-                        />
-                    </div>
+                <div style={{ marginTop: '40px', display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '30px', padding: '20px', backgroundColor: '#fdfdfd', borderRadius: '12px', border: '1px solid #e0f7fa' }}>
+                    <TextInput
+                        label="Surgeon Name"
+                        name="surgeonName"
+                        value={formData.surgeonName}
+                        onChange={handleChange}
+                    />
+                    <SignatureInput
+                        label="Surgeon Signature"
+                        name="surgeonSignature"
+                        value={formData.surgeonSignature}
+                        onChange={handleChange}
+                    />
                 </div>
 
-                <button type="submit" className="submit-btn" style={{ marginTop: '3rem' }}>
-                    Confirm & Save Post-Op Advice
-                </button>
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '40px' }}>
+                    <button type="submit" className="submit-btn" style={{ minWidth: '300px' }}>
+                        Confirm Post-Op Advice
+                    </button>
+                </div>
             </form>
-
-            <style>{`
-                .section-box {
-                    background: #ffffff;
-                    border: 1px solid var(--border-color);
-                    border-radius: 16px;
-                    padding: 1.5rem;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-                }
-            `}</style>
         </div>
     );
 };

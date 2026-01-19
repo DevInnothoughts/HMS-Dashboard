@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import TextInput from '../inputs/TextInput';
 import MuiDateTimePicker from '../inputs/MuiDateTimePicker';
-import './Forms.css';
+import RadioGroup from '../inputs/RadioGroup';
 
 const TimeOutSheetForm = ({ onSubmit, patientData }) => {
     const [formData, setFormData] = useState({
@@ -32,7 +32,8 @@ const TimeOutSheetForm = ({ onSubmit, patientData }) => {
 
         completedByName: '',
         designation: '',
-        completionDateTime: ''
+        completionDate: '',
+        completionTime: ''
     });
 
     const handleChange = (e) => {
@@ -60,125 +61,110 @@ const TimeOutSheetForm = ({ onSubmit, patientData }) => {
     };
 
     const checklistItems = [
-        { id: 'teamIntroduced', label: 'All team members introduced by Name and Role' },
-        { id: 'patientIdentified', label: 'Patient identity verified' },
-        { id: 'procedureVerified', label: 'Procedure matches consent form' },
-        { id: 'allergyCheck', label: 'Allergy / Adverse reaction checked' },
-        { id: 'criticalEvents', label: 'Anticipated critical events discussed' },
-        { id: 'siteVerification', label: 'Correct site / side / level verified' },
-        { id: 'siteMarked', label: 'Surgical site marked' },
-        { id: 'imagingConfirmed', label: 'Pre-op imaging data confirmed' },
-        { id: 'implantsAvailable', label: 'Correct implants / prosthesis available' },
-        { id: 'specialEquipment', label: 'Special equipment requirements met' },
-        { id: 'prophylacticAntibiotic', label: 'Prophylactic antibiotics given' },
-        { id: 'thromboProphylaxis', label: 'Thrombo prophylaxis received', options: ['Yes', 'Not reqd'] },
-        { id: 'preProceduralMeds', label: 'Pre-procedural medications given' }
+        { id: 'teamIntroduced', label: '1. Confirm all team members have introduced themselves by Name and Role' },
+        { id: 'patientIdentified', label: '2. Patient identification confirmed' },
+        { id: 'procedureVerified', label: '3. Procedure verified and matches consent' },
+        { id: 'allergyCheck', label: '4. Allergy / Adverse reaction check' },
+        { id: 'criticalEvents', label: '5. Anticipated critical events' },
+        { id: 'siteVerification', label: '6. Correct site / side / level verification and matches consent' },
+        { id: 'siteMarked', label: '7. Site marked' },
+        { id: 'imagingConfirmed', label: '8. Imaging data confirmed' },
+        { id: 'implantsAvailable', label: '9. Correct implants / prosthesis (type / size / side) are available' },
+        { id: 'specialEquipment', label: '10. Any special equipment needed is available' },
+        { id: 'prophylacticAntibiotic', label: '11. Does the patient need prophylactic antibiotic? if yes, has it been given according to the guidelines' },
+        { id: 'thromboProphylaxis', label: '12. Has the patient received thrombo prophylaxis?' },
+        { id: 'preProceduralMeds', label: '13. Does the patient need any pre-procedural medications? if yes, have they been given' }
     ];
 
+    const cardStyle = {
+        padding: '25px',
+        borderRadius: '12px',
+        backgroundColor: '#fff',
+        boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
+        marginBottom: '25px',
+        border: '1px solid #e0f7fa'
+    };
+
+    const sectionHeaderStyle = {
+        fontSize: '1.1rem',
+        fontWeight: 'bold',
+        color: '#00838f',
+        marginBottom: '20px',
+        borderBottom: '2px solid #80deea',
+        paddingBottom: '8px'
+    };
+
     return (
-        <div className="medical-form-container">
-            <h2 className="form-title">SURGICAL / PROCEDURAL TIME OUT SHEET</h2>
+        <div className="medical-form timeout-sheet-form" style={{ maxWidth: '1000px', margin: '0 auto' }}>
+            <h2 className="form-title" style={{ textAlign: 'center', backgroundColor: '#80deea', color: 'white', padding: '15px', borderRadius: '8px', margin: '0 0 30px 0', fontSize: '1.6rem', fontWeight: 'bold' }}>
+                TIME OUT SHEET FOR PROCEDURES
+            </h2>
 
-            {/* Compact Patient Header */}
-            {patientData && (
-                <div className="patient-compact-header">
-                    <div className="info-item">
-                        <span className="info-label">UHID</span>
-                        <span className="info-value">{patientData.uhid}</span>
-                    </div>
-                    <div className="info-item">
-                        <span className="info-label">Patient Name</span>
-                        <span className="info-value">{patientData.name}</span>
-                    </div>
-                    <div className="info-item">
-                        <span className="info-label">Age</span>
-                        <span className="info-value">{patientData.age}</span>
-                    </div>
-                    <div className="info-item">
-                        <span className="info-label">Gender</span>
-                        <span className="info-value">{patientData.gender}</span>
-                    </div>
-                    <div className="info-item">
-                        <span className="info-label">IP No</span>
-                        <span className="info-value">{patientData.ipNo}</span>
-                    </div>
-                </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="medical-form">
-                <div className="two-col">
-                    <TextInput label="Performing Physician" name="doctorPerforming" value={formData.doctorPerforming} onChange={handleChange} />
-                    <TextInput label="Scheduled Procedure" name="procedureConducted" value={formData.procedureConducted} onChange={handleChange} />
+            <form onSubmit={handleSubmit}>
+                {/* Compact Patient Header */}
+                <div className="patient-compact-header" style={{ marginBottom: '30px' }}>
+                    <div className="info-item"><span className="info-label">UHID</span><span className="info-value">{formData.uhid || '—'}</span></div>
+                    <div className="info-item"><span className="info-label">Patient Name</span><span className="info-value">{formData.patientName || '—'}</span></div>
+                    <div className="info-item"><span className="info-label">Age</span><span className="info-value">{formData.age || '—'}</span></div>
+                    <div className="info-item"><span className="info-label">Gender</span><span className="info-value">{formData.gender || '—'}</span></div>
+                    <div className="info-item"><span className="info-label">IP No</span><span className="info-value">{formData.ipNo || '—'}</span></div>
                 </div>
 
-                <div className="section-box" style={{ background: '#fffbeb', border: '1px solid #fde68a', margin: '2rem 0', padding: '1rem', borderRadius: '12px', textAlign: 'center' }}>
-                    <span style={{ color: '#92400e', fontWeight: '800', fontSize: '0.9rem' }}>
-                        ⚠️ TIME OUT MUST BE COMPLETED IMMEDIATELY BEFORE THE PROCEDURE COMMENCES
-                    </span>
+                <div style={cardStyle}>
+                    <div style={sectionHeaderStyle}>Procedure Information</div>
+                    <div style={{ marginBottom: '15px', fontWeight: '600', color: '#546e7a', fontSize: '0.9rem', fontStyle: 'italic' }}>
+                        * Time out is to be completed immediately before the procedure starts.
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                        <TextInput label="Doctor performing procedure" name="doctorPerforming" value={formData.doctorPerforming} onChange={handleChange} />
+                        <TextInput label="Name of the procedure" name="procedureConducted" value={formData.procedureConducted} onChange={handleChange} />
+                    </div>
                 </div>
 
-                <h3 className="form-section-title">Safety Checklist</h3>
-                <div className="section-box" style={{ padding: 0, overflow: 'hidden' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                        <thead style={{ background: '#f8fafc' }}>
-                            <tr>
-                                <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '2px solid var(--border-color)', color: 'var(--primary-color)', fontWeight: '800' }}>Assessment Criteria</th>
-                                <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid var(--border-color)', color: 'var(--primary-color)', fontWeight: '800', width: '250px' }}>Confirmation</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {checklistItems.map((item, idx) => (
-                                <tr key={item.id} style={{ background: idx % 2 === 0 ? '#fff' : '#fcfcfc' }}>
-                                    <td style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', fontSize: '0.9rem', fontWeight: '600' }}>{item.label}</td>
-                                    <td style={{ padding: '1rem', borderBottom: '1px solid var(--border-color)', textAlign: 'center' }}>
-                                        <div className="radio-group" style={{ margin: 0, justifyContent: 'center' }}>
-                                            {(item.options || ['Yes', 'No', 'NA']).map(opt => (
-                                                <label key={opt} className={`radio-option ${formData.checklist[item.id] === opt.toLowerCase() ? 'selected' : ''}`} style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }}>
-                                                    <input
-                                                        type="radio"
-                                                        name={`checklist.${item.id}`}
-                                                        value={opt.toLowerCase()}
-                                                        checked={formData.checklist[item.id] === opt.toLowerCase()}
-                                                        onChange={handleChange}
-                                                    />
-                                                    <span>{opt}</span>
-                                                </label>
-                                            ))}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                {/* Checklist Section */}
+                <div style={cardStyle}>
+                    <div style={sectionHeaderStyle}>Safety Checklist</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                        {checklistItems.map((item, index) => (
+                            <div key={item.id} style={{
+                                padding: '15px',
+                                backgroundColor: index % 2 === 0 ? '#f9fefe' : '#fff',
+                                borderRadius: '8px',
+                                border: '1px solid #f0faff'
+                            }}>
+                                <RadioGroup
+                                    label={item.label}
+                                    name={`checklist.${item.id}`}
+                                    value={formData.checklist[item.id]}
+                                    onChange={handleChange}
+                                    options={item.options || [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }, { value: 'na', label: 'N/A' }]}
+                                />
+                            </div>
+                        ))}
+                    </div>
                 </div>
 
-                <div className="section-box" style={{ marginTop: '3rem', padding: '2rem' }}>
-                    <h3 className="form-section-title" style={{ marginTop: 0 }}>Final Authentication</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
-                        <TextInput label="Verified By" name="completedByName" value={formData.completedByName} onChange={handleChange} />
+                {/* Form Completion Section */}
+                <div style={cardStyle}>
+                    <div style={sectionHeaderStyle}>Final Confirmation</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '25px', marginBottom: '20px' }}>
+                        <TextInput label="Form completed by (Name)" name="completedByName" value={formData.completedByName} onChange={handleChange} />
                         <TextInput label="Designation" name="designation" value={formData.designation} onChange={handleChange} />
-                        <MuiDateTimePicker label="Auth Date & Time" name="completionDateTime" value={formData.completionDateTime} onChange={handleChange} />
+                    </div>
+                    <div style={{ display: 'flex', gap: '20px', maxWidth: '500px' }}>
+                        <div style={{ flex: 1 }}><MuiDateTimePicker label="Date" name="completionDate" value={formData.completionDate} onChange={handleChange} type="date" /></div>
+                        <div style={{ flex: 1 }}><MuiDateTimePicker label="Time" name="completionTime" value={formData.completionTime} onChange={handleChange} type="time" /></div>
+                    </div>
+
+                    <div style={{ marginTop: '25px', padding: '15px', backgroundColor: '#fff8e1', borderRadius: '8px', borderLeft: '4px solid #ffb300', fontSize: '0.85rem', color: '#5d4037', lineHeight: '1.6' }}>
+                        <strong>Post procedure:</strong> Document the procedure and advice of clinical handover in the patient's healthcare record. Ensure patient is aware of post procedure health advice. Label any specimens/images correctly. Document any post-procedure tests where clinically relevant.
                     </div>
                 </div>
 
-                <div style={{ marginTop: '2rem', padding: '1rem', borderLeft: '4px solid var(--primary-color)', background: '#f8fafc', fontSize: '0.85rem', color: 'var(--text-light)', fontStyle: 'italic' }}>
-                    <strong>Post-procedure:</strong> Ensure clinical handover is documented. Label all specimens. Provide post-procedure education to the patient.
-                </div>
-
-                <button type="submit" className="submit-btn" style={{ marginTop: '3rem' }}>
-                    Finalize Time-Out & Proceed
+                <button type="submit" className="submit-btn" style={{ width: '100%', padding: '15px', fontSize: '1.1rem', fontWeight: 'bold' }}>
+                    Confirm Time Out & Proceed
                 </button>
             </form>
-
-            <style>{`
-                .section-box {
-                    background: #ffffff;
-                    border: 1px solid var(--border-color);
-                    border-radius: 16px;
-                    padding: 1.5rem;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-                }
-            `}</style>
         </div>
     );
 };

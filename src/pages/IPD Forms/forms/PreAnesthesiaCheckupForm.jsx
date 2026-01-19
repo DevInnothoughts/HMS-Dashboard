@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import TextInput from '../inputs/TextInput';
 import MuiDateTimePicker from '../inputs/MuiDateTimePicker';
+import RadioGroup from '../inputs/RadioGroup';
 import Textarea from '../inputs/Textarea';
 import SignatureInput from '../inputs/SignatureInput';
-import './Forms.css';
 
 const PreAnesthesiaCheckupForm = ({ onSubmit, patientData }) => {
     const [formData, setFormData] = useState({
@@ -26,7 +26,7 @@ const PreAnesthesiaCheckupForm = ({ onSubmit, patientData }) => {
         tbDuration: '',
         epilepsyDuration: '',
         surgeryDuration: '',
-        history: '',
+        history: '', // For other history
         medicationHistory: '',
         personalHistory: '',
         height: '',
@@ -66,8 +66,10 @@ const PreAnesthesiaCheckupForm = ({ onSubmit, patientData }) => {
     };
 
     return (
-        <div className="medical-form-container">
-            <h2 className="form-title">PRE-ANESTHESIA CHECKUP (PAC)</h2>
+        <form onSubmit={handleSubmit} className="medical-form compact-form">
+            <h2 className="form-title" style={{ textAlign: 'center', marginBottom: '20px', color: '#80deea', borderBottom: '2px solid #80deea', paddingBottom: '10px' }}>
+                PRE-ANESTHESIA CHECKUP
+            </h2>
 
             {/* Compact Patient Header */}
             {patientData && (
@@ -95,130 +97,157 @@ const PreAnesthesiaCheckupForm = ({ onSubmit, patientData }) => {
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="medical-form">
-                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
-                    <MuiDateTimePicker label="PAC Date & Time" name="assessmentDateTime" value={formData.assessmentDateTime} onChange={handleChange} />
-                    <TextInput label="S/B Doctor" name="sbDoctor" value={formData.sbDoctor} onChange={handleChange} />
-                </div>
+            {/* Date & Doctor */}
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '15px' }}>
+                <MuiDateTimePicker label="Date & Time" name="assessmentDateTime" value={formData.assessmentDateTime} onChange={handleChange} />
+                <TextInput label="S/B Doctor" name="sbDoctor" value={formData.sbDoctor} onChange={handleChange} />
+            </div>
 
-                <div className="form-field">
-                    <label className="field-label">ASA Physical Status Classification</label>
-                    <div className="radio-group">
-                        {['I', 'II', 'III', 'IV', 'V', 'VI'].map(opt => (
-                            <label key={opt} className={`radio-option ${formData.asaGrade === opt ? 'selected' : ''}`}>
-                                <input type="radio" name="asaGrade" value={opt} checked={formData.asaGrade === opt} onChange={handleChange} />
-                                <span>ASA {opt}</span>
-                            </label>
-                        ))}
-                    </div>
-                </div>
+            {/* ASA Grade */}
+            <RadioGroup
+                label="ASA Grade"
+                name="asaGrade"
+                value={formData.asaGrade}
+                onChange={handleChange}
+                options={[
+                    { label: 'I', value: 'I' },
+                    { label: 'II', value: 'II' },
+                    { label: 'III', value: 'III' },
+                    { label: 'IV', value: 'IV' },
+                    { label: 'V', value: 'V' },
+                    { label: 'VI', value: 'VI' }
+                ]}
+            />
 
-                <div className="two-col">
-                    <TextInput label="Diagnosis" name="diagnosis" value={formData.diagnosis} onChange={handleChange} />
-                    <TextInput label="Posted For (Surgery)" name="postedFor" value={formData.postedFor} onChange={handleChange} />
-                </div>
+            <TextInput label="Diagnosis" name="diagnosis" value={formData.diagnosis} onChange={handleChange} />
+            <TextInput label="Posted For" name="postedFor" value={formData.postedFor} onChange={handleChange} />
 
-                <h3 className="form-section-title">Co-morbidities & Relevant History</h3>
-                <div className="section-box" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
-                        {[
-                            { label: 'DM', name: 'hasDM', dur: 'dmDuration' },
-                            { label: 'Hypertension', name: 'hasHypertension', dur: 'hypertensionDuration' },
-                            { label: 'IHD', name: 'hasIHD', dur: 'ihdDuration' },
-                            { label: 'Asthma', name: 'hasAsthma', dur: 'asthmaDuration' },
-                            { label: 'TB', name: 'hasTB', dur: 'tbDuration' },
-                            { label: 'Epilepsy', name: 'hasEpilepsy', dur: 'epilepsyDuration' },
-                            { label: 'Prior Surgery', name: 'hasSurgery', dur: 'surgeryDuration' }
-                        ].map((item) => (
-                            <div key={item.name} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem', background: '#f8fafc', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span style={{ fontWeight: '700', fontSize: '0.875rem' }}>{item.label}</span>
-                                    <div className="radio-group" style={{ margin: 0 }}>
-                                        {['Yes', 'No'].map(opt => (
-                                            <label key={opt} className={`radio-option ${formData[item.name] === opt ? 'selected' : ''}`} style={{ padding: '0.2rem 0.6rem', fontSize: '0.75rem' }}>
-                                                <input type="radio" name={item.name} value={opt} checked={formData[item.name] === opt} onChange={handleChange} />
-                                                <span>{opt}</span>
-                                            </label>
-                                        ))}
-                                    </div>
+            {/* Relevant History Section */}
+            <div className="medical-history-section" style={{ marginTop: '20px', marginBottom: '20px' }}>
+                <h3 style={{ borderBottom: '1px solid #80deea', paddingBottom: '8px', marginBottom: '15px', fontSize: '1rem' }}>Relevant History</h3>
+                <div className="medical-history-grid" style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    columnGap: '40px',
+                    rowGap: '10px',
+                    marginBottom: '15px'
+                }}>
+                    {[
+                        { label: 'DM (Diabetes Mellitus)', name: 'hasDM', duration: 'dmDuration' },
+                        { label: 'Hypertension', name: 'hasHypertension', duration: 'hypertensionDuration' },
+                        { label: 'IHD', name: 'hasIHD', duration: 'ihdDuration' },
+                        { label: 'Asthma', name: 'hasAsthma', duration: 'asthmaDuration' },
+                        { label: 'TB (Tuberculosis)', name: 'hasTB', duration: 'tbDuration' },
+                        { label: 'Epilepsy', name: 'hasEpilepsy', duration: 'epilepsyDuration' },
+                        { label: 'Previous Hospitalization', name: 'hasSurgery', duration: 'surgeryDuration' }
+                    ].map((item) => (
+                        <div key={item.name} style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '8px',
+                            padding: '8px',
+                            borderBottom: '1px solid #f0f4f8'
+                        }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{ fontWeight: '600', fontSize: '0.85rem', color: '#4a5568' }}>{item.label}</span>
+                                <div style={{ display: 'flex', gap: '15px' }}>
+                                    {['Yes', 'No'].map(opt => (
+                                        <label key={opt} className="radio-option" style={{ border: 'none', padding: 0 }}>
+                                            <input
+                                                type="radio"
+                                                name={item.name}
+                                                value={opt}
+                                                checked={formData[item.name] === opt}
+                                                onChange={handleChange}
+                                            />
+                                            <span style={{ fontSize: '0.8rem' }}>{opt}</span>
+                                        </label>
+                                    ))}
                                 </div>
-                                {formData[item.name] === 'Yes' && (
-                                    <TextInput hideLabel name={item.dur} value={formData[item.dur]} onChange={handleChange} placeholder="Duration/Notes..." />
-                                )}
                             </div>
-                        ))}
-                    </div>
-                    <div style={{ marginTop: '1.5rem' }}>
-                        <Textarea label="Other Medical History" name="history" value={formData.history} onChange={handleChange} rows={2} />
-                    </div>
+                            {formData[item.name] === 'Yes' && (
+                                <div style={{ marginTop: '5px' }}>
+                                    <input
+                                        type="text"
+                                        name={item.duration}
+                                        value={formData[item.duration]}
+                                        onChange={handleChange}
+                                        placeholder="Duration / Details"
+                                        style={{
+                                            padding: '6px 10px',
+                                            fontSize: '0.8rem',
+                                            borderRadius: '4px',
+                                            border: '1px solid #e2e8f0',
+                                            width: '100%'
+                                        }}
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    ))}
                 </div>
+                <Textarea label="Other History (Details)" name="history" value={formData.history} onChange={handleChange} rows={2} />
+            </div>
+            <Textarea label="Medication (Drug History)" name="medicationHistory" value={formData.medicationHistory} onChange={handleChange} />
+            <Textarea label="Personal History (habits / allergies)" name="personalHistory" value={formData.personalHistory} onChange={handleChange} />
 
-                <div className="two-col">
-                    <Textarea label="Current Medications" name="medicationHistory" value={formData.medicationHistory} onChange={handleChange} rows={3} />
-                    <Textarea label="Personal History (Allergies/Habits)" name="personalHistory" value={formData.personalHistory} onChange={handleChange} rows={3} />
-                </div>
+            {/* Vitals */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px' }}>
+                <TextInput label="Height (cm)" name="height" value={formData.height} onChange={handleChange} />
+                <TextInput label="Weight (kg)" name="weight" value={formData.weight} onChange={handleChange} />
+                <TextInput label="G.C." name="gc" value={formData.gc} onChange={handleChange} />
+                <TextInput label="Pulse" name="pulse" value={formData.pulse} onChange={handleChange} />
+                <TextInput label="BP" name="bp" value={formData.bp} onChange={handleChange} />
+                <TextInput label="RR" name="rr" value={formData.rr} onChange={handleChange} />
+            </div>
 
-                <h3 className="form-section-title">Physical & Airway Examination</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
-                    <TextInput label="Height (cm)" name="height" value={formData.height} onChange={handleChange} />
-                    <TextInput label="Weight (kg)" name="weight" value={formData.weight} onChange={handleChange} />
-                    <TextInput label="Pulse" name="pulse" value={formData.pulse} onChange={handleChange} />
-                    <TextInput label="BP" name="bp" value={formData.bp} onChange={handleChange} />
-                    <TextInput label="RR" name="rr" value={formData.rr} onChange={handleChange} />
-                </div>
+            <Textarea label="General Examination (Pallor / Icterus / Clubbing /  Lymphadenopathy / Cyanosis / Edema)" name="generalFindings" value={formData.generalFindings} onChange={handleChange} />
 
-                <Textarea label="General Physical Examination" name="generalFindings" value={formData.generalFindings} onChange={handleChange} rows={2} placeholder="Pallor, Icterus, Cyanosis, Edema, etc." />
+            {/* Systemic History */}
+<h3 style={{ marginTop: '20px', marginBottom: '10px' }}>
+    Systemic History
+</h3>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginTop: '1.5rem' }}>
-                    <TextInput label="RS" name="systemicRS" value={formData.systemicRS} onChange={handleChange} placeholder="Respiratory System" />
-                    <TextInput label="CVS" name="systemicCVS" value={formData.systemicCVS} onChange={handleChange} placeholder="Cardiovascular" />
-                    <TextInput label="CNS" name="systemicCNS" value={formData.systemicCNS} onChange={handleChange} placeholder="Central Nervous System" />
-                    <TextInput label="P/A" name="systemicPA" value={formData.systemicPA} onChange={handleChange} placeholder="Per Abdomen" />
-                </div>
+<div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+    <TextInput label="RS" name="systemicRS" value={formData.systemicRS} onChange={handleChange} />
+    <TextInput label="CVS" name="systemicCVS" value={formData.systemicCVS} onChange={handleChange} />
+    <TextInput label="CNS" name="systemicCNS" value={formData.systemicCNS} onChange={handleChange} />
+    <TextInput label="PA" name="systemicPA" value={formData.systemicPA} onChange={handleChange} />
+</div>
 
-                <h4 style={{ margin: '2rem 0 1rem', color: 'var(--primary-color)', fontWeight: '700' }}>Airway Assessment</h4>
-                <div className="section-box" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
-                    <TextInput label="MP Class" name="mpc" value={formData.mpc} onChange={handleChange} placeholder="Mallampati" />
-                    <TextInput label="Neck Move." name="neckMovement" value={formData.neckMovement} onChange={handleChange} />
-                    <TextInput label="Mouth Open." name="mouthOpening" value={formData.mouthOpening} onChange={handleChange} />
-                    <TextInput label="Teeth/Dentition" name="teeth" value={formData.teeth} onChange={handleChange} />
-                </div>
+{/* Airway Examination */}
+<h3 style={{ marginTop: '20px', marginBottom: '10px' }}>
+    Airway Examination
+</h3>
 
-                <h3 className="form-section-title">Investigations & Plan</h3>
-                <Textarea label="Routine & Special Investigations" name="investigations" value={formData.investigations} onChange={handleChange} rows={3} />
+<div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+    <TextInput label="MPC" name="mpc" value={formData.mpc} onChange={handleChange} />
+    <TextInput label="Neck Movement" name="neckMovement" value={formData.neckMovement} onChange={handleChange} />
+    <TextInput label="Mouth Opening" name="mouthOpening" value={formData.mouthOpening} onChange={handleChange} />
+    <TextInput label="Teeth" name="teeth" value={formData.teeth} onChange={handleChange} />
+</div>
 
-                <div className="two-col" style={{ marginTop: '1.5rem' }}>
-                    <TextInput label="ECG Findings" name="ecg" value={formData.ecg} onChange={handleChange} />
-                    <TextInput label="Chest X-Ray Findings" name="chestXray" value={formData.chestXray} onChange={handleChange} />
-                </div>
 
-                <div style={{ marginTop: '1.5rem' }}>
-                    <Textarea label="Anesthesia Plan" name="anesthesiaPlan" value={formData.anesthesiaPlan} onChange={handleChange} rows={3} placeholder="GA / Spinal / Epidural / Regional / MAC..." />
-                </div>
+            <Textarea label="Investigations" name="investigations" value={formData.investigations} onChange={handleChange} />
 
-                <div className="section-box" style={{ marginTop: '3rem', padding: '2rem' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1.5fr', gap: '2rem', alignItems: 'end' }}>
-                        <TextInput label="Consultant Anesthetist" name="anesthetistName" value={formData.anesthetistName} onChange={handleChange} />
-                        <SignatureInput label="Digital Signature" name="anesthetistSignature" value={formData.anesthetistSignature} onChange={handleChange} />
-                        <MuiDateTimePicker label="Signed Date & Time" name="anesthetistDateTime" value={formData.anesthetistDateTime} onChange={handleChange} />
-                    </div>
-                </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                <TextInput label="ECG" name="ecg" value={formData.ecg} onChange={handleChange} />
+                <TextInput label="Chest X-ray" name="chestXray" value={formData.chestXray} onChange={handleChange} />
+            </div>
 
-                <button type="submit" className="submit-btn" style={{ marginTop: '3rem' }}>
-                    Successfully Complete PAC
-                </button>
-            </form>
+            <Textarea label="Plan of Anesthesia" name="anesthesiaPlan" value={formData.anesthesiaPlan} onChange={handleChange} />
 
-            <style>{`
-                .section-box {
-                    background: #ffffff;
-                    border: 1px solid var(--border-color);
-                    border-radius: 16px;
-                    padding: 1.5rem;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-                }
-            `}</style>
-        </div>
+            {/* Signature */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1.5fr', gap: '10px', marginTop: '15px' }}>
+                <TextInput label="Name of Anesthetist" name="anesthetistName" value={formData.anesthetistName} onChange={handleChange} />
+                <SignatureInput label="Signature" name="anesthetistSignature" value={formData.anesthetistSignature} onChange={handleChange} />
+                <MuiDateTimePicker label="Date & Time" name="anesthetistDateTime" value={formData.anesthetistDateTime} onChange={handleChange} />
+            </div>
+
+            <button type="submit" className="submit-btn">
+                Submit PAC Form
+            </button>
+        </form>
     );
 };
 

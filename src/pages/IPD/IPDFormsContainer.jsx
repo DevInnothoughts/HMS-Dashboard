@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Table, Form, Button, Badge, InputGroup } from "react-bootstrap";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import FeatherIcon from "feather-icons-react";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import Swal from "sweetalert2";
@@ -116,28 +116,36 @@ const allFormsList = [
 ];
 
 export default function IPDFormsContainer() {
-    const { admissionNo } = useParams();
+    const location = useLocation();
+    
+    // Access the data from the state object
+    // const patient = location.state?.patientData;
+
+    // console.log("Admission number from state:", patientData);    
     const navigate = useNavigate();
     const [patient, setPatient] = useState(null);
     const [activeForm, setActiveForm] = useState(null); // null means show list
     const [searchTerm, setSearchTerm] = useState("");
     const [expandedForms, setExpandedForms] = useState({});
+    const [admissionNo, setAdmissionNo] = useState(null);
 
     const toggleExpand = (formName) => {
         setExpandedForms(prev => ({ ...prev, [formName]: !prev[formName] }));
     };
-
+    // console.log("Admissiong number for all forms: ", admissionNo);
+    
     useEffect(() => {
-        const surgeryPatients = JSON.parse(localStorage.getItem("surgeryPatients") || "[]");
-        const found = surgeryPatients.find((p) => p.admissionNo === admissionNo);
-        if (found) {
-            setPatient(found);
+        // Check if state exists
+        if (location.state?.patientData) {
+            setPatient(location.state.patientData);
+            setAdmissionNo(location.state.patientData.admissionNo);
         } else {
-            Swal.fire("Error", "Patient not found", "error").then(() => {
+            // Fallback if someone tries to access the URL directly without state
+            Swal.fire("Error", "Patient data missing. Please select from the list.", "error").then(() => {
                 navigate("/surgery");
             });
         }
-    }, [admissionNo, navigate]);
+    }, [location, navigate]);
 
     const filteredForms = allFormsList.filter((f) =>
         f.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

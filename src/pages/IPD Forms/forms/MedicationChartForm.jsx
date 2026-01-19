@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import TextInput from '../inputs/TextInput';
 import MuiDateTimePicker from '../inputs/MuiDateTimePicker';
-import './Forms.css';
 
 const MedicationChartForm = ({ onSubmit, patientData }) => {
     const [formData, setFormData] = useState({
@@ -66,9 +65,15 @@ const MedicationChartForm = ({ onSubmit, patientData }) => {
         onSubmit && onSubmit(formData);
     };
 
+    const cellStyle = {
+        padding: '8px',
+        border: '1px solid #ddd',
+        fontSize: '0.85rem'
+    };
+
     return (
-        <div className="medical-form-container">
-            <h2 className="form-title">
+        <div className="medical-form medication-chart-form" style={{ maxWidth: '1100px', margin: '0 auto', padding: '10px' }}>
+            <h2 className="form-title" style={{ textAlign: 'center', backgroundColor: '#80deea', color: 'white', padding: '8px', borderRadius: '4px', margin: '10px 0 20px 0', fontSize: '1.2rem' }}>
                 MEDICATION CHART
             </h2>
 
@@ -96,60 +101,83 @@ const MedicationChartForm = ({ onSubmit, patientData }) => {
                 </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="medical-form">
-                <div style={{ marginBottom: '1rem' }}>
+            <form onSubmit={handleSubmit}>
+                <div style={{ marginBottom: '20px' }}>
                     <TextInput
                         label="Known allergies:"
                         name="knownAllergies"
                         value={formData.knownAllergies}
                         onChange={handleAllergyChange}
-                        placeholder="Specify allergies or N/A..."
+                        placeholder="Specify allergies or N.A."
                     />
                 </div>
 
-                <div style={{ overflowX: 'auto', border: '1px solid var(--border-color)', borderRadius: '8px', overflow: 'hidden', marginBottom: '1rem' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '940px' }}>
+                <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px' }}>
                         <thead>
-                            <tr style={{ backgroundColor: '#f1f5f9' }}>
-                                <th style={{ padding: '8px', borderBottom: '1.5px solid var(--border-color)', fontWeight: '700', fontSize: '13px', textAlign: 'left', width: '38%' }}>Medicine Order</th>
-                                <th style={{ padding: '8px', borderBottom: '1.5px solid var(--border-color)', fontWeight: '700', fontSize: '13px', textAlign: 'center' }}>Admin Record</th>
-                                <th style={{ padding: '8px', borderBottom: '1.5px solid var(--border-color)', width: '40px' }}></th>
+                            <tr style={{ backgroundColor: '#f4f7f6' }}>
+                                <th style={{ ...cellStyle, width: '40%', fontWeight: 'bold', color: '#008b8b' }}>Medicine Order</th>
+                                <th style={{ ...cellStyle, fontWeight: 'bold', color: '#008b8b' }}>Medicine Administration Record</th>
+                                <th style={{ ...cellStyle, width: '50px' }}>Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             {formData.medications.map((med, medIndex) => (
-                                <tr key={medIndex} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                                    <td style={{ padding: '8px', verticalAlign: 'top' }}>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                                            <TextInput
-                                                placeholder="Drug Name"
-                                                value={med.drugName}
-                                                onChange={(e) => handleMedChange(medIndex, 'drugName', e.target.value)}
-                                                hideLabel
-                                                style={{ fontWeight: '700', fontSize: '13px' }}
-                                            />
-                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.4rem' }}>
-                                                <TextInput placeholder="Dose" value={med.dose} onChange={(e) => handleMedChange(medIndex, 'dose', e.target.value)} hideLabel style={{ fontSize: '12px' }} />
-                                                <TextInput placeholder="Route" value={med.route} onChange={(e) => handleMedChange(medIndex, 'route', e.target.value)} hideLabel style={{ fontSize: '12px' }} />
-                                                <TextInput placeholder="Freq" value={med.frequency} onChange={(e) => handleMedChange(medIndex, 'frequency', e.target.value)} hideLabel style={{ fontSize: '12px' }} />
+                                <tr key={medIndex}>
+                                    <td style={{ ...cellStyle, padding: '0' }}>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0' }}>
+                                            <div style={{ padding: '4px' }}>
+                                                <TextInput
+                                                    placeholder="Drug Name"
+                                                    value={med.drugName}
+                                                    onChange={(e) => handleMedChange(medIndex, 'drugName', e.target.value)}
+                                                    hideLabel
+                                                    style={{ fontWeight: 'bold' }}
+                                                />
                                             </div>
-                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.4rem', paddingTop: '0.4rem', borderTop: '1px dashed var(--border-color)' }}>
-                                                <TextInput placeholder="Dr. Sign" value={med.drSign} onChange={(e) => handleMedChange(medIndex, 'drSign', e.target.value)} hideLabel style={{ fontSize: '12px' }} />
-                                                <MuiDateTimePicker label="Order Date" name="orderDateTime" value={med.orderDateTime} onChange={(e) => handleMedChange(medIndex, 'orderDateTime', e.target.value)} hideLabel />
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr' }}>
+                                                <TextInput
+                                                    placeholder="Dose"
+                                                    value={med.dose}
+                                                    onChange={(e) => handleMedChange(medIndex, 'dose', e.target.value)}
+                                                    hideLabel
+                                                />
+                                                <TextInput
+                                                    placeholder="Route"
+                                                    value={med.route}
+                                                    onChange={(e) => handleMedChange(medIndex, 'route', e.target.value)}
+                                                    hideLabel
+                                                />
+                                                <TextInput
+                                                    placeholder="Freq"
+                                                    value={med.frequency}
+                                                    onChange={(e) => handleMedChange(medIndex, 'frequency', e.target.value)}
+                                                    hideLabel
+                                                />
+                                            </div>
+                                            <div style={{ padding: '8px', borderTop: '1px solid #eee' }}>
+                                                <TextInput
+                                                    placeholder="Dr. Sign"
+                                                    value={med.drSign}
+                                                    onChange={(e) => handleMedChange(medIndex, 'drSign', e.target.value)}
+                                                    hideLabel
+                                                />
+                                                <div style={{ marginTop: '5px' }}>
+                                                    <MuiDateTimePicker
+                                                        label="Order Date & Time"
+                                                        name="orderDateTime"
+                                                        value={med.orderDateTime}
+                                                        onChange={(e) => handleMedChange(medIndex, 'orderDateTime', e.target.value)}
+                                                        hideLabel
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td style={{ padding: '0', verticalAlign: 'top', borderLeft: '1px solid var(--border-color)' }}>
-                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', height: '100%' }}>
+                                    <td style={{ ...cellStyle, padding: '0' }}>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', height: '100%', minHeight: '120px' }}>
                                             {med.admins.map((admin, adminIndex) => (
-                                                <div key={adminIndex} style={{
-                                                    borderRight: adminIndex < 3 ? '1px solid var(--border-color)' : 'none',
-                                                    padding: '8px',
-                                                    display: 'flex',
-                                                    flexDirection: 'column',
-                                                    gap: '0.4rem',
-                                                    background: adminIndex % 2 === 0 ? 'transparent' : '#f8fafc'
-                                                }}>
+                                                <div key={adminIndex} style={{ borderRight: adminIndex < 3 ? '1px solid #eee' : 'none', padding: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                     <MuiDateTimePicker
                                                         type="time"
                                                         label="Time"
@@ -159,24 +187,23 @@ const MedicationChartForm = ({ onSubmit, patientData }) => {
                                                         hideLabel
                                                     />
                                                     <TextInput
-                                                        placeholder="S.N. Sign"
+                                                        placeholder="Sign"
                                                         value={admin.sign}
                                                         onChange={(e) => handleAdminChange(medIndex, adminIndex, 'sign', e.target.value)}
                                                         hideLabel
-                                                        style={{ fontSize: '12px' }}
                                                     />
                                                 </div>
                                             ))}
                                         </div>
                                     </td>
-                                    <td style={{ padding: '8px', textAlign: 'center', verticalAlign: 'middle', borderLeft: '1px solid var(--border-color)' }}>
+                                    <td style={{ ...cellStyle, textAlign: 'center' }}>
                                         <button
                                             type="button"
                                             onClick={() => removeMedication(medIndex)}
-                                            style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', padding: '4px' }}
-                                            title="Remove Row"
+                                            className="remove-btn"
+                                            title="Remove Medication"
                                         >
-                                            ×
+                                            &times;
                                         </button>
                                     </td>
                                 </tr>
@@ -185,14 +212,19 @@ const MedicationChartForm = ({ onSubmit, patientData }) => {
                     </table>
                 </div>
 
-                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-                    <button type="button" onClick={addMedication} className="submit-btn" style={{ backgroundColor: '#64748b', maxWidth: '200px' }}>
-                        + Add Medication
-                    </button>
-                    <button type="submit" className="submit-btn" style={{ maxWidth: '200px' }}>
-                        Save Chart
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '30px' }}>
+                    <button
+                        type="button"
+                        onClick={addMedication}
+                        className="secondary-btn"
+                    >
+                        + Add Medication Order
                     </button>
                 </div>
+
+                <button type="submit" className="submit-btn">
+                    Save Medication Chart
+                </button>
             </form>
         </div>
     );

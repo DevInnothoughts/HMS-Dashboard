@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import TextInput from '../inputs/TextInput';
 import Textarea from '../inputs/Textarea';
 import MuiDateTimePicker from '../inputs/MuiDateTimePicker';
-import './Forms.css';
 
 const NursingNotesForm = ({ onSubmit, patientData }) => {
     const [headerData, setHeaderData] = useState({
@@ -47,13 +46,29 @@ const NursingNotesForm = ({ onSubmit, patientData }) => {
         onSubmit && onSubmit({ header: headerData, notes: noteRows });
     };
 
+    const cellStyle = {
+        padding: '8px',
+        border: '1px solid #ddd',
+        verticalAlign: 'middle'
+    };
+
+    const inputStyle = {
+        width: '100%',
+        border: 'none',
+        outline: 'none',
+        fontSize: '0.9rem',
+        minHeight: '60px',
+        resize: 'none',
+        fontFamily: 'inherit'
+    };
+
     return (
-        <div className="medical-form-container">
-            <h2 className="form-title">
+        <div className="medical-form nursing-notes-form" style={{ maxWidth: '1000px', margin: '0 auto', padding: '10px' }}>
+            <h2 className="form-title" style={{ textAlign: 'center', backgroundColor: '#80deea', color: 'white', padding: '8px', borderRadius: '4px', margin: '10px 0 20px 0', fontSize: '1.2rem' }}>
                 NURSING NOTES
             </h2>
 
-            <form onSubmit={handleSubmit} className="medical-form">
+            <form onSubmit={handleSubmit}>
                 {/* Compact Patient Header */}
                 <div className="patient-compact-header">
                     <div className="info-item">
@@ -78,71 +93,72 @@ const NursingNotesForm = ({ onSubmit, patientData }) => {
                     </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem', margin: '1.5rem 0' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', margin: '15px 0', padding: '10px', border: '1px solid #eee', borderRadius: '8px', backgroundColor: '#fdfdfd' }}>
                     <TextInput label="Diagnosis" name="diagnosis" value={headerData.diagnosis} onChange={handleHeaderChange} />
                     <TextInput label="Surgery" name="surgery" value={headerData.surgery} onChange={handleHeaderChange} />
                     <TextInput label="Surgeon Name" name="surgeonName" value={headerData.surgeonName} onChange={handleHeaderChange} />
                 </div>
 
-                <div style={{ overflowX: 'auto', border: '1px solid var(--border-color)', borderRadius: '12px', overflow: 'hidden' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '940px' }}>
-                        <thead style={{ backgroundColor: '#f1f5f9' }}>
+                <div style={{ overflowX: 'auto', border: '1px solid #ddd', borderRadius: '4px' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead style={{ backgroundColor: '#f4f7f6' }}>
                             <tr>
-                                <th style={{ padding: '12px', fontWeight: '700', color: 'var(--text-main)', textAlign: 'left', width: '220px', borderBottom: '1.5px solid var(--border-color)' }}>DATE & TIME</th>
-                                <th style={{ padding: '12px', fontWeight: '700', color: 'var(--text-main)', textAlign: 'left', borderBottom: '1.5px solid var(--border-color)' }}>MORNING</th>
-                                <th style={{ padding: '12px', fontWeight: '700', color: 'var(--text-main)', textAlign: 'left', borderBottom: '1.5px solid var(--border-color)' }}>EVENING</th>
-                                <th style={{ padding: '12px', fontWeight: '700', color: 'var(--text-main)', textAlign: 'left', borderBottom: '1.5px solid var(--border-color)' }}>NIGHT</th>
-                                <th style={{ padding: '12px', width: '50px', borderBottom: '1.5px solid var(--border-color)' }}></th>
+                                <th style={{ ...cellStyle, width: '180px', fontWeight: 'bold', color: '#80deea', textAlign: 'center' }}>DATE & TIME</th>
+                                <th style={{ ...cellStyle, fontWeight: 'bold', color: '#80deea', textAlign: 'center' }}>MORNING</th>
+                                <th style={{ ...cellStyle, fontWeight: 'bold', color: '#80deea', textAlign: 'center' }}>EVENING</th>
+                                <th style={{ ...cellStyle, fontWeight: 'bold', color: '#80deea', textAlign: 'center' }}>NIGHT</th>
+                                <th style={{ ...cellStyle, width: '50px' }}></th>
                             </tr>
                         </thead>
                         <tbody>
                             {noteRows.map((row, index) => (
-                                <tr key={index} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                                    <td style={{ padding: '12px', verticalAlign: 'top' }}>
+                                <tr key={index}>
+                                    <td style={cellStyle}>
                                         <MuiDateTimePicker
                                             value={row.dateTime}
                                             onChange={(e) => handleRowChange(index, 'dateTime', e.target.value)}
                                             hideLabel
+                                            style={{ marginBottom: 0 }}
                                         />
                                     </td>
-                                    <td style={{ padding: '8px', verticalAlign: 'top' }}>
+                                    <td style={cellStyle}>
                                         <Textarea
                                             value={row.morning}
                                             onChange={(e) => handleRowChange(index, 'morning', e.target.value)}
                                             placeholder="Morning shift notes..."
                                             hideLabel
-                                            rows={3}
-                                            textareaStyle={{ minHeight: '100px', fontSize: '0.875rem' }}
+                                            rows={2}
+                                            textareaStyle={{ minHeight: 'unset' }}
                                         />
                                     </td>
-                                    <td style={{ padding: '8px', verticalAlign: 'top' }}>
+                                    <td style={cellStyle}>
                                         <Textarea
                                             value={row.evening}
                                             onChange={(e) => handleRowChange(index, 'evening', e.target.value)}
                                             placeholder="Evening shift notes..."
                                             hideLabel
-                                            rows={3}
-                                            textareaStyle={{ minHeight: '100px', fontSize: '0.875rem' }}
+                                            rows={2}
+                                            textareaStyle={{ minHeight: 'unset' }}
                                         />
                                     </td>
-                                    <td style={{ padding: '8px', verticalAlign: 'top' }}>
+                                    <td style={cellStyle}>
                                         <Textarea
                                             value={row.night}
                                             onChange={(e) => handleRowChange(index, 'night', e.target.value)}
                                             placeholder="Night shift notes..."
                                             hideLabel
-                                            rows={3}
-                                            textareaStyle={{ minHeight: '100px', fontSize: '0.875rem' }}
+                                            rows={2}
+                                            textareaStyle={{ minHeight: 'unset' }}
                                         />
                                     </td>
-                                    <td style={{ padding: '12px', textAlign: 'center', verticalAlign: 'middle' }}>
+                                    <td style={{ ...cellStyle, textAlign: 'center', verticalAlign: 'middle' }}>
                                         <button
                                             type="button"
                                             onClick={() => removeRow(index)}
-                                            style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '1.25rem', cursor: 'pointer', visibility: noteRows.length > 1 ? 'visible' : 'hidden' }}
+                                            className="remove-btn"
                                             title="Remove Row"
                                         >
-                                            &times;
+                                            ×
                                         </button>
                                     </td>
                                 </tr>
@@ -151,7 +167,7 @@ const NursingNotesForm = ({ onSubmit, patientData }) => {
                     </table>
                 </div>
 
-                <div style={{ marginTop: '1.5rem', textAlign: 'right' }}>
+                <div style={{ marginTop: '20px', textAlign: 'right' }}>
                     <button
                         type="button"
                         onClick={addRow}
@@ -161,11 +177,9 @@ const NursingNotesForm = ({ onSubmit, patientData }) => {
                     </button>
                 </div>
 
-                <div style={{ marginTop: '3rem', display: 'flex', justifyContent: 'center' }}>
-                    <button type="submit" className="submit-btn" style={{ minWidth: '300px' }}>
-                        Save Nursing Entry
-                    </button>
-                </div>
+                <button type="submit" className="submit-btn">
+                    Save Nursing Entry
+                </button>
             </form>
         </div>
     );

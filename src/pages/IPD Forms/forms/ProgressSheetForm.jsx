@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import MuiDateTimePicker from '../inputs/MuiDateTimePicker';
 import Textarea from '../inputs/Textarea';
-import './Forms.css';
 
 const ProgressSheetForm = ({ onSubmit, patientData }) => {
+    // Start with one record as requested
     const [rows, setRows] = useState([
         { dateTime: '', note: '', advisedOrders: '' }
     ]);
@@ -29,9 +29,20 @@ const ProgressSheetForm = ({ onSubmit, patientData }) => {
     };
 
     return (
-        <div className="medical-form-container">
-            <h2 className="form-title">
-                PATIENT PROGRESS SHEET
+        <div className="medical-form progress-sheet-form" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+            {/* Blank Space at top for print header or layout */}
+            <div style={{ height: '30px' }}></div>
+
+            <h2 className="form-title" style={{
+                textAlign: 'center',
+                backgroundColor: '#80deea',
+                color: 'white',
+                padding: '12px',
+                borderRadius: '8px',
+                marginBottom: '30px',
+                fontSize: '1.4rem'
+            }}>
+                PROGRESS SHEET
             </h2>
 
             {/* Compact Patient Header */}
@@ -60,104 +71,75 @@ const ProgressSheetForm = ({ onSubmit, patientData }) => {
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="medical-form">
-                <h3 className="form-section-title">Timeline of Care</h3>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                    {rows.map((row, index) => (
-                        <div
-                            key={index}
-                            className="section-box"
-                            style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'minmax(200px, 0.8fr) 1.5fr 1fr auto',
-                                gap: '1.5rem',
-                                alignItems: 'start',
-                                padding: '1.5rem',
-                                borderLeft: '4px solid var(--primary-color)'
-                            }}
-                        >
-                            <div style={{ paddingTop: '0.25rem' }}>
-                                <MuiDateTimePicker
-                                    label="Date & Time"
-                                    value={row.dateTime}
-                                    onChange={(e) => handleRowChange(index, 'dateTime', e.target.value)}
-                                />
-                            </div>
-                            <div>
-                                <Textarea
-                                    label="Clinical Progress Note"
-                                    placeholder="Vital trends, physical findings..."
-                                    value={row.note}
-                                    onChange={(e) => handleRowChange(index, 'note', e.target.value)}
-                                    rows={4}
-                                />
-                            </div>
-                            <div>
-                                <Textarea
-                                    label="Advised Orders"
-                                    placeholder="New meds, investigations..."
-                                    value={row.advisedOrders}
-                                    onChange={(e) => handleRowChange(index, 'advisedOrders', e.target.value)}
-                                    rows={4}
-                                />
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => removeRow(index)}
-                                className="remove-row-btn"
-                                style={{
-                                    marginTop: '2.5rem',
-                                    background: '#fee2e2',
-                                    color: '#dc2626',
-                                    border: 'none',
-                                    borderRadius: '50%',
-                                    width: '32px',
-                                    height: '32px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s',
-                                    visibility: rows.length > 1 ? 'visible' : 'hidden'
-                                }}
-                                title="Delete Entry"
-                            >
-                                &times;
-                            </button>
-                        </div>
-                    ))}
+            <form onSubmit={handleSubmit}>
+                <div style={{ border: '1px solid #80deea', borderRadius: '8px', overflow: 'hidden' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead style={{ backgroundColor: '#e0f7fa' }}>
+                            <tr>
+                                <th style={{ padding: '12px', textAlign: 'center', borderRight: '1px solid #80deea', width: '220px', color: '#00796b' }}>DATE & TIME</th>
+                                <th style={{ padding: '12px', textAlign: 'center', borderRight: '1px solid #80deea', color: '#00796b' }}>PROGRESS NOTES</th>
+                                <th style={{ padding: '12px', textAlign: 'center', borderRight: '1px solid #80deea', color: '#00796b' }}>ADVISED ORDERS</th>
+                                <th style={{ padding: '12px', width: '50px' }}></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {rows.map((row, index) => (
+                                <tr key={index} style={{ borderTop: '1px solid #80deea' }}>
+                                    <td style={{ padding: '10px', borderRight: '1px solid #80deea', verticalAlign: 'top' }}>
+                                        <MuiDateTimePicker
+                                            value={row.dateTime}
+                                            onChange={(e) => handleRowChange(index, 'dateTime', e.target.value)}
+                                            hideLabel
+                                        />
+                                    </td>
+                                    <td style={{ padding: '10px', borderRight: '1px solid #80deea', verticalAlign: 'top' }}>
+                                        <Textarea
+                                            placeholder="Enter clinical progress..."
+                                            value={row.note}
+                                            onChange={(e) => handleRowChange(index, 'note', e.target.value)}
+                                            hideLabel
+                                            rows={3}
+                                        />
+                                    </td>
+                                    <td style={{ padding: '10px', borderRight: '1px solid #80deea', verticalAlign: 'top' }}>
+                                        <Textarea
+                                            placeholder="Enter advised orders..."
+                                            value={row.advisedOrders}
+                                            onChange={(e) => handleRowChange(index, 'advisedOrders', e.target.value)}
+                                            hideLabel
+                                            rows={2}
+                                        />
+                                    </td>
+                                    <td style={{ padding: '10px', textAlign: 'center', verticalAlign: 'middle' }}>
+                                        <button
+                                            type="button"
+                                            onClick={() => removeRow(index)}
+                                            className="remove-btn"
+                                            title="Remove Note Row"
+                                        >
+                                            &times;
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
 
-                <div style={{ marginTop: '2rem', textAlign: 'center' }}>
+                <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end' }}>
                     <button
                         type="button"
                         onClick={addRow}
                         className="secondary-btn"
-                        style={{ padding: '0.75rem 2rem', border: '2px dashed var(--primary-color)', background: 'transparent', color: 'var(--primary-color)' }}
                     >
-                        + Append New Progress Row
+                        + Add Progress Note
                     </button>
                 </div>
 
-                <button type="submit" className="submit-btn" style={{ marginTop: '4rem' }}>
-                    Save Full Progress Sheet
+                <button type="submit" className="submit-btn">
+                    Save Progress Sheet
                 </button>
             </form>
-
-            <style>{`
-                .section-box {
-                    background: #ffffff;
-                    border: 1px solid var(--border-color);
-                    border-radius: 16px;
-                    padding: 1.5rem;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-                }
-                .remove-row-btn:hover {
-                    background: #fecaca;
-                    transform: scale(1.1);
-                }
-            `}</style>
         </div>
     );
 };

@@ -42,9 +42,9 @@ const SignatureInput = ({
     const displayError = error || localError;
 
     return (
-        <div className="form-field signature-field mb-2">
-            <label htmlFor={name} className="fw-bold text-muted small uppercase mb-1 d-block" style={{ fontSize: '0.75rem' }}>
-                {label} {required && <span className="required text-danger">*</span>}
+        <div className="form-field signature-field">
+            <label htmlFor={name}>
+                {label} {required && <span className="required">*</span>}
             </label>
             <input
                 type="text"
@@ -53,23 +53,13 @@ const SignatureInput = ({
                 value={value}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                placeholder="Type your full name to sign"
-                style={{
-                    backgroundColor: '#ffffff',
-                    border: '1px solid #6db8c2ff',
-                    borderRadius: '8px',
-                    padding: '8px 12px',
-                    fontSize: '0.9rem',
-                    fontFamily: "'Poppins', sans-serif",
-                    width: '100%',
-                    fontStyle: 'italic',
-                    color: '#1a5b61ff'
-                }}
-                className={`signature-input ${displayError && touched ? 'is-invalid' : ''}`}
+                placeholder="Type your full name"
+                className={`signature-input ${displayError && touched ? 'error' : ''}`}
             />
             {touched && displayError && (
-                <div className="invalid-feedback d-block" style={{ fontSize: '0.75rem' }}>{displayError}</div>
+                <span className="error-message">{displayError}</span>
             )}
+
         </div>
     );
 };

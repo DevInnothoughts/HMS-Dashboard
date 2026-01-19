@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import MuiDateTimePicker from '../inputs/MuiDateTimePicker';
-import './Forms.css';
 
 const ScoreMappingSheetForm = ({ onSubmit, patientData }) => {
     const scoreItems = [
@@ -12,6 +11,7 @@ const ScoreMappingSheetForm = ({ onSubmit, patientData }) => {
         { id: 'pain', name: 'Pain Score' }
     ];
 
+    // 4 Monitoring Slots
     const [dates, setDates] = useState(['', '', '', '']);
     const [scores, setScores] = useState(
         scoreItems.reduce((acc, score) => {
@@ -45,9 +45,40 @@ const ScoreMappingSheetForm = ({ onSubmit, patientData }) => {
         onSubmit && onSubmit({ dates, scores, nurseSigns });
     };
 
+    // Styling
+    const cardStyle = {
+        backgroundColor: '#fff',
+        border: '1px solid #eee',
+        borderRadius: '12px',
+        padding: '20px',
+        marginBottom: '25px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+    };
+
+    const shiftInputStyle = {
+        width: '100%',
+        padding: '8px',
+        border: '1px solid #e0e0e0',
+        borderRadius: '4px',
+        fontSize: '0.85rem',
+        outline: 'none',
+        textAlign: 'center'
+    };
+
+    const dateBlockStyle = {
+        padding: '10px',
+        backgroundColor: '#f8fbfc',
+        borderRadius: '8px',
+        border: '1px solid #e1f5fe'
+    };
+
     return (
-        <div className="medical-form-container">
-            <h2 className="form-title">NURSING SCORE MAPPING SHEET</h2>
+        <div className="medical-form score-mapping-sheet-form" style={{ maxWidth: '1200px', margin: '0 auto', padding: '10px' }}>
+            {/* Removed redundant top spacer */}
+
+            <h2 style={{ textAlign: 'center', color: '#80deea', marginBottom: '30px', fontSize: '1.6rem', fontWeight: 'bold' }}>
+                SCORE MAPPING SHEET
+            </h2>
 
             {/* Compact Patient Header */}
             <div className="patient-compact-header">
@@ -73,106 +104,78 @@ const ScoreMappingSheetForm = ({ onSubmit, patientData }) => {
                 </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="medical-form">
-                <h3 className="form-section-title">Monitoring Period Selection</h3>
-                <div className="section-box" style={{ background: '#f8fafc', marginBottom: '2rem' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
+            <form onSubmit={handleSubmit}>
+                {/* Global Date Selection */}
+                <div style={{ ...cardStyle, backgroundColor: '#e0f2f1', padding: '15px' }}>
+                    <h4 style={{ margin: '0 0 15px 0', color: '#80deea', fontSize: '0.9rem', textTransform: 'uppercase' }}>Monitoring Period Dates</h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' }}>
                         {[0, 1, 2, 3].map(i => (
-                            <MuiDateTimePicker
-                                key={i}
-                                label={`Monitoring Day ${i + 1}`}
-                                value={dates[i]}
-                                onChange={(e) => handleDateChange(i, e.target.value)}
-                                type="date"
-                            />
+                            <div key={i}>
+                                <MuiDateTimePicker
+                                    label={`Date ${i + 1}`}
+                                    name={`date${i}`}
+                                    value={dates[i]}
+                                    onChange={(e) => handleDateChange(i, e.target.value)}
+                                />
+                            </div>
                         ))}
                     </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem' }}>
-                    {scoreItems.map((item) => (
-                        <div key={item.id} className="section-box score-card">
-                            <h4 style={{ margin: '0 0 1.5rem', color: 'var(--primary-color)', fontWeight: '800', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
-                                {item.name}
-                            </h4>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
-                                {[0, 1, 2, 3].map(dateIdx => (
-                                    <div key={dateIdx} style={{ background: '#ffffff', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '0.75rem' }}>
-                                        <div style={{ fontSize: '0.7rem', color: 'var(--text-light)', marginBottom: '0.75rem', textAlign: 'center', fontWeight: '800' }}>
-                                            {dates[dateIdx] ? new Date(dates[dateIdx]).toLocaleDateString() : `DAY ${dateIdx + 1}`}
+                {/* Score Sections as Cards */}
+                {scoreItems.map((item) => (
+                    <div key={item.id} style={cardStyle}>
+                        <h3 style={{ margin: '0 0 20px 0', fontSize: '1.1rem', color: '#80deea', borderBottom: '2px solid #f0f0f0', paddingBottom: '10px', display: 'flex', alignItems: 'center' }}>
+                            <span style={{ backgroundColor: '#80deea', color: '#fff', width: '24px', height: '24px', borderRadius: '50%', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginRight: '10px', fontSize: '0.8rem' }}>S</span>
+                            {item.name}
+                        </h3>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '10px' }}>
+                            {[0, 1, 2, 3].map(dateIdx => (
+                                <div key={dateIdx} style={dateBlockStyle}>
+                                    <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#80deea', marginBottom: '10px', textAlign: 'center' }}>
+                                        {dates[dateIdx] ? new Date(dates[dateIdx]).toLocaleDateString() : `Day ${dateIdx + 1}`}
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+                                        <div>
+                                            <span style={{ fontSize: '0.65rem', display: 'block', textAlign: 'center', color: '#666' }}>M</span>
+                                            <input style={shiftInputStyle} value={scores[item.id][dateIdx].M} onChange={(e) => handleScoreChange(item.id, dateIdx, 'M', e.target.value)} />
                                         </div>
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
-                                            {['M', 'E', 'N'].map(shift => (
-                                                <div key={shift}>
-                                                    <span style={{ fontSize: '0.65rem', display: 'block', textAlign: 'center', fontWeight: '600' }}>{shift}</span>
-                                                    <input
-                                                        className="score-input"
-                                                        value={scores[item.id][dateIdx][shift]}
-                                                        onChange={(e) => handleScoreChange(item.id, dateIdx, shift, e.target.value)}
-                                                    />
-                                                </div>
-                                            ))}
+                                        <div>
+                                            <span style={{ fontSize: '0.65rem', display: 'block', textAlign: 'center', color: '#666' }}>E</span>
+                                            <input style={shiftInputStyle} value={scores[item.id][dateIdx].E} onChange={(e) => handleScoreChange(item.id, dateIdx, 'E', e.target.value)} />
+                                        </div>
+                                        <div>
+                                            <span style={{ fontSize: '0.65rem', display: 'block', textAlign: 'center', color: '#666' }}>N</span>
+                                            <input style={shiftInputStyle} value={scores[item.id][dateIdx].N} onChange={(e) => handleScoreChange(item.id, dateIdx, 'N', e.target.value)} />
                                         </div>
                                     </div>
-                                ))}
-                            </div>
+                                </div>
+                            ))}
                         </div>
-                    ))}
-                </div>
+                    </div>
+                ))}
 
-                <h3 className="form-section-title" style={{ marginTop: '3rem' }}>Staff Nurse Responsibilities</h3>
-                <div className="section-box" style={{ borderTop: '4px solid var(--primary-color)' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
+                {/* Nurse Signature Card */}
+                <div style={{ ...cardStyle, borderTop: '4px solid #80deea' }}>
+                    <h3 style={{ margin: '0 0 20px 0', fontSize: '1.1rem', color: '#80deea' }}>Staff Nurse Signatures</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '10px' }}>
                         {[0, 1, 2, 3].map(dateIdx => (
-                            <div key={dateIdx} style={{ padding: '0.5rem' }}>
-                                <div style={{ fontSize: '0.75rem', marginBottom: '0.75rem', fontWeight: '700' }}>Signatures (D{dateIdx + 1})</div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                    {['M', 'E', 'N'].map(shift => (
-                                        <input
-                                            key={shift}
-                                            placeholder={`Sign ${shift}`}
-                                            className="score-input"
-                                            style={{ textAlign: 'left', padding: '0.5rem' }}
-                                            value={nurseSigns[dateIdx][shift]}
-                                            onChange={(e) => handleSignChange(dateIdx, shift, e.target.value)}
-                                        />
-                                    ))}
+                            <div key={dateIdx} style={{ ...dateBlockStyle, backgroundColor: '#fff' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+                                    <input placeholder="Sign M" style={shiftInputStyle} value={nurseSigns[dateIdx].M} onChange={(e) => handleSignChange(dateIdx, 'M', e.target.value)} />
+                                    <input placeholder="Sign E" style={shiftInputStyle} value={nurseSigns[dateIdx].E} onChange={(e) => handleSignChange(dateIdx, 'E', e.target.value)} />
+                                    <input placeholder="Sign N" style={shiftInputStyle} value={nurseSigns[dateIdx].N} onChange={(e) => handleSignChange(dateIdx, 'N', e.target.value)} />
                                 </div>
                             </div>
                         ))}
                     </div>
                 </div>
 
-                <button type="submit" className="submit-btn" style={{ marginTop: '4rem' }}>
-                    Successfully Finalize Score Mapping
+                <button type="submit" className="submit-btn" style={{ width: '100%', marginTop: '30px' }}>
+                    Finalize & Save All Scores
                 </button>
             </form>
-
-            <style>{`
-                .section-box {
-                    background: #ffffff;
-                    border: 1px solid var(--border-color);
-                    border-radius: 16px;
-                    padding: 1.5rem;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.02);
-                }
-                .score-input {
-                    width: 100%;
-                    padding: 6px;
-                    border: 1px solid var(--border-color);
-                    border-radius: 4px;
-                    font-size: 0.85rem;
-                    outline: none;
-                    text-align: center;
-                    transition: border-color 0.2s;
-                }
-                .score-input:focus {
-                    border-color: var(--primary-color);
-                }
-                .score-card:hover {
-                    box-shadow: 0 6px 16px rgba(0,0,0,0.05);
-                }
-            `}</style>
         </div>
     );
 };
