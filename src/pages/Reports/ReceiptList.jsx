@@ -192,6 +192,7 @@ export default function ReceiptList() {
 
   const handlePrintReceipt = (selectedReceipt) => {
     if (!selectedReceipt) return;
+    console.log(" printing  RECEPT: ", selectedReceipt);
 
     const clinicAddr = clinincLoc[currentLocation] || {
       address: "Healing Hands Clinic Pvt Ltd, DP Road, Ground Floor, Millenium Star Extension, Adjacent to Ruby Hall Clinic, Pune 411001",
@@ -369,34 +370,34 @@ export default function ReceiptList() {
                     <td>Date : <b>${moment(selectedReceipt.receipt_date).format("DD-MM-YYYY")}</b></td>
                   </tr>
                 </table>
+                <table class="items-table">
+                  <thead>
+                    <tr>
+                      <th width="15%">Sr. No</th>
+                      <th width="60%">Description</th>
+                      <th width="25%" align="right">Amount (₹)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${selectedReceipt.item_details
+                      ? selectedReceipt.item_details.split(",").map((itemGroup, index) => {
+                          // Split "USG ABDOMEN AND PELVIS: 100" into ["USG ABDOMEN AND PELVIS", "100"]
+                          const parts = itemGroup.split(":");
+                          const label = parts[0] ? parts[0].trim() : "-";
+                          const amount = parts[1] ? parseFloat(parts[1].trim()) : 0;
 
-        <table class="items-table">
-  <thead>
-    <tr>
-      <th width="15%">Sr. No</th>
-      <th width="60%">Description</th>
-      <th width="25%" align="right">Amount (₹)</th>
-    </tr>
-  </thead>
-  <tbody>
-    ${selectedReceipt.consultation
-      ? selectedReceipt.consultation.split(",").map((item, index) => {
-          const amounts = selectedReceipt.totalamt.toString().split(",");
-          const currentAmount = amounts[index] || (index === 0 ? selectedReceipt.totalamt : "0.00");
-
-          return `
-            <tr>
-              <td>${index + 1}</td>
-              <td>${item.trim()}</td>
-              <td align="right"><b>${parseFloat(currentAmount).toFixed(2)}</b></td>
-            </tr>
-          `;
-        }).join("")
-      : `<tr><td>1</td><td>-</td><td align="right">0.00</td></tr>`
-    }
-  </tbody>
-</table>
-
+                          return `
+                            <tr>
+                              <td>${index + 1}</td>
+                              <td>${label}</td>
+                              <td align="right"><b>${amount.toFixed(2)}</b></td>
+                            </tr>
+                          `;
+                        }).join("")
+                      : `<tr><td>1</td><td>-</td><td align="right">0.00</td></tr>`
+                    }
+                  </tbody>
+                </table>
                 <div class="summary-section">
                   Sub Total : <b>${parseFloat(selectedReceipt.totalamt).toFixed(2)}</b><br>
                   Discount (If Any) : <b>${parseFloat(selectedReceipt.discountamt || 0).toFixed(2)}</b><br>
