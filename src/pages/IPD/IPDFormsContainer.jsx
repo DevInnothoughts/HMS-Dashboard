@@ -369,6 +369,7 @@ export default function IPDFormsContainer() {
                                                 age: patient.age,
                                                 gender: patient.gender,
                                                 ipNo: patient.admissionNo,
+                                                contact: patient.contact,
                                             }}
                                             onSubmit={handleFormSubmit}
                                         />

@@ -894,7 +894,7 @@ case "dr_ref":
       ? `<img src="${vipIconImg}" class="vip-logo-img" alt="(VIP)" />`
       : '';
 
-    const location = currentLocation || "";
+    const location = "Hyderabad" || "";
 
     let regionalConsent = "";
     let regionalPatientNameLabel = "<p><b>Patients Name :</b>:</p>";
