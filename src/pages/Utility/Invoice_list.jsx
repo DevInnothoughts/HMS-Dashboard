@@ -186,6 +186,17 @@ const InvoiceList = () => {
   const initialFormData = { ...formData };
 
   useEffect(() => {
+    // Helper function moved inside to ensure availability
+    const formatToApiDateLocal = (date) => {
+      if (!date) return null;
+      const d = new Date(date);
+      if (isNaN(d.getTime())) return null;
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const year = d.getFullYear();
+      return `${day}-${month}-${year}`; // Matches your DD-MM-YYYY backend expectation
+    };
+
     const fetchInvoices = async () => {
       if (!currentLocation) return;
 
@@ -193,49 +204,67 @@ const InvoiceList = () => {
       setError("");
 
       try {
-        const response = await fetch(
-          `${BASE_URL}/V1/invoice/listInvoice?location=${encodeURIComponent(
-            currentLocation
-          )}`
-        );
+        // 1. Create the base URL
+        const url = new URL(`${BASE_URL}/V1/invoice/listInvoice`);
+        
+        // 2. Prepare the parameters
+        const params = {
+          location: currentLocation,
+          from: formatToApiDateLocal(fromDate),
+          to: formatToApiDateLocal(toDate)
+        };
+        
+        // 3. Cleanly append parameters
+        Object.keys(params).forEach((key) => {
+          if (params[key]) {
+            url.searchParams.append(key, params[key]);
+          }
+        });
+
+        console.log("Fetching URL:", url.toString());
+
+        const response = await fetch(url.toString(), {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${localStorage.getItem("token")}` // Good practice to include
+          }
+        });
 
         const data = await response.json();
-        console.log(data);
+        
         if (response.ok) {
-          const processedInvoices = (data.data[0] || []).map((invoice) => ({
+          // Flatten data if backend returns nested array [ [] ]
+          const rawData = Array.isArray(data.data[0]) ? data.data[0] : (data.data || []);
+          
+          const processedInvoices = rawData.map((invoice) => ({
             ...invoice,
             totalamt: parseFloat(invoice.totalamt) || 0,
             discount: parseFloat(invoice.discount) || 0,
             advance_amt: parseFloat(invoice.advance_amt) || 0,
             receivedamt: parseFloat(invoice.receivedamt) || 0,
             payable_amt: calculatePayableAmt(invoice),
-            due_amt:
-              (parseFloat(invoice.totalamt) || 0) -
-              (parseFloat(invoice.receivedamt) || 0),
-            pay_mode:
-              invoice.chequeno && invoice.chequeno !== "NULL"
-                ? "PDC"
-                : invoice.insurancecompany
-                  ? "INSURANCE"
-                  : "CASH/CARD",
+            due_amt: (parseFloat(invoice.totalamt) || 0) - (parseFloat(invoice.receivedamt) || 0),
+            pay_mode: invoice.chequeno && invoice.chequeno !== "NULL" ? "PDC" : 
+                      invoice.insurancecompany ? "INSURANCE" : "CASH/CARD",
             patient_name: invoice.patient_name || "N/A",
             patient_phone: invoice.patient_phone || "N/A",
           }));
 
-          setInvoices(processedInvoices || []);
+          setInvoices(processedInvoices);
         } else {
-          console.error(data.message);
-          throw new Error("Failed to fetch invoices.");
+          throw new Error(data.message || "Failed to fetch invoices.");
         }
       } catch (err) {
-        setError(err.message || "An error occurred while fetching invoices.");
+        console.error("Fetch error:", err);
+        setError(err.message);
       } finally {
         setLoading(false);
       }
     };
 
     fetchInvoices();
-  }, [currentLocation]);
+  }, [currentLocation, fromDate, toDate]); // Added fromDate and toDate so it refreshes when dates change
 
   useEffect(() => {
     const fetchDropdowns = async () => {
