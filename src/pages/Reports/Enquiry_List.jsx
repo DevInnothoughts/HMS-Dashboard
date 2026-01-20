@@ -90,6 +90,7 @@ export default function EnquiryList() {
         to: finalToDate,
         location: currentLocation, 
       };
+      console.log(params);
 
       Object.keys(params).forEach((key) =>
         url.searchParams.append(key, params[key])

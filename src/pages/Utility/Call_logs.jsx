@@ -198,6 +198,7 @@ export default function Call_logs() {
         to: formatToApiDate(toDate),
         location: currentLocation,
       };
+      // console.log(params);
 
       Object.keys(params).forEach((key) => {
         if (params[key]) url.searchParams.append(key, params[key]);

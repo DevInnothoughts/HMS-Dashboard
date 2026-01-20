@@ -160,54 +160,6 @@ export default function All_patient() {
     }
   }, []);
 
-  const fetchPatientData = async () => {
-    setLoading(true);
-    try {
-      const url = new URL(`${BASE_URL}/V1/patient/listPatient`);
-      const params = {
-        from: formatToApiDate(fromDate),
-        to: formatToApiDate(toDate),
-        location: currentLocation,
-      };
-
-      Object.keys(params).forEach((key) => {
-        if (params[key]) url.searchParams.append(key, params[key]);
-      });
-
-      const response = await fetch(url, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.data) {
-        setPatients(data.data);
-      }
-      // else {
-      //   Swal.fire({
-      //     icon: 'error',
-      //     title: 'Fetch Failed',
-      //     text: 'Failed to fetch patient data.'
-      //   });
-      // }
-    } catch (error) {
-      console.error("Error fetching patients:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "An error occurred while loading patient data.",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (currentLocation) {
-      fetchPatientData();
-    }
-  }, [currentLocation, fromDate, toDate]);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -457,11 +409,19 @@ export default function All_patient() {
           currentLocation
         )}`
       );
+
+      const params = {
+        from: formatToApiDate(fromDate),
+        to: formatToApiDate(toDate)
+      };
+
+      Object.keys(params).forEach((key) => {
+        if (params[key]) url.searchParams.append(key, params[key]);
+      });
+
       const response = await fetch(url, {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
       });
 
       const data = await response.json();
@@ -2219,7 +2179,7 @@ case "dr_ref":
 
           <Button
             variant="primary"
-            onClick={() => fetchPatientData()}
+            onClick={() => fetchPatientsData()}
             style={{
               backgroundColor: "#00bcd4",
               border: "none",

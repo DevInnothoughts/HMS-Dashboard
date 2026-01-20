@@ -90,7 +90,7 @@ export default function ReceiptList() {
         to: finalToDate,
         location: currentLocation, 
       };
-
+      // console.log(params);
       Object.keys(params).forEach((key) =>
         url.searchParams.append(key, params[key])
       );

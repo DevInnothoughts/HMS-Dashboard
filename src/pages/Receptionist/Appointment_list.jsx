@@ -504,6 +504,7 @@ export default function Appointment_list() {
 
       const formattedFromDate = formatDateToDDMMYYYY(fromDate);
       const formattedToDate = formatDateToDDMMYYYY(toDate);
+      // console.log(formattedFromDate, formattedToDate);
       const url = `${BASE_URL}/V1/appointment/listAppointments?from=${formattedFromDate}&to=${formattedToDate}&location=${currentLocation}`;
 
       const response = await fetch(url, { method: "GET" });
