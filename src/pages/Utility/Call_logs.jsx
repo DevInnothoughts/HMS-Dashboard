@@ -49,7 +49,6 @@ export default function Call_logs() {
   const [enquiryTypes, setEnquiryTypes] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [filters1, setFilters1] = useState({
-    // global: { value: null, matchMode: FilterMatchMode.CONTAINS },
     global: { value: null, matchMode: FilterMatchMode.EQUALS }
   });
   const [loading, setLoading] = useState(false);
@@ -86,7 +85,6 @@ export default function Call_logs() {
     const today = new Date();
     const patient_phone = rowData.caller_no || "";
 
-    // Reset/Set initial data
     setFormData((prev) => ({
       ...prev,
       date: moment(today).format("YYYY-MM-DD"),
@@ -96,7 +94,7 @@ export default function Call_logs() {
       patientName: "",
       doctor_id: "",
       FDE_Name: "",
-      patient_type: "New", // Default
+      patient_type: "",
     }));
 
     if (!patient_phone) {
@@ -112,14 +110,13 @@ export default function Call_logs() {
       });
 
       if (!response.ok) {
-        setFormData((prev) => ({ ...prev, patient_type: "New" }));
+        setFormData((prev) => ({ ...prev, patient_type: "" }));
         setShowAddModal(true);
         return;
       }
 
       const data = await response.json();
       if (data.statusCode === 200 && data.data) {
-        // --- NESTED CHECK: PENDING APPOINTMENTS ---
         try {
           const confirmUrl = `${BASE_URL}/V1/appointment/getPatientByApptConfirm?patient_phone=${patient_phone}&location=${currentLocation}`;
           const confirmResponse = await fetch(confirmUrl, {
@@ -129,7 +126,6 @@ export default function Call_logs() {
 
           const confirmData = await confirmResponse.json();
 
-          // If status 400, a pending appointment exists
           if (confirmResponse.status === 400) {
             Swal.fire({
               icon: "warning",
@@ -137,15 +133,14 @@ export default function Call_logs() {
               text: confirmData.message || "This patient already has a pending appointment. Please complete it first.",
               confirmButtonColor: "#f39c12",
             });
-            return; // STOP: Do not open modal
+            return;
           }
         } catch (innerError) {
           console.error("Error in confirmation check API call:", innerError);
         }
 
-        // If we reached here, patient exists and has NO pending appointments
         Swal.fire({
-          icon: "info",
+          icon: "warning",
           title: "Patient Found",
           text: `${data.data.name} is already registered.`,
           confirmButtonColor: "#00bcd4",
@@ -155,7 +150,7 @@ export default function Call_logs() {
         setFormData((prev) => ({
           ...prev,
           patientName: data.data.name || "",
-          patient_type: "Follow", // Default for existing patient
+          patient_type: "",
         }));
       } else {
         setFormData((prev) => ({ ...prev, patient_type: "New" }));
@@ -475,7 +470,7 @@ export default function Call_logs() {
               value={rows}
               onChange={(e) => {
                 setRows(parseInt(e.target.value));
-                setFirst(0); // Reset to first page when changing row count
+                setFirst(0);
               }}
               style={{ width: "70px", height: "30px", border: "1px solid #4dd0e1", borderRadius: "6px", fontSize: "12px" }}
             >
@@ -639,19 +634,15 @@ export default function Call_logs() {
 
   const generateTimeSlots = () => {
     const slots = [];
-    // Start at 7:00 AM today
     let start = moment().startOf('day').add(7, 'hours');
-    // End at 11:45 PM today
     const end = moment().startOf('day').add(23, 'hours').add(45, 'minutes');
 
     while (start <= end) {
       slots.push(start.format("hh:mm A"));
-      start.add(15, 'minutes'); // 15-minute gap
+      start.add(15, 'minutes');
     }
     return slots;
   };
-
-  // const timeSlots = generateTimeSlots();
 
   useEffect(() => {
     setTimeSlots(generateTimeSlots());
@@ -673,7 +664,7 @@ export default function Call_logs() {
       FDE_Name: fdeName,
       appointment_time: formData.appointmentTime,
       patient_phone: formData.caller_no,
-      patient_type: formData.patient_type, // Now dynamic
+      patient_type: formData.patient_type,
       appointment_timestamp: moment(formData.date).format("YYYY-MM-DD"),
       doctorName: doctorName,
       doctor_id: formData.doctor_id,
@@ -1046,7 +1037,7 @@ export default function Call_logs() {
           style={{
             backgroundColor: "#e0f7fa",
             borderBottom: "2px solid #00bcd4",
-            padding: "10px 15px", // Compact padding
+            padding: "10px 15px",
           }}
         >
           <Modal.Title style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}>
@@ -1118,6 +1109,35 @@ export default function Call_logs() {
                   </Form.Select>
                 </Form.Group>
               </Col>
+
+              <Col md={6}>
+                <Form.Group className="mb-2">
+                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                    Patient Type <span className="text-danger">*</span>
+                  </Form.Label>
+                  <Form.Select
+                    required
+                    size="sm"
+                    name="patient_type"
+                    value={formData.patient_type}
+                    onChange={handleInputChange}
+                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
+                  >
+                    <option value="">Select Type</option>
+                    
+                    {formData.patient_type === "New" ? (
+                      <option value="New">NEW</option>
+                    ) : (
+                      <>
+                        <option value="Follow">FOLLOW</option>
+                        <option value="Post Operative">POST OPERATIVE</option>
+                        <option value="Other">OTHER</option>
+                      </>
+                    )}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+
               <Col md={6}>
                 <Form.Group className="mb-2">
                   <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
