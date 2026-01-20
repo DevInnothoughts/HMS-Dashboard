@@ -64,7 +64,7 @@ function decodeJwt(token) {
   }
 }
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 export default function ReceptionistDashboard() {
   const [appointments, setAppointments] = useState([]);
@@ -188,6 +188,7 @@ export default function ReceptionistDashboard() {
       try {
         const from = moment(start).format("DD-MM-YYYY");
         const to = moment(end).format("DD-MM-YYYY");
+        // console.log(from, to);
         let url = `${BASE_URL}/V1/appointment/listAppointments?from=${from}&to=${to}&location=${currentLocation}`;
         if (doctorId) url += `&doctor=${doctorId}`;
 
