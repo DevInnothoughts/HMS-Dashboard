@@ -301,7 +301,6 @@ const errorBannerStyle = {
   borderRadius: "8px",
   fontSize: "13px",
   border: "1px solid #feb2b2",
-  marginTop: "5px",
   display: "inline-block",
   marginTop: "10px",
 };

@@ -208,14 +208,14 @@ export default function SearchBy() {
                                     <FeatherIcon icon="search" size="16" style={{ color: "#1a5b61ff", marginRight: "8px" }} />
                                     <h4 className="m-0" style={{ color: "#1a5b61ff", fontWeight: "600", fontSize: "0.95rem" }}>Search Patient</h4>
                                 </div>
-                                <Card.Body className="p-3">
+                                <Card.Body className="p-3" style={{margin:"5px"}}>
                                     <Form onSubmit={handleSearch}>
                                         <Form.Group>
-                                            <Form.Label className="fw-bold uppercase mb-1" style={{ fontSize: "0.8rem", color: "#1a5b61ff" }}>UHID No. / Contact No.</Form.Label>
+                                            <Form.Label className="fw-bold uppercase mb-1" style={{ fontSize: "0.8rem", color: "#1a5b61ff" }}>Enter UHID No.</Form.Label>
                                             <InputGroup size="sm">
                                                 <Form.Control
                                                     type="text"
-                                                    placeholder="Enter UHID or Mobile Number"
+                                                    placeholder="Enter UHID No"
                                                     value={uhid}
                                                     onChange={(e) => setUhid(e.target.value)}
                                                     style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "0.85rem", borderRadius: "8px 0 0 8px" }}
