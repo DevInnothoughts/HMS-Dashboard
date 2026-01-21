@@ -3,7 +3,7 @@ import PageBreadcrumb from "../../../components/PageBreadcrumb";
 import { Row, Col, Card, Container, Table, Button, Spinner } from "react-bootstrap";
 import { decodeJwt } from "../../../utils/decode-jwt";
 
-export const BASE_URL = "http://localhost:5100/api";
+export const BASE_URL = "http://194.195.117.79:5100/api";
 
 const initialReportState = {
   opdCounts: [],
