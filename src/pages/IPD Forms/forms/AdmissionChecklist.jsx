@@ -9,6 +9,7 @@ import { decodeJwt } from '../../../utils/decode-jwt';
 import Swal from "sweetalert2"
 import hhcLogo from '../../../assets/images/logo/hhclogo.webp';
 
+const pageTitle = "admission-checklist";
 const BASE_URL = "http://localhost:5100/api";
 
 
@@ -96,6 +97,8 @@ const AdmissionChecklist = ({ onSubmit, patientData }) => {
         staffSignature: '',   // New field
         staffActionDateTime: ''
     });
+    const [loading, setLoading] = useState(false);
+    
     const [currentLocation, setCurrentLocation] = useState(null);
 
     useEffect(() => {
@@ -107,6 +110,56 @@ const AdmissionChecklist = ({ onSubmit, patientData }) => {
             }
         }
     }, []);
+
+    useEffect(() => {
+        const fetchExistingChecklist = async () => {
+            if (!patientData?.uhid) return;
+            
+            setLoading(true);
+            try {
+                // Adjust this URL to your actual endpoint that returns the ipdflow row
+                const response = await fetch(`${BASE_URL}/V1/ipd/admission/listAdmissionEntry?uhid=${patientData.uhid}&title=${pageTitle}`, {
+                    headers: {
+                        "Authorization": `Bearer ${localStorage.getItem("token")}`
+                    }
+                });
+                const result = await response.json();
+
+                if (response.ok && result.data?.admission) {
+                    // const existing = result.data.admission["admission-checklist"];
+                    // if (existing) {
+                    //     // Map the API JSON back to the local formData state
+                    //     setFormData({
+                    //         admissionDateTime: existing.admission_tracking?.admission_date 
+                    //             ? `${existing.admission_tracking.admission_date} ${existing.admission_tracking.admission_time}` 
+                    //             : '',
+                    //         consentTaken: existing.admission_tracking?.general_consent_taken ? ['Yes'] : [],
+                    //         roomCategory: getRoomCategoryArray(existing.room_allotment?.category),
+                    //         amenities: extractAmenities(existing.basic_amenities_on_admission),
+                    //         admissionTakenBy: existing.staff_verification?.admission_taken_by_name || '',
+                    //         staffSignature: existing.staff_verification?.signature || '',
+                    //         staffActionDateTime: existing.staff_verification?.date_time || ''
+                    //     });
+                    // }
+                    console.log(result);
+                }
+            } catch (error) {
+                console.error("Error fetching checklist:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchExistingChecklist();
+    }, [patientData?.uhid, pageTitle]); // Re-fetch if UHID changes
+
+    // Helper: Map nested room JSON back to array for checkboxes
+    const getRoomCategoryArray = (catObj) => {
+        if (!catObj) return [];
+        return Object.entries(catObj)
+            .filter(([_, val]) => val)
+            .map(([key]) => key.charAt(0).toUpperCase() + key.slice(1).replace('_', '-'));
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -502,7 +555,7 @@ const AdmissionChecklist = ({ onSubmit, patientData }) => {
             .logo-img { height: 65px; width: auto; margin-top:10px }           
             .patient-info-block { position: absolute; right: 25px; color: #333; font-weight: bold; font-size: 11px; text-align: left; line-height: 1.5; }
             .label-teal { color: #008080; font-weight: bold; margin-right: 4px; }
-            .main-title { color: #008080; font-size: 24px; font-weight: bold; margin: 5px 0 30px 0; }
+            .main-title { color: #008080; font-size: 24px; font-weight: bold; margin: 15px 0 30px 0; }
             .row { display: flex; align-items: baseline; margin-bottom: 15px; font-size: 14px; font-weight:bold; }
             .dotted-line { border-bottom: 1px dotted #646363; flex: 1; margin: 0 8px; height: 1.1em; text-align: center; font-weight: normal; padding: 4px 10px; min-width: 50px; }
             .cb-item { display: flex; align-items: center; margin-bottom: 6px; font-size: 14px; }
