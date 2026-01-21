@@ -10,7 +10,7 @@ import Swal from "sweetalert2";
 import hhcLogo from '../../../assets/images/logo/hhclogo.webp';
 
 const pageTitle = "admission-checklist";
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 const theme = createTheme({
     palette: {
@@ -36,7 +36,7 @@ const AdmissionChecklist = ({ onSubmit, patientData }) => {
     const extractAmenities = (amenitiesObj) => {
         if (!amenitiesObj) return [];
         const found = [];
-    
+
         // Map DB keys to EXACT UI Labels used in your checkboxes
         const keyToLabelMap = {
             "paper_napkins": "Paper napkins",
@@ -61,7 +61,7 @@ const AdmissionChecklist = ({ onSubmit, patientData }) => {
             "call_bell": "Call bell",
             "wifi_password": "Wifi password"
         };
-    
+
         // Iterate through categories: room_utilities, patient_comfort, etc.
         Object.values(amenitiesObj).forEach(group => {
             Object.entries(group).forEach(([key, value]) => {
@@ -72,7 +72,7 @@ const AdmissionChecklist = ({ onSubmit, patientData }) => {
                 }
             });
         });
-        
+
         return found;
     };
 
@@ -107,8 +107,8 @@ const AdmissionChecklist = ({ onSubmit, patientData }) => {
                 if (response.ok && result.data) {
                     const existing = result.data;
                     setFormData({
-                        admissionDateTime: existing.admission_tracking?.admission_date 
-                            ? `${existing.admission_tracking.admission_date} ${existing.admission_tracking.admission_time}` 
+                        admissionDateTime: existing.admission_tracking?.admission_date
+                            ? `${existing.admission_tracking.admission_date} ${existing.admission_tracking.admission_time}`
                             : '',
                         consentTaken: existing.admission_tracking?.general_consent_taken ? ['Yes'] : [],
                         roomCategory: getRoomCategoryArray(existing.room_allotment?.category),
@@ -240,7 +240,7 @@ const AdmissionChecklist = ({ onSubmit, patientData }) => {
         const dateTimeParts = formData?.admissionDateTime ? formData.admissionDateTime.split(' ') : ['', ''];
         const admissionDate = dateTimeParts[0] || '________________';
         const admissionTime = dateTimeParts[1] || '________________';
-    
+
         const isChecked = (category, value) => {
             // Add safety check ?. to prevent "is undefined" errors
             return formData?.[category]?.includes(value) ? 'checked' : '';
@@ -273,7 +273,7 @@ const AdmissionChecklist = ({ onSubmit, patientData }) => {
             .indent { margin-left: 30px; }
             .footer { margin-top: 10px; padding-top: 20px; }
             .sig-flex { display: flex; justify-content: space-between; margin-top: 20px; }
-            .line-solid { border-bottom: 1px solid #333; width: 225px; display: inline-block; height: 1.1em; text-align: center; padding: 4px 10px; }
+            .line-solid { border-bottom: 1px solid #333; width: 225px; display: inline-block; height: 1.1em; text-align: center; padding: 4px 10px;  }
             .line-long { border-bottom: 1px solid #333; flex: 1; margin-left: 10px; height: 1.1em; text-align: left; padding-left: 10px; padding: 4px 10px; }
             @media print { .no-print { display: none; } outer-border { height: 90vh; }}
         </style>
@@ -304,7 +304,7 @@ const AdmissionChecklist = ({ onSubmit, patientData }) => {
             
             <div class="row">
                 2] General consent of admission taken: 
-                <div class="box ${formData?.consentTaken.includes('Yes') ? 'checked' : ''}" style="margin-left:5px;"></div>
+                <div class="box ${formData?.consentTaken.includes('Yes') ? 'checked' : ''}" style="margin-left:5px; margin-top:10px;"></div>
             </div>
 
             <div class="section-title">3] Allotment of room as per category-</div>
@@ -325,8 +325,8 @@ const AdmissionChecklist = ({ onSubmit, patientData }) => {
         ).join('')}
             </div>
 
-            <div class="footer">
-    <div class="row"><span style="font-weight: bold;">Admission taken by (Full Name):</span><div class="line-long" style="font-weight: normal;">${formData?.admissionTakenBy || ''}</div></div>
+            <div class="footer" style=" margin-bottom:20px">
+    <div class="row"><span style="font-weight: bold;">Admission taken by (Full Name):</span><div class="line-long" style="font-weight: normal; text-align: center;">${formData?.admissionTakenBy || ''}</div></div>
     <div class="sig-flex">
         <div style="font-size:14px"><span style="font-weight: bold;">Signature:</span> <div class="line-solid" style="font-weight: normal;">${formData?.staffSignature || ''}</div></div>
         <div style="font-size:14px"><span style="font-weight: bold;">Date & Time:</span> <div class="line-solid" style="font-weight: normal;">${formData?.staffActionDateTime || ''}</div></div>
@@ -370,21 +370,39 @@ const AdmissionChecklist = ({ onSubmit, patientData }) => {
                             value={formData.admissionDateTime ? dayjs(formData.admissionDateTime, 'DD-MM-YYYY HH:mm') : null}
                             format="DD-MM-YYYY HH:mm"
                             onChange={(newValue) => setFormData(prev => ({ ...prev, admissionDateTime: newValue ? newValue.format('DD-MM-YYYY HH:mm') : '' }))}
-                            slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                            slotProps={{ textField: { size: 'small', fullWidth: true, required: true } }}
                         />
                     </div>
 
                     <div className="form-field mb-10" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <label className="field-label" style={{ marginBottom: 0 }}>General Consent for Admission *</label>
-                        <input type="checkbox" checked={formData.consentTaken.includes('Yes')} onChange={() => handleCheckboxChange('consentTaken', 'Yes', formData.consentTaken)} />
+                        <label className="field-label" style={{ marginBottom: 0 }}>General Consent for Admission <span style={{ color: '#e74c3c' }}>*</span></label>
+                        <div className="checkbox-group">
+                            <label className="checkbox-option" style={{ padding: 0, margin: 0, marginBottom: "10px" }}>
+                                <input
+                                    style={{
+                                        width: '15px',
+                                        height: '15px',
+                                        cursor: 'pointer',
+                                        transform: 'scale(1.2)',
+                                    }}
+                                    type="checkbox"
+                                    checked={formData.consentTaken.includes('Yes')}
+                                    onChange={() => handleCheckboxChange('consentTaken', 'Yes', formData.consentTaken)}
+                                    required
+                                />
+                                <span></span>
+                            </label>
+                        </div>
                     </div>
 
                     <div className="form-field mb-20">
-                        <label className="field-label">Allotment of room category *</label>
+                        <label className="field-label">Allotment of room category <span style={{ color: '#e74c3c' }}>*</span></label>
                         <div className="checkbox-group">
                             {['General', 'Semi-Private', 'Private', 'Deluxe', 'Super Deluxe', 'Suite'].map(option => (
                                 <label key={option} className="checkbox-option">
-                                    <input type="checkbox" checked={formData.roomCategory.includes(option)} onChange={() => handleCheckboxChange('roomCategory', option, formData.roomCategory)} />
+                                    <input type="checkbox"
+                                        checked={formData.roomCategory.includes(option)}
+                                        onChange={() => handleCheckboxChange('roomCategory', option, formData.roomCategory)} />
                                     <span>{option}</span>
                                 </label>
                             ))}
@@ -392,7 +410,7 @@ const AdmissionChecklist = ({ onSubmit, patientData }) => {
                     </div>
 
                     <div className="form-field mb-20">
-                        <label className="field-label">Basic amenities given</label>
+                        <label className="field-label">Basic amenities given <span style={{ color: '#e74c3c' }}>*</span></label>
                         <div className="checkbox-group">
                             {['Paper napkins', 'Soap', 'Water mug with glass', 'Pillow cover & bed sheet', 'Dress of patient', 'T.V with remote', 'A.C. with remote', 'Geyser in condition', 'Mug, bucket & dustbin', 'Spoons', 'Plates', 'Dental kit', 'Cup and bowls', 'Trey & kettles', 'Tissue paper & stands', 'Dish TV with remote', 'Slippers', 'Door mats', 'Call bell', 'Wifi password', 'Room orientation'].map(option => (
                                 <label key={option} className="checkbox-option">
@@ -405,7 +423,7 @@ const AdmissionChecklist = ({ onSubmit, patientData }) => {
 
                     <div style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
                         <div style={{ flex: '1' }}>
-                            <label className="field-label">Admission taken by:</label>
+                            <label className="field-label">Admission taken by: <span style={{ color: '#e74c3c' }}>*</span></label>
                             <input type="text" name="admissionTakenBy" className="form-input" style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #ccc' }} value={formData.admissionTakenBy} onChange={handleChange} />
                         </div>
                         <div style={{ flex: '1' }}>
@@ -413,7 +431,7 @@ const AdmissionChecklist = ({ onSubmit, patientData }) => {
                             <input type="text" name="staffSignature" className="form-input" style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #ccc' }} value={formData.staffSignature} onChange={handleChange} />
                         </div>
                         <div style={{ flex: '1' }}>
-                            <label className="field-label">Date & Time:</label>
+                            <label className="field-label">Date & Time: <span style={{ color: '#e74c3c' }}>*</span></label>
                             <DateTimePicker
                                 value={formData.staffActionDateTime ? dayjs(formData.staffActionDateTime, 'DD-MM-YYYY HH:mm') : null}
                                 format="DD-MM-YYYY HH:mm"
@@ -425,8 +443,19 @@ const AdmissionChecklist = ({ onSubmit, patientData }) => {
 
                     <div style={{ display: 'flex', gap: '15px' }}>
                         <button type="submit" className="submit-btn" style={{ flex: 1 }}>Save / Update Data</button>
-                        <button type="button" className="submit-btn" style={{ flex: 1, backgroundColor: '#008080' }} onClick={generatePrintContent}>Print Form</button>
-                    </div>
+                        <button
+                            type="button"
+                            className="submit-btn"
+                            style={{
+                                flex: 1,
+                                backgroundColor: isFormComplete() ? '#008080' : '#cccccc', // Gray out if incomplete
+                                cursor: isFormComplete() ? 'pointer' : 'not-allowed'
+                            }}
+                            onClick={generatePrintContent}
+                            disabled={!isFormComplete()} // Prevents clicking if validation fails
+                        >
+                            Print Form
+                        </button>                    </div>
                 </form>
             </LocalizationProvider>
         </ThemeProvider>

@@ -385,7 +385,7 @@ export default function IPDFormsContainer() {
                                             </p>
                                             <div className="mt-4 d-flex justify-content-center gap-3">
                                                 <Button variant="light" className="px-5 py-2 fw-bold border" onClick={() => setActiveForm(null)} style={{ borderRadius: "8px" }}>Back to index</Button>
-                                                <Button variant="primary" className="px-5 py-2 fw-bold" style={{ backgroundColor: "#178aaeff", border: "none", borderRadius: "8px" }} onClick={() => handleFormSubmit({})}>Mock Submit</Button>
+                                                <Button variant="light" className="px-5 py-2 fw-bold" style={{ backgroundColor: "#178aaeff", border: "none", borderRadius: "8px" }} onClick={() => handleFormSubmit({})}>Mock Submit</Button>
                                             </div>
                                         </div>
                                     )}

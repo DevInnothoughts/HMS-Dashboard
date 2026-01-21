@@ -197,14 +197,14 @@
 				li{
 				  &.menu-item{
 					> a{
-						background-color: rgba($theme-primary,0.1);
+						background-color: rgba(#0d6efd,0.1);
 						padding: 12px 15px;
 						border-radius: 5px;
-						color: $theme-primary;
+						color: #0d6efd;
 						justify-content: center;
 						&.active{
 						  color: $white;
-						  background-color: $theme-primary;
+						  background-color: #0d6efd;
 						}
 					}
 				  }
@@ -276,7 +276,7 @@
 				width: 40px;
 				height: 40px;
 				padding: 0;
-				color: $theme-primary;
+				color: #0d6efd;
 				display: flex;				
 				align-items: center;				
 				justify-content: center;			
@@ -290,7 +290,7 @@
 				opacity: 0;
 				visibility:hidden;
 				width: 0;
-				border: 1px solid $theme-border;
+				border: 1px solid #0d6efd;
 				background-color: $white;
 				transition: all 0.5s ease;
 				&.active{
@@ -956,7 +956,7 @@
 	.invoice-user{
 		display:block;
 		.right-user{
-			border-top: 1px solid $theme-border;
+			border-top: 1px solid #0d6efd;
 			margin-top: 15px;
 			padding-top: 15px;
 		}

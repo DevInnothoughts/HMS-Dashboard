@@ -2,11 +2,11 @@ import React from "react";
 import { Routes } from "react-router-dom";
 import { AuthRoutes } from "./AuthRoutes";
 import { DashboardRoutes } from "./DashboardRoutes";
-import { DoctorRoutes } from "./DoctorRoutes";
+// import { DoctorRoutes } from "./DoctorRoutes";
 import { PatientRoutes } from "./PatientRoutes";
-import { ReceptionistRoutes } from "./ReceptionistRoutes";
+// import { ReceptionistRoutes } from "./ReceptionistRoutes";
 import { ReportRoutes } from "./ReportsRoutes";
-import { SettingsRoutes } from "./SettingsRoutes";
+// import { SettingsRoutes } from "./SettingsRoutes";
 import { UtilityRoutes } from "./UtilityRoutes";
 import { IpdRoutes } from "./IpdRoutes";
 
@@ -15,12 +15,12 @@ export default function AppRoutes() {
     <Routes>
       {AuthRoutes}
       {DashboardRoutes}
-      {DoctorRoutes}
+      {/* {DoctorRoutes} */}
       {IpdRoutes}
       {PatientRoutes}
-      {ReceptionistRoutes}
+      {/* {ReceptionistRoutes} */}
       {ReportRoutes}
-      {SettingsRoutes}
+      {/* {SettingsRoutes} */}
       {UtilityRoutes}
     </Routes>
   );

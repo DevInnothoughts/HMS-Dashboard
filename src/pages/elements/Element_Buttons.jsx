@@ -46,7 +46,7 @@ export default function Element_Buttons() {
                       Use any of the available <code>.btn btn-*</code>
                       &nbsp;classes quickly create a styled button.{" "}
                     </p>
-                    <Button variant="primary">Primary</Button>{" "}
+                    <Button variant="primary"Primary</Button>{" "}
                     <Button variant="secondary">Secondary</Button>{" "}
                     <Button variant="success">Success</Button>{" "}
                     <Button variant="warning">Warning</Button>{" "}
@@ -67,7 +67,7 @@ export default function Element_Buttons() {
                       Add <code>.btn.btn-sm.btn-outline-*</code>&nbsp; for
                       additional sizes.{" "}
                     </p>
-                    <Button className="btn btn-sm" variant="primary">
+                    <Button className="btn btn-sm" variant="primary"
                       Primary
                     </Button>{" "}
                     <Button className="btn btn-sm" variant="secondary">
@@ -218,7 +218,7 @@ export default function Element_Buttons() {
                       <code>.btn.btn-rounded.btn-outline-*</code>&nbsp;classes
                       quickly create a styled button.{" "}
                     </p>
-                    <Button className="btn-rounded" variant="primary">
+                    <Button className="btn-rounded" variant="primary"
                       Primary
                     </Button>{" "}
                     <Button className="btn-rounded" variant="secondary">
@@ -252,7 +252,7 @@ export default function Element_Buttons() {
                   </div>
                   <div className="card-body">
                     <p className="card-title-desc mb-2">Add icon in button </p>
-                    <Button variant="primary">
+                    <Button variant="primary"
                       {" "}
                       <i className="fa fa-smile-o me-1"></i>Primary
                     </Button>{" "}

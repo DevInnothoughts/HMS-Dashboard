@@ -4,7 +4,7 @@ import React from "react";
 import { useLocation } from "react-router-dom";
 import Header from "./Header"; // Adjust path if needed
 import Sidebar from "./Sidebar"; // Adjust path if needed
-import Customizer from "./Customizer"; // Adjust path if needed
+// import Customizer from "./Customizer"; // Adjust path if needed
 import Taptotop from "./Taptotop"; // Adjust path if needed
 import { SidebarProvider } from "../pages/api/useSidebarContext"; // Adjust path if needed
 
@@ -47,7 +47,7 @@ const AppLayout = ({ children }) => {
       {/* Scroll To Top End */}
 
       {/* Conditionally render Customizer */}
-      {shouldRenderExtras && customizerEnabled && <Customizer />}
+      {shouldRenderExtras && customizerEnabled }
     </SidebarProvider>
   );
 };
