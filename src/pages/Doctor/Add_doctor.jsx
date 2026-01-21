@@ -3,7 +3,7 @@ import { Row, Col, Card, Form, Container, Button, Alert } from 'react-bootstrap'
 import SimpleBar from 'simplebar-react';
 import PageBreadcrumb from '../../components/PageBreadcrumb';
 
-const BASE_URL = 'http://localhost:5000/api'; // Correct API base URL
+const BASE_URL = 'http://194.195.117.79:5000/api'; // Correct API base URL
 
 export default function Add_doctor() {
   const [formData, setFormData] = useState({
