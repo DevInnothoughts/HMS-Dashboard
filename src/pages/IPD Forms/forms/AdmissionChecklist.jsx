@@ -133,6 +133,22 @@ const AdmissionChecklist = ({ onSubmit, patientData }) => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const isSelected = (arr, val) => arr.some(item => item.toLowerCase() === val.toLowerCase().replace(/_/g, ' '));
+
+    // Add this function after isSelected
+    const isFormComplete = () => {
+        // Check all required fields
+        const requiredFields = [
+            formData.admissionDateTime,
+            formData.consentTaken.length > 0,
+            formData.roomCategory.length > 0,
+            formData.admissionTakenBy,
+            formData.staffActionDateTime
+        ];
+
+        return requiredFields.every(field => field);
+    };
+
     const handleCheckboxChange = (name, optionValue, currentValues) => {
         let newValue = currentValues.includes(optionValue)
             ? currentValues.filter(v => v !== optionValue)
@@ -220,79 +236,116 @@ const AdmissionChecklist = ({ onSubmit, patientData }) => {
     };
 
     const generatePrintContent = () => {
+        // Access local state variables directly
         const dateTimeParts = formData?.admissionDateTime ? formData.admissionDateTime.split(' ') : ['', ''];
         const admissionDate = dateTimeParts[0] || '________________';
         const admissionTime = dateTimeParts[1] || '________________';
-        const isChecked = (category, value) => formData?.[category]?.includes(value) ? 'checked' : '';
+    
+        const isChecked = (category, value) => {
+            // Add safety check ?. to prevent "is undefined" errors
+            return formData?.[category]?.includes(value) ? 'checked' : '';
+        };
 
         const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>ADMISSION CHECK LIST</title>
-            <style>
-                @page { margin: 5mm; }
-                body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 15px; color: #333; }
-                .outer-border { border: 3px solid #00a99d; padding: 15px 25px; display: flex; flex-direction: column; min-height: 90vh; position: relative; }
-                .form-type { color: red; font-weight: bold; font-size: 11px; margin-bottom: 5px; }
-                .header-flex { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
-                .logo-img { height: 65px; width: auto; }           
-                .patient-info-block { color: #333; font-weight: bold; font-size: 11px; text-align: left; line-height: 1.5; }
-                .label-teal { color: #008080; font-weight: bold; margin-right: 4px; }
-                .main-title { color: #008080; font-size: 24px; font-weight: bold; margin: 10px 0; }
-                .row { display: flex; align-items: baseline; margin-bottom: 15px; font-size: 14px; font-weight:bold; }
-                .dotted-line { border-bottom: 1px dotted #646363; flex: 1; margin: 0 8px; height: 1.1em; text-align: center; }
-                .cb-item { display: flex; align-items: center; margin-bottom: 6px; font-size: 14px; }
-                .box { width: 18px; height: 18px; border: 1px solid #cbd5e0; border-radius: 4px; margin-right: 8px; background-color: #fff; position: relative; }
-                .box.checked { background-color: #00bcd4; border-color: #00bcd4; }
-                .box.checked::after { content: '✓'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -55%); color: white; font-weight: bold; }
-                .amenities-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px 15px; margin-top: 10px; }
-                .footer { margin-top: auto; padding-top: 20px; }
-                .line-solid { border-bottom: 1px solid #333; width: 200px; display: inline-block; height: 1.1em; }
-                @media print { .no-print { display: none; } }
-            </style>
-        </head>
-        <body>
-            <div class="form-type">Form 2 - Front</div>
-            <div class="outer-border">
-                <div class="header-flex">
-                    <img src="${window.location.origin}${hhcLogo}" class="logo-img">
-                    <div class="patient-info-block">
-                        <div><span class="label-teal">Name:</span>${patientData?.name || ''}</div>
-                        <div><span class="label-teal">UHID:</span>${patientData?.uhid || ''}</div>
-                        <div><span class="label-teal">DOA:</span>${formData?.admissionDateTime || ''}</div>
-                    </div>
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>ADMISSION CHECK LIST</title>
+        <style>
+            @page { margin: 5mm; }
+             body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 15px; color: #333; }
+            .outer-border { border: 3px solid #00a99d; padding: 5px 25px; display: flex; flex-direction: column; min-height: 80vh; }
+            .form-type { color: red; font-weight: bold; font-size: 11px; margin-bottom: 5px; }
+            .header-flex { display: flex; justify-content: space-between; align-items: flex-start; }
+            .logo-area { display: flex; align-items: center; }
+            .logo-img { height: 65px; width: auto; margin-top:10px }           
+            .patient-info-block { position: absolute; right: 25px; color: #333; font-weight: bold; font-size: 11px; text-align: left; line-height: 1.5; }
+            .label-teal { color: #008080; font-weight: bold; margin-right: 4px; }
+            .main-title { color: #008080; font-size: 24px; font-weight: bold; margin: 10px 0 30px 0; }
+            .row { display: flex; align-items: baseline; margin-bottom: 15px; font-size: 14px; font-weight:bold; }
+            .dotted-line { border-bottom: 1px dotted #646363; flex: 1; margin: 0 8px; height: 1.1em; text-align: center; font-weight: normal; padding: 4px 10px; min-width: 50px; }
+            .cb-item { display: flex; align-items: center; margin-bottom: 6px; font-size: 14px; }
+            .box { width: 18px; height: 18px; border: 1px solid #cbd5e0; border-radius: 4px; margin-top: 5px; margin-right: 5px; position: relative; flex-shrink: 0; background-color: #fff; }
+            .box.checked { background-color: #00bcd4; border-color: #00bcd4; }
+            .box.checked::after { content: '✓'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -55%); color: #333; font-weight: bold; font-size: 14px; }
+            .amenities-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; margin-left: 30px; gap: 5px 2px; }
+            .section-title { margin-bottom: 5px; margin-top: 5px; font-size: 14px; font-weight:bold; }
+            .indent { margin-left: 30px; }
+            .footer { margin-top: 10px; padding-top: 20px; }
+            .sig-flex { display: flex; justify-content: space-between; margin-top: 20px; }
+            .line-solid { border-bottom: 1px solid #333; width: 225px; display: inline-block; height: 1.1em; text-align: center; padding: 4px 10px; }
+            .line-long { border-bottom: 1px solid #333; flex: 1; margin-left: 10px; height: 1.1em; text-align: left; padding-left: 10px; padding: 4px 10px; }
+            @media print { .no-print { display: none; } outer-border { height: 90vh; }}
+        </style>
+    </head>
+    <body>
+        <div class="form-type">Form 2 - Front</div>
+        <div class="outer-border">
+            <div class="header-flex">
+                <div class="logo-area">
+                    <img src="${window.location.origin}${hhcLogo}" class="logo-img" alt="HHC Logo">
                 </div>
-                <div class="main-title">ADMISSION CHECK LIST</div>
-                <div class="row">1] Date: <div class="dotted-line">${admissionDate}</div> Time: <div class="dotted-line">${admissionTime}</div></div>
-                <div class="row">2] Consent taken: <div class="box ${formData.consentTaken.includes('Yes') ? 'checked' : ''}" style="margin-left:10px"></div></div>
-                <div style="font-weight:bold; margin: 10px 0;">3] Room Category:</div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; margin-left:20px;">
-                    ${['General', 'Semi-Private', 'Private', 'Deluxe', 'Super Deluxe', 'Suite'].map(cat => `
-                        <div class="cb-item"><div class="box ${isChecked('roomCategory', cat)}"></div> ${cat}</div>
-                    `).join('')}
-                </div>
-                <div style="font-weight:bold; margin-top:20px;">4] Amenities:</div>
-                <div class="amenities-grid">
-                    ${['Paper napkins', 'Soap', 'Room orientation', 'Water mug with glass', 'Pillow cover & bed sheet', 'Dress of patient', 'T.V with remote', 'A.C. with remote', 'Geyser in condition', 'Mug, bucket & dustbin', 'Spoons', 'Plates', 'Dental kit', 'Cup and bowls', 'Trey & kettles', 'Tissue paper & stands', 'Dish TV with remote', 'Slippers', 'Door mats', 'Call bell', 'Wifi password'].map(item => `
-                        <div class="cb-item"><div class="box ${isChecked('amenities', item)}"></div> ${item}</div>
-                    `).join('')}
-                </div>
-                <div class="footer">
-                    <div class="row">Admission by: <div class="dotted-line" style="flex:2">${formData.admissionTakenBy}</div></div>
-                    <div style="display:flex; justify-content: space-between;">
-                        <div>Signature: <div class="line-solid"></div></div>
-                        <div>Date/Time: <div class="line-solid">${formData.staffActionDateTime}</div></div>
-                    </div>
+                <div class="patient-info-block">
+                    <div><span class="label-teal">Name:</span>${patientData?.name || ''}</div>
+                    <div><span class="label-teal">Age/Gender:</span>${patientData?.age || ''} / ${patientData?.gender || ''}</div>
+                    <div><span class="label-teal">UHID:</span>${patientData?.uhid || ''}</div>
+                    <div><span class="label-teal">I/P:</span>${patientData?.ipNo || ''}</div>
+                    <div><span class="label-teal">DOA:</span>${formData?.admissionDateTime || ''}</div>
+                    <div><span class="label-teal">Contact No:</span>${patientData?.contact || ''}</div>
                 </div>
             </div>
-            <div class="no-print" style="text-align:center; padding:20px;"><button onclick="window.print()">Print Now</button></div>
-        </body>
-        </html>`;
+            
+            <div class="main-title">ADMISSION CHECK LIST</div>
+            
+            <div class="row">
+                1] Admission Date: <div class="dotted-line">${admissionDate}</div> 
+                Admission Time: <div class="dotted-line">${admissionTime}</div>
+            </div>
+            
+            <div class="row">
+                2] General consent of admission taken: 
+                <div class="box ${formData?.consentTaken.includes('Yes') ? 'checked' : ''}" style="margin-left:5px;"></div>
+            </div>
+
+            <div class="section-title">3] Allotment of room as per category-</div>
+            <div class="indent">
+                <div class="cb-item"><div class="box ${isChecked('roomCategory', 'General')}"></div> General</div>
+                <div class="cb-item"><div class="box ${isChecked('roomCategory', 'Semi-Private')}"></div> Semi-Private</div>
+                <div class="cb-item"><div class="box ${isChecked('roomCategory', 'Private')}"></div> Private</div>
+                <div class="cb-item"><div class="box ${isChecked('roomCategory', 'Deluxe')}"></div> Deluxe</div>
+                <div class="cb-item"><div class="box ${isChecked('roomCategory', 'Super Deluxe')}"></div> Super Deluxe</div>
+                <div class="cb-item"><div class="box ${isChecked('roomCategory', 'Suite')}"></div> Suite</div>
+            </div>
+
+            <div class="row" style="margin-top:20px"><span>4] Basic amenities given (as per room):</span><span style="margin-left: 5px">Admission</span></div>
+
+            <div class="amenities-grid">
+                ${['Paper napkins', 'Soap', 'Room orientation', 'Water mug with glass', 'Pillow cover & bed sheet', '', 'Dress of patient', 'T.V with remote', '', 'A.C. with remote', 'Geyser in condition', '', 'Mug, bucket & dustbin', 'Spoons', '', 'Plates', 'Dental kit', '', 'Cup and bowls', 'Trey & kettles', '', 'Tissue paper & stands', 'Dish TV with remote', '', 'Slippers', 'Door mats', '', 'Call bell', 'Wifi password'].map(item =>
+            item === '' ? '<div></div>' : `<div class="cb-item"><div class="box ${isChecked('amenities', item)}"></div> ${item}</div>`
+        ).join('')}
+            </div>
+
+            <div class="footer">
+    <div class="row"><span style="font-weight: bold;">Admission taken by (Full Name):</span><div class="line-long" style="font-weight: normal;">${formData?.admissionTakenBy || ''}</div></div>
+    <div class="sig-flex">
+        <div style="font-size:14px"><span style="font-weight: bold;">Signature:</span> <div class="line-solid" style="font-weight: normal;">${formData?.staffSignature || ''}</div></div>
+        <div style="font-size:14px"><span style="font-weight: bold;">Date & Time:</span> <div class="line-solid" style="font-weight: normal;">${formData?.staffActionDateTime || ''}</div></div>
+    </div>
+</div>
+        </div>
+        <div class="no-print" style="text-align:center; padding: 20px;">
+            <button onclick="window.print()" style="padding: 10px 40px; background:#008080; color:white; border:none; border-radius:5px; cursor:pointer;">Print Form</button>
+        </div>
+    </body>
+    </html>
+    `;
 
         const blob = new Blob(['\ufeff' + htmlContent], { type: 'text/html;charset=utf-8' });
-        window.open(URL.createObjectURL(blob), '_blank', 'width=800,height=900');
+        const url = URL.createObjectURL(blob);
+        const printWindow = window.open(url, 'PrintChecklist', `width=800,height=900,scrollbars=yes`);
+        if (printWindow) printWindow.onload = () => URL.revokeObjectURL(url);
     };
+
 
     return (
         <ThemeProvider theme={theme}>
