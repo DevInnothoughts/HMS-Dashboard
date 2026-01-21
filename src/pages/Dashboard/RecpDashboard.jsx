@@ -116,7 +116,7 @@ export default function ReceptionistDashboard() {
         // Map common variations to standard keys
         if (type === "NEW PATIENT" || type === "NEW") type = "New";
         if (type === "FOLLOW" || type === "FOLLOW-UP") type = "Follow";
-        if (type === "POST OPERATIVE" || type === "POST-OPERATIVE") type = "Postoperative";
+        if (type === "POST OPERATIVE" || type === "POST-OPERATIVE" || type === "POSTOPERATIVE") type = "Postoperative";
         
         acc[type] = (acc[type] || 0) + 1;
         return acc;
@@ -305,10 +305,10 @@ export default function ReceptionistDashboard() {
 
   const eventStyleGetter = useCallback((event) => {
     const colorMap = {
-      New: "#000000",
-      Follow: "#ff8000",
-      Postoperative: "#8000ff",
-      Other: "#ff0080",
+      NEW: "#000000",
+      FOLLOW: "#ff8000",
+      POSTOPERATIVE: "#8000ff",
+      OTHER: "#ff0080",
     };
     return {
       style: {
