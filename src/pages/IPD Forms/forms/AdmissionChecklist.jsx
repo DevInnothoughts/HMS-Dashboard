@@ -226,42 +226,51 @@ const AdmissionChecklist = ({ onSubmit, patientData }) => {
         const isChecked = (category, value) => formData?.[category]?.includes(value) ? 'checked' : '';
 
         const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>ADMISSION CHECK LIST</title>
-            <style>
-                @page { margin: 5mm; }
-                body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 15px; color: #333; }
-                .outer-border { border: 3px solid #00a99d; padding: 15px 25px; display: flex; flex-direction: column; min-height: 90vh; position: relative; }
-                .form-type { color: red; font-weight: bold; font-size: 11px; margin-bottom: 5px; }
-                .header-flex { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
-                .logo-img { height: 65px; width: auto; }           
-                .patient-info-block { color: #333; font-weight: bold; font-size: 11px; text-align: left; line-height: 1.5; }
-                .label-teal { color: #008080; font-weight: bold; margin-right: 4px; }
-                .main-title { color: #008080; font-size: 24px; font-weight: bold; margin: 10px 0; }
-                .row { display: flex; align-items: baseline; margin-bottom: 15px; font-size: 14px; font-weight:bold; }
-                .dotted-line { border-bottom: 1px dotted #646363; flex: 1; margin: 0 8px; height: 1.1em; text-align: center; }
-                .cb-item { display: flex; align-items: center; margin-bottom: 6px; font-size: 14px; }
-                .box { width: 18px; height: 18px; border: 1px solid #cbd5e0; border-radius: 4px; margin-right: 8px; background-color: #fff; position: relative; }
-                .box.checked { background-color: #00bcd4; border-color: #00bcd4; }
-                .box.checked::after { content: '✓'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -55%); color: white; font-weight: bold; }
-                .amenities-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px 15px; margin-top: 10px; }
-                .footer { margin-top: auto; padding-top: 20px; }
-                .line-solid { border-bottom: 1px solid #333; width: 200px; display: inline-block; height: 1.1em; }
-                @media print { .no-print { display: none; } }
-            </style>
-        </head>
-        <body>
-            <div class="form-type">Form 2 - Front</div>
-            <div class="outer-border">
-                <div class="header-flex">
-                    <img src="${window.location.origin}${hhcLogo}" class="logo-img">
-                    <div class="patient-info-block">
-                        <div><span class="label-teal">Name:</span>${patientData?.name || ''}</div>
-                        <div><span class="label-teal">UHID:</span>${patientData?.uhid || ''}</div>
-                        <div><span class="label-teal">DOA:</span>${formData?.admissionDateTime || ''}</div>
-                    </div>
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>ADMISSION CHECK LIST</title>
+        <style>
+            @page { margin: 5mm; }
+             body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 15px; color: #333; }
+            .outer-border { border: 3px solid #00a99d; padding: 5px 25px; display: flex; flex-direction: column; min-height: 80vh; }
+            .form-type { color: red; font-weight: bold; font-size: 11px; margin-bottom: 5px; }
+            .header-flex { display: flex; justify-content: space-between; align-items: flex-start; }
+            .logo-area { display: flex; align-items: center; }
+            .logo-img { height: 65px; width: auto; margin-top:10px }           
+            .patient-info-block { position: absolute; right: 25px; color: #333; font-weight: bold; font-size: 11px; text-align: left; line-height: 1.5; }
+            .label-teal { color: #008080; font-weight: bold; margin-right: 4px; }
+            .main-title { color: #008080; font-size: 24px; font-weight: bold; margin: 15px 0 30px 0; }
+            .row { display: flex; align-items: baseline; margin-bottom: 15px; font-size: 14px; font-weight:bold; }
+            .dotted-line { border-bottom: 1px dotted #646363; flex: 1; margin: 0 8px; height: 1.1em; text-align: center; font-weight: normal; padding: 4px 10px; min-width: 50px; }
+            .cb-item { display: flex; align-items: center; margin-bottom: 6px; font-size: 14px; }
+            .box { width: 18px; height: 18px; border: 1px solid #cbd5e0; border-radius: 4px; margin-top: 5px; margin-right: 5px; position: relative; flex-shrink: 0; background-color: #fff; }
+            .box.checked { background-color: #00bcd4; border-color: #00bcd4; }
+            .box.checked::after { content: '✓'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -55%); color: #333; font-weight: bold; font-size: 14px; }
+            .amenities-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; margin-left: 30px; gap: 5px 2px; }
+            .section-title { margin-bottom: 5px; margin-top: 5px; font-size: 14px; font-weight:bold; }
+            .indent { margin-left: 30px; }
+            .footer { margin-top: 10px; padding-top: 20px; }
+            .sig-flex { display: flex; justify-content: space-between; margin-top: 20px; }
+            .line-solid { border-bottom: 1px solid #333; width: 225px; display: inline-block; height: 1.1em; text-align: center; padding: 4px 10px; }
+            .line-long { border-bottom: 1px solid #333; flex: 1; margin-left: 10px; height: 1.1em; text-align: left; padding-left: 10px; padding: 4px 10px; }
+            @media print { .no-print { display: none; } outer-border { height: 90vh; }}
+        </style>
+    </head>
+    <body>
+        <div class="form-type">Form 2 - Front</div>
+        <div class="outer-border">
+            <div class="header-flex">
+                <div class="logo-area">
+                    <img src="${window.location.origin}${hhcLogo}" class="logo-img" alt="HHC Logo">
+                </div>
+                <div class="patient-info-block">
+                    <div><span class="label-teal">Name:</span>${patientData?.name || ''}</div>
+                    <div><span class="label-teal">Age/Gender:</span>${patientData?.age || ''} / ${patientData?.gender || ''}</div>
+                    <div><span class="label-teal">UHID:</span>${patientData?.uhid || ''}</div>
+                    <div><span class="label-teal">I/P:</span>${patientData?.ipNo || ''}</div>
+                    <div><span class="label-teal">DOA:</span>${formData?.admissionDateTime || ''}</div>
+                    <div><span class="label-teal">Contact No:</span>${patientData?.contact || ''}</div>
                 </div>
                 <div class="main-title">ADMISSION CHECK LIST</div>
                 <div class="row">1] Date: <div class="dotted-line">${admissionDate}</div> Time: <div class="dotted-line">${admissionTime}</div></div>
