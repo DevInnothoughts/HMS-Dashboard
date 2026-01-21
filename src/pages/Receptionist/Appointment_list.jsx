@@ -52,7 +52,7 @@ const NoteCell = ({ note }) => {
   );
 };
 const BASE_URL = "http://194.195.117.79:5100/api";
-const TYPE_LIST = ["New", "Follow-UP", "POST-OPERATIVE", "OTHER"];
+const TYPE_LIST = ["New", "Follow", "Post Operative", "Other"];
 const REFERENCE_OPTIONS = [
   "Family / Friends",
   "Referred By Another Doctor",

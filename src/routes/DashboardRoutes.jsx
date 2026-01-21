@@ -11,3 +11,4 @@ export const DashboardRoutes = (
     <Route path="/reception-dashboard" element={<ReceptionistDashboard />} />
   </>
 );
+ 

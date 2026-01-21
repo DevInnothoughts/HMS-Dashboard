@@ -2403,9 +2403,9 @@ case "dr_ref":
                     style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
                   >
                     <option value="">Select Patient Type</option>
-                    <option value="FOLLOW-UP">FOLLOW </option>
-                    <option value="POST-OPERATIVE">POST OPERATIVE</option>
-                    <option value="OTHER">OTHER</option>
+                    <option value="Follow">Follow </option>
+                    <option value="Post Operative">Post Operative</option>
+                    <option value="Other">Other</option>
                   </Form.Select>
                 </Form.Group>
               </Col>

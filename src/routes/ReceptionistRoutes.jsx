@@ -1,6 +1,6 @@
 import React from "react";
 import { Route } from "react-router-dom";
-import Appointment_list from "../pages/Receptionist/Appointment_list";
+import Appointment_list from "../pages/Receptionist/Appointment_list.jsx";
 import Add_appointment from "../pages/Receptionist/Add_appointment";
 // import Edit_appointment from "../pages/Receptionist/Edit_appointment";
 // import Receptionist_list from "../pages/Receptionist/Receptionist_list";

@@ -114,13 +114,14 @@ export default function ReceptionistDashboard() {
       (acc, event) => {
         let type = (event.patientType || "Other").toUpperCase();
         // Map common variations to standard keys
-        if (type === "NEW PATIENT") type = "NEW";
-        if (type === "FOLLOW-UP") type = "FOLLOW";
+        if (type === "NEW PATIENT" || type === "NEW") type = "New";
+        if (type === "FOLLOW" || type === "FOLLOW-UP") type = "Follow";
+        if (type === "POST OPERATIVE" || type === "POST-OPERATIVE") type = "Postoperative";
         
         acc[type] = (acc[type] || 0) + 1;
         return acc;
       },
-      { NEW: 0, FOLLOW: 0, POSTOPERATIVE: 0, OTHER: 0 } // Use consistent Uppercase keys
+      { New: 0, Follow: 0, Postoperative: 0, Other: 0 } // Use consistent Uppercase keys
     );
   }, [appointments, selectedDate]);
 
@@ -304,10 +305,10 @@ export default function ReceptionistDashboard() {
 
   const eventStyleGetter = useCallback((event) => {
     const colorMap = {
-      NEW: "#000000",
-      FOLLOW: "#ff8000",
-      POSTOPERATIVE: "#8000ff",
-      OTHER: "#ff0080",
+      New: "#000000",
+      Follow: "#ff8000",
+      Postoperative: "#8000ff",
+      Other: "#ff0080",
     };
     return {
       style: {
@@ -660,22 +661,22 @@ export default function ReceptionistDashboard() {
                 <div className="d-flex align-items-center flex-wrap">
                 <div className="legend-item">
                     <span className="dot" style={{ background: "#000" }}></span>{" "}
-                    New <span className="cnt">({counts.NEW || 0})</span>
+                    New <span className="cnt">({counts.New || 0})</span>
                   </div>
                   <div className="legend-item">
                     <span className="dot" style={{ background: "#ff8000" }}></span>{" "}
-                    Follow-up <span className="cnt">({counts.FOLLOW || 0})</span>
+                    Follow <span className="cnt">({counts.Follow || 0})</span>
                   </div>
                   <div className="legend-item">
                     <span className="dot" style={{ background: "#8000ff" }}></span>{" "}
-                    Post-Operative <span className="cnt">({counts.POSTOPERATIVE || 0})</span>
+                    Post Operative <span className="cnt">({counts.Postoperative || 0})</span>
                   </div>
                   <div className="legend-item">
                     <span
                       className="dot"
                       style={{ background: "#ff0080" }}
                     ></span>{" "}
-                    Other <span className="cnt">({counts.OTHER})</span>
+                    Other <span className="cnt">({counts.Other})</span>
                   </div>
                 </div>
               </Col>

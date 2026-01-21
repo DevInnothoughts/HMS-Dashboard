@@ -1129,9 +1129,9 @@ export default function Call_logs() {
                       <option value="New">NEW</option>
                     ) : (
                       <>
-                        <option value="Follow">FOLLOW</option>
-                        <option value="Post Operative">POST OPERATIVE</option>
-                        <option value="Other">OTHER</option>
+                        <option value="Follow">Follow</option>
+                        <option value="Post Operative">Post Operative</option>
+                        <option value="Other">Other</option>
                       </>
                     )}
                   </Form.Select>
