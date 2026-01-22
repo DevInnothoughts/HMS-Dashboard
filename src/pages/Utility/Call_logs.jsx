@@ -149,6 +149,7 @@ export default function Call_logs() {
 
         setFormData((prev) => ({
           ...prev,
+          patient_id: data.data.patient_id,
           patientName: data.data.name || "",
           patient_id: data.data.patient_id,
           patient_type: "",
