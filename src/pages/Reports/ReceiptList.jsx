@@ -88,7 +88,7 @@ export default function ReceiptList() {
       const params = {
         from: finalFromDate,
         to: finalToDate,
-        location: currentLocation, 
+        location: currentLocation,
       };
       // console.log(params);
       Object.keys(params).forEach((key) =>
@@ -189,6 +189,46 @@ export default function ReceiptList() {
     }
     return result.trim() + " Rupees Only";
   };
+
+  const handleDeleteReceipt = (receipt) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: `You are about to delete receipt ${receipt.receipt_id}. This action cannot be undone!`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "Cancel",
+      reverseButtons: true, // Moves Cancel to left, Confirm to right
+      customClass: {
+        confirmButton: "swal-button-radius",
+        cancelButton: "swal-button-radius"
+      }
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const response = await fetch(`${BASE_URL}/V1/appointment/deleteReceipt/${receipt.receipt_id}`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+          });
+
+          if (response.ok) {
+            Toast.fire({
+              icon: "success",
+              title: "Receipt deleted successfully",
+            });
+            fetchReceiptsData();
+          } else {
+            throw new Error("Failed to delete");
+          }
+        } catch (error) {
+          console.error("❌ Error deleting receipt:", error);
+          Swal.fire("Error!", "Could not delete the receipt.", "error");
+        }
+      }
+    });
+  };  
 
   const handlePrintReceipt = (selectedReceipt) => {
     if (!selectedReceipt) return;
@@ -380,22 +420,22 @@ export default function ReceiptList() {
                   </thead>
                   <tbody>
                     ${selectedReceipt.item_details
-                      ? selectedReceipt.item_details.split(",").map((itemGroup, index) => {
-                          // Split "USG ABDOMEN AND PELVIS: 100" into ["USG ABDOMEN AND PELVIS", "100"]
-                          const parts = itemGroup.split(":");
-                          const label = parts[0] ? parts[0].trim() : "-";
-                          const amount = parts[1] ? parseFloat(parts[1].trim()) : 0;
+          ? selectedReceipt.item_details.split(",").map((itemGroup, index) => {
+            // Split "USG ABDOMEN AND PELVIS: 100" into ["USG ABDOMEN AND PELVIS", "100"]
+            const parts = itemGroup.split(":");
+            const label = parts[0] ? parts[0].trim() : "-";
+            const amount = parts[1] ? parseFloat(parts[1].trim()) : 0;
 
-                          return `
+            return `
                             <tr>
                               <td>${index + 1}</td>
                               <td>${label}</td>
                               <td align="right"><b>${amount.toFixed(2)}</b></td>
                             </tr>
                           `;
-                        }).join("")
-                      : `<tr><td>1</td><td>-</td><td align="right">0.00</td></tr>`
-                    }
+          }).join("")
+          : `<tr><td>1</td><td>-</td><td align="right">0.00</td></tr>`
+        }
                   </tbody>
                 </table>
                 <div class="summary-section">
@@ -431,34 +471,24 @@ export default function ReceiptList() {
     });
   };
 
-  const sendMail = (receipt) => {
-    Swal.fire({
-      title: "Feature Coming Soon!",
-      text: `Emailing receipt feature is currently under development.`,
-      icon: "info",
-      confirmButtonColor: "#00bcd4",
-    });
-  };
-
   const actionBodyTemplate = (receipt) => (
     <div className="d-flex align-items-center justify-content-center">
-      {/* Mail Button */}
-      <Button
-        onClick={() => sendMail(receipt)}
-        className="btn btn-extra-small btn-icon  me-2"
-        variant="primary"
-        title="Mail"
-      >
-        <FeatherIcon icon="mail" size="14" />
-      </Button>
-      {/* Print Button */}
       <Button
         onClick={() => handlePrintReceipt(receipt)}
-        className="btn btn-extra-small btn-icon "
+        className="btn btn-extra-small btn-icon me-1"
         variant="primary"
         title="Print"
       >
         <FeatherIcon icon="printer" size="14" />
+      </Button>
+      <Button
+        style={{ borderRadius: "8px" }}
+        onClick={() => handleDeleteReceipt(receipt)}
+        className="btn btn-extra-small btn-icon"
+        variant="danger"
+        title="Delete"
+      >
+        <FeatherIcon icon="trash-2" size="14" />
       </Button>
     </div>
   );

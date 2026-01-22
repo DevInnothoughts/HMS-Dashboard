@@ -67,6 +67,13 @@ const AdverseDrugCorrectiveActionForm = ({ onSubmit, patientData }) => {
         onSubmit && onSubmit({ ...formData, patientHeader: patientData });
     };
 
+    const cardStyle = {
+    backgroundColor: '#fff',
+    borderRadius: '4px',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+    marginBottom: '20px'
+};
+
     return (
         <div className="medical-form-container">
             <style>

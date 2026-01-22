@@ -78,6 +78,7 @@ export default function ReceptionistDashboard() {
   const [cancelComment, setCancelComment] = useState("");
   const [selectedEvent, setSelectedEvent] = useState(null);
   const calendarRef = React.useRef(null);
+  
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -335,7 +336,6 @@ export default function ReceptionistDashboard() {
     }).style.backgroundColor;
 
     const statusTemplate = (rowData) => {
-      // If confirm_time is not '0' or 0, the patient has arrived
       const isConfirmed =
         rowData.confirm_time !== "0" && rowData.confirm_time !== 0;
       return (
@@ -475,7 +475,6 @@ export default function ReceptionistDashboard() {
       }}
     >
       <style>{`
-                    /* --- 1. Layout & Stacking Contexts --- */
 .sidebar-wrapper, 
 .header-wrapper, 
 .page-main-header { 
@@ -487,7 +486,6 @@ export default function ReceptionistDashboard() {
     z-index: 1; 
 }
 
-/* --- 2. Dashboard Header & Legend --- */
 .dashboard-header-bar {
     background: #fff; 
     border-radius: 12px;
@@ -504,7 +502,7 @@ export default function ReceptionistDashboard() {
     color: #1eb3caff; 
     font-weight: 700; 
     margin-bottom: 5px; 
-    letter-spacing: 0.5px; 
+    letter-spacing: 0.4px; 
     text-transform: uppercase;
 }
 
@@ -514,7 +512,7 @@ export default function ReceptionistDashboard() {
     margin-right: 22px; 
     font-size: 13px; 
     font-weight: 600; 
-    color: #295261ff; 
+    color: rgb(0, 0, 0); 
 }
 
 .dot { 
@@ -524,20 +522,19 @@ export default function ReceptionistDashboard() {
     margin-right: 6px; 
 }
 
-/* --- 3. Calendar Specific Fixes --- */
 .rbc-calendar { 
     background: #fff; 
     border-radius: 12px; 
     padding: 3px;
     position: relative;
     z-index: 1;
-    overflow: visible !important; /* Critical to prevent clipping popups */
+    overflow: visible !important; 
 }
 
 .rbc-header { 
     padding: 12px 0 !important; 
-    font-weight: 700 !important; 
-    color: #454b53ff !important; 
+    font-weight: 7000 !important; 
+    color: rgb(0, 0, 0) !important; 
     border-bottom: 2px solid #f1f5f9 !important; 
 }
 
@@ -550,16 +547,14 @@ export default function ReceptionistDashboard() {
     padding: 2px 6px !important; 
 }
 
-/* The popup that appears when clicking '+ more' */
 .rbc-overlay { 
     position: absolute !important;
-    z-index: 10000 !important; /* Must be higher than dashboard-header-bar */
+    z-index: 10000 !important; 
     background: #fff;
     border: 1px solid #ccc;
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
-/* --- 4. Patient & Clinical Data Styling --- */
 .clinical-header-centered {
     display: flex;
     flex-direction: column;
@@ -605,7 +600,6 @@ export default function ReceptionistDashboard() {
     border: 1px solid #bbf7d0; 
 }
 
-/* --- 5. Notes Section --- */
 .note-section-modern label {
     display: flex;
     align-items: center;
@@ -646,7 +640,6 @@ export default function ReceptionistDashboard() {
             <Row className="align-items-center">
               <Col lg={7}>
                 <div className="legend-title">
-                  {/* <h4 className="fw-bold mb-10">Patient Appointment Live Statistics</h4> */}
                   <h4 className="fw-bold mb-10">
                     Patient Appointment Statistics for {moment(selectedDate).format("MMMM YYYY")}
                   </h4>
@@ -654,19 +647,19 @@ export default function ReceptionistDashboard() {
                 <div className="d-flex align-items-center flex-wrap">
                   <div className="legend-item">
                     <span className="dot" style={{ background: "#000000" }}></span>
-                    New <span className="cnt">({counts.NEW || 0})</span>
+                    New Patient <span className="cnt">({counts.NEW || 0})</span>
                   </div>
                   <div className="legend-item">
                     <span className="dot" style={{ background: "#ff8000" }}></span>
-                    Follow <span className="cnt">({counts.FOLLOW || 0})</span>
+                    Follow Patient <span className="cnt">({counts.FOLLOW || 0})</span>
                   </div>
                   <div className="legend-item">
                     <span className="dot" style={{ background: "#8000ff" }}></span>
-                    Post Operative <span className="cnt">({counts.POSTOPERATIVE || 0})</span>
+                    Postoperative Patient <span className="cnt">({counts.POSTOPERATIVE || 0})</span>
                   </div>
                   <div className="legend-item">
                     <span className="dot" style={{ background: "#ff0080" }}></span>
-                    Other <span className="cnt">({counts.OTHER || 0})</span>
+                    Other Patient <span className="cnt">({counts.OTHER || 0})</span>
                   </div>
                     </div>
                   </Col>
@@ -682,9 +675,9 @@ export default function ReceptionistDashboard() {
                                         />
                                     </div> */}
 
-                  <div className="d-flex flex-column">
+                  <div className="d-flex flex-column" style={{justifyContent:"center", alignContent:"center", alignSelf:"center"}}>
                     <label
-                      className="text-muted fw-bold mb-4"
+                      className="text-muted fw-bold mb-2"
                       style={{ fontSize: "13px" }}
                     >
                       Filter by Doctor:
@@ -694,8 +687,9 @@ export default function ReceptionistDashboard() {
                       value={selectedDoctorId}
                       style={{
                         width: "200px",
+                        height:"30px",
                         borderRadius: "8px",
-                        border: "1px solid #d1d5db",
+                        border: "1px solid #009bad",
                         fontSize: "11px"
                       }}
                     >
@@ -712,16 +706,18 @@ export default function ReceptionistDashboard() {
                     variant="primary"
                     onClick={handleRefreshClick}
                     style={{
-                      height: "27px",
-                      width: "90px",
+                      height: "22px",
+                      width: "80px",
                       display: "flex",
                       justifyContent: "center",
                       alignItems: "center",
+                      fontSize: "12px",
                       padding: 0,
-                      alignSelf: "flex-end"
+                      alignSelf: "flex-end",
+                      marginBottom:"5.5px"
                     }}
                   >
-                    <FeatherIcon icon="refresh-cw" size={12} className="me-1" />Refresh
+                    <FeatherIcon icon="refresh-cw" size={10} className="me-1" />Refresh
                   </Button>
                 </div>
               </Col>
@@ -768,7 +764,7 @@ export default function ReceptionistDashboard() {
                 <Card.Header className="bg-white py-5 d-flex justify-content-center align-items-center" style={{ borderBottom: "1px solid rgb(77, 208, 225)" }} >
                   <div className="d-flex align-items-center justify-content-center w-100">
                     <div
-                      className="d-flex align-items-center justify-content-center me-2"
+                      className="d-flex align-items-center justify-content-center me-1"
                       style={{
                         background: "#e0f2fe",
                         width: "27px",

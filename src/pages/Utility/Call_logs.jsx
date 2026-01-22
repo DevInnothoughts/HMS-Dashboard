@@ -1047,7 +1047,7 @@ export default function Call_logs() {
             Add Appointment
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body style={{ fontSize: "13px", padding: "10px" }}>
+        <Modal.Body style={{ fontSize: "13px", padding: "5px" }}>
           <Form onSubmit={handleAddAppointment}>
             <Row>
               <Col md={6}>
@@ -1332,7 +1332,7 @@ export default function Call_logs() {
             Add Enquiry
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body style={{ fontSize: "13px", padding: "10px" }}>
+        <Modal.Body style={{ fontSize: "13px", padding: "5px" }}>
           <div>
             <Form>
               <Row>

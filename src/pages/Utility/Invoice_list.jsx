@@ -206,14 +206,14 @@ const InvoiceList = () => {
       try {
         // 1. Create the base URL
         const url = new URL(`${BASE_URL}/V1/invoice/listInvoice`);
-        
+
         // 2. Prepare the parameters
         const params = {
           location: currentLocation,
           from: formatToApiDateLocal(fromDate),
           to: formatToApiDateLocal(toDate)
         };
-        
+
         // 3. Cleanly append parameters
         Object.keys(params).forEach((key) => {
           if (params[key]) {
@@ -232,11 +232,11 @@ const InvoiceList = () => {
         });
 
         const data = await response.json();
-        
+
         if (response.ok) {
           // Flatten data if backend returns nested array [ [] ]
           const rawData = Array.isArray(data.data[0]) ? data.data[0] : (data.data || []);
-          
+
           const processedInvoices = rawData.map((invoice) => ({
             ...invoice,
             totalamt: parseFloat(invoice.totalamt) || 0,
@@ -245,8 +245,8 @@ const InvoiceList = () => {
             receivedamt: parseFloat(invoice.receivedamt) || 0,
             payable_amt: calculatePayableAmt(invoice),
             due_amt: (parseFloat(invoice.totalamt) || 0) - (parseFloat(invoice.receivedamt) || 0),
-            pay_mode: invoice.chequeno && invoice.chequeno !== "NULL" ? "PDC" : 
-                      invoice.insurancecompany ? "INSURANCE" : "CASH/CARD",
+            pay_mode: invoice.chequeno && invoice.chequeno !== "NULL" ? "PDC" :
+              invoice.insurancecompany ? "INSURANCE" : "CASH/CARD",
             patient_name: invoice.patient_name || "N/A",
             patient_phone: invoice.patient_phone || "N/A",
           }));
@@ -1150,7 +1150,14 @@ const InvoiceList = () => {
                     />
                   </DataTable>
                 )}
-                {!loading && !error && filteredInvoices.length === 0 && (
+                {/* {!loading && !error && filteredInvoices.length === 0 && (
+                  <div className="text-center p-5" style={{ color: "#00838f" }}>
+                    <FeatherIcon icon="search" size={40} className="mb-3" style={{ opacity: 0.5 }} />
+                    <h5>No invoices found matching your search.</h5>
+                    <p className="text-muted">Try a different name, invoice ID, or phone number.</p>
+                  </div>
+                )} */}
+                {!loading && !error && filteredInvoices.length === 0 && filters1.global.value && (
                   <div className="text-center p-5" style={{ color: "#00838f" }}>
                     <FeatherIcon icon="search" size={40} className="mb-3" style={{ opacity: 0.5 }} />
                     <h5>No invoices found matching your search.</h5>

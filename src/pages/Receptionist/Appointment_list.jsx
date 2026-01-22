@@ -1200,7 +1200,7 @@ export default function Appointment_list() {
             <Form>
               <Row>
                 <Col md={4}>
-                  <Form.Group className="mb-15">
+                  <Form.Group className="mb-10">
                     <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>Appointment Date</Form.Label>
                     <DatePicker
                       selected={selectedAppointment.appointment_timestamp ? new Date(selectedAppointment.appointment_timestamp) : null}
@@ -1234,7 +1234,7 @@ export default function Appointment_list() {
                 </Col>
 
                 <Col md={4}>
-                  <Form.Group className="mb-15">
+                  <Form.Group className="mb-2">
                     <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>Doctor Name</Form.Label>
                     <Form.Select
                       name="doctor_name"
@@ -1257,7 +1257,7 @@ export default function Appointment_list() {
                   </Form.Group>
                 </Col>
 
-                <Col md={4} className="mb-2">
+                <Col md={4} className="mb-10">
                   <Form.Group className="mb-2">
                     <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>Patient Type</Form.Label>
                     <Form.Select
@@ -1299,7 +1299,7 @@ export default function Appointment_list() {
                 </Col>
 
                 <Col md={12}>
-                  <Form.Group className="mb-15">
+                  <Form.Group className="mb-10">
                     <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>Patient Address</Form.Label>
                     <Form.Control
                       as="textarea"
