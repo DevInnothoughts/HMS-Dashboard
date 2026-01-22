@@ -23,7 +23,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import "../../styles/styles.css";
 import { toast } from "react-hot-toast";
 
-export const BASE_URL = "http://194.195.117.79:5100/api";
+export const BASE_URL = "http://localhost:5100/api";
 
 const Toast = Swal.mixin({
   toast: true,
@@ -150,6 +150,7 @@ export default function Call_logs() {
         setFormData((prev) => ({
           ...prev,
           patientName: data.data.name || "",
+          patient_id: data.data.patient_id,
           patient_type: "",
         }));
       } else {
@@ -670,11 +671,12 @@ export default function Call_logs() {
       doctor_id: formData.doctor_id,
       note: formData.note,
       patientName: formData.patientName,
+      patient_id: formData.patient_id,
     };
 
     try {
       console.log("Sending appointment booking request.");
-
+      // console.log(payload);
       const response = await fetch(
         `${BASE_URL}/V1/appointment/addAppointment?location=${currentLocation}`,
         {
@@ -1125,7 +1127,7 @@ export default function Call_logs() {
                   >
                     <option value="">Select Type</option>
                     
-                    {formData.patient_type === "New" ? (
+                    {formData.patient_type === "New" || formData.patient_id === undefined ? (
                       <option value="New">NEW</option>
                     ) : (
                       <>

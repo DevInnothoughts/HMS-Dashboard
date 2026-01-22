@@ -64,7 +64,7 @@ function decodeJwt(token) {
   }
 }
 
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 export default function ReceptionistDashboard() {
   const [appointments, setAppointments] = useState([]);
@@ -89,70 +89,58 @@ export default function ReceptionistDashboard() {
     }
   }, []);
 
-  // const counts = useMemo(() => {
-  //   return appointments.reduce(
-  //     (acc, event) => {
-  //       const type = (event.patientType || "Other").toUpperCase();
-  //       acc[type] = (acc[type] || 0) + 1;
-  //       return acc;
-  //     },
-  //     { New: 0, Follow: 0, Postoperative: 0, OTHER: 0 }
-  //   );
-  // }, [appointments]);
-
   const counts = useMemo(() => {
     const monthStart = moment(selectedDate).startOf('month');
     const monthEnd = moment(selectedDate).endOf('month');
-    
-    const visibleAppointments = appointments.filter(event => {
-      const eventDate = moment(event.start);
-      return eventDate.isSameOrAfter(monthStart, 'day') &&
-             eventDate.isSameOrBefore(monthEnd, 'day');
-    });
-  
-    return visibleAppointments.reduce(
-      (acc, event) => {
-        let type = (event.patientType || "Other").toUpperCase();
-        // Map common variations to standard keys
-        if (type === "NEW PATIENT" || type === "NEW") type = "New";
-        if (type === "FOLLOW" || type === "FOLLOW-UP") type = "Follow";
-        if (type === "POST OPERATIVE" || type === "POST-OPERATIVE" || type === "POSTOPERATIVE") type = "Postoperative";
-        
-        acc[type] = (acc[type] || 0) + 1;
-        return acc;
-      },
-      { New: 0, Follow: 0, Postoperative: 0, Other: 0 } // Use consistent Uppercase keys
-    );
+
+    return appointments
+      .filter(event => {
+        const eventDate = moment(event.start);
+        return eventDate.isSameOrAfter(monthStart, 'day') && eventDate.isSameOrBefore(monthEnd, 'day');
+      })
+      .reduce(
+        (acc, event) => {
+          acc[event.patientType] = (acc[event.patientType] || 0) + 1;
+          return acc;
+        },
+        { NEW: 0, FOLLOW: 0, POSTOPERATIVE: 0, OTHER: 0 }
+      );
   }, [appointments, selectedDate]);
 
   const formatAppointments = useCallback((data) => {
-    return data.map((app) => {
-      // Ensure we take the date part correctly
-      const datePart = moment(app.appointment_timestamp).format("YYYY-MM-DD");
-      // Parse combined string with format helper
-      const startTime = moment(`${datePart} ${app.appointment_time}`, "YYYY-MM-DD hh:mm A");
-      const endTime = startTime.clone().add(30, "minutes");
+  return data.map((app) => {
+    const datePart = moment(app.appointment_timestamp).format("YYYY-MM-DD");
+    const startTime = moment(`${datePart} ${app.appointment_time}`, "YYYY-MM-DD hh:mm A");
+    const endTime = startTime.clone().add(30, "minutes");
 
-      return {
-        title: `${app.appointment_time || "N/A"} — ${app.patient_name || "Patient"
-          }`,
-        start: startTime.toDate(),
-        end: endTime.toDate(),
-        phone: app.patient_phone,
-        date: moment(app.appointment_timestamp).format("DD-MM-YYYY"),
-        time: app.appointment_time,
-        patientName: app.patient_name,
-        doctorName: app.doctor_name,
-        patientType: app.patient_type || "Other",
-        status: app.status,
-        note: app.note,
-        confirmTime: app.confirm_time,
-        patientid: app.patient_id,
-        appointmentid: app.appointment_id,
-        isConfirmed: app.confirm_time !== "0" && app.confirm_time !== 0,
-      };
-    });
-  }, []);
+    // --- STANDARDIZATION LOGIC ---
+    let rawType = (app.patient_type || "OTHER").toUpperCase();
+    let standardizedType = "OTHER";
+
+    if (rawType.includes("NEW")) standardizedType = "NEW";
+    else if (rawType.includes("FOLLOW")) standardizedType = "FOLLOW";
+    else if (rawType.includes("POST") || rawType.includes("OPERATIVE")) standardizedType = "POSTOPERATIVE";
+    // ------------------------------
+
+    return {
+      title: `${app.appointment_time || "N/A"} — ${app.patient_name || "Patient"}`,
+      start: startTime.toDate(),
+      end: endTime.toDate(),
+      phone: app.patient_phone,
+      date: moment(app.appointment_timestamp).format("DD-MM-YYYY"),
+      time: app.appointment_time,
+      patientName: app.patient_name,
+      doctorName: app.doctor_name,
+      patientType: standardizedType, // Now always NEW, FOLLOW, POSTOPERATIVE, or OTHER
+      status: app.status,
+      note: app.note,
+      confirmTime: app.confirm_time,
+      patientid: app.patient_id,
+      appointmentid: app.appointment_id,
+      isConfirmed: app.confirm_time !== "0" && app.confirm_time !== 0,
+    };
+  });
+}, []);
 
   const fetchDropdowns = useCallback(async () => {
     if (currentLocation === "default") return;
@@ -304,21 +292,23 @@ export default function ReceptionistDashboard() {
   };
 
   const eventStyleGetter = useCallback((event) => {
-    const colorMap = {
-      NEW: "#000000",
-      FOLLOW: "#ff8000",
-      POSTOPERATIVE: "#8000ff",
-      OTHER: "#ff0080",
-    };
-    return {
-      style: {
-        backgroundColor: colorMap[event.patientType.toUpperCase()] || "#000",
-        borderRadius: "4px",
-        border: "none",
-        color: "white",
-      },
-    };
-  }, []);
+  const colorMap = {
+    NEW: "#000000",
+    FOLLOW: "#ff8000",
+    POSTOPERATIVE: "#8000ff",
+    OTHER: "#ff0080",
+  };
+
+  return {
+    style: {
+      backgroundColor: colorMap[event.patientType] || "#ff0080",
+      borderRadius: "4px",
+      border: "none",
+      color: "white",
+      display: "block",
+    },
+  };
+}, []);
 
   const AppointmentDetailsCard = () => {
     if (!selectedEvent) {
@@ -336,7 +326,7 @@ export default function ReceptionistDashboard() {
       );
     }
 
-    const isConfirmed =
+  const isConfirmed =
       selectedEvent.confirmTime &&
       selectedEvent.confirmTime !== "0" &&
       selectedEvent.confirmTime !== 0;
@@ -479,7 +469,10 @@ export default function ReceptionistDashboard() {
   return (
     <div
       className="themebody-wrap"
-      style={{ background: "#f0f2f5", minHeight: "100vh" }}
+      style={{
+        background: "linear-gradient(to right, #e0f7fa, #80deea)",
+        minHeight: "100vh"
+      }}
     >
       <style>{`
                     /* --- 1. Layout & Stacking Contexts --- */
@@ -659,28 +652,25 @@ export default function ReceptionistDashboard() {
                   </h4>
                 </div>
                 <div className="d-flex align-items-center flex-wrap">
-                <div className="legend-item">
-                    <span className="dot" style={{ background: "#000" }}></span>{" "}
-                    New <span className="cnt">({counts.New || 0})</span>
+                  <div className="legend-item">
+                    <span className="dot" style={{ background: "#000000" }}></span>
+                    New <span className="cnt">({counts.NEW || 0})</span>
                   </div>
                   <div className="legend-item">
-                    <span className="dot" style={{ background: "#ff8000" }}></span>{" "}
-                    Follow <span className="cnt">({counts.Follow || 0})</span>
+                    <span className="dot" style={{ background: "#ff8000" }}></span>
+                    Follow <span className="cnt">({counts.FOLLOW || 0})</span>
                   </div>
                   <div className="legend-item">
-                    <span className="dot" style={{ background: "#8000ff" }}></span>{" "}
-                    Post Operative <span className="cnt">({counts.Postoperative || 0})</span>
+                    <span className="dot" style={{ background: "#8000ff" }}></span>
+                    Post Operative <span className="cnt">({counts.POSTOPERATIVE || 0})</span>
                   </div>
                   <div className="legend-item">
-                    <span
-                      className="dot"
-                      style={{ background: "#ff0080" }}
-                    ></span>{" "}
-                    Other <span className="cnt">({counts.Other})</span>
+                    <span className="dot" style={{ background: "#ff0080" }}></span>
+                    Other <span className="cnt">({counts.OTHER || 0})</span>
                   </div>
-                </div>
-              </Col>
-              <Col lg={5}>
+                    </div>
+                  </Col>
+                  <Col lg={5}>
                 <div className="d-flex align-items-end justify-content-lg-end gap-3 mt-3 mt-lg-0">
                   {/* <div className="d-flex flex-column">
                                         <label className="text-muted fw-bold mb-1" style={{ fontSize: '12px', textTransform: 'uppercase' }}>Select Date:</label>
@@ -759,9 +749,9 @@ export default function ReceptionistDashboard() {
                     style={{ height: 770 }}
                     popup={true}
                     views={{
-                      month: true, 
-                      week: true, 
-                      day: true  
+                      month: true,
+                      week: true,
+                      day: true
                     }}
                     length={3}
                     maxEvents={3}
@@ -801,7 +791,6 @@ export default function ReceptionistDashboard() {
                     </h5>
                   </div>
                 </Card.Header>
-
                 <Card.Body className="p-4">
                   <AppointmentDetailsCard />
                 </Card.Body>
