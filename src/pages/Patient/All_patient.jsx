@@ -697,7 +697,11 @@ export default function All_patient() {
       // reference_type: formData.reference_type,
       // ref: formData.ref
       reference_type: reference_type,
-      ref: ref
+      ref: ref,
+      additional_info: {
+        nationality: formData.nationality,
+        language: formData.language
+      }
     };
 
     console.log("Updated Patient Data:", updatedPatientData);
