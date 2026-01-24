@@ -208,7 +208,7 @@ export default function ReceiptList() {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const response = await fetch(`${BASE_URL}/V1/appointment/deleteReceipt/${receipt.receipt_id}`, {
+          const response = await fetch(`${BASE_URL}/V1/appointment/deleteReceipt?receipt_id=${receipt.receipt_id}&location=${currentLocation}`, {
             method: "DELETE",
             headers: { "Content-Type": "application/json" },
           });
