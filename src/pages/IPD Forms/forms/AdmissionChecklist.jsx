@@ -346,117 +346,157 @@ const AdmissionChecklist = ({ onSubmit, patientData }) => {
         if (printWindow) printWindow.onload = () => URL.revokeObjectURL(url);
     };
 
-
     return (
         <ThemeProvider theme={theme}>
             <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <form onSubmit={handleSubmit} className="medical-form compact-form">
-                    <h2 className="form-title" style={{ textAlign: 'center', marginBottom: '30px', color: '#008080', borderBottom: '2px solid #80deea', paddingBottom: '10px' }}>
-                        ADMISSION CHECKLIST
-                    </h2>
+                <div className="medical-form-container">
+                    <form onSubmit={handleSubmit}>
+                        <h2 className="form-title">ADMISSION CHECKLIST</h2>
 
-                    {patientData && (
-                        <div className="patient-compact-header">
-                            <div className="info-item"><span className="info-label">UHID</span><span className="info-value">{patientData.uhid}</span></div>
-                            <div className="info-item"><span className="info-label">Name</span><span className="info-value">{patientData.name}</span></div>
-                            <div className="info-item"><span className="info-label">Age/Sex</span><span className="info-value">{patientData.age}/{patientData.gender}</span></div>
-                            <div className="info-item"><span className="info-label">IP No</span><span className="info-value">{patientData.ipNo}</span></div>
-                        </div>
-                    )}
+                        {/* Patient Header - Using shared CSS classes */}
+                        {patientData && (
+                            <div className="patient-compact-header">
+                                <div className="info-item">
+                                    <span className="info-label">UHID</span>
+                                    <span className="info-value">{patientData.uhid}</span>
+                                </div>
+                                <div className="info-item">
+                                    <span className="info-label">Patient Name</span>
+                                    <span className="info-value">{patientData.name}</span>
+                                </div>
+                                <div className="info-item">
+                                    <span className="info-label">Age/Sex</span>
+                                    <span className="info-value">{patientData.age}/{patientData.gender}</span>
+                                </div>
+                                <div className="info-item">
+                                    <span className="info-label">IP No</span>
+                                    <span className="info-value">{patientData.ipNo}</span>
+                                </div>
+                            </div>
+                        )}
 
-                    <div className="form-field" style={{ marginBottom: '15px' }}>
-                        <label className="field-label">Admission Date & Time <span style={{ color: '#e74c3c' }}>*</span></label>
-                        <DateTimePicker
-                            value={formData.admissionDateTime ? dayjs(formData.admissionDateTime, 'DD-MM-YYYY HH:mm') : null}
-                            format="DD-MM-YYYY HH:mm"
-                            onChange={(newValue) => setFormData(prev => ({ ...prev, admissionDateTime: newValue ? newValue.format('DD-MM-YYYY HH:mm') : '' }))}
-                            slotProps={{ textField: { size: 'small', fullWidth: true, required: true } }}
-                        />
-                    </div>
+                        {/* Verification Section */}
+                        <div className="section-box">
+                            <div className="form-section-title">Admission Verification</div>
+                            <div className="two-col">
+                                <div className="form-field">
+                                    <label className="field-label">Admission Date & Time <span className="required">*</span></label>
+                                    <DateTimePicker
+                                        value={formData.admissionDateTime ? dayjs(formData.admissionDateTime, 'DD-MM-YYYY HH:mm') : null}
+                                        format="DD-MM-YYYY HH:mm"
+                                        onChange={(newValue) => setFormData(prev => ({ ...prev, admissionDateTime: newValue ? newValue.format('DD-MM-YYYY HH:mm') : '' }))}
+                                        slotProps={{ textField: { size: 'small', fullWidth: true, required: true } }}
+                                    />
+                                </div>
+                                <div className="form-field">
+                                    <label className="field-label">General Consent for Admission <span className="required">*</span></label>
+                                    <div className="checkbox-group">
+                                        <label className={`checkbox-option ${formData.consentTaken.includes('Yes') ? 'selected' : ''}`}>
+                                            <input
+                                                type="checkbox"
+                                                checked={formData.consentTaken.includes('Yes')}
+                                                onChange={() => handleCheckboxChange('consentTaken', 'Yes', formData.consentTaken)}
+                                                required
+                                            />
+                                            <span>Consent Obtained</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-                    <div className="form-field mb-10" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <label className="field-label" style={{ marginBottom: 0 }}>General Consent for Admission <span style={{ color: '#e74c3c' }}>*</span></label>
-                        <div className="checkbox-group">
-                            <label className="checkbox-option" style={{ padding: 0, margin: 0, marginBottom: "10px" }}>
-                                <input
-                                    style={{
-                                        width: '15px',
-                                        height: '15px',
-                                        cursor: 'pointer',
-                                        transform: 'scale(1.2)',
-                                    }}
-                                    type="checkbox"
-                                    checked={formData.consentTaken.includes('Yes')}
-                                    onChange={() => handleCheckboxChange('consentTaken', 'Yes', formData.consentTaken)}
-                                    required
-                                />
-                                <span></span>
-                            </label>
+                        {/* Room Allotment Section */}
+                        <div className="section-box">
+                            <div className="form-section-title">Allotment of Room Category</div>
+                            <div className="checkbox-group">
+                                {['General', 'Semi-Private', 'Private', 'Deluxe', 'Super Deluxe', 'Suite'].map(option => (
+                                    <label key={option} className={`checkbox-option ${formData.roomCategory.includes(option) ? 'selected' : ''}`}>
+                                        <input 
+                                            type="checkbox"
+                                            checked={formData.roomCategory.includes(option)}
+                                            onChange={() => handleCheckboxChange('roomCategory', option, formData.roomCategory)} 
+                                        />
+                                        <span>{option}</span>
+                                    </label>
+                                ))}
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="form-field mb-20">
-                        <label className="field-label">Allotment of room category <span style={{ color: '#e74c3c' }}>*</span></label>
-                        <div className="checkbox-group">
-                            {['General', 'Semi-Private', 'Private', 'Deluxe', 'Super Deluxe', 'Suite'].map(option => (
-                                <label key={option} className="checkbox-option">
-                                    <input type="checkbox"
-                                        checked={formData.roomCategory.includes(option)}
-                                        onChange={() => handleCheckboxChange('roomCategory', option, formData.roomCategory)} />
-                                    <span>{option}</span>
-                                </label>
-                            ))}
+                        {/* Amenities Section - Using Medical History Grid for better spacing */}
+                        <div className="section-box">
+                            <div className="form-section-title">Basic Amenities Given</div>
+                            <div className="medical-history-grid">
+                                {['Paper napkins', 'Soap', 'Water mug with glass', 'Pillow cover & bed sheet', 'Dress of patient', 'T.V with remote', 'A.C. with remote', 'Geyser in condition', 'Mug, bucket & dustbin', 'Spoons', 'Plates', 'Dental kit', 'Cup and bowls', 'Trey & kettles', 'Tissue paper & stands', 'Dish TV with remote', 'Slippers', 'Door mats', 'Call bell', 'Wifi password', 'Room orientation'].map(option => (
+                                    <label key={option} className={`checkbox-option ${formData.amenities.includes(option) ? 'selected' : ''}`}>
+                                        <input 
+                                            type="checkbox" 
+                                            checked={formData.amenities.includes(option)} 
+                                            onChange={() => handleCheckboxChange('amenities', option, formData.amenities)} 
+                                        />
+                                        <span>{option}</span>
+                                    </label>
+                                ))}
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="form-field mb-20">
-                        <label className="field-label">Basic amenities given <span style={{ color: '#e74c3c' }}>*</span></label>
-                        <div className="checkbox-group">
-                            {['Paper napkins', 'Soap', 'Water mug with glass', 'Pillow cover & bed sheet', 'Dress of patient', 'T.V with remote', 'A.C. with remote', 'Geyser in condition', 'Mug, bucket & dustbin', 'Spoons', 'Plates', 'Dental kit', 'Cup and bowls', 'Trey & kettles', 'Tissue paper & stands', 'Dish TV with remote', 'Slippers', 'Door mats', 'Call bell', 'Wifi password', 'Room orientation'].map(option => (
-                                <label key={option} className="checkbox-option">
-                                    <input type="checkbox" checked={formData.amenities.includes(option)} onChange={() => handleCheckboxChange('amenities', option, formData.amenities)} />
-                                    <span>{option}</span>
-                                </label>
-                            ))}
+                        {/* Sign-off Section */}
+                        <div className="section-box">
+                            <div className="form-section-title">Staff Acknowledgement</div>
+                            <div className="three-col">
+                                <div className="form-field">
+                                    <label className="field-label">Admission Taken By <span className="required">*</span></label>
+                                    <input 
+                                        type="text" 
+                                        name="admissionTakenBy" 
+                                        className="form-control" 
+                                        value={formData.admissionTakenBy} 
+                                        onChange={handleChange} 
+                                    />
+                                </div>
+                                <div className="form-field">
+                                    <label className="field-label">Signature / ID</label>
+                                    <input 
+                                        type="text" 
+                                        name="staffSignature" 
+                                        className="form-control" 
+                                        value={formData.staffSignature} 
+                                        onChange={handleChange} 
+                                    />
+                                </div>
+                                <div className="form-field">
+                                    <label className="field-label">Date & Time <span className="required">*</span></label>
+                                    <DateTimePicker
+                                        value={formData.staffActionDateTime ? dayjs(formData.staffActionDateTime, 'DD-MM-YYYY HH:mm') : null}
+                                        format="DD-MM-YYYY HH:mm"
+                                        onChange={(newValue) => setFormData(prev => ({ ...prev, staffActionDateTime: newValue ? newValue.format('DD-MM-YYYY HH:mm') : '' }))}
+                                        slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                                    />
+                                </div>
+                            </div>
                         </div>
-                    </div>
 
-                    <div style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
-                        <div style={{ flex: '1' }}>
-                            <label className="field-label">Admission taken by: <span style={{ color: '#e74c3c' }}>*</span></label>
-                            <input type="text" name="admissionTakenBy" className="form-input" style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #ccc' }} value={formData.admissionTakenBy} onChange={handleChange} />
+                        {/* Actions */}
+                        <div className="two-col" style={{ marginTop: '1rem' }}>
+                            <button type="submit" className="submit-btn" style={{ margin: 0, width: '100%' }}>
+                                Save / Update Data
+                            </button>
+                            <button
+                                type="button"
+                                className="submit-btn"
+                                style={{
+                                    margin: 0,
+                                    width: '100%',
+                                    backgroundColor: isFormComplete() ? '#10b981' : '#cbd5e1', 
+                                    cursor: isFormComplete() ? 'pointer' : 'not-allowed'
+                                }}
+                                onClick={generatePrintContent}
+                                disabled={!isFormComplete()}
+                            >
+                                Print Form
+                            </button>
                         </div>
-                        <div style={{ flex: '1' }}>
-                            <label className="field-label">Signature:</label>
-                            <input type="text" name="staffSignature" className="form-input" style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #ccc' }} value={formData.staffSignature} onChange={handleChange} />
-                        </div>
-                        <div style={{ flex: '1' }}>
-                            <label className="field-label">Date & Time: <span style={{ color: '#e74c3c' }}>*</span></label>
-                            <DateTimePicker
-                                value={formData.staffActionDateTime ? dayjs(formData.staffActionDateTime, 'DD-MM-YYYY HH:mm') : null}
-                                format="DD-MM-YYYY HH:mm"
-                                onChange={(newValue) => setFormData(prev => ({ ...prev, staffActionDateTime: newValue ? newValue.format('DD-MM-YYYY HH:mm') : '' }))}
-                                slotProps={{ textField: { size: 'small', fullWidth: true } }}
-                            />
-                        </div>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '15px' }}>
-                        <button type="submit" className="submit-btn" style={{ flex: 1 }}>Save / Update Data</button>
-                        <button
-                            type="button"
-                            className="submit-btn"
-                            style={{
-                                flex: 1,
-                                backgroundColor: isFormComplete() ? '#008080' : '#cccccc', // Gray out if incomplete
-                                cursor: isFormComplete() ? 'pointer' : 'not-allowed'
-                            }}
-                            onClick={generatePrintContent}
-                            disabled={!isFormComplete()} // Prevents clicking if validation fails
-                        >
-                            Print Form
-                        </button>                    </div>
-                </form>
+                    </form>
+                </div>
             </LocalizationProvider>
         </ThemeProvider>
     );
