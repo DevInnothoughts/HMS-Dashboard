@@ -250,7 +250,7 @@ export default function Appointment_list() {
 
     const payload = {
       appointment_id: selectedAppointment.appointment_id,
-      doctor_id: selectedAppointment.doctor_id,
+      doctor_id: receiptForm.doctor_id,
       appointment_date: moment(new Date()).format("DD-MM-YYYY"),
       consultations: consultationData,
       paymentmode: receiptForm.paymentMode,
@@ -262,7 +262,7 @@ export default function Appointment_list() {
       PosMachine: receiptForm.posTerminal,
       MachineType: "OPD",
     };
-    // console.log("check reg type:", payload);
+    console.log("check reg type:", payload);
     try {
       const response = await fetch(
         `${BASE_URL}/V1/appointment/saveReceipt?location=${currentLocation}`,
@@ -441,15 +441,22 @@ export default function Appointment_list() {
 
     if (name === "doctorName") {
       const selectedDoctor = doctors.find((d) => d.name === value);
+      // console.log(selectedDoctor);
       setReceiptForm((prev) => ({
         ...prev,
-        doctorName: value,
+        doctorName: selectedDoctor ? selectedDoctor.name : "",        
         doctor_id: selectedDoctor ? selectedDoctor.doctor_id : "",
       }));
+      // console.log(receiptForm);
     } else {
       setReceiptForm((prev) => ({ ...prev, [name]: value }));
     }
   };
+
+  // useEffect(() => {
+  //   console.log("receiptForm changed:", receiptForm);
+  // }, [receiptForm]);
+  
 
   useEffect(() => {
     const token = localStorage.getItem("token");

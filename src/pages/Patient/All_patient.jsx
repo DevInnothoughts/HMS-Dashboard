@@ -140,6 +140,7 @@ export default function All_patient() {
   const [showEditPatientModal, setShowEditPatientModal] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [currentLocation, setCurrentLocation] = useState("default");
+  const [isManualEntry, setIsManualEntry] = useState(false);
 
   const formatToApiDate = (date) => {
     const validDate = date instanceof Date ? date : new Date(date);
@@ -231,32 +232,45 @@ export default function All_patient() {
   const [doctorSearchResults, setDoctorSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  const searchDoctorByName = async (name) => {
+  const [showManualDoctor, setShowManualDoctor] = useState(false);
+  const [manualDoctorData, setManualDoctorData] = useState({
+      name: '',
+      location: '',
+      specialty: ''
+  });
+
+const searchDoctorByName = async (name) => {
     if (!name || name.length < 2) {
-      setDoctorSearchResults([]);
-      return;
+        setDoctorSearchResults([]);
+        setShowManualDoctor(false); // Reset manual view on empty search
+        return;
     }
 
     setIsSearching(true);
     try {
-      const response = await fetch(
-        `${BASE_URL}/V1/Patients/listDoctor?name=${encodeURIComponent(name)}&location=${currentLocation}`,
-        {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+        const response = await fetch(
+            `${BASE_URL}/V1/Patients/listDoctor?name=${encodeURIComponent(name)}&location=${currentLocation}`,
+            {
+                method: "GET",
+                headers: { "Content-Type": "application/json" },
+            }
+        );
 
-      if (response.ok) {
-        const data = await response.json();
-        setDoctorSearchResults(data.data || []);
-      }
+        if (response.ok) {
+            const data = await response.json();
+            const results = data.data || [];
+            setDoctorSearchResults(results);
+            
+            // If no results found, we don't automatically show the form, 
+            // but the UI will now show the "Add Reference" button.
+            setShowManualDoctor(false); 
+        }
     } catch (error) {
-      console.error("Error searching doctor:", error);
+        console.error("Error searching doctor:", error);
     } finally {
-      setIsSearching(false);
+        setIsSearching(false);
     }
-  };
+};
 
 
   const [patientSearchResults, setPatientSearchResults] = useState([]);
@@ -1585,26 +1599,56 @@ export default function All_patient() {
       case "dr_ref":
         return (
           <div className="control-group">
-            <label className="control-label" style={{ marginTop: "15px", fontSize: "12px", fontWeight: "bold", marginBottom: "5px" }}>
-              Doctor Reference (Search as you type)
-            </label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
+              <label className="control-label" style={{ marginTop: "15px", fontSize: "12px", fontWeight: "bold" }}>
+                Doctor Reference {isManualEntry ? "(Manual Entry)" : "(Search as you type)"}
+              </label>
+              
+              {/* Show Add button only if search returns nothing and we aren't already in manual mode */}
+              {!isSearching && referenceDetails.dr_name?.length >= 2 && doctorSearchResults.length === 0 && !isManualEntry && (
+                <button 
+                  type="button"
+                  className="btn btn-sm"
+                  style={{ marginTop: "10px", fontSize: "12px", backgroundColor: "#003138ff", color: "white", borderRadius: "5px" }}
+                  onClick={() => setIsManualEntry(true)}
+                >
+                  + Add New Doctor Reference
+                </button>
+              )}
+              
+              {isManualEntry && (
+                <button 
+                  type="button"
+                  className="btn btn-sm"
+                  style={{ marginTop: "10px", fontSize: "10px", backgroundColor: "#ff8a80", color: "white", borderRadius: "5px" }}
+                  onClick={() => {
+                    setIsManualEntry(false);
+                    setReferenceDetails({ dr_name: "", dr_contact: "", dr_specialty: "", dr_location: "" });
+                  }}
+                >
+                  Reset / Search Again
+                </button>
+              )}
+            </div>
+
             <Row className="g-2">
               <Col md={3} style={{ position: "relative" }}>
                 <input
                   className="form-control"
                   type="text"
                   autoComplete="off"
-                  placeholder="Type Doctor Name (min. 2 chars)"
+                  placeholder="Type Doctor Name"
                   style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
                   value={referenceDetails.dr_name || ""}
                   onChange={(e) => {
                     const val = e.target.value;
                     setReferenceDetails(prev => ({ ...prev, dr_name: val }));
-                    searchDoctorByName(val);
+                    if (!isManualEntry) searchDoctorByName(val);
                   }}
                 />
 
-                {(isSearching || doctorSearchResults.length > 0) && (
+                {/* Search Results Dropdown */}
+                {!isManualEntry && (isSearching || doctorSearchResults.length > 0) && (
                   <div style={{
                     position: "absolute", zIndex: 1000, top: "40px", width: "100%",
                     backgroundColor: "white", border: "1px solid #ddd", borderRadius: "8px",
@@ -1637,30 +1681,51 @@ export default function All_patient() {
               <Col md={3}>
                 <input
                   className="form-control"
-                  readOnly
                   placeholder="Contact"
                   value={referenceDetails.dr_contact || ""}
-                   style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px", backgroundColor: "#e7ebebff", cursor:"not-allowed" }}
+                  readOnly={!isManualEntry}
+                  onChange={(e) => isManualEntry && setReferenceDetails(prev => ({ ...prev, dr_contact: e.target.value }))}
+                  style={{ 
+                    border: "2px solid rgb(77, 208, 225)", 
+                    fontSize: "12px", 
+                    borderRadius: "10px", 
+                    backgroundColor: isManualEntry ? "#fff" : "#e7ebebff", 
+                    cursor: isManualEntry ? "text" : "not-allowed" 
+                  }}
                 />
               </Col>
 
               <Col md={3}>
                 <input
                   className="form-control"
-                  readOnly
                   placeholder="Specialty"
                   value={referenceDetails.dr_specialty || ""}
-              style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px", backgroundColor: "#e7ebebff", cursor:"not-allowed" }}
+                  readOnly={!isManualEntry}
+                  onChange={(e) => isManualEntry && setReferenceDetails(prev => ({ ...prev, dr_specialty: e.target.value }))}
+                  style={{ 
+                    border: "2px solid rgb(77, 208, 225)", 
+                    fontSize: "12px", 
+                    borderRadius: "10px", 
+                    backgroundColor: isManualEntry ? "#fff" : "#e7ebebff", 
+                    cursor: isManualEntry ? "text" : "not-allowed" 
+                  }}
                 />
               </Col>
 
               <Col md={3}>
                 <input
                   className="form-control"
-                  readOnly
                   placeholder="Location"
                   value={referenceDetails.dr_location || ""}
-                 style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px", backgroundColor: "#e7ebebff", cursor:"not-allowed" }}
+                  readOnly={!isManualEntry}
+                  onChange={(e) => isManualEntry && setReferenceDetails(prev => ({ ...prev, dr_location: e.target.value }))}
+                  style={{ 
+                    border: "2px solid rgb(77, 208, 225)", 
+                    fontSize: "12px", 
+                    borderRadius: "10px", 
+                    backgroundColor: isManualEntry ? "#fff" : "#e7ebebff", 
+                    cursor: isManualEntry ? "text" : "not-allowed" 
+                  }}
                 />
               </Col>
             </Row>
