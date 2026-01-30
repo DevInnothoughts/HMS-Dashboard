@@ -4,7 +4,7 @@ import { Column } from "primereact/column";
 import { decodeJwt } from "../../utils/decode-jwt";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import Swal from "sweetalert2";
-import { clinincLoc } from "../../utils/clinic_locations";
+import { receiptlocations } from "../../utils/clinic_locations-receipt.js";
 import {
   Container,
   Row,
@@ -234,11 +234,11 @@ export default function ReceiptList() {
     if (!selectedReceipt) return;
     console.log(" printing  RECEPT: ", selectedReceipt);
 
-    const clinicAddr = clinincLoc[currentLocation] || {
+    const clinicAddr = receiptlocations[currentLocation] || {
       address: "Healing Hands Clinic Pvt Ltd, DP Road, Ground Floor, Millenium Star Extension, Adjacent to Ruby Hall Clinic, Pune 411001",
       phone: "8888288884 | 020-26164488/99"
     };
-
+    console.log(clinicAddr);
     const getBase64Image = (imgUrl) => {
       return new Promise((resolve) => {
         const img = new Image();
@@ -401,7 +401,7 @@ export default function ReceiptList() {
               <td class="addr-cell">
                 <b style="font-size: 11px;">
                 ${clinicAddr.address}<br>
-                <i class="fa fa-phone"></i> ${clinicAddr.phone}
+                <i class="fa fa-phone"></i> ${clinicAddr.telephone}
               </td>
             </tr>
           </table>
@@ -465,7 +465,7 @@ export default function ReceiptList() {
                 </div>
 
                 <div class="legal-text">
-                  In case you have not received the correct receipt for the paid amount, or for any discrepancies in transaction please write us on <b>info@healinghandsclinic.co.in</b> or whatsapp on <b>+91 8888988882</b>
+                  In case you have not received the correct receipt for the paid amount, or for any discrepancies in transaction please write us on info@healinghandsclinic.co.in or whatsapp on ${clinicAddr.phone}
                 </div>
               </td>
             </tr>

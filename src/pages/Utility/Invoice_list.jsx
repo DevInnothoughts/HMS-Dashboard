@@ -5,7 +5,7 @@ import { Paginator } from 'primereact/paginator';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { InputGroup } from "react-bootstrap";
-import { clinincLoc } from "../../utils/clinic_locations";
+import { clinincLoc } from "../../utils/clinic_locations-invoice";
 import {
   Container,
   Row,
@@ -747,7 +747,7 @@ const InvoiceList = () => {
       <table class="header-table">
         <tr>
           <td class="header-logo"><img src="${mainLogo}" alt="Logo"></td>
-          <td class="header-address">${clinicAddr.address || "<b>Healing Hands Clinic</b>"}</td>
+          <td class="header-address">${clinicAddr.invoiceAddress || "<b>Healing Hands Clinic</b>"}</td>
         </tr>
       </table>
   
@@ -882,8 +882,8 @@ const InvoiceList = () => {
       <div class="footer">
         <table class="footer-table">
           <tr>
-            <td>For queries call ${clinicAddr.phone || '7774099753'}</td>
-            <td style="text-align:right;">For Emergency SMS ${clinicAddr.emergency || '7774053187'}</td>
+            <td>For queries call ${clinicAddr.invoiceHelplineNo || '7774099753'}</td>
+            <td style="text-align:right;">For Emergency SMS ${clinicAddr.EmergencySMS || '7774053187'}</td>
           </tr>
         </table>
       </div>
