@@ -634,7 +634,7 @@ const InvoiceList = () => {
       });
       return;
     }
-
+    console.log("printing invoice:", invoice);
     const clinicAddr = clinincLoc[currentLocation] || {
       address: "Healing Hands Clinic",
       phone: "8888288884"
@@ -687,26 +687,26 @@ const InvoiceList = () => {
          margin-bottom: 20px; 
         }
 
-.header-logo { 
-  padding-right: 15px; 
-  vertical-align: middle;
-}
+        .header-logo { 
+          padding-right: 15px; 
+          vertical-align: middle;
+        }
 
-.header-logo img {
-  width: 150px;    
-  height: auto;    
-  max-height: 200px; 
-  display: block;
-}
+        .header-logo img {
+          width: 150px;    
+          height: auto;    
+          max-height: 200px; 
+          display: block;
+        }
 
-.header-address { 
-  text-align: left; 
-  font-weight: bold; 
-  font-size: 12px !important; 
-  vertical-align: middle;
-  line-height: 1.2;
-}
-  
+        .header-address { 
+          text-align: left; 
+          font-weight: bold; 
+          font-size: 12px !important; 
+          vertical-align: middle;
+          line-height: 1.2;
+        }
+          
         .details-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
         .details-table td { padding: 6px 10px; width: 25%; vertical-align: top; }
         .details-table td:nth-child(odd) { font-weight: normal; color: #000000; font-weight: bold } 
@@ -721,7 +721,7 @@ const InvoiceList = () => {
         .left_align { text-align: left; width: 25%; }
         .right_align { text-align: right !important; width: 25%; }
         
-        .itemized-table { width: 100%; border-collapse: collapse; }
+        .itemized-table { margin-left: 60px; width: 100%; border-collapse: collapse; table-layout: fixed;}
         .itemized-table td { width: 50%; display: inline-block; padding: 4px 0; border-bottom: 1px solid #eee; }
         .itemized-table td:nth-child(even) { text-align: right; }
   
@@ -795,13 +795,17 @@ const InvoiceList = () => {
           <td style="width: 50%; vertical-align: top; border-right: 1px solid #eee;">
             <table class="itemized-table">
               <tr>
-              <td style="font-weight:bold; color:#000;">Items/Services</td>
-              <td style="font-weight:bold; color:#000; text-align:right;">Amount (INR)</td>
+                <td style="font-weight:bold; color:#000; text-align:left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                  Items/Services
+                </td>
+                <td style="font-weight:bold; color:#000; text-align:right; width: 100px; white-space: nowrap;">
+                  Amount (INR)
+                </td>
               </tr>
               ${dynamicRows.map(row => `
                 <tr>
-                  <td>${row.label}</td>
-                  <td>${parseFloat(row.value).toFixed(2)}</td>
+                <td style="font-weight:bold; color:#000; text-align:left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${row.label}</td>
+                <td style="font-weight:bold; color:#000; text-align:right; width: 100px; white-space: nowrap;">${parseFloat(row.value).toFixed(2)}</td>
                 </tr>
               `).join("")}
             </table>

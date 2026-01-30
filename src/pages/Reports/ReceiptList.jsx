@@ -292,13 +292,13 @@ export default function ReceiptList() {
           }
 
           .addr-cell {
-      padding-left: 2px; 
-      vertical-align: top;
-      line-height: 1.5;
-      margin-top: 5px;
-      margin-right: 40px; 
-      display: block;
-    }
+            padding-left: 2px; 
+            vertical-align: top;
+            line-height: 1.5;
+            margin-top: 5px;
+            margin-right: 40px; 
+            display: block;
+          }
 
           .header-table { 
             width: 100%; 
@@ -368,14 +368,14 @@ export default function ReceiptList() {
           }
 
          .signature-area { 
-  text-align: center; 
-  width: 140px; 
-  font-weight: bold;
-  border-top: 1px solid #000; 
-  padding-top: 8px;           
-  margin-left: 20px;       
-  margin-top: 15px;      
-}
+            text-align: center; 
+            width: 140px; 
+            font-weight: bold;
+            border-top: 1px solid #000; 
+            padding-top: 8px;           
+            margin-left: 20px;       
+            margin-top: 15px;      
+          }
 
           @media print { .no-print { display: none; } }
           .print-btn { padding: 10px 20px; background: #2b9163; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 20px; }
@@ -420,22 +420,22 @@ export default function ReceiptList() {
                   </thead>
                   <tbody>
                     ${selectedReceipt.item_details
-          ? selectedReceipt.item_details.split(",").map((itemGroup, index) => {
-            // Split "USG ABDOMEN AND PELVIS: 100" into ["USG ABDOMEN AND PELVIS", "100"]
-            const parts = itemGroup.split(":");
-            const label = parts[0] ? parts[0].trim() : "-";
-            const amount = parts[1] ? parseFloat(parts[1].trim()) : 0;
+                      ? selectedReceipt.item_details.split(",").map((itemGroup, index) => {
+                        // Split "USG ABDOMEN AND PELVIS: 100" into ["USG ABDOMEN AND PELVIS", "100"]
+                        const parts = itemGroup.split(":");
+                        const label = parts[0] ? parts[0].trim() : "-";
+                        const amount = parts[1] ? parseFloat(parts[1].trim()) : 0;
 
-            return `
+                        return `
                             <tr>
                               <td>${index + 1}</td>
                               <td>${label}</td>
                               <td align="right"><b>${amount.toFixed(2)}</b></td>
                             </tr>
                           `;
-          }).join("")
-          : `<tr><td>1</td><td>-</td><td align="right">0.00</td></tr>`
-        }
+                      }).join("")
+                      : `<tr><td>1</td><td>-</td><td align="right">0.00</td></tr>`
+                    }
                   </tbody>
                 </table>
                 <div class="summary-section">
