@@ -83,10 +83,191 @@ const DailyOPDReport = () => {
     }
   }, [fetchDailyReport]);
 
-  const handlePrint = () => {
-    window.print();
-  };
+  // const handlePrint = () => {
+  //   window.print();
+  // };
 
+  const handlePrint = () => {
+    const printWindow = window.open("", "_blank", "width=1000,height=900");
+  
+    const buildCollectionTable = (title, data) => `
+      <div class="col-lg-4 mb-4">
+        <table class="table table-sm table-striped text-center"
+          style="border:1px solid #00bcd4; background:white;">
+          <thead>
+            <tr style="background:#e3f2fd;">
+              <th colspan="2" style="text-align:left;padding-left:10px;border:1px solid #00bcd4;">
+                ${title}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.map(item => `
+              <tr>
+                <td style="text-align:left;padding-left:10px;width:70%;
+                    font-weight:${item.method === 'TOTAL' ? 'bold' : 'normal'};
+                    color:${item.method === 'TOTAL' ? '#000' : '#6c757d'}">
+                  ${item.method}
+                </td>
+                <td style="width:30%;
+                    font-weight:${item.method === 'TOTAL' ? 'bold' : 'normal'}">
+                  ${item.amount}
+                </td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    `;
+  
+    const htmlContent = `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <title>Daily OPD Report - ${formattedDate}</title>
+  
+    <!-- Bootstrap CSS (for Row/Col exact behavior) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+    <style>
+      body { background:white; padding:20px; }
+  
+      @media print {
+        * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+      }
+    </style>
+  </head>
+  
+  <body>
+  
+  <div class="row justify-content-center">
+    <div class="col-md-12">
+  
+      <div class="card shadow-sm"
+        style="border-radius:12px;
+               box-shadow:0px 6px 12px rgba(0,0,0,0.15);
+               border:1.5px solid #00bcd4;">
+  
+        <div class="card-header text-center"
+          style="font-weight:bold;
+                 background:#00acc1;
+                 color:white;
+                 font-size:16px;
+                 border-bottom:2px solid #0288d1;">
+          DAILY OPD REPORT
+        </div>
+  
+        <div class="card-body" style="padding:15px;">
+  
+          <div class="d-flex justify-content-end mb-2">
+            Date: <b class="ms-1">${formattedDate}</b>
+          </div>
+  
+          <!-- OPD COUNT -->
+          <div class="row justify-content-center mb-4">
+            <div class="col-lg-4 col-md-6 col-sm-8 col-12">
+              <table class="table table-sm table-striped text-center"
+                style="border:1px solid #00bcd4;">
+                <thead style="background:#0288d1;color:white;font-size:13px;">
+                  <tr>
+                    <th style="width:60%">Type</th>
+                    <th style="width:40%">Total</th>
+                  </tr>
+                </thead>
+                <tbody style="font-size:12px;">
+                  ${reportData.opdCounts.map(i => `
+                    <tr>
+                      <td class="fw-bold text-secondary">${i.type}</td>
+                      <td>${i.count}</td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
+          </div>
+  
+          <!-- OPD DETAILS -->
+          <div class="row justify-content-center mb-4">
+            <div class="col-lg-8 col-md-10 col-12">
+              <table class="table table-sm table-striped text-center"
+                style="border:1px solid #00bcd4;">
+                <thead style="background:#0288d1;color:white;font-size:13px;">
+                  <tr>
+                    <th>Type</th>
+                    <th>New</th>
+                    <th>Follow UP</th>
+                    <th>PO</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody style="font-size:12px;">
+                  ${reportData.opdDetails.map(i => `
+                    <tr>
+                      <td class="fw-bold text-secondary">${i.type}</td>
+                      <td>${i.new}</td>
+                      <td>${i.followUp}</td>
+                      <td>${i.po}</td>
+                      <td>${i.total}</td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
+          </div>
+  
+          <!-- TEST DETAILS -->
+          <div class="row justify-content-center mb-4">
+            <div class="col-lg-4 col-md-6 col-sm-8 col-12">
+              <table class="table table-sm table-striped text-center"
+                style="border:1px solid #00bcd4;">
+                <thead style="background:#0288d1;color:white;font-size:13px;">
+                  <tr>
+                    <th>Test</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+                <tbody style="font-size:12px;">
+                  ${reportData.testDetails.map(i => `
+                    <tr>
+                      <td class="fw-bold text-secondary">${i.testName}</td>
+                      <td>₹ ${i.amount}</td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
+          </div>
+  
+          <!-- COLLECTIONS -->
+          <div class="row justify-content-center">
+            ${buildCollectionTable("Overall Collection Detail (Rs)", reportData.collectionDetails)}
+            ${buildCollectionTable("LAB Collection Detail (Rs)", reportData.collectionDetails)}
+            ${buildCollectionTable("Pharmacy Collection Detail (Rs)", reportData.collectionDetails)}
+          </div>
+  
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+  window.onload = function() {
+    window.print();
+    setTimeout(() => window.close(), 500);
+  };
+  </script>
+  
+  </body>
+  </html>
+  `;
+  
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+  };
+  
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ height: "100vh" }}>
