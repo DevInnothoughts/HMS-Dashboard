@@ -1,9 +1,17 @@
 import React, { useState, useEffect, useCallback } from "react";
 import PageBreadcrumb from "../../../components/PageBreadcrumb";
-import { Row, Col, Card, Container, Table, Button, Spinner } from "react-bootstrap";
+import {
+  Row,
+  Col,
+  Card,
+  Container,
+  Table,
+  Button,
+  Spinner,
+} from "react-bootstrap";
 import { decodeJwt } from "../../../utils/decode-jwt";
 
-export const BASE_URL = "http://localhost:5100/api";
+export const BASE_URL = "http://194.195.117.79:5100/api";
 
 const initialReportState = {
   opdCounts: [],
@@ -25,12 +33,12 @@ const DailyOPDReport = () => {
   const fetchDailyReport = useCallback(async (location) => {
     try {
       setLoading(true);
-      
+
       // Define the static date string here so it doesn't trigger re-renders
-      const apiDate = new Date().toISOString().split('T')[0]; 
-      
+      const apiDate = new Date().toISOString().split("T")[0];
+
       const response = await fetch(
-        `${BASE_URL}/V1/appointment/daily-opd?location=${location}&date=${apiDate}`
+        `${BASE_URL}/V1/appointment/daily-opd?location=${location}&date=${apiDate}`,
       );
       const result = await response.json();
 
@@ -89,7 +97,7 @@ const DailyOPDReport = () => {
 
   const handlePrint = () => {
     const printWindow = window.open("", "_blank", "width=1000,height=900");
-  
+
     const buildCollectionTable = (title, data) => `
       <div class="col-lg-4 mb-4">
         <table class="table table-sm table-striped text-center"
@@ -102,24 +110,28 @@ const DailyOPDReport = () => {
             </tr>
           </thead>
           <tbody>
-            ${data.map(item => `
+            ${data
+              .map(
+                (item) => `
               <tr>
                 <td style="text-align:left;padding-left:10px;width:70%;
-                    font-weight:${item.method === 'TOTAL' ? 'bold' : 'normal'};
-                    color:${item.method === 'TOTAL' ? '#000' : '#6c757d'}">
+                    font-weight:${item.method === "TOTAL" ? "bold" : "normal"};
+                    color:${item.method === "TOTAL" ? "#000" : "#6c757d"}">
                   ${item.method}
                 </td>
                 <td style="width:30%;
-                    font-weight:${item.method === 'TOTAL' ? 'bold' : 'normal'}">
+                    font-weight:${item.method === "TOTAL" ? "bold" : "normal"}">
                   ${item.amount}
                 </td>
               </tr>
-            `).join("")}
+            `,
+              )
+              .join("")}
           </tbody>
         </table>
       </div>
     `;
-  
+
     const htmlContent = `
   <!DOCTYPE html>
   <html>
@@ -178,12 +190,16 @@ const DailyOPDReport = () => {
                   </tr>
                 </thead>
                 <tbody style="font-size:12px;">
-                  ${reportData.opdCounts.map(i => `
+                  ${reportData.opdCounts
+                    .map(
+                      (i) => `
                     <tr>
                       <td class="fw-bold text-secondary">${i.type}</td>
                       <td>${i.count}</td>
                     </tr>
-                  `).join("")}
+                  `,
+                    )
+                    .join("")}
                 </tbody>
               </table>
             </div>
@@ -204,7 +220,9 @@ const DailyOPDReport = () => {
                   </tr>
                 </thead>
                 <tbody style="font-size:12px;">
-                  ${reportData.opdDetails.map(i => `
+                  ${reportData.opdDetails
+                    .map(
+                      (i) => `
                     <tr>
                       <td class="fw-bold text-secondary">${i.type}</td>
                       <td>${i.new}</td>
@@ -212,7 +230,9 @@ const DailyOPDReport = () => {
                       <td>${i.po}</td>
                       <td>${i.total}</td>
                     </tr>
-                  `).join("")}
+                  `,
+                    )
+                    .join("")}
                 </tbody>
               </table>
             </div>
@@ -230,12 +250,16 @@ const DailyOPDReport = () => {
                   </tr>
                 </thead>
                 <tbody style="font-size:12px;">
-                  ${reportData.testDetails.map(i => `
+                  ${reportData.testDetails
+                    .map(
+                      (i) => `
                     <tr>
                       <td class="fw-bold text-secondary">${i.testName}</td>
                       <td>₹ ${i.amount}</td>
                     </tr>
-                  `).join("")}
+                  `,
+                    )
+                    .join("")}
                 </tbody>
               </table>
             </div>
@@ -263,14 +287,17 @@ const DailyOPDReport = () => {
   </body>
   </html>
   `;
-  
+
     printWindow.document.write(htmlContent);
     printWindow.document.close();
   };
-  
+
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: "100vh" }}>
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{ height: "100vh" }}
+      >
         <Spinner animation="border" variant="info" />
       </div>
     );
@@ -372,14 +399,31 @@ const DailyOPDReport = () => {
                         }}
                       >
                         <tr>
-                          <th style={{ width: '60%', borderLeft: "1px solid #00bcd4", borderRight: "1px solid #00bcd4" }}>Type</th>
-                          <th style={{ width: '40%', borderRight: "1px solid #00bcd4" }}>Total</th>
+                          <th
+                            style={{
+                              width: "60%",
+                              borderLeft: "1px solid #00bcd4",
+                              borderRight: "1px solid #00bcd4",
+                            }}
+                          >
+                            Type
+                          </th>
+                          <th
+                            style={{
+                              width: "40%",
+                              borderRight: "1px solid #00bcd4",
+                            }}
+                          >
+                            Total
+                          </th>
                         </tr>
                       </thead>
                       <tbody style={{ fontSize: "12px" }}>
                         {reportData.opdCounts.map((item, index) => (
                           <tr key={index}>
-                            <td className="fw-bold text-secondary">{item.type}</td>
+                            <td className="fw-bold text-secondary">
+                              {item.type}
+                            </td>
                             <td>{item.count}</td>
                           </tr>
                         ))}
@@ -397,7 +441,7 @@ const DailyOPDReport = () => {
                       style={{
                         border: "1px solid #00bcd4",
                         textAlign: "center",
-                        boxShadow: "0px 2px 4px rgba(0,0,0,0.05)"
+                        boxShadow: "0px 2px 4px rgba(0,0,0,0.05)",
                       }}
                     >
                       <thead
@@ -408,17 +452,47 @@ const DailyOPDReport = () => {
                         }}
                       >
                         <tr>
-                          <th style={{ borderLeft: "1px solid #00bcd4", borderRight: "1px solid #00bcd4" }}>Type</th>
-                          <th style={{ borderLeft: "1px solid #00bcd4", borderRight: "1px solid #00bcd4" }}>New</th>
-                          <th style={{ borderLeft: "1px solid #00bcd4", borderRight: "1px solid #00bcd4" }}>Follow UP</th>
-                          <th style={{ borderLeft: "1px solid #00bcd4", borderRight: "1px solid #00bcd4" }}>PO</th>
-                          <th style={{ borderRight: "1px solid #00bcd4" }}>Total</th>
+                          <th
+                            style={{
+                              borderLeft: "1px solid #00bcd4",
+                              borderRight: "1px solid #00bcd4",
+                            }}
+                          >
+                            Type
+                          </th>
+                          <th
+                            style={{
+                              borderLeft: "1px solid #00bcd4",
+                              borderRight: "1px solid #00bcd4",
+                            }}
+                          >
+                            New
+                          </th>
+                          <th
+                            style={{
+                              borderLeft: "1px solid #00bcd4",
+                              borderRight: "1px solid #00bcd4",
+                            }}
+                          >
+                            Follow UP
+                          </th>
+                          <th
+                            style={{
+                              borderLeft: "1px solid #00bcd4",
+                              borderRight: "1px solid #00bcd4",
+                            }}
+                          >
+                            PO
+                          </th>
+                          <th style={{ borderRight: "1px solid #00bcd4" }}>
+                            Total
+                          </th>
                         </tr>
                       </thead>
                       <tbody style={{ fontSize: "12px" }}>
                         {reportData.opdDetails.map((item, index) => (
                           <tr key={index}>
-                            <td className="fw-bold text-secondary" >
+                            <td className="fw-bold text-secondary">
                               {item.type}
                             </td>
                             <td>{item.new}</td>
@@ -443,7 +517,7 @@ const DailyOPDReport = () => {
                         textAlign: "center",
                         boxShadow: "0px 2px 4px rgba(0,0,0,0.05)",
                         maxWidth: "300px",
-                        margin: "0 auto"
+                        margin: "0 auto",
                       }}
                     >
                       <thead
@@ -454,14 +528,25 @@ const DailyOPDReport = () => {
                         }}
                       >
                         <tr>
-                          <th style={{ borderLeft: "1px solid #00bcd4", borderRight: "1px solid #00bcd4" }}>Test</th>
-                          <th style={{ borderRight: "1px solid #00bcd4" }}>Amount</th>
+                          <th
+                            style={{
+                              borderLeft: "1px solid #00bcd4",
+                              borderRight: "1px solid #00bcd4",
+                            }}
+                          >
+                            Test
+                          </th>
+                          <th style={{ borderRight: "1px solid #00bcd4" }}>
+                            Amount
+                          </th>
                         </tr>
                       </thead>
                       <tbody style={{ fontSize: "12px" }}>
                         {reportData.testDetails.map((item, index) => (
                           <tr key={index}>
-                            <td className="fw-bold text-secondary">{item.testName}</td>
+                            <td className="fw-bold text-secondary">
+                              {item.testName}
+                            </td>
                             <td>₹ {item.amount}</td>
                           </tr>
                         ))}
@@ -472,9 +557,18 @@ const DailyOPDReport = () => {
 
                 <Row className="justify-content-center">
                   {[
-                    { title: "Overall Collection Detail(Rs)", data: reportData.collectionDetails },
-                    { title: "LAB Collection Detail(Rs)", data: reportData.collectionDetails },
-                    { title: "Pharmacy Collection Detail(Rs)", data: reportData.collectionDetails },
+                    {
+                      title: "Overall Collection Detail(Rs)",
+                      data: reportData.collectionDetails,
+                    },
+                    {
+                      title: "LAB Collection Detail(Rs)",
+                      data: reportData.collectionDetails,
+                    },
+                    {
+                      title: "Pharmacy Collection Detail(Rs)",
+                      data: reportData.collectionDetails,
+                    },
                   ].map((section, idx) => (
                     <Col key={idx} xs={12} lg={4} className="mb-4">
                       <Table
@@ -485,12 +579,20 @@ const DailyOPDReport = () => {
                           border: "1px solid #00bcd4",
                           textAlign: "center",
                           fontSize: "13px",
-                          backgroundColor: "white"
+                          backgroundColor: "white",
                         }}
                       >
                         <thead>
                           <tr style={{ backgroundColor: "#e3f2fd" }}>
-                            <th colSpan="2" style={{ textAlign: "left", paddingLeft: "10px", borderRight: "1px solid #00bcd4", borderLeft: "1px solid #00bcd4" }}>
+                            <th
+                              colSpan="2"
+                              style={{
+                                textAlign: "left",
+                                paddingLeft: "10px",
+                                borderRight: "1px solid #00bcd4",
+                                borderLeft: "1px solid #00bcd4",
+                              }}
+                            >
                               {section.title}
                             </th>
                           </tr>
@@ -503,12 +605,18 @@ const DailyOPDReport = () => {
                                 style={{
                                   textAlign: "left",
                                   paddingLeft: "10px",
-                                  width: "70%"
+                                  width: "70%",
                                 }}
                               >
                                 {item.method}
                               </td>
-                              <td style={{ width: "30%", fontWeight: item.method === "TOTAL" ? "bold" : "normal" }}>
+                              <td
+                                style={{
+                                  width: "30%",
+                                  fontWeight:
+                                    item.method === "TOTAL" ? "bold" : "normal",
+                                }}
+                              >
                                 {item.amount}
                               </td>
                             </tr>

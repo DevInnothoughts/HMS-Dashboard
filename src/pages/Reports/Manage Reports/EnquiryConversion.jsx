@@ -14,7 +14,7 @@ import {
 } from "react-bootstrap";
 import SimpleBar from "simplebar-react";
 
-const BASE_URL = "http://localhost:5100/api"; // Update your API base URL here
+const BASE_URL = "http://194.195.117.79:5100/api"; // Update your API base URL here
 
 const EnquiryConversion = () => {
   const [fromDate, setFromDate] = useState("");
@@ -168,7 +168,7 @@ const EnquiryConversion = () => {
 
       // Create URL with query parameters
       const appointmentURL = new URL(
-        `${BASE_URL}/V1/appointment/listAppointments`
+        `${BASE_URL}/V1/appointment/listAppointments`,
       );
       appointmentURL.searchParams.append("from", formattedFromDate);
       appointmentURL.searchParams.append("to", formattedToDate);
@@ -182,14 +182,14 @@ const EnquiryConversion = () => {
             "Content-Type": "application/json",
             Accept: "application/json",
           },
-        }
+        },
       );
 
       if (!appointmentResponse.ok) {
         const errorText = await appointmentResponse.text();
         console.error("Appointment API Error:", errorText);
         throw new Error(
-          `Failed to fetch appointment data: ${appointmentResponse.status}`
+          `Failed to fetch appointment data: ${appointmentResponse.status}`,
         );
       }
 
@@ -205,14 +205,14 @@ const EnquiryConversion = () => {
             "Content-Type": "application/json",
             Accept: "application/json",
           },
-        }
+        },
       );
 
       if (!enquiryResponse.ok) {
         const errorText = await enquiryResponse.text();
         console.error("Enquiry API Error:", errorText);
         throw new Error(
-          `Failed to fetch enquiry data: ${enquiryResponse.status}`
+          `Failed to fetch enquiry data: ${enquiryResponse.status}`,
         );
       }
 

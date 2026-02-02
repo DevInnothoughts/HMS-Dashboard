@@ -11,7 +11,7 @@ import {
 } from "react-bootstrap";
 import SimpleBar from "simplebar-react";
 
-const BASE_URL = "http://localhost:5100/api"; // Update your API base URL here
+const BASE_URL = "http://194.195.117.79:5100/api"; // Update your API base URL here
 
 const appointmentTypes = [
   { value: "New", label: "New" },
@@ -65,7 +65,7 @@ const AppointmentConversion = () => {
         throw new Error(
           `HTTP error! status: ${response.status}${
             errorData ? ` - ${errorData.error}` : ""
-          }`
+          }`,
         );
       }
 
@@ -317,8 +317,8 @@ const AppointmentConversion = () => {
                                   appointment.status === "Scheduled"
                                     ? "#00796b"
                                     : appointment.status === "Completed"
-                                    ? "#388e3c"
-                                    : "#d32f2f",
+                                      ? "#388e3c"
+                                      : "#d32f2f",
                               }}
                             >
                               {appointment.status}
@@ -405,9 +405,9 @@ const AppointmentConversion = () => {
                             Math.min(
                               prev + 1,
                               Math.ceil(
-                                appointments.length / appointmentsPerPage
-                              )
-                            )
+                                appointments.length / appointmentsPerPage,
+                              ),
+                            ),
                           )
                         }
                         disabled={
@@ -433,7 +433,9 @@ const AppointmentConversion = () => {
                       <button
                         onClick={() =>
                           setCurrentPage(
-                            Math.ceil(appointments.length / appointmentsPerPage)
+                            Math.ceil(
+                              appointments.length / appointmentsPerPage,
+                            ),
                           )
                         }
                         disabled={
@@ -467,7 +469,7 @@ const AppointmentConversion = () => {
                         Showing {(currentPage - 1) * appointmentsPerPage + 1} to{" "}
                         {Math.min(
                           currentPage * appointmentsPerPage,
-                          appointments.length
+                          appointments.length,
                         )}{" "}
                         of {appointments.length}
                       </span>

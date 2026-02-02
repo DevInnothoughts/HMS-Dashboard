@@ -56,7 +56,7 @@ function decodeJwt(token) {
       atob(base64)
         .split("")
         .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
+        .join(""),
     );
     return JSON.parse(jsonPayload);
   } catch (e) {
@@ -64,7 +64,7 @@ function decodeJwt(token) {
   }
 }
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 export default function ReceptionistDashboard() {
   const [appointments, setAppointments] = useState([]);
@@ -78,7 +78,6 @@ export default function ReceptionistDashboard() {
   const [cancelComment, setCancelComment] = useState("");
   const [selectedEvent, setSelectedEvent] = useState(null);
   const calendarRef = React.useRef(null);
-  
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -91,57 +90,64 @@ export default function ReceptionistDashboard() {
   }, []);
 
   const counts = useMemo(() => {
-    const monthStart = moment(selectedDate).startOf('month');
-    const monthEnd = moment(selectedDate).endOf('month');
+    const monthStart = moment(selectedDate).startOf("month");
+    const monthEnd = moment(selectedDate).endOf("month");
 
     return appointments
-      .filter(event => {
+      .filter((event) => {
         const eventDate = moment(event.start);
-        return eventDate.isSameOrAfter(monthStart, 'day') && eventDate.isSameOrBefore(monthEnd, 'day');
+        return (
+          eventDate.isSameOrAfter(monthStart, "day") &&
+          eventDate.isSameOrBefore(monthEnd, "day")
+        );
       })
       .reduce(
         (acc, event) => {
           acc[event.patientType] = (acc[event.patientType] || 0) + 1;
           return acc;
         },
-        { NEW: 0, FOLLOW: 0, POSTOPERATIVE: 0, OTHER: 0 }
+        { NEW: 0, FOLLOW: 0, POSTOPERATIVE: 0, OTHER: 0 },
       );
   }, [appointments, selectedDate]);
 
   const formatAppointments = useCallback((data) => {
-  return data.map((app) => {
-    const datePart = moment(app.appointment_timestamp).format("YYYY-MM-DD");
-    const startTime = moment(`${datePart} ${app.appointment_time}`, "YYYY-MM-DD hh:mm A");
-    const endTime = startTime.clone().add(30, "minutes");
+    return data.map((app) => {
+      const datePart = moment(app.appointment_timestamp).format("YYYY-MM-DD");
+      const startTime = moment(
+        `${datePart} ${app.appointment_time}`,
+        "YYYY-MM-DD hh:mm A",
+      );
+      const endTime = startTime.clone().add(30, "minutes");
 
-    // --- STANDARDIZATION LOGIC ---
-    let rawType = (app.patient_type || "OTHER").toUpperCase();
-    let standardizedType = "OTHER";
+      // --- STANDARDIZATION LOGIC ---
+      let rawType = (app.patient_type || "OTHER").toUpperCase();
+      let standardizedType = "OTHER";
 
-    if (rawType.includes("NEW")) standardizedType = "NEW";
-    else if (rawType.includes("FOLLOW")) standardizedType = "FOLLOW";
-    else if (rawType.includes("POST") || rawType.includes("OPERATIVE")) standardizedType = "POSTOPERATIVE";
-    // ------------------------------
+      if (rawType.includes("NEW")) standardizedType = "NEW";
+      else if (rawType.includes("FOLLOW")) standardizedType = "FOLLOW";
+      else if (rawType.includes("POST") || rawType.includes("OPERATIVE"))
+        standardizedType = "POSTOPERATIVE";
+      // ------------------------------
 
-    return {
-      title: `${app.appointment_time || "N/A"} — ${app.patient_name || "Patient"}`,
-      start: startTime.toDate(),
-      end: endTime.toDate(),
-      phone: app.patient_phone,
-      date: moment(app.appointment_timestamp).format("DD-MM-YYYY"),
-      time: app.appointment_time,
-      patientName: app.patient_name,
-      doctorName: app.doctor_name,
-      patientType: standardizedType, // Now always NEW, FOLLOW, POSTOPERATIVE, or OTHER
-      status: app.status,
-      note: app.note,
-      confirmTime: app.confirm_time,
-      patientid: app.patient_id,
-      appointmentid: app.appointment_id,
-      isConfirmed: app.confirm_time !== "0" && app.confirm_time !== 0,
-    };
-  });
-}, []);
+      return {
+        title: `${app.appointment_time || "N/A"} — ${app.patient_name || "Patient"}`,
+        start: startTime.toDate(),
+        end: endTime.toDate(),
+        phone: app.patient_phone,
+        date: moment(app.appointment_timestamp).format("DD-MM-YYYY"),
+        time: app.appointment_time,
+        patientName: app.patient_name,
+        doctorName: app.doctor_name,
+        patientType: standardizedType, // Now always NEW, FOLLOW, POSTOPERATIVE, or OTHER
+        status: app.status,
+        note: app.note,
+        confirmTime: app.confirm_time,
+        patientid: app.patient_id,
+        appointmentid: app.appointment_id,
+        isConfirmed: app.confirm_time !== "0" && app.confirm_time !== 0,
+      };
+    });
+  }, []);
 
   const fetchDropdowns = useCallback(async () => {
     if (currentLocation === "default") return;
@@ -189,7 +195,7 @@ export default function ReceptionistDashboard() {
           let filteredData = data.data;
           if (doctorId) {
             filteredData = data.data.filter(
-              (app) => String(app.doctor_id) === String(doctorId)
+              (app) => String(app.doctor_id) === String(doctorId),
             );
           }
           const formattedEvents = formatAppointments(filteredData);
@@ -204,7 +210,7 @@ export default function ReceptionistDashboard() {
         setLoading(false);
       }
     },
-    [currentLocation, currentView, formatAppointments]
+    [currentLocation, currentView, formatAppointments],
   );
 
   useEffect(() => {
@@ -293,23 +299,23 @@ export default function ReceptionistDashboard() {
   };
 
   const eventStyleGetter = useCallback((event) => {
-  const colorMap = {
-    NEW: "#000000",
-    FOLLOW: "#ff8000",
-    POSTOPERATIVE: "#8000ff",
-    OTHER: "#ff0080",
-  };
+    const colorMap = {
+      NEW: "#000000",
+      FOLLOW: "#ff8000",
+      POSTOPERATIVE: "#8000ff",
+      OTHER: "#ff0080",
+    };
 
-  return {
-    style: {
-      backgroundColor: colorMap[event.patientType] || "#ff0080",
-      borderRadius: "4px",
-      border: "none",
-      color: "white",
-      display: "block",
-    },
-  };
-}, []);
+    return {
+      style: {
+        backgroundColor: colorMap[event.patientType] || "#ff0080",
+        borderRadius: "4px",
+        border: "none",
+        color: "white",
+        display: "block",
+      },
+    };
+  }, []);
 
   const AppointmentDetailsCard = () => {
     if (!selectedEvent) {
@@ -327,7 +333,7 @@ export default function ReceptionistDashboard() {
       );
     }
 
-  const isConfirmed =
+    const isConfirmed =
       selectedEvent.confirmTime &&
       selectedEvent.confirmTime !== "0" &&
       selectedEvent.confirmTime !== 0;
@@ -365,7 +371,8 @@ export default function ReceptionistDashboard() {
 
           <div className="data-item-inline">
             <label>
-              <FeatherIcon icon="calendar" size={14} />Apt Date:
+              <FeatherIcon icon="calendar" size={14} />
+              Apt Date:
             </label>
             <span className="data-value fw-bold">{selectedEvent.date}</span>
           </div>
@@ -443,7 +450,7 @@ export default function ReceptionistDashboard() {
                   handleConfirm(
                     selectedEvent.appointmentid,
                     selectedEvent.patientType,
-                    selectedEvent.phone
+                    selectedEvent.phone,
                   )
                 }
               >
@@ -471,7 +478,7 @@ export default function ReceptionistDashboard() {
       className="themebody-wrap"
       style={{
         background: "linear-gradient(to right, #e0f7fa, #80deea)",
-        minHeight: "100vh"
+        minHeight: "100vh",
       }}
     >
       <style>{`
@@ -641,29 +648,45 @@ export default function ReceptionistDashboard() {
               <Col lg={7}>
                 <div className="legend-title">
                   <h4 className="fw-bold mb-10">
-                    Patient Appointment Statistics for {moment(selectedDate).format("MMMM YYYY")}
+                    Patient Appointment Statistics for{" "}
+                    {moment(selectedDate).format("MMMM YYYY")}
                   </h4>
                 </div>
                 <div className="d-flex align-items-center flex-wrap">
                   <div className="legend-item">
-                    <span className="dot" style={{ background: "#000000" }}></span>
+                    <span
+                      className="dot"
+                      style={{ background: "#000000" }}
+                    ></span>
                     New Patient <span className="cnt">({counts.NEW || 0})</span>
                   </div>
                   <div className="legend-item">
-                    <span className="dot" style={{ background: "#ff8000" }}></span>
-                    Follow Patient <span className="cnt">({counts.FOLLOW || 0})</span>
+                    <span
+                      className="dot"
+                      style={{ background: "#ff8000" }}
+                    ></span>
+                    Follow Patient{" "}
+                    <span className="cnt">({counts.FOLLOW || 0})</span>
                   </div>
                   <div className="legend-item">
-                    <span className="dot" style={{ background: "#8000ff" }}></span>
-                    Postoperative Patient <span className="cnt">({counts.POSTOPERATIVE || 0})</span>
+                    <span
+                      className="dot"
+                      style={{ background: "#8000ff" }}
+                    ></span>
+                    Postoperative Patient{" "}
+                    <span className="cnt">({counts.POSTOPERATIVE || 0})</span>
                   </div>
                   <div className="legend-item">
-                    <span className="dot" style={{ background: "#ff0080" }}></span>
-                    Other Patient <span className="cnt">({counts.OTHER || 0})</span>
+                    <span
+                      className="dot"
+                      style={{ background: "#ff0080" }}
+                    ></span>
+                    Other Patient{" "}
+                    <span className="cnt">({counts.OTHER || 0})</span>
                   </div>
-                    </div>
-                  </Col>
-                  <Col lg={5}>
+                </div>
+              </Col>
+              <Col lg={5}>
                 <div className="d-flex align-items-end justify-content-lg-end gap-3 mt-3 mt-lg-0">
                   {/* <div className="d-flex flex-column">
                                         <label className="text-muted fw-bold mb-1" style={{ fontSize: '12px', textTransform: 'uppercase' }}>Select Date:</label>
@@ -675,7 +698,14 @@ export default function ReceptionistDashboard() {
                                         />
                                     </div> */}
 
-                  <div className="d-flex flex-column" style={{justifyContent:"center", alignContent:"center", alignSelf:"center"}}>
+                  <div
+                    className="d-flex flex-column"
+                    style={{
+                      justifyContent: "center",
+                      alignContent: "center",
+                      alignSelf: "center",
+                    }}
+                  >
                     <label
                       className="text-muted fw-bold mb-2"
                       style={{ fontSize: "13px" }}
@@ -687,10 +717,10 @@ export default function ReceptionistDashboard() {
                       value={selectedDoctorId}
                       style={{
                         width: "200px",
-                        height:"30px",
+                        height: "30px",
                         borderRadius: "8px",
                         border: "1px solid #009bad",
-                        fontSize: "11px"
+                        fontSize: "11px",
                       }}
                     >
                       <option value="">All Doctors</option>
@@ -714,10 +744,11 @@ export default function ReceptionistDashboard() {
                       fontSize: "12px",
                       padding: 0,
                       alignSelf: "flex-end",
-                      marginBottom:"5.5px"
+                      marginBottom: "5.5px",
                     }}
                   >
-                    <FeatherIcon icon="refresh-cw" size={10} className="me-1" />Refresh
+                    <FeatherIcon icon="refresh-cw" size={10} className="me-1" />
+                    Refresh
                   </Button>
                 </div>
               </Col>
@@ -730,7 +761,13 @@ export default function ReceptionistDashboard() {
                 className="border-0 shadow-sm"
                 style={{ borderRadius: "10px" }}
               >
-                <Card.Body className="p-3" style={{ border: "2px solid rgb(77, 208, 225)", borderRadius: "10px" }}>
+                <Card.Body
+                  className="p-3"
+                  style={{
+                    border: "2px solid rgb(77, 208, 225)",
+                    borderRadius: "10px",
+                  }}
+                >
                   <Calendar
                     ref={calendarRef}
                     localizer={localizer}
@@ -747,7 +784,7 @@ export default function ReceptionistDashboard() {
                     views={{
                       month: true,
                       week: true,
-                      day: true
+                      day: true,
                     }}
                     length={3}
                     maxEvents={3}
@@ -759,9 +796,16 @@ export default function ReceptionistDashboard() {
             <Col xxl={4} xl={4} lg={12}>
               <Card
                 className="shadow-sm sticky-sidebar"
-                style={{ borderRadius: "10px", overflow: "hidden", border: "2px solid rgb(77, 208, 225)" }}
+                style={{
+                  borderRadius: "10px",
+                  overflow: "hidden",
+                  border: "2px solid rgb(77, 208, 225)",
+                }}
               >
-                <Card.Header className="bg-white py-5 d-flex justify-content-center align-items-center" style={{ borderBottom: "1px solid rgb(77, 208, 225)" }} >
+                <Card.Header
+                  className="bg-white py-5 d-flex justify-content-center align-items-center"
+                  style={{ borderBottom: "1px solid rgb(77, 208, 225)" }}
+                >
                   <div className="d-flex align-items-center justify-content-center w-100">
                     <div
                       className="d-flex align-items-center justify-content-center me-1"
@@ -781,7 +825,11 @@ export default function ReceptionistDashboard() {
                     </div>
                     <h5
                       className="mb-0 fw-bold"
-                      style={{ color: "#3f444bff", whiteSpace: "nowrap", fontSize: "16px" }}
+                      style={{
+                        color: "#3f444bff",
+                        whiteSpace: "nowrap",
+                        fontSize: "16px",
+                      }}
                     >
                       Appointment Detail
                     </h5>

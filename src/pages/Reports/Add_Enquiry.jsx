@@ -20,7 +20,7 @@ import { decodeJwt } from "../../utils/decode-jwt";
 const getCountryCode = (patient_phone) => {
   if (!patient_phone) return "Unknown";
   const country = countryCodes.find((code) =>
-    patient_phone.startsWith(code.value)
+    patient_phone.startsWith(code.value),
   );
   return country ? country.value : "Unknown";
 };
@@ -52,7 +52,7 @@ const countryCodes = [
   { value: "+34", label: "🇪🇸 Spain (+34)" },
 ];
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 const formatDate = (date) => {
   const d = new Date(date);
   const day = String(d.getDate()).padStart(2, "0");
@@ -196,7 +196,7 @@ export default function Add_Enquiry() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
-          }
+          },
         );
 
         if (response.ok) {
@@ -262,7 +262,7 @@ export default function Add_Enquiry() {
     fontWeight: "600",
     color: "#555",
     marginBottom: "5px",
-    display: "block"
+    display: "block",
   };
 
   const inputStyle = {
@@ -270,7 +270,7 @@ export default function Add_Enquiry() {
     borderRadius: "10px",
     border: "2px solid rgb(77, 208, 225)",
     padding: "5px 10px",
-    textTransform: "none"
+    textTransform: "none",
   };
 
   return (
@@ -355,7 +355,10 @@ export default function Add_Enquiry() {
                           style={inputStyle}
                         />
                         {errors.date && (
-                          <p className="text-danger mt-1" style={{ fontSize: '11px' }}>
+                          <p
+                            className="text-danger mt-1"
+                            style={{ fontSize: "11px" }}
+                          >
                             {errors.date}
                           </p>
                         )}
@@ -392,11 +395,16 @@ export default function Add_Enquiry() {
                             "Patient is Coming Late for Appointment",
                             "Insurance Related Queries",
                           ].map((type) => (
-                            <option key={type} value={type}>{type}</option>
+                            <option key={type} value={type}>
+                              {type}
+                            </option>
                           ))}
                         </Form.Select>
                         {errors.enquirytype && (
-                          <p className="text-danger mt-1" style={{ fontSize: '11px' }}>
+                          <p
+                            className="text-danger mt-1"
+                            style={{ fontSize: "11px" }}
+                          >
                             {errors.enquirytype}
                           </p>
                         )}
@@ -418,13 +426,19 @@ export default function Add_Enquiry() {
                         >
                           <option value="">Select a Doctor</option>
                           {doctors.map((doctor) => (
-                            <option key={doctor.doctor_id} value={doctor.doctor_id}>
+                            <option
+                              key={doctor.doctor_id}
+                              value={doctor.doctor_id}
+                            >
                               {doctor.doctor_id} - {doctor.name}
                             </option>
                           ))}
                         </Form.Select>
                         {errors.doctorId && (
-                          <p className="text-danger mt-1" style={{ fontSize: '11px' }}>
+                          <p
+                            className="text-danger mt-1"
+                            style={{ fontSize: "11px" }}
+                          >
                             {errors.doctorId}
                           </p>
                         )}
@@ -448,7 +462,10 @@ export default function Add_Enquiry() {
                           onChange={handleInputChange}
                         />
                         {errors.patient_name && (
-                          <p className="text-danger mt-1" style={{ fontSize: '11px' }}>
+                          <p
+                            className="text-danger mt-1"
+                            style={{ fontSize: "11px" }}
+                          >
                             {errors.patient_name}
                           </p>
                         )}
@@ -477,7 +494,10 @@ export default function Add_Enquiry() {
                           style={inputStyle}
                         />
                         {errors.patient_phone && (
-                          <p className="text-danger mt-1" style={{ fontSize: '11px' }}>
+                          <p
+                            className="text-danger mt-1"
+                            style={{ fontSize: "11px" }}
+                          >
                             {errors.patient_phone}
                           </p>
                         )}
@@ -499,7 +519,10 @@ export default function Add_Enquiry() {
                           onChange={handleInputChange}
                         />
                         {errors.patient_location && (
-                          <p className="text-danger mt-1" style={{ fontSize: '11px' }}>
+                          <p
+                            className="text-danger mt-1"
+                            style={{ fontSize: "11px" }}
+                          >
                             {errors.patient_location}
                           </p>
                         )}
@@ -534,7 +557,10 @@ export default function Add_Enquiry() {
                           ))}
                         </Form.Select>
                         {errors.FDE_Name && (
-                          <p className="text-danger mt-1" style={{ fontSize: '11px' }}>
+                          <p
+                            className="text-danger mt-1"
+                            style={{ fontSize: "11px" }}
+                          >
                             {errors.FDE_Name}
                           </p>
                         )}
@@ -570,11 +596,16 @@ export default function Add_Enquiry() {
                             "Aggregators",
                             "Other",
                           ].map((ref) => (
-                            <option key={ref} value={ref}>{ref}</option>
+                            <option key={ref} value={ref}>
+                              {ref}
+                            </option>
                           ))}
                         </Form.Select>
                         {errors.reference && (
-                          <p className="text-danger mt-1" style={{ fontSize: '11px' }}>
+                          <p
+                            className="text-danger mt-1"
+                            style={{ fontSize: "11px" }}
+                          >
                             {errors.reference}
                           </p>
                         )}
@@ -583,9 +614,7 @@ export default function Add_Enquiry() {
 
                     <Col md={4}>
                       <Form.Group>
-                        <Form.Label style={labelStyle}>
-                          Note
-                        </Form.Label>
+                        <Form.Label style={labelStyle}>Note</Form.Label>
                         <Form.Control
                           as="textarea"
                           name="note"
@@ -596,7 +625,10 @@ export default function Add_Enquiry() {
                           onChange={handleInputChange}
                         />
                         {errors.note && (
-                          <p className="text-danger mt-1" style={{ fontSize: '11px' }}>
+                          <p
+                            className="text-danger mt-1"
+                            style={{ fontSize: "11px" }}
+                          >
                             {errors.note}
                           </p>
                         )}
@@ -606,7 +638,11 @@ export default function Add_Enquiry() {
 
                   <div className="d-flex justify-content-end align-items-center">
                     <Button
-                      style={{ borderRadius: "10px", fontSize: "13px", padding: "8px 25px" }}
+                      style={{
+                        borderRadius: "10px",
+                        fontSize: "13px",
+                        padding: "8px 25px",
+                      }}
                       variant="secondary"
                       className="me-2"
                       onClick={() => {
@@ -626,7 +662,7 @@ export default function Add_Enquiry() {
                         backgroundColor: "#00bcd4",
                         border: "none",
                         fontSize: "13px",
-                        padding: "9px 35px"
+                        padding: "9px 35px",
                       }}
                       disabled={loading || !currentLocation}
                     >

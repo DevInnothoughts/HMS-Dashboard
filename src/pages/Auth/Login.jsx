@@ -47,10 +47,10 @@ const LOCATIONS_LIST = [
   "lead",
   "Pratiksha Local",
   "Demo Server",
-  "demo"
+  "demo",
 ].sort();
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -124,7 +124,7 @@ export default function Login() {
         navigate("/reception-dashboard", { replace: true });
       } else {
         setErrorMessage(
-          data.message || "Invalid email or password. Please try again."
+          data.message || "Invalid email or password. Please try again.",
         );
       }
     } catch (error) {
@@ -279,7 +279,6 @@ export default function Login() {
                       aria-hidden="true"
                       justifyContent="center"
                       alignItems="center"
-
                     />
                   </>
                 ) : (

@@ -26,33 +26,198 @@ import DatePicker from "react-datepicker";
 import logo from "../../assets/images/3.png";
 
 const countries = [
-  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan",
-  "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi",
-  "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic",
-  "Denmark", "Djibouti", "Dominica", "Dominican Republic",
-  "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia",
-  "Fiji", "Finland", "France",
-  "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guyana",
-  "Haiti", "Honduras", "Hungary",
-  "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Ivory Coast",
-  "Jamaica", "Japan", "Jordan",
-  "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan",
-  "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg",
-  "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar",
-  "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "Norway",
+  "Afghanistan",
+  "Albania",
+  "Algeria",
+  "Andorra",
+  "Angola",
+  "Antigua and Barbuda",
+  "Argentina",
+  "Armenia",
+  "Australia",
+  "Austria",
+  "Azerbaijan",
+  "Bahamas",
+  "Bahrain",
+  "Bangladesh",
+  "Barbados",
+  "Belarus",
+  "Belgium",
+  "Belize",
+  "Benin",
+  "Bhutan",
+  "Bolivia",
+  "Bosnia and Herzegovina",
+  "Botswana",
+  "Brazil",
+  "Brunei",
+  "Bulgaria",
+  "Burkina Faso",
+  "Burundi",
+  "Cabo Verde",
+  "Cambodia",
+  "Cameroon",
+  "Canada",
+  "Central African Republic",
+  "Chad",
+  "Chile",
+  "China",
+  "Colombia",
+  "Comoros",
+  "Congo",
+  "Costa Rica",
+  "Croatia",
+  "Cuba",
+  "Cyprus",
+  "Czech Republic",
+  "Denmark",
+  "Djibouti",
+  "Dominica",
+  "Dominican Republic",
+  "Ecuador",
+  "Egypt",
+  "El Salvador",
+  "Equatorial Guinea",
+  "Eritrea",
+  "Estonia",
+  "Eswatini",
+  "Ethiopia",
+  "Fiji",
+  "Finland",
+  "France",
+  "Gabon",
+  "Gambia",
+  "Georgia",
+  "Germany",
+  "Ghana",
+  "Greece",
+  "Grenada",
+  "Guatemala",
+  "Guinea",
+  "Guyana",
+  "Haiti",
+  "Honduras",
+  "Hungary",
+  "Iceland",
+  "India",
+  "Indonesia",
+  "Iran",
+  "Iraq",
+  "Ireland",
+  "Israel",
+  "Italy",
+  "Ivory Coast",
+  "Jamaica",
+  "Japan",
+  "Jordan",
+  "Kazakhstan",
+  "Kenya",
+  "Kiribati",
+  "Kuwait",
+  "Kyrgyzstan",
+  "Laos",
+  "Latvia",
+  "Lebanon",
+  "Lesotho",
+  "Liberia",
+  "Libya",
+  "Liechtenstein",
+  "Lithuania",
+  "Luxembourg",
+  "Madagascar",
+  "Malawi",
+  "Malaysia",
+  "Maldives",
+  "Mali",
+  "Malta",
+  "Mauritania",
+  "Mauritius",
+  "Mexico",
+  "Micronesia",
+  "Moldova",
+  "Monaco",
+  "Mongolia",
+  "Montenegro",
+  "Morocco",
+  "Mozambique",
+  "Myanmar",
+  "Namibia",
+  "Nauru",
+  "Nepal",
+  "Netherlands",
+  "New Zealand",
+  "Nicaragua",
+  "Niger",
+  "Nigeria",
+  "North Korea",
+  "Norway",
   "Oman",
-  "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal",
+  "Pakistan",
+  "Palau",
+  "Palestine",
+  "Panama",
+  "Papua New Guinea",
+  "Paraguay",
+  "Peru",
+  "Philippines",
+  "Poland",
+  "Portugal",
   "Qatar",
-  "Romania", "Russia", "Rwanda",
-  "Saint Kitts and Nevis", "Saint Lucia", "Samoa", "San Marino", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria",
-  "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu",
-  "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan",
-  "Vanuatu", "Vatican City", "Venezuela", "Vietnam",
+  "Romania",
+  "Russia",
+  "Rwanda",
+  "Saint Kitts and Nevis",
+  "Saint Lucia",
+  "Samoa",
+  "San Marino",
+  "Saudi Arabia",
+  "Senegal",
+  "Serbia",
+  "Seychelles",
+  "Sierra Leone",
+  "Singapore",
+  "Slovakia",
+  "Slovenia",
+  "Solomon Islands",
+  "Somalia",
+  "South Africa",
+  "South Korea",
+  "South Sudan",
+  "Spain",
+  "Sri Lanka",
+  "Sudan",
+  "Suriname",
+  "Sweden",
+  "Switzerland",
+  "Syria",
+  "Taiwan",
+  "Tajikistan",
+  "Tanzania",
+  "Thailand",
+  "Togo",
+  "Tonga",
+  "Trinidad and Tobago",
+  "Tunisia",
+  "Turkey",
+  "Turkmenistan",
+  "Tuvalu",
+  "Uganda",
+  "Ukraine",
+  "United Arab Emirates",
+  "United Kingdom",
+  "United States",
+  "Uruguay",
+  "Uzbekistan",
+  "Vanuatu",
+  "Vatican City",
+  "Venezuela",
+  "Vietnam",
   "Yemen",
-  "Zambia", "Zimbabwe"
+  "Zambia",
+  "Zimbabwe",
 ];
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const formatDateToLocal = (dateString) => {
   if (!dateString) return "";
@@ -161,7 +326,6 @@ export default function All_patient() {
     }
   }, []);
 
-
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -192,7 +356,7 @@ export default function All_patient() {
           headers: {
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (doctorResponse.ok) {
@@ -210,7 +374,7 @@ export default function All_patient() {
           headers: {
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (fdeResponse.ok) {
@@ -234,9 +398,9 @@ export default function All_patient() {
 
   const [showManualDoctor, setShowManualDoctor] = useState(false);
   const [manualDoctorData, setManualDoctorData] = useState({
-    name: '',
-    location: '',
-    specialty: ''
+    name: "",
+    location: "",
+    specialty: "",
   });
 
   const searchDoctorByName = async (name) => {
@@ -253,7 +417,7 @@ export default function All_patient() {
         {
           method: "GET",
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
 
       if (response.ok) {
@@ -261,7 +425,7 @@ export default function All_patient() {
         const results = data.data || [];
         setDoctorSearchResults(results);
 
-        // If no results found, we don't automatically show the form, 
+        // If no results found, we don't automatically show the form,
         // but the UI will now show the "Add Reference" button.
         setShowManualDoctor(false);
       }
@@ -271,7 +435,6 @@ export default function All_patient() {
       setIsSearching(false);
     }
   };
-
 
   const [patientSearchResults, setPatientSearchResults] = useState([]);
   const [isSearchingPatient, setIsSearchingPatient] = useState(false);
@@ -292,7 +455,7 @@ export default function All_patient() {
           headers: {
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       console.log("API Response Status:", response.status);
@@ -417,13 +580,13 @@ export default function All_patient() {
     try {
       const url = new URL(
         `${BASE_URL}/V1/patient/listPatient?location=${encodeURIComponent(
-          currentLocation
-        )}`
+          currentLocation,
+        )}`,
       );
 
       const params = {
         from: formatToApiDate(fromDate),
-        to: formatToApiDate(toDate)
+        to: formatToApiDate(toDate),
       };
 
       Object.keys(params).forEach((key) => {
@@ -443,7 +606,7 @@ export default function All_patient() {
       } else {
         console.error(
           "Error fetching patients:",
-          data.message || "Unknown error"
+          data.message || "Unknown error",
         );
       }
     } catch (error) {
@@ -520,7 +683,7 @@ export default function All_patient() {
         Sedentary: workPatternsArray.includes("Sedentary"),
         Travelling: workPatternsArray.includes("Travelling"),
         "Strenuous (Physical Activity)": workPatternsArray.includes(
-          "Strenuous (Physical Activity)"
+          "Strenuous (Physical Activity)",
         ),
         "Mentally Stressful": workPatternsArray.includes("Mentally Stressful"),
       });
@@ -556,18 +719,18 @@ export default function All_patient() {
 
     const age = patient.age || calculateAge(formattedBirthDate) || "";
 
-    if (patient.reference_type === 'old_ref') {
+    if (patient.reference_type === "old_ref") {
       const parts = (patient.ref || "").split(",");
       setOldPatientDetails({
         patient_ref_no: parts[0] || "",
         old_patient_name: parts[1] || "",
         old_patient_id_value: parts[2] || "",
-        old_patient_pincode: parts[3] || ""
+        old_patient_pincode: parts[3] || "",
       });
     } else {
-      setReferenceDetails(prev => ({
+      setReferenceDetails((prev) => ({
         ...prev,
-        [patient.reference_type]: patient.ref || ""
+        [patient.reference_type]: patient.ref || "",
       }));
     }
 
@@ -606,7 +769,7 @@ export default function All_patient() {
       Sedentary: workPatternsArray.includes("Sedentary"),
       Travelling: workPatternsArray.includes("Travelling"),
       "Strenuous (Physical Activity)": workPatternsArray.includes(
-        "Strenuous (Physical Activity)"
+        "Strenuous (Physical Activity)",
       ),
       "Mentally Stressful": workPatternsArray.includes("Mentally Stressful"),
     });
@@ -648,14 +811,17 @@ export default function All_patient() {
         break;
       case "old_ref":
         reference_type = "old_ref";
-        ref = `${oldPatientDetails.patient_ref_no || ""},${oldPatientDetails.old_patient_name || ""
-          },${oldPatientDetails.old_patient_id_value || ""},${oldPatientDetails.old_patient_pincode || ""
-          }`;
+        ref = `${oldPatientDetails.patient_ref_no || ""},${
+          oldPatientDetails.old_patient_name || ""
+        },${oldPatientDetails.old_patient_id_value || ""},${
+          oldPatientDetails.old_patient_pincode || ""
+        }`;
         break;
       case "family_friends":
         reference_type = "family_friends";
-        ref = `${referenceDetails.friendname || ""},${referenceDetails.friendno || ""
-          }`;
+        ref = `${referenceDetails.friendname || ""},${
+          referenceDetails.friendno || ""
+        }`;
         break;
       case "hhc_board":
         reference_type = "hhc_board";
@@ -691,7 +857,7 @@ export default function All_patient() {
         break;
       default:
         reference_type = null;
-        ref = referenceDetails[selectedReference] || formData.ref;;
+        ref = referenceDetails[selectedReference] || formData.ref;
     }
 
     console.log("Reference Type:", reference_type);
@@ -714,8 +880,8 @@ export default function All_patient() {
       ref: ref,
       additional_info: {
         nationality: formData.nationality,
-        language: formData.language
-      }
+        language: formData.language,
+      },
     };
 
     console.log("Updated Patient Data:", updatedPatientData);
@@ -728,7 +894,7 @@ export default function All_patient() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(updatedPatientData),
-        }
+        },
       );
 
       const responseData = await response.json();
@@ -742,8 +908,8 @@ export default function All_patient() {
           prevPatients.map((p) =>
             p.phone === selectedPatient.phone
               ? { ...p, ...responseData.data }
-              : p
-          )
+              : p,
+          ),
         );
 
         setShowEditPatientModal(false);
@@ -765,13 +931,13 @@ export default function All_patient() {
     }
   };
 
-
   const statusBodyTemplate = (formData) => (
     <span
-      className={`badge ${formData.status
-        ? ` status- ${formData.status.toLowerCase()}`
-        : "status-unknown"
-        }`}
+      className={`badge ${
+        formData.status
+          ? ` status- ${formData.status.toLowerCase()}`
+          : "status-unknown"
+      }`}
     >
       {formData.status || "Unknown"}
     </span>
@@ -788,13 +954,13 @@ export default function All_patient() {
       localStorage.setItem("patient", patient.phone);
 
       const add_appointmentResponse = await fetch(
-        `${BASE_URL}/V1/appointment/addAppointment`
+        `${BASE_URL}/V1/appointment/addAppointment`,
       );
 
       if (!add_appointmentResponse.ok) {
         console.error(
           "Add appointment failed",
-          await add_appointmentResponse.text()
+          await add_appointmentResponse.text(),
         );
       }
 
@@ -817,7 +983,7 @@ export default function All_patient() {
     const fdeName = selectedFDE ? selectedFDE.FDEName : "";
     const formattedDate = moment(formData.date).format("YYYY-MM-DD");
     const selectedDoctor = doctors.find(
-      (doc) => doc.doctor_id === formData.doctor_id
+      (doc) => doc.doctor_id === formData.doctor_id,
     );
     const doctorName = selectedDoctor ? selectedDoctor.name : "";
     const payload = {
@@ -844,7 +1010,7 @@ export default function All_patient() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -898,9 +1064,10 @@ export default function All_patient() {
 
   const handlePrint = (patient) => {
     const printWindow = window.open("", "_blank", "width=800,height=900");
-    const vipIcon = (patient.patient_type == 1)
-      ? `<img src="${vipIconImg}" class="vip-logo-img" alt="(VIP)" />`
-      : '';
+    const vipIcon =
+      patient.patient_type == 1
+        ? `<img src="${vipIconImg}" class="vip-logo-img" alt="(VIP)" />`
+        : "";
 
     const location = currentLocation || "";
 
@@ -910,7 +1077,7 @@ export default function All_patient() {
     let regionalWitnessSignature = "<p><b>Witness Signature:</b></p>";
     let regionalTimeDate = "Time & Date :";
 
-    if (location === 'Hyderabad' || location === 'Secunderabad') {
+    if (location === "Hyderabad" || location === "Secunderabad") {
       regionalConsent = `<p>నేను, కింద సంతకం చేసిన రోగి / బాధ్యతగల బంధువు ..........................................................................................................<br> ఇందుమూలంగా హీలింగ్ హ్యాండ్స్ క్లినిక్ వైద్యులు, సర్జన్లు మరియు
 									వైద్యపరమైన వ్యక్తికి ఔట్-పేషెంట్ గా నాకు మంచిది లేదా అవసరమైనట్లు
 									భావిస్తే వైద్య సంరక్షణలో వైద్య పరీక్షలు, పరిశోధనలు మరియు చికిత్స
@@ -926,32 +1093,60 @@ export default function All_patient() {
       regionalPatientSignature = `<p><b>Patients Signature:<br>(రోగి సంతకం)</b></p>`;
       regionalWitnessSignature = `<p><b>Witness Signature:<br>(సాక్షి సంతకం)</b></p>`;
       regionalTimeDate = `Time & Date:<br>(సమయం మరియూ తేదీ)`;
-    }
-    else if (['Bangalore', 'Indiranagar', 'HSR Layout', 'Sahakarnagar', 'Rajajinagar', 'Sarjapura', 'Belagavi', 'Mysore', 'Kalaburagi'].includes(location)) {
+    } else if (
+      [
+        "Bangalore",
+        "Indiranagar",
+        "HSR Layout",
+        "Sahakarnagar",
+        "Rajajinagar",
+        "Sarjapura",
+        "Belagavi",
+        "Mysore",
+        "Kalaburagi",
+      ].includes(location)
+    ) {
       regionalConsent = `<p>ನಾನು, ಕೆಳಗೆ ಸಹಿ ಮಾಡಿದ ರೋಗಿ ಅಥವಾ ಜವಾಬ್ದಾರಿಯುತ ಸಂಬಂಧಿ ..........................................................................................................<br> ಈ ಮೂಲಕ ಹೀಲಿಂಗ್ ಹ್ಯಾಂಡ್ಸ್ ಕ್ಲಿನಿಕ್ ವೈದ್ಯರಿಗೆ ಒಪ್ಪಿಗೆ ಮತ್ತು ಅಧಿಕಾರವನ್ನು ನೀಡಿ , ಶಸ್ತ್ರಚಿಕಿತ್ಸಕರು ಮತ್ತು ವೈದ್ಯಕೀಯ ವ್ಯಕ್ತಿಗಳು ವೈದ್ಯಕೀಯ ಪರೀಕ್ಷೆಗಳು, ತನಿಖೆಗಳು, ವೈದ್ಯಕೀಯ ಚಿಕಿತ್ಸೆಗಳು ಮತ್ತು ಹೊರರೋಗಿ ಕಾರ್ಯವಿಧಾನವನ್ನು ಹೊರರೋಗಿಯಾಗಿ, ಸಲಹೆ ಅಥವಾ ಅಗತ್ಯವೆಂದು ಪರಿಗಣಿಸಿ ವೈದ್ಯಕೀಯ ಆರೈಕೆಯ ಸಮಯದಲ್ಲಿ ನಿರ್ವಹಿಸುತ್ತಾರೆ ಮತ್ತು ನಿರ್ವಹಿಸುತ್ತಾರೆ.<br>ನಾನು ಹೀಲಿಂಗ್ ಹ್ಯಾಂಡ್ಸ್ ಕ್ಲಿನಿಕ್ ನೀತಿಗಳನ್ನು ಅರ್ಥಮಾಡಿಕೊಂಡಿದ್ದೇನೆ ಮತ್ತು ಸ್ವೀಕರಿಸುತ್ತೇನೆ ಮತ್ತು ಅವುಗಳನ್ನು ಪಾಲಿಸಲು ಒಪ್ಪುತ್ತೇನೆ. ಅಪಾಯಿಂಟ್‌ಮೆಂಟ್‌ಗಳು ಮತ್ತು ಫಾಲೋ-ಅಪ್‌ಗಳ ಬಗ್ಗೆ ಅಗತ್ಯವಿದ್ದರೆ ನನ್ನನ್ನು/ಅವನನ್ನು/ಅವಳನ್ನು ದೂರವಾಣಿ ಮೂಲಕ ಸಂಪರ್ಕಿಸಲು ನಾನು ಕ್ಲಿನಿಕ್‌ಗೆ ಒಪ್ಪಿಗೆ ನೀಡುತ್ತೇನೆ.| ಖಾಸಗಿತನವನ್ನು ಕಾಪಾಡಿಕೊಳ್ಳಲಾಗುವುದು ಎಂದು ತಿಳಿದುಕೊಂಡು ಕ್ಲಿನಿಕ್ ಮತ್ತು ವೈದ್ಯರು ನನ್ನ/ಅವನ/ಅವಳ ವೈದ್ಯಕೀಯ ಸಮಸ್ಯೆಗಳ ಬಗ್ಗೆ ಚರ್ಚಿಸಲು ಅವಕಾಶ ಮಾಡಿಕೊಡಿ.<br>ನಾನು ಕೆಳಗೆ ಸಹಿ ಮಾಡಿದ್ದೇನೆ, ನನ್ನ ಸಮಾಲೋಚನೆ/ಚಿಕಿತ್ಸೆಯ ಸಮಯದಲ್ಲಿ ಕಂಡುಬರುವ ಯಾವುದೇ ಗಮನಿಸಿದ/ಚರ್ಚಿತ/ಹೊಸ ಮಾಹಿತಿಯನ್ನು ಭವಿಷ್ಯದಲ್ಲಿ ಅಧ್ಯಯನ ಉದ್ದೇಶಗಳಿಗೆ/ಸಂಶೋಧನೆಗಾಗಿ ಬಳಸಲು ಅನುಮತಿಯನ್ನು ನೀಡುತ್ತೇನೆ</p>`;
       regionalPatientNameLabel = `<p><b>Patients Name (ರೋಗಿಯ ಹೆಸರು):</b></p>`;
       regionalPatientSignature = `<p><b>Patients Signature:<br>(ರೋಗಿಯ ಸಹಿ)</b></p>`;
       regionalWitnessSignature = `<p><b>Witness Signature:<br>(ಸಾಕ್ಷಿದಾರರ ಸಹಿ)</b></p>`;
       regionalTimeDate = `Time & Date:<br>(ಸಮಯ ಮತ್ತು ದಿನಾಂಕ)`;
-
-    }
-    else if (['DP Road', 'Baner', 'Tilak Road', 'Salunkhe-Vihar', 'Pimpri-Chinchwad', 'Chakan', 'Dighi', 'Katraj', 'Navi-Mumbai', 'Kemps-Corner', 'Andheri', 'Thane', 'Kolhapur', 'Latur', 'Nashik', 'Undri', 'Hinjewadi', 'Vashi'].includes(location)) {
+    } else if (
+      [
+        "DP Road",
+        "Baner",
+        "Tilak Road",
+        "Salunkhe-Vihar",
+        "Pimpri-Chinchwad",
+        "Chakan",
+        "Dighi",
+        "Katraj",
+        "Navi-Mumbai",
+        "Kemps-Corner",
+        "Andheri",
+        "Thane",
+        "Kolhapur",
+        "Latur",
+        "Nashik",
+        "Undri",
+        "Hinjewadi",
+        "Vashi",
+      ].includes(location)
+    ) {
       regionalConsent = `<p>मी खाली सही करणारा रुग्ण / रुग्णाचा जबाबदार पालक/ नातेवाईक ..........................................................................................................<br> हीलींग हॅन्डस् क्लिनीक येथिल चिकिसक शल्यविशाराद व वैधकीय कर्मचारी याना बाहय रुग्ण म्हणून सदर रुग्णाच्या हितासाठी / आरोग्यासाठी आवश्यक त्या सर्व नैदानिक तपासण्या परीक्षणे, वैद्यकीय औषधोपचार व लघुशस्त्रक्रिया करण्यास परवानगी देतो. मला हीलींग हॅन्डस क्लिनीकची सर्व धोरणे ज्ञात सून मी त्याचे पालन करण्यास तयार आहे. मी खाली सही करणार अशी ही संमती देतो की मला तपासणीच्या वेळेतील बदल किंवा फेरतपासणीबाबतच्या वेळेतील व इतर अन्य बदल कळविण्याकरीता केलेल्या दूरध्वनी संपर्कबद्दल मला आक्षेप असणार नाही. मी, क्लिनिक व डॉक्टर यांना माझ्या / त्याच्या/ तिच्या वैदयकिय समस्थाची आपआपसांत चर्चा करण्याची परवानगी देत आहे तसेच यांची गोपनियता राखण्यात येईल याची मला माहीती दिलेली आहे. मी खाली सही करणारा/करणारी, माझ्या उपचाराच्या दरम्यान प्राप्त झालेली / सापडलेली कोणत्याही प्रकारच्या माहितीचे उपयोग भविष्यकालीन अभ्यासासाठी / संशोधनासाठी करण्याची परवानगी देत आहे.</p>`;
       regionalPatientNameLabel = `<p><b>Patients Name (रुग्णाचे नाव):</b>:</p>`;
       regionalPatientSignature = `<p><b>Patients Signature:<br>(रुग्णाची सही)</b></p>`;
       regionalWitnessSignature = `<p><b>Witness Signature:<br>(साक्षीदाराची सही)</b></p>`;
       regionalTimeDate = `Time & Date:<br>(वेळ व दिनांक)`;
-    }
-    else {
+    } else {
       regionalConsent = `<p>मैं, निम्नलिखित मरीज या जिम्मेदार रिश्तेदार ..........................................................................................................<br> यहाँ इलाज के दौरान चिकित्सक, सर्जन और चिकित्सा व्यक्तियों को अनुमति और अधिकार देता हूँ कि वे चिकित्सा परीक्षण, जांच, चिकित्सा उपचार और बाह्य दूरस्थ प्रक्रिया कार्यान्वित करें, जो उपयुक्त या आवश्यक माने जाते हैं।<br>मैं हीलिंग हैंड्स क्लिनिक की नीतियों को समझता और स्वीकार करता हूँ और उनका पालन करने के लिए सहमत हूँ। मैं यह भी स्वीकार करता हूँ कि क्लिनिक को मुझसे / उससे फोन पर संपर्क करने की अनुमति है यदि अपॉइंटमेंट और फॉलो-अप के संबंध में जरूरत हो। मैं क्लिनिक और डॉक्टरों को यहाँ बताए गए चिकित्सा मुद्दों के बारे में चर्चा करने की अनुमति देता हूँ, जानते हुए कि गोपनीयता का पालन किया जाएगा।<br>मैं, नीचे लिखे गए, अपनी परमिशन देता हूँ कि मेरी परामर्श / उपचार के दौरान किसी भी देखी गई / चर्चित / नई जानकारी का भविष्य में अध्ययन के उद्देश्यों / अनुसंधान के लिए उपयोग किया जा सकता है।</p>`;
       regionalPatientNameLabel = `<p><b>Patients Name (रोगी का नाम):</b></p>`;
       regionalPatientSignature = `<p><b>Patients Signature:<br>(रोगी के हस्ताक्षर)</b></p>`;
       regionalWitnessSignature = `<p><b>Witness Signature:<br>(गवाह के हस्ताक्षर)</b></p>`;
       regionalTimeDate = `Time & Date:<br>(समय और दिनांक)`;
-
     }
 
-    const patientName = `${patient.prefix ? patient.prefix + '.' : ''}${patient.name || ''}`;
+    const patientName = `${patient.prefix ? patient.prefix + "." : ""}${patient.name || ""}`;
     const today = moment().format("DD-MM-YYYY");
 
     printWindow.document.write(`
@@ -1007,20 +1202,20 @@ export default function All_patient() {
           <table width="100%" border="0">
             <tr>
   <td style="width:50%; vertical-align: top; line-height: 1.3;">
-    <p><b>UID No :-</b>&nbsp;&nbsp;${patient.Uid_no || '-'}</p>
+    <p><b>UID No :-</b>&nbsp;&nbsp;${patient.Uid_no || "-"}</p>
     <p style="margin:0;"><b>Name :-</b>&nbsp;&nbsp;${patientName} ${vipIcon}</p>
-    <p><b>Gender :-</b>&nbsp;&nbsp;${patient.sex || '-'}</p>
-    <p><b>Address :-</b>&nbsp;&nbsp;${patient.address || '-'}</p>
-    <p><b>Contact No :-</b>&nbsp;&nbsp;${patient.phone || '-'}</p>
-    <p><b>Alternate Contact No :-</b>&nbsp;&nbsp;${patient.mobile_2 || '-'}</p>
+    <p><b>Gender :-</b>&nbsp;&nbsp;${patient.sex || "-"}</p>
+    <p><b>Address :-</b>&nbsp;&nbsp;${patient.address || "-"}</p>
+    <p><b>Contact No :-</b>&nbsp;&nbsp;${patient.phone || "-"}</p>
+    <p><b>Alternate Contact No :-</b>&nbsp;&nbsp;${patient.mobile_2 || "-"}</p>
   </td>
   <td style="width:50%; vertical-align: top; line-height: 1.3;">
- <p><b>D.O.B :-</b>&nbsp;&nbsp;${patient.birth_date ? moment(patient.birth_date).format("DD-MM-YYYY") : '-'}</p>
-    <p><b>Age :-</b>&nbsp;&nbsp;${patient.age || '-'}</p>
-    <p><b>Email :-</b>&nbsp;&nbsp;${patient.email || '-'}</p>
-    <p><b>Occupation :-</b>&nbsp;&nbsp;${patient.occupation || '-'}</p>
-    ${patient.companyname ? `<p><b>Company Name :-</b>&nbsp;&nbsp;${patient.companyname}</p>` : ''}
-    ${patient.ref ? `<p><b>Reference :-</b>&nbsp;&nbsp;${patient.ref}</p>` : ''}
+ <p><b>D.O.B :-</b>&nbsp;&nbsp;${patient.birth_date ? moment(patient.birth_date).format("DD-MM-YYYY") : "-"}</p>
+    <p><b>Age :-</b>&nbsp;&nbsp;${patient.age || "-"}</p>
+    <p><b>Email :-</b>&nbsp;&nbsp;${patient.email || "-"}</p>
+    <p><b>Occupation :-</b>&nbsp;&nbsp;${patient.occupation || "-"}</p>
+    ${patient.companyname ? `<p><b>Company Name :-</b>&nbsp;&nbsp;${patient.companyname}</p>` : ""}
+    ${patient.ref ? `<p><b>Reference :-</b>&nbsp;&nbsp;${patient.ref}</p>` : ""}
   </td>
 </tr>
           </table>
@@ -1125,7 +1320,7 @@ export default function All_patient() {
                   display: "flex",
                   padding: 5,
                   marginBottom: "5px",
-                  fontSize: "10px"
+                  fontSize: "10px",
                 }}
               >
                 {["Sakal", "TOI", "MT", "Lokmat", "Pune Mirror"].map(
@@ -1158,11 +1353,15 @@ export default function All_patient() {
                       />
                       {paper}
                     </li>
-                  )
+                  ),
                 )}
               </ul>
               <input
-                style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
+                style={{
+                  border: "2px solid rgb(77, 208, 225)",
+                  fontSize: "12px",
+                  borderRadius: "10px",
+                }}
                 className="form-control"
                 type="text"
                 name="Other_Newspaper"
@@ -1172,7 +1371,7 @@ export default function All_patient() {
                   const val = e.target.value;
                   setReferenceDetails((prev) => ({
                     ...prev,
-                    Other_Newspaper: val
+                    Other_Newspaper: val,
                   }));
                   setFormData((prev) => ({
                     ...prev,
@@ -1188,7 +1387,15 @@ export default function All_patient() {
       case "family_friends":
         return (
           <div className="control-group">
-            <label className="control-label" style={{ marginTop: "20px", fontSize: "12px", fontWeight: "bold", marginBottom: "5px" }}>
+            <label
+              className="control-label"
+              style={{
+                marginTop: "20px",
+                fontSize: "12px",
+                fontWeight: "bold",
+                marginBottom: "5px",
+              }}
+            >
               Family / Friends Details
             </label>
             <div className="controls" style={{ display: "flex", gap: "10px" }}>
@@ -1196,15 +1403,22 @@ export default function All_patient() {
                 className="form-control"
                 type="text"
                 placeholder="Friend Name"
-                style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
+                style={{
+                  border: "2px solid rgb(77, 208, 225)",
+                  fontSize: "12px",
+                  borderRadius: "10px",
+                }}
                 value={referenceDetails.friendname || ""}
                 onChange={(e) => {
                   const name = e.target.value;
-                  setReferenceDetails(prev => ({ ...prev, friendname: name }));
-                  setFormData(prev => ({
+                  setReferenceDetails((prev) => ({
+                    ...prev,
+                    friendname: name,
+                  }));
+                  setFormData((prev) => ({
                     ...prev,
                     ref: `${name},${referenceDetails.friendno || ""}`,
-                    reference_type: "family_friends"
+                    reference_type: "family_friends",
                   }));
                 }}
               />
@@ -1212,15 +1426,19 @@ export default function All_patient() {
                 className="form-control"
                 type="text"
                 placeholder="Friend Number"
-                style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
+                style={{
+                  border: "2px solid rgb(77, 208, 225)",
+                  fontSize: "12px",
+                  borderRadius: "10px",
+                }}
                 value={referenceDetails.friendno || ""}
                 onChange={(e) => {
                   const no = e.target.value;
-                  setReferenceDetails(prev => ({ ...prev, friendno: no }));
-                  setFormData(prev => ({
+                  setReferenceDetails((prev) => ({ ...prev, friendno: no }));
+                  setFormData((prev) => ({
                     ...prev,
                     ref: `${referenceDetails.friendname || ""},${no}`,
-                    reference_type: "family_friends"
+                    reference_type: "family_friends",
                   }));
                 }}
               />
@@ -1276,7 +1494,8 @@ export default function All_patient() {
                   flex: "1",
                   minWidth: "200px",
                   border: "2px solid rgb(77, 208, 225)",
-                  fontSize: "12px", borderRadius: "10px"
+                  fontSize: "12px",
+                  borderRadius: "10px",
                 }}
               />
 
@@ -1350,7 +1569,8 @@ export default function All_patient() {
                   flex: "1",
                   minWidth: "200px",
                   border: "2px solid rgb(77, 208, 225)",
-                  fontSize: "12px", borderRadius: "10px"
+                  fontSize: "12px",
+                  borderRadius: "10px",
                 }}
               />
 
@@ -1375,7 +1595,8 @@ export default function All_patient() {
                   flex: "1",
                   minWidth: "200px",
                   border: "2px solid rgb(77, 208, 225)",
-                  fontSize: "12px", borderRadius: "10px"
+                  fontSize: "12px",
+                  borderRadius: "10px",
                 }}
               />
             </div>
@@ -1413,8 +1634,7 @@ export default function All_patient() {
                   padding: 0,
                   flexDirection: "row",
                   margin: "10px",
-                  fontSize: "10px"
-
+                  fontSize: "10px",
                 }}
               >
                 {[
@@ -1559,7 +1779,7 @@ export default function All_patient() {
                   fontSize: "17px",
                   gap: "20px",
                   whiteSpace: "nowrap",
-                  fontSize: "12px"
+                  fontSize: "12px",
                 }}
               >
                 {[
@@ -1608,31 +1828,66 @@ export default function All_patient() {
       case "dr_ref":
         return (
           <div className="control-group">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
-              <label className="control-label" style={{ marginTop: "15px", fontSize: "12px", fontWeight: "bold" }}>
-                Doctor Reference {isManualEntry ? "(Manual Entry)" : "(Search as you type)"}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "5px",
+              }}
+            >
+              <label
+                className="control-label"
+                style={{
+                  marginTop: "15px",
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                }}
+              >
+                Doctor Reference{" "}
+                {isManualEntry ? "(Manual Entry)" : "(Search as you type)"}
               </label>
 
               {/* Show Add button only if search returns nothing and we aren't already in manual mode */}
-              {!isSearching && referenceDetails.dr_name?.length >= 2 && doctorSearchResults.length === 0 && !isManualEntry && (
-                <button
-                  type="button"
-                  className="btn btn-sm"
-                  style={{ marginTop: "10px", fontSize: "12px", backgroundColor: "#003138ff", color: "white", borderRadius: "5px" }}
-                  onClick={() => setIsManualEntry(true)}
-                >
-                  + Add New Doctor Reference
-                </button>
-              )}
+              {!isSearching &&
+                referenceDetails.dr_name?.length >= 2 &&
+                doctorSearchResults.length === 0 &&
+                !isManualEntry && (
+                  <button
+                    type="button"
+                    className="btn btn-sm"
+                    style={{
+                      marginTop: "10px",
+                      fontSize: "12px",
+                      backgroundColor: "#003138ff",
+                      color: "white",
+                      borderRadius: "5px",
+                    }}
+                    onClick={() => setIsManualEntry(true)}
+                  >
+                    + Add New Doctor Reference
+                  </button>
+                )}
 
               {isManualEntry && (
                 <button
                   type="button"
                   className="btn btn-sm"
-                  style={{ marginTop: "10px", fontSize: "10px", backgroundColor: "#ff8a80", color: "white", borderRadius: "5px" }}
+                  style={{
+                    marginTop: "10px",
+                    fontSize: "10px",
+                    backgroundColor: "#ff8a80",
+                    color: "white",
+                    borderRadius: "5px",
+                  }}
                   onClick={() => {
                     setIsManualEntry(false);
-                    setReferenceDetails({ dr_name: "", dr_contact: "", dr_specialty: "", dr_location: "" });
+                    setReferenceDetails({
+                      dr_name: "",
+                      dr_contact: "",
+                      dr_specialty: "",
+                      dr_location: "",
+                    });
                   }}
                 >
                   Reset / Search Again
@@ -1647,44 +1902,73 @@ export default function All_patient() {
                   type="text"
                   autoComplete="off"
                   placeholder="Type Doctor Name"
-                  style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
+                  style={{
+                    border: "2px solid rgb(77, 208, 225)",
+                    fontSize: "12px",
+                    borderRadius: "10px",
+                  }}
                   value={referenceDetails.dr_name || ""}
                   onChange={(e) => {
                     const val = e.target.value;
-                    setReferenceDetails(prev => ({ ...prev, dr_name: val }));
+                    setReferenceDetails((prev) => ({ ...prev, dr_name: val }));
                     if (!isManualEntry) searchDoctorByName(val);
                   }}
                 />
 
                 {/* Search Results Dropdown */}
-                {!isManualEntry && (isSearching || doctorSearchResults.length > 0) && (
-                  <div style={{
-                    position: "absolute", zIndex: 1000, top: "40px", width: "100%",
-                    backgroundColor: "white", border: "1px solid #ddd", borderRadius: "8px",
-                    maxHeight: "200px", overflowY: "auto", boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
-                  }}>
-                    {isSearching && <div className="p-2 text-muted">Searching...</div>}
-                    {doctorSearchResults.map((doc, idx) => (
-                      <div
-                        key={idx}
-                        style={{ cursor: "pointer", borderBottom: "1px solid #eee", padding: "10px" }}
-                        onClick={() => {
-                          setReferenceDetails({
-                            dr_name: doc.ref_doctor_name,
-                            dr_contact: doc.ref_doctor_phone || doc.reference_doctor_no,
-                            dr_specialty: doc.reference_doctor_speciality,
-                            dr_location: doc.reference_doctor_location
-                          });
-                          setFormData(prev => ({ ...prev, ref: doc.ref_doctor_name }));
-                          setDoctorSearchResults([]);
-                        }}
-                      >
-                        <div className="fw-bold" style={{ fontSize: "12px" }}>{doc.ref_doctor_name}</div>
-                        <div className="text-muted small">{doc.reference_doctor_speciality} | {doc.reference_doctor_location}</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                {!isManualEntry &&
+                  (isSearching || doctorSearchResults.length > 0) && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        zIndex: 1000,
+                        top: "40px",
+                        width: "100%",
+                        backgroundColor: "white",
+                        border: "1px solid #ddd",
+                        borderRadius: "8px",
+                        maxHeight: "200px",
+                        overflowY: "auto",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                      }}
+                    >
+                      {isSearching && (
+                        <div className="p-2 text-muted">Searching...</div>
+                      )}
+                      {doctorSearchResults.map((doc, idx) => (
+                        <div
+                          key={idx}
+                          style={{
+                            cursor: "pointer",
+                            borderBottom: "1px solid #eee",
+                            padding: "10px",
+                          }}
+                          onClick={() => {
+                            setReferenceDetails({
+                              dr_name: doc.ref_doctor_name,
+                              dr_contact:
+                                doc.ref_doctor_phone || doc.reference_doctor_no,
+                              dr_specialty: doc.reference_doctor_speciality,
+                              dr_location: doc.reference_doctor_location,
+                            });
+                            setFormData((prev) => ({
+                              ...prev,
+                              ref: doc.ref_doctor_name,
+                            }));
+                            setDoctorSearchResults([]);
+                          }}
+                        >
+                          <div className="fw-bold" style={{ fontSize: "12px" }}>
+                            {doc.ref_doctor_name}
+                          </div>
+                          <div className="text-muted small">
+                            {doc.reference_doctor_speciality} |{" "}
+                            {doc.reference_doctor_location}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
               </Col>
 
               <Col md={3}>
@@ -1693,13 +1977,19 @@ export default function All_patient() {
                   placeholder="Contact"
                   value={referenceDetails.dr_contact || ""}
                   readOnly={!isManualEntry}
-                  onChange={(e) => isManualEntry && setReferenceDetails(prev => ({ ...prev, dr_contact: e.target.value }))}
+                  onChange={(e) =>
+                    isManualEntry &&
+                    setReferenceDetails((prev) => ({
+                      ...prev,
+                      dr_contact: e.target.value,
+                    }))
+                  }
                   style={{
                     border: "2px solid rgb(77, 208, 225)",
                     fontSize: "12px",
                     borderRadius: "10px",
                     backgroundColor: isManualEntry ? "#fff" : "#e7ebebff",
-                    cursor: isManualEntry ? "text" : "not-allowed"
+                    cursor: isManualEntry ? "text" : "not-allowed",
                   }}
                 />
               </Col>
@@ -1710,13 +2000,19 @@ export default function All_patient() {
                   placeholder="Specialty"
                   value={referenceDetails.dr_specialty || ""}
                   readOnly={!isManualEntry}
-                  onChange={(e) => isManualEntry && setReferenceDetails(prev => ({ ...prev, dr_specialty: e.target.value }))}
+                  onChange={(e) =>
+                    isManualEntry &&
+                    setReferenceDetails((prev) => ({
+                      ...prev,
+                      dr_specialty: e.target.value,
+                    }))
+                  }
                   style={{
                     border: "2px solid rgb(77, 208, 225)",
                     fontSize: "12px",
                     borderRadius: "10px",
                     backgroundColor: isManualEntry ? "#fff" : "#e7ebebff",
-                    cursor: isManualEntry ? "text" : "not-allowed"
+                    cursor: isManualEntry ? "text" : "not-allowed",
                   }}
                 />
               </Col>
@@ -1727,13 +2023,19 @@ export default function All_patient() {
                   placeholder="Location"
                   value={referenceDetails.dr_location || ""}
                   readOnly={!isManualEntry}
-                  onChange={(e) => isManualEntry && setReferenceDetails(prev => ({ ...prev, dr_location: e.target.value }))}
+                  onChange={(e) =>
+                    isManualEntry &&
+                    setReferenceDetails((prev) => ({
+                      ...prev,
+                      dr_location: e.target.value,
+                    }))
+                  }
                   style={{
                     border: "2px solid rgb(77, 208, 225)",
                     fontSize: "12px",
                     borderRadius: "10px",
                     backgroundColor: isManualEntry ? "#fff" : "#e7ebebff",
-                    cursor: isManualEntry ? "text" : "not-allowed"
+                    cursor: isManualEntry ? "text" : "not-allowed",
                   }}
                 />
               </Col>
@@ -1744,12 +2046,36 @@ export default function All_patient() {
       case "hhc_board":
         return (
           <div className="control-group">
-            <label className="control-label" style={{ marginTop: "20px", fontSize: "12px", fontWeight: "bold", marginBottom: "5px" }}>
+            <label
+              className="control-label"
+              style={{
+                marginTop: "20px",
+                fontSize: "12px",
+                fontWeight: "bold",
+                marginBottom: "5px",
+              }}
+            >
               HHC Board Reference
             </label>
             <div className="controls">
-              <ul className="checkbox-grid" style={{ display: "flex", padding: 5, marginBottom: "5px", fontSize: "10px" }}>
-                <li style={{ listStyleType: "none", display: "flex", alignItems: "center", cursor: "pointer", transform: "scale(1.2)" }}>
+              <ul
+                className="checkbox-grid"
+                style={{
+                  display: "flex",
+                  padding: 5,
+                  marginBottom: "5px",
+                  fontSize: "10px",
+                }}
+              >
+                <li
+                  style={{
+                    listStyleType: "none",
+                    display: "flex",
+                    alignItems: "center",
+                    cursor: "pointer",
+                    transform: "scale(1.2)",
+                  }}
+                >
                   <input
                     type="radio"
                     name="hhc_board_radio"
@@ -1808,7 +2134,12 @@ export default function All_patient() {
           <div className="control-group">
             <label
               className="control-label"
-              style={{ marginTop: "20px", fontSize: "12px", fontWeight: "bold", marginBottom: "5px" }}
+              style={{
+                marginTop: "20px",
+                fontSize: "12px",
+                fontWeight: "bold",
+                marginBottom: "5px",
+              }}
             >
               Other Detail
             </label>
@@ -1818,7 +2149,11 @@ export default function All_patient() {
                 type="text"
                 name="other_detail"
                 placeholder="Enter other details"
-                style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
+                style={{
+                  border: "2px solid rgb(77, 208, 225)",
+                  fontSize: "12px",
+                  borderRadius: "10px",
+                }}
                 value={referenceDetails.other || ""}
                 onChange={(e) => {
                   const val = e.target.value;
@@ -1882,7 +2217,8 @@ export default function All_patient() {
                 placeholder="Other"
                 style={{
                   border: "2px solid rgb(77, 208, 225)",
-                  fontSize: "12px", borderRadius: "10px"
+                  fontSize: "12px",
+                  borderRadius: "10px",
                 }}
                 value={referenceDetails.awareness_lecture || ""}
                 onChange={(e) => {
@@ -1911,7 +2247,6 @@ export default function All_patient() {
                 fontSize: "12px",
                 fontWeight: "bold",
                 marginBottom: "5px",
-
               }}
             >
               Self Old Pt
@@ -1919,7 +2254,11 @@ export default function All_patient() {
             <div className="controls">
               <ul
                 className="checkbox-grid"
-                style={{ display: "flex", fontSize: "10px", marginLeft: "10px" }}
+                style={{
+                  display: "flex",
+                  fontSize: "10px",
+                  marginLeft: "10px",
+                }}
               >
                 {["Already Operated", "Already Visited"].map((status) => (
                   <li
@@ -1950,7 +2289,6 @@ export default function All_patient() {
                         }));
                       }}
                       checked={formData.ref === status}
-
                     />
                     {status}
                   </li>
@@ -1982,7 +2320,7 @@ export default function All_patient() {
                 style={{
                   border: "2px solid rgb(77, 208, 225)",
                   fontSize: "12px",
-                  borderRadius: "10px"
+                  borderRadius: "10px",
                 }}
                 value={referenceDetails.hhc_branch || ""}
                 onChange={(e) => {
@@ -2028,42 +2366,44 @@ export default function All_patient() {
                   fontSize: "10px",
                   flexWrap: "wrap",
                   gap: "25px",
-                  fontSize: "12px"
+                  fontSize: "12px",
                 }}
               >
-                {["Mediend", "Hexa", "Practo", "Medibuddy", "Mykare"].map((aggregator) => (
-                  <li
-                    key={aggregator}
-                    style={{
-                      listStyleType: "none",
-                      display: "flex",
-                      alignItems: "center",
-                      cursor: "pointer",
-                      transform: "scale(1.0)",
-                    }}
-                  >
-                    <input
-                      type="radio"
-                      name="aggregators"
-                      value={aggregator}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setReferenceDetails((prev) => ({
-                          ...prev,
-                          aggregators: val,
-                        }));
-                        setFormData((prev) => ({
-                          ...prev,
-                          ref: val,
-                          reference_type: "aggregators",
-                        }));
+                {["Mediend", "Hexa", "Practo", "Medibuddy", "Mykare"].map(
+                  (aggregator) => (
+                    <li
+                      key={aggregator}
+                      style={{
+                        listStyleType: "none",
+                        display: "flex",
+                        alignItems: "center",
+                        cursor: "pointer",
+                        transform: "scale(1.0)",
                       }}
-                      checked={formData.ref === aggregator}
-                      style={{ marginRight: "1px" }}
-                    />
-                    {aggregator}
-                  </li>
-                ))}
+                    >
+                      <input
+                        type="radio"
+                        name="aggregators"
+                        value={aggregator}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setReferenceDetails((prev) => ({
+                            ...prev,
+                            aggregators: val,
+                          }));
+                          setFormData((prev) => ({
+                            ...prev,
+                            ref: val,
+                            reference_type: "aggregators",
+                          }));
+                        }}
+                        checked={formData.ref === aggregator}
+                        style={{ marginRight: "1px" }}
+                      />
+                      {aggregator}
+                    </li>
+                  ),
+                )}
               </ul>
             </div>
           </div>
@@ -2425,7 +2765,9 @@ export default function All_patient() {
             padding: "10px 15px",
           }}
         >
-          <Modal.Title style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}>
+          <Modal.Title
+            style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}
+          >
             <FeatherIcon icon="plus-square" className="me-2" size="16" />
             Add Appointment
           </Modal.Title>
@@ -2435,7 +2777,13 @@ export default function All_patient() {
             <Row>
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                  <Form.Label
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      marginBottom: "4px",
+                    }}
+                  >
                     Appointment Date <span style={{ color: "red" }}>*</span>
                   </Form.Label>
                   <DatePicker
@@ -2454,7 +2802,11 @@ export default function All_patient() {
                     customInput={
                       <Form.Control
                         size="sm"
-                        style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "11px", borderRadius: "10px" }}
+                        style={{
+                          border: "2px solid rgb(77, 208, 225)",
+                          fontSize: "11px",
+                          borderRadius: "10px",
+                        }}
                       />
                     }
                   />
@@ -2463,14 +2815,25 @@ export default function All_patient() {
 
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
-                    Appointment Time <span style={{ color: "red" }}>*</span></Form.Label>
+                  <Form.Label
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      marginBottom: "4px",
+                    }}
+                  >
+                    Appointment Time <span style={{ color: "red" }}>*</span>
+                  </Form.Label>
                   <Form.Select
                     required
                     name="appointmentTime"
                     value={formData.appointmentTime}
                     onChange={handleInputChange}
-                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
+                    style={{
+                      border: "2px solid rgb(77, 208, 225)",
+                      fontSize: "12px",
+                      borderRadius: "10px",
+                    }}
                   >
                     <option value="">Select Time</option>
                     {timeSlots.map((time, index) => (
@@ -2486,13 +2849,25 @@ export default function All_patient() {
             <Row>
               <Col md={6}>
                 <Form.Group controlId="patient_type">
-                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>Patient Type</Form.Label>
+                  <Form.Label
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      marginBottom: "4px",
+                    }}
+                  >
+                    Patient Type
+                  </Form.Label>
                   <Form.Select
                     name="patient_type"
                     value={formData.patient_type}
                     onChange={handleInputChange}
                     required
-                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
+                    style={{
+                      border: "2px solid rgb(77, 208, 225)",
+                      fontSize: "12px",
+                      borderRadius: "10px",
+                    }}
                   >
                     <option value="">Select Patient Type</option>
                     <option value="Follow">Follow </option>
@@ -2503,8 +2878,14 @@ export default function All_patient() {
               </Col>
 
               <Col md={6}>
-                <Form.Group >
-                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                <Form.Group>
+                  <Form.Label
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      marginBottom: "4px",
+                    }}
+                  >
                     Patient Name <span style={{ color: "red" }}>*</span>
                   </Form.Label>
                   <Form.Control
@@ -2515,7 +2896,13 @@ export default function All_patient() {
                     onChange={handleInputChange}
                     readOnly
                     placeholder="Enter Patient Name"
-                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "11px", borderRadius: "10px", cursor: "not-allowed", backgroundColor: "#e7ebebff", }}
+                    style={{
+                      border: "2px solid rgb(77, 208, 225)",
+                      fontSize: "11px",
+                      borderRadius: "10px",
+                      cursor: "not-allowed",
+                      backgroundColor: "#e7ebebff",
+                    }}
                     required
                   />
                 </Form.Group>
@@ -2524,8 +2911,14 @@ export default function All_patient() {
 
             <Row>
               <Col md={6}>
-                <Form.Group >
-                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                <Form.Group>
+                  <Form.Label
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      marginBottom: "4px",
+                    }}
+                  >
                     Contact Number <span style={{ color: "red" }}>*</span>
                   </Form.Label>
                   <Form.Control
@@ -2538,7 +2931,8 @@ export default function All_patient() {
                       border: "2px solid rgb(77, 208, 225)",
                       backgroundColor: "#e7ebebff",
                       cursor: "not-allowed",
-                      fontSize: "11px", borderRadius: "10px"
+                      fontSize: "11px",
+                      borderRadius: "10px",
                     }}
                   />
                 </Form.Group>
@@ -2546,7 +2940,13 @@ export default function All_patient() {
 
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                  <Form.Label
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      marginBottom: "4px",
+                    }}
+                  >
                     Doctor Name <span style={{ color: "red" }}>*</span>
                   </Form.Label>
                   <Form.Select
@@ -2554,7 +2954,11 @@ export default function All_patient() {
                     name="doctor_id"
                     value={formData.doctor_id}
                     onChange={handleInputChange}
-                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
+                    style={{
+                      border: "2px solid rgb(77, 208, 225)",
+                      fontSize: "12px",
+                      borderRadius: "10px",
+                    }}
                     required
                   >
                     <option value="">Select a Doctor</option>
@@ -2570,8 +2974,14 @@ export default function All_patient() {
 
             <Row>
               <Col md={6}>
-                <Form.Group >
-                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                <Form.Group>
+                  <Form.Label
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      marginBottom: "4px",
+                    }}
+                  >
                     FDE Name <span style={{ color: "red" }}>*</span>
                   </Form.Label>
                   <Form.Select
@@ -2579,7 +2989,11 @@ export default function All_patient() {
                     name="FDE_Name"
                     value={formData.FDE_Name}
                     onChange={handleInputChange}
-                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
+                    style={{
+                      border: "2px solid rgb(77, 208, 225)",
+                      fontSize: "12px",
+                      borderRadius: "10px",
+                    }}
                     required
                   >
                     <option value="">Select FDE Name</option>
@@ -2594,7 +3008,15 @@ export default function All_patient() {
 
               <Col md={6}>
                 <Form.Group>
-                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>Note</Form.Label>
+                  <Form.Label
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      marginBottom: "4px",
+                    }}
+                  >
+                    Note
+                  </Form.Label>
                   <Form.Control
                     size="sm"
                     as="textarea"
@@ -2603,18 +3025,26 @@ export default function All_patient() {
                     onChange={handleInputChange}
                     rows={2}
                     placeholder="Enter Note"
-                    style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
+                    style={{
+                      border: "2px solid rgb(77, 208, 225)",
+                      fontSize: "12px",
+                      borderRadius: "10px",
+                    }}
                   />
                 </Form.Group>
               </Col>
             </Row>
 
-            <div className="d-flex justify-content-end pt-2" >
+            <div className="d-flex justify-content-end pt-2">
               <Button
                 size="sm"
                 variant="danger"
                 className="me-2 px-3"
-                style={{ borderRadius: "10px", fontSize: "12px", padding: "10px" }}
+                style={{
+                  borderRadius: "10px",
+                  fontSize: "12px",
+                  padding: "10px",
+                }}
                 onClick={() => setShowAddModal(false)}
               >
                 Cancel
@@ -2627,7 +3057,8 @@ export default function All_patient() {
                   borderRadius: "10px",
                   fontSize: "12px",
                   backgroundColor: "#00bcd4",
-                  borderColor: "#00bcd4", padding: "10px"
+                  borderColor: "#00bcd4",
+                  padding: "10px",
                 }}
                 onClick={() => handleSubmit("save")}
               >
@@ -2653,13 +3084,21 @@ export default function All_patient() {
             padding: "10px 15px",
           }}
         >
-          <Modal.Title style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}>
+          <Modal.Title
+            style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}
+          >
             <FeatherIcon icon="edit" className="me-2" size="16" />
             Edit Patient Detail
           </Modal.Title>
         </Modal.Header>
 
-        <Modal.Body style={{ backgroundColor: "#f8fbfc", fontSize: "13px", padding: "5px" }}>
+        <Modal.Body
+          style={{
+            backgroundColor: "#f8fbfc",
+            fontSize: "13px",
+            padding: "5px",
+          }}
+        >
           <Form>
             <div
               className="p-3 mb-4 bg-white rounded shadow-sm border"
@@ -2679,7 +3118,10 @@ export default function All_patient() {
               <Row>
                 <Col md={3} className="mb-3">
                   <Form.Group>
-                    <Form.Label className="small fw-bold mb-3" style={{ fontSize: "12px" }}>
+                    <Form.Label
+                      className="small fw-bold mb-3"
+                      style={{ fontSize: "12px" }}
+                    >
                       UID No <span className="text-danger">*</span>
                     </Form.Label>
                     <Form.Control
@@ -2691,14 +3133,18 @@ export default function All_patient() {
                         backgroundColor: "#e7ebebff",
                         cursor: "not-allowed",
                         border: "2px solid rgb(77, 208, 225)",
-                        fontSize: "12px", borderRadius: "10px"
+                        fontSize: "12px",
+                        borderRadius: "10px",
                       }}
                     />
                   </Form.Group>
                 </Col>
                 <Col md={3} className="mb-3">
                   <Form.Group>
-                    <Form.Label className="small fw-bold mb-3" style={{ fontSize: "12px" }}>
+                    <Form.Label
+                      className="small fw-bold mb-3"
+                      style={{ fontSize: "12px" }}
+                    >
                       Prefix <span className="text-danger">*</span>
                     </Form.Label>
                     <Form.Select
@@ -2706,7 +3152,11 @@ export default function All_patient() {
                       name="prefix"
                       value={formData.prefix || ""}
                       onChange={handleInputChange}
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
+                      style={{
+                        border: "2px solid rgb(77, 208, 225)",
+                        fontSize: "12px",
+                        borderRadius: "10px",
+                      }}
                     >
                       <option value="">Select Prefix</option>
                       <option value="Mr">Mr</option>
@@ -2718,7 +3168,10 @@ export default function All_patient() {
                 </Col>
                 <Col md={4} className="mb-3">
                   <Form.Group>
-                    <Form.Label className="small fw-bold mb-3" style={{ fontSize: "12px" }}>
+                    <Form.Label
+                      className="small fw-bold mb-3"
+                      style={{ fontSize: "12px" }}
+                    >
                       Patient Name <span className="text-danger">*</span>
                     </Form.Label>
                     <Form.Control
@@ -2728,7 +3181,11 @@ export default function All_patient() {
                       value={formData.name || ""}
                       onChange={handleInputChange}
                       placeholder="Enter Patient Name"
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
+                      style={{
+                        border: "2px solid rgb(77, 208, 225)",
+                        fontSize: "12px",
+                        borderRadius: "10px",
+                      }}
                     />
                   </Form.Group>
                 </Col>
@@ -2750,15 +3207,21 @@ export default function All_patient() {
                       type="checkbox"
                       id="patient_type"
                       name="patient_type"
-                      checked={formData.patient_type === 1 || formData.patient_type === true}
+                      checked={
+                        formData.patient_type === 1 ||
+                        formData.patient_type === true
+                      }
                       onChange={(e) => {
-                        setFormData({ ...formData, patient_type: e.target.checked ? 1 : 0 });
+                        setFormData({
+                          ...formData,
+                          patient_type: e.target.checked ? 1 : 0,
+                        });
                       }}
                       style={{
                         transform: "scale(1.4)",
                         cursor: "pointer",
                         marginBottom: "5px",
-                        fontSize: "12px"
+                        fontSize: "12px",
                       }}
                     />
                   </Form.Group>
@@ -2781,7 +3244,10 @@ export default function All_patient() {
               <Row>
                 <Col md={4} className="mb-15">
                   <Form.Group>
-                    <Form.Label className="small fw-bold mb-3" style={{ fontSize: "12px" }}>
+                    <Form.Label
+                      className="small fw-bold mb-3"
+                      style={{ fontSize: "12px" }}
+                    >
                       Email ID <span className="text-danger">*</span>
                     </Form.Label>
                     <Form.Control
@@ -2791,13 +3257,20 @@ export default function All_patient() {
                       value={formData.email || ""}
                       onChange={handleInputChange}
                       placeholder="Enter Email"
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
+                      style={{
+                        border: "2px solid rgb(77, 208, 225)",
+                        fontSize: "12px",
+                        borderRadius: "10px",
+                      }}
                     />
                   </Form.Group>
                 </Col>
                 <Col md={2} className="mb-3">
                   <Form.Group>
-                    <Form.Label className="small fw-bold mb-3" style={{ fontSize: "12px" }}>
+                    <Form.Label
+                      className="small fw-bold mb-3"
+                      style={{ fontSize: "12px" }}
+                    >
                       Gender <span className="text-danger">*</span>
                     </Form.Label>
                     <Form.Select
@@ -2805,7 +3278,11 @@ export default function All_patient() {
                       name="sex"
                       value={formData.sex || ""}
                       onChange={handleInputChange}
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
+                      style={{
+                        border: "2px solid rgb(77, 208, 225)",
+                        fontSize: "12px",
+                        borderRadius: "10px",
+                      }}
                     >
                       <option value="">Select</option>
                       <option value="Male">Male</option>
@@ -2816,7 +3293,10 @@ export default function All_patient() {
                 </Col>
                 <Col md={3} className="mb-3">
                   <Form.Group>
-                    <Form.Label className="small fw-bold mb-3" style={{ fontSize: "12px" }}>
+                    <Form.Label
+                      className="small fw-bold mb-3"
+                      style={{ fontSize: "12px" }}
+                    >
                       Contact Number <span className="text-danger">*</span>
                     </Form.Label>
                     <Form.Control
@@ -2826,13 +3306,20 @@ export default function All_patient() {
                       value={formData.phone}
                       onChange={handleInputChange}
                       placeholder="Enter Contact Number"
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
+                      style={{
+                        border: "2px solid rgb(77, 208, 225)",
+                        fontSize: "12px",
+                        borderRadius: "10px",
+                      }}
                     />
                   </Form.Group>
                 </Col>
                 <Col md={3} className="mb-3">
                   <Form.Group>
-                    <Form.Label className="small fw-bold mb-3" style={{ fontSize: "12px" }}>
+                    <Form.Label
+                      className="small fw-bold mb-3"
+                      style={{ fontSize: "12px" }}
+                    >
                       Alternate Contact Number
                     </Form.Label>
                     <Form.Control
@@ -2841,13 +3328,20 @@ export default function All_patient() {
                       value={formData.mobile_2}
                       onChange={handleInputChange}
                       placeholder="Enter Secondary Contact No"
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
+                      style={{
+                        border: "2px solid rgb(77, 208, 225)",
+                        fontSize: "12px",
+                        borderRadius: "10px",
+                      }}
                     />
                   </Form.Group>
                 </Col>
                 <Col md={3} className="mb-15">
                   <Form.Group>
-                    <Form.Label className="small fw-bold mb-3" style={{ fontSize: "12px" }}>
+                    <Form.Label
+                      className="small fw-bold mb-3"
+                      style={{ fontSize: "12px" }}
+                    >
                       Nationality <span className="text-danger">*</span>
                     </Form.Label>
                     <Form.Select
@@ -2857,7 +3351,7 @@ export default function All_patient() {
                       style={{
                         border: "2px solid rgb(77, 208, 225)",
                         fontSize: "12px",
-                        borderRadius: "10px"
+                        borderRadius: "10px",
                       }}
                       required
                     >
@@ -2872,7 +3366,10 @@ export default function All_patient() {
                 </Col>
                 <Col md={7} className="mb-3">
                   <Form.Group>
-                    <Form.Label className="small fw-bold mb-3" style={{ fontSize: "12px" }}>
+                    <Form.Label
+                      className="small fw-bold mb-3"
+                      style={{ fontSize: "12px" }}
+                    >
                       Address <span className="text-danger">*</span>
                     </Form.Label>
                     <Form.Control
@@ -2882,13 +3379,20 @@ export default function All_patient() {
                       value={formData.address || ""}
                       onChange={handleInputChange}
                       placeholder="Enter Residential Address"
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
+                      style={{
+                        border: "2px solid rgb(77, 208, 225)",
+                        fontSize: "12px",
+                        borderRadius: "10px",
+                      }}
                     />
                   </Form.Group>
                 </Col>
                 <Col md={2} className="mb-3">
                   <Form.Group>
-                    <Form.Label className="small fw-bold mb-3" style={{ fontSize: "12px" }}>
+                    <Form.Label
+                      className="small fw-bold mb-3"
+                      style={{ fontSize: "12px" }}
+                    >
                       Pincode <span className="text-danger">*</span>
                     </Form.Label>
                     <Form.Control
@@ -2898,7 +3402,11 @@ export default function All_patient() {
                       value={formData.pincode || ""}
                       onChange={handleInputChange}
                       placeholder="Enter Pincode"
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
+                      style={{
+                        border: "2px solid rgb(77, 208, 225)",
+                        fontSize: "12px",
+                        borderRadius: "10px",
+                      }}
                     />
                   </Form.Group>
                 </Col>
@@ -2920,7 +3428,10 @@ export default function All_patient() {
               <Row>
                 <Col md={3} className="mb-15">
                   <Form.Group>
-                    <Form.Label className="small fw-bold mb-3" style={{ fontSize: "12px" }}>
+                    <Form.Label
+                      className="small fw-bold mb-3"
+                      style={{ fontSize: "12px" }}
+                    >
                       Identity Document
                     </Form.Label>
                     <Form.Select
@@ -2929,20 +3440,29 @@ export default function All_patient() {
                         formData.identity ? formData.identity.split(",")[0] : ""
                       }
                       onChange={handleInputChange}
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
+                      style={{
+                        border: "2px solid rgb(77, 208, 225)",
+                        fontSize: "12px",
+                        borderRadius: "10px",
+                      }}
                     >
                       <option value="">Select Document</option>
                       <option value="Aadhaar No">Aadhaar No</option>
                       <option value="Passport No">Passport No</option>
                       <option value="Voter No">Voter No</option>
                       <option value="Pan No">PAN No</option>
-                      <option value="Driving Licence No">Driving Licence No</option>
+                      <option value="Driving Licence No">
+                        Driving Licence No
+                      </option>
                     </Form.Select>
                   </Form.Group>
                 </Col>
                 <Col md={3} className="mb-3">
                   <Form.Group>
-                    <Form.Label className="small fw-bold mb-3" style={{ fontSize: "12px" }}>
+                    <Form.Label
+                      className="small fw-bold mb-3"
+                      style={{ fontSize: "12px" }}
+                    >
                       Identity Number
                     </Form.Label>
                     <Form.Control
@@ -2955,13 +3475,20 @@ export default function All_patient() {
                       }
                       onChange={handleInputChange}
                       placeholder="Enter ID Number"
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
+                      style={{
+                        border: "2px solid rgb(77, 208, 225)",
+                        fontSize: "12px",
+                        borderRadius: "10px",
+                      }}
                     />
                   </Form.Group>
                 </Col>
                 <Col md={3} className="mb-3">
                   <Form.Group>
-                    <Form.Label className="small fw-bold mb-3" style={{ fontSize: "12px" }}>
+                    <Form.Label
+                      className="small fw-bold mb-3"
+                      style={{ fontSize: "12px" }}
+                    >
                       Blood Group <span className="text-danger">*</span>
                     </Form.Label>
                     <Form.Select
@@ -2969,7 +3496,11 @@ export default function All_patient() {
                       name="blood_group"
                       value={formData.blood_group || ""}
                       onChange={handleInputChange}
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
+                      style={{
+                        border: "2px solid rgb(77, 208, 225)",
+                        fontSize: "12px",
+                        borderRadius: "10px",
+                      }}
                     >
                       <option value="">Select Blood Group</option>
                       <option value="A+">A+</option>
@@ -2985,7 +3516,10 @@ export default function All_patient() {
                 </Col>
                 <Col md={3} className="mb-3">
                   <Form.Group>
-                    <Form.Label className="small fw-bold mb-3" style={{ fontSize: "12px" }}>
+                    <Form.Label
+                      className="small fw-bold mb-3"
+                      style={{ fontSize: "12px" }}
+                    >
                       Birth Date <span className="text-danger">*</span>
                     </Form.Label>
                     <DatePicker
@@ -3008,13 +3542,22 @@ export default function All_patient() {
                       showYearDropdown
                       dropdownMode="select"
                       maxDate={new Date()}
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
+                      style={{
+                        border: "2px solid rgb(77, 208, 225)",
+                        fontSize: "12px",
+                        borderRadius: "10px",
+                      }}
                     />
                   </Form.Group>
                 </Col>
                 <Col md={2} className="mb-3">
                   <Form.Group>
-                    <Form.Label className="small fw-bold mb-3" style={{ fontSize: "12px" }}>Age</Form.Label>
+                    <Form.Label
+                      className="small fw-bold mb-3"
+                      style={{ fontSize: "12px" }}
+                    >
+                      Age
+                    </Form.Label>
                     <Form.Control
                       type="text"
                       value={formData.age || ""}
@@ -3023,14 +3566,18 @@ export default function All_patient() {
                         backgroundColor: "#e7ebebff",
                         cursor: "not-allowed",
                         border: "2px solid rgb(77, 208, 225)",
-                        fontSize: "12px", borderRadius: "10px"
+                        fontSize: "12px",
+                        borderRadius: "10px",
                       }}
                     />
                   </Form.Group>
                 </Col>
                 <Col md={3} className="mb-3">
                   <Form.Group>
-                    <Form.Label className="small fw-bold mb-3" style={{ fontSize: "12px" }}>
+                    <Form.Label
+                      className="small fw-bold mb-3"
+                      style={{ fontSize: "12px" }}
+                    >
                       Occupation
                     </Form.Label>
                     <Form.Control
@@ -3039,13 +3586,20 @@ export default function All_patient() {
                       placeholder="Enter Occupation"
                       value={formData.occupation || ""}
                       onChange={handleInputChange}
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
+                      style={{
+                        border: "2px solid rgb(77, 208, 225)",
+                        fontSize: "12px",
+                        borderRadius: "10px",
+                      }}
                     />
                   </Form.Group>
                 </Col>
                 <Col md={4} className="mb-3">
                   <Form.Group>
-                    <Form.Label className="small fw-bold mb-3" style={{ fontSize: "12px" }}>
+                    <Form.Label
+                      className="small fw-bold mb-3"
+                      style={{ fontSize: "12px" }}
+                    >
                       Company Name
                     </Form.Label>
                     <Form.Control
@@ -3054,17 +3608,28 @@ export default function All_patient() {
                       placeholder="Enter Company Name"
                       value={formData.companyname || ""}
                       onChange={handleInputChange}
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
+                      style={{
+                        border: "2px solid rgb(77, 208, 225)",
+                        fontSize: "12px",
+                        borderRadius: "10px",
+                      }}
                     />
                   </Form.Group>
                 </Col>
                 <Col md={3} className="mb-3">
                   <Form.Group>
-                    <Form.Label className="small fw-bold mb-3" style={{ fontSize: "12px" }}>
+                    <Form.Label
+                      className="small fw-bold mb-3"
+                      style={{ fontSize: "12px" }}
+                    >
                       Preferred Language
                     </Form.Label>
                     <Form.Select
-                      style={{ border: "2px solid rgb(77, 208, 225)", fontSize: "12px", borderRadius: "10px" }}
+                      style={{
+                        border: "2px solid rgb(77, 208, 225)",
+                        fontSize: "12px",
+                        borderRadius: "10px",
+                      }}
                       name="language"
                       value={formData.language}
                       onChange={handleInputChange}
@@ -3113,7 +3678,10 @@ export default function All_patient() {
               </h4>
               <Row>
                 <Col md={10} className="mb-15">
-                  <Form.Label className="small fw-bold mb-3" style={{ fontSize: "12px" }}>
+                  <Form.Label
+                    className="small fw-bold mb-3"
+                    style={{ fontSize: "12px" }}
+                  >
                     Add Specific Work Pattern
                   </Form.Label>
                   <div
@@ -3121,7 +3689,6 @@ export default function All_patient() {
                     style={{
                       backgroundColor: "#94e2eeff",
                       border: "2px solid rgb(77, 208, 225)",
-
                     }}
                   >
                     {[
@@ -3149,7 +3716,7 @@ export default function All_patient() {
                           fontWeight: "500",
                           margin: "3px",
                           fontSize: "12px",
-                          marginLeft: "10px"
+                          marginLeft: "10px",
                         }}
                       />
                     ))}
@@ -3157,7 +3724,10 @@ export default function All_patient() {
                 </Col>
 
                 <Col md={12}>
-                  <Form.Label className="small fw-bold mb-1" style={{ fontSize: "12px" }}>
+                  <Form.Label
+                    className="small fw-bold mb-1"
+                    style={{ fontSize: "12px" }}
+                  >
                     Reference
                   </Form.Label>
                   <div className="d-flex gap-3 align-items-start p-3 rounded bg-white">
@@ -3169,7 +3739,8 @@ export default function All_patient() {
                       style={{
                         border: "2px solid rgb(77, 208, 225)",
                         minWidth: "270px",
-                        fontSize: "12px", borderRadius: "10px"
+                        fontSize: "12px",
+                        borderRadius: "10px",
                       }}
                     >
                       <option value="">Choose Reference</option>
@@ -3212,7 +3783,7 @@ export default function All_patient() {
               backgroundColor: "#00bcd4",
               borderColor: "#00bcd4",
               fontSize: "12px",
-              padding: "10px"
+              padding: "10px",
             }}
             onClick={() => handlePrint(selectedPatient)}
           >
@@ -3263,7 +3834,8 @@ export default function All_patient() {
               borderColor: "rgb(77, 208, 225)",
               color: "white",
               borderRadius: "10px",
-              fontSize: "12px", padding: "10px"
+              fontSize: "12px",
+              padding: "10px",
             }}
             onClick={handleSaveChanges}
           >
@@ -3314,17 +3886,12 @@ export default function All_patient() {
                       }}
                       filters={filters1}
                       header={header}
-                      globalFilterFields={[
-                        "Uid_no",
-                        "name",
-                        "phone",
-                      ]}
+                      globalFilterFields={["Uid_no", "name", "phone"]}
                       paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
                       currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
                       responsiveLayout="scroll"
                       className="datatable-compact-style datatable-medium-small"
                     >
-
                       <Column
                         header="Sr No"
                         body={(rowData, { rowIndex }) => rowIndex + 1}

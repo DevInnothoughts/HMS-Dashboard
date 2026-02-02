@@ -27,7 +27,7 @@ import logo from "../../assets/images/3.png";
 // import labLogo from "../../assets/images/1.png";
 // import pharmacyLogo from "../../assets/images/2.png";
 import receiptLogo from "../../assets/images/4.png";
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 const LOCATION = "demo";
 
 const Toast = Swal.mixin({
@@ -52,7 +52,7 @@ export default function ReceiptList() {
   const [first, setFirst] = useState(0);
   const [filters, setFilters] = useState({
     // global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    global: { value: null, matchMode: FilterMatchMode.EQUALS }
+    global: { value: null, matchMode: FilterMatchMode.EQUALS },
   });
 
   useEffect(() => {
@@ -92,7 +92,7 @@ export default function ReceiptList() {
       };
       // console.log(params);
       Object.keys(params).forEach((key) =>
-        url.searchParams.append(key, params[key])
+        url.searchParams.append(key, params[key]),
       );
 
       const response = await fetch(url.toString(), {
@@ -112,7 +112,7 @@ export default function ReceiptList() {
         });
         console.error(
           "❌ Error fetching receipts:",
-          data.message || "Unknown error"
+          data.message || "Unknown error",
         );
         setReceipts([]);
       }
@@ -203,15 +203,18 @@ export default function ReceiptList() {
       reverseButtons: true, // Moves Cancel to left, Confirm to right
       customClass: {
         confirmButton: "swal-button-radius",
-        cancelButton: "swal-button-radius"
-      }
+        cancelButton: "swal-button-radius",
+      },
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const response = await fetch(`${BASE_URL}/V1/appointment/deleteReceipt?receipt_id=${receipt.receipt_id}&location=${currentLocation}`, {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
-          });
+          const response = await fetch(
+            `${BASE_URL}/V1/appointment/deleteReceipt?receipt_id=${receipt.receipt_id}&location=${currentLocation}`,
+            {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+            },
+          );
 
           if (response.ok) {
             Toast.fire({
@@ -235,8 +238,9 @@ export default function ReceiptList() {
     console.log(" printing  RECEPT: ", selectedReceipt);
 
     const clinicAddr = receiptlocations[currentLocation] || {
-      address: "Healing Hands Clinic Pvt Ltd, DP Road, Ground Floor, Millenium Star Extension, Adjacent to Ruby Hall Clinic, Pune 411001",
-      phone: "8888288884 | 020-26164488/99"
+      address:
+        "Healing Hands Clinic Pvt Ltd, DP Road, Ground Floor, Millenium Star Extension, Adjacent to Ruby Hall Clinic, Pune 411001",
+      phone: "8888288884 | 020-26164488/99",
     };
     console.log(clinicAddr);
     const getBase64Image = (imgUrl) => {
@@ -256,17 +260,18 @@ export default function ReceiptList() {
       });
     };
 
-    Promise.all([
-      getBase64Image(logo),
-      getBase64Image(receiptLogo)
-    ]).then(([mainLogo, horizontalReceiptLogo]) => {
-      const receiptWindow = window.open("", "_blank", "width=800,height=850");
-      if (!receiptWindow) return;
+    Promise.all([getBase64Image(logo), getBase64Image(receiptLogo)]).then(
+      ([mainLogo, horizontalReceiptLogo]) => {
+        const receiptWindow = window.open("", "_blank", "width=800,height=850");
+        if (!receiptWindow) return;
 
-      const netAmount = (parseFloat(selectedReceipt.totalamt) - parseFloat(selectedReceipt.discountamt || 0)).toFixed(2);
-      const amountInWords = numberToWords(netAmount);
+        const netAmount = (
+          parseFloat(selectedReceipt.totalamt) -
+          parseFloat(selectedReceipt.discountamt || 0)
+        ).toFixed(2);
+        const amountInWords = numberToWords(netAmount);
 
-      const htmlContent = `
+        const htmlContent = `
       <!DOCTYPE html>
       <html>
       <head>
@@ -418,7 +423,7 @@ export default function ReceiptList() {
               <td class="meta-right">Receipt No : <b>${selectedReceipt.receipt_id}</b></td>
             </tr>
                   <tr>
-              <td class="meta-left">Doctor Name : <b>${selectedReceipt.doctorName || '-'}</b></td>
+              <td class="meta-left">Doctor Name : <b>${selectedReceipt.doctorName || "-"}</b></td>
               <td class="meta-right">Date : <b>${moment(selectedReceipt.receipt_date).format("DD-MM-YYYY")}</b></td>
             </tr>
                 </table>
@@ -431,22 +436,28 @@ export default function ReceiptList() {
                     </tr>
                   </thead>
                   <tbody>
-                    ${selectedReceipt.item_details
-          ? selectedReceipt.item_details.split(",").map((itemGroup, index) => {
-            const parts = itemGroup.split(":");
-            const label = parts[0] ? parts[0].trim() : "-";
-            const amount = parts[1] ? parseFloat(parts[1].trim()) : 0;
+                    ${
+                      selectedReceipt.item_details
+                        ? selectedReceipt.item_details
+                            .split(",")
+                            .map((itemGroup, index) => {
+                              const parts = itemGroup.split(":");
+                              const label = parts[0] ? parts[0].trim() : "-";
+                              const amount = parts[1]
+                                ? parseFloat(parts[1].trim())
+                                : 0;
 
-            return `
+                              return `
                         <tr>
                               <td class="col-sr">${index + 1}</td>
                               <td class="col-desc">${label}</td>
                               <td class="col-amt">${amount.toFixed(2)}</td>
                             </tr>
                           `;
-          }).join("")
-          : `<tr><td class="col-sr">1</td><td class="col-desc">-</td><td class="col-amt">0.00</td></tr>`
-        }
+                            })
+                            .join("")
+                        : `<tr><td class="col-sr">1</td><td class="col-desc">-</td><td class="col-amt">0.00</td></tr>`
+                    }
                   </tbody>
                 </table>
                 <div class="summary-section">
@@ -478,9 +489,10 @@ export default function ReceiptList() {
       </html>
     `;
 
-      receiptWindow.document.write(htmlContent);
-      receiptWindow.document.close();
-    });
+        receiptWindow.document.write(htmlContent);
+        receiptWindow.document.close();
+      },
+    );
   };
 
   const actionBodyTemplate = (receipt) => (

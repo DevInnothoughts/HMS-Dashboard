@@ -27,7 +27,7 @@ const getCountryCode = (patient_phone) => {
   if (!patient_phone) return "Unknown";
 
   const country = countryCodes.find((code) =>
-    patient_phone.startsWith(code.value)
+    patient_phone.startsWith(code.value),
   );
   return country ? country.value : "Unknown";
 };
@@ -77,7 +77,7 @@ const countryNumberLimits = {
   default: { min: 7, max: 15 },
 };
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 export default function Add_appointment() {
   const [loading, setLoading] = useState(false);
@@ -185,7 +185,9 @@ export default function Add_appointment() {
               Swal.fire({
                 icon: "warning",
                 title: "Duplicate Appointment",
-                text: confirmData.message || "This patient already has a pending appointment.",
+                text:
+                  confirmData.message ||
+                  "This patient already has a pending appointment.",
                 confirmButtonColor: "#f39c12",
               });
               setNoPendingAppt(false);
@@ -232,7 +234,7 @@ export default function Add_appointment() {
         setIsExistingPatient(false);
       }
     },
-    [currentLocation]
+    [currentLocation],
   );
 
   const fetchDropdownData = useCallback(async () => {
@@ -331,7 +333,15 @@ export default function Add_appointment() {
 
   const validate = () => {
     const newErrors = {};
-    const requiredFields = ["date", "patientName", "patient_type", "patient_phone", "appointmentTime", "FDE_Name", "doctor_id"];
+    const requiredFields = [
+      "date",
+      "patientName",
+      "patient_type",
+      "patient_phone",
+      "appointmentTime",
+      "FDE_Name",
+      "doctor_id",
+    ];
 
     if (formData.patient_type === "New") {
       requiredFields.push("patient_location");
@@ -383,18 +393,30 @@ export default function Add_appointment() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
-          }
+          },
         );
 
         if (response.ok) {
-          Swal.fire({ icon: "success", title: "Success!", text: "Appointment booked successfully." });
+          Swal.fire({
+            icon: "success",
+            title: "Success!",
+            text: "Appointment booked successfully.",
+          });
           handleReset();
         } else {
           const errorData = await response.json();
-          Swal.fire({ icon: "error", title: "Booking Failed", text: errorData.message });
+          Swal.fire({
+            icon: "error",
+            title: "Booking Failed",
+            text: errorData.message,
+          });
         }
       } catch (error) {
-        Swal.fire({ icon: "error", title: "Error", text: "Network error occurred." });
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Network error occurred.",
+        });
       } finally {
         setLoading(false);
       }
@@ -410,7 +432,13 @@ export default function Add_appointment() {
     endTime.setHours(23, 45, 0);
     startTime.setHours(7, 0, 0);
     while (startTime <= endTime) {
-      slots.push(startTime.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true }));
+      slots.push(
+        startTime.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        }),
+      );
       startTime.setMinutes(startTime.getMinutes() + 15);
     }
     return slots;
@@ -430,7 +458,7 @@ export default function Add_appointment() {
     fontSize: "12px",
     fontWeight: "600",
     marginBottom: "5px",
-    display: "block"
+    display: "block",
   };
 
   const inputStyle = {
@@ -463,29 +491,79 @@ export default function Add_appointment() {
       <Container fluid>
         <Row>
           <Col>
-            <Card style={{ borderRadius: "15px", boxShadow: "0 10px 25px rgba(0,0,0,0.08)", border: "none", background: "white", overflow: "hidden" }}>
+            <Card
+              style={{
+                borderRadius: "15px",
+                boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
+                border: "none",
+                background: "white",
+                overflow: "hidden",
+              }}
+            >
               <div style={cardHeaderStyle}>
-                <FeatherIcon icon="plus-square" size="18" style={{ color: "#1a5b61ff", marginRight: "10px" }} />
-                <h4 style={{ color: "#1a5b61ff", fontWeight: "600", fontSize: "1rem", margin: 0 }}>Add New Appointment Detail</h4>
+                <FeatherIcon
+                  icon="plus-square"
+                  size="18"
+                  style={{ color: "#1a5b61ff", marginRight: "10px" }}
+                />
+                <h4
+                  style={{
+                    color: "#1a5b61ff",
+                    fontWeight: "600",
+                    fontSize: "1rem",
+                    margin: 0,
+                  }}
+                >
+                  Add New Appointment Detail
+                </h4>
               </div>
 
               <Card.Body style={{ padding: "10px" }}>
                 <Form>
                   <Row className="g-3">
                     <Col md={3}>
-                      <Form.Label style={labelStyle}>Contact Number <span className="text-danger">*</span></Form.Label>
-                      <Form.Control required type="tel" style={inputStyle} value={formData.patient_phone} onChange={handlePhoneNumberChange} placeholder="Enter Contact Number" />
-                      {errors.patient_phone && <p className="text-danger" style={{ fontSize: '11px' }}>{errors.patient_phone}</p>}
+                      <Form.Label style={labelStyle}>
+                        Contact Number <span className="text-danger">*</span>
+                      </Form.Label>
+                      <Form.Control
+                        required
+                        type="tel"
+                        style={inputStyle}
+                        value={formData.patient_phone}
+                        onChange={handlePhoneNumberChange}
+                        placeholder="Enter Contact Number"
+                      />
+                      {errors.patient_phone && (
+                        <p className="text-danger" style={{ fontSize: "11px" }}>
+                          {errors.patient_phone}
+                        </p>
+                      )}
                     </Col>
                     <Col md={3}>
-                      <Form.Label style={labelStyle}>Patient Type <span className="text-danger">*</span></Form.Label>
-                      <Form.Select style={inputStyle} name="patient_type" value={formData.patient_type} onChange={handleInputChange}>
+                      <Form.Label style={labelStyle}>
+                        Patient Type <span className="text-danger">*</span>
+                      </Form.Label>
+                      <Form.Select
+                        style={inputStyle}
+                        name="patient_type"
+                        value={formData.patient_type}
+                        onChange={handleInputChange}
+                      >
                         <option value="">Select Type</option>
-                        {(isExistingPatient ? existingPatientTypes : newPatientTypes).map((t) => <option key={t} value={t}>{t}</option>)}
+                        {(isExistingPatient
+                          ? existingPatientTypes
+                          : newPatientTypes
+                        ).map((t) => (
+                          <option key={t} value={t}>
+                            {t}
+                          </option>
+                        ))}
                       </Form.Select>
                     </Col>
                     <Col md={3}>
-                      <Form.Label style={labelStyle}>Appointment Date <span className="text-danger">*</span></Form.Label>
+                      <Form.Label style={labelStyle}>
+                        Appointment Date <span className="text-danger">*</span>
+                      </Form.Label>
                       <Form.Control
                         required
                         type="date"
@@ -497,25 +575,63 @@ export default function Add_appointment() {
                       />
                     </Col>
                     <Col md={3}>
-                      <Form.Label style={labelStyle}>Appointment Time <span className="text-danger">*</span></Form.Label>
-                      <Form.Select required style={inputStyle} name="appointmentTime" value={formData.appointmentTime} onChange={handleInputChange}>
+                      <Form.Label style={labelStyle}>
+                        Appointment Time <span className="text-danger">*</span>
+                      </Form.Label>
+                      <Form.Select
+                        required
+                        style={inputStyle}
+                        name="appointmentTime"
+                        value={formData.appointmentTime}
+                        onChange={handleInputChange}
+                      >
                         <option value="">Select Time</option>
-                        {timeSlots.map((t) => <option key={t} value={t}>{t}</option>)}
+                        {timeSlots.map((t) => (
+                          <option key={t} value={t}>
+                            {t}
+                          </option>
+                        ))}
                       </Form.Select>
                     </Col>
                   </Row>
 
                   <Row className="g-3">
                     <Col md={4}>
-                      <Form.Label style={labelStyle}>Patient Name <span className="text-danger">*</span></Form.Label>
-                      <Form.Control required style={inputStyle} type="text" name="patientName" value={formData.patientName} onChange={handleInputChange} placeholder="Enter Name" />
+                      <Form.Label style={labelStyle}>
+                        Patient Name <span className="text-danger">*</span>
+                      </Form.Label>
+                      <Form.Control
+                        required
+                        style={inputStyle}
+                        type="text"
+                        name="patientName"
+                        value={formData.patientName}
+                        onChange={handleInputChange}
+                        placeholder="Enter Name"
+                      />
                     </Col>
-                    {(formData.patient_type === "OTHER" || formData.treatment) && (
+                    {(formData.patient_type === "OTHER" ||
+                      formData.treatment) && (
                       <Col md={4}>
-                        <Form.Label style={labelStyle}>Treatment <span className="text-danger">*</span></Form.Label>
-                        <Form.Select required style={inputStyle} name="treatment" value={formData.treatment} onChange={handleInputChange}>
+                        <Form.Label style={labelStyle}>
+                          Treatment <span className="text-danger">*</span>
+                        </Form.Label>
+                        <Form.Select
+                          required
+                          style={inputStyle}
+                          name="treatment"
+                          value={formData.treatment}
+                          onChange={handleInputChange}
+                        >
                           <option value="">Select Treatment</option>
-                          {treatmentList?.map((t) => <option key={t.treatment_name} value={t.treatment_name}>{t.treatment_name}</option>)}
+                          {treatmentList?.map((t) => (
+                            <option
+                              key={t.treatment_name}
+                              value={t.treatment_name}
+                            >
+                              {t.treatment_name}
+                            </option>
+                          ))}
                         </Form.Select>
                       </Col>
                     )}
@@ -535,24 +651,51 @@ export default function Add_appointment() {
                           placeholder="Enter Address"
                         />
                         {errors.patient_location && (
-                          <p className="text-danger" style={{ fontSize: "11px" }}>
+                          <p
+                            className="text-danger"
+                            style={{ fontSize: "11px" }}
+                          >
                             {errors.patient_location}
                           </p>
                         )}
                       </Col>
                     )}
                     <Col md={4}>
-                      <Form.Label style={labelStyle}>Doctor Name <span className="text-danger">*</span></Form.Label>
-                      <Form.Select required style={inputStyle} name="doctorName" value={formData.doctorName} onChange={handleInputChange}>
+                      <Form.Label style={labelStyle}>
+                        Doctor Name <span className="text-danger">*</span>
+                      </Form.Label>
+                      <Form.Select
+                        required
+                        style={inputStyle}
+                        name="doctorName"
+                        value={formData.doctorName}
+                        onChange={handleInputChange}
+                      >
                         <option value="">Select Doctor</option>
-                        {doctors?.map((d) => <option key={d.doctor_id} value={d.name}>{d.name}</option>)}
+                        {doctors?.map((d) => (
+                          <option key={d.doctor_id} value={d.name}>
+                            {d.name}
+                          </option>
+                        ))}
                       </Form.Select>
                     </Col>
                     <Col md={4}>
-                      <Form.Label style={labelStyle}>FDE Name <span className="text-danger">*</span></Form.Label>
-                      <Form.Select required style={inputStyle} name="FDE_Name" value={formData.FDE_Name} onChange={handleInputChange}>
+                      <Form.Label style={labelStyle}>
+                        FDE Name <span className="text-danger">*</span>
+                      </Form.Label>
+                      <Form.Select
+                        required
+                        style={inputStyle}
+                        name="FDE_Name"
+                        value={formData.FDE_Name}
+                        onChange={handleInputChange}
+                      >
                         <option value="">Select FDE</option>
-                        {fdeList?.map((f) => <option key={f.FDEID} value={f.FDEID}>{f.FDEName}</option>)}
+                        {fdeList?.map((f) => (
+                          <option key={f.FDEID} value={f.FDEID}>
+                            {f.FDEName}
+                          </option>
+                        ))}
                       </Form.Select>
                     </Col>
 
@@ -590,7 +733,10 @@ export default function Add_appointment() {
                           ))}
                         </Form.Select>
                         {errors.reference && (
-                          <p className="text-danger" style={{ fontSize: "11px" }}>
+                          <p
+                            className="text-danger"
+                            style={{ fontSize: "11px" }}
+                          >
                             {errors.reference}
                           </p>
                         )}
@@ -598,12 +744,41 @@ export default function Add_appointment() {
                     )}
                     <Col md={4} className="mb-10">
                       <Form.Label style={labelStyle}>Note</Form.Label>
-                      <Form.Control as="textarea" rows={2} style={{ ...inputStyle }} name="note" value={formData.note} onChange={handleInputChange} placeholder="Enter additional note..." />
+                      <Form.Control
+                        as="textarea"
+                        rows={2}
+                        style={{ ...inputStyle }}
+                        name="note"
+                        value={formData.note}
+                        onChange={handleInputChange}
+                        placeholder="Enter additional note..."
+                      />
                     </Col>
                   </Row>
-                  <div className="d-flex justify-content-end" >
-                    <Button variant="secondary" className="me-2" style={{ fontSize: "13px", borderRadius: "10px", padding: "10px 20px" }} onClick={handleManualReset}>Reset Form</Button>
-                    <Button variant="primary" style={{ fontSize: "13px", borderRadius: "10px", padding: "10px 25px", border: "none" }} onClick={() => handleSubmit("save")} disabled={loading || !noPendingAppt}>
+                  <div className="d-flex justify-content-end">
+                    <Button
+                      variant="secondary"
+                      className="me-2"
+                      style={{
+                        fontSize: "13px",
+                        borderRadius: "10px",
+                        padding: "10px 20px",
+                      }}
+                      onClick={handleManualReset}
+                    >
+                      Reset Form
+                    </Button>
+                    <Button
+                      variant="primary"
+                      style={{
+                        fontSize: "13px",
+                        borderRadius: "10px",
+                        padding: "10px 25px",
+                        border: "none",
+                      }}
+                      onClick={() => handleSubmit("save")}
+                      disabled={loading || !noPendingAppt}
+                    >
                       {loading ? "Adding..." : "Add Appointment"}
                     </Button>
                   </div>

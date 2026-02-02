@@ -35,10 +35,10 @@ const Toast = Swal.mixin({
   },
 });
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 export default function EnquiryList() {
-  const [currentLocation, setCurrentLocation] = useState("default"); 
+  const [currentLocation, setCurrentLocation] = useState("default");
   const [enquiries, setEnquiries] = useState([]);
   const [filteredEnquiries, setFilteredEnquiries] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -48,7 +48,7 @@ export default function EnquiryList() {
   const [toDate, setToDate] = useState(moment().endOf("day").toDate());
   const [filters1, setFilters1] = useState({
     // global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    global: { value: null, matchMode: FilterMatchMode.EQUALS }
+    global: { value: null, matchMode: FilterMatchMode.EQUALS },
   });
 
   useEffect(() => {
@@ -88,12 +88,12 @@ export default function EnquiryList() {
       const params = {
         from: finalFromDate,
         to: finalToDate,
-        location: currentLocation, 
+        location: currentLocation,
       };
       console.log(params);
 
       Object.keys(params).forEach((key) =>
-        url.searchParams.append(key, params[key])
+        url.searchParams.append(key, params[key]),
       );
 
       const response = await fetch(url.toString(), {
@@ -112,7 +112,7 @@ export default function EnquiryList() {
         });
         console.error(
           "Error fetching enquiries:",
-          data.message || "Unknown error"
+          data.message || "Unknown error",
         );
       }
     } catch (error) {
@@ -177,7 +177,7 @@ export default function EnquiryList() {
               value={rows}
               onChange={(e) => {
                 setRows(parseInt(e.target.value));
-                setFirst(0); 
+                setFirst(0);
               }}
               style={{
                 width: "70px",
