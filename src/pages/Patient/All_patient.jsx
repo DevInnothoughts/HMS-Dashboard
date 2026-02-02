@@ -234,43 +234,43 @@ export default function All_patient() {
 
   const [showManualDoctor, setShowManualDoctor] = useState(false);
   const [manualDoctorData, setManualDoctorData] = useState({
-      name: '',
-      location: '',
-      specialty: ''
+    name: '',
+    location: '',
+    specialty: ''
   });
 
-const searchDoctorByName = async (name) => {
+  const searchDoctorByName = async (name) => {
     if (!name || name.length < 2) {
-        setDoctorSearchResults([]);
-        setShowManualDoctor(false); // Reset manual view on empty search
-        return;
+      setDoctorSearchResults([]);
+      setShowManualDoctor(false); // Reset manual view on empty search
+      return;
     }
 
     setIsSearching(true);
     try {
-        const response = await fetch(
-            `${BASE_URL}/V1/Patients/listDoctor?name=${encodeURIComponent(name)}&location=${currentLocation}`,
-            {
-                method: "GET",
-                headers: { "Content-Type": "application/json" },
-            }
-        );
-
-        if (response.ok) {
-            const data = await response.json();
-            const results = data.data || [];
-            setDoctorSearchResults(results);
-            
-            // If no results found, we don't automatically show the form, 
-            // but the UI will now show the "Add Reference" button.
-            setShowManualDoctor(false); 
+      const response = await fetch(
+        `${BASE_URL}/V1/Patients/listDoctor?name=${encodeURIComponent(name)}&location=${currentLocation}`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
         }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        const results = data.data || [];
+        setDoctorSearchResults(results);
+
+        // If no results found, we don't automatically show the form, 
+        // but the UI will now show the "Add Reference" button.
+        setShowManualDoctor(false);
+      }
     } catch (error) {
-        console.error("Error searching doctor:", error);
+      console.error("Error searching doctor:", error);
     } finally {
-        setIsSearching(false);
+      setIsSearching(false);
     }
-};
+  };
 
 
   const [patientSearchResults, setPatientSearchResults] = useState([]);
@@ -952,7 +952,7 @@ const searchDoctorByName = async (name) => {
     }
 
     const patientName = `${patient.prefix ? patient.prefix + '.' : ''}${patient.name || ''}`;
-    const today = new Date().toISOString().split('T')[0];
+    const today = moment().format("DD-MM-YYYY");
 
     printWindow.document.write(`
     <html>
@@ -1015,7 +1015,7 @@ const searchDoctorByName = async (name) => {
     <p><b>Alternate Contact No :-</b>&nbsp;&nbsp;${patient.mobile_2 || '-'}</p>
   </td>
   <td style="width:50%; vertical-align: top; line-height: 1.3;">
- <p><b>D.O.B :-</b>&nbsp;&nbsp;${patient.birth_date || '-'}</p>
+ <p><b>D.O.B :-</b>&nbsp;&nbsp;${patient.birth_date ? moment(patient.birth_date).format("DD-MM-YYYY") : '-'}</p>
     <p><b>Age :-</b>&nbsp;&nbsp;${patient.age || '-'}</p>
     <p><b>Email :-</b>&nbsp;&nbsp;${patient.email || '-'}</p>
     <p><b>Occupation :-</b>&nbsp;&nbsp;${patient.occupation || '-'}</p>
@@ -1063,7 +1063,6 @@ const searchDoctorByName = async (name) => {
     </html>
   `);
     printWindow.document.close();
-    printWindow.print();
   };
 
   const actionBodyTemplate = (patient) => (
@@ -1613,10 +1612,10 @@ const searchDoctorByName = async (name) => {
               <label className="control-label" style={{ marginTop: "15px", fontSize: "12px", fontWeight: "bold" }}>
                 Doctor Reference {isManualEntry ? "(Manual Entry)" : "(Search as you type)"}
               </label>
-              
+
               {/* Show Add button only if search returns nothing and we aren't already in manual mode */}
               {!isSearching && referenceDetails.dr_name?.length >= 2 && doctorSearchResults.length === 0 && !isManualEntry && (
-                <button 
+                <button
                   type="button"
                   className="btn btn-sm"
                   style={{ marginTop: "10px", fontSize: "12px", backgroundColor: "#003138ff", color: "white", borderRadius: "5px" }}
@@ -1625,9 +1624,9 @@ const searchDoctorByName = async (name) => {
                   + Add New Doctor Reference
                 </button>
               )}
-              
+
               {isManualEntry && (
-                <button 
+                <button
                   type="button"
                   className="btn btn-sm"
                   style={{ marginTop: "10px", fontSize: "10px", backgroundColor: "#ff8a80", color: "white", borderRadius: "5px" }}
@@ -1695,12 +1694,12 @@ const searchDoctorByName = async (name) => {
                   value={referenceDetails.dr_contact || ""}
                   readOnly={!isManualEntry}
                   onChange={(e) => isManualEntry && setReferenceDetails(prev => ({ ...prev, dr_contact: e.target.value }))}
-                  style={{ 
-                    border: "2px solid rgb(77, 208, 225)", 
-                    fontSize: "12px", 
-                    borderRadius: "10px", 
-                    backgroundColor: isManualEntry ? "#fff" : "#e7ebebff", 
-                    cursor: isManualEntry ? "text" : "not-allowed" 
+                  style={{
+                    border: "2px solid rgb(77, 208, 225)",
+                    fontSize: "12px",
+                    borderRadius: "10px",
+                    backgroundColor: isManualEntry ? "#fff" : "#e7ebebff",
+                    cursor: isManualEntry ? "text" : "not-allowed"
                   }}
                 />
               </Col>
@@ -1712,12 +1711,12 @@ const searchDoctorByName = async (name) => {
                   value={referenceDetails.dr_specialty || ""}
                   readOnly={!isManualEntry}
                   onChange={(e) => isManualEntry && setReferenceDetails(prev => ({ ...prev, dr_specialty: e.target.value }))}
-                  style={{ 
-                    border: "2px solid rgb(77, 208, 225)", 
-                    fontSize: "12px", 
-                    borderRadius: "10px", 
-                    backgroundColor: isManualEntry ? "#fff" : "#e7ebebff", 
-                    cursor: isManualEntry ? "text" : "not-allowed" 
+                  style={{
+                    border: "2px solid rgb(77, 208, 225)",
+                    fontSize: "12px",
+                    borderRadius: "10px",
+                    backgroundColor: isManualEntry ? "#fff" : "#e7ebebff",
+                    cursor: isManualEntry ? "text" : "not-allowed"
                   }}
                 />
               </Col>
@@ -1729,12 +1728,12 @@ const searchDoctorByName = async (name) => {
                   value={referenceDetails.dr_location || ""}
                   readOnly={!isManualEntry}
                   onChange={(e) => isManualEntry && setReferenceDetails(prev => ({ ...prev, dr_location: e.target.value }))}
-                  style={{ 
-                    border: "2px solid rgb(77, 208, 225)", 
-                    fontSize: "12px", 
-                    borderRadius: "10px", 
-                    backgroundColor: isManualEntry ? "#fff" : "#e7ebebff", 
-                    cursor: isManualEntry ? "text" : "not-allowed" 
+                  style={{
+                    border: "2px solid rgb(77, 208, 225)",
+                    fontSize: "12px",
+                    borderRadius: "10px",
+                    backgroundColor: isManualEntry ? "#fff" : "#e7ebebff",
+                    cursor: isManualEntry ? "text" : "not-allowed"
                   }}
                 />
               </Col>

@@ -8,12 +8,14 @@ import ErrorPage from "../pages/Utility/Errorpage";
 // import Add_payment from "../pages/Utility/Add_payment";
 // import Event_management from "../pages/Utility/Event_management";
 import Call_logs from "../pages/Utility/Call_logs";
+import IpdPaymentData from "../pages/Utility/IpdPaymentData";
 
 export const UtilityRoutes = (
   <>
     {/* <Route path="/invoice" element={<Invoice />} /> */}
     <Route path="/invoices" element={<InvoiceList />} />
     <Route path="/invoice/add" element={<AddInvoice />} />
+    <Route path="/invoices/payment-data" element={<IpdPaymentData />} />
     {/* <Route path="/payment/add" element={<Add_payment />} /> */}
     {/* <Route path="/faq" element={<Faq />} /> */}
     {/* <Route path="/events" element={<Event_management />} /> */}

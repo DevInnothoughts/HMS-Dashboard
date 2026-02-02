@@ -12,9 +12,9 @@ export default function NavBarA() {
   // const [time, setTime] = useState(new Date().toLocaleTimeString());
   // const today = new Date();
   // const formattedDate = today.toLocaleDateString();
-    const [time, setTime] = useState(new Date().toLocaleTimeString());
-    const today = new Date();
-    const formattedDate = today.toLocaleDateString("en-GB"); 
+  const [time, setTime] = useState(new Date().toLocaleTimeString());
+  const today = new Date();
+  const formattedDate = today.toLocaleDateString("en-GB");
   const location = useLocation();
 
   useEffect(() => {
@@ -25,65 +25,59 @@ export default function NavBarA() {
   }, []);
 
   return (
-    <div className="navbar-container" style={{border: "1.5px solid #00bcd4",}}>
+    <div className="navbar-container" style={{ border: "1.5px solid #00bcd4", }}>
       <Container fluid>
         <div className="navbar-content">
           <nav className="breadcrumb-nav">
             <Link
               to="/reception-dashboard"
-              className={`nav-link ${
-                location.pathname === "/reception-dashboard" ? "active" : ""
-              }`}
+              className={`nav-link ${location.pathname === "/reception-dashboard" ? "active" : ""
+                }`}
             >
               <span className="fa fa-th"></span>
-             Reception Dashboard
+              Reception Dashboard
             </Link>
             <span className="separator">•</span>
             <Link
               to="/appointments"
-              className={`nav-link ${
-                location.pathname === "/appointments" ? "active" : ""
-              }`}
+              className={`nav-link ${location.pathname === "/appointments" ? "active" : ""
+                }`}
             >
               <span className="nav-icon">📋</span>
               Appointment List
             </Link>
-             <span className="separator">•</span>
+            <span className="separator">•</span>
             <Link
               to="/appointment/add"
-              className={`nav-link ${
-                location.pathname === "/appointment/add" ? "active" : ""
-              }`}
+              className={`nav-link ${location.pathname === "/appointment/add" ? "active" : ""
+                }`}
             >
               <span className="nav-icon">➕</span>
               Add Appointment
             </Link>
-              <span className="separator">•</span>
-               <Link
+            <span className="separator">•</span>
+            <Link
               to="/reports/receipts"
-              className={`nav-link ${
-                location.pathname === "/reports/receipts" ? "active" : ""
-              }`}
+              className={`nav-link ${location.pathname === "/reports/receipts" ? "active" : ""
+                }`}
             >
-              <span className="nav-icon">📋</span>
-              Receipt List
+              <span className="nav-icon">🧾</span>
+              OPD Receipt List
             </Link>
-              <span className="separator">•</span>
-              <Link
+            <span className="separator">•</span>
+            <Link
               to="/reports/enquiry"
-              className={`nav-link ${
-                location.pathname === "/reports/enquiry" ? "active" : ""
-              }`}
+              className={`nav-link ${location.pathname === "/reports/enquiry" ? "active" : ""
+                }`}
             >
               <span className="nav-icon">📋</span>
               Enquiry List
             </Link>
-             <span className="separator">•</span>
+            <span className="separator">•</span>
             <Link
               to="/reports/enquiry/add"
-              className={`nav-link ${
-                location.pathname === "/reports/enquiry/add" ? "active" : ""
-              }`}
+              className={`nav-link ${location.pathname === "/reports/enquiry/add" ? "active" : ""
+                }`}
             >
               <span className="nav-icon">➕</span>
               Add Enquiry
@@ -97,7 +91,7 @@ export default function NavBarA() {
         {`
           .navbar-container {
             background: linear-gradient(135deg, #ffffff 0%, #f0f4f8 100%);
-            padding: 10px 25px;
+            padding: 10px 15px;
             border-radius: 16px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             margin: 20px;

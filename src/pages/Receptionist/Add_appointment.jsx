@@ -427,7 +427,7 @@ export default function Add_appointment() {
   };
 
   const labelStyle = {
-    fontSize: "13px",
+    fontSize: "12px",
     fontWeight: "600",
     marginBottom: "5px",
     display: "block"
@@ -471,7 +471,7 @@ export default function Add_appointment() {
 
               <Card.Body style={{ padding: "10px" }}>
                 <Form>
-                  <Row className="g-3 mb-3">
+                  <Row className="g-3">
                     <Col md={3}>
                       <Form.Label style={labelStyle}>Contact Number <span className="text-danger">*</span></Form.Label>
                       <Form.Control required type="tel" style={inputStyle} value={formData.patient_phone} onChange={handlePhoneNumberChange} placeholder="Enter Contact Number" />
@@ -505,7 +505,7 @@ export default function Add_appointment() {
                     </Col>
                   </Row>
 
-                  <Row className="g-3 mb-3">
+                  <Row className="g-3">
                     <Col md={4}>
                       <Form.Label style={labelStyle}>Patient Name <span className="text-danger">*</span></Form.Label>
                       <Form.Control required style={inputStyle} type="text" name="patientName" value={formData.patientName} onChange={handleInputChange} placeholder="Enter Name" />
@@ -519,19 +519,14 @@ export default function Add_appointment() {
                         </Form.Select>
                       </Col>
                     )}
-                    {/* {!(isExistingPatient && (formData.patient_type === "Follow" || formData.patient_type === "Postoperative" || formData.patient_type === "OTHER")) && (
-                      <Col md={formData.patient_type === "OTHER" ? 4 : 8}>
-                        <Form.Label style={labelStyle}>Patient Address <span className="text-danger">*</span></Form.Label>
-                        <Form.Control style={inputStyle} type="text" name="patient_location" value={formData.patient_location} onChange={handleInputChange} placeholder="Enter Address" />
-                      </Col>
-                    )} */}
+
                     {formData.patient_type === "New" && (
-                      <Col md={8}>
+                      <Col md={4}>
                         <Form.Label style={labelStyle}>
                           Patient Address <span className="text-danger">*</span>
                         </Form.Label>
                         <Form.Control
-                        required
+                          required
                           style={inputStyle}
                           type="text"
                           name="patient_location"
@@ -560,26 +555,7 @@ export default function Add_appointment() {
                         {fdeList?.map((f) => <option key={f.FDEID} value={f.FDEID}>{f.FDEName}</option>)}
                       </Form.Select>
                     </Col>
-                    {/* <Col md={4}>
-                      <Form.Label style={labelStyle}>Reference <span className="text-danger">*</span></Form.Label>
-                      <Form.Select style={inputStyle} name="reference" value={formData.reference} onChange={handleInputChange}>
-                        <option value="">Select Reference</option>
-                        {["Family / Friends",
-                            "Referred By Another Doctor",
-                            "Referred By Another Patient",
-                            "Internet",
-                            "Social Media",
-                            "Entertainment Media",
-                            "TV Show",
-                            "Newspaper / Magazine",
-                            "Awareness Lecture",
-                            "HHC Board on building",
-                            "I was treated here in past ",
-                            "Healing Hands Clinic Branch",
-                            "Aggregators",
-                            "Other",].map(r => <option key={r} value={r}>{r}</option>)}
-                      </Form.Select>
-                    </Col> */}
+
                     {formData.patient_type === "New" && (
                       <Col md={4}>
                         <Form.Label style={labelStyle}>

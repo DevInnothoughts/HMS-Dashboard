@@ -444,7 +444,7 @@ export default function Appointment_list() {
       // console.log(selectedDoctor);
       setReceiptForm((prev) => ({
         ...prev,
-        doctorName: selectedDoctor ? selectedDoctor.name : "",        
+        doctorName: selectedDoctor ? selectedDoctor.name : "",
         doctor_id: selectedDoctor ? selectedDoctor.doctor_id : "",
       }));
       // console.log(receiptForm);
@@ -456,7 +456,7 @@ export default function Appointment_list() {
   // useEffect(() => {
   //   console.log("receiptForm changed:", receiptForm);
   // }, [receiptForm]);
-  
+
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -1202,7 +1202,7 @@ export default function Appointment_list() {
             Edit Appointment
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body style={{padding:"10px"}}>
+        <Modal.Body style={{ padding: "10px" }}>
           {selectedAppointment ? (
             <Form>
               <Row>
@@ -1597,7 +1597,7 @@ export default function Appointment_list() {
             style={{ fontSize: "16px", fontWeight: "600", color: "#00838f" }}
           >
             <FeatherIcon icon="credit-card" size={16} className="me-2" />
-            Generate Receipt
+            Generate OPD Receipt
           </Modal.Title>
         </Modal.Header>
 
@@ -1640,7 +1640,7 @@ export default function Appointment_list() {
                       Doctor Name <span className="text-danger">*</span>
                     </Form.Label>
                     <Form.Select
-                    required
+                      required
                       name="doctorName"
                       style={{
                         fontSize: "12px",

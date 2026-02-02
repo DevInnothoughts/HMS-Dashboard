@@ -18,6 +18,7 @@ import {
   Spinner
 } from "react-bootstrap";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
+import NavbarIpdBills from "../../components/NavbarIpdBills";
 import Swal from "sweetalert2";
 import { decodeJwt } from "../../utils/decode-jwt";
 import { Link } from "react-router-dom";
@@ -635,7 +636,7 @@ const InvoiceList = () => {
       return;
     }
     console.log("printing invoice:", invoice);
-    const clinicAddr = clinincLoc[currentLocation] || {
+    const clinicAddr = clinincLoc["DP Road"] || {
       address: "Healing Hands Clinic",
       phone: "8888288884"
     };
@@ -684,7 +685,7 @@ const InvoiceList = () => {
         
         .header-table { 
          width: auto; 
-         margin-bottom: 20px; 
+         margin-bottom: 15px; 
         }
 
         .header-logo { 
@@ -702,13 +703,13 @@ const InvoiceList = () => {
         .header-address { 
           text-align: left; 
           font-weight: bold; 
-          font-size: 12px !important; 
+          font-size: 10px !important; 
           vertical-align: middle;
           line-height: 1.2;
         }
           
         .details-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-        .details-table td { padding: 6px 10px; width: 25%; vertical-align: top; }
+        .details-table td { padding: 5px 10px; width: 25%; vertical-align: top; }
         .details-table td:nth-child(odd) { font-weight: normal; color: #000000; font-weight: bold } 
         .details-table td:nth-child(even) { font-weight: 500; }
   
@@ -721,11 +722,12 @@ const InvoiceList = () => {
         .left_align { text-align: left; width: 25%; }
         .right_align { text-align: right !important; width: 25%; }
         
-        .itemized-table { margin-left: 60px; width: 100%; border-collapse: collapse; table-layout: fixed;}
-        .itemized-table td { width: 50%; display: inline-block; padding: 4px 0; border-bottom: 1px solid #eee; }
+        .itemized-table {table-layout: fixed; width: 100%; border-collapse: collapse; table-layout: fixed; }
+        .itemized-table td { width: 50%; display: inline-block; padding: 4px 0;  }
+        .itemized-table td:nth-child(odd) { text-align: left; width: 65%; }
         .itemized-table td:nth-child(even) { text-align: right; }
   
-        .total-row-container { width: 100%; border: 2px solid #000; margin-top: 10px; border-collapse: collapse; }
+        .total-row-container { width: 100%; border: 2px solid #000; border-collapse: collapse; }
         .total-row-container td { padding: 8px 10px; }
   
         .footer { margin-top: 20px; border-top: 1px solid #4b897e; padding-top: 5px; }
@@ -792,46 +794,60 @@ const InvoiceList = () => {
   
       <table width="100%">
         <tr>
-          <td style="width: 50%; vertical-align: top; border-right: 1px solid #eee;">
+          <td style="width: 50%; vertical-align: top; border-right: 1px solid #666666;">
             <table class="itemized-table">
               <tr>
-                <td style="font-weight:bold; color:#000; text-align:left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                <td style="font-weight:bold; color:#000; text-align:left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-bottom: 1px solid #666666;">
                   Items/Services
                 </td>
-                <td style="font-weight:bold; color:#000; text-align:right; width: 100px; white-space: nowrap;">
+                <td style="font-weight:bold; color:#000; text-align:right; width: 100px; white-space: nowrap; border-bottom: 1px solid #666666;">
                   Amount (INR)
                 </td>
               </tr>
               ${dynamicRows.map(row => `
                 <tr>
-                <td style="font-weight:bold; color:#000; text-align:left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${row.label}</td>
-                <td style="font-weight:bold; color:#000; text-align:right; width: 100px; white-space: nowrap;">${parseFloat(row.value).toFixed(2)}</td>
+                <td style=" color:#000; text-align:left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-bottom: 1px dotted #666666;">${row.label}</td>
+                <td style=" color:#000; text-align:right; width: 100px; white-space: nowrap; border-bottom: 1px dotted #666666;">${parseFloat(row.value).toFixed(2)}</td>
                 </tr>
               `).join("")}
             </table>
           </td>
-          <td style="width: 50%; vertical-align: top; padding-left: 10px;">
-            <table width="100%">
-              <tr><td style="font-weight:bold; color:#000;">Heading</td><td style="font-weight:bold; color:#000; text-align:right;">Amount (INR)</td></tr>
-              <tr>
-                <td style="padding-top:5px;">Total<br> ${invoice.discount > 0 ? '<br>Discount' : ''}</td>
-                <td style="text-align:right; padding-top:5px;">
-                  ${parseFloat(invoice.totalamt).toLocaleString()}.00 <br>
-                  ${invoice.discount > 0 ? '<br>' + parseFloat(invoice.discount).toLocaleString() + '.00' : ''}
-                </td>
-              </tr>
-            </table>
-          </td>
+      <td style="width: 50%; vertical-align: top; padding-left: 10px;">
+  <table width="100%" style="border-collapse: collapse;">
+    <tr>
+      <td style="font-weight:bold; color:#000; border-bottom: 1px solid #666666; padding-bottom: 5px;">Heading</td>
+      <td style="font-weight:bold; color:#000; text-align:right; border-bottom: 1px solid #666666; padding-bottom: 5px;">Amount (INR)</td>
+    </tr>
+    <tr>
+      <td style="padding: 8px 0; border-bottom: 1px dotted #666666;">
+        Total
+      </td>
+      <td style="text-align:right; padding: 8px 0; border-bottom: 1px dotted #666666;">
+        ${parseFloat(invoice.totalamt).toLocaleString()}.00
+      </td>
+    </tr>
+    ${invoice.discount > 0 ? `
+    <tr>
+      <td style="padding: 8px 0; border-bottom: 1px dotted #666666;">
+        Discount
+      </td>
+      <td style="text-align:right; padding: 8px 0; border-bottom: 1px dotted #666666;">
+        ${parseFloat(invoice.discount).toLocaleString()}.00
+      </td>
+    </tr>
+    ` : ''}
+  </table>
+</td>
         </tr>
       </table>
   
-      <p style="padding: 10px 0;">* ${invoice.note || ''}</p>
+      <p style="padding: 5px 0;">* ${invoice.note || ''}</p>
   
       <table class="total-row-container" border="1">
         <tr>
-          <td class="left_align" style="border-right:0;">Total</td>
-          <td class="right_align" style="border-left:0;">${parseFloat(invoice.totalamt).toLocaleString()}.00</td>
-          <td class="left_align" style="border-right:0;">Please Pay</td>
+          <td class="left_align" style="border-right:0;">Total:</td>
+          <td class="right_align" style="border-left:0; font-weight:bold;">${parseFloat(invoice.totalamt).toLocaleString()}.00</td>
+          <td class="left_align" style="border-right:0;">Please Pay:</td>
           <td class="right_align" style="border-left:0; font-weight:bold;">
             ${parseFloat(invoice.payable_amt).toLocaleString()}.00
           </td>
@@ -881,7 +897,6 @@ const InvoiceList = () => {
       printWindow.document.write(printContent);
       printWindow.document.close();
       setTimeout(() => {
-        printWindow.print();
       }, 1000);
     });
   };
@@ -998,6 +1013,7 @@ const InvoiceList = () => {
       }}
     >
       <PageBreadcrumb pagename="IPD Bills" />
+      <NavbarIpdBills />
       <Container fluid>
         <Row>
           <Col>
@@ -1011,13 +1027,13 @@ const InvoiceList = () => {
               }}
             >
               <Card.Body>
-                <div className="d-flex justify-content-end">
+                {/* <div className="d-flex justify-content-end">
                   <Link to="/invoice/add">
                     <Button variant="primary" style={{ padding: "12px", marginBottom: "7px", fontSize: "12px" }}>
                       <FaPlus /> Add New Invoice
                     </Button>
                   </Link>
-                </div>
+                </div> */}
                 {renderHeader()}
                 {loading ? (
                   <div
@@ -1228,7 +1244,7 @@ const InvoiceList = () => {
                         type="text"
                         value={selectedInvoice.invoice_id}
                         readOnly
-                        style={{ borderRadius: "10px", fontSize: "12px", cursor: "not-allowed", backgroundColor: "#f0f0f0", border: "1px solid #4dd0e1" }}
+                        style={{ borderRadius: "10px", fontSize: "12px", cursor: "not-allowed", backgroundColor: "#e7ebebff", border: "1px solid #4dd0e1" }}
                       />
                     </Col>
                     <Col md={4}>
@@ -1240,7 +1256,7 @@ const InvoiceList = () => {
                         type="text"
                         value={selectedInvoice.admission_no}
                         readOnly
-                        style={{ borderRadius: "10px", fontSize: "12px", cursor: "not-allowed", backgroundColor: "#f0f0f0", border: "1px solid #4dd0e1" }}
+                        style={{ borderRadius: "10px", fontSize: "12px", cursor: "not-allowed", backgroundColor: "#e7ebebff", border: "1px solid #4dd0e1" }}
                       />
                     </Col>
                     <Col md={4}>
@@ -1252,7 +1268,7 @@ const InvoiceList = () => {
                         type="text"
                         value={selectedInvoice.patient_name}
                         readOnly
-                        style={{ borderRadius: "10px", fontSize: "12px", cursor: "not-allowed", backgroundColor: "#f0f0f0", border: "1px solid #4dd0e1" }}
+                        style={{ borderRadius: "10px", fontSize: "12px", cursor: "not-allowed", backgroundColor: "#e7ebebff", border: "1px solid #4dd0e1" }}
                       />
                     </Col>
                     <Col md={3}>
@@ -1555,10 +1571,11 @@ const InvoiceList = () => {
                                 />
                               </Col>
                               <Col md={6}>
-                                <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">PDC Amt (₹)</Form.Label>
+                                <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">PDC Amount (₹)</Form.Label>
                                 <Form.Control
                                   size="sm"
                                   type="number"
+                                  onWheel={(e) => e.target.blur()}
                                   style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                                   value={selectedInvoice.pdc || ""}
                                   onChange={(e) => {
@@ -1576,10 +1593,11 @@ const InvoiceList = () => {
                       )}
 
                       {(selectedInvoice.bill_Type === "non_insurance" || selectedInvoice.bill_Type === "charity") && (
-                        <Col md={8}>
+                        <Col md={4}>
                           <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">Discount Amount (₹)</Form.Label>
                           <Form.Control
                             size="sm"
+                            onWheel={(e) => e.target.blur()}
                             type="number"
                             style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                             value={selectedInvoice.discount}
@@ -1594,7 +1612,7 @@ const InvoiceList = () => {
                         </Col>
                       )}
 
-                      <Col md={9}>
+                      <Col md={5}>
                         <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">Note</Form.Label>
                         <Form.Control
                           size="sm"

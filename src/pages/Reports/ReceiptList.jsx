@@ -228,7 +228,7 @@ export default function ReceiptList() {
         }
       }
     });
-  };  
+  };
 
   const handlePrintReceipt = (selectedReceipt) => {
     if (!selectedReceipt) return;
@@ -302,9 +302,9 @@ export default function ReceiptList() {
 
           .header-table { 
             width: 100%; 
-            border-bottom: 1px dotted #ccc; 
+            border-bottom: 1px solid #ccc; 
             padding-bottom: 10px; 
-            margin-bottom: 15px; 
+            margin-bottom: 10px; 
           }
 
           .content-table { 
@@ -334,17 +334,30 @@ export default function ReceiptList() {
             width: 100%; 
             margin-top: 5px; 
             margin-bottom: 20px; 
+            border-collapse: collapse;
           }
           
-          .meta-table td { 
-            padding-bottom: 8px; 
-          }
+          .meta-left {
+            text-align: left;
+            width: 60%;
+            padding-bottom: 8px;
+           }
+
+          .meta-right {
+            text-align: right;
+            width: 40%;
+            padding-bottom: 8px;
+            padding-right: 5px;
+           }
 
           .items-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
-          .items-table th { background: #f4f4f4; padding: 6px; text-align: left; border-bottom: 1px solid #ddd; }
-          .items-table td { padding: 8px; border-bottom: 1px dotted #eee; }
+          .items-table th { background: #eeeeee; padding: 6px; border: 1px solid #bebebe; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+          .items-table td { padding: 8px; border: 1px solid #bebebe; }
+          .col-sr { text-align: center; width: 15%; }
+          .col-desc { text-align: center; width: 50%; } 
+          .col-amt { text-align: center; width: 35%; }
 
-          .summary-section { float: right; width: 220px; text-align: right; margin-top: 10px; line-height: 1.6; }
+          .summary-section { float: right; width: 180px; text-align: right; line-height: 1.6; }
           
           .footer-details { 
             margin-top: 40px; 
@@ -355,14 +368,13 @@ export default function ReceiptList() {
             display: flex;
             justify-content: space-between;
             align-items: flex-end; 
-            margin-top: 5px;
           }
 
           .legal-text { 
-            margin-top: 25px; 
+            margin-top: 15px; 
             font-size: 9.5px; 
             color: #333; 
-            border-top: 1px solid #eee; 
+            border-top: 1px solid #b5b5b5; 
             padding-top: 10px;
             line-height: 1.4;
           }
@@ -402,58 +414,58 @@ export default function ReceiptList() {
               <td class="data-cell">
                 <table class="meta-table">
                   <tr>
-                    <td width="55%">Patient Name : <b style="text-transform: uppercase;">${selectedReceipt.patientName}</b></td>
-                    <td width="45%">Receipt No : <b>${selectedReceipt.receipt_id}</b></td>
-                  </tr>
+              <td class="meta-left">Patient Name : <b style="text-transform: uppercase;">${selectedReceipt.patientName}</b></td>
+              <td class="meta-right">Receipt No : <b>${selectedReceipt.receipt_id}</b></td>
+            </tr>
                   <tr>
-                    <td>Doctor Name : <b>${selectedReceipt.doctorName || '-'}</b></td>
-                    <td>Date : <b>${moment(selectedReceipt.receipt_date).format("DD-MM-YYYY")}</b></td>
-                  </tr>
+              <td class="meta-left">Doctor Name : <b>${selectedReceipt.doctorName || '-'}</b></td>
+              <td class="meta-right">Date : <b>${moment(selectedReceipt.receipt_date).format("DD-MM-YYYY")}</b></td>
+            </tr>
                 </table>
                 <table class="items-table">
                   <thead>
                     <tr>
-                      <th width="15%">Sr. No</th>
-                      <th width="60%">Description</th>
-                      <th width="25%" align="right">Amount (₹)</th>
+                      <th class="col-sr">Sr. No</th>
+                      <th class="col-desc">Description</th>
+                      <th class="col-amt">Amount (₹)</th>
                     </tr>
                   </thead>
                   <tbody>
                     ${selectedReceipt.item_details
-                      ? selectedReceipt.item_details.split(",").map((itemGroup, index) => {
-                        // Split "USG ABDOMEN AND PELVIS: 100" into ["USG ABDOMEN AND PELVIS", "100"]
-                        const parts = itemGroup.split(":");
-                        const label = parts[0] ? parts[0].trim() : "-";
-                        const amount = parts[1] ? parseFloat(parts[1].trim()) : 0;
+          ? selectedReceipt.item_details.split(",").map((itemGroup, index) => {
+            const parts = itemGroup.split(":");
+            const label = parts[0] ? parts[0].trim() : "-";
+            const amount = parts[1] ? parseFloat(parts[1].trim()) : 0;
 
-                        return `
-                            <tr>
-                              <td>${index + 1}</td>
-                              <td>${label}</td>
-                              <td align="right"><b>${amount.toFixed(2)}</b></td>
+            return `
+                        <tr>
+                              <td class="col-sr">${index + 1}</td>
+                              <td class="col-desc">${label}</td>
+                              <td class="col-amt">${amount.toFixed(2)}</td>
                             </tr>
                           `;
-                      }).join("")
-                      : `<tr><td>1</td><td>-</td><td align="right">0.00</td></tr>`
-                    }
+          }).join("")
+          : `<tr><td class="col-sr">1</td><td class="col-desc">-</td><td class="col-amt">0.00</td></tr>`
+        }
                   </tbody>
                 </table>
                 <div class="summary-section">
-                  Sub Total : <b>${parseFloat(selectedReceipt.totalamt).toFixed(2)}</b><br>
-                  Discount (If Any) : <b>${parseFloat(selectedReceipt.discountamt || 0).toFixed(2)}</b><br>
-                  Payable Amount : <b>${netAmount}</b>
+                  Sub Total : <b>₹ ${parseFloat(selectedReceipt.totalamt).toFixed(2)}</b><br>
+                  Discount (If Any) : <b>₹ ${parseFloat(selectedReceipt.discountamt || 0).toFixed(2)}</b><br>
+                  Payable Amount : <b>₹ ${netAmount}</b>
                 </div>
 
                 <div class="footer-details">
-                  In Words : <b>${amountInWords}</b><br>
+                  In Words : <b>${amountInWords}</b><br><br>
+                  Payment Mode : <span style="text-transform: capitalize;"><b>${selectedReceipt.paymentmode}</b></span>
                   <div class="flex-footer">
-                    <div>Payment Mode : <span style="text-transform: capitalize;"><b>${selectedReceipt.paymentmode}</b></span></div>
+                    <div></div>
                     <div class="signature-area">Signature</div>
                   </div>
                 </div>
 
                 <div class="legal-text">
-                  In case you have not received the correct receipt for the paid amount, or for any discrepancies in transaction please write us on info@healinghandsclinic.co.in or whatsapp on +91 8888988882
+                  In case you have not received the correct receipt for the paid amount, or for any discrepancies in transaction please write us on <b>info@healinghandsclinic.co.in</b> or whatsapp on <b>+91 8888988882</b>
                 </div>
               </td>
             </tr>
@@ -680,8 +692,8 @@ export default function ReceiptList() {
         padding: "20px",
       }}
     >
-      <PageBreadcrumb pagename="Receipt List" />
-      <NavBarA pagename="Receipt List" />
+      <PageBreadcrumb pagename="OPD Receipt List" />
+      <NavBarA pagename="OPD Receipt List" />
       <div className="theme-body">
         <Container fluid>
           <Row>

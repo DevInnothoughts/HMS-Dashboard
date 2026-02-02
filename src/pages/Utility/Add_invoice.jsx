@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import NavbarIpdBills from "../../components/NavbarIpdBills";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import { Row, Col, Form, Container, Card, Button } from "react-bootstrap";
 import { decodeJwt } from "../../utils/decode-jwt";
@@ -404,18 +405,19 @@ const AddInvoice = () => {
         background: "linear-gradient(to right, #e0f7fa, #80deea)",
         minHeight: "100vh",
         padding: "10px",
-        paddingLeft: "30px",
+        fontFamily: "'Poppins', Arial, sans-serif",
       }}
     >
-      <Container>
-        <PageBreadcrumb pagename="Add New Invoice Form" />
+      <PageBreadcrumb pagename="Add New Invoice Form" />
+      <NavbarIpdBills />
+      <Container style={{ paddingLeft: "20px", paddingRight: "20px" }}>
         <Form onSubmit={handleSubmit}>
           <Card style={cardStyle}>
             <Card.Body className="p-4">
               <h5 style={sectionTitleStyle}>Patient & Admission Information</h5>
               <Row className="g-3">
-                <Col md={4}>
-                  <Form.Label style={labelStyle}>
+                <Col md={2}>
+                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }}>
                     Invoice No <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
@@ -425,11 +427,11 @@ const AddInvoice = () => {
                     isInvalid={errors.invoice_id}
                     placeholder="Fetching ID..."
                     readOnly
-                    style={{ ...inputStyle, backgroundColor: "#e9ecef", cursor: "not-allowed" }}
+                    style={{ ...inputStyle, backgroundColor: "#e7ebebff", cursor: "not-allowed" }}
                   />
                 </Col>
-                <Col md={4}>
-                  <Form.Label style={labelStyle}>Admission No</Form.Label>
+                <Col md={2}>
+                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }}>Admission No</Form.Label>
                   <Form.Control
                     name="admission_no"
                     style={inputStyle}
@@ -439,8 +441,8 @@ const AddInvoice = () => {
                     placeholder="Enter Admission No"
                   />
                 </Col>
-                <Col md={4}>
-                  <Form.Label style={labelStyle}>
+                <Col md={2}>
+                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }}>
                     Patient ID <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
@@ -453,8 +455,8 @@ const AddInvoice = () => {
                     placeholder="Enter Patient ID"
                   />
                 </Col>
-                <Col md={3}>
-                  <Form.Label style={labelStyle}>
+                <Col md={2}>
+                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }}>
                     Admission Date <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
@@ -467,8 +469,8 @@ const AddInvoice = () => {
                     isInvalid={errors.admission_date}
                   />
                 </Col>
-                <Col md={3}>
-                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
+                <Col md={2}>
+                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }}>
                     Admission Time <span style={{ color: "red" }} className="required">*</span>
                   </Form.Label>
                   <Form.Select
@@ -495,8 +497,8 @@ const AddInvoice = () => {
                     })}
                   </Form.Select>
                 </Col>
-                <Col md={3}>
-                  <Form.Label style={labelStyle}>
+                <Col md={2}>
+                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }}>
                     Discharge Date <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
@@ -510,8 +512,8 @@ const AddInvoice = () => {
                     isInvalid={errors.discharge_date}
                   />
                 </Col>
-                <Col md={3}>
-                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
+                <Col md={2}>
+                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }}>
                     Discharge Time <span style={{ color: "red" }}>*</span>
                   </Form.Label>
                   <Form.Select
@@ -539,7 +541,7 @@ const AddInvoice = () => {
                   </Form.Select>
                 </Col>
                 <Col md={4}>
-                  <Form.Label style={labelStyle}>
+                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }}>
                     Bed Category <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
@@ -552,8 +554,8 @@ const AddInvoice = () => {
                     isInvalid={errors.bed_category}
                   />
                 </Col>
-                <Col md={4}>
-                  <Form.Label style={labelStyle}>
+                <Col md={3}>
+                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }}>
                     Consultant Name <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Select
@@ -570,8 +572,8 @@ const AddInvoice = () => {
                     ))}
                   </Form.Select>
                 </Col>
-                <Col md={4}>
-                  <Form.Label style={labelStyle}>Surgeon Name</Form.Label>
+                <Col md={3}>
+                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }}>Surgeon Name</Form.Label>
                   <Form.Select
                     style={inputStyle}
                     name="surgeonName"
@@ -595,7 +597,7 @@ const AddInvoice = () => {
               {formData.dynamicRows.map((row, index) => (
                 <Row key={index} className="align-items-end mb-3">
                   <Col md={5}>
-                    <Form.Label style={labelStyle}>Label Name</Form.Label>
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }}>Label Name</Form.Label>
                     <Form.Control
                       style={inputStyle}
                       placeholder="e.g. Consultation Fees"
@@ -604,7 +606,7 @@ const AddInvoice = () => {
                     />
                   </Col>
                   <Col md={4}>
-                    <Form.Label style={labelStyle}>Amount (₹)</Form.Label>
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }}>Amount (₹)</Form.Label>
                     <Form.Control
                       style={inputStyle}
                       type="number"
@@ -645,7 +647,7 @@ const AddInvoice = () => {
               <h5 style={sectionTitleStyle}>Payment Details & Config</h5>
               <Row className="g-3">
                 <Col md={2}>
-                  <Form.Label style={labelStyle}>
+                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }}>
                     Bill Type <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Select
@@ -666,21 +668,21 @@ const AddInvoice = () => {
                 {formData.bill_Type === "insurance" && (
                   <>
                     <Col md={3}>
-                      <Form.Label style={labelStyle}>Insurance Co</Form.Label>
+                      <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }}>Insurance Company</Form.Label>
                       <Form.Select style={inputStyle} name="insurance" value={formData.insurance} onChange={handleInputChange}>
                         <option value="">SELECT COMPANY</option>
                         {insurance.map((i) => (<option key={i._id} value={i.companyname}>{i.companyname}</option>))}
                       </Form.Select>
                     </Col>
-                    <Col md={3}>
-                      <Form.Label style={labelStyle}>TPA</Form.Label>
+                    <Col md={5}>
+                      <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }}>TPA</Form.Label>
                       <Form.Select style={inputStyle} name="tpa" value={formData.tpa} onChange={handleInputChange}>
                         <option value="">SELECT</option>
                         {tpa.map((t) => (<option key={t._id} value={t.companyname}>{t.companyname}</option>))}
                       </Form.Select>
                     </Col>
-                    <Col md={4}>
-                      <Form.Label style={labelStyle}>Bill Method</Form.Label>
+                    <Col md={2}>
+                      <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }}>Bill Method</Form.Label>
                       <Form.Select style={inputStyle} name="bill_method" value={formData.bill_method} onChange={handleInputChange}>
                         <option value="">SELECT METHOD</option>
                         <option value="cashless">Cashless</option>
@@ -693,33 +695,33 @@ const AddInvoice = () => {
 
                 {formData.bill_method === "PDC" && (
                   <>
-                    <Col md={4}>
-                      <Form.Label style={labelStyle}>Cheque No</Form.Label>
+                    <Col md={3}>
+                      <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }}>Cheque No</Form.Label>
                       <Form.Control style={inputStyle} placeholder="Enter cheque No" type="number" name="chequeno" value={formData.chequeno} onChange={handleInputChange} />
                     </Col>
-                    <Col md={4}>
-                      <Form.Label style={labelStyle}>PDC Amount (₹)</Form.Label>
-                      <Form.Control style={inputStyle} placeholder="Enter PDC Amount" type="number" name="pdc" value={formData.pdc} onChange={handleInputChange} />
+                    <Col md={3}>
+                      <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }}>PDC Amount (₹)</Form.Label>
+                      <Form.Control style={inputStyle} onWheel={(e) => e.target.blur()} placeholder="Enter PDC Amount" type="number" name="pdc" value={formData.pdc} onChange={handleInputChange} />
                     </Col>
                   </>
                 )}
 
                 {formData.bill_Type === "non_insurance" && (
                   <Col md={4}>
-                    <Form.Label style={labelStyle}>Discount Amount (₹)</Form.Label>
-                    <Form.Control style={inputStyle} placeholder="e.g. 1000" type="number" name="discount" value={formData.discount} onChange={handleInputChange} />
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }}>Discount Amount (₹)</Form.Label>
+                    <Form.Control style={inputStyle} onWheel={(e) => e.target.blur()} placeholder="e.g. 1000" type="number" name="discount" value={formData.discount} onChange={handleInputChange} />
                   </Col>
                 )}
 
                 {formData.bill_Type === "charity" && (
                   <Col md={4}>
-                    <Form.Label style={labelStyle}>Charity Discount (₹)</Form.Label>
-                    <Form.Control style={inputStyle} placeholder="e.g. 100" type="number" name="discountAmount" value={formData.discountAmount} onChange={handleInputChange} />
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }}>Charity Discount (₹)</Form.Label>
+                    <Form.Control style={inputStyle} onWheel={(e) => e.target.blur()} placeholder="e.g. 100" type="number" name="discountAmount" value={formData.discountAmount} onChange={handleInputChange} />
                   </Col>
                 )}
 
-                <Col md={10}>
-                  <Form.Label style={labelStyle}>Note</Form.Label>
+                <Col md={6}>
+                  <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }}>Note</Form.Label>
                   <Form.Control style={inputStyle} as="textarea" placeholder="Enter clinical note..." rows={2} name="note" value={formData.note} onChange={handleInputChange} />
                 </Col>
               </Row>
