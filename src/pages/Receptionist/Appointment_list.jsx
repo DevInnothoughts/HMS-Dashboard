@@ -757,7 +757,7 @@ export default function Appointment_list() {
     const hasHistory = historychk === 3;
     const hasExecution = executivechk === 1;
     const hasConsultation = consultationchk === 2;
-    const hasReceipt = executivechk === 4;
+    const hasReceipt = executivechk === 2;
 
     if (!isConfirmed) return "row-status-unconfirmed";
     if (hasReceipt) return "row-status-receipt";
@@ -782,7 +782,7 @@ export default function Appointment_list() {
     const isHistoryDone = historychk === 3;
     const isExecutionDone = executivechk === 1 || executivechk === 4;
     const isConsultationDone = consultationchk === 2;
-    const isReceiptDone = executivechk === 4;
+    const isReceiptDone = executivechk === 2;
 
     return (
       <div
