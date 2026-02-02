@@ -77,7 +77,7 @@ const countryNumberLimits = {
   default: { min: 7, max: 15 },
 };
 
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 export default function Add_appointment() {
   const [loading, setLoading] = useState(false);

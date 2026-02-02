@@ -42,7 +42,7 @@ const Toast = Swal.mixin({
   },
 });
 
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 const getDynamicRowsFromInvoice = (invoice) => {
   const dynamicRows = [];
@@ -636,7 +636,7 @@ const InvoiceList = () => {
       return;
     }
     console.log("printing invoice:", invoice);
-    const clinicAddr = clinincLoc["DP Road"] || {
+    const clinicAddr = clinincLoc[currentLocation] || {
       address: "Healing Hands Clinic",
       phone: "8888288884"
     };

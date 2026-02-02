@@ -51,7 +51,7 @@ const NoteCell = ({ note }) => {
     </div>
   );
 };
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 const TYPE_LIST = ["New", "Follow", "Post Operative", "Other"];
 const REFERENCE_OPTIONS = [
   "Family / Friends",
