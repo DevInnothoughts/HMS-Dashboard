@@ -794,10 +794,10 @@ export default function Appointment_list() {
       confirm_time,
     } = rowData;
     const isConfirmed = confirm_time != 0;
-    const hasHistory = historychk === 3;
-    const hasExecution = executivechk === 1;
-    const hasConsultation = consultationchk === 2;
-    const hasReceipt = executivechk === 2;
+    const hasHistory = Number(historychk) === 3;
+    const hasExecution = Number(executivechk) === 1;
+    const hasConsultation = Number(consultationchk) === 4;
+    const hasReceipt = Number(executivechk) === 2;
 
     if (!isConfirmed) return "row-status-unconfirmed";
     if (hasReceipt) return "row-status-receipt";
@@ -818,11 +818,12 @@ export default function Appointment_list() {
       patient_phone,
       patient_type,
     } = rowData;
+    // console.log("ROW DATA:", rowData);
     const isConfirmed = confirm_time != 0;
-    const isHistoryDone = historychk === 3;
-    const isExecutionDone = executivechk === 1 || executivechk === 4;
-    const isConsultationDone = consultationchk === 2;
-    const isReceiptDone = executivechk === 2;
+    const isHistoryDone = Number(historychk) === 3;
+    const isExecutionDone = Number(executivechk) === 1;
+    const isConsultationDone = Number(consultationchk) === 4;
+    const isReceiptDone = Number(executivechk) === 2;
 
     return (
       <div
@@ -901,7 +902,7 @@ export default function Appointment_list() {
                   "Execution process completed!",
                 )
               }
-              disabled={!isHistoryDone || isExecutionDone}
+              disabled={!isHistoryDone || isExecutionDone || isReceiptDone}
               icon="list"
             />
 
