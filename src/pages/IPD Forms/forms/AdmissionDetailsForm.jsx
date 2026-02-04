@@ -11,6 +11,7 @@ import Swal from "sweetalert2";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
 
+
 // admissionJSON = {
 //     "admission_details": {
 //       "admission_date": null,
