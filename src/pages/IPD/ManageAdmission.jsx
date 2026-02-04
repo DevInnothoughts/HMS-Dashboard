@@ -147,7 +147,7 @@ export default function ManageAdmission() {
       p.uhid.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  const handleConfirm = (uhid) => {
+  const handleConfirm = (contact, uhid) => {
     Swal.fire({
       title: "Confirm Admission?",
       text: "This will move the patient to the surgery list.",
@@ -166,7 +166,7 @@ export default function ManageAdmission() {
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ uhid, location: currentLocation }),
+              body: JSON.stringify({ contact, uhid, location: currentLocation }),
             },
           );
 
@@ -359,7 +359,7 @@ export default function ManageAdmission() {
                                         variant="outline-success"
                                         size="sm"
                                         onClick={() =>
-                                          handleConfirm(patient.uhid)
+                                          handleConfirm(patient.contact, patient.uhid)
                                         }
                                         style={{
                                           borderRadius: "6px",

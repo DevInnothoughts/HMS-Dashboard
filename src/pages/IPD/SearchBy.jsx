@@ -45,61 +45,49 @@ export default function SearchBy() {
     }
   }, []);
 
+  const [showSelectionModal, setShowSelectionModal] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+
   const handleSearch = async (e) => {
-    // Added async
-    e.preventDefault();
-    if (!uhid) {
-      Swal.fire("Error", "Please enter a UHID number", "error");
-      return;
-    }
+      e.preventDefault();
+      if (!uhid) return;
 
-    try {
-      const response = await fetch(
-        // Added await
-        `${BASE_URL}/V1/ipd/admin/checkPatientOPD?location=${currentLocation}&uidNo=${uhid}`,
-        {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        },
-      );
+      try {
+          const response = await fetch(`${BASE_URL}/V1/ipd/admin/checkPatientOPD?location=${currentLocation}&uidNo=${uhid}`);
+          if (response.ok) {
+              const data = await response.json();
 
-      if (response.ok) {
-        const data = await response.json(); // Added await
-        console.log("Patients API Response:", data[0]);
-
-        if (data[0]) {
-          const patData = {
-            uhid: uhid,
-            name: data[0].name,
-            contact: data[0].phone,
-            HMSId: data[0].patient_id,
-
-            global_id: data[0].global_id,
-            address: data[0].address,
-            age: data[0].age,
-            gender: data[0].sex,
-          };
-          setPatientData(patData);
-        } else {
-          // Fallback to Mock Data only if API succeeds but returns no patient
-          const mockData = {
-            uhid: uhid,
-            name: "John Doe",
-            contact: "9876543210",
-            address: "123, Street Name, Pune",
-            age: "35",
-            gender: "Male",
-          };
-          setPatientData(mockData);
-        }
-      } else {
-        console.error("Failed to fetch patient:", response.statusText);
-        Swal.fire("Error", "Failed to fetch patient data", "error");
+              if (data && data.length > 1) {
+                  // Scenario: Same UID or same Phone found multiple times
+                  setSearchResults(data);
+                  setShowSelectionModal(true); // Open selection UI
+              } else if (data && data.length === 1) {
+                  // Scenario: Perfect single match
+                  selectPatient(data[0]);
+              } else {
+                  Swal.fire("Not Found", "No matches found.", "info");
+              }
+          }
+      } catch (error) {
+          console.error("Search error:", error);
       }
-    } catch (error) {
-      console.error("Error fetching data:", error.message);
-      Swal.fire("Error", "Server connection failed", "error");
-    }
+  };
+
+  // Helper to map the selected row to your state
+  const selectPatient = (patient) => {
+      const patData = {
+          uhid: patient.Uid_no,
+          name: patient.name,
+          contact: patient.phone,
+          HMSId: patient.patient_id,
+          global_id: patient.global_id,
+          address: patient.address,
+          age: patient.age,
+          gender: patient.sex,
+      };
+      setPatientData(patData);
+      setShowSelectionModal(false);
+      Toast.fire({ icon: 'success', title: 'Patient Selected' });
   };
 
   const openEditModal = () => {
@@ -146,21 +134,8 @@ export default function SearchBy() {
       console.log(payload);
 
       const result = await response.json();
-
+      console.log(result);
       if (response.ok) {
-        // 3. Logic for Local History (Existing functionality)
-        // const today = new Date();
-        // const d = String(today.getDate()).padStart(2, '0');
-        // const m = String(today.getMonth() + 1).padStart(2, '0');
-        // const y = today.getFullYear();
-        // const formattedDate = `${d}-${m}-${y}`;
-
-        // const verifiedPatient = { ...patientData, verifiedDate: formattedDate };
-        // const existing = JSON.parse(localStorage.getItem("verifiedPatients") || "[]");
-        // const updatedHistory = [...existing, verifiedPatient];
-
-        // localStorage.setItem("verifiedPatients", JSON.stringify(updatedHistory));
-        // setVerifiedHistory(updatedHistory);
 
         // 4. Success Message and Navigation
         Swal.fire({
@@ -175,7 +150,7 @@ export default function SearchBy() {
       } else {
         Swal.fire(
           "Error",
-          result.message || "Failed to verify patient on server",
+          result.message || result.data || "Failed to verify patient on server",
           "error",
         );
       }
@@ -738,6 +713,49 @@ export default function SearchBy() {
                 </Button>
               </Modal.Footer>
             </Form>
+          </Modal>
+          <Modal show={showSelectionModal} onHide={() => setShowSelectionModal(false)} centered size="lg">
+              <Modal.Header closeButton style={{ backgroundColor: "#e0f7fa" }}>
+                  <Modal.Title style={{ fontSize: "16px", color: "#00838f" }}>
+                      Multiple Records Found for "{uhid}"
+                  </Modal.Title>
+              </Modal.Header>
+              <Modal.Body>
+                  <p className="small text-muted">Please select the correct patient record from the list below:</p>
+                  <div className="table-responsive">
+                      <table className="table table-hover border">
+                          <thead className="table-light">
+                              <tr style={{ fontSize: "12px" }}>
+                                  <th>UID</th>
+                                  <th>Name</th>
+                                  <th>Phone</th>
+                                  <th>Address</th>
+                                  <th>Action</th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                              {searchResults.map((p, index) => (
+                                  <tr key={index} style={{ fontSize: "12px" }}>
+                                      <td>{p.Uid_no}</td>
+                                      <td><strong>{p.name}</strong></td>
+                                      <td>{p.phone}</td>
+                                      <td className="text-truncate" style={{ maxWidth: "200px" }}>{p.address}</td>
+                                      <td>
+                                          <Button 
+                                              size="sm" 
+                                              variant="info" 
+                                              style={{ fontSize: "10px", color: "white" }}
+                                              onClick={() => selectPatient(p)}
+                                          >
+                                              Select
+                                          </Button>
+                                      </td>
+                                  </tr>
+                              ))}
+                          </tbody>
+                      </table>
+                  </div>
+              </Modal.Body>
           </Modal>
         </Container>
       </div>
