@@ -927,7 +927,7 @@ export default function Appointment_list() {
                 setSelectedAppointment(rowData);
                 setShowReceiptModal(true);
               }}
-              disabled={!isConsultationDone || isReceiptDone}
+              disabled={!isConsultationDone}
               icon="credit-card"
             />
           </>
