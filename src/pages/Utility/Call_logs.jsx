@@ -796,26 +796,6 @@ export default function Call_logs() {
     }
   };
 
-  const fetchEnquiries = async () => {
-    try {
-      const response = await fetch(`${BASE_URL}/V1/enquiry/listEnquiry`);
-      if (response.ok) {
-        const data = await response.json();
-        setEnquiries(data.data || []);
-      } else {
-        console.error("Failed to fetch enquiries");
-        toast.error("Failed to load enquiries.");
-      }
-    } catch (error) {
-      console.error("Error fetching enquiries:", error);
-      toast.error("Error fetching enquiries.");
-    }
-  };
-
-  useEffect(() => {
-    fetchEnquiries();
-  }, []);
-
   return (
     <>
       <div

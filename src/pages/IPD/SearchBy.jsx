@@ -237,12 +237,12 @@ export default function SearchBy() {
                         className="fw-bold uppercase mb-1"
                         style={{ fontSize: "0.8rem", color: "#1a5b61ff" }}
                       >
-                        Enter UHID No.
+                        Enter UHID No. / Patient Mobile No.
                       </Form.Label>
                       <InputGroup size="sm">
                         <Form.Control
                           type="text"
-                          placeholder="Enter UHID No"
+                          placeholder="Enter UHID No / Patient Mobile No"
                           value={uhid}
                           onChange={(e) => setUhid(e.target.value)}
                           style={{
@@ -419,7 +419,7 @@ export default function SearchBy() {
           )}
 
           {/* Verification History Table */}
-          <Row>
+          {/* <Row>
             <Col md={12}>
               <Card
                 style={{
@@ -591,7 +591,7 @@ export default function SearchBy() {
                 </Card.Body>
               </Card>
             </Col>
-          </Row>
+          </Row> */}
 
           {/* Edit Modal */}
           <Modal
