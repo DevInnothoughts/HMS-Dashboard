@@ -189,6 +189,7 @@ export default function Call_logs() {
   };
 
   const fetchCallLogsData = async () => {
+    console.log(currentLocation);
     setLoading(true);
     try {
       const url = new URL(`${BASE_URL}/V1/ivrdata/listIvrdata`);
