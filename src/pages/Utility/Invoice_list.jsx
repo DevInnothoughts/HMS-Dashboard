@@ -49,9 +49,10 @@ const getDynamicRowsFromInvoice = (invoice) => {
   let titleCalculatedTotal = 0;
 
   if (!invoice) return { dynamicRows: [], Sub_Total: "0.00" };
+  console.log(invoice.package);
 
-  if (invoice.title && typeof invoice.title === "string") {
-    invoice.title.split(",").forEach((entry) => {
+  if (invoice.package && typeof invoice.package === "string") {
+    invoice.package.split(",").forEach((entry) => {
       const parts = entry.split(":");
       if (parts.length === 2) {
         const label = parts[0].trim();
@@ -67,6 +68,8 @@ const getDynamicRowsFromInvoice = (invoice) => {
         }
       }
     });
+
+    console.log("Dynamic rows:", dynamicRows);
   }
 
   const itemMap = {
@@ -561,7 +564,7 @@ const InvoiceList = () => {
     const payload = {
       ...selectedInvoice,
       ...modalInvoiceData,
-      title: titleString,
+      package: titleString,
       location: currentLocation,
       totalamt: modalInvoiceData.Sub_Total,
       payable_amt: modalInvoiceData.payableAmount,
@@ -590,7 +593,7 @@ const InvoiceList = () => {
         setInvoices((prev) =>
           prev.map((inv) =>
             inv.invoice_id === selectedInvoice.invoice_id
-              ? { ...inv, title: titleString }
+              ? { ...inv, package: titleString }
               : inv,
           ),
         );
