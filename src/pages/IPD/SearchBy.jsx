@@ -16,7 +16,7 @@ import Swal from "sweetalert2";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import { decodeJwt } from "../../utils/decode-jwt";
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 export default function SearchBy() {
   const navigate = useNavigate();
@@ -49,45 +49,47 @@ export default function SearchBy() {
   const [searchResults, setSearchResults] = useState([]);
 
   const handleSearch = async (e) => {
-      e.preventDefault();
-      if (!uhid) return;
+    e.preventDefault();
+    if (!uhid) return;
 
-      try {
-          const response = await fetch(`${BASE_URL}/V1/ipd/admin/checkPatientOPD?location=${currentLocation}&uidNo=${uhid}`);
-          if (response.ok) {
-              const data = await response.json();
+    try {
+      const response = await fetch(
+        `${BASE_URL}/V1/ipd/admin/checkPatientOPD?location=${currentLocation}&uidNo=${uhid}`,
+      );
+      if (response.ok) {
+        const data = await response.json();
 
-              if (data && data.length > 1) {
-                  // Scenario: Same UID or same Phone found multiple times
-                  setSearchResults(data);
-                  setShowSelectionModal(true); // Open selection UI
-              } else if (data && data.length === 1) {
-                  // Scenario: Perfect single match
-                  selectPatient(data[0]);
-              } else {
-                  Swal.fire("Not Found", "No matches found.", "info");
-              }
-          }
-      } catch (error) {
-          console.error("Search error:", error);
+        if (data && data.length > 1) {
+          // Scenario: Same UID or same Phone found multiple times
+          setSearchResults(data);
+          setShowSelectionModal(true); // Open selection UI
+        } else if (data && data.length === 1) {
+          // Scenario: Perfect single match
+          selectPatient(data[0]);
+        } else {
+          Swal.fire("Not Found", "No matches found.", "info");
+        }
       }
+    } catch (error) {
+      console.error("Search error:", error);
+    }
   };
 
   // Helper to map the selected row to your state
   const selectPatient = (patient) => {
-      const patData = {
-          uhid: patient.Uid_no,
-          name: patient.name,
-          contact: patient.phone,
-          HMSId: patient.patient_id,
-          global_id: patient.global_id,
-          address: patient.address,
-          age: patient.age,
-          gender: patient.sex,
-      };
-      setPatientData(patData);
-      setShowSelectionModal(false);
-      Toast.fire({ icon: 'success', title: 'Patient Selected' });
+    const patData = {
+      uhid: patient.Uid_no,
+      name: patient.name,
+      contact: patient.phone,
+      HMSId: patient.patient_id,
+      global_id: patient.global_id,
+      address: patient.address,
+      age: patient.age,
+      gender: patient.sex,
+    };
+    setPatientData(patData);
+    setShowSelectionModal(false);
+    Toast.fire({ icon: "success", title: "Patient Selected" });
   };
 
   const openEditModal = () => {
@@ -136,7 +138,6 @@ export default function SearchBy() {
       const result = await response.json();
       console.log(result);
       if (response.ok) {
-
         // 4. Success Message and Navigation
         Swal.fire({
           icon: "success",
@@ -714,48 +715,62 @@ export default function SearchBy() {
               </Modal.Footer>
             </Form>
           </Modal>
-          <Modal show={showSelectionModal} onHide={() => setShowSelectionModal(false)} centered size="lg">
-              <Modal.Header closeButton style={{ backgroundColor: "#e0f7fa" }}>
-                  <Modal.Title style={{ fontSize: "16px", color: "#00838f" }}>
-                      Multiple Records Found for "{uhid}"
-                  </Modal.Title>
-              </Modal.Header>
-              <Modal.Body>
-                  <p className="small text-muted">Please select the correct patient record from the list below:</p>
-                  <div className="table-responsive">
-                      <table className="table table-hover border">
-                          <thead className="table-light">
-                              <tr style={{ fontSize: "12px" }}>
-                                  <th>UID</th>
-                                  <th>Name</th>
-                                  <th>Phone</th>
-                                  <th>Address</th>
-                                  <th>Action</th>
-                              </tr>
-                          </thead>
-                          <tbody>
-                              {searchResults.map((p, index) => (
-                                  <tr key={index} style={{ fontSize: "12px" }}>
-                                      <td>{p.Uid_no}</td>
-                                      <td><strong>{p.name}</strong></td>
-                                      <td>{p.phone}</td>
-                                      <td className="text-truncate" style={{ maxWidth: "200px" }}>{p.address}</td>
-                                      <td>
-                                          <Button 
-                                              size="sm" 
-                                              variant="info" 
-                                              style={{ fontSize: "10px", color: "white" }}
-                                              onClick={() => selectPatient(p)}
-                                          >
-                                              Select
-                                          </Button>
-                                      </td>
-                                  </tr>
-                              ))}
-                          </tbody>
-                      </table>
-                  </div>
-              </Modal.Body>
+          <Modal
+            show={showSelectionModal}
+            onHide={() => setShowSelectionModal(false)}
+            centered
+            size="lg"
+          >
+            <Modal.Header closeButton style={{ backgroundColor: "#e0f7fa" }}>
+              <Modal.Title style={{ fontSize: "16px", color: "#00838f" }}>
+                Multiple Records Found for "{uhid}"
+              </Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <p className="small text-muted">
+                Please select the correct patient record from the list below:
+              </p>
+              <div className="table-responsive">
+                <table className="table table-hover border">
+                  <thead className="table-light">
+                    <tr style={{ fontSize: "12px" }}>
+                      <th>UID</th>
+                      <th>Name</th>
+                      <th>Phone</th>
+                      <th>Address</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {searchResults.map((p, index) => (
+                      <tr key={index} style={{ fontSize: "12px" }}>
+                        <td>{p.Uid_no}</td>
+                        <td>
+                          <strong>{p.name}</strong>
+                        </td>
+                        <td>{p.phone}</td>
+                        <td
+                          className="text-truncate"
+                          style={{ maxWidth: "200px" }}
+                        >
+                          {p.address}
+                        </td>
+                        <td>
+                          <Button
+                            size="sm"
+                            variant="info"
+                            style={{ fontSize: "10px", color: "white" }}
+                            onClick={() => selectPatient(p)}
+                          >
+                            Select
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Modal.Body>
           </Modal>
         </Container>
       </div>

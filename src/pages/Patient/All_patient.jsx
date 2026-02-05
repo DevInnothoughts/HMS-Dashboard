@@ -217,7 +217,7 @@ const countries = [
   "Zimbabwe",
 ];
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const formatDateToLocal = (dateString) => {
   if (!dateString) return "";

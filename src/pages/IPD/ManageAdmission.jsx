@@ -16,7 +16,7 @@ import Swal from "sweetalert2";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import { decodeJwt } from "../../utils/decode-jwt";
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 export default function ManageAdmission() {
   const [patients, setPatients] = useState([]);
@@ -166,7 +166,11 @@ export default function ManageAdmission() {
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ contact, uhid, location: currentLocation }),
+              body: JSON.stringify({
+                contact,
+                uhid,
+                location: currentLocation,
+              }),
             },
           );
 
@@ -359,7 +363,10 @@ export default function ManageAdmission() {
                                         variant="outline-success"
                                         size="sm"
                                         onClick={() =>
-                                          handleConfirm(patient.contact, patient.uhid)
+                                          handleConfirm(
+                                            patient.contact,
+                                            patient.uhid,
+                                          )
                                         }
                                         style={{
                                           borderRadius: "6px",
