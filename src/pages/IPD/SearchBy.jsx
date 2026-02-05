@@ -177,7 +177,7 @@ export default function SearchBy() {
   const inputStyle = {
     borderRadius: "8px",
     border: "2px solid rgb(77, 208, 225)",
-    padding: "6px",
+    padding: "4px",
   };
 
   return (
@@ -322,11 +322,11 @@ export default function SearchBy() {
                           value: patientData.name,
                           name: "name",
                         },
-                        {
-                          label: "Patient HMS ID",
-                          value: patientData.HMSId,
-                          name: "HMSId",
-                        },
+                        // {
+                        //   label: "Patient HMS ID",
+                        //   value: patientData.HMSId,
+                        //   name: "HMSId",
+                        // },
                         {
                           label: "Patient Global ID",
                           value: patientData.global_id,
@@ -350,7 +350,7 @@ export default function SearchBy() {
                           name: "gender",
                         },
                       ].map((field) => (
-                        <Col md={4} key={field.name} className="mb-3">
+                        <Col md={4} key={field.name} className="mb-10">
                           <Form.Group>
                             <Form.Label
                               className={labelStyle}
@@ -364,11 +364,11 @@ export default function SearchBy() {
                               readOnly
                               style={{
                                 backgroundColor: "#fafdff",
-                                border: "1px solid #6db8c2ff",
+                                border: "1.5px solid rgb(77, 208, 225)",
                                 borderRadius: "8px",
                                 cursor: "not-allowed",
-                                padding: "5px 10px",
-                                fontSize: "0.9rem",
+                                padding: "3px 10px",
+                                fontSize: "0.8rem",
                               }}
                             />
                           </Form.Group>
@@ -409,7 +409,7 @@ export default function SearchBy() {
                           size={14}
                           className="me-2"
                         />
-                        Verified & Submit
+                        Book For Admission(BOA)
                       </Button>
                     </div>
                   </Card.Body>
@@ -454,7 +454,7 @@ export default function SearchBy() {
                         fontSize: "0.95rem",
                       }}
                     >
-                      Verification History
+                      Booked For Admission History
                     </h4>
                   </div>
                   <div style={{ width: "250px" }}>
@@ -497,7 +497,7 @@ export default function SearchBy() {
                     >
                       <tr>
                         <th className="py-5 px-3 border-0 uppercase fw-bold">
-                          Verified Date
+                          BOA Date
                         </th>
                         <th className="py-5 px-3 border-0 uppercase fw-bold">
                           UHID No.
@@ -605,9 +605,12 @@ export default function SearchBy() {
               style={{
                 backgroundColor: "#67c5cfff",
                 borderBottom: "2px solid #1a5b61ff",
+                padding: "10px",
               }}
             >
-              <Modal.Title style={{ color: "#1a5b61ff", fontWeight: "600" }}>
+              <Modal.Title style={{
+                color: "#1a5b61ff", fontWeight: "600", fontSize: "19px",
+              }}>
                 Edit Patient Details
               </Modal.Title>
             </Modal.Header>
@@ -616,7 +619,7 @@ export default function SearchBy() {
                 <Row>
                   <Col md={6} className="mb-10">
                     <Form.Group>
-                      <Form.Label className={labelStyle}>UHID No.</Form.Label>
+                      <Form.Label className={labelStyle} style={{ fontSize: "13px" }}>UHID No.</Form.Label>
                       <Form.Control
                         name="uhid"
                         value={editFormData.uhid}
@@ -627,7 +630,7 @@ export default function SearchBy() {
                   </Col>
                   <Col md={6} className="mb-3">
                     <Form.Group>
-                      <Form.Label className={labelStyle}>
+                      <Form.Label className={labelStyle} style={{ fontSize: "13px" }}>
                         Patient Name
                       </Form.Label>
                       <Form.Control
@@ -640,7 +643,7 @@ export default function SearchBy() {
                   </Col>
                   <Col md={6} className="mb-10">
                     <Form.Group>
-                      <Form.Label className={labelStyle}>
+                      <Form.Label className={labelStyle} style={{ fontSize: "13px" }}>
                         Contact Number
                       </Form.Label>
                       <Form.Control
@@ -653,7 +656,7 @@ export default function SearchBy() {
                   </Col>
                   <Col md={6} className="mb-3">
                     <Form.Group>
-                      <Form.Label className={labelStyle}>Age</Form.Label>
+                      <Form.Label className={labelStyle} style={{ fontSize: "13px" }}>Age</Form.Label>
                       <Form.Control
                         name="age"
                         value={editFormData.age}
@@ -665,7 +668,7 @@ export default function SearchBy() {
 
                   <Col md={6} className="mb-3">
                     <Form.Group>
-                      <Form.Label className={labelStyle}>Gender</Form.Label>
+                      <Form.Label className={labelStyle} style={{ fontSize: "13px" }}>Gender</Form.Label>
                       <Form.Select
                         name="gender"
                         value={editFormData.gender}
@@ -680,7 +683,7 @@ export default function SearchBy() {
                   </Col>
                   <Col md={6} className="mb-10">
                     <Form.Group>
-                      <Form.Label className={labelStyle}>Address</Form.Label>
+                      <Form.Label className={labelStyle} style={{ fontSize: "13px" }}>Address</Form.Label>
                       <Form.Control
                         as="textarea"
                         rows={2}
@@ -693,7 +696,7 @@ export default function SearchBy() {
                   </Col>
                 </Row>
               </Modal.Body>
-              <Modal.Footer className="border-0">
+              <Modal.Footer className="border-0" style={{ padding: "2px" }}>
                 <Button
                   variant="secondary"
                   onClick={() => setShowEditModal(false)}
