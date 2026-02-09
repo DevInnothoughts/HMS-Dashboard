@@ -123,7 +123,9 @@ export default function IpdDashboard() {
 
             if (response.ok) {
                 const result = await response.json();
+                console.log("RESult:",result);
                 const formattedEvents = formatSurgeries(result);
+                console.log("Formatted events:", formattedEvents);
                 setSurgeries(formattedEvents);
             }
         } catch (error) {
@@ -145,19 +147,48 @@ export default function IpdDashboard() {
         setSelectedEvent(event);
     };
 
-    const handleConfirmSurgery = () => {
+    const handleConfirmSurgery = (contact, uhid) => {
         Swal.fire({
-            title: "Confirm Surgery?",
-            text: "This action will be implemented in the backend later.",
-            icon: "question",
-            showCancelButton: true,
-            confirmButtonText: "Confirm",
-            cancelButtonText: "Cancel",
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Toast.fire({ icon: "success", title: "Surgery Confirmed (Frontend Only)" });
-            }
-        });
+              title: "Confirm Admission?",
+              text: "This will move the patient to the surgery list.",
+              icon: "question",
+              showCancelButton: true,
+              confirmButtonText: "Confirm",
+              cancelButtonText: "Cancel",
+              confirmButtonColor: "#15ab56ff",
+              cancelButtonColor: "#dc1818ff",
+            }).then(async (result) => {
+              if (result.isConfirmed) {
+                try {
+                  // Call backend to update status and generate Admission No
+                  const response = await fetch(
+                    `${BASE_URL}/V1/ipd/admin/confirmAdmissionEntry`,
+                    {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        contact,
+                        uhid,
+                        location: currentLocation,
+                      }),
+                    },
+                  );
+        
+                  if (response.ok) {
+                    const data = await response.json();
+                    console.log(data);
+                    Swal.fire(
+                      "Confirmed!",
+                      `Admission No: ${data.admissionNo} generated.`,
+                      "success",
+                    );
+                    fetchSurgeries(); // Refresh the list
+                  }
+                } catch (error) {
+                  Swal.fire("Error", "Could not confirm admission", "error");
+                }
+              }
+            });
     };
 
     const handleCancelSurgery = () => {
@@ -166,21 +197,63 @@ export default function IpdDashboard() {
         setShowCancelModal(true);
     };
 
-    const handleCancelSubmit = (e) => {
+    const handleCancelSubmit = async (e) => {
         e.preventDefault();
+
+        if (!cancelComment.trim()) {
+            Swal.fire("Required", "Please provide a reason for cancellation", "warning");
+            return;
+        }
+
         Swal.fire({
             title: "Cancel Surgery?",
-            text: `Reason: ${cancelComment}. This action will be implemented in the backend later.`,
+            text: `Are you sure you want to cancel the surgery for ${selectedEvent.patientName}?`,
             icon: "warning",
             showCancelButton: true,
             confirmButtonText: "Yes, Cancel",
             cancelButtonText: "No",
-            confirmButtonColor: "#d33",
-        }).then((result) => {
+            confirmButtonColor: "#dc3545",
+        }).then(async (result) => {
             if (result.isConfirmed) {
-                setShowCancelModal(false);
-                setCancelComment("");
-                Toast.fire({ icon: "success", title: "Surgery Cancelled (Frontend Only)" });
+                try {
+                    // Show loading state while processing
+                    Swal.fire({
+                        title: 'Processing Cancellation...',
+                        didOpen: () => Swal.showLoading(),
+                        allowOutsideClick: false
+                    });
+
+                    const response = await fetch(`${BASE_URL}/V1/ipd/admin/cancelAdmissionEntry`, {
+                        method: "POST",
+                        headers: { 
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${localStorage.getItem("token")}` 
+                        },
+                        body: JSON.stringify({
+                            location: currentLocation,
+                            uhid: selectedEvent.uhid,
+                            contact: selectedEvent.phone,
+                            reason: cancelComment // Passing the reason for backend logs
+                        }),
+                    });
+
+                    const data = await response.json();
+                    console.log(data);
+                    if (response.ok) {
+                        setShowCancelModal(false);
+                        setCancelComment("");
+                        setSelectedEvent(null); // Clear the selection
+                        
+                        Swal.fire("Cancelled!", "The surgery entry has been removed.", "success");
+                        
+                        fetchSurgeries(); // Refresh the calendar list
+                    } else {
+                        throw new Error(data.message || "Failed to cancel entry");
+                    }
+                } catch (error) {
+                    console.error("Cancellation error:", error);
+                    Swal.fire("Error", error.message || "Server connection failed", "error");
+                }
             }
         });
     };
@@ -254,6 +327,14 @@ export default function IpdDashboard() {
                             {selectedEvent.age} / {selectedEvent.gender}
                         </span>
                     </div>
+                    <div className="data-item-inline">
+                        <label>
+                            <FeatherIcon icon="info" size={14} /> Admission No:
+                        </label>
+                        <span className="data-value fw-bold">
+                            {selectedEvent.admissionNo || "N/A"}
+                        </span>
+                    </div>
                 </div>
 
                 <div
@@ -264,23 +345,28 @@ export default function IpdDashboard() {
                 <div className="clinical-actions pt-2">
                     <div className="d-grid gap-1">
                         <Button
-                            variant="primary"
+                            variant={selectedEvent.isConfirmed ? "success" : "primary"}
                             className="confirm-btn"
                             style={{ borderRadius: "10px" }}
-                            onClick={handleConfirmSurgery}
+                            // Pass as arrow function AND disable if already confirmed
+                            onClick={() => handleConfirmSurgery(selectedEvent.phone, selectedEvent.uhid)}
+                            disabled={selectedEvent.isConfirmed}
                         >
-                            <FeatherIcon icon="check-circle" size={16} className="me-1" />{" "}
-                            Confirm Surgery
+                            <FeatherIcon icon={selectedEvent.isConfirmed ? "user-check" : "check-circle"} size={16} className="me-1" />{" "}
+                            {selectedEvent.isConfirmed ? `Admitted (${selectedEvent.admissionNo})` : "Confirm Admission"}
                         </Button>
-                        <Button
-                            variant="danger"
-                            className="btn-sm border-0 mt-1"
-                            style={{ borderRadius: "10px" }}
-                            onClick={handleCancelSurgery}
-                        >
-                            <FeatherIcon icon="x-circle" size={14} className="me-1" /> Cancel
-                            Surgery
-                        </Button>
+                        
+                        {!selectedEvent.isConfirmed && (
+                            <Button
+                                variant="danger"
+                                className="btn-sm border-0 mt-1"
+                                style={{ borderRadius: "10px" }}
+                                onClick={handleCancelSurgery}
+                            >
+                                <FeatherIcon icon="x-circle" size={14} className="me-1" /> Cancel
+                                Surgery
+                            </Button>
+                        )}
                     </div>
                 </div>
             </div>

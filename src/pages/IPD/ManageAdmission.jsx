@@ -403,26 +403,57 @@ export default function ManageAdmission() {
     setShowCancelModal(true);
   };
 
-  const handleCancelSubmit = (e) => {
+  const handleCancelSubmit = async (e) => {
     e.preventDefault();
+
     if (!cancelReason.trim()) {
-      Swal.fire("Required", "Please provide a reason for cancellation", "warning");
-      return;
+        Swal.fire("Required", "Please provide a reason for cancellation", "warning");
+        return;
     }
 
-    // Frontend only for now
-    console.log("Cancelling surgery for patient:", cancelPatient.uhid, "Reason:", cancelReason);
+    try {
+        // Show a loading state inside Swal
+        Swal.fire({
+            title: 'Cancelling Admission...',
+            didOpen: () => Swal.showLoading(),
+            allowOutsideClick: false
+        });
 
-    Swal.fire({
-      icon: "success",
-      title: "Cancelled!",
-      text: "Surgery has been cancelled (Frontend Only).",
-      timer: 1500,
-      showConfirmButton: false,
-    });
+        const response = await fetch(`${BASE_URL}/V1/ipd/admin/cancelAdmissionEntry`, {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${localStorage.getItem("token")}` 
+            },
+            body: JSON.stringify({
+                location: currentLocation,
+                uhid: cancelPatient.uhid,     // Fixed: Using cancelPatient
+                contact: cancelPatient.contact, // Fixed: Using cancelPatient.contact
+                reason: cancelReason
+            }),
+        });
 
-    setShowCancelModal(false);
-  };
+        const data = await response.json();
+
+        if (response.ok) {
+            Swal.fire({
+                icon: "success",
+                title: "Cancelled!",
+                text: "The surgery entry has been successfully removed.",
+                timer: 2000,
+                showConfirmButton: false,
+            });
+            
+            setShowCancelModal(false);
+            fetchVerifiedPatients(); // Refresh the DataTable to remove the cancelled patient
+        } else {
+            throw new Error(data.message || "Failed to cancel admission");
+        }
+    } catch (error) {
+        console.error("Cancellation Error:", error);
+        Swal.fire("Error", error.message || "Server connection failed", "error");
+    }
+};
 
   const actionBodyTemplate = (patient) => {
     return (
