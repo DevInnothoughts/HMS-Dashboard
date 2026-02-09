@@ -111,8 +111,8 @@ const DailyOPDReport = () => {
           </thead>
           <tbody>
             ${data
-              .map(
-                (item) => `
+        .map(
+          (item) => `
               <tr>
                 <td style="text-align:left;padding-left:10px;width:70%;
                     font-weight:${item.method === "TOTAL" ? "bold" : "normal"};
@@ -125,8 +125,8 @@ const DailyOPDReport = () => {
                 </td>
               </tr>
             `,
-              )
-              .join("")}
+        )
+        .join("")}
           </tbody>
         </table>
       </div>
@@ -191,15 +191,15 @@ const DailyOPDReport = () => {
                 </thead>
                 <tbody style="font-size:12px;">
                   ${reportData.opdCounts
-                    .map(
-                      (i) => `
+        .map(
+          (i) => `
                     <tr>
                       <td class="fw-bold text-secondary">${i.type}</td>
                       <td>${i.count}</td>
                     </tr>
                   `,
-                    )
-                    .join("")}
+        )
+        .join("")}
                 </tbody>
               </table>
             </div>
@@ -221,8 +221,8 @@ const DailyOPDReport = () => {
                 </thead>
                 <tbody style="font-size:12px;">
                   ${reportData.opdDetails
-                    .map(
-                      (i) => `
+        .map(
+          (i) => `
                     <tr>
                       <td class="fw-bold text-secondary">${i.type}</td>
                       <td>${i.new}</td>
@@ -231,8 +231,8 @@ const DailyOPDReport = () => {
                       <td>${i.total}</td>
                     </tr>
                   `,
-                    )
-                    .join("")}
+        )
+        .join("")}
                 </tbody>
               </table>
             </div>
@@ -251,15 +251,15 @@ const DailyOPDReport = () => {
                 </thead>
                 <tbody style="font-size:12px;">
                   ${reportData.testDetails
-                    .map(
-                      (i) => `
+        .map(
+          (i) => `
                     <tr>
                       <td class="fw-bold text-secondary">${i.testName}</td>
                       <td>₹ ${i.amount}</td>
                     </tr>
                   `,
-                    )
-                    .join("")}
+        )
+        .join("")}
                 </tbody>
               </table>
             </div>

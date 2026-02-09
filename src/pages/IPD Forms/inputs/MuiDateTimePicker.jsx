@@ -9,7 +9,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 const theme = createTheme({
     palette: {
         primary: {
-            main: '#80deea',
+            main: '#4dd0e1',
         },
     },
     typography: {
@@ -17,33 +17,45 @@ const theme = createTheme({
     }
 });
 
-const MuiDateTimePicker = ({ label, value, onChange, name, required = false, type = 'datetime', style = {}, hideLabel = false }) => {
+const MuiDateTimePicker = ({ label, value, onChange, name, required = false, type = 'datetime', style = {}, hideLabel = false, ampm = true, labelClassName = "", labelStyle = {}, disablePast = false, placeholder = "" }) => {
     const PickerComponent = type === 'date' ? DatePicker : (type === 'time' ? TimePicker : DateTimePicker);
+
+    // Dynamic format based on type and ampm
+    const getFormat = () => {
+        if (type === 'date') return 'DD-MM-YYYY';
+        if (type === 'time') return ampm ? 'hh:mm A' : 'HH:mm';
+        return ampm ? 'DD-MM-YYYY hh:mm A' : 'DD-MM-YYYY HH:mm';
+    };
+
+    const displayFormat = getFormat();
 
     return (
         <ThemeProvider theme={theme}>
             <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <div className="form-field" style={{ marginBottom: hideLabel ? '0' : '20px', display: 'flex', flexDirection: 'column', ...style }}>
                     {!hideLabel && label && (
-                        <label style={{
+                        <label className={labelClassName} style={{
                             fontWeight: '600',
                             marginBottom: '8px',
                             fontSize: '0.85rem',
                             color: '#34495e',
-                            display: 'block'
+                            display: 'block',
+                            ...labelStyle
                         }}>
-                            {label} {required && <span style={{ color: '#e74c3c' }}>*</span>}
+                            {label}{required && <span style={{ color: 'red', marginLeft: '4px' }}>*</span>}
                         </label>
                     )}
                     <PickerComponent
-                        value={value ? dayjs(value, type === 'time' ? 'HH:mm' : (type === 'date' ? 'DD-MM-YYYY' : ['DD-MM-YYYY HH:mm', 'YYYY-MM-DDTHH:mm:ss.SSSZ'])) : null}
-                        format={type === 'date' ? 'DD-MM-YYYY' : (type === 'time' ? 'HH:mm' : 'DD-MM-YYYY HH:mm')}
+                        ampm={ampm}
+                        disablePast={disablePast}
+                        value={value ? dayjs(value, type === 'time' ? (ampm ? 'hh:mm A' : 'HH:mm') : (type === 'date' ? 'DD-MM-YYYY' : ['DD-MM-YYYY HH:mm', 'DD-MM-YYYY hh:mm A', 'YYYY-MM-DDTHH:mm:ss.SSSZ'])) : null}
+                        format={displayFormat}
                         onChange={(newValue) => {
                             let formattedValue = '';
                             if (newValue && newValue.isValid()) {
                                 if (type === 'date') formattedValue = newValue.format('DD-MM-YYYY');
-                                else if (type === 'time') formattedValue = newValue.format('HH:mm');
-                                else formattedValue = newValue.format('DD-MM-YYYY HH:mm');
+                                else if (type === 'time') formattedValue = newValue.format(ampm ? 'hh:mm A' : 'HH:mm');
+                                else formattedValue = newValue.format(ampm ? 'DD-MM-YYYY hh:mm A' : 'DD-MM-YYYY HH:mm');
                             }
                             const event = {
                                 target: {
@@ -59,26 +71,27 @@ const MuiDateTimePicker = ({ label, value, onChange, name, required = false, typ
                                 fullWidth: true,
                                 variant: 'outlined',
                                 size: 'small',
+                                placeholder: placeholder || displayFormat,
                                 sx: {
                                     '& .MuiOutlinedInput-root, & .MuiInputBase-root': {
-                                        borderRadius: '6px',
-                                        backgroundColor: '#ffffff !important',
+                                        borderRadius: '8px',
+                                        backgroundColor: '#fafdff !important',
                                         '& fieldset': {
-                                            borderWidth: '2px',
-                                            borderColor: '#e1e8ed',
+                                            borderWidth: '1.5px',
+                                            borderColor: '#4dd0e1',
                                         },
                                         '&:hover fieldset': {
-                                            borderColor: '#cbd5e0',
+                                            borderColor: '#4dd0e1',
                                         },
                                         '&.Mui-focused fieldset': {
-                                            borderColor: '#80deea',
+                                            borderColor: '#4dd0e1',
                                         },
                                     },
                                     '& .MuiInputBase-input': {
-                                        padding: '8px 12px',
-                                        fontSize: '0.85rem',
+                                        padding: '4px 12px',
+                                        fontSize: '0.8rem',
                                         height: 'auto',
-                                        backgroundColor: '#ffffff !important',
+                                        backgroundColor: '#fafdff !important',
                                     }
                                 }
                             }

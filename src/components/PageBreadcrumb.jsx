@@ -7,10 +7,10 @@ export default function PageBreadcrumb(props) {
     // const [time, setTime] = useState(new Date().toLocaleTimeString());
     // const today = new Date(); // Get the current date
     // const formattedDate = today.toLocaleDateString(); // Format the date
-        const [time, setTime] = useState(new Date().toLocaleTimeString());
-        const today = new Date();
-        // Format the date as dd/mm/yyyy
-        const formattedDate = today.toLocaleDateString("en-GB"); // Use 'en-GB' for dd/mm/yyyy format
+    const [time, setTime] = useState(new Date().toLocaleTimeString());
+    const today = new Date();
+    // Format the date as dd/mm/yyyy
+    const formattedDate = today.toLocaleDateString("en-GB"); // Use 'en-GB' for dd/mm/yyyy format
     useEffect(() => {
         const timer = setInterval(() => {
             setTime(new Date().toLocaleTimeString());
@@ -20,6 +20,9 @@ export default function PageBreadcrumb(props) {
         return () => clearInterval(timer);
     }, []);
 
+    const department = localStorage.getItem("department");
+    const dashboardLink = department === "IPD" ? "/ipd-dashboard" : "/reception-dashboard";
+
     return (
 
         <div className="codex-breadcrumb">
@@ -28,7 +31,7 @@ export default function PageBreadcrumb(props) {
                     <div className="left-breadcrumb">
                         <ul className="breadcrumb mb-0">
                             <li className="breadcrumb-item ">
-                                <Link to="/reception-dashboard">Dashboard</Link>
+                                <Link to={dashboardLink}>Dashboard</Link>
                             </li>
                             <li className="breadcrumb-item active">
                                 <Link to={''}>{props.pagename}</Link>
@@ -41,7 +44,7 @@ export default function PageBreadcrumb(props) {
                                 <div className="bread-wrap">
                                     <i className="fa fa-clock-o"></i>
                                 </div>
-                                     {time}
+                                {time}
                             </li>
                             <li>
                                 <div className="bread-wrap">

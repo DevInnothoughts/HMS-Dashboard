@@ -78,15 +78,15 @@ const IPDCollectionReport = () => {
       const newTotals =
         data.length > 0
           ? data.reduce(
-              (acc, curr) => ({
-                cash: acc.cash + (parseInt(curr.cashamt) || 0),
-                card: acc.card + (parseInt(curr.cardamt) || 0),
-                cheque: acc.cheque + (parseInt(curr.chequeamt) || 0),
-                online: acc.online + (parseInt(curr.onlineamt) || 0),
-                discount: acc.discount + (parseInt(curr.discountamt) || 0),
-              }),
-              { cash: 0, card: 0, cheque: 0, online: 0, discount: 0 },
-            )
+            (acc, curr) => ({
+              cash: acc.cash + (parseInt(curr.cashamt) || 0),
+              card: acc.card + (parseInt(curr.cardamt) || 0),
+              cheque: acc.cheque + (parseInt(curr.chequeamt) || 0),
+              online: acc.online + (parseInt(curr.onlineamt) || 0),
+              discount: acc.discount + (parseInt(curr.discountamt) || 0),
+            }),
+            { cash: 0, card: 0, cheque: 0, online: 0, discount: 0 },
+          )
           : { cash: 0, card: 0, cheque: 0, online: 0, discount: 0 };
 
       setTotals(newTotals);

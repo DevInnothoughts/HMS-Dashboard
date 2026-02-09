@@ -121,7 +121,11 @@ export default function Login() {
         localStorage.setItem("department", formData.department);
         localStorage.setItem("jobLocation", formData.jobLocation);
 
-        navigate("/reception-dashboard", { replace: true });
+        if (formData.department === "IPD") {
+          navigate("/ipd-dashboard", { replace: true });
+        } else {
+          navigate("/reception-dashboard", { replace: true });
+        }
       } else {
         setErrorMessage(
           data.message || "Invalid email or password. Please try again.",

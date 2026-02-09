@@ -384,42 +384,42 @@ const AdmissionChecklist = ({ onSubmit, patientData }) => {
 
             <div class="amenities-grid">
                 ${[
-                  "Paper napkins",
-                  "Soap",
-                  "Room orientation",
-                  "Water mug with glass",
-                  "Pillow cover & bed sheet",
-                  "",
-                  "Dress of patient",
-                  "T.V with remote",
-                  "",
-                  "A.C. with remote",
-                  "Geyser in condition",
-                  "",
-                  "Mug, bucket & dustbin",
-                  "Spoons",
-                  "",
-                  "Plates",
-                  "Dental kit",
-                  "",
-                  "Cup and bowls",
-                  "Trey & kettles",
-                  "",
-                  "Tissue paper & stands",
-                  "Dish TV with remote",
-                  "",
-                  "Slippers",
-                  "Door mats",
-                  "",
-                  "Call bell",
-                  "Wifi password",
-                ]
-                  .map((item) =>
-                    item === ""
-                      ? "<div></div>"
-                      : `<div class="cb-item"><div class="box ${isChecked("amenities", item)}"></div> ${item}</div>`,
-                  )
-                  .join("")}
+        "Paper napkins",
+        "Soap",
+        "Room orientation",
+        "Water mug with glass",
+        "Pillow cover & bed sheet",
+        "",
+        "Dress of patient",
+        "T.V with remote",
+        "",
+        "A.C. with remote",
+        "Geyser in condition",
+        "",
+        "Mug, bucket & dustbin",
+        "Spoons",
+        "",
+        "Plates",
+        "Dental kit",
+        "",
+        "Cup and bowls",
+        "Trey & kettles",
+        "",
+        "Tissue paper & stands",
+        "Dish TV with remote",
+        "",
+        "Slippers",
+        "Door mats",
+        "",
+        "Call bell",
+        "Wifi password",
+      ]
+        .map((item) =>
+          item === ""
+            ? "<div></div>"
+            : `<div class="cb-item"><div class="box ${isChecked("amenities", item)}"></div> ${item}</div>`,
+        )
+        .join("")}
             </div>
 
             <div class="footer" style=" margin-bottom:20px">
@@ -657,9 +657,9 @@ const AdmissionChecklist = ({ onSubmit, patientData }) => {
                     value={
                       formData.staffActionDateTime
                         ? dayjs(
-                            formData.staffActionDateTime,
-                            "DD-MM-YYYY HH:mm",
-                          )
+                          formData.staffActionDateTime,
+                          "DD-MM-YYYY HH:mm",
+                        )
                         : null
                     }
                     format="DD-MM-YYYY HH:mm"

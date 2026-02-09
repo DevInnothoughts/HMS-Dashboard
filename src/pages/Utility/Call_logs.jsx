@@ -1167,7 +1167,7 @@ export default function Call_logs() {
                     <option value="">Select Type</option>
 
                     {formData.patient_type === "New" ||
-                    formData.patient_id === undefined ? (
+                      formData.patient_id === undefined ? (
                       <option value="New">NEW</option>
                     ) : (
                       <>

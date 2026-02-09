@@ -15,6 +15,8 @@ import FeatherIcon from "feather-icons-react";
 import Swal from "sweetalert2";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import { decodeJwt } from "../../utils/decode-jwt";
+import MuiDateTimePicker from "../IPD Forms/inputs/MuiDateTimePicker";
+import dayjs from "dayjs";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
 
@@ -86,6 +88,7 @@ export default function SearchBy() {
       address: patient.address,
       age: patient.age,
       gender: patient.sex,
+      datetime: null,
     };
     setPatientData(patData);
     setShowSelectionModal(false);
@@ -109,7 +112,17 @@ export default function SearchBy() {
     Swal.fire("Success", "Patient details updated", "success");
   };
 
+  const handleDatetimeChange = (e) => {
+    const { value } = e.target;
+    setPatientData((prev) => ({ ...prev, datetime: value }));
+  };
+
   const handleVerifyAndSubmit = async () => {
+    if (!patientData.datetime) {
+      Swal.fire("Required", "Please select Surgery Date & Time", "warning");
+      return;
+    }
+
     // 1. Prepare data for the backend API
     const payload = {
       global_id: patientData.global_id,
@@ -327,12 +340,11 @@ export default function SearchBy() {
                         //   value: patientData.HMSId,
                         //   name: "HMSId",
                         // },
-                        {
-                          label: "Patient Global ID",
-                          value: patientData.global_id,
-                          name: "global_id",
-                        },
-
+                        // {
+                        //   label: "Patient Global ID",
+                        //   value: patientData.global_id,
+                        //   name: "global_id",
+                        // },                                                                         
                         {
                           label: "Contact Number",
                           value: patientData.contact,
@@ -374,6 +386,23 @@ export default function SearchBy() {
                           </Form.Group>
                         </Col>
                       ))}
+                      <Col md={4} className="mb-10">
+                        <MuiDateTimePicker
+                          label="Surgery Date & Time"
+                          value={patientData.datetime}
+                          onChange={handleDatetimeChange}
+                          name="datetime"
+                          type="datetime"
+                          labelClassName={labelStyle}
+                          labelStyle={{ fontSize: "0.75rem" }}
+                          required={true}
+                          disablePast={true}
+                          placeholder="Select Surgery Date & Time"
+                          style={{
+                            marginBottom: "0px",
+                          }}
+                        />
+                      </Col>
                     </Row>
 
                     <div className="d-flex justify-content-center gap-2 mt-2 mb-3">
@@ -409,7 +438,7 @@ export default function SearchBy() {
                           size={14}
                           className="me-2"
                         />
-                        Book For Admission(BOA)
+                        Book For Admission
                       </Button>
                     </div>
                   </Card.Body>

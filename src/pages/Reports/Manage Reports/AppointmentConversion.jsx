@@ -63,8 +63,7 @@ const AppointmentConversion = () => {
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
         throw new Error(
-          `HTTP error! status: ${response.status}${
-            errorData ? ` - ${errorData.error}` : ""
+          `HTTP error! status: ${response.status}${errorData ? ` - ${errorData.error}` : ""
           }`,
         );
       }
@@ -421,7 +420,7 @@ const AppointmentConversion = () => {
                           padding: "5px 10px",
                           color:
                             currentPage ===
-                            Math.ceil(appointments.length / appointmentsPerPage)
+                              Math.ceil(appointments.length / appointmentsPerPage)
                               ? "#ccc"
                               : "#0288d1",
                         }}
@@ -449,7 +448,7 @@ const AppointmentConversion = () => {
                           padding: "5px 10px",
                           color:
                             currentPage ===
-                            Math.ceil(appointments.length / appointmentsPerPage)
+                              Math.ceil(appointments.length / appointmentsPerPage)
                               ? "#ccc"
                               : "#0288d1",
                         }}

@@ -987,36 +987,36 @@ const AdmissionDetailsForm = ({ onSubmit, patientData }) => {
 
           {(formData.paymentMethod === "Cash" ||
             formData.paymentMethod === "Insurance") && (
-            <div
-              style={{
-                background: "#f8fafc",
-                padding: "10px",
-                borderRadius: "6px",
-                marginTop: "10px",
-                borderLeft: "4px solid var(--primary-color)",
-              }}
-            >
-              <label className="field-label">Coordinator Verification</label>
-              <RadioGroup
-                name={
-                  formData.paymentMethod === "Cash"
-                    ? "cashPaymentStatus"
-                    : "insuranceApprovalStatus"
-                }
-                value={
-                  formData.paymentMethod === "Cash"
-                    ? formData.cashPaymentStatus
-                    : formData.insuranceApprovalStatus
-                }
-                onChange={handleChange}
-                options={
-                  formData.paymentMethod === "Cash"
-                    ? cashOptions
-                    : insuranceOptions
-                }
-              />
-            </div>
-          )}
+              <div
+                style={{
+                  background: "#f8fafc",
+                  padding: "10px",
+                  borderRadius: "6px",
+                  marginTop: "10px",
+                  borderLeft: "4px solid var(--primary-color)",
+                }}
+              >
+                <label className="field-label">Coordinator Verification</label>
+                <RadioGroup
+                  name={
+                    formData.paymentMethod === "Cash"
+                      ? "cashPaymentStatus"
+                      : "insuranceApprovalStatus"
+                  }
+                  value={
+                    formData.paymentMethod === "Cash"
+                      ? formData.cashPaymentStatus
+                      : formData.insuranceApprovalStatus
+                  }
+                  onChange={handleChange}
+                  options={
+                    formData.paymentMethod === "Cash"
+                      ? cashOptions
+                      : insuranceOptions
+                  }
+                />
+              </div>
+            )}
 
           <div className="two-col" style={{ marginTop: "15px" }}>
             <TextInput

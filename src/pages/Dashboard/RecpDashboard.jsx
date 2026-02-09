@@ -849,9 +849,17 @@ export default function ReceptionistDashboard() {
         onHide={() => setShowCancelModal(false)}
         centered
       >
-        <Modal.Header closeButton className="border-0">
-          <Modal.Title className="h5 fw-bold" style={{ color: "#0f7fa4ff" }}>
-            CANCELLATION REASON
+        <Modal.Header closeButton style={{
+          backgroundColor: "#67c5cfff",
+          borderBottom: "2px solid #1a5b61ff",
+          padding: "7px 15px",
+        }}>
+          <Modal.Title style={{
+            color: "#1a5b61ff",
+            fontWeight: "600",
+            fontSize: "1.1rem",
+          }}>
+            REASON OF CANCELLATION
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-1 pt-0">
@@ -875,7 +883,7 @@ export default function ReceptionistDashboard() {
                 className="fw-bold px-4"
                 style={{ borderRadius: "10px", padding: "10px 0" }}
               >
-                Confirm Cancellation
+                Confirm & Cancel
               </Button>
             </div>
           </Form>

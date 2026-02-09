@@ -10,19 +10,45 @@ import {
   InputGroup,
   Badge,
   Spinner,
+  Modal,
 } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import { decodeJwt } from "../../utils/decode-jwt";
+import { FilterMatchMode } from "primereact/api";
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import MuiDateTimePicker from "../IPD Forms/inputs/MuiDateTimePicker";
+import dayjs from "dayjs";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
 
 export default function ManageAdmission() {
+  const navigate = useNavigate();
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentLocation, setCurrentLocation] = useState("default");
+
+  const [rows, setRows] = useState(10);
+  const [first, setFirst] = useState(0);
+  const [filters1, setFilters1] = useState({
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+  });
+  const [fromDate, setFromDate] = useState(new Date());
+  const [toDate, setToDate] = useState(new Date());
+
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+  const [rescheduleDate, setRescheduleDate] = useState(null);
+  const [reschedulePatient, setReschedulePatient] = useState(null);
+
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelPatient, setCancelPatient] = useState(null);
 
   // 1. Initialize Location from JWT
   useEffect(() => {
@@ -42,6 +68,15 @@ export default function ManageAdmission() {
     const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-indexed
     const year = date.getFullYear();
     return `${day}-${month}-${year}`;
+  };
+
+  const formatToApiDate = (date) => {
+    if (!date) return null;
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
   };
 
   // 2. Fetch Logic
@@ -90,8 +125,10 @@ export default function ManageAdmission() {
 
     setLoading(true);
     try {
+      const from = formatToApiDate(fromDate);
+      const to = formatToApiDate(toDate);
       const response = await fetch(
-        `${BASE_URL}/V1/ipd/admin/listVerifiedPatients?location=${currentLocation}`,
+        `${BASE_URL}/V1/ipd/admin/listVerifiedPatients?location=${currentLocation}&from=${from}&to=${to}`,
         {
           method: "GET",
           headers: {
@@ -134,18 +171,339 @@ export default function ManageAdmission() {
     } finally {
       setLoading(false);
     }
-  }, [currentLocation]);
+  }, [currentLocation, fromDate, toDate]);
 
   useEffect(() => {
     fetchVerifiedPatients();
   }, [fetchVerifiedPatients]);
 
-  // 3. Search Filtering
-  const filteredPatients = patients.filter(
-    (p) =>
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.uhid.toLowerCase().includes(searchTerm.toLowerCase()),
+  // 3. Search Filtering - PrimeReact DataTable handles global filtering via filters1 state
+
+  const renderHeader = () => (
+    <div
+      style={{
+        border: "1px solid #4dd0e1",
+        textAlign: "center",
+        borderRadius: "8px",
+        padding: "10px",
+        backgroundColor: "#e0f7fa",
+        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: "10px",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "15px",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <span
+              style={{
+                marginRight: "8px",
+                fontSize: "12px",
+                fontWeight: "bold",
+                color: "#333",
+              }}
+            >
+              Show
+            </span>
+            <Form.Select
+              size="sm"
+              value={rows}
+              onChange={(e) => setRows(parseInt(e.target.value))}
+              style={{
+                width: "70px",
+                height: "30px",
+                border: "1px solid #4dd0e1",
+                borderRadius: "6px",
+                fontSize: "12px",
+              }}
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </Form.Select>
+          </div>
+
+          <Form.Group
+            className="ms-2"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              margin: 0,
+            }}
+          >
+            <span
+              style={{
+                marginRight: "10px",
+                fontSize: "12px",
+                fontWeight: "bold",
+                color: "#333",
+              }}
+            >
+              Search
+            </span>
+            <InputGroup>
+              <Form.Control
+                type="search"
+                value={filters1.global.value || ""}
+                onChange={(e) =>
+                  setFilters1({
+                    global: {
+                      value: e.target.value,
+                      matchMode: FilterMatchMode.CONTAINS,
+                    },
+                  })
+                }
+                placeholder="Global Search"
+                style={{
+                  borderRadius: "6px",
+                  border: "1px solid #4dd0e1",
+                  padding: "5px 8px",
+                  width: "200px",
+                  height: "30px",
+                  fontSize: "12px",
+                  transition: "all 0.3s ease",
+                }}
+              />
+            </InputGroup>
+          </Form.Group>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            border: "1px solid #4dd0e1",
+            borderRadius: "8px",
+            padding: "8px",
+            backgroundColor: "#f5fcfd",
+          }}
+        >
+          <div>
+            <div
+              style={{
+                fontSize: "12px",
+                fontWeight: "500",
+                color: "#00838f",
+                marginBottom: "3px",
+              }}
+            >
+              From Date
+            </div>
+            <DatePicker
+              selected={fromDate}
+              onChange={(date) => setFromDate(date)}
+              dateFormat="dd-MM-yyyy"
+              placeholderText="Select from date"
+              maxDate={new Date()}
+              customInput={
+                <Form.Control
+                  style={{ padding: "5px 8px", fontSize: "12px" }}
+                />
+              }
+            />
+          </div>
+
+          <div>
+            <div
+              style={{
+                fontSize: "12px",
+                fontWeight: "500",
+                color: "#00838f",
+                marginBottom: "3px",
+              }}
+            >
+              To Date
+            </div>
+            <DatePicker
+              selected={toDate}
+              onChange={(date) => setToDate(date)}
+              dateFormat="dd-MM-yyyy"
+              placeholderText="Select to date"
+              minDate={fromDate}
+              customInput={
+                <Form.Control
+                  style={{ padding: "5px 8px", fontSize: "12px" }}
+                />
+              }
+            />
+          </div>
+
+          <Button
+            variant="primary"
+            onClick={() => fetchVerifiedPatients()}
+            style={{
+              backgroundColor: "#00bcd4",
+              border: "none",
+              borderRadius: "8px",
+              padding: "6px 7px",
+              fontSize: "12px",
+              fontWeight: "500",
+              color: "white",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              marginTop: "15px",
+            }}
+          >
+            <FeatherIcon icon="refresh-ccw" size={12} className="me-1" />
+            Refresh
+          </Button>
+        </div>
+      </div>
+    </div>
   );
+
+  const header = renderHeader();
+
+  const handleRescheduleClick = (patient) => {
+    setReschedulePatient(patient);
+    // Initialize to null to force selection (required)
+    setRescheduleDate(null);
+    setShowRescheduleModal(true);
+  };
+
+  const handleRescheduleSubmit = (e) => {
+    e.preventDefault();
+    if (!rescheduleDate) {
+      Swal.fire("Required", "Please select a new date and time", "warning");
+      return;
+    }
+
+    // Frontend only for now as requested
+    console.log("Rescheduling patient:", reschedulePatient.uhid, "to", rescheduleDate);
+
+    // Optimistic UI or just a success message
+    Swal.fire({
+      icon: "success",
+      title: "Rescheduled!",
+      text: "Surgery date has been updated (Frontend Only).",
+      timer: 1500,
+      showConfirmButton: false,
+    });
+
+    setShowRescheduleModal(false);
+  };
+
+  const handleCancelClick = (patient) => {
+    setCancelPatient(patient);
+    setCancelReason("");
+    setShowCancelModal(true);
+  };
+
+  const handleCancelSubmit = (e) => {
+    e.preventDefault();
+    if (!cancelReason.trim()) {
+      Swal.fire("Required", "Please provide a reason for cancellation", "warning");
+      return;
+    }
+
+    // Frontend only for now
+    console.log("Cancelling surgery for patient:", cancelPatient.uhid, "Reason:", cancelReason);
+
+    Swal.fire({
+      icon: "success",
+      title: "Cancelled!",
+      text: "Surgery has been cancelled (Frontend Only).",
+      timer: 1500,
+      showConfirmButton: false,
+    });
+
+    setShowCancelModal(false);
+  };
+
+  const actionBodyTemplate = (patient) => {
+    return (
+      <div className="d-flex justify-content-center gap-1">
+        {!patient.admissionNo ? (
+          <>
+            <Button
+              variant="outline-primary"
+              size="sm"
+              title="Reschedule Surgery"
+              onClick={() => handleRescheduleClick(patient)}
+              style={{
+                borderRadius: "6px",
+                padding: "5px 8px",
+              }}
+            >
+              <FeatherIcon icon="calendar" size={16} />
+            </Button>
+            <Button
+              variant="outline-danger"
+              size="sm"
+              title="Cancel Surgery"
+              onClick={() => handleCancelClick(patient)}
+              style={{
+                borderRadius: "6px",
+                padding: "5px 8px",
+              }}
+            >
+              <FeatherIcon icon="trash-2" size={16} />
+            </Button>
+            <Button
+              variant="outline-success"
+              size="sm"
+              title="Confirm Surgery"
+              onClick={() => handleConfirm(patient.contact, patient.uhid)}
+              style={{
+                borderRadius: "6px",
+                padding: "5px 8px",
+              }}
+            >
+              <FeatherIcon icon="check" size={16} />
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => handleForms(patient)}
+              title="All Forms"
+              style={{
+                borderRadius: "6px",
+                backgroundColor: "#178aaeff",
+                border: "none",
+                padding: "5px 8px",
+              }}
+            >
+              <FeatherIcon icon="file-text" size={16} />
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              title="Print All Forms"
+              style={{
+                borderRadius: "6px",
+                backgroundColor: "#178aaeff",
+                border: "none",
+                padding: "5px 8px",
+              }}
+            >
+              <FeatherIcon icon="printer" size={16} />
+            </Button>
+          </>
+        )}
+      </div>
+    );
+  };
+
+  const handleForms = (patientData) => {
+    navigate(`/surgery/forms`, { state: { patientData: patientData } });
+  };
 
   const handleConfirm = (contact, uhid) => {
     Swal.fire({
@@ -216,188 +574,129 @@ export default function ManageAdmission() {
                   overflow: "hidden",
                 }}
               >
-                <div
-                  style={{
-                    backgroundColor: "#67c5cfff",
-                    padding: "12px 15px",
-                    borderBottom: "2px solid #1a5b61ff",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <div className="d-flex align-items-center">
-                    <FeatherIcon
-                      icon="users"
-                      size="18"
-                      style={{ color: "#1a5b61ff", marginRight: "10px" }}
-                    />
-                    <h4
-                      className="m-0"
-                      style={{
-                        color: "#1a5b61ff",
-                        fontWeight: "600",
-                        fontSize: "1.1rem",
-                      }}
-                    >
-                      Verified Patients Queue
-                    </h4>
-                  </div>
-                  <div style={{ width: "350px" }}>
-                    <InputGroup size="sm">
-                      <InputGroup.Text
-                        style={{
-                          backgroundColor: "#fff",
-                          borderRight: "none",
-                          borderRadius: "8px 0 0 8px",
-                        }}
-                      >
-                        <FeatherIcon
-                          icon="search"
-                          size={14}
-                          className="text-muted"
-                        />
-                      </InputGroup.Text>
-                      <Form.Control
-                        placeholder="Search by name or UHID..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        style={{ borderRadius: "0 8px 8px 0" }}
-                      />
-                    </InputGroup>
-                  </div>
-                </div>
                 <Card.Body className="p-0">
                   {loading ? (
                     <div className="text-center py-5">
                       <Spinner animation="border" variant="info" />
-                      <p className="mt-2 text-muted">Loading queue...</p>
+                      <p className="mt-2 text-muted">Loading data...</p>
                     </div>
                   ) : (
-                    <Table responsive hover className="mb-0">
-                      <thead
+                    <DataTable
+                      value={patients}
+                      paginator
+                      rows={rows}
+                      first={first}
+                      onPage={(e) => {
+                        setFirst(e.first);
+                        setRows(e.rows);
+                      }}
+                      filters={filters1}
+                      header={header}
+                      globalFilterFields={["uhid", "name", "contact", "admissionNo"]}
+                      paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
+                      currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
+                      responsiveLayout="scroll"
+                      className="datatable-compact-style datatable-medium-small"
+                      style={{ padding: "5px" }}
+                    >
+
+                      <Column
+                        field="verifiedDate"
+                        header="Surgery Date & Time"
+                        headerClassName="datatable-header-center"
                         style={{
-                          backgroundColor: "#f8f9fa",
-                          borderBottom: "2px solid #e9ecef",
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "140px",
                         }}
-                      >
-                        <tr>
-                          <th className="py-3 px-4 border-0 uppercase fw-bold">
-                            Verified Date
-                          </th>
-                          <th className="py-3 px-4 border-0 uppercase fw-bold">
-                            UHID
-                          </th>
-                          <th className="py-3 px-4 border-0 uppercase fw-bold">
-                            Patient Name
-                          </th>
-                          <th className="py-3 px-4 border-0 uppercase fw-bold">
-                            Age/Gender
-                          </th>
-                          <th className="py-3 px-4 border-0 uppercase fw-bold">
-                            Contact
-                          </th>
-                          <th className="py-3 px-4 border-0 text-center uppercase fw-bold">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredPatients.length > 0 ? (
-                          filteredPatients.map((patient, index) => (
-                            <tr
-                              key={index}
-                              style={{
-                                verticalAlign: "middle",
-                                fontSize: "0.9rem",
-                              }}
-                            >
-                              <td className="py-3 px-4">
-                                {patient.verifiedDate || "N/A"}
-                              </td>
-                              <td
-                                className="py-3 px-4 fw-bold"
-                                style={{ color: "#178aaeff" }}
-                              >
-                                {patient.uhid}
-                              </td>
-                              <td className="py-3 px-4">{patient.name}</td>
-                              <td className="py-3 px-4">
-                                {patient.age} / {patient.gender}
-                              </td>
-                              <td className="py-3 px-4">{patient.contact}</td>
-                              <td className="py-3 px-4">
-                                <div className="d-flex justify-content-center gap-2">
-                                  {patient.admissionNo ? (
-                                    <Badge
-                                      bg="success"
-                                      style={{
-                                        padding: "8px 12px",
-                                        borderRadius: "6px",
-                                        fontSize: "12px",
-                                        display: "flex",
-                                        alignItems: "center",
-                                      }}
-                                    >
-                                      <FeatherIcon
-                                        icon="check-circle"
-                                        size={14}
-                                        className="me-2"
-                                      />
-                                      {patient.admissionNo}
-                                    </Badge>
-                                  ) : (
-                                    <>
-                                      <Button
-                                        variant="outline-primary"
-                                        size="sm"
-                                        style={{
-                                          borderRadius: "6px",
-                                          fontWeight: "600",
-                                          margin: "3px",
-                                        }}
-                                      >
-                                        Edit
-                                      </Button>
-                                      <Button
-                                        variant="outline-success"
-                                        size="sm"
-                                        onClick={() =>
-                                          handleConfirm(
-                                            patient.contact,
-                                            patient.uhid,
-                                          )
-                                        }
-                                        style={{
-                                          borderRadius: "6px",
-                                          fontWeight: "600",
-                                        }}
-                                      >
-                                        Confirm Admission
-                                      </Button>
-                                    </>
-                                  )}
-                                </div>
-                              </td>
-                            </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td
-                              colSpan="6"
-                              className="text-center py-5 text-muted"
-                            >
-                              <FeatherIcon
-                                icon="info"
-                                size={40}
-                                className="mb-3 opacity-20"
-                              />
-                              <p className="m-0">No verified patients found.</p>
-                            </td>
-                          </tr>
+                      />
+
+                      <Column
+                        field="uhid"
+                        header="UHID No"
+                        headerClassName="datatable-header-center"
+                        body={(rowData) => (
+                          <span className="fw-bold" style={{ color: "#178aaeff" }}>
+                            {rowData.uhid}
+                          </span>
                         )}
-                      </tbody>
-                    </Table>
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "120px",
+                        }}
+                      />
+
+                      <Column
+                        field="admissionNo"
+                        header="Admission No"
+                        headerClassName="datatable-header-center"
+                        body={(rowData) => (
+                          <span
+                            className={rowData.admissionNo ? "fw-bold" : "text-muted"}
+                            style={{
+                              color: rowData.admissionNo ? "#178aaeff" : "inherit",
+                            }}
+                          >
+                            {rowData.admissionNo || "N/A"}
+                          </span>
+                        )}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "120px",
+                        }}
+                      />
+
+                      <Column
+                        field="name"
+                        header="Patient Name"
+                        headerClassName="datatable-header-center"
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "150px",
+                        }}
+                      />
+
+                      <Column
+                        field="contact"
+                        header="Contact No"
+                        headerClassName="datatable-header-center"
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "120px",
+                        }}
+                      />
+                      <Column
+                        header="Age/Gender"
+                        headerClassName="datatable-header-center"
+                        body={(rowData) => `${rowData.age} / ${rowData.gender}`}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "100px",
+                        }}
+                      />
+                      <Column
+                        header="Actions"
+                        headerClassName="datatable-header-center"
+                        body={actionBodyTemplate}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "110px",
+                        }}
+                      />
+                    </DataTable>
                   )}
                 </Card.Body>
               </Card>
@@ -405,6 +704,142 @@ export default function ManageAdmission() {
           </Row>
         </Container>
       </div>
+
+      {/* Reschedule Surgery Modal */}
+      <Modal
+        show={showRescheduleModal}
+        onHide={() => setShowRescheduleModal(false)}
+        centered
+        size="md"
+      >
+        <Modal.Header
+          closeButton
+          style={{
+            backgroundColor: "#67c5cfff",
+            borderBottom: "2px solid #1a5b61ff",
+            padding: "7px 15px",
+          }}
+        >
+          <Modal.Title
+            style={{
+              color: "#1a5b61ff",
+              fontWeight: "600",
+              fontSize: "1.1rem",
+            }}
+          >
+            <FeatherIcon icon="calendar" size="18" className="me-2" />
+            Reschedule Surgery
+          </Modal.Title>
+        </Modal.Header>
+        <Form onSubmit={handleRescheduleSubmit}>
+          <Modal.Body style={{ padding: "10px" }}>
+            <MuiDateTimePicker
+              label="New Surgery Date & Time"
+              value={rescheduleDate}
+              onChange={(e) => setRescheduleDate(e.target.value)}
+              name="rescheduleDate"
+              type="datetime"
+              required={true}
+              disablePast={true}
+              placeholder="Select New Date & Time"
+              style={{ marginBottom: "0px" }}
+            />
+          </Modal.Body>
+          <Modal.Footer className="border-0 pt-0">
+            <Button
+              variant="secondary"
+              onClick={() => setShowRescheduleModal(false)}
+              style={{ borderRadius: "8px", padding: "8px 20px" }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              style={{
+                backgroundColor: "#178aaeff",
+                border: "none",
+                borderRadius: "8px",
+                padding: "8px 20px",
+                fontWeight: "600",
+              }}
+            >
+              Submit
+            </Button>
+          </Modal.Footer>
+        </Form>
+      </Modal>
+
+      {/* Cancellation Reason Modal */}
+      <Modal
+        show={showCancelModal}
+        onHide={() => setShowCancelModal(false)}
+        centered
+        size="md"
+      >
+        <Modal.Header
+          closeButton
+          style={{
+            backgroundColor: "#67c5cfff",
+            borderBottom: "2px solid #1a5b61ff",
+            padding: "7px 15px",
+          }}
+        >
+          <Modal.Title
+            style={{
+              color: "#1a5b61ff",
+              fontWeight: "600",
+              fontSize: "1.1rem",
+            }}
+          >
+            <FeatherIcon icon="trash-2" size="18" className="me-2" />
+            Reason of cancellation for surgery
+          </Modal.Title>
+        </Modal.Header>
+        <Form onSubmit={handleCancelSubmit}>
+          <Modal.Body style={{ padding: "10px" }}>
+            <Form.Group>
+              <Form.Label
+                style={{
+                  fontWeight: "600",
+                  marginBottom: "8px",
+                  fontSize: "0.85rem",
+                  color: "#34495e",
+                }}
+              >
+                Cancellation Reason<span style={{ color: "red", marginLeft: "4px" }}>*</span>
+              </Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={4}
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder="Enter the reason for cancellation..."
+                style={{
+                  borderRadius: "8px",
+                  border: "1.5px solid #4dd0e1",
+                  fontSize: "0.85rem",
+                  padding: "5px",
+                }}
+                required
+              />
+            </Form.Group>
+          </Modal.Body>
+          <Modal.Footer className="border-0 pt-0">
+            <Button
+              type="submit"
+              variant="danger"
+              style={{
+                border: "none",
+                borderRadius: "8px",
+                padding: "8px 20px",
+                fontWeight: "600",
+              }}
+            >
+              Confirm & Cancel
+            </Button>
+          </Modal.Footer>
+        </Form>
+      </Modal>
     </div>
   );
 }
