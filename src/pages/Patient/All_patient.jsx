@@ -4034,7 +4034,7 @@ export default function All_patient() {
                         header="Actions"
                         body={actionBodyTemplate}
                         exportable={false}
-                        headerClassName="datatable-header-center"
+                        headerClassName="datatable-header-center" 
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
