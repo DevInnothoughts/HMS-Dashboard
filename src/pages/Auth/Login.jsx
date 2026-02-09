@@ -50,7 +50,7 @@ const LOCATIONS_LIST = [
   "demo",
 ].sort();
 
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -446,7 +446,7 @@ const inputStyle = {
   borderRadius: "12px",
   border: "1px solid #6db8c2ff",
   backgroundColor: "#fafdff",
-  fontSize: "14px",
+  fontSize: "12px",
   transition: "all 0.2s ease",
   color: "#2D3748",
 };

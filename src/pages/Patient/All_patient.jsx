@@ -217,7 +217,7 @@ const countries = [
   "Zimbabwe",
 ];
 
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 const formatDateToLocal = (dateString) => {
   if (!dateString) return "";
@@ -1206,7 +1206,14 @@ export default function All_patient() {
     <p><b>Alternate Contact No :-</b>&nbsp;&nbsp;${patient.mobile_2 || "-"}</p>
   </td>
   <td style="width:50%; vertical-align: top; line-height: 1.3;">
- <p><b>D.O.B :-</b>&nbsp;&nbsp;${patient.birth_date ? moment(patient.birth_date).format("DD-MM-YYYY") : "-"}</p>
+ <p>
+  <b>D.O.B :-</b>&nbsp;&nbsp;
+  {patient.birth_date 
+    ? moment(patient.birth_date, "YYYY-MM-DD").format("DD-MM-YYYY") === "Invalid date" 
+      ? moment(patient.birth_date).format("DD-MM-YYYY")  
+      : moment(patient.birth_date, "YYYY-MM-DD").format("DD-MM-YYYY")
+    : "-"}
+</p>
     <p><b>Age :-</b>&nbsp;&nbsp;${patient.age || "-"}</p>
     <p><b>Email :-</b>&nbsp;&nbsp;${patient.email || "-"}</p>
     <p><b>Occupation :-</b>&nbsp;&nbsp;${patient.occupation || "-"}</p>

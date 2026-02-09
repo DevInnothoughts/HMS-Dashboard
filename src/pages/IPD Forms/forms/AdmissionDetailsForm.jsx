@@ -9,7 +9,7 @@ import MuiDateTimePicker from "../inputs/MuiDateTimePicker";
 // import { decodeJwt } from "../../../utils/decode-jwt";
 // import Swal from "sweetalert2";
 
-// const BASE_URL = "http://194.195.117.79:5100/api";
+// const BASE_URL = "http://localhost:5100/api";
 
 // // admissionJSON = {
 // //     "admission_details": {
@@ -332,147 +332,147 @@ import MuiDateTimePicker from "../inputs/MuiDateTimePicker";
 //         </div>
 
 //         {/* Section 2: Lab & Investigation */}
-        // <div className="section-box">
-        //   <div className="form-section-title">Investigations & Status</div>
+// <div className="section-box">
+//   <div className="form-section-title">Investigations & Status</div>
 
-        //   <div className="form-field">
-        //     <label className="field-label">Lab tests</label>
-        //     <RadioGroup
-        //       name="labTests"
-        //       value={formData.labTests}
-        //       onChange={handleChange}
-        //       options={labTestOptions}
-        //     />
+//   <div className="form-field">
+//     <label className="field-label">Lab tests</label>
+//     <RadioGroup
+//       name="labTests"
+//       value={formData.labTests}
+//       onChange={handleChange}
+//       options={labTestOptions}
+//     />
 
-        //     {formData.labTests === "Done outside" && (
-        //       <div
-        //         style={{
-        //           marginTop: "10px",
-        //           padding: "10px",
-        //           background: "#f0fdfa",
-        //           border: "1px dashed var(--primary-color)",
-        //           borderRadius: "6px",
-        //         }}
-        //       >
-        //         <span
-        //           className="info-label"
-        //           style={{ color: "var(--primary-color)" }}
-        //         >
-        //           Attach lab reports to file
-        //         </span>
-        //         <button
-        //           type="button"
-        //           className="secondary-btn"
-        //           style={{ marginLeft: "10px" }}
-        //         >
-        //           Import Reports
-        //         </button>
-        //       </div>
-        //     )}
-        //   </div>
+//     {formData.labTests === "Done outside" && (
+//       <div
+//         style={{
+//           marginTop: "10px",
+//           padding: "10px",
+//           background: "#f0fdfa",
+//           border: "1px dashed var(--primary-color)",
+//           borderRadius: "6px",
+//         }}
+//       >
+//         <span
+//           className="info-label"
+//           style={{ color: "var(--primary-color)" }}
+//         >
+//           Attach lab reports to file
+//         </span>
+//         <button
+//           type="button"
+//           className="secondary-btn"
+//           style={{ marginLeft: "10px" }}
+//         >
+//           Import Reports
+//         </button>
+//       </div>
+//     )}
+//   </div>
 
-        //   <div
-        //     className="two-col"
-        //     style={{
-        //       borderTop: "1px solid var(--border-color)",
-        //       paddingTop: "10px",
-        //       marginTop: "10px",
-        //     }}
-        //   >
-        //     <div className="form-field">
-        //       <label className="field-label">
-        //         Investigation orders (Imaging)
-        //       </label>
-        //       <RadioGroup
-        //         name="investigationOrders"
-        //         value={formData.investigationOrders}
-        //         onChange={handleChange}
-        //         options={investigationOptions}
-        //       />
-        //     </div>
-        //     <div className="form-field">
-        //       <label className="field-label">NBM status</label>
-        //       <RadioGroup
-        //         name="nbmStatus"
-        //         value={formData.nbmStatus}
-        //         onChange={handleChange}
-        //         options={nbmOptions}
-        //       />
-        //     </div>
-        //   </div>
-        // </div>
+//   <div
+//     className="two-col"
+//     style={{
+//       borderTop: "1px solid var(--border-color)",
+//       paddingTop: "10px",
+//       marginTop: "10px",
+//     }}
+//   >
+//     <div className="form-field">
+//       <label className="field-label">
+//         Investigation orders (Imaging)
+//       </label>
+//       <RadioGroup
+//         name="investigationOrders"
+//         value={formData.investigationOrders}
+//         onChange={handleChange}
+//         options={investigationOptions}
+//       />
+//     </div>
+//     <div className="form-field">
+//       <label className="field-label">NBM status</label>
+//       <RadioGroup
+//         name="nbmStatus"
+//         value={formData.nbmStatus}
+//         onChange={handleChange}
+//         options={nbmOptions}
+//       />
+//     </div>
+//   </div>
+// </div>
 
 //         {/* Section 3: Finance */}
-        // <div className="section-box">
-        //   <div className="form-section-title">
-        //     Payment & Coordinator Verification
-        //   </div>
-        //   <div className="two-col">
-        //     <TextInput
-        //       label="Estimated length of stay"
-        //       name="estimatedStay"
-        //       value={formData.estimatedStay}
-        //       onChange={handleChange}
-        //     />
-        //     <div className="form-field">
-        //       <label className="field-label">Payment method</label>
-        //       <RadioGroup
-        //         name="paymentMethod"
-        //         value={formData.paymentMethod}
-        //         onChange={handleChange}
-        //         options={paymentOptions}
-        //       />
-        //     </div>
-        //   </div>
+// <div className="section-box">
+//   <div className="form-section-title">
+//     Payment & Coordinator Verification
+//   </div>
+//   <div className="two-col">
+//     <TextInput
+//       label="Estimated length of stay"
+//       name="estimatedStay"
+//       value={formData.estimatedStay}
+//       onChange={handleChange}
+//     />
+//     <div className="form-field">
+//       <label className="field-label">Payment method</label>
+//       <RadioGroup
+//         name="paymentMethod"
+//         value={formData.paymentMethod}
+//         onChange={handleChange}
+//         options={paymentOptions}
+//       />
+//     </div>
+//   </div>
 
-        //   {(formData.paymentMethod === "Cash" ||
-        //     formData.paymentMethod === "Insurance") && (
-        //     <div
-        //       style={{
-        //         background: "#f8fafc",
-        //         padding: "10px",
-        //         borderRadius: "6px",
-        //         marginTop: "10px",
-        //         borderLeft: "4px solid var(--primary-color)",
-        //       }}
-        //     >
-        //       <label className="field-label">Coordinator Verification</label>
-        //       <RadioGroup
-        //         name={
-        //           formData.paymentMethod === "Cash"
-        //             ? "cashPaymentStatus"
-        //             : "insuranceApprovalStatus"
-        //         }
-        //         value={
-        //           formData.paymentMethod === "Cash"
-        //             ? formData.cashPaymentStatus
-        //             : formData.insuranceApprovalStatus
-        //         }
-        //         onChange={handleChange}
-        //         options={
-        //           formData.paymentMethod === "Cash"
-        //             ? cashOptions
-        //             : insuranceOptions
-        //         }
-        //       />
-        //     </div>
-        //   )}
+//   {(formData.paymentMethod === "Cash" ||
+//     formData.paymentMethod === "Insurance") && (
+//     <div
+//       style={{
+//         background: "#f8fafc",
+//         padding: "10px",
+//         borderRadius: "6px",
+//         marginTop: "10px",
+//         borderLeft: "4px solid var(--primary-color)",
+//       }}
+//     >
+//       <label className="field-label">Coordinator Verification</label>
+//       <RadioGroup
+//         name={
+//           formData.paymentMethod === "Cash"
+//             ? "cashPaymentStatus"
+//             : "insuranceApprovalStatus"
+//         }
+//         value={
+//           formData.paymentMethod === "Cash"
+//             ? formData.cashPaymentStatus
+//             : formData.insuranceApprovalStatus
+//         }
+//         onChange={handleChange}
+//         options={
+//           formData.paymentMethod === "Cash"
+//             ? cashOptions
+//             : insuranceOptions
+//         }
+//       />
+//     </div>
+//   )}
 
-        //   <div className="two-col" style={{ marginTop: "15px" }}>
-        //     <TextInput
-        //       label="Floor Coordinator Name & Sign"
-        //       name="coordinatorNameSign"
-        //       value={formData.coordinatorNameSign}
-        //       onChange={handleChange}
-        //     />
-        //     <MuiDateTimePicker
-        //       label="Verification Date & Time"
-        //       name="coordinatorDateTime"
-        //       value={formData.coordinatorDateTime}
-        //       onChange={handleChange}
-        //     />
-        //   </div>
-        // </div>
+//   <div className="two-col" style={{ marginTop: "15px" }}>
+//     <TextInput
+//       label="Floor Coordinator Name & Sign"
+//       name="coordinatorNameSign"
+//       value={formData.coordinatorNameSign}
+//       onChange={handleChange}
+//     />
+//     <MuiDateTimePicker
+//       label="Verification Date & Time"
+//       name="coordinatorDateTime"
+//       value={formData.coordinatorDateTime}
+//       onChange={handleChange}
+//     />
+//   </div>
+// </div>
 
 //         {/* Final Footer Section */}
 //         <div
@@ -528,7 +528,7 @@ import Swal from "sweetalert2";
 import hhcLogo from "../../../assets/images/logo/hhclogo.webp";
 
 const pageTitle = "admission-details";
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 const theme = createTheme({
   palette: {
@@ -591,8 +591,8 @@ const AdmissionDetailsForm = ({ onSubmit, patientData }) => {
           const existing = result.data["admission-details"];
           if (existing) {
             setFormData({
-              admissionDateTime: existing.admission_details?.admission_date 
-                ? `${existing.admission_details.admission_date} ${existing.admission_details.admission_time || ""}` 
+              admissionDateTime: existing.admission_details?.admission_date
+                ? `${existing.admission_details.admission_date} ${existing.admission_details.admission_time || ""}`
                 : "",
               surgeryDate: existing.admission_details?.surgery_procedure_date || "",
               provisionalDiagnosis: existing.admission_details?.provisional_diagnosis || "",
@@ -847,11 +847,11 @@ const AdmissionDetailsForm = ({ onSubmit, patientData }) => {
                   />
                 </div>
                 <div className="form-field">
-                    <label className="field-label">Surgery/Procedure Date</label>
-                    <input type="date" name="surgeryDate" className="form-control" value={formData.surgeryDate} onChange={handleChange} />
+                  <label className="field-label">Surgery/Procedure Date</label>
+                  <input type="date" name="surgeryDate" className="form-control" value={formData.surgeryDate} onChange={handleChange} />
                 </div>
               </div>
-              <div className="form-grid" style={{marginTop:'10px'}}>
+              <div className="form-grid" style={{ marginTop: '10px' }}>
                 <TextInput label="Provisional Diagnosis *" name="provisionalDiagnosis" value={formData.provisionalDiagnosis} onChange={handleChange} />
                 <TextInput label="Final Diagnosis" name="finalDiagnosis" value={formData.finalDiagnosis} onChange={handleChange} />
               </div>
@@ -878,77 +878,77 @@ const AdmissionDetailsForm = ({ onSubmit, patientData }) => {
               </div>
             </div> */}
 
-        <div className="section-box">
-          <div className="form-section-title">Investigations & Status</div>
+            <div className="section-box">
+              <div className="form-section-title">Investigations & Status</div>
 
-          <div className="form-field">
-            <label className="field-label">Lab tests</label>
-            <RadioGroup
-              name="labTests"
-              value={formData.labTests}
-              onChange={handleChange}
-              options={labTestOptions}
-            />
+              <div className="form-field">
+                <label className="field-label">Lab tests</label>
+                <RadioGroup
+                  name="labTests"
+                  value={formData.labTests}
+                  onChange={handleChange}
+                  options={labTestOptions}
+                />
 
-            {formData.labTests === "Done outside" && (
+                {formData.labTests === "Done outside" && (
+                  <div
+                    style={{
+                      marginTop: "10px",
+                      padding: "10px",
+                      background: "#f0fdfa",
+                      border: "1px dashed var(--primary-color)",
+                      borderRadius: "6px",
+                    }}
+                  >
+                    <span
+                      className="info-label"
+                      style={{ color: "var(--primary-color)" }}
+                    >
+                      Attach lab reports to file
+                    </span>
+                    <button
+                      type="button"
+                      className="secondary-btn"
+                      style={{ marginLeft: "10px" }}
+                    >
+                      Import Reports
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <div
+                className="two-col"
                 style={{
+                  borderTop: "1px solid var(--border-color)",
+                  paddingTop: "10px",
                   marginTop: "10px",
-                  padding: "10px",
-                  background: "#f0fdfa",
-                  border: "1px dashed var(--primary-color)",
-                  borderRadius: "6px",
                 }}
               >
-                <span
-                  className="info-label"
-                  style={{ color: "var(--primary-color)" }}
-                >
-                  Attach lab reports to file
-                </span>
-                <button
-                  type="button"
-                  className="secondary-btn"
-                  style={{ marginLeft: "10px" }}
-                >
-                  Import Reports
-                </button>
+                <div className="form-field">
+                  <label className="field-label">
+                    Investigation orders (Imaging)
+                  </label>
+                  <RadioGroup
+                    name="investigationOrders"
+                    value={formData.investigationOrders}
+                    onChange={handleChange}
+                    options={investigationOptions}
+                  />
+                </div>
+                <div className="form-field">
+                  <label className="field-label">NBM status</label>
+                  <RadioGroup
+                    name="nbmStatus"
+                    value={formData.nbmStatus}
+                    onChange={handleChange}
+                    options={nbmOptions}
+                  />
+                </div>
               </div>
-            )}
-          </div>
+            </div>
 
-          <div
-            className="two-col"
-            style={{
-              borderTop: "1px solid var(--border-color)",
-              paddingTop: "10px",
-              marginTop: "10px",
-            }}
-          >
-            <div className="form-field">
-              <label className="field-label">
-                Investigation orders (Imaging)
-              </label>
-              <RadioGroup
-                name="investigationOrders"
-                value={formData.investigationOrders}
-                onChange={handleChange}
-                options={investigationOptions}
-              />
-            </div>
-            <div className="form-field">
-              <label className="field-label">NBM status</label>
-              <RadioGroup
-                name="nbmStatus"
-                value={formData.nbmStatus}
-                onChange={handleChange}
-                options={nbmOptions}
-              />
-            </div>
-          </div>
-        </div>
-            
-{/* 
+            {/* 
             Section 3: Billing
             <div className="section-box">
                 <div className="form-section-title">Billing & stay</div>
@@ -963,76 +963,76 @@ const AdmissionDetailsForm = ({ onSubmit, patientData }) => {
             </div>
              */}
 
-<div className="section-box">
-          <div className="form-section-title">
-            Payment & Coordinator Verification
-          </div>
-          <div className="two-col">
-            <TextInput
-              label="Estimated length of stay"
-              name="estimatedStay"
-              value={formData.estimatedStay}
-              onChange={handleChange}
-            />
-            <div className="form-field">
-              <label className="field-label">Payment method</label>
-              <RadioGroup
-                name="paymentMethod"
-                value={formData.paymentMethod}
-                onChange={handleChange}
-                options={paymentOptions}
-              />
-            </div>
-          </div>
-
-          {(formData.paymentMethod === "Cash" ||
-            formData.paymentMethod === "Insurance") && (
-              <div
-                style={{
-                  background: "#f8fafc",
-                  padding: "10px",
-                  borderRadius: "6px",
-                  marginTop: "10px",
-                  borderLeft: "4px solid var(--primary-color)",
-                }}
-              >
-                <label className="field-label">Coordinator Verification</label>
-                <RadioGroup
-                  name={
-                    formData.paymentMethod === "Cash"
-                      ? "cashPaymentStatus"
-                      : "insuranceApprovalStatus"
-                  }
-                  value={
-                    formData.paymentMethod === "Cash"
-                      ? formData.cashPaymentStatus
-                      : formData.insuranceApprovalStatus
-                  }
+            <div className="section-box">
+              <div className="form-section-title">
+                Payment & Coordinator Verification
+              </div>
+              <div className="two-col">
+                <TextInput
+                  label="Estimated length of stay"
+                  name="estimatedStay"
+                  value={formData.estimatedStay}
                   onChange={handleChange}
-                  options={
-                    formData.paymentMethod === "Cash"
-                      ? cashOptions
-                      : insuranceOptions
-                  }
+                />
+                <div className="form-field">
+                  <label className="field-label">Payment method</label>
+                  <RadioGroup
+                    name="paymentMethod"
+                    value={formData.paymentMethod}
+                    onChange={handleChange}
+                    options={paymentOptions}
+                  />
+                </div>
+              </div>
+
+              {(formData.paymentMethod === "Cash" ||
+                formData.paymentMethod === "Insurance") && (
+                  <div
+                    style={{
+                      background: "#f8fafc",
+                      padding: "10px",
+                      borderRadius: "6px",
+                      marginTop: "10px",
+                      borderLeft: "4px solid var(--primary-color)",
+                    }}
+                  >
+                    <label className="field-label">Coordinator Verification</label>
+                    <RadioGroup
+                      name={
+                        formData.paymentMethod === "Cash"
+                          ? "cashPaymentStatus"
+                          : "insuranceApprovalStatus"
+                      }
+                      value={
+                        formData.paymentMethod === "Cash"
+                          ? formData.cashPaymentStatus
+                          : formData.insuranceApprovalStatus
+                      }
+                      onChange={handleChange}
+                      options={
+                        formData.paymentMethod === "Cash"
+                          ? cashOptions
+                          : insuranceOptions
+                      }
+                    />
+                  </div>
+                )}
+
+              <div className="two-col" style={{ marginTop: "15px" }}>
+                <TextInput
+                  label="Floor Coordinator Name & Sign"
+                  name="coordinatorNameSign"
+                  value={formData.coordinatorNameSign}
+                  onChange={handleChange}
+                />
+                <MuiDateTimePicker
+                  label="Verification Date & Time"
+                  name="coordinatorDateTime"
+                  value={formData.coordinatorDateTime}
+                  onChange={handleChange}
                 />
               </div>
-            )}
-
-          <div className="two-col" style={{ marginTop: "15px" }}>
-            <TextInput
-              label="Floor Coordinator Name & Sign"
-              name="coordinatorNameSign"
-              value={formData.coordinatorNameSign}
-              onChange={handleChange}
-            />
-            <MuiDateTimePicker
-              label="Verification Date & Time"
-              name="coordinatorDateTime"
-              value={formData.coordinatorDateTime}
-              onChange={handleChange}
-            />
-          </div>
-        </div>
+            </div>
 
 
             <div className="two-col" style={{ marginTop: "1rem" }}>

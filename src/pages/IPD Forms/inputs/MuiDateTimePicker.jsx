@@ -17,7 +17,7 @@ const theme = createTheme({
     }
 });
 
-const MuiDateTimePicker = ({ label, value, onChange, name, required = false, type = 'datetime', style = {}, hideLabel = false, ampm = true, labelClassName = "", labelStyle = {}, disablePast = false, placeholder = "" }) => {
+const MuiDateTimePicker = ({ label, value, onChange, name, required = false, type = 'datetime', style = {}, hideLabel = false, ampm = true, labelClassName = "", labelStyle = {}, disablePast = false, placeholder = "", inputSx = {}, minutesStep = 1 }) => {
     const PickerComponent = type === 'date' ? DatePicker : (type === 'time' ? TimePicker : DateTimePicker);
 
     // Dynamic format based on type and ampm
@@ -47,6 +47,7 @@ const MuiDateTimePicker = ({ label, value, onChange, name, required = false, typ
                     )}
                     <PickerComponent
                         ampm={ampm}
+                        minutesStep={minutesStep}
                         disablePast={disablePast}
                         value={value ? dayjs(value, type === 'time' ? (ampm ? 'hh:mm A' : 'HH:mm') : (type === 'date' ? 'DD-MM-YYYY' : ['DD-MM-YYYY HH:mm', 'DD-MM-YYYY hh:mm A', 'YYYY-MM-DDTHH:mm:ss.SSSZ'])) : null}
                         format={displayFormat}
@@ -75,7 +76,8 @@ const MuiDateTimePicker = ({ label, value, onChange, name, required = false, typ
                                 sx: {
                                     '& .MuiOutlinedInput-root, & .MuiInputBase-root': {
                                         borderRadius: '8px',
-                                        backgroundColor: '#fafdff !important',
+                                        backgroundColor: '#fafdff',
+                                        height: 'min-content',
                                         '& fieldset': {
                                             borderWidth: '1.5px',
                                             borderColor: '#4dd0e1',
@@ -91,8 +93,8 @@ const MuiDateTimePicker = ({ label, value, onChange, name, required = false, typ
                                         padding: '4px 12px',
                                         fontSize: '0.8rem',
                                         height: 'auto',
-                                        backgroundColor: '#fafdff !important',
-                                    }
+                                    },
+                                    ...inputSx
                                 }
                             }
                         }}

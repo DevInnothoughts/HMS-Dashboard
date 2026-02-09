@@ -18,7 +18,7 @@ import { decodeJwt } from "../../utils/decode-jwt";
 import MuiDateTimePicker from "../IPD Forms/inputs/MuiDateTimePicker";
 import dayjs from "dayjs";
 
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 export default function SearchBy() {
   const navigate = useNavigate();
@@ -88,7 +88,13 @@ export default function SearchBy() {
       address: patient.address,
       age: patient.age,
       gender: patient.sex,
+      reference: patient.reference || "",
+      admissionDatetime: null,
       datetime: null,
+      roomNumber: "",
+      sxPlan: "",
+      sxTime: null,
+      nmbTime: null,
     };
     setPatientData(patData);
     setShowSelectionModal(false);
@@ -112,12 +118,26 @@ export default function SearchBy() {
     Swal.fire("Success", "Patient details updated", "success");
   };
 
+  const handleAdmissionDatetimeChange = (e) => {
+    const { value } = e.target;
+    setPatientData((prev) => ({ ...prev, admissionDatetime: value }));
+  };
+
   const handleDatetimeChange = (e) => {
     const { value } = e.target;
     setPatientData((prev) => ({ ...prev, datetime: value }));
   };
 
+  const handleBookingChange = (e) => {
+    const { name, value } = e.target;
+    setPatientData((prev) => ({ ...prev, [name]: value }));
+  };
+
   const handleVerifyAndSubmit = async () => {
+    if (!patientData.admissionDatetime) {
+      Swal.fire("Required", "Please select Admission Date & Time", "warning");
+      return;
+    }
     if (!patientData.datetime) {
       Swal.fire("Required", "Please select Surgery Date & Time", "warning");
       return;
@@ -129,7 +149,13 @@ export default function SearchBy() {
       patient_id: patientData.HMSId,
       phone: patientData.contact,
       Uid_no: patientData.uhid,
-      location: currentLocation, // Adding location as it's standard in your other calls
+      admission_datetime: patientData.admissionDatetime,
+      surgery_datetime: patientData.datetime,
+      room_no: patientData.roomNumber,
+      sx_plan: patientData.sxPlan,
+      sx_time: patientData.sxTime,
+      nmb_time: patientData.nmbTime,
+      location: currentLocation,
     };
     try {
       // 2. Call the backend API
@@ -350,16 +376,21 @@ export default function SearchBy() {
                           value: patientData.contact,
                           name: "contact",
                         },
-                        {
-                          label: "Address",
-                          value: patientData.address,
-                          name: "address",
-                        },
                         { label: "Age", value: patientData.age, name: "age" },
                         {
                           label: "Gender",
                           value: patientData.gender,
                           name: "gender",
+                        },
+                        {
+                          label: "Address",
+                          value: patientData.address,
+                          name: "address",
+                        },
+                        {
+                          label: "Reference",
+                          value: patientData.reference,
+                          name: "reference",
                         },
                       ].map((field) => (
                         <Col md={4} key={field.name} className="mb-10">
@@ -375,7 +406,7 @@ export default function SearchBy() {
                               value={field.value}
                               readOnly
                               style={{
-                                backgroundColor: "#fafdff",
+                                backgroundColor: "#e7ebebff",
                                 border: "1.5px solid rgb(77, 208, 225)",
                                 borderRadius: "8px",
                                 cursor: "not-allowed",
@@ -386,6 +417,55 @@ export default function SearchBy() {
                           </Form.Group>
                         </Col>
                       ))}
+
+                      {/* Admission Booking Section */}
+                      <Col md={12} className="mb-2 mt-2">
+                        <hr style={{ borderTop: "1px solid #67c5cfff", opacity: 0.3 }} />
+                        <p style={{ fontSize: "0.90rem", color: "#ff1500ff", fontWeight: "600", marginBottom: "5px" }}>
+                          Fill the below details to book the patient for admission
+                        </p>
+                      </Col>
+
+                      <Col md={4} className="mb-10">
+                        <MuiDateTimePicker
+                          label="Admission Date & Time"
+                          value={patientData.admissionDatetime}
+                          onChange={handleAdmissionDatetimeChange}
+                          name="admissionDatetime"
+                          type="datetime"
+                          labelClassName={labelStyle}
+                          labelStyle={{ fontSize: "0.75rem" }}
+                          required={true}
+                          disablePast={true}
+                          placeholder="Select Admission Date & Time"
+                          style={{
+                            marginBottom: "0px",
+                          }}
+                          inputSx={{
+                            '& .MuiOutlinedInput-root': {
+                              backgroundColor: '#e7ebebff',
+                              borderRadius: '8px',
+                              height: '31px',
+                              '& fieldset': {
+                                borderWidth: '1.5px !important',
+                                borderColor: 'rgb(77, 208, 225) !important',
+                              }
+                            },
+                            '& .MuiInputBase-input': {
+                              padding: '3px 10px !important',
+                              fontSize: '0.8rem !important',
+                            },
+                            '& .MuiInputAdornment-root': {
+                              marginLeft: '0',
+                            },
+                            '& .MuiIconButton-root': {
+                              padding: '4px',
+                              color: '#1a5b61ff',
+                            }
+                          }}
+                        />
+                      </Col>
+
                       <Col md={4} className="mb-10">
                         <MuiDateTimePicker
                           label="Surgery Date & Time"
@@ -400,6 +480,142 @@ export default function SearchBy() {
                           placeholder="Select Surgery Date & Time"
                           style={{
                             marginBottom: "0px",
+                          }}
+                          inputSx={{
+                            '& .MuiOutlinedInput-root': {
+                              backgroundColor: '#e7ebebff', // Match readOnly background
+                              borderRadius: '8px',
+                              height: '31px', // Standard height for small inputs
+                              '& fieldset': {
+                                borderWidth: '1.5px !important',
+                                borderColor: 'rgb(77, 208, 225) !important',
+                              }
+                            },
+                            '& .MuiInputBase-input': {
+                              padding: '3px 10px !important',
+                              fontSize: '0.8rem !important',
+                            },
+                            '& .MuiInputAdornment-root': {
+                              marginLeft: '0',
+                            },
+                            '& .MuiIconButton-root': {
+                              padding: '4px',
+                              color: '#1a5b61ff',
+                            }
+                          }}
+                        />
+                      </Col>
+
+                      <Col md={4} className="mb-10">
+                        <Form.Group>
+                          <Form.Label className={labelStyle} style={{ fontSize: "0.75rem" }}>
+                            Room Number
+                          </Form.Label>
+                          <Form.Control
+                            type="text"
+                            name="roomNumber"
+                            value={patientData.roomNumber}
+                            onChange={handleBookingChange}
+                            style={{
+                              border: "1.5px solid rgb(77, 208, 225)",
+                              borderRadius: "8px",
+                              padding: "3px 10px",
+                              fontSize: "0.8rem",
+                              height: "31px",
+                            }}
+                          />
+                        </Form.Group>
+                      </Col>
+
+                      <Col md={4} className="mb-10">
+                        <Form.Group>
+                          <Form.Label className={labelStyle} style={{ fontSize: "0.75rem" }}>
+                            SX Plan
+                          </Form.Label>
+                          <Form.Control
+                            type="text"
+                            name="sxPlan"
+                            value={patientData.sxPlan}
+                            onChange={handleBookingChange}
+                            style={{
+                              border: "1.5px solid rgb(77, 208, 225)",
+                              borderRadius: "8px",
+                              padding: "3px 10px",
+                              fontSize: "0.8rem",
+                              height: "31px",
+                            }}
+                          />
+                        </Form.Group>
+                      </Col>
+
+                      <Col md={4} className="mb-10">
+                        <MuiDateTimePicker
+                          label="SX Time"
+                          value={patientData.sxTime}
+                          onChange={(e) => setPatientData(prev => ({ ...prev, sxTime: e.target.value }))}
+                          name="sxTime"
+                          type="time"
+                          minutesStep={15}
+                          labelClassName={labelStyle}
+                          labelStyle={{ fontSize: "0.75rem" }}
+                          style={{ marginBottom: "0px" }}
+                          inputSx={{
+                            '& .MuiOutlinedInput-root': {
+                              backgroundColor: '#e7ebebff',
+                              borderRadius: '8px',
+                              height: '31px',
+                              '& fieldset': {
+                                borderWidth: '1.5px !important',
+                                borderColor: 'rgb(77, 208, 225) !important',
+                              }
+                            },
+                            '& .MuiInputBase-input': {
+                              padding: '3px 10px !important',
+                              fontSize: '0.8rem !important',
+                            },
+                            '& .MuiInputAdornment-root': {
+                              marginLeft: '0',
+                            },
+                            '& .MuiIconButton-root': {
+                              padding: '4px',
+                              color: '#1a5b61ff',
+                            }
+                          }}
+                        />
+                      </Col>
+
+                      <Col md={4} className="mb-10">
+                        <MuiDateTimePicker
+                          label="NBM Time"
+                          value={patientData.nmbTime}
+                          onChange={(e) => setPatientData(prev => ({ ...prev, nmbTime: e.target.value }))}
+                          name="nmbTime"
+                          type="time"
+                          minutesStep={15}
+                          labelClassName={labelStyle}
+                          labelStyle={{ fontSize: "0.75rem" }}
+                          style={{ marginBottom: "0px" }}
+                          inputSx={{
+                            '& .MuiOutlinedInput-root': {
+                              backgroundColor: '#e7ebebff',
+                              borderRadius: '8px',
+                              height: '31px',
+                              '& fieldset': {
+                                borderWidth: '1.5px !important',
+                                borderColor: 'rgb(77, 208, 225) !important',
+                              }
+                            },
+                            '& .MuiInputBase-input': {
+                              padding: '3px 10px !important',
+                              fontSize: '0.8rem !important',
+                            },
+                            '& .MuiInputAdornment-root': {
+                              marginLeft: '0',
+                            },
+                            '& .MuiIconButton-root': {
+                              padding: '4px',
+                              color: '#1a5b61ff',
+                            }
                           }}
                         />
                       </Col>
@@ -635,8 +851,15 @@ export default function SearchBy() {
                 backgroundColor: "#67c5cfff",
                 borderBottom: "2px solid #1a5b61ff",
                 padding: "10px",
+                display: "flex",
+                alignItems: "center",
               }}
             >
+              <FeatherIcon
+                icon="edit-2"
+                size="18"
+                style={{ color: "#1a5b61ff", marginRight: "10px" }}
+              />
               <Modal.Title style={{
                 color: "#1a5b61ff", fontWeight: "600", fontSize: "19px",
               }}>
