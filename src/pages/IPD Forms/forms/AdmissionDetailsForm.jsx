@@ -586,9 +586,9 @@ const AdmissionDetailsForm = ({ onSubmit, patientData }) => {
           }
         );
         const result = await response.json();
-
+        console.log("result.data: ", result.data);
         if (response.ok && result.data) {
-          const existing = result.data["admission-details"];
+          const existing = result.data;
           if (existing) {
             setFormData({
               admissionDateTime: existing.admission_details?.admission_date
@@ -731,7 +731,7 @@ const AdmissionDetailsForm = ({ onSubmit, patientData }) => {
     };
 
     try {
-      console.log(finalPayload);
+      console.log("FINAL:", finalPayload);
       Swal.fire({ title: "Saving...", didOpen: () => Swal.showLoading(), allowOutsideClick: false });
       const response = await fetch(`${BASE_URL}/V1/ipd/admission/insertAdmission`, {
         method: "POST",
