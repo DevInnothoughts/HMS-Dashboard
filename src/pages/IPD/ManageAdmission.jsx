@@ -140,7 +140,7 @@ export default function ManageAdmission() {
 
       if (response.ok) {
         const result = await response.json();
-
+        console.log(result);
         // 1. Sort the raw data by date (Descending: Newest first)
         const sortedData = result.sort((a, b) => {
           return new Date(b.created_at) - new Date(a.created_at);
@@ -153,7 +153,8 @@ export default function ManageAdmission() {
           contact: p.patient_phone,
           age: p.age,
           gender: p.sex,
-          verifiedDate: formatDate(p.created_at), // Using the formatter from previous step
+          verifiedDate: formatDate(p.created_at), 
+          surgeryDate: p.surgery_datetime || "Not Scheduled",// Using the formatter from previous step
           admissionNo:
             p.admission_no === 0 || p.admission_no === "0"
               ? null
@@ -633,13 +634,30 @@ export default function ManageAdmission() {
 
                       <Column
                         field="verifiedDate"
-                        header="Surgery Date & Time"
+                        header="Admission Date & Time"
                         headerClassName="datatable-header-center"
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
                           padding: "0.75rem",
                           width: "140px",
+                        }}
+                      />
+
+                      <Column
+                        field="surgeryDate" // Changed from verifiedDate
+                        header="Surgery Date & Time"
+                        headerClassName="datatable-header-center"
+                        body={(rowData) => (
+                          <span style={{ fontSize: '10px' }}>
+                              {rowData.surgeryDate}
+                          </span>
+                        )}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "160px",
                         }}
                       />
 

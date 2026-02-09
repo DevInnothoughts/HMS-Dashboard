@@ -142,21 +142,27 @@ export default function SearchBy() {
       Swal.fire("Required", "Please select Surgery Date & Time", "warning");
       return;
     }
-
-    // 1. Prepare data for the backend API
-    const payload = {
-      global_id: patientData.global_id,
-      patient_id: patientData.HMSId,
-      phone: patientData.contact,
-      Uid_no: patientData.uhid,
+    const preplan = { "pre_planning": {
       admission_datetime: patientData.admissionDatetime,
       surgery_datetime: patientData.datetime,
       room_no: patientData.roomNumber,
       sx_plan: patientData.sxPlan,
       sx_time: patientData.sxTime,
       nmb_time: patientData.nmbTime,
+    }
+  };
+    // 1. Prepare data for the backend API
+    const payload = {
+      global_id: patientData.global_id,
+      patient_id: patientData.HMSId,
+      phone: patientData.contact,
+      Uid_no: patientData.uhid,
       location: currentLocation,
+      // Grouping the specific planning fields into one object
+      pre_planning: preplan
     };
+    
+    console.log(payload);
     try {
       // 2. Call the backend API
       const response = await fetch(

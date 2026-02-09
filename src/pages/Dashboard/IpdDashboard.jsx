@@ -79,19 +79,50 @@ export default function IpdDashboard() {
         return `${day}-${month}-${year}`;
     };
 
+    // const formatSurgeries = useCallback((data) => {
+    //     return data.map((p) => {
+    //         const surgeryDate = moment(p.created_at);
+    //         const startTime = surgeryDate.toDate();
+    //         const endTime = surgeryDate.clone().add(1, "hour").toDate();
+
+    //         return {
+    //             title: `${surgeryDate.format("hh:mm A")} — ${p.name || "Patient"}`,
+    //             start: startTime,
+    //             end: endTime,
+    //             phone: p.patient_phone,
+    //             date: formatDate(p.created_at),
+    //             time: surgeryDate.format("hh:mm A"),
+    //             patientName: p.name,
+    //             uhid: p.uid,
+    //             age: p.age,
+    //             gender: p.sex,
+    //             patientid: p.patient_id,
+    //             isConfirmed: p.admission_no !== 0 && p.admission_no !== "0" && p.admission_no !== null,
+    //             admissionNo: p.admission_no
+    //         };
+    //     });
+    // }, []);
+
     const formatSurgeries = useCallback((data) => {
         return data.map((p) => {
-            const surgeryDate = moment(p.created_at);
-            const startTime = surgeryDate.toDate();
-            const endTime = surgeryDate.clone().add(1, "hour").toDate();
+            // Parse the surgery_datetime string from the API
+            // Format: Day-Month-Year Hour:Minute AM/PM
+            const surgeryMoment = p.surgery_datetime 
+                ? moment(p.surgery_datetime, "DD-MM-YYYY hh:mm A") 
+                : moment(p.created_at);
+
+            const startTime = surgeryMoment.toDate();
+            // Default duration of 1 hour for the calendar block
+            const endTime = surgeryMoment.clone().add(1, "hour").toDate();
 
             return {
-                title: `${surgeryDate.format("hh:mm A")} — ${p.name || "Patient"}`,
+                title: `${surgeryMoment.format("hh:mm A")} — ${p.name || "Patient"}`,
                 start: startTime,
                 end: endTime,
                 phone: p.patient_phone,
-                date: formatDate(p.created_at),
-                time: surgeryDate.format("hh:mm A"),
+                // Display the parsed surgery date in the detail card
+                date: surgeryMoment.format("DD-MM-YYYY"),
+                time: surgeryMoment.format("hh:mm A"),
                 patientName: p.name,
                 uhid: p.uid,
                 age: p.age,
