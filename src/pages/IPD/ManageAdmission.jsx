@@ -153,7 +153,7 @@ export default function ManageAdmission() {
           contact: p.patient_phone,
           age: p.age,
           gender: p.sex,
-          verifiedDate: formatDate(p.created_at), 
+          verifiedDate: p.admission_datetime || "NOT ADMITTED", 
           surgeryDate: p.surgery_datetime || "Not Scheduled",// Using the formatter from previous step
           admissionNo:
             p.admission_no === 0 || p.admission_no === "0"
@@ -376,27 +376,37 @@ export default function ManageAdmission() {
     setShowRescheduleModal(true);
   };
 
-  const handleRescheduleSubmit = (e) => {
+  const handleRescheduleSubmit = async (e) => {
     e.preventDefault();
-    if (!rescheduleDate) {
-      Swal.fire("Required", "Please select a new date and time", "warning");
-      return;
+    
+    try {
+        Swal.fire({ title: 'Updating...', didOpen: () => Swal.showLoading() });
+
+        const response = await fetch(`${BASE_URL}/V1/ipd/admin/rescheduleSurgeryDate`, {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${localStorage.getItem("token")}` 
+            },
+            body: JSON.stringify({
+                location: currentLocation,
+                uidNo: reschedulePatient.uhid, // Ensure this matches your state key
+                rescheduleDate: rescheduleDate
+            }),
+        });
+
+        if (response.ok) {
+            Swal.fire("Success", "Surgery date rescheduled!", "success");
+            setShowRescheduleModal(false);
+            fetchVerifiedPatients(); // Refresh the list/calendar
+        } else {
+            const err = await response.json();
+            throw new Error(err.message || "Failed to reschedule");
+        }
+    } catch (error) {
+        Swal.fire("Error", error.message, "error");
     }
-
-    // Frontend only for now as requested
-    console.log("Rescheduling patient:", reschedulePatient.uhid, "to", rescheduleDate);
-
-    // Optimistic UI or just a success message
-    Swal.fire({
-      icon: "success",
-      title: "Rescheduled!",
-      text: "Surgery date has been updated (Frontend Only).",
-      timer: 1500,
-      showConfirmButton: false,
-    });
-
-    setShowRescheduleModal(false);
-  };
+};
 
   const handleCancelClick = (patient) => {
     setCancelPatient(patient);
