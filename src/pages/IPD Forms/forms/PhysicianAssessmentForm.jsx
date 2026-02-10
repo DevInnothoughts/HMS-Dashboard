@@ -287,7 +287,7 @@ import Swal from "sweetalert2";
 import './Forms.css';
 
 const pageTitle = "physician-assessment"; // Database JSON key
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const PhysicianAssessmentForm = ({ onSubmit, patientData = {} }) => {
     const [currentLocation, setCurrentLocation] = useState(null);
