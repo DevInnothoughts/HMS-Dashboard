@@ -282,12 +282,12 @@ export default function SearchBy() {
                         className="fw-bold uppercase mb-1"
                         style={{ fontSize: "0.8rem", color: "#1a5b61ff" }}
                       >
-                        Enter UHID No. / Patient Mobile No.
+                        Search by Patient Name / UHID No. / Patient Mobile No.
                       </Form.Label>
                       <InputGroup size="sm">
                         <Form.Control
                           type="text"
-                          placeholder="Enter UHID No / Patient Mobile No"
+                          placeholder="Enter Patient Name / UHID No / Patient Mobile No"
                           value={uhid}
                           onChange={(e) => setUhid(e.target.value)}
                           style={{
