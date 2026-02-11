@@ -556,7 +556,7 @@ export default function IpdDashboard() {
                             <Col lg={8}>
                                 <div className="legend-title">
                                     <h4 className="fw-bold mb-10">
-                                        Patient Surgery Statistics for {moment(selectedDate).format("MMMM YYYY")}
+                                        Patient Surgery Calendar for {moment(selectedDate).format("MMMM YYYY")}
                                     </h4>
                                 </div>
                                 <div className="d-flex align-items-center flex-wrap">

@@ -795,7 +795,7 @@ export default function ManageAdmission() {
             <MuiDateTimePicker
               label="New Surgery Date & Time"
               value={rescheduleDate}
-              onChange={(e) => setRescheduleDate(e.target.value)}
+              onChange={(e) => setRescheduleDate(e.target.value)} 
               name="rescheduleDate"
               type="datetime"
               required={true}

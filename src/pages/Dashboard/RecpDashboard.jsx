@@ -648,7 +648,7 @@ export default function ReceptionistDashboard() {
               <Col lg={7}>
                 <div className="legend-title">
                   <h4 className="fw-bold mb-10">
-                    Patient Appointment Statistics for{" "}
+                    Patient Appointment Calendar for{" "}
                     {moment(selectedDate).format("MMMM YYYY")}
                   </h4>
                 </div>

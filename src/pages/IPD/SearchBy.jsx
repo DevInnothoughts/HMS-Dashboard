@@ -93,7 +93,7 @@ export default function SearchBy() {
       datetime: null,
       roomNumber: "",
       sxPlan: "",
-      sxTime: null,
+      // sxTime: null,
       nmbTime: null,
     };
     setPatientData(patData);
@@ -147,7 +147,7 @@ export default function SearchBy() {
       surgery_datetime: patientData.datetime,
       room_no: patientData.roomNumber,
       sx_plan: patientData.sxPlan,
-      sx_time: patientData.sxTime,
+      // sx_time: patientData.sxTime,
       nmb_time: patientData.nmbTime,
     }
   };
@@ -158,7 +158,6 @@ export default function SearchBy() {
       phone: patientData.contact,
       Uid_no: patientData.uhid,
       location: currentLocation,
-      // Grouping the specific planning fields into one object
       pre_planning: preplan
     };
     
@@ -554,7 +553,7 @@ export default function SearchBy() {
                         </Form.Group>
                       </Col>
 
-                      <Col md={4} className="mb-10">
+                      {/* <Col md={4} className="mb-10">
                         <MuiDateTimePicker
                           label="SX Time"
                           value={patientData.sxTime}
@@ -588,7 +587,7 @@ export default function SearchBy() {
                             }
                           }}
                         />
-                      </Col>
+                      </Col> */}
 
                       <Col md={4} className="mb-10">
                         <MuiDateTimePicker
