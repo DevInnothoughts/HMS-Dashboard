@@ -99,9 +99,9 @@ const DailyOPDReport = () => {
     const printWindow = window.open("", "_blank", "width=1000,height=900");
 
     const buildCollectionTable = (title, data) => `
-      <div class="col-lg-4 mb-4">
+      <div class="col-4 mb-4">
         <table class="table table-sm table-striped text-center"
-          style="border:1px solid #00bcd4; background:white;">
+          style="border:1px solid #00bcd4; background:white; border-collapse: collapse; width: 100%;">
           <thead>
             <tr style="background:#e3f2fd;">
               <th colspan="2" style="text-align:left;padding-left:10px;border:1px solid #00bcd4;">
@@ -116,11 +116,13 @@ const DailyOPDReport = () => {
               <tr>
                 <td style="text-align:left;padding-left:10px;width:70%;
                     font-weight:${item.method === "TOTAL" ? "bold" : "normal"};
-                    color:${item.method === "TOTAL" ? "#000" : "#6c757d"}">
+                    color:${item.method === "TOTAL" ? "#000" : "#6c757d"};
+                    border: 1px solid #00bcd4;">
                   ${item.method}
                 </td>
                 <td style="width:30%;
-                    font-weight:${item.method === "TOTAL" ? "bold" : "normal"}">
+                    font-weight:${item.method === "TOTAL" ? "bold" : "normal"};
+                    border: 1px solid #00bcd4;">
                   ${item.amount}
                 </td>
               </tr>
@@ -142,7 +144,7 @@ const DailyOPDReport = () => {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   
     <style>
-      body { background:white; padding:20px; }
+      body { background:white; padding:5px; }
   
       @media print {
         * {
@@ -150,18 +152,21 @@ const DailyOPDReport = () => {
           print-color-adjust: exact !important;
         }
       }
+      table { border-collapse: collapse; width: 100%; border: 1px solid #00bcd4 !important; }
+      th, td { border: 1px solid #00bcd4 !important; }
     </style>
   </head>
   
   <body>
   
-  <div class="row justify-content-center">
-    <div class="col-md-12">
+  <div class="row">
+    <div class="col-12">
   
       <div class="card shadow-sm"
         style="border-radius:12px;
                box-shadow:0px 6px 12px rgba(0,0,0,0.15);
-               border:1.5px solid #00bcd4;">
+               border:1.5px solid #00bcd4;
+               width: 100%;">
   
         <div class="card-header text-center"
           style="font-weight:bold;
@@ -180,9 +185,9 @@ const DailyOPDReport = () => {
   
           <!-- OPD COUNT -->
           <div class="row justify-content-center mb-4">
-            <div class="col-lg-4 col-md-6 col-sm-8 col-12">
+            <div class="col-6">
               <table class="table table-sm table-striped text-center"
-                style="border:1px solid #00bcd4;">
+                style="border:1px solid #00bcd4; border-collapse: collapse; width: 100%;">
                 <thead style="background:#0288d1;color:white;font-size:13px;">
                   <tr>
                     <th style="width:60%">Type</th>
@@ -207,9 +212,9 @@ const DailyOPDReport = () => {
   
           <!-- OPD DETAILS -->
           <div class="row justify-content-center mb-4">
-            <div class="col-lg-8 col-md-10 col-12">
+            <div class="col-10">
               <table class="table table-sm table-striped text-center"
-                style="border:1px solid #00bcd4;">
+                style="border:1px solid #00bcd4; border-collapse: collapse; width: 100%;">
                 <thead style="background:#0288d1;color:white;font-size:13px;">
                   <tr>
                     <th>Type</th>
@@ -240,9 +245,9 @@ const DailyOPDReport = () => {
   
           <!-- TEST DETAILS -->
           <div class="row justify-content-center mb-4">
-            <div class="col-lg-4 col-md-6 col-sm-8 col-12">
+            <div class="col-6">
               <table class="table table-sm table-striped text-center"
-                style="border:1px solid #00bcd4;">
+                style="border:1px solid #00bcd4; border-collapse: collapse; width: 100%;">
                 <thead style="background:#0288d1;color:white;font-size:13px;">
                   <tr>
                     <th>Test</th>

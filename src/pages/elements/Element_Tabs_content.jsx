@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Container, Row, Col, Card, Nav, Tab } from "react-bootstrap";
 
-import PageBreadcrumb from "../componets/PageBreadcrumb";
+import PageBreadcrumb from "../../components/PageBreadcrumb";
 
 export default function Element_Tabs_content() {
   return (

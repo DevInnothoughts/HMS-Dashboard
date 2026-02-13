@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import PageBreadcrumb from "../../componets/PageBreadcrumb";
+import PageBreadcrumb from "../../../components/PageBreadcrumb";
 import { Row, Col, Card, Container, Form, Button } from "react-bootstrap";
 import SimpleBar from "simplebar-react";
 import DataTable from "react-data-table-component";

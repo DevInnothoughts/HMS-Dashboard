@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Container, Row, Col, Card, Form } from "react-bootstrap";
-import PageBreadcrumb from "../componets/PageBreadcrumb";
+import PageBreadcrumb from "../../components/PageBreadcrumb";
 export default function Element_Checkbox_radio() {
   //  Inuut value start
   const [checkboxes, setCheckboxes] = useState({

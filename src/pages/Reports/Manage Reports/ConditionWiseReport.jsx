@@ -10,7 +10,7 @@ import {
 } from "react-bootstrap";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import PageBreadcrumb from "../../componets/PageBreadcrumb";
+import PageBreadcrumb from "../../../components/PageBreadcrumb";
 import SimpleBar from "simplebar-react";
 import axios from 'axios';
 
@@ -176,7 +176,7 @@ const ConditionWiseReport = () => {
         Todate: toDate
       });
       processConvertedData(convertedResponse.data);
-      
+
       setShowTables(true);
     } catch (error) {
       console.error('Error fetching data:', error);

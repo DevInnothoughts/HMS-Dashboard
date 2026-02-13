@@ -8,9 +8,9 @@ import {
   Form,
   Button,
 } from "react-bootstrap";
-import PageBreadcrumb from "../../componets/PageBreadcrumb";
+import PageBreadcrumb from "../../../components/PageBreadcrumb";
 import SimpleBar from "simplebar-react";
-  import '../../styles/styles.css'; // Add this import at the top
+import '../../styles/styles.css'; // Add this import at the top
 
 const PharmacyCollectionReport = () => {
   const today = new Date().toISOString().split("T")[0];

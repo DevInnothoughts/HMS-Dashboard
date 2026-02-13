@@ -207,7 +207,7 @@ export default function Sidebar() {
                     }}
                 >
                     <li><Link to="/dailyOPDReport">Daily OPD Report</Link></li>
-                    <li><Link to="/birthdayAlert">Birthday Alert</Link></li>
+                    <li><Link to="/BirthdayAlert">Birthday Alert</Link></li>
                     <li><Link to="/appointmentConversion">Appointment Conversion</Link></li>
                     <li><Link to="/enquiryConversation">Enquiry Conversation</Link></li>
                     <li><Link to="/enquiryData">Enquiry Data</Link></li>

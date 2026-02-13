@@ -15,7 +15,7 @@ import {
   Button,
 } from "react-bootstrap";
 
-import PageBreadcrumb from "../componets/PageBreadcrumb";
+import PageBreadcrumb from "../components/PageBreadcrumb";
 
 export default function Datatable() {
   const emailcreat = () => setShow(true);

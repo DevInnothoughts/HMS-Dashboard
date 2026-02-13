@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Container, Row, Col, Card } from "react-bootstrap";
-import PageBreadcrumb from "../componets/PageBreadcrumb";
+import PageBreadcrumb from "../../components/PageBreadcrumb";
 
 export default function Element_pricing() {
   return (

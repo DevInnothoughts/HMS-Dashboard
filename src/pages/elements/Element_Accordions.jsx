@@ -2,7 +2,7 @@ import * as React from "react";
 import { Container, Row, Col, Card, Accordion } from "react-bootstrap";
 import { Link } from "react-router-dom";
 
-import PageBreadcrumb from "../componets/PageBreadcrumb";
+import PageBreadcrumb from "../../components/PageBreadcrumb";
 
 export default function Element_Accordions() {
   return (

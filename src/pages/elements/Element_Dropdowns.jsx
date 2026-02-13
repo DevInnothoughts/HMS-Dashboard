@@ -10,7 +10,7 @@ import {
   Form,
 } from "react-bootstrap";
 
-import PageBreadcrumb from "../componets/PageBreadcrumb";
+import PageBreadcrumb from "../../components/PageBreadcrumb";
 
 export default function Element_Dropdowns() {
   return (

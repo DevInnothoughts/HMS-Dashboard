@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import PageBreadcrumb from "../../componets/PageBreadcrumb";
+import PageBreadcrumb from "../../../components/PageBreadcrumb";
 import {
   Row,
   Col,

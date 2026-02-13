@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Container, Row, Col, Card, Stack, Badge } from "react-bootstrap";
 
-import PageBreadcrumb from "../componets/PageBreadcrumb";
+import PageBreadcrumb from "../../components/PageBreadcrumb";
 
 export default function Element_Badges() {
   return (
@@ -82,28 +82,28 @@ export default function Element_Badges() {
                       Example heading <Badge bg="primary">New</Badge>
                     </h1>
                     <h2 className="mb-5">
-                      Example heading <Badge bg="primary"New</Badge>
-                    </h2>
-                    <h3 className="mb-5">
-                      Example heading <Badge bg="primary"New</Badge>
-                    </h3>
-                    <h4 className="mb-5">
-                      Example heading <Badge bg="primary"New</Badge>
-                    </h4>
-                    <h5 className="mb-5">
-                      Example heading <Badge bg="primary"New</Badge>
-                    </h5>
-                    <h6 className="mb-5">
-                      Example heading <Badge bg="primary"New</Badge>
-                    </h6>
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
-          </Container>
-        </div>
-        {/* theme body end */}
-      </div>
+                      Example heading <Badge bg="primary" New</Badge>
+                  </h2>
+                  <h3 className="mb-5">
+                    Example heading <Badge bg="primary" New</Badge>
+                </h3>
+                <h4 className="mb-5">
+                  Example heading <Badge bg="primary" New</Badge>
+              </h4>
+              <h5 className="mb-5">
+                Example heading <Badge bg="primary" New</Badge>
+            </h5>
+            <h6 className="mb-5">
+              Example heading <Badge bg="primary" New</Badge>
+          </h6>
+        </Card.Body>
+      </Card>
+    </Col >
+            </Row >
+          </Container >
+        </div >
+    {/* theme body end */ }
+      </div >
     </>
   );
 }

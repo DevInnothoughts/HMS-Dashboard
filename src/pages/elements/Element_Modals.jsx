@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Container, Row, Col, Card, Modal, Button } from "react-bootstrap";
 
-import PageBreadcrumb from "../componets/PageBreadcrumb";
+import PageBreadcrumb from "../../components/PageBreadcrumb";
 
 export default function Element_Modals() {
   const [activeModal, setActiveModal] = useState(null);

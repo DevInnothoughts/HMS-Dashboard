@@ -2,7 +2,7 @@ import React from "react";
 import { Container, Row, Col, Card, Alert } from "react-bootstrap";
 import { Link } from "react-router-dom";
 
-import PageBreadcrumb from "../componets/PageBreadcrumb";
+import PageBreadcrumb from "../../components/PageBreadcrumb";
 
 export default function Element_Alerts() {
   return (

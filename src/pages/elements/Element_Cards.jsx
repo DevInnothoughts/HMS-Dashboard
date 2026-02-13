@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Container, Row, Col, Card } from "react-bootstrap";
-import PageBreadcrumb from "../componets/PageBreadcrumb";
+import PageBreadcrumb from "../../components/PageBreadcrumb";
 import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
 
 export default function Element_Cards() {

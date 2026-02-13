@@ -1,7 +1,7 @@
 import * as React from "react";
 import { Container, Row, Col, Card, ProgressBar } from "react-bootstrap";
 
-import PageBreadcrumb from "../componets/PageBreadcrumb";
+import PageBreadcrumb from "../../components/PageBreadcrumb";
 
 export default function Element_Progressbar() {
   return (

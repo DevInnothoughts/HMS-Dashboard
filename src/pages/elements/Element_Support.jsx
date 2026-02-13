@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Container, Row, Col, Card, Accordion } from "react-bootstrap";
-import PageBreadcrumb from "../componets/PageBreadcrumb";
+import PageBreadcrumb from "../../components/PageBreadcrumb";
 import IMAGE_URLS from "/src/pages/api/Imgconfig.js";
 
 export default function Element_Support() {

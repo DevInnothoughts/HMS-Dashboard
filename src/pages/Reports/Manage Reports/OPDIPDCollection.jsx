@@ -8,7 +8,7 @@ import {
   Button,
   Form,
 } from "react-bootstrap";
-import PageBreadcrumb from "../../componets/PageBreadcrumb";
+import PageBreadcrumb from "../../../components/PageBreadcrumb";
 import SimpleBar from "simplebar-react";
 import '../../styles/styles.css'; // Add this import at the top
 
@@ -129,7 +129,7 @@ const OPDCollectionReport = () => {
                       <Col md={3}>
                         <Button
                           variant="primary"
-                          onClick={() => {}}
+                          onClick={() => { }}
                           className="w-100"
                         >
                           Find

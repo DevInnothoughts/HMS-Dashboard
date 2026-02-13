@@ -1,11 +1,17 @@
-import React from "react";
-import PageBreadcrumb from "../../componets/PageBreadcrumb";
-import { Row, Col, Card, Container, Table } from "react-bootstrap";
+import React, { useState } from "react";
+import PageBreadcrumb from "../../../components/PageBreadcrumb";
+import { Row, Col, Card, Container, Spinner, Form, Button } from "react-bootstrap";
+import FeatherIcon from "feather-icons-react";
+import { InputText } from "primereact/inputtext";
 import SimpleBar from "simplebar-react";
+import moment from "moment";
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
+import { FilterMatchMode } from "primereact/api";
 
-// Static data for doctors
+// Static data for doctors (used as patients in this context)
 const doctorsData = [
-    {
+  {
     id: 1,
     name: "SAROJ OJHA",
     phone: "9822030801",
@@ -547,97 +553,247 @@ const doctorsData = [
 ];
 
 
+
+
 const BirthdayAlert = () => {
+  const currentDate = moment().format("DD-MM-YYYY");
+  const [rows, setRows] = useState(10);
+  const [first, setFirst] = useState(0);
+  const [filters, setFilters] = useState({
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+  });
+  const [globalFilterValue, setGlobalFilterValue] = useState("");
+
+  const onGlobalFilterChange = (e) => {
+    const value = e.target.value;
+    let _filters = { ...filters };
+    _filters["global"].value = value;
+    setFilters(_filters);
+    setGlobalFilterValue(value);
+  };
+
+  const handleRefresh = () => {
+    setGlobalFilterValue("");
+    setFilters({
+      global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    });
+    setFirst(0);
+  };
+
+  const renderHeader = () => {
+    return (
+      <div
+        className="d-flex justify-content-between align-items-center"
+        style={{
+          backgroundColor: "#e0f7fa",
+          padding: "10px 15px",
+          borderRadius: "8px",
+          border: "1px solid #4dd0e1",
+          marginBottom: "5px"
+        }}
+      >
+        <div className="d-flex align-items-center gap-3">
+          <div className="d-flex align-items-center">
+            <span style={{ marginRight: "10px", fontSize: "13px", fontWeight: "600", color: "#00838f" }}>Show</span>
+            <Form.Select
+              size="sm"
+              value={rows}
+              onChange={(e) => {
+                setRows(parseInt(e.target.value));
+                setFirst(0);
+              }}
+              style={{
+                width: "80px",
+                height: "35px",
+                borderRadius: "8px",
+                border: "1.5px solid #4dd0e1",
+                fontSize: "13px"
+              }}
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+            </Form.Select>
+          </div>
+
+          <div className="d-flex align-items-center">
+            <span style={{ marginRight: "10px", fontSize: "13px", fontWeight: "600", color: "#00838f" }}>Search</span>
+            <span className="p-input-icon-left">
+              <InputText
+                value={globalFilterValue}
+                onChange={onGlobalFilterChange}
+                placeholder="Global Search"
+                style={{
+                  borderRadius: "8px",
+                  padding: "5px 1px 5px 5px",
+                  fontSize: "12px",
+                  border: "1.5px solid #4dd0e1",
+                  width: "200px",
+                  height: "35px"
+                }}
+              />
+            </span>
+          </div>
+        </div>
+
+        <Button
+          variant="primary"
+          onClick={handleRefresh}
+          style={{
+            backgroundColor: "#00bcd4",
+            border: "none",
+            borderRadius: "8px",
+            padding: "6px 15px",
+            fontSize: "13px",
+            fontWeight: "600",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+          }}
+        >
+          <FeatherIcon icon="refresh-ccw" size={15} />
+          Refresh
+        </Button>
+      </div>
+    );
+  };
+
+  const header = renderHeader();
+
   return (
     <div
       className="themebody-wrap"
       style={{
-        padding: "20px",
         background: "linear-gradient(to right, #e0f7fa, #80deea)",
         fontFamily: "'Poppins', Arial, sans-serif",
         minHeight: "100vh",
+        padding: "10px",
       }}
     >
-      {/* Breadcrumb */}
       <PageBreadcrumb pagename="Birthday Alert" />
 
-      <SimpleBar className="theme-body common-dash">
+      <div className="theme-body">
         <Container fluid>
           <Row className="justify-content-center">
             <Col md={12}>
               <Card
                 style={{
                   borderRadius: "12px",
-                  boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
+                  boxShadow: "0px 8px 16px rgba(0, 0, 0, 0.1)",
                   borderColor: "#00bcd4",
                   background: "white",
-                  border: "4px solid #00bcd4",
+                  border: "1.5px solid #00bcd4",
+                  overflow: "hidden"
                 }}
               >
                 <Card.Header
                   className="text-center"
                   style={{
                     fontWeight: "bold",
-                    backgroundColor: "#e3f2fd",
-                    borderBottom: "2px solid #0288d1",
-                    padding: "1rem",
+                    borderBottom: "none",
+                    padding: "1.2rem",
                     background: "linear-gradient(to right, #00acc1, #007c91)",
                     color: "white",
-                    fontSize: "16px",
                   }}
                 >
-                  <h4>Birthday Alert - 02-01-2025</h4>
+                  <h4 style={{ margin: 0, fontWeight: "700", letterSpacing: "0.5px" }}>Birthday Alert</h4>
+                  <div style={{ fontSize: "16px", marginTop: "5px", opacity: 0.9 }}>
+                    {currentDate}
+                  </div>
                 </Card.Header>
-                <Card.Body
-                  style={{
-                    padding: "25px",
-                  }}
-                >
-                  {/* Birthday Alert Table */}
-                  <Table
-                    bordered
-                    responsive
-                    className="table-striped"
-                    style={{
-                      border: "1px solid #90caf9",
-                      textAlign: "center",
+                <Card.Body style={{ padding: "5px" }}>
+                  <DataTable
+                    value={[...doctorsData].sort((a, b) => a.name.localeCompare(b.name))}
+                    paginator
+                    rows={rows}
+                    first={first}
+                    onPage={(e) => {
+                      setFirst(e.first);
+                      setRows(e.rows);
                     }}
+                    header={header}
+                    rowsPerPageOptions={[10, 25, 50]}
+                    filters={filters}
+                    globalFilterFields={["name", "phone", "address"]}
+                    responsiveLayout="scroll"
+                    paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
+                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
+                    className="p-datatable-customers datatable-compact-style"
+                    rowClassName={(rowData, { rowIndex }) => ({
+                      style: {
+                        backgroundColor: rowIndex % 2 === 0 ? "#f8fdfe" : "white",
+                        transition: "background-color 0.2s ease",
+                      },
+                    })}
                   >
-                    <thead
+                    <Column
+                      field="id"
+                      header="Sr No"
+                      alignHeader="center"
+                      align="center"
+                      body={(rowData, { rowIndex }) => rowIndex + 1}
                       style={{
-                        backgroundColor: "#0288d1",
-                        color: "white",
-                        fontSize: "16px",
+                        width: "80px",
+                        border: "1px solid #e0f2f1",
                       }}
-                    >
-                      <tr>
-                        <th>Sr. No</th>
-                        <th>Name</th>
-                        <th>Phone No</th>
-                        <th>Birthday Date</th>
-                        <th style={{ textAlign: "center" }}>Address</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {doctorsData.map((doctor, index) => (
-                        <tr key={doctor.id}>
-                          <td style={{ padding: "10px" }}>{index + 1}</td>
-                          <td>{doctor.name}</td>
-                          <td>{doctor.phone}</td>
-                          <td>{doctor.birthday}</td>
-                          <td style={{ textAlign: "center" }}>
-                            {doctor.address}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </Table>
+                      headerStyle={{
+                        backgroundColor: "#00bcd4",
+                        color: "white",
+                        fontSize: "13px",
+                      }}
+                    />
+                    <Column
+                      field="name"
+                      header="Patient Name"
+                      alignHeader="center"
+                      align="center"
+                      sortable
+                      style={{
+                        border: "1px solid #e0f2f1",
+                      }}
+                      headerStyle={{
+                        backgroundColor: "#00bcd4",
+                        color: "white",
+                        fontSize: "13px",
+                      }}
+                    />
+                    <Column
+                      field="phone"
+                      header="Contact Number"
+                      alignHeader="center"
+                      align="center"
+                      style={{
+                        width: "200px",
+                        border: "1px solid #e0f2f1",
+                      }}
+                      headerStyle={{
+                        backgroundColor: "#00bcd4",
+                        color: "white",
+                        fontSize: "13px",
+                      }}
+                    />
+                    <Column
+                      field="address"
+                      header="Address"
+                      alignHeader="center"
+                      align="center"
+                      style={{
+                        border: "1px solid #e0f2f1",
+                      }}
+                      headerStyle={{
+                        backgroundColor: "#00bcd4",
+                        color: "white",
+                        fontSize: "13px",
+                      }}
+                    />
+                  </DataTable>
                 </Card.Body>
               </Card>
             </Col>
           </Row>
         </Container>
-      </SimpleBar>
+      </div>
     </div>
   );
 };
