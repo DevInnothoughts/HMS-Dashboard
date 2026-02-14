@@ -9,7 +9,7 @@ import MuiDateTimePicker from "../inputs/MuiDateTimePicker";
 // import { decodeJwt } from "../../../utils/decode-jwt";
 // import Swal from "sweetalert2";
 
-// const BASE_URL = "http://localhost:5100/api";
+// const BASE_URL = "http://194.195.117.79:5100/api";
 
 // // admissionJSON = {
 // //     "admission_details": {
@@ -102,7 +102,6 @@ import MuiDateTimePicker from "../inputs/MuiDateTimePicker";
 //       [name]: type === "checkbox" ? checked : files ? files : value,
 //     }));
 //   };
-
 
 //   const cardStyle = {
 //     padding: "20px",
@@ -513,7 +512,6 @@ import MuiDateTimePicker from "../inputs/MuiDateTimePicker";
 
 // export default AdmissionDetailsForm;
 
-
 import React, { useState, useEffect } from "react";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -528,7 +526,7 @@ import Swal from "sweetalert2";
 import hhcLogo from "../../../assets/images/logo/hhclogo.webp";
 
 const pageTitle = "admission-details";
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const theme = createTheme({
   palette: {
@@ -583,7 +581,7 @@ const AdmissionDetailsForm = ({ onSubmit, patientData }) => {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-          }
+          },
         );
         const result = await response.json();
         console.log("result.data: ", result.data);
@@ -594,23 +592,46 @@ const AdmissionDetailsForm = ({ onSubmit, patientData }) => {
               admissionDateTime: existing.admission_details?.admission_date
                 ? `${existing.admission_details.admission_date} ${existing.admission_details.admission_time || ""}`
                 : "",
-              surgeryDate: existing.admission_details?.surgery_procedure_date || "",
-              provisionalDiagnosis: existing.admission_details?.provisional_diagnosis || "",
+              surgeryDate:
+                existing.admission_details?.surgery_procedure_date || "",
+              provisionalDiagnosis:
+                existing.admission_details?.provisional_diagnosis || "",
               finalDiagnosis: existing.admission_details?.final_diagnosis || "",
               icd10Coding: existing.admission_details?.icd_coding || "",
               plan: existing.admission_details?.plan || "",
               allergies: existing.admission_details?.allergies || "",
-              labTests: existing.lab_investigations?.tests_done_outside ? "Done outside" : "Not done",
-              sampleCollected: existing.lab_investigations?.sample_collected_for_lab ? "Sample collected for lab" : "Not collected",
-              investigationOrders: existing.lab_investigations?.investigation_orders || "",
+              labTests: existing.lab_investigations?.tests_done_outside
+                ? "Done outside"
+                : "Not done",
+              sampleCollected: existing.lab_investigations
+                ?.sample_collected_for_lab
+                ? "Sample collected for lab"
+                : "Not collected",
+              investigationOrders:
+                existing.lab_investigations?.investigation_orders || "",
               nbmStatus: existing.patient_status?.nbm_status?.status_text || "",
-              paymentMethod: getPaymentMethod(existing.billing_administration?.payment_method),
-              cashPaymentStatus: existing.billing_administration?.cash_verification?.advance_paid ? "Advance paid" : "Pending",
-              insuranceApprovalStatus: existing.billing_administration?.insurance_verification?.pre_approval_received ? "Pre approval received" : "Not received",
-              coordinatorNameSign: existing.billing_administration?.coordinator_details?.name || "",
-              coordinatorDateTime: existing.billing_administration?.coordinator_details?.date_and_time || "",
-              admissionDoneByNameSign: existing.billing_administration?.coordinator_details?.admission_by || "", // or relevant field
-              estimatedStay: existing.billing_administration?.estimated_stay || ""
+              paymentMethod: getPaymentMethod(
+                existing.billing_administration?.payment_method,
+              ),
+              cashPaymentStatus: existing.billing_administration
+                ?.cash_verification?.advance_paid
+                ? "Advance paid"
+                : "Pending",
+              insuranceApprovalStatus: existing.billing_administration
+                ?.insurance_verification?.pre_approval_received
+                ? "Pre approval received"
+                : "Not received",
+              coordinatorNameSign:
+                existing.billing_administration?.coordinator_details?.name ||
+                "",
+              coordinatorDateTime:
+                existing.billing_administration?.coordinator_details
+                  ?.date_and_time || "",
+              admissionDoneByNameSign:
+                existing.billing_administration?.coordinator_details
+                  ?.admission_by || "", // or relevant field
+              estimatedStay:
+                existing.billing_administration?.estimated_stay || "",
             });
           }
         }
@@ -675,9 +696,12 @@ const AdmissionDetailsForm = ({ onSubmit, patientData }) => {
     { value: "Not received", label: "Not received" },
   ];
 
-
   const isFormComplete = () => {
-    return formData.admissionDateTime && formData.provisionalDiagnosis && formData.admissionDoneByNameSign;
+    return (
+      formData.admissionDateTime &&
+      formData.provisionalDiagnosis &&
+      formData.admissionDoneByNameSign
+    );
   };
 
   // 2. Submit Logic (Mapping flat state to nested JSON)
@@ -697,7 +721,8 @@ const AdmissionDetailsForm = ({ onSubmit, patientData }) => {
         },
         lab_investigations: {
           tests_done_outside: formData.labTests === "Done outside",
-          sample_collected_for_lab: formData.sampleCollected === "Sample collected for lab",
+          sample_collected_for_lab:
+            formData.sampleCollected === "Sample collected for lab",
           investigation_orders: formData.investigationOrders,
         },
         patient_status: {
@@ -718,12 +743,13 @@ const AdmissionDetailsForm = ({ onSubmit, patientData }) => {
             pending: formData.cashPaymentStatus === "Pending",
           },
           insurance_verification: {
-            pre_approval_received: formData.insuranceApprovalStatus === "Pre approval received",
+            pre_approval_received:
+              formData.insuranceApprovalStatus === "Pre approval received",
           },
           coordinator_details: {
             name: formData.coordinatorNameSign,
             date_and_time: formData.coordinatorDateTime,
-            admission_by: formData.admissionDoneByNameSign
+            admission_by: formData.admissionDoneByNameSign,
           },
         },
         document_metadata: { form_code: "AAC-F-2.2-01", page_number: 1 },
@@ -732,23 +758,35 @@ const AdmissionDetailsForm = ({ onSubmit, patientData }) => {
 
     try {
       console.log("FINAL:", finalPayload);
-      Swal.fire({ title: "Saving...", didOpen: () => Swal.showLoading(), allowOutsideClick: false });
-      const response = await fetch(`${BASE_URL}/V1/ipd/admission/insertAdmission`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify({
-          title: pageTitle,
-          location: currentLocation,
-          patient_id: patientData.uhid,
-          admissionData: finalPayload,
-        }),
+      Swal.fire({
+        title: "Saving...",
+        didOpen: () => Swal.showLoading(),
+        allowOutsideClick: false,
       });
+      const response = await fetch(
+        `${BASE_URL}/V1/ipd/admission/insertAdmission`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            title: pageTitle,
+            location: currentLocation,
+            patient_id: patientData.uhid,
+            admissionData: finalPayload,
+          }),
+        },
+      );
 
       if (response.ok) {
-        Swal.fire({ icon: "success", title: "Saved!", timer: 2000, showConfirmButton: false });
+        Swal.fire({
+          icon: "success",
+          title: "Saved!",
+          timer: 2000,
+          showConfirmButton: false,
+        });
         if (onSubmit) onSubmit();
       } else {
         throw new Error("Failed to save data");
@@ -811,7 +849,9 @@ const AdmissionDetailsForm = ({ onSubmit, patientData }) => {
     </body>
     </html>`;
 
-    const blob = new Blob(["\ufeff" + htmlContent], { type: "text/html;charset=utf-8" });
+    const blob = new Blob(["\ufeff" + htmlContent], {
+      type: "text/html;charset=utf-8",
+    });
     const url = URL.createObjectURL(blob);
     window.open(url, "PrintForm", `width=850,height=900,scrollbars=yes`);
   };
@@ -826,10 +866,24 @@ const AdmissionDetailsForm = ({ onSubmit, patientData }) => {
             {/* Patient Header */}
             {patientData && (
               <div className="patient-compact-header">
-                <div className="info-item"><span className="info-label">UHID</span><span className="info-value">{patientData.uhid}</span></div>
-                <div className="info-item"><span className="info-label">Name</span><span className="info-value">{patientData.name}</span></div>
-                <div className="info-item"><span className="info-label">Age/Sex</span><span className="info-value">{patientData.age}/{patientData.gender}</span></div>
-                <div className="info-item"><span className="info-label">IP No</span><span className="info-value">{patientData.ipNo}</span></div>
+                <div className="info-item">
+                  <span className="info-label">UHID</span>
+                  <span className="info-value">{patientData.uhid}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Name</span>
+                  <span className="info-value">{patientData.name}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Age/Sex</span>
+                  <span className="info-value">
+                    {patientData.age}/{patientData.gender}
+                  </span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">IP No</span>
+                  <span className="info-value">{patientData.ipNo}</span>
+                </div>
               </div>
             )}
 
@@ -840,25 +894,69 @@ const AdmissionDetailsForm = ({ onSubmit, patientData }) => {
                 <div className="form-field">
                   <label className="field-label">Admission Date & Time *</label>
                   <DateTimePicker
-                    value={formData.admissionDateTime ? dayjs(formData.admissionDateTime, "DD-MM-YYYY HH:mm") : null}
+                    value={
+                      formData.admissionDateTime
+                        ? dayjs(formData.admissionDateTime, "DD-MM-YYYY HH:mm")
+                        : null
+                    }
                     format="DD-MM-YYYY HH:mm"
-                    onChange={(val) => setFormData(p => ({ ...p, admissionDateTime: val ? val.format("DD-MM-YYYY HH:mm") : "" }))}
-                    slotProps={{ textField: { size: "small", fullWidth: true } }}
+                    onChange={(val) =>
+                      setFormData((p) => ({
+                        ...p,
+                        admissionDateTime: val
+                          ? val.format("DD-MM-YYYY HH:mm")
+                          : "",
+                      }))
+                    }
+                    slotProps={{
+                      textField: { size: "small", fullWidth: true },
+                    }}
                   />
                 </div>
                 <div className="form-field">
                   <label className="field-label">Surgery/Procedure Date</label>
-                  <input type="date" name="surgeryDate" className="form-control" value={formData.surgeryDate} onChange={handleChange} />
+                  <input
+                    type="date"
+                    name="surgeryDate"
+                    className="form-control"
+                    value={formData.surgeryDate}
+                    onChange={handleChange}
+                  />
                 </div>
               </div>
-              <div className="form-grid" style={{ marginTop: '10px' }}>
-                <TextInput label="Provisional Diagnosis *" name="provisionalDiagnosis" value={formData.provisionalDiagnosis} onChange={handleChange} />
-                <TextInput label="Final Diagnosis" name="finalDiagnosis" value={formData.finalDiagnosis} onChange={handleChange} />
+              <div className="form-grid" style={{ marginTop: "10px" }}>
+                <TextInput
+                  label="Provisional Diagnosis *"
+                  name="provisionalDiagnosis"
+                  value={formData.provisionalDiagnosis}
+                  onChange={handleChange}
+                />
+                <TextInput
+                  label="Final Diagnosis"
+                  name="finalDiagnosis"
+                  value={formData.finalDiagnosis}
+                  onChange={handleChange}
+                />
               </div>
               <div className="three-col">
-                <TextInput label="ICD-10" name="icd10Coding" value={formData.icd10Coding} onChange={handleChange} />
-                <TextInput label="Plan" name="plan" value={formData.plan} onChange={handleChange} />
-                <TextInput label="Allergies" name="allergies" value={formData.allergies} onChange={handleChange} />
+                <TextInput
+                  label="ICD-10"
+                  name="icd10Coding"
+                  value={formData.icd10Coding}
+                  onChange={handleChange}
+                />
+                <TextInput
+                  label="Plan"
+                  name="plan"
+                  value={formData.plan}
+                  onChange={handleChange}
+                />
+                <TextInput
+                  label="Allergies"
+                  name="allergies"
+                  value={formData.allergies}
+                  onChange={handleChange}
+                />
               </div>
             </div>
 
@@ -987,36 +1085,38 @@ const AdmissionDetailsForm = ({ onSubmit, patientData }) => {
 
               {(formData.paymentMethod === "Cash" ||
                 formData.paymentMethod === "Insurance") && (
-                  <div
-                    style={{
-                      background: "#f8fafc",
-                      padding: "10px",
-                      borderRadius: "6px",
-                      marginTop: "10px",
-                      borderLeft: "4px solid var(--primary-color)",
-                    }}
-                  >
-                    <label className="field-label">Coordinator Verification</label>
-                    <RadioGroup
-                      name={
-                        formData.paymentMethod === "Cash"
-                          ? "cashPaymentStatus"
-                          : "insuranceApprovalStatus"
-                      }
-                      value={
-                        formData.paymentMethod === "Cash"
-                          ? formData.cashPaymentStatus
-                          : formData.insuranceApprovalStatus
-                      }
-                      onChange={handleChange}
-                      options={
-                        formData.paymentMethod === "Cash"
-                          ? cashOptions
-                          : insuranceOptions
-                      }
-                    />
-                  </div>
-                )}
+                <div
+                  style={{
+                    background: "#f8fafc",
+                    padding: "10px",
+                    borderRadius: "6px",
+                    marginTop: "10px",
+                    borderLeft: "4px solid var(--primary-color)",
+                  }}
+                >
+                  <label className="field-label">
+                    Coordinator Verification
+                  </label>
+                  <RadioGroup
+                    name={
+                      formData.paymentMethod === "Cash"
+                        ? "cashPaymentStatus"
+                        : "insuranceApprovalStatus"
+                    }
+                    value={
+                      formData.paymentMethod === "Cash"
+                        ? formData.cashPaymentStatus
+                        : formData.insuranceApprovalStatus
+                    }
+                    onChange={handleChange}
+                    options={
+                      formData.paymentMethod === "Cash"
+                        ? cashOptions
+                        : insuranceOptions
+                    }
+                  />
+                </div>
+              )}
 
               <div className="two-col" style={{ marginTop: "15px" }}>
                 <TextInput
@@ -1034,10 +1134,25 @@ const AdmissionDetailsForm = ({ onSubmit, patientData }) => {
               </div>
             </div>
 
-
             <div className="two-col" style={{ marginTop: "1rem" }}>
-              <button type="submit" className="submit-btn" style={{ margin: 0, width: "100%" }}>Save Admission Data</button>
-              <button type="button" className="submit-btn" style={{ margin: 0, width: "100%", backgroundColor: isFormComplete() ? "#10b981" : "#cbd5e1" }} onClick={generatePrintContent} disabled={!isFormComplete()}>
+              <button
+                type="submit"
+                className="submit-btn"
+                style={{ margin: 0, width: "100%" }}
+              >
+                Save Admission Data
+              </button>
+              <button
+                type="button"
+                className="submit-btn"
+                style={{
+                  margin: 0,
+                  width: "100%",
+                  backgroundColor: isFormComplete() ? "#10b981" : "#cbd5e1",
+                }}
+                onClick={generatePrintContent}
+                disabled={!isFormComplete()}
+              >
                 Print Form
               </button>
             </div>

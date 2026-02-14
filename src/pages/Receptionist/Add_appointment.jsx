@@ -77,7 +77,7 @@ const countryNumberLimits = {
   default: { min: 7, max: 15 },
 };
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 export default function Add_appointment() {
   const [loading, setLoading] = useState(false);
@@ -612,29 +612,29 @@ export default function Add_appointment() {
                     </Col>
                     {(formData.patient_type === "OTHER" ||
                       formData.treatment) && (
-                        <Col md={4}>
-                          <Form.Label style={labelStyle}>
-                            Treatment <span className="text-danger">*</span>
-                          </Form.Label>
-                          <Form.Select
-                            required
-                            style={inputStyle}
-                            name="treatment"
-                            value={formData.treatment}
-                            onChange={handleInputChange}
-                          >
-                            <option value="">Select Treatment</option>
-                            {treatmentList?.map((t) => (
-                              <option
-                                key={t.treatment_name}
-                                value={t.treatment_name}
-                              >
-                                {t.treatment_name}
-                              </option>
-                            ))}
-                          </Form.Select>
-                        </Col>
-                      )}
+                      <Col md={4}>
+                        <Form.Label style={labelStyle}>
+                          Treatment <span className="text-danger">*</span>
+                        </Form.Label>
+                        <Form.Select
+                          required
+                          style={inputStyle}
+                          name="treatment"
+                          value={formData.treatment}
+                          onChange={handleInputChange}
+                        >
+                          <option value="">Select Treatment</option>
+                          {treatmentList?.map((t) => (
+                            <option
+                              key={t.treatment_name}
+                              value={t.treatment_name}
+                            >
+                              {t.treatment_name}
+                            </option>
+                          ))}
+                        </Form.Select>
+                      </Col>
+                    )}
 
                     {formData.patient_type === "New" && (
                       <Col md={4}>

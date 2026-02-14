@@ -64,7 +64,7 @@ function decodeJwt(token) {
   }
 }
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 export default function ReceptionistDashboard() {
   const [appointments, setAppointments] = useState([]);
@@ -849,16 +849,21 @@ export default function ReceptionistDashboard() {
         onHide={() => setShowCancelModal(false)}
         centered
       >
-        <Modal.Header closeButton style={{
-          backgroundColor: "#67c5cfff",
-          borderBottom: "2px solid #1a5b61ff",
-          padding: "7px 15px",
-        }}>
-          <Modal.Title style={{
-            color: "#1a5b61ff",
-            fontWeight: "600",
-            fontSize: "1.1rem",
-          }}>
+        <Modal.Header
+          closeButton
+          style={{
+            backgroundColor: "#67c5cfff",
+            borderBottom: "2px solid #1a5b61ff",
+            padding: "7px 15px",
+          }}
+        >
+          <Modal.Title
+            style={{
+              color: "#1a5b61ff",
+              fontWeight: "600",
+              fontSize: "1.1rem",
+            }}
+          >
             REASON OF CANCELLATION
           </Modal.Title>
         </Modal.Header>

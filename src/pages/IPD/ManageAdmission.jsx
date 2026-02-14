@@ -25,7 +25,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import MuiDateTimePicker from "../IPD Forms/inputs/MuiDateTimePicker";
 import dayjs from "dayjs";
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 export default function ManageAdmission() {
   const navigate = useNavigate();
@@ -153,8 +153,8 @@ export default function ManageAdmission() {
           contact: p.patient_phone,
           age: p.age,
           gender: p.sex,
-          verifiedDate: p.admission_datetime || "NOT ADMITTED", 
-          surgeryDate: p.surgery_datetime || "Not Scheduled",// Using the formatter from previous step
+          verifiedDate: p.admission_datetime || "NOT ADMITTED",
+          surgeryDate: p.surgery_datetime || "Not Scheduled", // Using the formatter from previous step
           admissionNo:
             p.admission_no === 0 || p.admission_no === "0"
               ? null
@@ -378,35 +378,38 @@ export default function ManageAdmission() {
 
   const handleRescheduleSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
-        Swal.fire({ title: 'Updating...', didOpen: () => Swal.showLoading() });
+      Swal.fire({ title: "Updating...", didOpen: () => Swal.showLoading() });
 
-        const response = await fetch(`${BASE_URL}/V1/ipd/admin/rescheduleSurgeryDate`, {
-            method: "POST",
-            headers: { 
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${localStorage.getItem("token")}` 
-            },
-            body: JSON.stringify({
-                location: currentLocation,
-                uidNo: reschedulePatient.uhid, // Ensure this matches your state key
-                rescheduleDate: rescheduleDate
-            }),
-        });
+      const response = await fetch(
+        `${BASE_URL}/V1/ipd/admin/rescheduleSurgeryDate`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            location: currentLocation,
+            uidNo: reschedulePatient.uhid, // Ensure this matches your state key
+            rescheduleDate: rescheduleDate,
+          }),
+        },
+      );
 
-        if (response.ok) {
-            Swal.fire("Success", "Surgery date rescheduled!", "success");
-            setShowRescheduleModal(false);
-            fetchVerifiedPatients(); // Refresh the list/calendar
-        } else {
-            const err = await response.json();
-            throw new Error(err.message || "Failed to reschedule");
-        }
+      if (response.ok) {
+        Swal.fire("Success", "Surgery date rescheduled!", "success");
+        setShowRescheduleModal(false);
+        fetchVerifiedPatients(); // Refresh the list/calendar
+      } else {
+        const err = await response.json();
+        throw new Error(err.message || "Failed to reschedule");
+      }
     } catch (error) {
-        Swal.fire("Error", error.message, "error");
+      Swal.fire("Error", error.message, "error");
     }
-};
+  };
 
   const handleCancelClick = (patient) => {
     setCancelPatient(patient);
@@ -418,53 +421,60 @@ export default function ManageAdmission() {
     e.preventDefault();
 
     if (!cancelReason.trim()) {
-        Swal.fire("Required", "Please provide a reason for cancellation", "warning");
-        return;
+      Swal.fire(
+        "Required",
+        "Please provide a reason for cancellation",
+        "warning",
+      );
+      return;
     }
 
     try {
-        // Show a loading state inside Swal
+      // Show a loading state inside Swal
+      Swal.fire({
+        title: "Cancelling Admission...",
+        didOpen: () => Swal.showLoading(),
+        allowOutsideClick: false,
+      });
+
+      const response = await fetch(
+        `${BASE_URL}/V1/ipd/admin/cancelAdmissionEntry`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            location: currentLocation,
+            uhid: cancelPatient.uhid, // Fixed: Using cancelPatient
+            contact: cancelPatient.contact, // Fixed: Using cancelPatient.contact
+            reason: cancelReason,
+          }),
+        },
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
         Swal.fire({
-            title: 'Cancelling Admission...',
-            didOpen: () => Swal.showLoading(),
-            allowOutsideClick: false
+          icon: "success",
+          title: "Cancelled!",
+          text: "The surgery entry has been successfully removed.",
+          timer: 2000,
+          showConfirmButton: false,
         });
 
-        const response = await fetch(`${BASE_URL}/V1/ipd/admin/cancelAdmissionEntry`, {
-            method: "POST",
-            headers: { 
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${localStorage.getItem("token")}` 
-            },
-            body: JSON.stringify({
-                location: currentLocation,
-                uhid: cancelPatient.uhid,     // Fixed: Using cancelPatient
-                contact: cancelPatient.contact, // Fixed: Using cancelPatient.contact
-                reason: cancelReason
-            }),
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            Swal.fire({
-                icon: "success",
-                title: "Cancelled!",
-                text: "The surgery entry has been successfully removed.",
-                timer: 2000,
-                showConfirmButton: false,
-            });
-            
-            setShowCancelModal(false);
-            fetchVerifiedPatients(); // Refresh the DataTable to remove the cancelled patient
-        } else {
-            throw new Error(data.message || "Failed to cancel admission");
-        }
+        setShowCancelModal(false);
+        fetchVerifiedPatients(); // Refresh the DataTable to remove the cancelled patient
+      } else {
+        throw new Error(data.message || "Failed to cancel admission");
+      }
     } catch (error) {
-        console.error("Cancellation Error:", error);
-        Swal.fire("Error", error.message || "Server connection failed", "error");
+      console.error("Cancellation Error:", error);
+      Swal.fire("Error", error.message || "Server connection failed", "error");
     }
-};
+  };
 
   const actionBodyTemplate = (patient) => {
     return (
@@ -634,14 +644,18 @@ export default function ManageAdmission() {
                       }}
                       filters={filters1}
                       header={header}
-                      globalFilterFields={["uhid", "name", "contact", "admissionNo"]}
+                      globalFilterFields={[
+                        "uhid",
+                        "name",
+                        "contact",
+                        "admissionNo",
+                      ]}
                       paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
                       currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
                       responsiveLayout="scroll"
                       className="datatable-compact-style datatable-medium-small"
                       style={{ padding: "5px" }}
                     >
-
                       <Column
                         field="verifiedDate"
                         header="Admission Date & Time"
@@ -659,8 +673,8 @@ export default function ManageAdmission() {
                         header="Surgery Date & Time"
                         headerClassName="datatable-header-center"
                         body={(rowData) => (
-                          <span style={{ fontSize: '10px' }}>
-                              {rowData.surgeryDate}
+                          <span style={{ fontSize: "10px" }}>
+                            {rowData.surgeryDate}
                           </span>
                         )}
                         style={{
@@ -676,7 +690,10 @@ export default function ManageAdmission() {
                         header="UHID No"
                         headerClassName="datatable-header-center"
                         body={(rowData) => (
-                          <span className="fw-bold" style={{ color: "#178aaeff" }}>
+                          <span
+                            className="fw-bold"
+                            style={{ color: "#178aaeff" }}
+                          >
                             {rowData.uhid}
                           </span>
                         )}
@@ -694,9 +711,13 @@ export default function ManageAdmission() {
                         headerClassName="datatable-header-center"
                         body={(rowData) => (
                           <span
-                            className={rowData.admissionNo ? "fw-bold" : "text-muted"}
+                            className={
+                              rowData.admissionNo ? "fw-bold" : "text-muted"
+                            }
                             style={{
-                              color: rowData.admissionNo ? "#178aaeff" : "inherit",
+                              color: rowData.admissionNo
+                                ? "#178aaeff"
+                                : "inherit",
                             }}
                           >
                             {rowData.admissionNo || "N/A"}
@@ -795,7 +816,7 @@ export default function ManageAdmission() {
             <MuiDateTimePicker
               label="New Surgery Date & Time"
               value={rescheduleDate}
-              onChange={(e) => setRescheduleDate(e.target.value)} 
+              onChange={(e) => setRescheduleDate(e.target.value)}
               name="rescheduleDate"
               type="datetime"
               required={true}
@@ -865,7 +886,8 @@ export default function ManageAdmission() {
                   color: "#34495e",
                 }}
               >
-                Cancellation Reason<span style={{ color: "red", marginLeft: "4px" }}>*</span>
+                Cancellation Reason
+                <span style={{ color: "red", marginLeft: "4px" }}>*</span>
               </Form.Label>
               <Form.Control
                 as="textarea"

@@ -277,308 +277,527 @@
 
 // export default PhysicianAssessmentForm;
 
-
-import React, { useState, useEffect } from 'react';
-import TextInput from '../inputs/TextInput';
-import Textarea from '../inputs/Textarea';
-import RadioGroup from '../inputs/RadioGroup';
+import React, { useState, useEffect } from "react";
+import TextInput from "../inputs/TextInput";
+import Textarea from "../inputs/Textarea";
+import RadioGroup from "../inputs/RadioGroup";
 import { decodeJwt } from "../../../utils/decode-jwt";
 import Swal from "sweetalert2";
-import './Forms.css';
+import "./Forms.css";
 
 const pageTitle = "physician-assessment"; // Database JSON key
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const PhysicianAssessmentForm = ({ onSubmit, patientData = {} }) => {
-    const [currentLocation, setCurrentLocation] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [formData, setFormData] = useState({
-        uhid: patientData.uhid || '',
-        name: patientData.name || '',
-        age: patientData.age || '',
-        gender: patientData.gender || '',
-        ipNo: patientData.ipNo || '',
+  const [currentLocation, setCurrentLocation] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    uhid: patientData.uhid || "",
+    name: patientData.name || "",
+    age: patientData.age || "",
+    gender: patientData.gender || "",
+    ipNo: patientData.ipNo || "",
 
-        allergies: '',
-        surgeryPlanned: '',
-        medicalHistory: '',
-        habits: [],
-        habitsOther: '',
+    allergies: "",
+    surgeryPlanned: "",
+    medicalHistory: "",
+    habits: [],
+    habitsOther: "",
 
-        reviewOfSystems: {
-            constitutional: { status: '', details: '' },
-            headNeck: { status: '', details: '' },
-            heartDisease: { options: [], dyspneaClass: '' },
-            respiration: { options: [] },
-            gastrointestinal: { status: '', details: '' },
-            genitoUrinary: { status: '', details: '' },
-            hematologic: { options: [] },
-            neurologic: { status: '', details: '' },
-            psychiatric: { status: '', details: '' },
-            endocrine: { options: [], other: '' }
-        },
+    reviewOfSystems: {
+      constitutional: { status: "", details: "" },
+      headNeck: { status: "", details: "" },
+      heartDisease: { options: [], dyspneaClass: "" },
+      respiration: { options: [] },
+      gastrointestinal: { status: "", details: "" },
+      genitoUrinary: { status: "", details: "" },
+      hematologic: { options: [] },
+      neurologic: { status: "", details: "" },
+      psychiatric: { status: "", details: "" },
+      endocrine: { options: [], other: "" },
+    },
 
-        presentMedications: {
-            status: '',
-            list: [{ medication: '', dose: '', freq: '', lastDose: '' }]
-        },
+    presentMedications: {
+      status: "",
+      list: [{ medication: "", dose: "", freq: "", lastDose: "" }],
+    },
 
-        physicalExam: { bp: '', pulse: '', rr: '', temp: '' },
-        riskAssessment: '',
-        medicalConditionsStatus: '',
-        result: '',
-        resultNote: ''
-    });
+    physicalExam: { bp: "", pulse: "", rr: "", temp: "" },
+    riskAssessment: "",
+    medicalConditionsStatus: "",
+    result: "",
+    resultNote: "",
+  });
 
-    // 1. Fetch Existing Data
-    useEffect(() => {
-        const token = localStorage.getItem("token");
-        let loc = null;
-        if (token) {
-            const payload = decodeJwt(token);
-            if (payload?.jobLocation) {
-                loc = payload.jobLocation;
-                setCurrentLocation(loc);
-            }
-        }
+  // 1. Fetch Existing Data
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    let loc = null;
+    if (token) {
+      const payload = decodeJwt(token);
+      if (payload?.jobLocation) {
+        loc = payload.jobLocation;
+        setCurrentLocation(loc);
+      }
+    }
 
-        const fetchExistingData = async () => {
-            if (!patientData?.uhid || !loc) return;
-            setLoading(true);
-            try {
-                const response = await fetch(
-                    `${BASE_URL}/V1/ipd/admission/listAdmissionEntry?location=${loc}&uhid=${patientData.uhid}&title=${pageTitle}`,
-                    { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
-                );
-                const result = await response.json();
+    const fetchExistingData = async () => {
+      if (!patientData?.uhid || !loc) return;
+      setLoading(true);
+      try {
+        const response = await fetch(
+          `${BASE_URL}/V1/ipd/admission/listAdmissionEntry?location=${loc}&uhid=${patientData.uhid}&title=${pageTitle}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          },
+        );
+        const result = await response.json();
 
-                if (response.ok && result.data) {
-                    const existing = result.data;
-                    // Deep merge existing data into state
-                    setFormData(prev => ({
-                        ...prev,
-                        ...existing,
-                        reviewOfSystems: { ...prev.reviewOfSystems, ...existing.reviewOfSystems },
-                        presentMedications: { 
-                            ...prev.presentMedications, 
-                            ...existing.presentMedications,
-                            list: existing.presentMedications?.list || prev.presentMedications.list 
-                        },
-                        physicalExam: { ...prev.physicalExam, ...existing.physicalExam }
-                    }));
-                }
-            } catch (error) {
-                console.error("Error fetching assessment:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchExistingData();
-    }, [patientData?.uhid]);
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        if (name.includes('.')) {
-            const keys = name.split('.');
-            setFormData(prev => {
-                let updated = { ...prev };
-                let current = updated;
-                for (let i = 0; i < keys.length - 1; i++) {
-                    current[keys[i]] = { ...current[keys[i]] };
-                    current = current[keys[i]];
-                }
-                current[keys[keys.length - 1]] = value;
-                return updated;
-            });
-        } else {
-            setFormData(prev => ({ ...prev, [name]: value }));
-        }
-    };
-
-    const handleCheckboxArrayChange = (name, value) => {
-        setFormData(prev => {
-            const current = prev[name] || [];
-            const updated = current.includes(value)
-                ? current.filter(v => v !== value)
-                : [...current, value];
-            return { ...prev, [name]: updated };
-        });
-    };
-
-    const handleNestedCheckboxChange = (section, field, value) => {
-        setFormData(prev => {
-            const current = prev.reviewOfSystems[section][field] || [];
-            const updated = current.includes(value)
-                ? current.filter(v => v !== value)
-                : [...current, value];
-            return {
-                ...prev,
-                reviewOfSystems: {
-                    ...prev.reviewOfSystems,
-                    [section]: { ...prev.reviewOfSystems[section], [field]: updated }
-                }
-            };
-        });
-    };
-
-    const addMedRow = () => {
-        setFormData(prev => ({
+        if (response.ok && result.data) {
+          const existing = result.data;
+          // Deep merge existing data into state
+          setFormData((prev) => ({
             ...prev,
+            ...existing,
+            reviewOfSystems: {
+              ...prev.reviewOfSystems,
+              ...existing.reviewOfSystems,
+            },
             presentMedications: {
-                ...prev.presentMedications,
-                list: [...prev.presentMedications.list, { medication: '', dose: '', freq: '', lastDose: '' }]
-            }
-        }));
-    };
-
-    const handleMedRowChange = (index, field, value) => {
-        setFormData(prev => {
-            const newList = [...prev.presentMedications.list];
-            newList[index] = { ...newList[index], [field]: value };
-            return {
-                ...prev,
-                presentMedications: { ...prev.presentMedications, list: newList }
-            };
-        });
-    };
-
-    // 2. Submit Logic
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            Swal.fire({ title: "Saving Assessment...", didOpen: () => Swal.showLoading(), allowOutsideClick: false });
-            
-            const response = await fetch(`${BASE_URL}/V1/ipd/admission/insertAdmission`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${localStorage.getItem("token")}`,
-                },
-                body: JSON.stringify({
-                    title: pageTitle,
-                    location: currentLocation,
-                    patient_id: patientData.uhid,
-                    admissionData: { [pageTitle]: formData },
-                }),
-            });
-
-            if (response.ok) {
-                Swal.fire({ icon: "success", title: "Saved!", timer: 2000, showConfirmButton: false });
-                if (onSubmit) onSubmit();
-            } else {
-                throw new Error("Failed to save data");
-            }
-        } catch (error) {
-            Swal.fire("Error", error.message, "error");
+              ...prev.presentMedications,
+              ...existing.presentMedications,
+              list:
+                existing.presentMedications?.list ||
+                prev.presentMedications.list,
+            },
+            physicalExam: { ...prev.physicalExam, ...existing.physicalExam },
+          }));
         }
+      } catch (error) {
+        console.error("Error fetching assessment:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    if (loading) return <div className="text-center p-5">Loading Patient Assessment...</div>;
+    fetchExistingData();
+  }, [patientData?.uhid]);
 
-    return (
-        <div className="medical-form-container">
-            <form onSubmit={handleSubmit}>
-                <h2 className="form-title">PHYSICIAN ASSESSMENT FOR SURGICAL FITNESS</h2>
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (name.includes(".")) {
+      const keys = name.split(".");
+      setFormData((prev) => {
+        let updated = { ...prev };
+        let current = updated;
+        for (let i = 0; i < keys.length - 1; i++) {
+          current[keys[i]] = { ...current[keys[i]] };
+          current = current[keys[i]];
+        }
+        current[keys[keys.length - 1]] = value;
+        return updated;
+      });
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+  };
 
-                {/* Patient Header */}
-                <div className="patient-compact-header">
-                    <div className="info-item"><span className="info-label">UHID</span><span className="info-value">{formData.uhid || '—'}</span></div>
-                    <div className="info-item"><span className="info-label">Name</span><span className="info-value">{formData.name || '—'}</span></div>
-                    <div className="info-item"><span className="info-label">Age/Sex</span><span className="info-value">{formData.age}/{formData.gender}</span></div>
-                    <div className="info-item"><span className="info-label">IP No</span><span className="info-value">{formData.ipNo || '—'}</span></div>
-                </div>
+  const handleCheckboxArrayChange = (name, value) => {
+    setFormData((prev) => {
+      const current = prev[name] || [];
+      const updated = current.includes(value)
+        ? current.filter((v) => v !== value)
+        : [...current, value];
+      return { ...prev, [name]: updated };
+    });
+  };
 
-                <div className="section-box">
-                    <div className="form-section-title">Clinical Background</div>
-                    <div className="two-col">
-                        <TextInput label="Allergies" name="allergies" value={formData.allergies} onChange={handleChange} />
-                        <TextInput label="Surgery planned" name="surgeryPlanned" value={formData.surgeryPlanned} onChange={handleChange} />
-                    </div>
-                    <TextInput label="Medical history" name="medicalHistory" value={formData.medicalHistory} onChange={handleChange} />
+  const handleNestedCheckboxChange = (section, field, value) => {
+    setFormData((prev) => {
+      const current = prev.reviewOfSystems[section][field] || [];
+      const updated = current.includes(value)
+        ? current.filter((v) => v !== value)
+        : [...current, value];
+      return {
+        ...prev,
+        reviewOfSystems: {
+          ...prev.reviewOfSystems,
+          [section]: { ...prev.reviewOfSystems[section], [field]: updated },
+        },
+      };
+    });
+  };
 
-                    <div className="checkbox-group" style={{marginTop:'15px'}}>
-                        <label className="field-label">Habits:</label>
-                        {['Smoking', 'Alcohol', 'Tobacco', 'None'].map(opt => (
-                            <label key={opt} className={`checkbox-option ${formData.habits.includes(opt) ? 'selected' : ''}`}>
-                                <input type="checkbox" checked={formData.habits.includes(opt)} onChange={() => handleCheckboxArrayChange('habits', opt)} />
-                                <span>{opt}</span>
-                            </label>
-                        ))}
-                    </div>
-                </div>
+  const addMedRow = () => {
+    setFormData((prev) => ({
+      ...prev,
+      presentMedications: {
+        ...prev.presentMedications,
+        list: [
+          ...prev.presentMedications.list,
+          { medication: "", dose: "", freq: "", lastDose: "" },
+        ],
+      },
+    }));
+  };
 
-                <div className="section-box">
-                    <div className="form-section-title">Review of Systems</div>
-                    {['constitutional', 'headNeck', 'gastrointestinal', 'genitoUrinary', 'neurologic', 'psychiatric'].map(sys => (
-                        <div key={sys} className="form-grid" style={{marginBottom:'10px', alignItems:'center'}}>
-                            <span style={{ fontWeight: '600', textTransform: 'capitalize', width:'120px' }}>{sys.replace(/([A-Z])/g, ' $1')}:</span>
-                            <RadioGroup name={`reviewOfSystems.${sys}.status`} value={formData.reviewOfSystems[sys].status} onChange={handleChange} options={[{value:'None', label:'None'}, {value:'Yes', label:'Yes'}]} />
-                            <TextInput label="Details" name={`reviewOfSystems.${sys}.details`} value={formData.reviewOfSystems[sys].details} onChange={handleChange} />
-                        </div>
-                    ))}
-                </div>
+  const handleMedRowChange = (index, field, value) => {
+    setFormData((prev) => {
+      const newList = [...prev.presentMedications.list];
+      newList[index] = { ...newList[index], [field]: value };
+      return {
+        ...prev,
+        presentMedications: { ...prev.presentMedications, list: newList },
+      };
+    });
+  };
 
-                <div className="section-box">
-                    <div className="form-section-title">Medications & Vitals</div>
-                    <div className="form-field">
-                        <RadioGroup label="Present medications" name="presentMedications.status" value={formData.presentMedications.status} onChange={handleChange} options={[{value:'None', label:'None'}, {value:'Yes', label:'Yes'}]} />
-                        {formData.presentMedications.status === 'Yes' && (
-                            <div className="table-responsive mt-2">
-                                <table className="medical-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Medication</th><th>Dose</th><th>Freq</th><th>Last Taken</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {formData.presentMedications.list.map((row, idx) => (
-                                            <tr key={idx}>
-                                                <td><input className="table-input" value={row.medication} onChange={(e) => handleMedRowChange(idx, 'medication', e.target.value)} /></td>
-                                                <td><input className="table-input" value={row.dose} onChange={(e) => handleMedRowChange(idx, 'dose', e.target.value)} /></td>
-                                                <td><input className="table-input" value={row.freq} onChange={(e) => handleMedRowChange(idx, 'freq', e.target.value)} /></td>
-                                                <td><input className="table-input" value={row.lastDose} onChange={(e) => handleMedRowChange(idx, 'lastDose', e.target.value)} /></td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                                <button type="button" className="secondary-btn mt-2" onClick={addMedRow}>+ Add Medication</button>
-                            </div>
-                        )}
-                    </div>
+  // 2. Submit Logic
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      Swal.fire({
+        title: "Saving Assessment...",
+        didOpen: () => Swal.showLoading(),
+        allowOutsideClick: false,
+      });
 
-                    <div className="form-grid mt-3">
-                        <TextInput label="BP" name="physicalExam.bp" value={formData.physicalExam.bp} onChange={handleChange} />
-                        <TextInput label="Pulse" name="physicalExam.pulse" value={formData.physicalExam.pulse} onChange={handleChange} />
-                        <TextInput label="RR" name="physicalExam.rr" value={formData.physicalExam.rr} onChange={handleChange} />
-                        <TextInput label="Temp" name="physicalExam.temp" value={formData.physicalExam.temp} onChange={handleChange} />
-                    </div>
-                </div>
+      const response = await fetch(
+        `${BASE_URL}/V1/ipd/admission/insertAdmission`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            title: pageTitle,
+            location: currentLocation,
+            patient_id: patientData.uhid,
+            admissionData: { [pageTitle]: formData },
+          }),
+        },
+      );
 
-                <div className="section-box">
-                    <div className="form-section-title">Final Assessment</div>
-                    <div className="two-col">
-                        <RadioGroup label="Risk Assessment" name="riskAssessment" value={formData.riskAssessment} onChange={handleChange} options={[{value:'High', label:'High'}, {value:'Moderate', label:'Moderate'}, {value:'Low', label:'Low'}]} />
-                        <RadioGroup label="Medical Status" name="medicalConditionsStatus" value={formData.medicalConditionsStatus} onChange={handleChange} options={[{value:'Controlled', label:'Controlled'}, {value:'Uncontrolled', label:'Uncontrolled'}]} />
-                    </div>
-                    <div style={{marginTop:'15px', borderTop:'1px solid #eee', paddingTop:'15px'}}>
-                        <label className="field-label">Result:</label>
-                        <div className="checkbox-group">
-                            {['Fit', 'Not Fit'].map(res => (
-                                <label key={res} className={`checkbox-option ${formData.result === res ? 'selected' : ''}`}>
-                                    <input type="radio" name="result" value={res} checked={formData.result === res} onChange={handleChange} />
-                                    <span>{res === 'Fit' ? 'Fit for surgery (24hrs)' : 'Not Fit / Advise'}</span>
-                                </label>
-                            ))}
-                        </div>
-                        {formData.result === 'Not Fit' && <Textarea label="Physician Advice" name="resultNote" value={formData.resultNote} onChange={handleChange} />}
-                    </div>
-                </div>
+      if (response.ok) {
+        Swal.fire({
+          icon: "success",
+          title: "Saved!",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+        if (onSubmit) onSubmit();
+      } else {
+        throw new Error("Failed to save data");
+      }
+    } catch (error) {
+      Swal.fire("Error", error.message, "error");
+    }
+  };
 
-                <button type="submit" className="submit-btn">Save Fitness Assessment</button>
-            </form>
+  if (loading)
+    return <div className="text-center p-5">Loading Patient Assessment...</div>;
+
+  return (
+    <div className="medical-form-container">
+      <form onSubmit={handleSubmit}>
+        <h2 className="form-title">
+          PHYSICIAN ASSESSMENT FOR SURGICAL FITNESS
+        </h2>
+
+        {/* Patient Header */}
+        <div className="patient-compact-header">
+          <div className="info-item">
+            <span className="info-label">UHID</span>
+            <span className="info-value">{formData.uhid || "—"}</span>
+          </div>
+          <div className="info-item">
+            <span className="info-label">Name</span>
+            <span className="info-value">{formData.name || "—"}</span>
+          </div>
+          <div className="info-item">
+            <span className="info-label">Age/Sex</span>
+            <span className="info-value">
+              {formData.age}/{formData.gender}
+            </span>
+          </div>
+          <div className="info-item">
+            <span className="info-label">IP No</span>
+            <span className="info-value">{formData.ipNo || "—"}</span>
+          </div>
         </div>
-    );
+
+        <div className="section-box">
+          <div className="form-section-title">Clinical Background</div>
+          <div className="two-col">
+            <TextInput
+              label="Allergies"
+              name="allergies"
+              value={formData.allergies}
+              onChange={handleChange}
+            />
+            <TextInput
+              label="Surgery planned"
+              name="surgeryPlanned"
+              value={formData.surgeryPlanned}
+              onChange={handleChange}
+            />
+          </div>
+          <TextInput
+            label="Medical history"
+            name="medicalHistory"
+            value={formData.medicalHistory}
+            onChange={handleChange}
+          />
+
+          <div className="checkbox-group" style={{ marginTop: "15px" }}>
+            <label className="field-label">Habits:</label>
+            {["Smoking", "Alcohol", "Tobacco", "None"].map((opt) => (
+              <label
+                key={opt}
+                className={`checkbox-option ${formData.habits.includes(opt) ? "selected" : ""}`}
+              >
+                <input
+                  type="checkbox"
+                  checked={formData.habits.includes(opt)}
+                  onChange={() => handleCheckboxArrayChange("habits", opt)}
+                />
+                <span>{opt}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div className="section-box">
+          <div className="form-section-title">Review of Systems</div>
+          {[
+            "constitutional",
+            "headNeck",
+            "gastrointestinal",
+            "genitoUrinary",
+            "neurologic",
+            "psychiatric",
+          ].map((sys) => (
+            <div
+              key={sys}
+              className="form-grid"
+              style={{ marginBottom: "10px", alignItems: "center" }}
+            >
+              <span
+                style={{
+                  fontWeight: "600",
+                  textTransform: "capitalize",
+                  width: "120px",
+                }}
+              >
+                {sys.replace(/([A-Z])/g, " $1")}:
+              </span>
+              <RadioGroup
+                name={`reviewOfSystems.${sys}.status`}
+                value={formData.reviewOfSystems[sys].status}
+                onChange={handleChange}
+                options={[
+                  { value: "None", label: "None" },
+                  { value: "Yes", label: "Yes" },
+                ]}
+              />
+              <TextInput
+                label="Details"
+                name={`reviewOfSystems.${sys}.details`}
+                value={formData.reviewOfSystems[sys].details}
+                onChange={handleChange}
+              />
+            </div>
+          ))}
+        </div>
+
+        <div className="section-box">
+          <div className="form-section-title">Medications & Vitals</div>
+          <div className="form-field">
+            <RadioGroup
+              label="Present medications"
+              name="presentMedications.status"
+              value={formData.presentMedications.status}
+              onChange={handleChange}
+              options={[
+                { value: "None", label: "None" },
+                { value: "Yes", label: "Yes" },
+              ]}
+            />
+            {formData.presentMedications.status === "Yes" && (
+              <div className="table-responsive mt-2">
+                <table className="medical-table">
+                  <thead>
+                    <tr>
+                      <th>Medication</th>
+                      <th>Dose</th>
+                      <th>Freq</th>
+                      <th>Last Taken</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {formData.presentMedications.list.map((row, idx) => (
+                      <tr key={idx}>
+                        <td>
+                          <input
+                            className="table-input"
+                            value={row.medication}
+                            onChange={(e) =>
+                              handleMedRowChange(
+                                idx,
+                                "medication",
+                                e.target.value,
+                              )
+                            }
+                          />
+                        </td>
+                        <td>
+                          <input
+                            className="table-input"
+                            value={row.dose}
+                            onChange={(e) =>
+                              handleMedRowChange(idx, "dose", e.target.value)
+                            }
+                          />
+                        </td>
+                        <td>
+                          <input
+                            className="table-input"
+                            value={row.freq}
+                            onChange={(e) =>
+                              handleMedRowChange(idx, "freq", e.target.value)
+                            }
+                          />
+                        </td>
+                        <td>
+                          <input
+                            className="table-input"
+                            value={row.lastDose}
+                            onChange={(e) =>
+                              handleMedRowChange(
+                                idx,
+                                "lastDose",
+                                e.target.value,
+                              )
+                            }
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <button
+                  type="button"
+                  className="secondary-btn mt-2"
+                  onClick={addMedRow}
+                >
+                  + Add Medication
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="form-grid mt-3">
+            <TextInput
+              label="BP"
+              name="physicalExam.bp"
+              value={formData.physicalExam.bp}
+              onChange={handleChange}
+            />
+            <TextInput
+              label="Pulse"
+              name="physicalExam.pulse"
+              value={formData.physicalExam.pulse}
+              onChange={handleChange}
+            />
+            <TextInput
+              label="RR"
+              name="physicalExam.rr"
+              value={formData.physicalExam.rr}
+              onChange={handleChange}
+            />
+            <TextInput
+              label="Temp"
+              name="physicalExam.temp"
+              value={formData.physicalExam.temp}
+              onChange={handleChange}
+            />
+          </div>
+        </div>
+
+        <div className="section-box">
+          <div className="form-section-title">Final Assessment</div>
+          <div className="two-col">
+            <RadioGroup
+              label="Risk Assessment"
+              name="riskAssessment"
+              value={formData.riskAssessment}
+              onChange={handleChange}
+              options={[
+                { value: "High", label: "High" },
+                { value: "Moderate", label: "Moderate" },
+                { value: "Low", label: "Low" },
+              ]}
+            />
+            <RadioGroup
+              label="Medical Status"
+              name="medicalConditionsStatus"
+              value={formData.medicalConditionsStatus}
+              onChange={handleChange}
+              options={[
+                { value: "Controlled", label: "Controlled" },
+                { value: "Uncontrolled", label: "Uncontrolled" },
+              ]}
+            />
+          </div>
+          <div
+            style={{
+              marginTop: "15px",
+              borderTop: "1px solid #eee",
+              paddingTop: "15px",
+            }}
+          >
+            <label className="field-label">Result:</label>
+            <div className="checkbox-group">
+              {["Fit", "Not Fit"].map((res) => (
+                <label
+                  key={res}
+                  className={`checkbox-option ${formData.result === res ? "selected" : ""}`}
+                >
+                  <input
+                    type="radio"
+                    name="result"
+                    value={res}
+                    checked={formData.result === res}
+                    onChange={handleChange}
+                  />
+                  <span>
+                    {res === "Fit"
+                      ? "Fit for surgery (24hrs)"
+                      : "Not Fit / Advise"}
+                  </span>
+                </label>
+              ))}
+            </div>
+            {formData.result === "Not Fit" && (
+              <Textarea
+                label="Physician Advice"
+                name="resultNote"
+                value={formData.resultNote}
+                onChange={handleChange}
+              />
+            )}
+          </div>
+        </div>
+
+        <button type="submit" className="submit-btn">
+          Save Fitness Assessment
+        </button>
+      </form>
+    </div>
+  );
 };
 
 export default PhysicianAssessmentForm;

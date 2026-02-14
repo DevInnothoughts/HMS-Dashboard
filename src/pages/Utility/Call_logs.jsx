@@ -23,7 +23,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import "../../styles/styles.css";
 import { toast } from "react-hot-toast";
 
-export const BASE_URL = "http://localhost:5100/api";
+export const BASE_URL = "http://194.195.117.79:5100/api";
 
 const Toast = Swal.mixin({
   toast: true,
@@ -1167,7 +1167,7 @@ export default function Call_logs() {
                     <option value="">Select Type</option>
 
                     {formData.patient_type === "New" ||
-                      formData.patient_id === undefined ? (
+                    formData.patient_id === undefined ? (
                       <option value="New">NEW</option>
                     ) : (
                       <>

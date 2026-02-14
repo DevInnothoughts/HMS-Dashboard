@@ -51,7 +51,7 @@ const NoteCell = ({ note }) => {
     </div>
   );
 };
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 const TYPE_LIST = ["New", "Follow", "Post Operative", "Other"];
 const REFERENCE_OPTIONS = [
   "Family / Friends",
@@ -100,18 +100,19 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
     padding: "1px 3px",
     minWidth: "33px",
     borderRadius: "4px",
-    border: `1px solid ${disabled
-      ? "#ddd"
-      : isDanger
-        ? "#dc3545"
-        : isEdit
-          ? "#007bff"
-          : isConfirm
-            ? "#28a745"
-            : isBlueAction
-              ? "#0babb9ff"
-              : defaultBorder
-      }`,
+    border: `1px solid ${
+      disabled
+        ? "#ddd"
+        : isDanger
+          ? "#dc3545"
+          : isEdit
+            ? "#007bff"
+            : isConfirm
+              ? "#28a745"
+              : isBlueAction
+                ? "#0babb9ff"
+                : defaultBorder
+    }`,
     backgroundColor: disabled ? "#f8f9fa" : defaultBg,
     color: disabled
       ? "#aaa"
@@ -165,16 +166,17 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
               ? "#15cbd8ff"
               : "#e0e0e0";
 
-      e.currentTarget.style.border = `1px solid ${isDanger
-        ? "#c82333"
-        : isEdit
-          ? "#007bff"
-          : isConfirm
-            ? "#218838"
-            : isBlueAction
-              ? "#007bff"
-              : "#b0b0b0"
-        }`;
+      e.currentTarget.style.border = `1px solid ${
+        isDanger
+          ? "#c82333"
+          : isEdit
+            ? "#007bff"
+            : isConfirm
+              ? "#218838"
+              : isBlueAction
+                ? "#007bff"
+                : "#b0b0b0"
+      }`;
 
       e.currentTarget.style.color = "white";
       if (e.currentTarget.children[0]) {
@@ -196,16 +198,17 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
               ? "#23adb2ff"
               : defaultColor;
 
-      e.currentTarget.style.border = `1px solid ${isDanger
-        ? "#dc3545"
-        : isEdit
-          ? "#007bff"
-          : isConfirm
-            ? "#28a745"
-            : isBlueAction
-              ? "#007bff"
-              : defaultBorder
-        }`;
+      e.currentTarget.style.border = `1px solid ${
+        isDanger
+          ? "#dc3545"
+          : isEdit
+            ? "#007bff"
+            : isConfirm
+              ? "#28a745"
+              : isBlueAction
+                ? "#007bff"
+                : defaultBorder
+      }`;
 
       if (e.currentTarget.children[0]) {
         e.currentTarget.children[0].style.stroke = iconColor;
@@ -460,7 +463,7 @@ export default function Appointment_list() {
               Swal.fire(
                 "Error",
                 cancelResult?.message ||
-                "Remote cancel failed. Please cancel manually on machine.",
+                  "Remote cancel failed. Please cancel manually on machine.",
                 "error",
               );
             }
@@ -1646,8 +1649,8 @@ export default function Appointment_list() {
                         body={(rowData) =>
                           rowData.appointment_timestamp
                             ? moment(rowData.appointment_timestamp).format(
-                              "DD-MM-YYYY",
-                            )
+                                "DD-MM-YYYY",
+                              )
                             : "-"
                         }
                         headerClassName="datatable-header-center"
@@ -1663,9 +1666,9 @@ export default function Appointment_list() {
                         body={(rowData) =>
                           rowData.appointment_time
                             ? moment(rowData.appointment_time, [
-                              "hh:mm A",
-                              "HH:mm",
-                            ]).format("HH:mm")
+                                "hh:mm A",
+                                "HH:mm",
+                              ]).format("HH:mm")
                             : "-"
                         }
                         headerClassName="datatable-header-center"

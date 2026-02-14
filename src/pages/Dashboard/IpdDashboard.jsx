@@ -1,15 +1,15 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import FeatherIcon from "feather-icons-react";
 import {
-    Row,
-    Col,
-    Card,
-    Container,
-    Button,
-    Badge,
-    Spinner,
-    Form,
-    Modal,
+  Row,
+  Col,
+  Card,
+  Container,
+  Button,
+  Badge,
+  Spinner,
+  Form,
+  Modal,
 } from "react-bootstrap";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import { Calendar, momentLocalizer } from "react-big-calendar";
@@ -21,398 +21,426 @@ import { decodeJwt } from "../../utils/decode-jwt";
 const localizer = momentLocalizer(moment);
 
 const CustomEvent = ({ event }) => (
-    <div style={{ fontSize: "11px", lineHeight: "1.2" }}>
-        <strong>{event.time}</strong>
-        <div
-            style={{
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-            }}
-        >
-            {event.patientName}
-        </div>
+  <div style={{ fontSize: "11px", lineHeight: "1.2" }}>
+    <strong>{event.time}</strong>
+    <div
+      style={{
+        whiteSpace: "nowrap",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+      }}
+    >
+      {event.patientName}
     </div>
+  </div>
 );
 
 const Toast = Swal.mixin({
-    toast: true,
-    position: "top-end",
-    showConfirmButton: false,
-    timer: 3000,
-    timerProgressBar: true,
-    didOpen: (toast) => {
-        toast.addEventListener("mouseenter", Swal.stopTimer);
-        toast.addEventListener("mouseleave", Swal.resumeTimer);
-    },
+  toast: true,
+  position: "top-end",
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  didOpen: (toast) => {
+    toast.addEventListener("mouseenter", Swal.stopTimer);
+    toast.addEventListener("mouseleave", Swal.resumeTimer);
+  },
 });
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 export default function IpdDashboard() {
-    const [surgeries, setSurgeries] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [currentLocation, setCurrentLocation] = useState("default");
-    const [selectedDate, setSelectedDate] = useState(new Date());
-    const [currentView, setCurrentView] = useState("month");
-    const [selectedEvent, setSelectedEvent] = useState(null);
-    const [showCancelModal, setShowCancelModal] = useState(false);
-    const [cancelComment, setCancelComment] = useState("");
-    const calendarRef = React.useRef(null);
+  const [surgeries, setSurgeries] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState("default");
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [currentView, setCurrentView] = useState("month");
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelComment, setCancelComment] = useState("");
+  const calendarRef = React.useRef(null);
 
-    useEffect(() => {
-        const token = localStorage.getItem("token");
-        if (token) {
-            const payload = decodeJwt(token);
-            if (payload && payload.jobLocation) {
-                setCurrentLocation(payload.jobLocation);
-            }
-        }
-    }, []);
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const payload = decodeJwt(token);
+      if (payload && payload.jobLocation) {
+        setCurrentLocation(payload.jobLocation);
+      }
+    }
+  }, []);
 
-    const formatDate = (dateString) => {
-        if (!dateString) return "N/A";
-        const date = new Date(dateString);
-        const day = String(date.getDate()).padStart(2, "0");
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const year = date.getFullYear();
-        return `${day}-${month}-${year}`;
-    };
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
 
-    // const formatSurgeries = useCallback((data) => {
-    //     return data.map((p) => {
-    //         const surgeryDate = moment(p.created_at);
-    //         const startTime = surgeryDate.toDate();
-    //         const endTime = surgeryDate.clone().add(1, "hour").toDate();
+  // const formatSurgeries = useCallback((data) => {
+  //     return data.map((p) => {
+  //         const surgeryDate = moment(p.created_at);
+  //         const startTime = surgeryDate.toDate();
+  //         const endTime = surgeryDate.clone().add(1, "hour").toDate();
 
-    //         return {
-    //             title: `${surgeryDate.format("hh:mm A")} — ${p.name || "Patient"}`,
-    //             start: startTime,
-    //             end: endTime,
-    //             phone: p.patient_phone,
-    //             date: formatDate(p.created_at),
-    //             time: surgeryDate.format("hh:mm A"),
-    //             patientName: p.name,
-    //             uhid: p.uid,
-    //             age: p.age,
-    //             gender: p.sex,
-    //             patientid: p.patient_id,
-    //             isConfirmed: p.admission_no !== 0 && p.admission_no !== "0" && p.admission_no !== null,
-    //             admissionNo: p.admission_no
-    //         };
-    //     });
-    // }, []);
+  //         return {
+  //             title: `${surgeryDate.format("hh:mm A")} — ${p.name || "Patient"}`,
+  //             start: startTime,
+  //             end: endTime,
+  //             phone: p.patient_phone,
+  //             date: formatDate(p.created_at),
+  //             time: surgeryDate.format("hh:mm A"),
+  //             patientName: p.name,
+  //             uhid: p.uid,
+  //             age: p.age,
+  //             gender: p.sex,
+  //             patientid: p.patient_id,
+  //             isConfirmed: p.admission_no !== 0 && p.admission_no !== "0" && p.admission_no !== null,
+  //             admissionNo: p.admission_no
+  //         };
+  //     });
+  // }, []);
 
-    const formatSurgeries = useCallback((data) => {
-        return data.map((p) => {
-            // Parse the surgery_datetime string from the API
-            // Format: Day-Month-Year Hour:Minute AM/PM
-            const surgeryMoment = p.surgery_datetime 
-                ? moment(p.surgery_datetime, "DD-MM-YYYY hh:mm A") 
-                : moment(p.created_at);
+  const formatSurgeries = useCallback((data) => {
+    return data.map((p) => {
+      // Parse the surgery_datetime string from the API
+      // Format: Day-Month-Year Hour:Minute AM/PM
+      const surgeryMoment = p.surgery_datetime
+        ? moment(p.surgery_datetime, "DD-MM-YYYY hh:mm A")
+        : moment(p.created_at);
 
-            const startTime = surgeryMoment.toDate();
-            // Default duration of 1 hour for the calendar block
-            const endTime = surgeryMoment.clone().add(1, "hour").toDate();
+      const startTime = surgeryMoment.toDate();
+      // Default duration of 1 hour for the calendar block
+      const endTime = surgeryMoment.clone().add(1, "hour").toDate();
 
-            return {
-                title: `${surgeryMoment.format("hh:mm A")} — ${p.name || "Patient"}`,
-                start: startTime,
-                end: endTime,
-                phone: p.patient_phone,
-                // Display the parsed surgery date in the detail card
-                date: surgeryMoment.format("DD-MM-YYYY"),
-                time: surgeryMoment.format("hh:mm A"),
-                patientName: p.name,
-                uhid: p.uid,
-                age: p.age,
-                gender: p.sex,
-                patientid: p.patient_id,
-                isConfirmed: p.admission_no !== 0 && p.admission_no !== "0" && p.admission_no !== null,
-                admissionNo: p.admission_no
-            };
-        });
-    }, []);
+      return {
+        title: `${surgeryMoment.format("hh:mm A")} — ${p.name || "Patient"}`,
+        start: startTime,
+        end: endTime,
+        phone: p.patient_phone,
+        // Display the parsed surgery date in the detail card
+        date: surgeryMoment.format("DD-MM-YYYY"),
+        time: surgeryMoment.format("hh:mm A"),
+        patientName: p.name,
+        uhid: p.uid,
+        age: p.age,
+        gender: p.sex,
+        patientid: p.patient_id,
+        isConfirmed:
+          p.admission_no !== 0 &&
+          p.admission_no !== "0" &&
+          p.admission_no !== null,
+        admissionNo: p.admission_no,
+      };
+    });
+  }, []);
 
-    const fetchSurgeries = useCallback(async () => {
-        if (currentLocation === "default") return;
-        setLoading(true);
+  const fetchSurgeries = useCallback(async () => {
+    if (currentLocation === "default") return;
+    setLoading(true);
+    try {
+      const fromDate = moment(selectedDate)
+        .startOf("month")
+        .format("YYYY-MM-DD");
+      const toDate = moment(selectedDate).endOf("month").format("YYYY-MM-DD");
+
+      const response = await fetch(
+        `${BASE_URL}/V1/ipd/admin/listVerifiedPatients?location=${currentLocation}&from=${fromDate}&to=${toDate}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        },
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log("RESult:", result);
+        const formattedEvents = formatSurgeries(result);
+        console.log("Formatted events:", formattedEvents);
+        setSurgeries(formattedEvents);
+      }
+    } catch (error) {
+      console.error("Error fetching surgeries:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentLocation, selectedDate, formatSurgeries]);
+
+  useEffect(() => {
+    fetchSurgeries();
+  }, [fetchSurgeries]);
+
+  const handleCalendarNavigate = (newDate) => setSelectedDate(newDate);
+  const handleCalendarView = (newView) => setCurrentView(newView);
+  const handleRefreshClick = () => fetchSurgeries();
+
+  const handleEventClick = (event) => {
+    setSelectedEvent(event);
+  };
+
+  const handleConfirmSurgery = (contact, uhid) => {
+    Swal.fire({
+      title: "Confirm Admission?",
+      text: "This will move the patient to the surgery list.",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Confirm",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#15ab56ff",
+      cancelButtonColor: "#dc1818ff",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
         try {
-            const fromDate = moment(selectedDate).startOf("month").format("YYYY-MM-DD");
-            const toDate = moment(selectedDate).endOf("month").format("YYYY-MM-DD");
-
-            const response = await fetch(
-                `${BASE_URL}/V1/ipd/admin/listVerifiedPatients?location=${currentLocation}&from=${fromDate}&to=${toDate}`,
-                {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${localStorage.getItem("token")}`,
-                    },
-                }
-            );
-
-            if (response.ok) {
-                const result = await response.json();
-                console.log("RESult:",result);
-                const formattedEvents = formatSurgeries(result);
-                console.log("Formatted events:", formattedEvents);
-                setSurgeries(formattedEvents);
-            }
-        } catch (error) {
-            console.error("Error fetching surgeries:", error);
-        } finally {
-            setLoading(false);
-        }
-    }, [currentLocation, selectedDate, formatSurgeries]);
-
-    useEffect(() => {
-        fetchSurgeries();
-    }, [fetchSurgeries]);
-
-    const handleCalendarNavigate = (newDate) => setSelectedDate(newDate);
-    const handleCalendarView = (newView) => setCurrentView(newView);
-    const handleRefreshClick = () => fetchSurgeries();
-
-    const handleEventClick = (event) => {
-        setSelectedEvent(event);
-    };
-
-    const handleConfirmSurgery = (contact, uhid) => {
-        Swal.fire({
-              title: "Confirm Admission?",
-              text: "This will move the patient to the surgery list.",
-              icon: "question",
-              showCancelButton: true,
-              confirmButtonText: "Confirm",
-              cancelButtonText: "Cancel",
-              confirmButtonColor: "#15ab56ff",
-              cancelButtonColor: "#dc1818ff",
-            }).then(async (result) => {
-              if (result.isConfirmed) {
-                try {
-                  // Call backend to update status and generate Admission No
-                  const response = await fetch(
-                    `${BASE_URL}/V1/ipd/admin/confirmAdmissionEntry`,
-                    {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        contact,
-                        uhid,
-                        location: currentLocation,
-                      }),
-                    },
-                  );
-        
-                  if (response.ok) {
-                    const data = await response.json();
-                    console.log(data);
-                    Swal.fire(
-                      "Confirmed!",
-                      `Admission No: ${data.admissionNo} generated.`,
-                      "success",
-                    );
-                    fetchSurgeries(); // Refresh the list
-                  }
-                } catch (error) {
-                  Swal.fire("Error", "Could not confirm admission", "error");
-                }
-              }
-            });
-    };
-
-    const handleCancelSurgery = () => {
-        if (!selectedEvent) return;
-        setCancelComment("");
-        setShowCancelModal(true);
-    };
-
-    const handleCancelSubmit = async (e) => {
-        e.preventDefault();
-
-        if (!cancelComment.trim()) {
-            Swal.fire("Required", "Please provide a reason for cancellation", "warning");
-            return;
-        }
-
-        Swal.fire({
-            title: "Cancel Surgery?",
-            text: `Are you sure you want to cancel the surgery for ${selectedEvent.patientName}?`,
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonText: "Yes, Cancel",
-            cancelButtonText: "No",
-            confirmButtonColor: "#dc3545",
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                try {
-                    // Show loading state while processing
-                    Swal.fire({
-                        title: 'Processing Cancellation...',
-                        didOpen: () => Swal.showLoading(),
-                        allowOutsideClick: false
-                    });
-
-                    const response = await fetch(`${BASE_URL}/V1/ipd/admin/cancelAdmissionEntry`, {
-                        method: "POST",
-                        headers: { 
-                            "Content-Type": "application/json",
-                            "Authorization": `Bearer ${localStorage.getItem("token")}` 
-                        },
-                        body: JSON.stringify({
-                            location: currentLocation,
-                            uhid: selectedEvent.uhid,
-                            contact: selectedEvent.phone,
-                            reason: cancelComment // Passing the reason for backend logs
-                        }),
-                    });
-
-                    const data = await response.json();
-                    console.log(data);
-                    if (response.ok) {
-                        setShowCancelModal(false);
-                        setCancelComment("");
-                        setSelectedEvent(null); // Clear the selection
-                        
-                        Swal.fire("Cancelled!", "The surgery entry has been removed.", "success");
-                        
-                        fetchSurgeries(); // Refresh the calendar list
-                    } else {
-                        throw new Error(data.message || "Failed to cancel entry");
-                    }
-                } catch (error) {
-                    console.error("Cancellation error:", error);
-                    Swal.fire("Error", error.message || "Server connection failed", "error");
-                }
-            }
-        });
-    };
-
-    const eventStyleGetter = useCallback((event) => {
-        return {
-            style: {
-                backgroundColor: "#1eb3caff",
-                borderRadius: "4px",
-                border: "none",
-                color: "white",
-                display: "block",
+          // Call backend to update status and generate Admission No
+          const response = await fetch(
+            `${BASE_URL}/V1/ipd/admin/confirmAdmissionEntry`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contact,
+                uhid,
+                location: currentLocation,
+              }),
             },
-        };
-    }, []);
+          );
 
-    const SurgeryDetailsCard = () => {
-        if (!selectedEvent) {
-            return (
-                <div className="text-center py-5">
-                    <FeatherIcon
-                        icon="layers"
-                        size={45}
-                        className="text-muted opacity-25 mb-3"
-                    />
-                    <p className="text-muted" style={{ padding: "5px" }}>
-                        Select a surgery entry to view the patient detail and status.
-                    </p>
-                </div>
+          if (response.ok) {
+            const data = await response.json();
+            console.log(data);
+            Swal.fire(
+              "Confirmed!",
+              `Admission No: ${data.admissionNo} generated.`,
+              "success",
             );
+            fetchSurgeries(); // Refresh the list
+          }
+        } catch (error) {
+          Swal.fire("Error", "Could not confirm admission", "error");
         }
+      }
+    });
+  };
 
-        return (
-            <div className="clinical-card" style={{ margin: "10px" }}>
-                <div className="clinical-body">
-                    <div className="data-item-inline mt-4">
-                        <label>
-                            <FeatherIcon icon="calendar" size={14} /> Surgery Date:
-                        </label>
-                        <span className="data-value fw-bold">
-                            {selectedEvent.date}
-                        </span>
-                    </div>
+  const handleCancelSurgery = () => {
+    if (!selectedEvent) return;
+    setCancelComment("");
+    setShowCancelModal(true);
+  };
 
-                    <div className="data-item-inline">
-                        <label>
-                            <FeatherIcon icon="hash" size={14} /> UHID No:
-                        </label>
-                        <span className="data-value fw-bold">{selectedEvent.uhid}</span>
-                    </div>
+  const handleCancelSubmit = async (e) => {
+    e.preventDefault();
 
-                    <div className="data-item-inline">
-                        <label>
-                            <FeatherIcon icon="user" size={14} />
-                            Patient Name:
-                        </label>
-                        <span className="data-value fw-bold">{selectedEvent.patientName}</span>
-                    </div>
+    if (!cancelComment.trim()) {
+      Swal.fire(
+        "Required",
+        "Please provide a reason for cancellation",
+        "warning",
+      );
+      return;
+    }
 
-                    <div className="data-item-inline">
-                        <label>
-                            <FeatherIcon icon="phone" size={14} /> Contact No:
-                        </label>
-                        <span className="data-value fw-bold">{selectedEvent.phone}</span>
-                    </div>
-                    <div className="data-item-inline">
-                        <label>
-                            <FeatherIcon icon="info" size={14} /> Age/Gender:
-                        </label>
-                        <span className="data-value fw-bold">
-                            {selectedEvent.age} / {selectedEvent.gender}
-                        </span>
-                    </div>
-                    <div className="data-item-inline">
-                        <label>
-                            <FeatherIcon icon="info" size={14} /> Admission No:
-                        </label>
-                        <span className="data-value fw-bold">
-                            {selectedEvent.admissionNo || "N/A"}
-                        </span>
-                    </div>
-                </div>
+    Swal.fire({
+      title: "Cancel Surgery?",
+      text: `Are you sure you want to cancel the surgery for ${selectedEvent.patientName}?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, Cancel",
+      cancelButtonText: "No",
+      confirmButtonColor: "#dc3545",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          // Show loading state while processing
+          Swal.fire({
+            title: "Processing Cancellation...",
+            didOpen: () => Swal.showLoading(),
+            allowOutsideClick: false,
+          });
 
-                <div
-                    className="mb-3"
-                    style={{ borderTop: "1px solid #a3b1b4ff" }}
-                ></div>
+          const response = await fetch(
+            `${BASE_URL}/V1/ipd/admin/cancelAdmissionEntry`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+              body: JSON.stringify({
+                location: currentLocation,
+                uhid: selectedEvent.uhid,
+                contact: selectedEvent.phone,
+                reason: cancelComment, // Passing the reason for backend logs
+              }),
+            },
+          );
 
-                <div className="clinical-actions pt-2">
-                    <div className="d-grid gap-1">
-                        <Button
-                            variant={selectedEvent.isConfirmed ? "success" : "primary"}
-                            className="confirm-btn"
-                            style={{ borderRadius: "10px" }}
-                            // Pass as arrow function AND disable if already confirmed
-                            onClick={() => handleConfirmSurgery(selectedEvent.phone, selectedEvent.uhid)}
-                            disabled={selectedEvent.isConfirmed}
-                        >
-                            <FeatherIcon icon={selectedEvent.isConfirmed ? "user-check" : "check-circle"} size={16} className="me-1" />{" "}
-                            {selectedEvent.isConfirmed ? `Admitted (${selectedEvent.admissionNo})` : "Confirm Admission"}
-                        </Button>
-                        
-                        {!selectedEvent.isConfirmed && (
-                            <Button
-                                variant="danger"
-                                className="btn-sm border-0 mt-1"
-                                style={{ borderRadius: "10px" }}
-                                onClick={handleCancelSurgery}
-                            >
-                                <FeatherIcon icon="x-circle" size={14} className="me-1" /> Cancel
-                                Surgery
-                            </Button>
-                        )}
-                    </div>
-                </div>
-            </div>
-        );
+          const data = await response.json();
+          console.log(data);
+          if (response.ok) {
+            setShowCancelModal(false);
+            setCancelComment("");
+            setSelectedEvent(null); // Clear the selection
+
+            Swal.fire(
+              "Cancelled!",
+              "The surgery entry has been removed.",
+              "success",
+            );
+
+            fetchSurgeries(); // Refresh the calendar list
+          } else {
+            throw new Error(data.message || "Failed to cancel entry");
+          }
+        } catch (error) {
+          console.error("Cancellation error:", error);
+          Swal.fire(
+            "Error",
+            error.message || "Server connection failed",
+            "error",
+          );
+        }
+      }
+    });
+  };
+
+  const eventStyleGetter = useCallback((event) => {
+    return {
+      style: {
+        backgroundColor: "#1eb3caff",
+        borderRadius: "4px",
+        border: "none",
+        color: "white",
+        display: "block",
+      },
     };
+  }, []);
+
+  const SurgeryDetailsCard = () => {
+    if (!selectedEvent) {
+      return (
+        <div className="text-center py-5">
+          <FeatherIcon
+            icon="layers"
+            size={45}
+            className="text-muted opacity-25 mb-3"
+          />
+          <p className="text-muted" style={{ padding: "5px" }}>
+            Select a surgery entry to view the patient detail and status.
+          </p>
+        </div>
+      );
+    }
 
     return (
+      <div className="clinical-card" style={{ margin: "10px" }}>
+        <div className="clinical-body">
+          <div className="data-item-inline mt-4">
+            <label>
+              <FeatherIcon icon="calendar" size={14} /> Surgery Date:
+            </label>
+            <span className="data-value fw-bold">{selectedEvent.date}</span>
+          </div>
+
+          <div className="data-item-inline">
+            <label>
+              <FeatherIcon icon="hash" size={14} /> UHID No:
+            </label>
+            <span className="data-value fw-bold">{selectedEvent.uhid}</span>
+          </div>
+
+          <div className="data-item-inline">
+            <label>
+              <FeatherIcon icon="user" size={14} />
+              Patient Name:
+            </label>
+            <span className="data-value fw-bold">
+              {selectedEvent.patientName}
+            </span>
+          </div>
+
+          <div className="data-item-inline">
+            <label>
+              <FeatherIcon icon="phone" size={14} /> Contact No:
+            </label>
+            <span className="data-value fw-bold">{selectedEvent.phone}</span>
+          </div>
+          <div className="data-item-inline">
+            <label>
+              <FeatherIcon icon="info" size={14} /> Age/Gender:
+            </label>
+            <span className="data-value fw-bold">
+              {selectedEvent.age} / {selectedEvent.gender}
+            </span>
+          </div>
+          <div className="data-item-inline">
+            <label>
+              <FeatherIcon icon="info" size={14} /> Admission No:
+            </label>
+            <span className="data-value fw-bold">
+              {selectedEvent.admissionNo || "N/A"}
+            </span>
+          </div>
+        </div>
+
         <div
-            className="themebody-wrap"
-            style={{
-                background: "linear-gradient(to right, #e0f7fa, #80deea)",
-                minHeight: "100vh",
-            }}
-        >
-            <style>{`
+          className="mb-3"
+          style={{ borderTop: "1px solid #a3b1b4ff" }}
+        ></div>
+
+        <div className="clinical-actions pt-2">
+          <div className="d-grid gap-1">
+            <Button
+              variant={selectedEvent.isConfirmed ? "success" : "primary"}
+              className="confirm-btn"
+              style={{ borderRadius: "10px" }}
+              // Pass as arrow function AND disable if already confirmed
+              onClick={() =>
+                handleConfirmSurgery(selectedEvent.phone, selectedEvent.uhid)
+              }
+              disabled={selectedEvent.isConfirmed}
+            >
+              <FeatherIcon
+                icon={selectedEvent.isConfirmed ? "user-check" : "check-circle"}
+                size={16}
+                className="me-1"
+              />{" "}
+              {selectedEvent.isConfirmed
+                ? `Admitted (${selectedEvent.admissionNo})`
+                : "Confirm Admission"}
+            </Button>
+
+            {!selectedEvent.isConfirmed && (
+              <Button
+                variant="danger"
+                className="btn-sm border-0 mt-1"
+                style={{ borderRadius: "10px" }}
+                onClick={handleCancelSurgery}
+              >
+                <FeatherIcon icon="x-circle" size={14} className="me-1" />{" "}
+                Cancel Surgery
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div
+      className="themebody-wrap"
+      style={{
+        background: "linear-gradient(to right, #e0f7fa, #80deea)",
+        minHeight: "100vh",
+      }}
+    >
+      <style>{`
 .sidebar-wrapper, 
 .header-wrapper, 
 .page-main-header { 
@@ -548,185 +576,198 @@ export default function IpdDashboard() {
     background-color: #178aaeff;
 }
                 `}</style>
-            <PageBreadcrumb pagename="IPD Dashboard" />
-            <div className="theme-body">
-                <Container fluid>
-                    <div className="dashboard-header-bar" style={{ marginTop: "10px" }}>
-                        <Row className="align-items-center">
-                            <Col lg={8}>
-                                <div className="legend-title">
-                                    <h4 className="fw-bold mb-10">
-                                        Patient Surgery Calendar for {moment(selectedDate).format("MMMM YYYY")}
-                                    </h4>
-                                </div>
-                                <div className="d-flex align-items-center flex-wrap">
-                                    <div className="legend-item">
-                                        <span
-                                            className="dot"
-                                            style={{ background: "#1eb3caff" }}
-                                        ></span>
-                                        Surgery Patient <span className="cnt ms-1 text-muted">({surgeries.length || 0})</span>
-                                    </div>
-                                </div>
-                            </Col>
-                            <Col lg={4} className="text-lg-end mt-3 mt-lg-0">
-                                <Button
-                                    variant="primary"
-                                    onClick={handleRefreshClick}
-                                    style={{
-                                        height: "35px",
-                                        display: "inline-flex",
-                                        justifyContent: "center",
-                                        alignItems: "center",
-                                        fontSize: "14px",
-                                        borderRadius: "8px"
-                                    }}
-                                >
-                                    <FeatherIcon icon="refresh-cw" size={14} className="me-2" />
-                                    Refresh
-                                </Button>
-                            </Col>
-                        </Row>
+      <PageBreadcrumb pagename="IPD Dashboard" />
+      <div className="theme-body">
+        <Container fluid>
+          <div className="dashboard-header-bar" style={{ marginTop: "10px" }}>
+            <Row className="align-items-center">
+              <Col lg={8}>
+                <div className="legend-title">
+                  <h4 className="fw-bold mb-10">
+                    Patient Surgery Calendar for{" "}
+                    {moment(selectedDate).format("MMMM YYYY")}
+                  </h4>
+                </div>
+                <div className="d-flex align-items-center flex-wrap">
+                  <div className="legend-item">
+                    <span
+                      className="dot"
+                      style={{ background: "#1eb3caff" }}
+                    ></span>
+                    Surgery Patient{" "}
+                    <span className="cnt ms-1 text-muted">
+                      ({surgeries.length || 0})
+                    </span>
+                  </div>
+                </div>
+              </Col>
+              <Col lg={4} className="text-lg-end mt-3 mt-lg-0">
+                <Button
+                  variant="primary"
+                  onClick={handleRefreshClick}
+                  style={{
+                    height: "35px",
+                    display: "inline-flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    fontSize: "14px",
+                    borderRadius: "8px",
+                  }}
+                >
+                  <FeatherIcon icon="refresh-cw" size={14} className="me-2" />
+                  Refresh
+                </Button>
+              </Col>
+            </Row>
+          </div>
+
+          <Row>
+            <Col xxl={8} xl={8} lg={12} className="mb-4">
+              <Card
+                className="border-0 shadow-sm"
+                style={{ borderRadius: "10px" }}
+              >
+                <Card.Body
+                  className="p-3"
+                  style={{
+                    border: "2px solid rgb(77, 208, 225)",
+                    borderRadius: "10px",
+                  }}
+                >
+                  {loading ? (
+                    <div className="text-center py-5">
+                      <Spinner animation="border" variant="info" />
                     </div>
+                  ) : (
+                    <Calendar
+                      ref={calendarRef}
+                      localizer={localizer}
+                      events={surgeries}
+                      date={selectedDate}
+                      view={currentView}
+                      onNavigate={handleCalendarNavigate}
+                      onSelectEvent={handleEventClick}
+                      onView={handleCalendarView}
+                      eventPropGetter={eventStyleGetter}
+                      components={{ event: CustomEvent }}
+                      style={{ height: 580 }}
+                      popup={true}
+                    />
+                  )}
+                </Card.Body>
+              </Card>
+            </Col>
 
-                    <Row>
-                        <Col xxl={8} xl={8} lg={12} className="mb-4">
-                            <Card
-                                className="border-0 shadow-sm"
-                                style={{ borderRadius: "10px" }}
-                            >
-                                <Card.Body
-                                    className="p-3"
-                                    style={{
-                                        border: "2px solid rgb(77, 208, 225)",
-                                        borderRadius: "10px",
-                                    }}
-                                >
-                                    {loading ? (
-                                        <div className="text-center py-5">
-                                            <Spinner animation="border" variant="info" />
-                                        </div>
-                                    ) : (
-                                        <Calendar
-                                            ref={calendarRef}
-                                            localizer={localizer}
-                                            events={surgeries}
-                                            date={selectedDate}
-                                            view={currentView}
-                                            onNavigate={handleCalendarNavigate}
-                                            onSelectEvent={handleEventClick}
-                                            onView={handleCalendarView}
-                                            eventPropGetter={eventStyleGetter}
-                                            components={{ event: CustomEvent }}
-                                            style={{ height: 580 }}
-                                            popup={true}
-                                        />
-                                    )}
-                                </Card.Body>
-                            </Card>
-                        </Col>
+            <Col xxl={4} xl={4} lg={12}>
+              <Card
+                className="shadow-sm border-0"
+                style={{
+                  borderRadius: "10px",
+                  overflow: "hidden",
+                  border: "2px solid rgb(77, 208, 225)",
+                }}
+              >
+                <Card.Header
+                  className="bg-white py-3 d-flex justify-content-center align-items-center"
+                  style={{ borderBottom: "1px solid rgb(77, 208, 225)" }}
+                >
+                  <div className="d-flex align-items-center justify-content-center w-100">
+                    <div
+                      className="d-flex align-items-center justify-content-center me-1"
+                      style={{
+                        background: "#e0f2fe",
+                        width: "27px",
+                        height: "27px",
+                        borderRadius: "10px",
+                        flexShrink: 0,
+                      }}
+                    >
+                      <FeatherIcon
+                        icon="clipboard"
+                        size={16}
+                        className="text-primary"
+                      />
+                    </div>
+                    <h5
+                      className="mb-0 fw-bold"
+                      style={{
+                        color: "#3f444bff",
+                        whiteSpace: "nowrap",
+                        fontSize: "16px",
+                        padding: "7px",
+                      }}
+                    >
+                      Surgery Detail
+                    </h5>
+                  </div>
+                </Card.Header>
+                <Card.Body>
+                  <SurgeryDetailsCard />
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        </Container>
+      </div>
 
-                        <Col xxl={4} xl={4} lg={12}>
-                            <Card
-                                className="shadow-sm border-0"
-                                style={{
-                                    borderRadius: "10px",
-                                    overflow: "hidden",
-                                    border: "2px solid rgb(77, 208, 225)",
-                                }}
-                            >
-                                <Card.Header
-                                    className="bg-white py-3 d-flex justify-content-center align-items-center"
-                                    style={{ borderBottom: "1px solid rgb(77, 208, 225)" }}
-                                >
-                                    <div className="d-flex align-items-center justify-content-center w-100">
-                                        <div
-                                            className="d-flex align-items-center justify-content-center me-1"
-                                            style={{
-                                                background: "#e0f2fe",
-                                                width: "27px",
-                                                height: "27px",
-                                                borderRadius: "10px",
-                                                flexShrink: 0,
-                                            }}
-                                        >
-                                            <FeatherIcon
-                                                icon="clipboard"
-                                                size={16}
-                                                className="text-primary"
-                                            />
-                                        </div>
-                                        <h5
-                                            className="mb-0 fw-bold"
-                                            style={{
-                                                color: "#3f444bff",
-                                                whiteSpace: "nowrap",
-                                                fontSize: "16px",
-                                                padding: "7px"
-                                            }}
-                                        >
-                                            Surgery Detail
-                                        </h5>
-                                    </div>
-                                </Card.Header>
-                                <Card.Body>
-                                    <SurgeryDetailsCard />
-                                </Card.Body>
-                            </Card>
-                        </Col>
-                    </Row>
-                </Container>
+      <Modal
+        show={showCancelModal}
+        onHide={() => setShowCancelModal(false)}
+        centered
+      >
+        <Modal.Header
+          closeButton
+          style={{
+            backgroundColor: "#67c5cfff",
+            borderBottom: "2px solid #1a5b61ff",
+            padding: "7px 15px",
+          }}
+        >
+          <Modal.Title
+            style={{
+              color: "#1a5b61ff",
+              fontWeight: "600",
+              fontSize: "1.1rem",
+            }}
+          >
+            REASON OF CANCELLATION
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-1 pt-0">
+          <Form style={{ padding: "10px" }} onSubmit={handleCancelSubmit}>
+            <Form.Group>
+              <Form.Control
+                as="textarea"
+                rows={4}
+                value={cancelComment}
+                onChange={(e) => setCancelComment(e.target.value)}
+                placeholder="State the reason for cancellation (e.g., patient request, reschedule)..."
+                className="p-5"
+                style={{
+                  border: "1px solid #008cc8ff",
+                  borderRadius: "10px",
+                  marginBottom: "10px",
+                }}
+                required
+              />
+            </Form.Group>
+            <div className="d-flex justify-content-end">
+              <Button
+                variant="danger"
+                type="submit"
+                className="fw-bold px-4"
+                style={{
+                  borderRadius: "10px",
+                  padding: "10px 0",
+                  minWidth: "150px",
+                }}
+              >
+                Confirm & Cancel
+              </Button>
             </div>
-
-            <Modal
-                show={showCancelModal}
-                onHide={() => setShowCancelModal(false)}
-                centered
-            >
-                <Modal.Header closeButton style={{
-                    backgroundColor: "#67c5cfff",
-                    borderBottom: "2px solid #1a5b61ff",
-                    padding: "7px 15px",
-                }}>
-                    <Modal.Title style={{
-                        color: "#1a5b61ff",
-                        fontWeight: "600",
-                        fontSize: "1.1rem",
-                    }}>
-                        REASON OF CANCELLATION
-                    </Modal.Title>
-                </Modal.Header>
-                <Modal.Body className="p-1 pt-0">
-                    <Form style={{ padding: "10px" }} onSubmit={handleCancelSubmit}>
-                        <Form.Group>
-                            <Form.Control
-                                as="textarea"
-                                rows={4}
-                                value={cancelComment}
-                                onChange={(e) => setCancelComment(e.target.value)}
-                                placeholder="State the reason for cancellation (e.g., patient request, reschedule)..."
-                                className="p-5"
-                                style={{
-                                    border: "1px solid #008cc8ff",
-                                    borderRadius: "10px",
-                                    marginBottom: "10px"
-                                }}
-                                required
-                            />
-                        </Form.Group>
-                        <div className="d-flex justify-content-end">
-                            <Button
-                                variant="danger"
-                                type="submit"
-                                className="fw-bold px-4"
-                                style={{ borderRadius: "10px", padding: "10px 0", minWidth: "150px" }}
-                            >
-                                Confirm & Cancel
-                            </Button>
-                        </div>
-                    </Form>
-                </Modal.Body>
-            </Modal>
-        </div>
-    );
+          </Form>
+        </Modal.Body>
+      </Modal>
+    </div>
+  );
 }

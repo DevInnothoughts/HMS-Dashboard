@@ -11,7 +11,7 @@ import {
 } from "react-bootstrap";
 import SimpleBar from "simplebar-react";
 
-const BASE_URL = "http://localhost:5100/api"; // Update your API base URL here
+const BASE_URL = "http://194.195.117.79:5100/api"; // Update your API base URL here
 
 const appointmentTypes = [
   { value: "New", label: "New" },
@@ -63,7 +63,8 @@ const AppointmentConversion = () => {
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
         throw new Error(
-          `HTTP error! status: ${response.status}${errorData ? ` - ${errorData.error}` : ""
+          `HTTP error! status: ${response.status}${
+            errorData ? ` - ${errorData.error}` : ""
           }`,
         );
       }
@@ -420,7 +421,7 @@ const AppointmentConversion = () => {
                           padding: "5px 10px",
                           color:
                             currentPage ===
-                              Math.ceil(appointments.length / appointmentsPerPage)
+                            Math.ceil(appointments.length / appointmentsPerPage)
                               ? "#ccc"
                               : "#0288d1",
                         }}
@@ -448,7 +449,7 @@ const AppointmentConversion = () => {
                           padding: "5px 10px",
                           color:
                             currentPage ===
-                              Math.ceil(appointments.length / appointmentsPerPage)
+                            Math.ceil(appointments.length / appointmentsPerPage)
                               ? "#ccc"
                               : "#0288d1",
                         }}

@@ -153,20 +153,20 @@
 
 // export default GeneralConsentForm;
 
-import React, { useState, useEffect } from 'react';
-import TextInput from '../inputs/TextInput';
-import MuiDateTimePicker from '../inputs/MuiDateTimePicker';
+import React, { useState, useEffect } from "react";
+import TextInput from "../inputs/TextInput";
+import MuiDateTimePicker from "../inputs/MuiDateTimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
-import './Forms.css';
+import "./Forms.css";
 import { decodeJwt } from "../../../utils/decode-jwt";
 import Swal from "sweetalert2";
 import hhcLogo from "../../../assets/images/logo/hhclogo.webp";
 
 const pageTitle = "general-consent";
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const theme = createTheme({
   palette: { primary: { main: "#80deea" } },
@@ -174,244 +174,449 @@ const theme = createTheme({
 });
 
 const GeneralConsentForm = ({ onSubmit, patientData = {} }) => {
-    const [currentLocation, setCurrentLocation] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [formData, setFormData] = useState({
-        uhid: patientData.uhid || '',
-        name: patientData.name || '',
-        age: patientData.age || '',
-        gender: patientData.gender || '',
-        ipNo: patientData.ipNo || '',
-        doctorsName: patientData.doctorName || '',
-        doa: '',
-        doaTime: '',
-        dod: '',
-        dodTime: '',
-        examiningDoctor: '',
-        surgeryTreatment: '',
-        consentChecked: false,
-        patientSignDate: '',
-        patientSignTime: '',
-        relativeName: '',
-        relativeSignDate: '',
-        relativeSignTime: '',
-        admittingDoctorSignDate: '',
-        admittingDoctorSignTime: '',
-        regNo: ''
-    });
+  const [currentLocation, setCurrentLocation] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    uhid: patientData.uhid || "",
+    name: patientData.name || "",
+    age: patientData.age || "",
+    gender: patientData.gender || "",
+    ipNo: patientData.ipNo || "",
+    doctorsName: patientData.doctorName || "",
+    doa: "",
+    doaTime: "",
+    dod: "",
+    dodTime: "",
+    examiningDoctor: "",
+    surgeryTreatment: "",
+    consentChecked: false,
+    patientSignDate: "",
+    patientSignTime: "",
+    relativeName: "",
+    relativeSignDate: "",
+    relativeSignTime: "",
+    admittingDoctorSignDate: "",
+    admittingDoctorSignTime: "",
+    regNo: "",
+  });
 
-    // 1. Fetch Existing Data
-    useEffect(() => {
-        const token = localStorage.getItem("token");
-        let loc = null;
-        if (token) {
-            const payload = decodeJwt(token);
-            if (payload?.jobLocation) {
-                loc = payload.jobLocation;
-                setCurrentLocation(loc);
-            }
-        }
+  // 1. Fetch Existing Data
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    let loc = null;
+    if (token) {
+      const payload = decodeJwt(token);
+      if (payload?.jobLocation) {
+        loc = payload.jobLocation;
+        setCurrentLocation(loc);
+      }
+    }
 
-        const fetchExistingData = async () => {
-            if (!patientData?.uhid || !loc) return;
-            setLoading(true);
-            try {
-                const response = await fetch(
-                    `${BASE_URL}/V1/ipd/admission/listAdmissionEntry?location=${loc}&uhid=${patientData.uhid}&title=${pageTitle}`,
-                    { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
-                );
-                const result = await response.json();
-                console.log(result.data);
-                if (response.ok && result.data) {
-                    const existing = result.data;
-                    setFormData(prev => ({
-                        ...prev,
-                        doa: existing.admission_info?.doa || '',
-                        doaTime: existing.admission_info?.doa_time || '',
-                        dod: existing.admission_info?.dod || '',
-                        dodTime: existing.admission_info?.dod_time || '',
-                        doctorsName: existing.admission_info?.doctors_name || prev.doctorsName,
-                        examiningDoctor: existing.consent_details?.examining_doctor || '',
-                        surgeryTreatment: existing.consent_details?.surgery_treatment || '',
-                        consentChecked: existing.consent_details?.is_consent_given || false,
-                        patientSignDate: existing.signatures?.patient?.date || '',
-                        patientSignTime: existing.signatures?.patient?.time || '',
-                        relativeName: existing.signatures?.relative?.name || '',
-                        relativeSignDate: existing.signatures?.relative?.date || '',
-                        relativeSignTime: existing.signatures?.relative?.time || '',
-                        admittingDoctorSignDate: existing.signatures?.doctor?.date || '',
-                        admittingDoctorSignTime: existing.signatures?.doctor?.time || '',
-                        regNo: existing.signatures?.doctor?.reg_no || ''
-                    }));
-                }
-            } catch (error) {
-                console.error("Error fetching consent data:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchExistingData();
-    }, [patientData?.uhid]);
-
-    const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        setFormData(prev => ({
+    const fetchExistingData = async () => {
+      if (!patientData?.uhid || !loc) return;
+      setLoading(true);
+      try {
+        const response = await fetch(
+          `${BASE_URL}/V1/ipd/admission/listAdmissionEntry?location=${loc}&uhid=${patientData.uhid}&title=${pageTitle}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          },
+        );
+        const result = await response.json();
+        console.log(result.data);
+        if (response.ok && result.data) {
+          const existing = result.data;
+          setFormData((prev) => ({
             ...prev,
-            [name]: type === 'checkbox' ? checked : value
-        }));
-    };
-
-    // 2. Submit Logic
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        const finalPayload = {
-            [pageTitle]: {
-                admission_info: {
-                    doa: formData.doa,
-                    doa_time: formData.doaTime,
-                    dod: formData.dod,
-                    dod_time: formData.dodTime,
-                    doctors_name: formData.doctorsName,
-                },
-                consent_details: {
-                    examining_doctor: formData.examiningDoctor,
-                    surgery_treatment: formData.surgeryTreatment,
-                    is_consent_given: formData.consentChecked
-                },
-                signatures: {
-                    patient: { date: formData.patientSignDate, time: formData.patientSignTime },
-                    relative: { name: formData.relativeName, date: formData.relativeSignDate, time: formData.relativeSignTime },
-                    doctor: { reg_no: formData.regNo, date: formData.admittingDoctorSignDate, time: formData.admittingDoctorSignTime }
-                }
-            }
-        };
-
-        try {
-            Swal.fire({ title: "Saving General Consent...", didOpen: () => Swal.showLoading(), allowOutsideClick: false });
-            const response = await fetch(`${BASE_URL}/V1/ipd/admission/insertAdmission`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${localStorage.getItem("token")}`,
-                },
-                body: JSON.stringify({
-                    title: pageTitle,
-                    location: currentLocation,
-                    patient_id: patientData.uhid,
-                    admissionData: finalPayload,
-                }),
-            });
-
-            if (response.ok) {
-                Swal.fire({ icon: "success", title: "Consent Saved!", timer: 2000, showConfirmButton: false });
-                if (onSubmit) onSubmit();
-            } else {
-                throw new Error("Failed to save consent");
-            }
-        } catch (error) {
-            Swal.fire("Error", error.message, "error");
+            doa: existing.admission_info?.doa || "",
+            doaTime: existing.admission_info?.doa_time || "",
+            dod: existing.admission_info?.dod || "",
+            dodTime: existing.admission_info?.dod_time || "",
+            doctorsName:
+              existing.admission_info?.doctors_name || prev.doctorsName,
+            examiningDoctor: existing.consent_details?.examining_doctor || "",
+            surgeryTreatment: existing.consent_details?.surgery_treatment || "",
+            consentChecked: existing.consent_details?.is_consent_given || false,
+            patientSignDate: existing.signatures?.patient?.date || "",
+            patientSignTime: existing.signatures?.patient?.time || "",
+            relativeName: existing.signatures?.relative?.name || "",
+            relativeSignDate: existing.signatures?.relative?.date || "",
+            relativeSignTime: existing.signatures?.relative?.time || "",
+            admittingDoctorSignDate: existing.signatures?.doctor?.date || "",
+            admittingDoctorSignTime: existing.signatures?.doctor?.time || "",
+            regNo: existing.signatures?.doctor?.reg_no || "",
+          }));
         }
+      } catch (error) {
+        console.error("Error fetching consent data:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    const isFormComplete = () => formData.consentChecked && formData.doa && formData.examiningDoctor;
+    fetchExistingData();
+  }, [patientData?.uhid]);
 
-    return (
-        <ThemeProvider theme={theme}>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <div className="medical-form-container">
-                    <form onSubmit={handleSubmit}>
-                        <h2 className="form-title">
-                            GENERAL CONSENT FOR ADMISSION<br />
-                            रुग्णालयात दाखल होण्यासाठी संमतीपत्र
-                        </h2>
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
 
-                        {/* Patient Header */}
-                        <div className="patient-compact-header">
-                            <div className="info-item"><span className="info-label">UHID</span><span className="info-value">{formData.uhid || '—'}</span></div>
-                            <div className="info-item"><span className="info-label">Patient Name</span><span className="info-value">{formData.name || '—'}</span></div>
-                            <div className="info-item"><span className="info-label">Age/Sex</span><span className="info-value">{formData.age || '—'}/{formData.gender || '—'}</span></div>
-                            <div className="info-item"><span className="info-label">IP No</span><span className="info-value">{formData.ipNo || '—'}</span></div>
-                        </div>
+  // 2. Submit Logic
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const finalPayload = {
+      [pageTitle]: {
+        admission_info: {
+          doa: formData.doa,
+          doa_time: formData.doaTime,
+          dod: formData.dod,
+          dod_time: formData.dodTime,
+          doctors_name: formData.doctorsName,
+        },
+        consent_details: {
+          examining_doctor: formData.examiningDoctor,
+          surgery_treatment: formData.surgeryTreatment,
+          is_consent_given: formData.consentChecked,
+        },
+        signatures: {
+          patient: {
+            date: formData.patientSignDate,
+            time: formData.patientSignTime,
+          },
+          relative: {
+            name: formData.relativeName,
+            date: formData.relativeSignDate,
+            time: formData.relativeSignTime,
+          },
+          doctor: {
+            reg_no: formData.regNo,
+            date: formData.admittingDoctorSignDate,
+            time: formData.admittingDoctorSignTime,
+          },
+        },
+      },
+    };
 
-                        {loading ? <div className="text-center p-4">Loading existing data...</div> : (
-                            <>
-                                <div className="section-box">
-                                    <div className="form-section-title">Admission Timeline</div>
-                                    <div className="two-col">
-                                        <div style={{ display: 'flex', gap: '10px' }}>
-                                            <MuiDateTimePicker label="DOA" name="doa" value={formData.doa} onChange={handleChange} type="date" />
-                                            <MuiDateTimePicker label="Time" name="doaTime" value={formData.doaTime} onChange={handleChange} type="time" />
-                                        </div>
-                                        <div style={{ display: 'flex', gap: '10px' }}>
-                                            <MuiDateTimePicker label="DOD" name="dod" value={formData.dod} onChange={handleChange} type="date" />
-                                            <MuiDateTimePicker label="Time" name="dodTime" value={formData.dodTime} onChange={handleChange} type="time" />
-                                        </div>
-                                    </div>
-                                    <div style={{ marginTop: '15px' }}>
-                                        <TextInput label="Doctor's name:" name="doctorsName" value={formData.doctorsName} onChange={handleChange} />
-                                    </div>
-                                </div>
+    try {
+      Swal.fire({
+        title: "Saving General Consent...",
+        didOpen: () => Swal.showLoading(),
+        allowOutsideClick: false,
+      });
+      const response = await fetch(
+        `${BASE_URL}/V1/ipd/admission/insertAdmission`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            title: pageTitle,
+            location: currentLocation,
+            patient_id: patientData.uhid,
+            admissionData: finalPayload,
+          }),
+        },
+      );
 
-                                <div className="section-box" style={{ lineHeight: '2', padding: '20px' }}>
-                                    On arrival Dr. <input type="text" name="examiningDoctor" value={formData.examiningDoctor} onChange={handleChange} style={{ border: 'none', borderBottom: '1px solid #00838f', outline: 'none', width: '200px', textAlign: 'center' }} />
-                                    conducted examination and has advised me admission into the hospital for
-                                    this surgery / treatment <input type="text" name="surgeryTreatment" value={formData.surgeryTreatment} onChange={handleChange} style={{ border: 'none', borderBottom: '1px solid #00838f', outline: 'none', width: '200px', textAlign: 'center' }} />.
-                                </div>
+      if (response.ok) {
+        Swal.fire({
+          icon: "success",
+          title: "Consent Saved!",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+        if (onSubmit) onSubmit();
+      } else {
+        throw new Error("Failed to save consent");
+      }
+    } catch (error) {
+      Swal.fire("Error", error.message, "error");
+    }
+  };
 
-                                <div className="section-box" style={{ fontSize: '0.85rem', color: '#555', background: '#fff' }}>
-                                    <p>1. I have been given a clear idea about investigations and complications...</p>
-                                    <p>2. I allow the treating team and staff to render necessary services...</p>
-                                    <p>3. I give consent for necessary investigations, procedures, and ICU admission if required...</p>
-                                    {/* ... other points ... */}
-                                </div>
+  const isFormComplete = () =>
+    formData.consentChecked && formData.doa && formData.examiningDoctor;
 
-                                <div className="section-box" style={{ border: '1px solid #80deea', background: '#f0fbfa' }}>
-                                    <div style={{ display: 'flex', gap: '15px', alignItems: 'flex-start' }}>
-                                        <input type="checkbox" name="consentChecked" checked={formData.consentChecked} onChange={handleChange} style={{ width: '20px', height: '20px', marginTop: '4px' }} />
-                                        <div>
-                                            <div style={{ fontWeight: 'bold', color: '#006064' }}>I hereby give my consent for admission and treatment.</div>
-                                            <div className="field-hint">I understand my rights to refuse and the medical consequences thereof.</div>
-                                        </div>
-                                    </div>
-                                </div>
+  return (
+    <ThemeProvider theme={theme}>
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <div className="medical-form-container">
+          <form onSubmit={handleSubmit}>
+            <h2 className="form-title">
+              GENERAL CONSENT FOR ADMISSION
+              <br />
+              रुग्णालयात दाखल होण्यासाठी संमतीपत्र
+            </h2>
 
-                                <div className="form-grid">
-                                    <div className="section-box">
-                                        <div className="form-section-title">Patient / Doctor Confirmation</div>
-                                        <TextInput label="Patient's Name" value={formData.name} readOnly />
-                                        <div className="two-col" style={{ marginTop: '10px' }}>
-                                            <MuiDateTimePicker label="Date" name="patientSignDate" value={formData.patientSignDate} onChange={handleChange} type="date" />
-                                            <MuiDateTimePicker label="Time" name="patientSignTime" value={formData.patientSignTime} onChange={handleChange} type="time" />
-                                        </div>
-                                        <hr style={{ margin: '20px 0', borderStyle: 'dashed' }} />
-                                        <TextInput label="Admitting Doctor Reg no:" name="regNo" value={formData.regNo} onChange={handleChange} />
-                                        <div className="two-col" style={{ marginTop: '10px' }}>
-                                            <MuiDateTimePicker label="Date" name="admittingDoctorSignDate" value={formData.admittingDoctorSignDate} onChange={handleChange} type="date" />
-                                            <MuiDateTimePicker label="Time" name="admittingDoctorSignTime" value={formData.admittingDoctorSignTime} onChange={handleChange} type="time" />
-                                        </div>
-                                    </div>
+            {/* Patient Header */}
+            <div className="patient-compact-header">
+              <div className="info-item">
+                <span className="info-label">UHID</span>
+                <span className="info-value">{formData.uhid || "—"}</span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">Patient Name</span>
+                <span className="info-value">{formData.name || "—"}</span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">Age/Sex</span>
+                <span className="info-value">
+                  {formData.age || "—"}/{formData.gender || "—"}
+                </span>
+              </div>
+              <div className="info-item">
+                <span className="info-label">IP No</span>
+                <span className="info-value">{formData.ipNo || "—"}</span>
+              </div>
+            </div>
 
-                                    <div className="section-box">
-                                        <div className="form-section-title">Relative Confirmation</div>
-                                        <TextInput label="Relative Name & Relation" name="relativeName" value={formData.relativeName} onChange={handleChange} />
-                                        <div className="two-col" style={{ marginTop: '10px' }}>
-                                            <MuiDateTimePicker label="Date" name="relativeSignDate" value={formData.relativeSignDate} onChange={handleChange} type="date" />
-                                            <MuiDateTimePicker label="Time" name="relativeSignTime" value={formData.relativeSignTime} onChange={handleChange} type="time" />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <button type="submit" className="submit-btn" style={{ width: '100%' }}>
-                                    {isFormComplete() ? "Complete General Consent" : "Fill Required Fields to Save"}
-                                </button>
-                            </>
-                        )}
-                    </form>
+            {loading ? (
+              <div className="text-center p-4">Loading existing data...</div>
+            ) : (
+              <>
+                <div className="section-box">
+                  <div className="form-section-title">Admission Timeline</div>
+                  <div className="two-col">
+                    <div style={{ display: "flex", gap: "10px" }}>
+                      <MuiDateTimePicker
+                        label="DOA"
+                        name="doa"
+                        value={formData.doa}
+                        onChange={handleChange}
+                        type="date"
+                      />
+                      <MuiDateTimePicker
+                        label="Time"
+                        name="doaTime"
+                        value={formData.doaTime}
+                        onChange={handleChange}
+                        type="time"
+                      />
+                    </div>
+                    <div style={{ display: "flex", gap: "10px" }}>
+                      <MuiDateTimePicker
+                        label="DOD"
+                        name="dod"
+                        value={formData.dod}
+                        onChange={handleChange}
+                        type="date"
+                      />
+                      <MuiDateTimePicker
+                        label="Time"
+                        name="dodTime"
+                        value={formData.dodTime}
+                        onChange={handleChange}
+                        type="time"
+                      />
+                    </div>
+                  </div>
+                  <div style={{ marginTop: "15px" }}>
+                    <TextInput
+                      label="Doctor's name:"
+                      name="doctorsName"
+                      value={formData.doctorsName}
+                      onChange={handleChange}
+                    />
+                  </div>
                 </div>
-            </LocalizationProvider>
-        </ThemeProvider>
-    );
+
+                <div
+                  className="section-box"
+                  style={{ lineHeight: "2", padding: "20px" }}
+                >
+                  On arrival Dr.{" "}
+                  <input
+                    type="text"
+                    name="examiningDoctor"
+                    value={formData.examiningDoctor}
+                    onChange={handleChange}
+                    style={{
+                      border: "none",
+                      borderBottom: "1px solid #00838f",
+                      outline: "none",
+                      width: "200px",
+                      textAlign: "center",
+                    }}
+                  />
+                  conducted examination and has advised me admission into the
+                  hospital for this surgery / treatment{" "}
+                  <input
+                    type="text"
+                    name="surgeryTreatment"
+                    value={formData.surgeryTreatment}
+                    onChange={handleChange}
+                    style={{
+                      border: "none",
+                      borderBottom: "1px solid #00838f",
+                      outline: "none",
+                      width: "200px",
+                      textAlign: "center",
+                    }}
+                  />
+                  .
+                </div>
+
+                <div
+                  className="section-box"
+                  style={{
+                    fontSize: "0.85rem",
+                    color: "#555",
+                    background: "#fff",
+                  }}
+                >
+                  <p>
+                    1. I have been given a clear idea about investigations and
+                    complications...
+                  </p>
+                  <p>
+                    2. I allow the treating team and staff to render necessary
+                    services...
+                  </p>
+                  <p>
+                    3. I give consent for necessary investigations, procedures,
+                    and ICU admission if required...
+                  </p>
+                  {/* ... other points ... */}
+                </div>
+
+                <div
+                  className="section-box"
+                  style={{ border: "1px solid #80deea", background: "#f0fbfa" }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "15px",
+                      alignItems: "flex-start",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      name="consentChecked"
+                      checked={formData.consentChecked}
+                      onChange={handleChange}
+                      style={{
+                        width: "20px",
+                        height: "20px",
+                        marginTop: "4px",
+                      }}
+                    />
+                    <div>
+                      <div style={{ fontWeight: "bold", color: "#006064" }}>
+                        I hereby give my consent for admission and treatment.
+                      </div>
+                      <div className="field-hint">
+                        I understand my rights to refuse and the medical
+                        consequences thereof.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-grid">
+                  <div className="section-box">
+                    <div className="form-section-title">
+                      Patient / Doctor Confirmation
+                    </div>
+                    <TextInput
+                      label="Patient's Name"
+                      value={formData.name}
+                      readOnly
+                    />
+                    <div className="two-col" style={{ marginTop: "10px" }}>
+                      <MuiDateTimePicker
+                        label="Date"
+                        name="patientSignDate"
+                        value={formData.patientSignDate}
+                        onChange={handleChange}
+                        type="date"
+                      />
+                      <MuiDateTimePicker
+                        label="Time"
+                        name="patientSignTime"
+                        value={formData.patientSignTime}
+                        onChange={handleChange}
+                        type="time"
+                      />
+                    </div>
+                    <hr style={{ margin: "20px 0", borderStyle: "dashed" }} />
+                    <TextInput
+                      label="Admitting Doctor Reg no:"
+                      name="regNo"
+                      value={formData.regNo}
+                      onChange={handleChange}
+                    />
+                    <div className="two-col" style={{ marginTop: "10px" }}>
+                      <MuiDateTimePicker
+                        label="Date"
+                        name="admittingDoctorSignDate"
+                        value={formData.admittingDoctorSignDate}
+                        onChange={handleChange}
+                        type="date"
+                      />
+                      <MuiDateTimePicker
+                        label="Time"
+                        name="admittingDoctorSignTime"
+                        value={formData.admittingDoctorSignTime}
+                        onChange={handleChange}
+                        type="time"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="section-box">
+                    <div className="form-section-title">
+                      Relative Confirmation
+                    </div>
+                    <TextInput
+                      label="Relative Name & Relation"
+                      name="relativeName"
+                      value={formData.relativeName}
+                      onChange={handleChange}
+                    />
+                    <div className="two-col" style={{ marginTop: "10px" }}>
+                      <MuiDateTimePicker
+                        label="Date"
+                        name="relativeSignDate"
+                        value={formData.relativeSignDate}
+                        onChange={handleChange}
+                        type="date"
+                      />
+                      <MuiDateTimePicker
+                        label="Time"
+                        name="relativeSignTime"
+                        value={formData.relativeSignTime}
+                        onChange={handleChange}
+                        type="time"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="submit-btn"
+                  style={{ width: "100%" }}
+                >
+                  {isFormComplete()
+                    ? "Complete General Consent"
+                    : "Fill Required Fields to Save"}
+                </button>
+              </>
+            )}
+          </form>
+        </div>
+      </LocalizationProvider>
+    </ThemeProvider>
+  );
 };
 
 export default GeneralConsentForm;

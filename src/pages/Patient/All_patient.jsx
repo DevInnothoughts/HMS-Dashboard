@@ -217,7 +217,7 @@ const countries = [
   "Zimbabwe",
 ];
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const formatDateToLocal = (dateString) => {
   if (!dateString) return "";
@@ -599,7 +599,7 @@ export default function All_patient() {
       });
 
       const data = await response.json();
-      console.log(data)
+      console.log(data);
       if (response.ok) {
         console.log("Fetched Data (All Patients):", data.data);
         setPatients(data.data || []);
@@ -811,14 +811,17 @@ export default function All_patient() {
         break;
       case "old_ref":
         reference_type = "old_ref";
-        ref = `${oldPatientDetails.patient_ref_no || ""},${oldPatientDetails.old_patient_name || ""
-          },${oldPatientDetails.old_patient_id_value || ""},${oldPatientDetails.old_patient_pincode || ""
-          }`;
+        ref = `${oldPatientDetails.patient_ref_no || ""},${
+          oldPatientDetails.old_patient_name || ""
+        },${oldPatientDetails.old_patient_id_value || ""},${
+          oldPatientDetails.old_patient_pincode || ""
+        }`;
         break;
       case "family_friends":
         reference_type = "family_friends";
-        ref = `${referenceDetails.friendname || ""},${referenceDetails.friendno || ""
-          }`;
+        ref = `${referenceDetails.friendname || ""},${
+          referenceDetails.friendno || ""
+        }`;
         break;
       case "hhc_board":
         reference_type = "hhc_board";
@@ -930,10 +933,11 @@ export default function All_patient() {
 
   const statusBodyTemplate = (formData) => (
     <span
-      className={`badge ${formData.status
-        ? ` status- ${formData.status.toLowerCase()}`
-        : "status-unknown"
-        }`}
+      className={`badge ${
+        formData.status
+          ? ` status- ${formData.status.toLowerCase()}`
+          : "status-unknown"
+      }`}
     >
       {formData.status || "Unknown"}
     </span>

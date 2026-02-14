@@ -27,7 +27,7 @@ import logo from "../../assets/images/3.png";
 // import labLogo from "../../assets/images/1.png";
 // import pharmacyLogo from "../../assets/images/2.png";
 import receiptLogo from "../../assets/images/4.png";
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 const LOCATION = "demo";
 
 const Toast = Swal.mixin({
@@ -436,27 +436,28 @@ export default function ReceiptList() {
                     </tr>
                   </thead>
                   <tbody>
-                    ${selectedReceipt.item_details
-            ? selectedReceipt.item_details
-              .split(",")
-              .map((itemGroup, index) => {
-                const parts = itemGroup.split(":");
-                const label = parts[0] ? parts[0].trim() : "-";
-                const amount = parts[1]
-                  ? parseFloat(parts[1].trim())
-                  : 0;
+                    ${
+                      selectedReceipt.item_details
+                        ? selectedReceipt.item_details
+                            .split(",")
+                            .map((itemGroup, index) => {
+                              const parts = itemGroup.split(":");
+                              const label = parts[0] ? parts[0].trim() : "-";
+                              const amount = parts[1]
+                                ? parseFloat(parts[1].trim())
+                                : 0;
 
-                return `
+                              return `
                         <tr>
                               <td class="col-sr">${index + 1}</td>
                               <td class="col-desc">${label}</td>
                               <td class="col-amt">${amount.toFixed(2)}</td>
                             </tr>
                           `;
-              })
-              .join("")
-            : `<tr><td class="col-sr">1</td><td class="col-desc">-</td><td class="col-amt">0.00</td></tr>`
-          }
+                            })
+                            .join("")
+                        : `<tr><td class="col-sr">1</td><td class="col-desc">-</td><td class="col-amt">0.00</td></tr>`
+                    }
                   </tbody>
                 </table>
                 <div class="summary-section">

@@ -18,7 +18,7 @@ import { decodeJwt } from "../../utils/decode-jwt";
 import MuiDateTimePicker from "../IPD Forms/inputs/MuiDateTimePicker";
 import dayjs from "dayjs";
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 export default function SearchBy() {
   const navigate = useNavigate();
@@ -142,15 +142,16 @@ export default function SearchBy() {
       Swal.fire("Required", "Please select Surgery Date & Time", "warning");
       return;
     }
-    const preplan = { "pre_planning": {
-      admission_datetime: patientData.admissionDatetime,
-      surgery_datetime: patientData.datetime,
-      room_no: patientData.roomNumber,
-      sx_plan: patientData.sxPlan,
-      // sx_time: patientData.sxTime,
-      nmb_time: patientData.nmbTime,
-    }
-  };
+    const preplan = {
+      pre_planning: {
+        admission_datetime: patientData.admissionDatetime,
+        surgery_datetime: patientData.datetime,
+        room_no: patientData.roomNumber,
+        sx_plan: patientData.sxPlan,
+        // sx_time: patientData.sxTime,
+        nmb_time: patientData.nmbTime,
+      },
+    };
     // 1. Prepare data for the backend API
     const payload = {
       global_id: patientData.global_id,
@@ -158,9 +159,9 @@ export default function SearchBy() {
       phone: patientData.contact,
       Uid_no: patientData.uhid,
       location: currentLocation,
-      pre_planning: preplan
+      pre_planning: preplan,
     };
-    
+
     console.log(payload);
     try {
       // 2. Call the backend API
@@ -215,7 +216,7 @@ export default function SearchBy() {
       p.uhid.toLowerCase().includes(historySearchTerm.toLowerCase()) ||
       p.contact.toLowerCase().includes(historySearchTerm.toLowerCase()),
   );
- 
+
   const labelStyle = "fw-bold uppercase mb-2";
 
   const inputStyle = {
@@ -375,7 +376,7 @@ export default function SearchBy() {
                         //   label: "Patient Global ID",
                         //   value: patientData.global_id,
                         //   name: "global_id",
-                        // },                                                                         
+                        // },
                         {
                           label: "Contact Number",
                           value: patientData.contact,
@@ -425,9 +426,22 @@ export default function SearchBy() {
 
                       {/* Admission Booking Section */}
                       <Col md={12} className="mb-2 mt-2">
-                        <hr style={{ borderTop: "1px solid #67c5cfff", opacity: 0.3 }} />
-                        <p style={{ fontSize: "0.90rem", color: "#ff1500ff", fontWeight: "600", marginBottom: "5px" }}>
-                          Fill the below details to book the patient for admission
+                        <hr
+                          style={{
+                            borderTop: "1px solid #67c5cfff",
+                            opacity: 0.3,
+                          }}
+                        />
+                        <p
+                          style={{
+                            fontSize: "0.90rem",
+                            color: "#ff1500ff",
+                            fontWeight: "600",
+                            marginBottom: "5px",
+                          }}
+                        >
+                          Fill the below details to book the patient for
+                          admission
                         </p>
                       </Col>
 
@@ -447,26 +461,26 @@ export default function SearchBy() {
                             marginBottom: "0px",
                           }}
                           inputSx={{
-                            '& .MuiOutlinedInput-root': {
-                              backgroundColor: '#e7ebebff',
-                              borderRadius: '8px',
-                              height: '31px',
-                              '& fieldset': {
-                                borderWidth: '1.5px !important',
-                                borderColor: 'rgb(77, 208, 225) !important',
-                              }
+                            "& .MuiOutlinedInput-root": {
+                              backgroundColor: "#e7ebebff",
+                              borderRadius: "8px",
+                              height: "31px",
+                              "& fieldset": {
+                                borderWidth: "1.5px !important",
+                                borderColor: "rgb(77, 208, 225) !important",
+                              },
                             },
-                            '& .MuiInputBase-input': {
-                              padding: '3px 10px !important',
-                              fontSize: '0.8rem !important',
+                            "& .MuiInputBase-input": {
+                              padding: "3px 10px !important",
+                              fontSize: "0.8rem !important",
                             },
-                            '& .MuiInputAdornment-root': {
-                              marginLeft: '0',
+                            "& .MuiInputAdornment-root": {
+                              marginLeft: "0",
                             },
-                            '& .MuiIconButton-root': {
-                              padding: '4px',
-                              color: '#1a5b61ff',
-                            }
+                            "& .MuiIconButton-root": {
+                              padding: "4px",
+                              color: "#1a5b61ff",
+                            },
                           }}
                         />
                       </Col>
@@ -487,33 +501,36 @@ export default function SearchBy() {
                             marginBottom: "0px",
                           }}
                           inputSx={{
-                            '& .MuiOutlinedInput-root': {
-                              backgroundColor: '#e7ebebff', // Match readOnly background
-                              borderRadius: '8px',
-                              height: '31px', // Standard height for small inputs
-                              '& fieldset': {
-                                borderWidth: '1.5px !important',
-                                borderColor: 'rgb(77, 208, 225) !important',
-                              }
+                            "& .MuiOutlinedInput-root": {
+                              backgroundColor: "#e7ebebff", // Match readOnly background
+                              borderRadius: "8px",
+                              height: "31px", // Standard height for small inputs
+                              "& fieldset": {
+                                borderWidth: "1.5px !important",
+                                borderColor: "rgb(77, 208, 225) !important",
+                              },
                             },
-                            '& .MuiInputBase-input': {
-                              padding: '3px 10px !important',
-                              fontSize: '0.8rem !important',
+                            "& .MuiInputBase-input": {
+                              padding: "3px 10px !important",
+                              fontSize: "0.8rem !important",
                             },
-                            '& .MuiInputAdornment-root': {
-                              marginLeft: '0',
+                            "& .MuiInputAdornment-root": {
+                              marginLeft: "0",
                             },
-                            '& .MuiIconButton-root': {
-                              padding: '4px',
-                              color: '#1a5b61ff',
-                            }
+                            "& .MuiIconButton-root": {
+                              padding: "4px",
+                              color: "#1a5b61ff",
+                            },
                           }}
                         />
                       </Col>
 
                       <Col md={4} className="mb-10">
                         <Form.Group>
-                          <Form.Label className={labelStyle} style={{ fontSize: "0.75rem" }}>
+                          <Form.Label
+                            className={labelStyle}
+                            style={{ fontSize: "0.75rem" }}
+                          >
                             Room Number
                           </Form.Label>
                           <Form.Control
@@ -534,7 +551,10 @@ export default function SearchBy() {
 
                       <Col md={4} className="mb-10">
                         <Form.Group>
-                          <Form.Label className={labelStyle} style={{ fontSize: "0.75rem" }}>
+                          <Form.Label
+                            className={labelStyle}
+                            style={{ fontSize: "0.75rem" }}
+                          >
                             SX Plan
                           </Form.Label>
                           <Form.Control
@@ -593,7 +613,12 @@ export default function SearchBy() {
                         <MuiDateTimePicker
                           label="NBM Time"
                           value={patientData.nmbTime}
-                          onChange={(e) => setPatientData(prev => ({ ...prev, nmbTime: e.target.value }))}
+                          onChange={(e) =>
+                            setPatientData((prev) => ({
+                              ...prev,
+                              nmbTime: e.target.value,
+                            }))
+                          }
                           name="nmbTime"
                           type="time"
                           minutesStep={15}
@@ -601,26 +626,26 @@ export default function SearchBy() {
                           labelStyle={{ fontSize: "0.75rem" }}
                           style={{ marginBottom: "0px" }}
                           inputSx={{
-                            '& .MuiOutlinedInput-root': {
-                              backgroundColor: '#e7ebebff',
-                              borderRadius: '8px',
-                              height: '31px',
-                              '& fieldset': {
-                                borderWidth: '1.5px !important',
-                                borderColor: 'rgb(77, 208, 225) !important',
-                              }
+                            "& .MuiOutlinedInput-root": {
+                              backgroundColor: "#e7ebebff",
+                              borderRadius: "8px",
+                              height: "31px",
+                              "& fieldset": {
+                                borderWidth: "1.5px !important",
+                                borderColor: "rgb(77, 208, 225) !important",
+                              },
                             },
-                            '& .MuiInputBase-input': {
-                              padding: '3px 10px !important',
-                              fontSize: '0.8rem !important',
+                            "& .MuiInputBase-input": {
+                              padding: "3px 10px !important",
+                              fontSize: "0.8rem !important",
                             },
-                            '& .MuiInputAdornment-root': {
-                              marginLeft: '0',
+                            "& .MuiInputAdornment-root": {
+                              marginLeft: "0",
                             },
-                            '& .MuiIconButton-root': {
-                              padding: '4px',
-                              color: '#1a5b61ff',
-                            }
+                            "& .MuiIconButton-root": {
+                              padding: "4px",
+                              color: "#1a5b61ff",
+                            },
                           }}
                         />
                       </Col>
@@ -865,9 +890,13 @@ export default function SearchBy() {
                 size="18"
                 style={{ color: "#1a5b61ff", marginRight: "10px" }}
               />
-              <Modal.Title style={{
-                color: "#1a5b61ff", fontWeight: "600", fontSize: "19px",
-              }}>
+              <Modal.Title
+                style={{
+                  color: "#1a5b61ff",
+                  fontWeight: "600",
+                  fontSize: "19px",
+                }}
+              >
                 Edit Patient Details
               </Modal.Title>
             </Modal.Header>
@@ -876,7 +905,12 @@ export default function SearchBy() {
                 <Row>
                   <Col md={6} className="mb-10">
                     <Form.Group>
-                      <Form.Label className={labelStyle} style={{ fontSize: "13px" }}>UHID No.</Form.Label>
+                      <Form.Label
+                        className={labelStyle}
+                        style={{ fontSize: "13px" }}
+                      >
+                        UHID No.
+                      </Form.Label>
                       <Form.Control
                         name="uhid"
                         value={editFormData.uhid}
@@ -887,7 +921,10 @@ export default function SearchBy() {
                   </Col>
                   <Col md={6} className="mb-3">
                     <Form.Group>
-                      <Form.Label className={labelStyle} style={{ fontSize: "13px" }}>
+                      <Form.Label
+                        className={labelStyle}
+                        style={{ fontSize: "13px" }}
+                      >
                         Patient Name
                       </Form.Label>
                       <Form.Control
@@ -900,7 +937,10 @@ export default function SearchBy() {
                   </Col>
                   <Col md={6} className="mb-10">
                     <Form.Group>
-                      <Form.Label className={labelStyle} style={{ fontSize: "13px" }}>
+                      <Form.Label
+                        className={labelStyle}
+                        style={{ fontSize: "13px" }}
+                      >
                         Contact Number
                       </Form.Label>
                       <Form.Control
@@ -913,7 +953,12 @@ export default function SearchBy() {
                   </Col>
                   <Col md={6} className="mb-3">
                     <Form.Group>
-                      <Form.Label className={labelStyle} style={{ fontSize: "13px" }}>Age</Form.Label>
+                      <Form.Label
+                        className={labelStyle}
+                        style={{ fontSize: "13px" }}
+                      >
+                        Age
+                      </Form.Label>
                       <Form.Control
                         name="age"
                         value={editFormData.age}
@@ -925,7 +970,12 @@ export default function SearchBy() {
 
                   <Col md={6} className="mb-3">
                     <Form.Group>
-                      <Form.Label className={labelStyle} style={{ fontSize: "13px" }}>Gender</Form.Label>
+                      <Form.Label
+                        className={labelStyle}
+                        style={{ fontSize: "13px" }}
+                      >
+                        Gender
+                      </Form.Label>
                       <Form.Select
                         name="gender"
                         value={editFormData.gender}
@@ -940,7 +990,12 @@ export default function SearchBy() {
                   </Col>
                   <Col md={6} className="mb-10">
                     <Form.Group>
-                      <Form.Label className={labelStyle} style={{ fontSize: "13px" }}>Address</Form.Label>
+                      <Form.Label
+                        className={labelStyle}
+                        style={{ fontSize: "13px" }}
+                      >
+                        Address
+                      </Form.Label>
                       <Form.Control
                         as="textarea"
                         rows={2}
