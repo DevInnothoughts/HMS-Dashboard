@@ -8,6 +8,8 @@ import moment from "moment";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { FilterMatchMode } from "primereact/api";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 // Static data for doctors (used as patients in this context)
 const doctorsData = [
@@ -580,6 +582,34 @@ const BirthdayAlert = () => {
     setFirst(0);
   };
 
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text("Birthday Alert", 14, 15);
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+    doc.text(`Date: ${currentDate}`, 14, 22);
+
+    const tableColumn = ["Sr No", "Patient Name", "Contact Number", "Address"];
+    const tableRows = doctorsData.sort((a, b) => a.name.localeCompare(b.name)).map((item, index) => [
+      index + 1,
+      item.name,
+      item.phone,
+      item.address,
+    ]);
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 30,
+      theme: 'grid',
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [0, 172, 193] }
+    });
+
+    doc.save(`Birthday_Alert_${currentDate}.pdf`);
+  };
+
   const renderHeader = () => {
     return (
       <div
@@ -636,25 +666,47 @@ const BirthdayAlert = () => {
           </div>
         </div>
 
-        <Button
-          variant="primary"
-          onClick={handleRefresh}
-          style={{
-            backgroundColor: "#00bcd4",
-            border: "none",
-            borderRadius: "8px",
-            padding: "6px 15px",
-            fontSize: "13px",
-            fontWeight: "600",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
-          }}
-        >
-          <FeatherIcon icon="refresh-ccw" size={15} />
-          Refresh
-        </Button>
+        <div className="d-flex gap-2">
+          <Button
+            variant="primary"
+            onClick={handleRefresh}
+            style={{
+              backgroundColor: "#00bcd4",
+              border: "none",
+              borderRadius: "8px",
+              padding: "8px 15px",
+              fontSize: "13px",
+              fontWeight: "600",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+            }}
+          >
+            <FeatherIcon icon="refresh-ccw" size={15} />
+            Refresh
+          </Button>
+
+          <Button
+            variant="danger"
+            onClick={downloadPDF}
+            style={{
+              backgroundColor: "#ef5350",
+              border: "none",
+              borderRadius: "8px",
+              padding: "8px 15px",
+              fontSize: "13px",
+              fontWeight: "600",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+            }}
+          >
+            <i className="fa fa-file-pdf-o"></i>
+            Download PDF
+          </Button>
+        </div>
       </div>
     );
   };
@@ -697,7 +749,7 @@ const BirthdayAlert = () => {
                     color: "white",
                   }}
                 >
-                  <h4 style={{ margin: 0, fontWeight: "700", letterSpacing: "0.5px" }}>Birthday Alert</h4>
+                  <h4 style={{ margin: 0, fontWeight: "700", letterSpacing: "0.5px" }}>Today's Birthday Alert</h4>
                   <div style={{ fontSize: "16px", marginTop: "5px", opacity: 0.9 }}>
                     {currentDate}
                   </div>

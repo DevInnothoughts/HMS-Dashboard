@@ -1,43 +1,192 @@
-import React, { useState } from "react";
-import {
-  Row,
-  Col,
-  Card,
-  Container,
-  Table,
-  Form,
-  Button,
-} from "react-bootstrap";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import PageBreadcrumb from "../../../components/PageBreadcrumb";
+import React, { useState, useEffect, useRef } from "react";
+import { Row, Col, Card, Container, Form } from "react-bootstrap";
 import SimpleBar from "simplebar-react";
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
+import { FilterMatchMode } from "primereact/api";
+import { InputText } from "primereact/inputtext";
+import ReactApexChart from "react-apexcharts";
+import PageBreadcrumb from "../../../components/PageBreadcrumb";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const ReferenceReport = () => {
-  // State for form inputs
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
-
-  // Placeholder data for enquiry data (can be replaced with real API data)
-  const enquiryData = [
-    {
-      date: "2025-01-01",
-      customer: "John Smith",
-      enquiryType: "Service Inquiry",
-    },
-  ];
-
-  // Filter data based on selected dates
-  const filteredData = enquiryData.filter((entry) => {
-    const isDateValid =
-      (!fromDate || new Date(entry.date) >= new Date(fromDate)) &&
-      (!toDate || new Date(entry.date) <= new Date(toDate));
-    return isDateValid;
+  const [searchText, setSearchText] = useState("");
+  const [rows, setRows] = useState(10);
+  const chartRef = useRef(null);
+  const [filters, setFilters] = useState({
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
 
-  // Handle Find button click
-  const handleFindClick = () => {
-    console.log(`Filtering enquiry data from ${fromDate} to ${toDate}`);
+  const [referenceData, setReferenceData] = useState([
+    { type: "socialMedia", count: 15 },
+    { type: "Referred By Another Patient", count: 25 },
+    { type: "Referred By Another Doctor", count: 10 },
+    { type: "old_ref", count: 8 },
+    { type: "internet", count: 20 },
+    { type: "I was treated here in past", count: 12 },
+    { type: "Healing Hands Clinic Branch", count: 30 },
+    { type: "family_friends", count: 18 },
+    { type: "Entertainment Media", count: 5 },
+    { type: "dr_ref", count: 22 },
+  ]);
+
+  const chartSeries = [{
+    name: 'Reference Count',
+    data: referenceData.map(item => item.count)
+  }];
+
+  const chartOptions = {
+    chart: {
+      type: 'bar',
+      height: 380,
+      dropShadow: {
+        enabled: true,
+        color: '#000',
+        top: 2,
+        left: 2,
+        blur: 4,
+        opacity: 0.1
+      }
+    },
+    plotOptions: {
+      bar: {
+        borderRadius: 4,
+        horizontal: true,
+        distributed: true,
+        dataLabels: {
+          position: 'top',
+        },
+      }
+    },
+    colors: ['#42A5F5', '#FFCA28', '#66BB6A', '#FFA726', '#AB47BC', '#EC407A', '#26C6DA', '#8D6E63', '#5C6BC0', '#26A69A'],
+    dataLabels: {
+      enabled: true,
+      formatter: function (val, opts) {
+        return val;
+      },
+      offsetX: 30,
+      style: {
+        fontSize: '12px',
+        colors: ["#304758"]
+      }
+    },
+    xaxis: {
+      categories: referenceData.map(item => item.type),
+    },
+    yaxis: {
+      labels: {
+        style: {
+          fontSize: '12px',
+          fontWeight: 'bold'
+        }
+      }
+    },
+    tooltip: {
+      theme: 'dark',
+      x: {
+        show: true
+      },
+      y: {
+        title: {
+          formatter: function () {
+            return '';
+          }
+        }
+      }
+    },
+    legend: {
+      show: false
+    }
+  };
+
+  const onGlobalFilterChange = (e) => {
+    const value = e.target.value;
+    let _filters = { ...filters };
+    _filters["global"].value = value;
+    setFilters(_filters);
+    setSearchText(value);
+  };
+
+  const downloadPDF = async () => {
+    const doc = new jsPDF();
+    doc.text("Reference Report", 14, 15);
+
+    const tableColumn = ["Sr No", "Reference Type", "Reference Count"];
+    const tableRows = referenceData.map((item, index) => [
+      index + 1,
+      item.type,
+      item.count
+    ]);
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 20,
+    });
+
+    const finalY = doc.lastAutoTable.finalY || 20;
+
+    if (chartRef.current && chartRef.current.chart) {
+      const { imgURI } = await chartRef.current.chart.dataURI();
+      if (imgURI) {
+        doc.text("Reference Statistics", 14, finalY + 15);
+        doc.addImage(imgURI, 'PNG', 14, finalY + 20, 180, 100);
+      }
+    }
+
+    doc.save("Reference_Report.pdf");
+  };
+
+  const renderHeader = () => {
+    return (
+      <div className="d-flex justify-content-between align-items-center mb-1">
+        <div className="d-flex align-items-center" style={{ gap: "20px" }}>
+          <div className="d-flex align-items-center">
+            <span className="me-1" style={{ fontWeight: "bold", color: "#006064" }}>Show</span>
+            <Form.Select
+              size="sm"
+              style={{ width: "70px", borderRadius: "8px", border: "1px solid #4dd0e1" }}
+              value={rows}
+              onChange={(e) => setRows(Number(e.target.value))}
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </Form.Select>
+          </div>
+          <div className="d-flex align-items-center">
+            <span className="me-1" style={{ fontWeight: "bold", color: "#006064" }}>Search</span>
+            <span className="p-input-icon-left">
+              <InputText
+                value={searchText}
+                onChange={onGlobalFilterChange}
+                placeholder="Global Search..."
+                className="p-inputtext-sm"
+                style={{ width: "200px", borderRadius: "8px", border: "1px solid #4dd0e1" }}
+              />
+            </span>
+          </div>
+        </div>
+        <button
+          className="btn btn-danger btn-sm"
+          onClick={downloadPDF}
+          style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px" }}
+        >
+          <i className="fa fa-file-pdf-o"></i> Download PDF
+        </button>
+      </div>
+    );
+  };
+
+  const header = renderHeader();
+
+  const handleFindClick = (e) => {
+    e.preventDefault();
+    console.log(`Filtering Reference Report from ${fromDate} to ${toDate}`);
   };
 
   return (
@@ -50,7 +199,6 @@ const ReferenceReport = () => {
         minHeight: "100vh",
       }}
     >
-      {/* Breadcrumb */}
       <PageBreadcrumb pagename="Reference Report" />
 
       <SimpleBar className="theme-body common-dash">
@@ -63,125 +211,140 @@ const ReferenceReport = () => {
                   boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
                   borderColor: "#00bcd4",
                   background: "white",
-                  border: "4px solid #00bcd4",
+                  border: "1px solid #00bcd4",
                 }}
               >
                 <Card.Header
                   className="text-center"
                   style={{
                     fontWeight: "bold",
-                    fontSize: "22px",
-                    color: "#006064",
-                    background: "linear-gradient(to right, #4dd0e1, #00acc1)",
-                    borderBottom: "3px solid #00bcd4",
+                    backgroundColor: "#e3f2fd",
+                    borderBottom: "2px solid #0288d1",
                     padding: "1rem",
-                    backgroundColor: "white",
+                    background: "linear-gradient(to right, #00acc1, #007c91)",
+                    color: "white",
+                    fontSize: "16px",
                   }}
                 >
-                  <h4>Reference Report</h4>
+                  <h4 style={{ margin: 0 }}>Reference Report</h4>
                 </Card.Header>
-                <Card.Body>
-                  {/* Filters */}
-                  <Form className="mb-4">
-                    <Row className="align-items-end">
-                      <Col md={3}>
-                        <Form.Group className="mb-3">
-                          <Form.Label>
-                            <b>From Date</b>
-                          </Form.Label>
-                          <DatePicker
-                            selected={fromDate}
-                            onChange={(date) => setFromDate(date)}
-                            dateFormat="dd/MM/yyyy"
-                            className="form-control"
-                            placeholderText="Select From Date"
+                <Card.Body style={{ padding: "5px" }}>
+                  <Form onSubmit={handleFindClick}>
+                    <Row className="align-items-end mb-4 flex-nowrap" style={{ margin: "0 -5px" }}>
+                      <Col style={{ padding: "0 5px", flex: "1" }}>
+                        <Form.Group className="mb-2">
+                          <Form.Label style={{ fontWeight: "bold", color: "#006064", whiteSpace: "nowrap", fontSize: "12px" }}>From Date</Form.Label>
+                          <Form.Control
+                            type="date"
+                            value={fromDate}
+                            onChange={(e) => setFromDate(e.target.value)}
+                            style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }}
                           />
                         </Form.Group>
                       </Col>
-                      <Col md={3}>
-                        <Form.Group className="mb-3">
-                          <Form.Label>
-                            <b>To Date</b>
-                          </Form.Label>
-                          <DatePicker
-                            selected={toDate}
-                            onChange={(date) => setToDate(date)}
-                            dateFormat="dd/MM/yyyy"
-                            className="form-control"
-                            placeholderText="Select To Date"
+                      <Col style={{ padding: "0 5px", flex: "1" }}>
+                        <Form.Group className="mb-2">
+                          <Form.Label style={{ fontWeight: "bold", color: "#006064", whiteSpace: "nowrap", fontSize: "12px" }}>To Date</Form.Label>
+                          <Form.Control
+                            type="date"
+                            value={toDate}
+                            onChange={(e) => setToDate(e.target.value)}
+                            style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }}
                           />
                         </Form.Group>
                       </Col>
-                      <Col md={3}>
-                        <Button
-                          variant="primary"
-                          onClick={handleFindClick}
-                          className="w-100"
-                          style={{
-                            marginTop: "30px",
-                            height: "55px",
-                            width: "100%",
-                            backgroundColor: "#00acc1",
-                            borderColor: "#00bcd4",
-                            color: "white",
-                            cursor: "pointer",
-                            borderRadius: "8px",
-                            transition: "0.3s all",
-                            fontWeight: "bold",
-                          }}
-                        >
-                          Find
-                        </Button>
+                      <Col style={{ padding: "0 5px", flex: "1" }}>
+                        <Form.Group className="mb-2">
+                          <button
+                            className="btn btn-primary"
+                            type="submit"
+                            style={{
+                              height: "35px",
+                              width: "100%",
+                              backgroundColor: "#00acc1",
+                              borderColor: "#00bcd4",
+                              color: "white",
+                              borderRadius: "8px",
+                              fontWeight: "bold",
+                              fontSize: "13px"
+                            }}
+                          >
+                            Search
+                          </button>
+                        </Form.Group>
                       </Col>
                     </Row>
                   </Form>
-                  <br />
-                  <br />
-                  {/* Enquiry Data Table */}
-                  <Table
-                    striped
-                    bordered
-                    hover
-                    className="mt-4"
-                    style={{ textAlign: "center" }}
+
+                  <DataTable
+                    value={referenceData}
+                    paginator
+                    rows={rows}
+                    filters={filters}
+                    header={header}
+                    paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
+                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
+                    className="p-datatable-sm custom-datatable"
+                    style={{ fontSize: "12px" }}
+                    rowHover
+                    stripedRows
+                    responsiveLayout="scroll"
                   >
-                    <thead className="thead-light">
-                      <tr>
-                        <th>Date</th>
-                        <th>Customer</th>
-                        <th style={{ textAlign: "center" }}>Enquiry Type</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredData.length > 0 ? (
-                        filteredData.map((entry, index) => (
-                          <tr key={index}>
-                            <td>{entry.date}</td>
-                            <td>{entry.customer}</td>
-                            <td style={{ textAlign: "center" }}>
-                              {entry.enquiryType}
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td
-                            colSpan="3"
-                            className="text-center"
-                            style={{ color: "red" }}
-                          >
-                            No records found for the selected date range.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </Table>
+                    <Column
+                      header="Sr No"
+                      body={(rowData, { rowIndex }) => rowIndex + 1}
+                      style={{ width: "60px", textAlign: "center" }}
+                    />
+                    <Column field="type" header="Reference Type" />
+                    <Column field="count" header="Reference Count" />
+                  </DataTable>
+
+                  <div className="mt-5 mb-3 d-flex flex-column align-items-center">
+                    <h5 style={{ color: "#006064", fontWeight: "bold" }}>Reference Statistics</h5>
+                    <div style={{ width: '100%', maxWidth: '800px' }}>
+                      <ReactApexChart ref={chartRef} options={chartOptions} series={chartSeries} type="bar" height={450} />
+                    </div>
+                  </div>
                 </Card.Body>
               </Card>
             </Col>
           </Row>
         </Container>
       </SimpleBar>
+      <style>{`
+        .custom-datatable .p-datatable-header {
+          background: #e0f7fa;
+          border: 1px solid #4dd0e1;
+          border-top-left-radius: 8px;
+          border-top-right-radius: 8px;
+          padding: 10px;
+        }
+        .custom-datatable .p-datatable-thead > tr > th {
+          background-color: #b2ebf2 !important;
+          color: black !important;
+          font-size: 12px;
+          padding: 10px 8px !important;
+          border: 1px solid #90caf9 !important;
+          text-align: center !important;
+        }
+        .custom-datatable .p-datatable-thead > tr > th * {
+          color: black !important;
+          justify-content: center !important;
+        }
+        .custom-datatable .p-datatable-tbody > tr > td {
+          font-size: 12px;
+          padding: 8px;
+          border: 1px solid #90caf9;
+          text-align: center !important;
+        }
+        .custom-datatable .p-paginator {
+          background: #f8fdfe;
+          border: 1px solid #4dd0e1;
+          border-bottom-left-radius: 8px;
+          border-bottom-right-radius: 8px;
+          padding: 5px;
+        }
+      `}</style>
     </div>
   );
 };

@@ -1,192 +1,445 @@
-import React, { useState, useEffect } from 'react';
-import MaterialTable from '@material-table/core'; // Replace the old DataTable import
-import axios from 'axios'; // For making API calls
-import '../../styles/styles.css'; // Add this import at the top
+import React, { useState } from "react";
+import {
+  Row,
+  Col,
+  Card,
+  Container,
+  Form,
+} from "react-bootstrap";
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
+import { FilterMatchMode } from "primereact/api";
+import { InputText } from "primereact/inputtext";
+import { ColumnGroup } from 'primereact/columngroup';
+import { saveAs } from "file-saver";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import PageBreadcrumb from "../../../components/PageBreadcrumb";
+import SimpleBar from "simplebar-react";
+import axios from 'axios';
+
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const InsuranceDueReport = () => {
-  // State for form inputs and data
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
-  const [tableData, setTableData] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [tableData, setTableData] = useState([
+    {
+      patientName: "John Doe",
+      date: "2024-05-10",
+      companyName: "Star Health",
+      invoiceNo: "INV001",
+      totalAmt: 50000,
+      approvedAmt: 45000,
+      receivedAmt: 40000,
+      dueAmt: 5000
+    },
+    {
+      patientName: "Jane Smith",
+      date: "2024-05-12",
+      companyName: "HDFC Ergo",
+      invoiceNo: "INV002",
+      totalAmt: 30000,
+      approvedAmt: 28000,
+      receivedAmt: 25000,
+      dueAmt: 3000
+    }
+  ]);
+  const [loading, setLoading] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const [rows, setRows] = useState(10);
+  const [filters, setFilters] = useState({
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+  });
+  const [totals, setTotals] = useState({
+    totalAmt: 80000,
+    approvedAmt: 73000,
+    receivedAmt: 65000,
+    dueAmt: 8000
+  });
 
-  // Handle Find button click
-  const handleFindClick = async () => {
+  const onGlobalFilterChange = (e) => {
+    const value = e.target.value;
+    let _filters = { ...filters };
+    _filters["global"].value = value;
+    setFilters(_filters);
+    setSearchText(value);
+  };
+
+  const handleSearch = async (e) => {
+    if (e) e.preventDefault();
     if (!fromDate || !toDate) {
-      alert('Please Enter all fields details..');
+      alert("Please Enter the all fields details..");
       return;
     }
 
-    setIsLoading(true);
-    setError(null);
+    setLoading(true);
     try {
-      console.log('Fetching data...'); // Debug log
-      const response = await axios.post('/receptionist/InsuranceDueDetails', {
+      const response = await axios.post(`${BASE_URL}/receptionist/InsuranceDueDetails`, {
         Fromdate: fromDate,
         Todate: toDate
       });
-      console.log('Response:', response.data); // Debug log
-      setTableData(response.data);
+
+      const data = Array.isArray(response.data) ? response.data : [];
+
+      // Map API data to our table fields if necessary, or use as is
+      const mappedData = data.map(item => {
+        const received = (parseInt(item.receivedamt) || 0) + (parseInt(item.tdsamt) || 0);
+        const approved = parseInt(item.authoamt) || 0;
+        return {
+          ...item,
+          patientName: item.patientname,
+          date: item.creationdate,
+          companyName: item.companyname,
+          invoiceNo: item.invoiceid,
+          totalAmt: parseInt(item.totalamt) || 0,
+          approvedAmt: approved,
+          receivedAmt: received,
+          dueAmt: approved - received
+        };
+      });
+
+      const newTotals = mappedData.reduce((acc, curr) => ({
+        totalAmt: acc.totalAmt + curr.totalAmt,
+        approvedAmt: acc.approvedAmt + curr.approvedAmt,
+        receivedAmt: acc.receivedAmt + curr.receivedAmt,
+        dueAmt: acc.dueAmt + curr.dueAmt
+      }), { totalAmt: 0, approvedAmt: 0, receivedAmt: 0, dueAmt: 0 });
+
+      setTotals(newTotals);
+      setTableData(mappedData);
+
+      if (mappedData.length === 0) {
+        alert("No records found for the selected date range");
+      }
     } catch (error) {
-      console.error('Error fetching data:', error);
-      setError(error.message);
+      console.error("Error:", error);
+      alert(`Failed to fetch data: ${error.message}`);
+      setTableData([]);
+      setTotals({ totalAmt: 0, approvedAmt: 0, receivedAmt: 0, dueAmt: 0 });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  // DataTable columns configuration
-  const columns = [
-    { title: 'Sr No', field: 'invoice_id' },
-    { 
-      title: 'Date', 
-      field: 'creationdate',
-      render: (rowData) => {
-        const [year, month, day] = rowData.creationdate.split('-');
-        return `${day}-${month}-${year}`;
+  const formatDateDisplay = (dateStr) => {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
+  const exportToExcel = () => {
+    const fileType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
+    const fileExtension = ".xlsx";
+
+    const excelData = tableData.map((item, index) => ({
+      "Sr No": index + 1,
+      "Date": formatDateDisplay(item.date),
+      "Patient Name": item.patientName,
+      "Company Name": item.companyName,
+      "Invoice No": item.invoiceNo,
+      "Total Amt": item.totalAmt,
+      "Approved Amt": item.approvedAmt,
+      "Received Amt": item.receivedAmt,
+      "Due Amt": item.dueAmt,
+    }));
+
+    // Add totals row
+    excelData.push({
+      "Sr No": "Total",
+      "Date": "",
+      "Patient Name": "",
+      "Company Name": "",
+      "Invoice No": "",
+      "Total Amt": totals.totalAmt,
+      "Approved Amt": totals.approvedAmt,
+      "Received Amt": totals.receivedAmt,
+      "Due Amt": totals.dueAmt,
+    });
+
+    const ws = XLSX.utils.json_to_sheet(excelData);
+    const wb = { Sheets: { data: ws }, SheetNames: ["data"] };
+    const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const data = new Blob([excelBuffer], { type: fileType });
+    saveAs(data, "Insurance_Due_Report" + fileExtension);
+  };
+
+  const downloadPDF = () => {
+    const doc = new jsPDF("l", "mm", "a4");
+    const today = new Date().toLocaleDateString('en-GB').replace(/\//g, '-');
+    doc.setFontSize(16);
+    doc.text("Insurance Due Report", 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Date: ${today}`, 14, 22);
+
+    const tableColumn = ["Sr No", "Date", "Patient Name", "Company Name", "Invoice No", "Total Amt", "Approved Amt", "Received Amt", "Due Amt"];
+    const tableRows = tableData.map((item, index) => [
+      index + 1,
+      formatDateDisplay(item.date),
+      item.patientName,
+      item.companyName,
+      item.invoiceNo,
+      item.totalAmt,
+      item.approvedAmt,
+      item.receivedAmt,
+      item.dueAmt,
+    ]);
+
+    // Add totals row
+    tableRows.push([
+      "Total", "", "", "", "", totals.totalAmt, totals.approvedAmt, totals.receivedAmt, totals.dueAmt
+    ]);
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 28,
+      theme: 'grid',
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [0, 172, 193] },
+      didParseCell: (data) => {
+        if (data.row.index === tableRows.length - 1) {
+          data.cell.styles.fontStyle = 'bold';
+        }
       }
-    },
-    { title: 'Patient Name', field: 'patientname' },
-    { title: 'Company Name', field: 'companyname' },
-    { title: 'Invoice No', field: 'invoiceid' },
-    { title: 'Total Amt', field: 'totalamt' },
-    { title: 'Approved Amt', field: 'authoamt' },
-    { 
-      title: 'Received Amt',
-      render: (rowData) => {
-        const val = parseInt(rowData.receivedamt) + parseInt(rowData.tdsamt);
-        return isNaN(val) ? 0 : val;
-      }
-    },
-    {
-      title: 'Due Amt',
-      render: (rowData) => {
-        const value = parseInt(rowData.authoamt) - (parseInt(rowData.receivedamt) + parseInt(rowData.tdsamt));
-        return isNaN(value) ? 0 : value;
-      }
-    }
-  ];
+    });
+
+    doc.save("Insurance_Due_Report.pdf");
+  };
+
+  const renderHeader = () => {
+    return (
+      <div className="d-flex justify-content-between align-items-center mb-1">
+        <div className="d-flex align-items-center" style={{ gap: "20px" }}>
+          <div className="d-flex align-items-center">
+            <span className="me-1" style={{ fontWeight: "bold", color: "#006064" }}>Show</span>
+            <Form.Select
+              size="sm"
+              style={{ width: "70px", borderRadius: "8px", border: "1px solid #4dd0e1" }}
+              value={rows}
+              onChange={(e) => setRows(Number(e.target.value))}
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </Form.Select>
+          </div>
+          <div className="d-flex align-items-center">
+            <span className="me-1" style={{ fontWeight: "bold", color: "#006064" }}>Search</span>
+            <span className="p-input-icon-left">
+              <InputText
+                value={searchText}
+                onChange={onGlobalFilterChange}
+                placeholder="Global Search..."
+                className="p-inputtext-sm"
+                style={{ width: "200px", borderRadius: "8px", border: "1px solid #4dd0e1" }}
+              />
+            </span>
+          </div>
+        </div>
+        <div className="d-flex" style={{ gap: "10px" }}>
+          <button
+            className="btn btn-success btn-sm"
+            onClick={exportToExcel}
+            style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px" }}
+          >
+            <i className="fa fa-file-excel-o"></i> Download Excel
+          </button>
+          <button
+            className="btn btn-danger btn-sm"
+            onClick={downloadPDF}
+            style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px" }}
+          >
+            <i className="fa fa-file-pdf-o"></i> Download PDF
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const footerGroup = (
+    <ColumnGroup>
+      <Row>
+        <Column footer="Total" colSpan={5} footerStyle={{ textAlign: 'center', fontWeight: 'bold' }} />
+        <Column footer={totals.totalAmt} footerStyle={{ textAlign: 'center', fontWeight: 'bold' }} />
+        <Column footer={totals.approvedAmt} footerStyle={{ textAlign: 'center', fontWeight: 'bold' }} />
+        <Column footer={totals.receivedAmt} footerStyle={{ textAlign: 'center', fontWeight: 'bold' }} />
+        <Column footer={totals.dueAmt} footerStyle={{ textAlign: 'center', fontWeight: 'bold' }} />
+      </Row>
+    </ColumnGroup>
+  );
+
+  const header = renderHeader();
 
   return (
-    <div className="box">
-      <div className="box-content padded">
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '20px' }}>
-          <i className="icon-info-sign"></i>
-          <h3 style={{ margin: '0 0 0 10px' }}>Manage InsuranceDueReport</h3>
-        </div>
+    <div
+      className="themebody-wrap"
+      style={{
+        padding: "20px",
+        background: "linear-gradient(to right, #e0f7fa, #80deea)",
+        fontFamily: "'Poppins', Arial, sans-serif",
+        minHeight: "100vh",
+      }}
+    >
+      <PageBreadcrumb pagename="Insurance Due Report" />
 
-        <div className="row" style={{ marginBottom: '20px' }}>
-          <div className="col-md-3">
-            <div className="form-group">
-              <label className="control-label">From Date</label>
-              <input
-                type="date"
-                className="form-control"
-                placeholder="dd-mm-yyyy"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
+      <SimpleBar className="theme-body common-dash">
+        <Container fluid>
+          <Row>
+            <Col md={12}>
+              <Card
                 style={{
-                  width: '100%',
-                  padding: '8px',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  fontSize: '14px'
-                }}
-              />
-            </div>
-          </div>
-          
-          <div className="col-md-3">
-            <div className="form-group">
-              <label className="control-label">To Date</label>
-              <input
-                type="date"
-                className="form-control"
-                placeholder="dd-mm-yyyy"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '8px',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  fontSize: '14px'
-                }}
-              />
-            </div>
-          </div>
-          
-          <div className="col-md-3">
-            <div className="form-group" style={{ marginTop: '25px' }}>
-              <button 
-                className="btn btn-primary" 
-                onClick={handleFindClick}
-                disabled={isLoading}
-                style={{
-                  padding: '8px 20px',
-                  fontSize: '14px',
-                  backgroundColor: '#007bff',
-                  border: 'none',
-                  borderRadius: '4px',
-                  color: 'white',
-                  cursor: 'pointer'
+                  borderRadius: "12px",
+                  boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
+                  borderColor: "#00bcd4",
+                  background: "white",
+                  border: "1px solid #00bcd4",
                 }}
               >
-                {isLoading ? 'Loading...' : 'Find'}
-              </button>
-            </div>
-          </div>
-        </div>
+                <Card.Header
+                  className="text-center"
+                  style={{
+                    fontWeight: "bold",
+                    backgroundColor: "#e3f2fd",
+                    borderBottom: "2px solid #0288d1",
+                    padding: "1rem",
+                    background: "linear-gradient(to right, #00acc1, #007c91)",
+                    color: "white",
+                    fontSize: "16px",
+                  }}
+                >
+                  <h4 style={{ margin: 0 }}>Insurance Due Report</h4>
+                </Card.Header>
+                <Card.Body style={{ padding: "5px" }}>
+                  <Form onSubmit={handleSearch}>
+                    <Row className="align-items-end mb-4 flex-nowrap" style={{ margin: "0 -5px" }}>
+                      <Col style={{ padding: "0 5px", flex: "1" }}>
+                        <Form.Group className="mb-2">
+                          <Form.Label style={{ fontWeight: "bold", color: "#006064", whiteSpace: "nowrap", fontSize: "12px" }}>From Date</Form.Label>
+                          <Form.Control
+                            type="date"
+                            value={fromDate}
+                            onChange={(e) => setFromDate(e.target.value)}
+                            style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col style={{ padding: "0 5px", flex: "1" }}>
+                        <Form.Group className="mb-2">
+                          <Form.Label style={{ fontWeight: "bold", color: "#006064", whiteSpace: "nowrap", fontSize: "12px" }}>To Date</Form.Label>
+                          <Form.Control
+                            type="date"
+                            value={toDate}
+                            onChange={(e) => setToDate(e.target.value)}
+                            style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }}
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col style={{ padding: "0 5px", flex: "1" }}>
+                        <Form.Group className="mb-2">
+                          <button
+                            className="btn btn-primary"
+                            type="submit"
+                            style={{
+                              height: "35px",
+                              width: "100%",
+                              backgroundColor: "#00acc1",
+                              borderColor: "#00bcd4",
+                              color: "white",
+                              borderRadius: "8px",
+                              fontWeight: "bold",
+                              fontSize: "13px"
+                            }}
+                          >
+                            {loading ? "Loading..." : "Search"}
+                          </button>
+                        </Form.Group>
+                      </Col>
+                    </Row>
+                  </Form>
 
-        {!isLoading && tableData.length === 0 && (
-          <div style={{ 
-            textAlign: 'center', 
-            padding: '20px',
-            color: '#666',
-            fontSize: '14px'
-          }}>
-            No data available. Please select dates and click Find.
-          </div>
-        )}
-
-        {isLoading && (
-          <div style={{ textAlign: 'center', padding: '20px' }}>
-            Loading...
-          </div>
-        )}
-
-        {!isLoading && tableData.length > 0 && (
-          <div style={{ marginTop: '20px' }}>
-            <MaterialTable
-              data={tableData}
-              columns={columns}
-              options={{
-                sorting: true,
-                exportButton: true,
-                exportAllData: true,
-                exportFileName: 'InsuranceDueReport',
-                pageSize: 10,
-                pageSizeOptions: [10, 20, 50],
-                headerStyle: {
-                  backgroundColor: '#f5f5f5',
-                  fontWeight: 'bold',
-                },
-                searchFieldStyle: {
-                  marginLeft: '20px',
-                },
-                actionsColumnIndex: -1,
-                tableLayout: 'fixed',
-              }}
-              style={{
-                width: '100%',
-                boxShadow: '0 0 5px rgba(0,0,0,0.1)',
-                borderRadius: '4px',
-              }}
-            />
-          </div>
-        )}
-      </div>
+                  <DataTable
+                    value={tableData}
+                    paginator
+                    rows={rows}
+                    filters={filters}
+                    header={header}
+                    footerColumnGroup={footerGroup}
+                    paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
+                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
+                    emptyMessage={loading ? "Loading..." : "No records found."}
+                    className="p-datatable-sm custom-datatable"
+                    style={{ fontSize: "12px" }}
+                    rowHover
+                    stripedRows
+                    responsiveLayout="scroll"
+                  >
+                    <Column
+                      header="Sr No"
+                      body={(rowData, { rowIndex }) => rowIndex + 1}
+                      style={{ width: "60px", textAlign: "center" }}
+                    />
+                    <Column field="date" header="Date" body={(rowData) => formatDateDisplay(rowData.date)} />
+                    <Column field="patientName" header="Patient Name" />
+                    <Column field="companyName" header="Company Name" />
+                    <Column field="invoiceNo" header="Invoice No" />
+                    <Column field="totalAmt" header="Total Amt" />
+                    <Column field="approvedAmt" header="Approved Amt" />
+                    <Column field="receivedAmt" header="Received Amt" />
+                    <Column field="dueAmt" header="Due Amt" />
+                  </DataTable>
+                </Card.Body>
+              </Card>
+            </Col>
+          </Row>
+        </Container>
+      </SimpleBar>
+      <style>{`
+        .custom-datatable .p-datatable-header {
+          background: #e0f7fa;
+          border: 1px solid #4dd0e1;
+          border-top-left-radius: 8px;
+          border-top-right-radius: 8px;
+          padding: 10px;
+        }
+        .custom-datatable .p-datatable-thead > tr > th {
+          background-color: #b2ebf2 !important;
+          color: black !important;
+          font-size: 12px;
+          padding: 10px 8px !important;
+          border: 1px solid #90caf9 !important;
+          text-align: center !important;
+        }
+        .custom-datatable .p-datatable-thead > tr > th * {
+          color: black !important;
+          justify-content: center !important;
+        }
+        .custom-datatable .p-datatable-tbody > tr > td {
+          font-size: 12px;
+          padding: 8px;
+          border: 1px solid #90caf9;
+          text-align: center !important;
+        }
+        .custom-datatable .p-datatable-tfoot > tr > td {
+          background-color: #e0f7fa !important;
+          color: black !important;
+          padding: 10px 8px;
+          border: 1px solid #90caf9 !important;
+          font-size: 12px;
+        }
+        .custom-datatable .p-paginator {
+          background: #f8fdfe;
+          border: 1px solid #4dd0e1;
+          border-bottom-left-radius: 8px;
+          border-bottom-right-radius: 8px;
+          padding: 5px;
+        }
+      `}</style>
     </div>
   );
 };

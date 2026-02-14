@@ -206,16 +206,23 @@ export default function Sidebar() {
                         display: activeIndex === "/manage-reports" ? "block" : "none",
                     }}
                 >
-                    <li><Link to="/dailyOPDReport">Daily OPD Report</Link></li>
-                    <li><Link to="/BirthdayAlert">Birthday Alert</Link></li>
                     <li><Link to="/appointmentConversion">Appointment Conversion</Link></li>
+                    <li><Link to="/BillingReport">Billing Report</Link></li>
+                    <li><Link to="/BirthdayAlert">Birthday Alert</Link></li>
+                    <li><Link to="/conditionWiseReport">Condition Wise Report</Link></li>
+                    <li><Link to="/dailyOPDReport">Daily OPD Report</Link></li>
                     <li><Link to="/enquiryConversation">Enquiry Conversation</Link></li>
                     <li><Link to="/enquiryData">Enquiry Data</Link></li>
-                    <li><Link to="/oPDReceiptsReport">OPD Receipts Report</Link></li>
-                    <li><Link to="/BillingReport">Billing Report</Link></li>
+                    <li><Link to="/insuranceduereport">Insurance Due Report</Link></li>
                     <li><Link to="/IPDCollectionReport">IPD Collection Report</Link></li>
-                    <li><Link to="/referenceReport"> Reference Report</Link></li>
-                    <li><Link to="/conditionWiseReport">Condition Wise Report</Link></li>
+                    <li><Link to="/ipdduereport">IPD Due Report</Link></li>
+                    <li><Link to="/opdipdcollgraph">OPD + IPD Collection Graph</Link></li>
+                    <li><Link to="/opdipdcollection">OPD + IPD Collection Report</Link></li>
+                    <li><Link to="/OPDCollectionReports">OPD Collection Report</Link></li>
+                    <li><Link to="/oPDReceiptsReport">OPD Receipts Report</Link></li>
+                    <li><Link to="/PharmacyCollectionReport">Pharmacy Collection Report</Link></li>
+                    <li><Link to="/referenceReport">Reference Report</Link></li>
+                    <li><Link to="/sxconversionreport">SX Conversion Report</Link></li>
                 </ul>
             </li>
         </ul>

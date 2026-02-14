@@ -15,9 +15,22 @@ import BillingReports from "../pages/Reports/Manage Reports/BillingReports.jsx";
 import IPDCollectionReport from "../pages/Reports/Manage Reports/IPDCollectionReport.jsx";
 import ReferenceReport from "../pages/Reports/Manage Reports/ReferenceReport.jsx";
 import ConditionWiseReport from "../pages/Reports/Manage Reports/ConditionWiseReport.jsx";
+import OPDCollectionReports from "../pages/Reports/Manage Reports/OPDCollectionReports.jsx";
+import PharmacyCollectionReport from "../pages/Reports/Manage Reports/PharmacyCollectionReport.jsx";
+import SxConversionReport from "../pages/Reports/Manage Reports/SxConversionReport.jsx";
+import OPDIPDCollection from "../pages/Reports/Manage Reports/OPDIPDCollection.jsx";
+import OPDIPDCollGraph from "../pages/Reports/Manage Reports/OPDIPDCollGraph.jsx";
+import IPDDueReport from "../pages/Reports/Manage Reports/IPDDueReport.jsx";
+import InsuranceDueReport from "../pages/Reports/Manage Reports/InsuranceDueReport.jsx";
+
 
 export const ReportRoutes = (
   <>
+    <Route path="/sxconversionreport" element={<SxConversionReport />} />
+    <Route path="/opdipdcollection" element={<OPDIPDCollection />} />
+    <Route path="/opdipdcollgraph" element={<OPDIPDCollGraph />} />
+    <Route path="/ipdduereport" element={<IPDDueReport />} />
+    <Route path="/insuranceduereport" element={<InsuranceDueReport />} />
     <Route path="/reports/enquiry" element={<EnquiryList />} />
     <Route path="/reports/enquiry/add" element={<Add_Enquiry />} />
     {/* <Route path="/reports/payment" element={<Payment_list />} /> */}
@@ -28,9 +41,11 @@ export const ReportRoutes = (
     <Route path="/appointmentConversion" element={<AppointmentConversion />} />
     <Route path="/enquiryConversation" element={<EnquiryConversion />} />
     <Route path="/enquiryData" element={<EnquiryData />} />
-    <Route path="/oPDReceiptsReport" element={<OPDReceiptsReport />} />
+    <Route path="/OPDReceiptsReport" element={<OPDReceiptsReport />} />
     <Route path="/BillingReport" element={<BillingReports />} />
     <Route path="/IPDCollectionReport" element={<IPDCollectionReport />} />
+    <Route path="/OPDCollectionReports" element={<OPDCollectionReports />} />
+    <Route path="/PharmacyCollectionReport" element={<PharmacyCollectionReport />} />
     <Route path="/referenceReport" element={<ReferenceReport />} />
     <Route path="/conditionWiseReport" element={<ConditionWiseReport />} />
   </>

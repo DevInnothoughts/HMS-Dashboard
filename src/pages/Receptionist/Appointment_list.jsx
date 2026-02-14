@@ -2019,7 +2019,7 @@ export default function Appointment_list() {
                         "MEDICINES",
                         "DRESSING",
                         "CYSTOSCOPY",
-                        "POST OPERATIVE Follow UP",
+                        "POST OPERATIVE FOLLOW UP",
                         "POST OPERATIVE DRESSING + CONSULTATION",
                       ].map((opt) => (
                         <option key={opt} value={opt}>

@@ -2,40 +2,175 @@ import React, { useState } from "react";
 import PageBreadcrumb from "../../../components/PageBreadcrumb";
 import { Row, Col, Card, Container, Form } from "react-bootstrap";
 import SimpleBar from "simplebar-react";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
+import { FilterMatchMode } from "primereact/api";
+import { InputText } from "primereact/inputtext";
+import { saveAs } from "file-saver";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const BillingReport = () => {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [searchText, setSearchText] = useState("");
+  const [rows, setRows] = useState(10);
+  const [loading, setLoading] = useState(false);
+  const [filters, setFilters] = useState({
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+  });
 
-  const billingReport = [
-    { date: "2025-01-01", patient: "John Doe", amount: 5000, status: "Paid" },
+  const [billingData, setBillingData] = useState([
+    {
+      date: "2025-01-01",
+      invoiceId: "INV-001",
+      patientName: "John Doe",
+      invoiceType: "OPD",
+      packageAmount: 5000,
+      approvedAmount: 4500,
+      payableAmount: 500,
+    },
     {
       date: "2025-01-03",
-      patient: "Jane Smith",
-      amount: 3000,
-      status: "Pending",
+      invoiceId: "INV-002",
+      patientName: "Jane Smith",
+      invoiceType: "IPD",
+      packageAmount: 3000,
+      approvedAmount: 3000,
+      payableAmount: 0,
     },
     {
       date: "2025-01-05",
-      patient: "Bob Williams",
-      amount: 7000,
-      status: "Paid",
+      invoiceId: "INV-003",
+      patientName: "Bob Williams",
+      invoiceType: "OPD",
+      packageAmount: 7000,
+      approvedAmount: 6000,
+      payableAmount: 1000,
     },
-  ];
+  ]);
 
-  const filteredData = billingReport.filter((entry) => {
-    const isDateValid =
-      (!fromDate || new Date(entry.date) >= new Date(fromDate)) &&
-      (!toDate || new Date(entry.date) <= new Date(toDate));
-    return isDateValid;
-  });
+  const onGlobalFilterChange = (e) => {
+    const value = e.target.value;
+    let _filters = { ...filters };
+    _filters["global"].value = value;
+    setFilters(_filters);
+    setSearchText(value);
+  };
 
   const handleFindClick = (e) => {
     e.preventDefault();
-    console.log(`Filtering Billing Report from ${fromDate} to ${toDate}`);
+    setLoading(true);
+    // Logic for fetching or filtering data based on dates
+    setTimeout(() => {
+      setLoading(false);
+    }, 500);
   };
+
+  const exportToExcel = () => {
+    const fileType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
+    const fileExtension = ".xlsx";
+
+    const excelData = billingData.map((item, index) => ({
+      "Sr No": index + 1,
+      "Date": item.date,
+      "Invoice ID": item.invoiceId,
+      "Patient Name": item.patientName,
+      "Invoice Type": item.invoiceType,
+      "Package Amount": item.packageAmount,
+      "Approved Amount": item.approvedAmount,
+      "Payable Amount": item.payableAmount,
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(excelData);
+    const wb = { Sheets: { data: ws }, SheetNames: ["data"] };
+    const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const data = new Blob([excelBuffer], { type: fileType });
+    saveAs(data, "Billing_Report" + fileExtension);
+  };
+
+
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+    doc.text("Billing Report", 14, 15);
+
+    const tableColumn = ["Sr No", "Date", "Invoice ID", "Patient Name", "Invoice Type", "Package Amount", "Approved Amount", "Payable Amount"];
+    const tableRows = billingData.map((item, index) => [
+      index + 1,
+      item.date,
+      item.invoiceId,
+      item.patientName,
+      item.invoiceType,
+      item.packageAmount,
+      item.approvedAmount,
+      item.payableAmount,
+    ]);
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 20,
+      theme: 'grid',
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [0, 172, 193] }
+    });
+
+    doc.save("Billing_Report.pdf");
+  };
+
+  const renderHeader = () => {
+    return (
+      <div className="d-flex justify-content-between align-items-center mb-1">
+        <div className="d-flex align-items-center" style={{ gap: "20px" }}>
+          <div className="d-flex align-items-center">
+            <span className="me-1" style={{ fontWeight: "bold", color: "#006064" }}>Show</span>
+            <Form.Select
+              size="sm"
+              style={{ width: "70px", borderRadius: "8px", border: "1px solid #4dd0e1" }}
+              value={rows}
+              onChange={(e) => setRows(Number(e.target.value))}
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </Form.Select>
+          </div>
+          <div className="d-flex align-items-center">
+            <span className="me-1" style={{ fontWeight: "bold", color: "#006064" }}>Search</span>
+            <span className="p-input-icon-left">
+              <InputText
+                value={searchText}
+                onChange={onGlobalFilterChange}
+                placeholder="Global Search..."
+                className="p-inputtext-sm"
+                style={{ width: "200px", borderRadius: "8px", border: "1px solid #4dd0e1" }}
+              />
+            </span>
+          </div>
+        </div>
+        <div className="d-flex" style={{ gap: "10px" }}>
+          <button
+            className="btn btn-success btn-sm"
+            onClick={exportToExcel}
+            style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px" }}
+          >
+            <i className="fa fa-file-excel-o"></i> Download Excel
+          </button>
+          <button
+            className="btn btn-danger btn-sm"
+            onClick={downloadPDF}
+            style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px" }}
+          >
+            <i className="fa fa-file-pdf-o"></i> Download PDF
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const header = renderHeader();
 
   return (
     <div
@@ -59,170 +194,139 @@ const BillingReport = () => {
                   boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
                   borderColor: "#00bcd4",
                   background: "white",
-                  border: "4px solid #00bcd4",
+                  border: "1px solid #00bcd4",
                 }}
               >
                 <Card.Header
                   className="text-center"
                   style={{
                     fontWeight: "bold",
-                    fontSize: "22px",
-                    color: "#006064",
-                    background: "linear-gradient(to right, #4dd0e1, #00acc1)",
-                    borderBottom: "3px solid #00bcd4",
+                    backgroundColor: "#e3f2fd",
+                    borderBottom: "2px solid #0288d1",
                     padding: "1rem",
-                    backgroundColor: "white",
+                    background: "linear-gradient(to right, #00acc1, #007c91)",
+                    color: "white",
+                    fontSize: "16px",
                   }}
                 >
-                  <h4>Billing Report</h4>
+                  <h4 style={{ margin: 0 }}>Billing Report</h4>
                 </Card.Header>
-                <Card.Body style={{ padding: "25px" }}>
+                <Card.Body style={{ padding: "5px" }}>
                   <Form onSubmit={handleFindClick}>
-                    <Row className="align-items-end">
-                      <Col md={3}>
-                        <Form.Group className="mb-3">
-                          <Form.Label>
-                            <b>From Date</b>
-                          </Form.Label>
-                          <DatePicker
-                            selected={fromDate}
-                            onChange={(date) => setFromDate(date)}
-                            dateFormat="dd/MM/yyyy"
-                            className="form-control"
-                            placeholderText="Select From Date"
+                    <Row className="align-items-end mb-4 flex-nowrap" style={{ margin: "0 -5px" }}>
+                      <Col style={{ padding: "0 5px", flex: "1" }}>
+                        <Form.Group className="mb-2">
+                          <Form.Label style={{ fontWeight: "bold", color: "#006064", whiteSpace: "nowrap", fontSize: "12px" }}>From Date</Form.Label>
+                          <Form.Control
+                            type="date"
+                            value={fromDate}
+                            onChange={(e) => setFromDate(e.target.value)}
+                            style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }}
                           />
                         </Form.Group>
                       </Col>
-                      <Col md={3}>
-                        <Form.Group className="mb-3">
-                          <Form.Label>
-                            <b>To Date</b>
-                          </Form.Label>
-                          <DatePicker
-                            selected={toDate}
-                            onChange={(date) => setToDate(date)}
-                            dateFormat="dd/MM/yyyy"
-                            className="form-control"
-                            placeholderText="Select To Date"
+                      <Col style={{ padding: "0 5px", flex: "1" }}>
+                        <Form.Group className="mb-2">
+                          <Form.Label style={{ fontWeight: "bold", color: "#006064", whiteSpace: "nowrap", fontSize: "12px" }}>To Date</Form.Label>
+                          <Form.Control
+                            type="date"
+                            value={toDate}
+                            onChange={(e) => setToDate(e.target.value)}
+                            style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }}
                           />
                         </Form.Group>
                       </Col>
-                      <Col md={3}>
-                        <Form.Group className="mb-3">
+                      <Col style={{ padding: "0 5px", flex: "1" }}>
+                        <Form.Group className="mb-2">
                           <button
                             className="btn btn-primary"
                             type="submit"
                             style={{
-                              marginTop: "30px",
-                              height: "50px",
-                              width: "50%",
+                              height: "35px",
+                              width: "100%",
                               backgroundColor: "#00acc1",
                               borderColor: "#00bcd4",
                               color: "white",
-                              cursor: "pointer",
                               borderRadius: "8px",
-                              transition: "0.3s all",
                               fontWeight: "bold",
-                            }}
-                            onMouseOver={(e) => {
-                              e.target.style.backgroundColor = "#007c91";
-                            }}
-                            onMouseOut={(e) => {
-                              e.target.style.backgroundColor = "#00acc1";
+                              fontSize: "13px"
                             }}
                           >
-                            Find
+                            {loading ? "Loading..." : "Search"}
                           </button>
                         </Form.Group>
                       </Col>
                     </Row>
                   </Form>
 
-                  <table
-                    className="table table-bordered"
-                    style={{
-                      border: "1px solid #4dd0e1",
-                      marginTop: "20px",
-                      width: "100%",
-                      background: "white",
-                      borderRadius: "8px",
-                      overflow: "hidden",
-                    }}
+                  <DataTable
+                    value={billingData}
+                    paginator
+                    rows={rows}
+                    filters={filters}
+                    header={header}
+                    paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
+                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
+                    emptyMessage={loading ? "Loading..." : "No records found."}
+                    className="p-datatable-sm custom-datatable"
+                    style={{ fontSize: "12px" }}
+                    rowHover
+                    stripedRows
+                    responsiveLayout="scroll"
                   >
-                    <thead
-                      style={{
-                        background:
-                          "linear-gradient(to right, #00acc1, #007c91)",
-                        color: "white",
-                        fontSize: "16px",
-                        textAlign: "center",
-                      }}
-                    >
-                      <tr>
-                        <th>Date</th>
-                        <th>Patient</th>
-                        <th>Amount (Rs)</th>
-                        <th style={{ textAlign: "center" }}>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredData.length > 0 ? (
-                        filteredData.map((entry, index) => (
-                          <tr
-                            key={index}
-                            style={{
-                              backgroundColor:
-                                index % 2 === 0 ? "#e0f7fa" : "white",
-                              transition: "background-color 0.3s ease",
-                            }}
-                            onMouseOver={(e) => {
-                              e.target.style.backgroundColor = "#b2ebf2";
-                            }}
-                            onMouseOut={(e) => {
-                              e.target.style.backgroundColor =
-                                index % 2 === 0 ? "#e0f7fa" : "white";
-                            }}
-                          >
-                            <td
-                              style={{ padding: "10px", textAlign: "center" }}
-                            >
-                              {entry.date}
-                            </td>
-                            <td
-                              style={{ padding: "10px", textAlign: "center" }}
-                            >
-                              {entry.patient}
-                            </td>
-                            <td
-                              style={{ padding: "10px", textAlign: "center" }}
-                            >
-                              {entry.amount}
-                            </td>
-                            <td
-                              style={{ padding: "10px", textAlign: "center" }}
-                            >
-                              {entry.status}
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td
-                            colSpan="4"
-                            style={{ textAlign: "center", padding: "10px" }}
-                          >
-                            No records found for the selected date range.
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+                    <Column
+                      header="Sr No"
+                      body={(rowData, { rowIndex }) => rowIndex + 1}
+                      style={{ width: "60px", textAlign: "center" }}
+                    />
+                    <Column field="date" header="Date" />
+                    <Column field="invoiceId" header="Invoice ID" />
+                    <Column field="patientName" header="Patient Name" />
+                    <Column field="invoiceType" header="Invoice Type" />
+                    <Column field="packageAmount" header="Package Amount" />
+                    <Column field="approvedAmount" header="Approved Amount" />
+                    <Column field="payableAmount" header="Payable Amount" />
+                  </DataTable>
                 </Card.Body>
               </Card>
             </Col>
           </Row>
         </Container>
       </SimpleBar>
+      <style>{`
+        .custom-datatable .p-datatable-header {
+          background: #e0f7fa;
+          border: 1px solid #4dd0e1;
+          border-top-left-radius: 8px;
+          border-top-right-radius: 8px;
+          padding: 10px;
+        }
+        .custom-datatable .p-datatable-thead > tr > th {
+          background-color: #b2ebf2 !important;
+          color: black !important;
+          font-size: 12px;
+          padding: 10px 8px !important;
+          border: 1px solid #90caf9 !important;
+          text-align: center !important;
+        }
+        .custom-datatable .p-datatable-thead > tr > th * {
+          color: black !important;
+          justify-content: center !important;
+        }
+        .custom-datatable .p-datatable-tbody > tr > td {
+          font-size: 12px;
+          padding: 8px;
+          border: 1px solid #90caf9;
+          text-align: center !important;
+        }
+        .custom-datatable .p-paginator {
+          background: #f8fdfe;
+          border: 1px solid #4dd0e1;
+          border-bottom-left-radius: 8px;
+          border-bottom-right-radius: 8px;
+          padding: 5px;
+        }
+      `}</style>
     </div>
   );
 };

@@ -2,10 +2,53 @@ import React, { useState, useEffect } from "react";
 import PageBreadcrumb from "../../../components/PageBreadcrumb";
 import SimpleBar from "simplebar-react";
 import { Row, Col, Card, Container, Form, Spinner } from "react-bootstrap";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css"; // Import styles
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
+import { FilterMatchMode } from "primereact/api";
+import { InputText } from "primereact/inputtext";
+import { saveAs } from "file-saver";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
-const BASE_URL = "https://your-api.com"; // Replace with actual API URL
+const BASE_URL = "http://194.195.117.79:5100/api"; // Updated to local API based on previous files
+
+const consultationOptions = [
+  "CONSULTATION",
+  "Follow-UP",
+  "PROCTOSCOPY",
+  "MCDPA",
+  "COLON HYDROTHERAPY",
+  "COLONOSCOPY",
+  "USG",
+  "USG ABDOMEN AND PELVIS",
+  "MANOMETRY",
+  "BIOFEEDBACK",
+  "ECHODEFECOGRAPHY",
+  "USG SCROTUM",
+  "UNILATERAL DOPPLER",
+  "BILATERAL DOPPLER",
+  "PROCEDURE",
+  "GASTROSCOPY",
+  "3D ENDO ANAL IMAGING",
+  "OTHERS",
+  "MRI FISTULOGRAM",
+  "2D SCAN",
+  "LAB",
+  "Postoperative",
+  "BLOOD TESTS + ECG",
+  "DIET",
+  "UROFLOWMETRY",
+  "DIET PLAN - 1 MONTH",
+  "DIET PLAN - 3 MONTH",
+  "DIET PLAN - 6 MONTH",
+  "ENEMA",
+  "MEDICINES",
+  "DRESSING",
+  "CYSTOSCOPY",
+  "POST OPERATIVE FOLLOW UP",
+  "POST OPERATIVE DRESSING + CONSULTATION",
+];
 
 const OPDReceiptsReport = () => {
   const [fromDate, setFromDate] = useState(null);
@@ -15,6 +58,19 @@ const OPDReceiptsReport = () => {
   const [paymentMode, setPaymentMode] = useState("");
   const [receipts, setReceipts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const [rows, setRows] = useState(10);
+  const [filters, setFilters] = useState({
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+  });
+
+  const onGlobalFilterChange = (e) => {
+    const value = e.target.value;
+    let _filters = { ...filters };
+    _filters["global"].value = value;
+    setFilters(_filters);
+    setSearchText(value);
+  };
 
   const fetchReceiptsData = async () => {
     setLoading(true);
@@ -24,9 +80,9 @@ const OPDReceiptsReport = () => {
 
       const formatToDDMMYYYY = (date) => {
         let d = new Date(date);
-        return `${String(d.getUTCDate()).padStart(2, "0")}/${String(
-          d.getUTCMonth() + 1
-        ).padStart(2, "0")}/${d.getUTCFullYear()}`;
+        return `${String(d.getDate()).padStart(2, "0")}/${String(
+          d.getMonth() + 1
+        ).padStart(2, "0")}/${d.getFullYear()}`;
       };
 
       let finalFromDate = fromDate
@@ -35,9 +91,6 @@ const OPDReceiptsReport = () => {
       let finalToDate = toDate
         ? formatToDDMMYYYY(toDate)
         : formatToDDMMYYYY(today);
-
-      console.log("📅 Final From Date (Frontend):", finalFromDate);
-      console.log("📅 Final To Date (Frontend):", finalToDate);
 
       const params = {
         from: finalFromDate,
@@ -61,19 +114,119 @@ const OPDReceiptsReport = () => {
       const data = await response.json();
       if (response.ok) {
         setReceipts(Array.isArray(data.data) ? data.data : []);
-        console.log("📥 Fetched Data:", data.data);
       } else {
-        console.error(
-          "❌ Error fetching receipts:",
-          data.message || "Unknown error"
-        );
+        console.error("Error fetching receipts:", data.message || "Unknown error");
       }
     } catch (error) {
-      console.error("❌ Error fetching receipts:", error);
+      console.error("Error fetching receipts:", error);
     } finally {
       setLoading(false);
     }
   };
+
+  const exportToExcel = () => {
+    const fileType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
+    const fileExtension = ".xlsx";
+
+    const excelData = receipts.map((receipt, index) => ({
+      "Sr No": index + 1,
+      "Date": receipt.date,
+      "Patient Name": receipt.patientName,
+      "Consultation": receipt.consultation,
+      "Patient Status": receipt.patientStatus,
+      "Spray Qty": receipt.sprayQty,
+      "Payment Mode": receipt.paymentMode,
+      "Amount": receipt.amount,
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(excelData);
+    const wb = { Sheets: { data: ws }, SheetNames: ["data"] };
+    const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const data = new Blob([excelBuffer], { type: fileType });
+    saveAs(data, "OPD_Receipts_Report" + fileExtension);
+  };
+
+
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+    doc.text("OPD Receipts Report", 14, 15);
+
+    const tableColumn = ["Sr No", "Date", "Patient Name", "Consultation", "Patient Status", "Spray Qty", "Payment Mode", "Amount"];
+    const tableRows = receipts.map((receipt, index) => [
+      index + 1,
+      receipt.date,
+      receipt.patientName,
+      receipt.consultation,
+      receipt.patientStatus,
+      receipt.sprayQty,
+      receipt.paymentMode,
+      receipt.amount,
+    ]);
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 20,
+      theme: 'grid',
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [0, 172, 193] }
+    });
+
+    doc.save("OPD_Receipts_Report.pdf");
+  };
+
+  const renderHeader = () => {
+    return (
+      <div className="d-flex justify-content-between align-items-center mb-1">
+        <div className="d-flex align-items-center" style={{ gap: "20px" }}>
+          <div className="d-flex align-items-center">
+            <span className="me-1" style={{ fontWeight: "bold", color: "#006064" }}>Show</span>
+            <Form.Select
+              size="sm"
+              style={{ width: "70px", borderRadius: "8px", border: "1px solid #4dd0e1" }}
+              value={rows}
+              onChange={(e) => setRows(Number(e.target.value))}
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </Form.Select>
+          </div>
+          <div className="d-flex align-items-center">
+            <span className="me-1" style={{ fontWeight: "bold", color: "#006064" }}>Search</span>
+            <span className="p-input-icon-left">
+              <InputText
+                value={searchText}
+                onChange={onGlobalFilterChange}
+                placeholder="Global Search..."
+                className="p-inputtext-sm"
+                style={{ width: "200px", borderRadius: "8px", border: "1px solid #4dd0e1" }}
+              />
+            </span>
+          </div>
+        </div>
+        <div className="d-flex" style={{ gap: "10px" }}>
+          <button
+            className="btn btn-success btn-sm"
+            onClick={exportToExcel}
+            style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px" }}
+          >
+            <i className="fa fa-file-excel-o"></i> Download Excel
+          </button>
+          <button
+            className="btn btn-danger btn-sm"
+            onClick={downloadPDF}
+            style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px" }}
+          >
+            <i className="fa fa-file-pdf-o"></i> Download PDF
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const header = renderHeader();
 
   return (
     <div
@@ -97,192 +250,190 @@ const OPDReceiptsReport = () => {
                   boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
                   borderColor: "#00bcd4",
                   background: "white",
-                  border: "4px solid #00bcd4",
+                  border: "1px solid #00bcd4",
                 }}
               >
                 <Card.Header
                   className="text-center"
                   style={{
                     fontWeight: "bold",
-                    fontSize: "22px",
-                    background: "#00acc1",
+                    backgroundColor: "#e3f2fd",
+                    borderBottom: "2px solid #0288d1",
+                    padding: "1rem",
+                    background: "linear-gradient(to right, #00acc1, #007c91)",
                     color: "white",
+                    fontSize: "16px",
                   }}
                 >
                   <h4>OPD Receipts Report</h4>
                 </Card.Header>
-                <Card.Body style={{ padding: "25px" }}>
-                  <Row className="align-items-end">
-                    {/* Date Pickers */}
-                    <Col md={3}>
-                      <Form.Group className="mb-3">
-                        <Form.Label>
-                          <b>From Date</b>
-                        </Form.Label>
-                        <DatePicker
-                          selected={fromDate}
-                          onChange={(date) => setFromDate(date)}
-                          dateFormat="dd/MM/yyyy"
-                          className="form-control"
-                          placeholderText="Select From Date"
-                          isClearable
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col md={3}>
-                      <Form.Group className="mb-3">
-                        <Form.Label>
-                          <b>To Date</b>
-                        </Form.Label>
-                        <DatePicker
-                          selected={toDate}
-                          onChange={(date) => setToDate(date)}
-                          dateFormat="dd/MM/yyyy"
-                          className="form-control"
-                          placeholderText="Select To Date"
-                          isClearable
-                        />
-                      </Form.Group>
-                    </Col>
-
-                    {/* Filters */}
-                    <Col md={3}>
-                      <Form.Group className="mb-3">
-                        <Form.Label>
-                          <b>Consultation</b>
-                        </Form.Label>
+                <Card.Body style={{ padding: "5px" }}>
+                  <Row className="align-items-end mb-4 flex-nowrap" style={{ margin: "0 -5px" }}>
+                    <Col style={{ padding: "0 5px", flex: "1" }}>
+                      <Form.Group className="mb-2">
+                        <Form.Label style={{ fontWeight: "bold", color: "#006064", whiteSpace: "nowrap", fontSize: "12px" }}>From Date</Form.Label>
                         <Form.Control
-                          as="select"
+                          type="date"
+                          value={fromDate}
+                          onChange={(e) => setFromDate(e.target.value)}
+                          style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }}
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col style={{ padding: "0 5px", flex: "1" }}>
+                      <Form.Group className="mb-2">
+                        <Form.Label style={{ fontWeight: "bold", color: "#006064", whiteSpace: "nowrap", fontSize: "12px" }}>To Date</Form.Label>
+                        <Form.Control
+                          type="date"
+                          value={toDate}
+                          onChange={(e) => setToDate(e.target.value)}
+                          style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }}
+                        />
+                      </Form.Group>
+                    </Col>
+                    <Col style={{ padding: "0 5px", flex: "1" }}>
+                      <Form.Group className="mb-2">
+                        <Form.Label style={{ fontWeight: "bold", color: "#006064", whiteSpace: "nowrap", fontSize: "12px" }}>Consultation</Form.Label>
+                        <Form.Select
+                          size="sm"
                           value={consultation}
                           onChange={(e) => setConsultation(e.target.value)}
+                          style={{ border: "2px solid #4dd0e1", borderRadius: "8px", backgroundColor: "#e0f7fa", fontSize: "12px" }}
                         >
-                          <option value="">New</option>
-                          <option value="General">Follow</option>
-                          <option value="Specialist">Postoperative</option>
-                        </Form.Control>
+                          <option value="">Select</option>
+                          {consultationOptions.map((opt) => (
+                            <option key={opt} value={opt}>
+                              {opt}
+                            </option>
+                          ))}
+                        </Form.Select>
                       </Form.Group>
                     </Col>
-                    <Col md={3}>
-                      <Form.Group className="mb-3">
-                        <Form.Label>
-                          <b>Patient Status</b>
-                        </Form.Label>
-                        <Form.Control
-                          as="select"
+                    <Col style={{ padding: "0 5px", flex: "1" }}>
+                      <Form.Group className="mb-2">
+                        <Form.Label style={{ fontWeight: "bold", color: "#006064", whiteSpace: "nowrap", fontSize: "12px" }}>Patient Status</Form.Label>
+                        <Form.Select
+                          size="sm"
                           value={patientStatus}
                           onChange={(e) => setPatientStatus(e.target.value)}
+                          style={{ border: "2px solid #4dd0e1", borderRadius: "8px", backgroundColor: "#e0f7fa", fontSize: "12px" }}
                         >
                           <option value="">All</option>
-                          <option value="New">New</option>
-                          <option value="Returning">Returning</option>
-                        </Form.Control>
+                          <option value="DNC">DNC ( Do not Charge )</option>
+                          <option value="DNP">DNP ( Do not Pay )</option>
+                          <option value="DNW">DNW ( Do not Wait )</option>
+                        </Form.Select>
                       </Form.Group>
                     </Col>
-                    <Col md={3}>
-                      <Form.Group className="mb-3">
-                        <Form.Label>
-                          <b>Payment Mode</b>
-                        </Form.Label>
-                        <Form.Control
-                          as="select"
+                    <Col style={{ padding: "0 5px", flex: "1" }}>
+                      <Form.Group className="mb-2">
+                        <Form.Label style={{ fontWeight: "bold", color: "#006064", whiteSpace: "nowrap", fontSize: "12px" }}>Payment Mode</Form.Label>
+                        <Form.Select
+                          size="sm"
                           value={paymentMode}
                           onChange={(e) => setPaymentMode(e.target.value)}
+                          style={{ border: "2px solid #4dd0e1", borderRadius: "8px", backgroundColor: "#e0f7fa", fontSize: "12px" }}
                         >
                           <option value="">All</option>
                           <option value="Cash">Cash</option>
                           <option value="Card">Card</option>
+                          <option value="Paytm">Paytm</option>
+                          <option value="Online">Online</option>
                           <option value="UPI">UPI</option>
-                        </Form.Control>
+                        </Form.Select>
                       </Form.Group>
                     </Col>
-                    <Col md={3}>
-                      <button
-                        className="btn btn-primary mt-3"
-                        onClick={fetchReceiptsData}
-                        style={{
-                          marginTop: "30px",
-                          height: "55px",
-                          width: "100%",
-                          backgroundColor: "#00acc1",
-                          borderColor: "#00bcd4",
-                          color: "white",
-                          cursor: "pointer",
-                          borderRadius: "8px",
-                          transition: "0.3s all",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        {loading ? (
-                          <Spinner animation="border" size="sm" />
-                        ) : (
-                          "Find"
-                        )}
-                      </button>
+                    <Col style={{ padding: "0 5px", flex: "1" }}>
+                      <Form.Group className="mb-2">
+                        <button
+                          className="btn btn-primary"
+                          onClick={fetchReceiptsData}
+                          disabled={loading}
+                          style={{
+                            height: "35px",
+                            width: "100%",
+                            backgroundColor: "#00acc1",
+                            borderColor: "#00bcd4",
+                            color: "white",
+                            borderRadius: "8px",
+                            fontWeight: "bold",
+                            fontSize: "13px"
+                          }}
+                        >
+                          {loading ? <Spinner animation="border" size="sm" /> : "Search"}
+                        </button>
+                      </Form.Group>
                     </Col>
                   </Row>
+
+                  <DataTable
+                    value={receipts}
+                    paginator
+                    rows={rows}
+                    filters={filters}
+                    header={header}
+                    paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
+                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
+                    emptyMessage={loading ? "Loading..." : "No records found."}
+                    className="p-datatable-sm custom-datatable"
+                    style={{ fontSize: "12px" }}
+                    rowHover
+                    stripedRows
+                    responsiveLayout="scroll"
+                  >
+                    <Column
+                      header="Sr No"
+                      body={(rowData, { rowIndex }) => rowIndex + 1}
+                      style={{ width: "60px", textAlign: "center" }}
+                    />
+                    <Column field="date" header="Date" />
+                    <Column field="patientName" header="Patient Name" />
+                    <Column field="consultation" header="Consultation" />
+                    <Column field="patientStatus" header="Patient Status" />
+                    <Column field="sprayQty" header="Spray Qty" />
+                    <Column field="paymentMode" header="Payment Mode" />
+                    <Column field="amount" header="Amount" />
+                  </DataTable>
                 </Card.Body>
               </Card>
             </Col>
           </Row>
-
-          {/* Table Section */}
-          <div
-            className="card mt-4"
-            style={{
-              borderRadius: "12px",
-              boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
-              borderColor: "#00bcd4",
-              background: "white",
-              border: "4px solid #00bcd4",
-            }}
-          >
-            <div className="card-body">
-              <table className="table table-bordered">
-                <thead>
-                  <tr>
-                    <th>Sr.No</th>
-                    <th>Date</th>
-                    <th>Patient Name</th>
-                    <th>Consultation</th>
-                    <th>Patient Status</th>
-                    <th>Spray Qty</th>
-                    <th>Payment Mode</th>
-                    <th>Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading ? (
-                    <tr>
-                      <td colSpan="8" className="text-center">
-                        <Spinner animation="border" />
-                      </td>
-                    </tr>
-                  ) : receipts.length > 0 ? (
-                    receipts.map((receipt, index) => (
-                      <tr key={index}>
-                        <td>{index + 1}</td>
-                        <td>{receipt.date}</td>
-                        <td>{receipt.patientName}</td>
-                        <td>{receipt.consultation}</td>
-                        <td>{receipt.patientStatus}</td>
-                        <td>{receipt.sprayQty}</td>
-                        <td>{receipt.paymentMode}</td>
-                        <td>{receipt.amount}</td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="8" className="text-center">
-                        No data available
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
         </Container>
       </SimpleBar>
+      <style>{`
+        .custom-datatable .p-datatable-header {
+          background: #e0f7fa;
+          border: 1px solid #4dd0e1;
+          border-top-left-radius: 8px;
+          border-top-right-radius: 8px;
+          padding: 10px;
+        }
+        .custom-datatable .p-datatable-thead > tr > th {
+          background-color: #b2ebf2 !important;
+          color: black !important;
+          font-size: 12px;
+          padding: 10px 8px !important;
+          border: 1px solid #90caf9 !important;
+          text-align: center !important;
+        }
+        .custom-datatable .p-datatable-thead > tr > th * {
+          color: black !important;
+          justify-content: center !important;
+        }
+        .custom-datatable .p-datatable-tbody > tr > td {
+          font-size: 12px;
+          padding: 8px;
+          border: 1px solid #90caf9;
+          text-align: center !important;
+        }
+        .custom-datatable .p-paginator {
+          background: #f8fdfe;
+          border: 1px solid #4dd0e1;
+          border-bottom-left-radius: 8px;
+          border-bottom-right-radius: 8px;
+          padding: 5px;
+        }
+      `}</style>
     </div>
   );
 };

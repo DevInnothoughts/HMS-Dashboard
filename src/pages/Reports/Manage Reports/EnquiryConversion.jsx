@@ -1,18 +1,21 @@
 import React, { useState, useEffect } from "react";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-// import './ReceptionistReport.css'; // Keep the existing CSS in a separate file
 import PageBreadcrumb from "../../../components/PageBreadcrumb";
 import {
   Row,
   Col,
   Card,
   Container,
-  Table,
   Form,
-  Button,
 } from "react-bootstrap";
 import SimpleBar from "simplebar-react";
+import { saveAs } from "file-saver";
+import * as XLSX from "xlsx";
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
+import { FilterMatchMode } from "primereact/api";
+import { InputText } from "primereact/inputtext";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const BASE_URL = "http://194.195.117.79:5100/api"; // Update your API base URL here
 
@@ -27,124 +30,19 @@ const EnquiryConversion = () => {
     totalEnquiries: "-",
     callBack: "-",
   });
-
-  const styles = {
-    datePicker: {
-      width: "100%",
-    },
-    table: {
-      width: "100%",
-      fontSize: "13px",
-      marginBottom: "20px",
-      backgroundColor: "transparent",
-      borderCollapse: "collapse",
-      borderSpacing: "0",
-      display: "table",
-    },
-    tableBordered: {
-      border: "1px solid #dddddd",
-      borderCollapse: "separate",
-      borderLeft: "0",
-      WebkitBorderRadius: "4px",
-      MozBorderRadius: "4px",
-      borderRadius: "4px",
-    },
-    widgetHeader: {
-      position: "relative",
-      height: "40px",
-      lineHeight: "40px",
-      background: "linear-gradient(top, #fafafa 0%, #e9e9e9 100%)",
-      textShadow: "0 1px 0 #fff",
-      borderRadius: "5px 5px 0 0",
-      boxShadow:
-        "0 2px 5px rgba(0,0,0,0.1),inset 0 1px 0 white,inset 0 -1px 0 rgba(255,255,255,0.7)",
-      borderBottom: "1px solid #bababa",
-      border: "1px solid #D5D5D5",
-      WebkitBorderTopLeftRadius: "4px",
-      WebkitBorderTopRightRadius: "4px",
-      MozBorderRadiusTopleft: "4px",
-      MozBorderRadiusTopright: "4px",
-      borderTopLeftRadius: "4px",
-      borderTopRightRadius: "4px",
-      WebkitBackgroundClip: "padding-box",
-    },
-    widgetContent: {
-      padding: "20px 15px 15px",
-      background: "#FFF",
-      border: "1px solid #D5D5D5",
-      MozBorderRadius: "5px",
-      WebkitBorderRadius: "5px",
-      borderRadius: "5px",
-    },
-    widgetTitle: {
-      top: "2px",
-      marginTop: "0px",
-      position: "relative",
-      left: "10px",
-      display: "inline-block",
-      marginRight: "3em",
-      fontSize: "14px",
-      fontWeight: "600",
-      color: "#555",
-      lineHeight: "18px",
-      textShadow: "1px 1px 2px rgba(255, 255, 255, 0.5)",
-    },
-    icon: {
-      display: "inline-block",
-      marginLeft: "13px",
-      marginRight: "-2px",
-      fontSize: "16px",
-      color: "#555",
-      verticalAlign: "middle",
-    },
-  };
-
-  const datePickerCustomStyles = {
-    input: {
-      width: "100%",
-      padding: "8px 12px",
-      border: "1px solid #ccc",
-      borderRadius: "4px",
-      fontSize: "14px",
-      backgroundColor: "white",
-      cursor: "pointer",
-    },
-    calendar: {
-      fontSize: "14px",
-      width: "250px",
-      border: "1px solid #ccc",
-      borderRadius: "4px",
-      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-      backgroundColor: "white",
-    },
-  };
-
-  // Custom date input component
-  const CustomDateInput = React.forwardRef(({ value, onClick }, ref) => (
-    <input
-      ref={ref}
-      className="form-control"
-      value={value}
-      onClick={onClick}
-      readOnly
-      style={datePickerCustomStyles.input}
-      placeholder="Select Date"
-    />
-  ));
-
-  // Placeholder data for enquiry conversations
-  const enquiryConversionData = [
-    { date: "2025-01-01", customer: "Jane Doe", topic: "Product Details" },
-    { date: "2025-01-03", customer: "John Smith", topic: "Billing Inquiry" },
-  ];
-
-  // Filter data based on selected dates
-  const filteredData = enquiryConversionData.filter((entry) => {
-    const isDateValid =
-      (!fromDate || new Date(entry.date) >= new Date(fromDate)) &&
-      (!toDate || new Date(entry.date) <= new Date(toDate));
-    return isDateValid;
+  const [searchText, setSearchText] = useState("");
+  const [rows, setRows] = useState(10);
+  const [filters, setFilters] = useState({
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
+
+  const onGlobalFilterChange = (e) => {
+    const value = e.target.value;
+    let _filters = { ...filters };
+    _filters["global"].value = value;
+    setFilters(_filters);
+    setSearchText(value);
+  };
 
   const handleFind = async (e) => {
     e.preventDefault();
@@ -155,25 +53,9 @@ const EnquiryConversion = () => {
     }
 
     try {
-      const formatDateForAPI = (dateString) => {
-        const date = new Date(dateString);
-        const day = String(date.getDate()).padStart(2, "0");
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const year = date.getFullYear();
-        return `${day}/${month}/${year}`;
-      };
+      const formattedFromDate = fromDate.split("-").reverse().join("/");
+      const formattedToDate = toDate.split("-").reverse().join("/");
 
-      const formattedFromDate = formatDateForAPI(fromDate);
-      const formattedToDate = formatDateForAPI(toDate);
-
-      // Create URL with query parameters
-      const appointmentURL = new URL(
-        `${BASE_URL}/V1/appointment/listAppointments`,
-      );
-      appointmentURL.searchParams.append("from", formattedFromDate);
-      appointmentURL.searchParams.append("to", formattedToDate);
-
-      // Fetch appointments
       const appointmentResponse = await fetch(
         `${BASE_URL}/V1/appointment/listAppointments?from=${formattedFromDate}&to=${formattedToDate}`,
         {
@@ -186,17 +68,11 @@ const EnquiryConversion = () => {
       );
 
       if (!appointmentResponse.ok) {
-        const errorText = await appointmentResponse.text();
-        console.error("Appointment API Error:", errorText);
-        throw new Error(
-          `Failed to fetch appointment data: ${appointmentResponse.status}`,
-        );
+        throw new Error(`Failed to fetch appointment data: ${appointmentResponse.status}`);
       }
 
       const appointmentData = await appointmentResponse.json();
-      console.log("Appointment Data:", appointmentData);
 
-      // Fetch enquiries
       const enquiryResponse = await fetch(
         `${BASE_URL}/V1/enquiry/listEnquiry?from=${formattedFromDate}&to=${formattedToDate}`,
         {
@@ -209,36 +85,21 @@ const EnquiryConversion = () => {
       );
 
       if (!enquiryResponse.ok) {
-        const errorText = await enquiryResponse.text();
-        console.error("Enquiry API Error:", errorText);
-        throw new Error(
-          `Failed to fetch enquiry data: ${enquiryResponse.status}`,
-        );
+        throw new Error(`Failed to fetch enquiry data: ${enquiryResponse.status}`);
       }
 
       const enquiryData = await enquiryResponse.json();
 
-      console.log("Appointment Data:", appointmentData);
-      console.log("Enquiry Data:", enquiryData);
-
-      // Calculate statistics
       let confirmedPatients = 0;
       let dnwPatients = 0;
       let dntPatients = 0;
 
-      if (
-        appointmentData &&
-        appointmentData.data &&
-        Array.isArray(appointmentData.data)
-      ) {
+      if (appointmentData && appointmentData.data && Array.isArray(appointmentData.data)) {
         appointmentData.data.forEach((appointment) => {
           if (appointment.confirm_time !== 0) {
             confirmedPatients++;
           }
-          if (
-            appointment.executivechk === 0 &&
-            appointment.confirm_time !== 0
-          ) {
+          if (appointment.executivechk === 0 && appointment.confirm_time !== 0) {
             dnwPatients++;
           }
           if (appointment.confirm_time === 0) {
@@ -247,7 +108,6 @@ const EnquiryConversion = () => {
         });
       }
 
-      // Update report data with actual numbers
       setReportData({
         bookedAppointments: appointmentData?.data?.length || 0,
         visited: confirmedPatients,
@@ -270,6 +130,108 @@ const EnquiryConversion = () => {
     }
   };
 
+  const exportToExcel = () => {
+    const fileType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
+    const fileExtension = ".xlsx";
+
+    const excelData = [{
+      "Booked Appointment": reportData.bookedAppointments,
+      "Visited": reportData.visited,
+      "DNW": reportData.dnw,
+      "DNT": reportData.dnt,
+      "Total Enquiries": reportData.totalEnquiries,
+      "Call Back": reportData.callBack
+    }];
+
+    const ws = XLSX.utils.json_to_sheet(excelData);
+    const wb = { Sheets: { data: ws }, SheetNames: ["data"] };
+    const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const data = new Blob([excelBuffer], { type: fileType });
+    saveAs(data, "Enquiry_Conversion_Report" + fileExtension);
+  };
+
+
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+    doc.text("Enquiry Conversion Report", 14, 15);
+
+    const tableColumn = ["Booked Appointment", "Visited", "DNW", "DNT", "Total Enquiries", "Call Back"];
+    const tableRows = [
+      [
+        reportData.bookedAppointments,
+        reportData.visited,
+        reportData.dnw,
+        reportData.dnt,
+        reportData.totalEnquiries,
+        reportData.callBack
+      ]
+    ];
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 20,
+      theme: 'grid',
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [0, 172, 193] }
+    });
+
+    doc.save("Enquiry_Conversion_Report.pdf");
+  };
+
+  const renderHeader = () => {
+    return (
+      <div className="d-flex justify-content-between align-items-center mb-1">
+        <div className="d-flex align-items-center" style={{ gap: "20px" }}>
+          <div className="d-flex align-items-center">
+            <span className="me-1" style={{ fontWeight: "bold", color: "#006064" }}>Show</span>
+            <Form.Select
+              size="sm"
+              style={{ width: "70px", borderRadius: "8px", border: "1px solid #4dd0e1" }}
+              value={rows}
+              onChange={(e) => setRows(Number(e.target.value))}
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </Form.Select>
+          </div>
+          <div className="d-flex align-items-center">
+            <span className="me-1" style={{ fontWeight: "bold", color: "#006064" }}>Search</span>
+            <span className="p-input-icon-left">
+              <InputText
+                value={searchText}
+                onChange={onGlobalFilterChange}
+                placeholder="Global Search..."
+                className="p-inputtext-sm"
+                style={{ width: "200px", borderRadius: "8px", border: "1px solid #4dd0e1" }}
+              />
+            </span>
+          </div>
+        </div>
+        <div className="d-flex" style={{ gap: "10px" }}>
+          <button
+            className="btn btn-success btn-sm"
+            onClick={exportToExcel}
+            style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px" }}
+          >
+            <i className="fa fa-file-excel-o"></i> Download Excel
+          </button>
+          <button
+            className="btn btn-danger btn-sm"
+            onClick={downloadPDF}
+            style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px" }}
+          >
+            <i className="fa fa-file-pdf-o"></i> Download PDF
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const header = renderHeader();
+
   return (
     <div
       className="themebody-wrap"
@@ -280,7 +242,6 @@ const EnquiryConversion = () => {
         minHeight: "100vh",
       }}
     >
-      {/* Breadcrumb */}
       <PageBreadcrumb pagename="Enquiry Conversion Report" />
 
       <SimpleBar className="theme-body common-dash">
@@ -293,7 +254,7 @@ const EnquiryConversion = () => {
                   boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
                   borderColor: "#00bcd4",
                   background: "white",
-                  border: "4px solid #00bcd4",
+                  border: "1px solid #00bcd4",
                 }}
               >
                 <Card.Header
@@ -310,248 +271,115 @@ const EnquiryConversion = () => {
                 >
                   <h4>Enquiry Conversion Report</h4>
                 </Card.Header>
-                <Card.Body style={{ padding: "25px" }}>
-                  {/* Filters */}
+                <Card.Body style={{ padding: "5px" }}>
                   <Form onSubmit={handleFind}>
-                    <Row className="align-items-end">
-                      <Col md={3}>
-                        <Form.Group className="mb-3">
-                          <Form.Label>
-                            <b>From Date</b>
+                    <Row className="align-items-end mb-4 flex-nowrap" style={{ margin: "0 -5px" }}>
+                      <Col style={{ padding: "0 5px", flex: "1" }}>
+                        <Form.Group className="mb-2">
+                          <Form.Label style={{ fontWeight: "bold", color: "#006064", whiteSpace: "nowrap", fontSize: "12px" }}>
+                            From Date
                           </Form.Label>
-                          <DatePicker
-                            selected={fromDate}
-                            onChange={(date) => setFromDate(date)}
-                            dateFormat="dd/MM/yyyy"
-                            className="form-control"
-                            placeholderText="Select From Date"
+                          <Form.Control
+                            type="date"
+                            value={fromDate}
+                            onChange={(e) => setFromDate(e.target.value)}
+                            style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }}
                           />
                         </Form.Group>
                       </Col>
-                      <Col md={3}>
-                        <Form.Group className="mb-3">
-                          <Form.Label>
-                            <b>To Date</b>
+                      <Col style={{ padding: "0 5px", flex: "1" }}>
+                        <Form.Group className="mb-2">
+                          <Form.Label style={{ fontWeight: "bold", color: "#006064", whiteSpace: "nowrap", fontSize: "12px" }}>
+                            To Date
                           </Form.Label>
-                          <DatePicker
-                            selected={toDate}
-                            onChange={(date) => setToDate(date)}
-                            dateFormat="dd/MM/yyyy"
-                            className="form-control"
-                            placeholderText="Select To Date"
+                          <Form.Control
+                            type="date"
+                            value={toDate}
+                            onChange={(e) => setToDate(e.target.value)}
+                            style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }}
                           />
                         </Form.Group>
                       </Col>
-                      <Col md={3}>
-                        <Form.Group className="mb-3">
+                      <Col style={{ padding: "0 5px", flex: "1" }}>
+                        <Form.Group className="mb-2">
                           <button
                             className="btn btn-primary"
                             type="submit"
                             style={{
-                              marginTop: "30px",
-                              height: "55px",
+                              height: "35px",
                               width: "100%",
                               backgroundColor: "#00acc1",
                               borderColor: "#00bcd4",
                               color: "white",
-                              cursor: "pointer",
                               borderRadius: "8px",
-                              transition: "0.3s all",
                               fontWeight: "bold",
-                            }}
-                            onMouseOver={(e) => {
-                              e.target.style.backgroundColor = "#007c91";
-                            }}
-                            onMouseOut={(e) => {
-                              e.target.style.backgroundColor = "#00acc1";
+                              fontSize: "13px"
                             }}
                           >
-                            Find
+                            Search
                           </button>
                         </Form.Group>
                       </Col>
                     </Row>
                   </Form>
-                  <br />
-                  <br />
-                  {/* Show table regardless of showReport state */}
-                  <div id="divToPrint">
-                    <div className="tab-content">
-                      <div className="tab-pane box active" id="list">
-                        <div id="Assisted">
-                          <div className="widget stacked widget-table action-table">
-                            <div style={styles.widgetHeader}>
-                              <i
-                                className="icon-th-list"
-                                style={styles.icon}
-                              ></i>
-                              <h3 style={styles.widgetTitle}>
-                                Receptionist Performance
-                              </h3>
-                            </div>
-                            <div style={styles.widgetContent}>
-                              <table
-                                style={{
-                                  ...styles.table,
-                                  ...styles.tableBordered,
-                                }}
-                              >
-                                <thead>
-                                  <tr>
-                                    <th
-                                      style={{
-                                        padding: "8px",
-                                        borderBottom: "1px solid #ddd",
-                                      }}
-                                    >
-                                      Booked Appointment
-                                    </th>
-                                    <th
-                                      style={{
-                                        padding: "8px",
-                                        borderBottom: "1px solid #ddd",
-                                      }}
-                                    >
-                                      Visited
-                                    </th>
-                                    <th
-                                      style={{
-                                        padding: "8px",
-                                        borderBottom: "1px solid #ddd",
-                                      }}
-                                    >
-                                      DNW
-                                    </th>
-                                    <th
-                                      style={{
-                                        padding: "8px",
-                                        borderBottom: "1px solid #ddd",
-                                      }}
-                                    >
-                                      DNT
-                                    </th>
-                                    <th
-                                      style={{
-                                        padding: "8px",
-                                        borderBottom: "1px solid #ddd",
-                                      }}
-                                    >
-                                      Total Enquiries
-                                    </th>
-                                    <th
-                                      style={{
-                                        padding: "8px",
-                                        borderBottom: "1px solid #ddd",
-                                      }}
-                                    >
-                                      Call Back
-                                    </th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  <tr>
-                                    <td
-                                      style={{
-                                        padding: "8px",
-                                        borderBottom: "1px solid #ddd",
-                                      }}
-                                    >
-                                      {reportData.bookedAppointments}
-                                    </td>
-                                    <td
-                                      style={{
-                                        padding: "8px",
-                                        borderBottom: "1px solid #ddd",
-                                      }}
-                                    >
-                                      {reportData.visited}
-                                    </td>
-                                    <td
-                                      style={{
-                                        padding: "8px",
-                                        borderBottom: "1px solid #ddd",
-                                      }}
-                                    >
-                                      {reportData.dnw}
-                                    </td>
-                                    <td
-                                      style={{
-                                        padding: "8px",
-                                        borderBottom: "1px solid #ddd",
-                                      }}
-                                    >
-                                      {reportData.dnt}
-                                    </td>
-                                    <td
-                                      style={{
-                                        padding: "8px",
-                                        borderBottom: "1px solid #ddd",
-                                      }}
-                                    >
-                                      {reportData.totalEnquiries}
-                                    </td>
-                                    <td
-                                      style={{
-                                        padding: "8px",
-                                        borderBottom: "1px solid #ddd",
-                                      }}
-                                    >
-                                      {reportData.callBack}
-                                    </td>
-                                  </tr>
-                                </tbody>
-                              </table>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+
+                  <DataTable
+                    value={[reportData]}
+                    paginator
+                    rows={rows}
+                    filters={filters}
+                    header={header}
+                    paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
+                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
+                    emptyMessage="No records found."
+                    className="p-datatable-sm custom-datatable"
+                    style={{ fontSize: "12px" }}
+                    rowHover
+                    stripedRows
+                    responsiveLayout="scroll"
+                  >
+                    <Column field="bookedAppointments" header="Booked Appointment" />
+                    <Column field="visited" header="Visited" />
+                    <Column field="dnw" header="DNW" />
+                    <Column field="dnt" header="DNT" />
+                    <Column field="totalEnquiries" header="Total Enquiries" />
+                    <Column field="callBack" header="Call Back" />
+                  </DataTable>
                 </Card.Body>
               </Card>
             </Col>
           </Row>
         </Container>
       </SimpleBar>
+      <style>{`
+        .custom-datatable .p-datatable-header {
+          background: #e0f7fa;
+          border: 1px solid #4dd0e1;
+          border-top-left-radius: 8px;
+          border-top-right-radius: 8px;
+          padding: 10px;
+        }
+        .custom-datatable .p-datatable-thead > tr > th {
+          background-color: #b2ebf2 !important;
+          color: black !important;
+          font-size: 12px;
+          padding: 10px 8px !important;
+          border: 1px solid #90caf9 !important;
+          text-align: center !important;
+        }
+        .custom-datatable .p-datatable-thead > tr > th * {
+          color: black !important;
+          justify-content: center !important;
+        }
+        .custom-datatable .p-datatable-tbody > tr > td {
+          font-size: 12px;
+          padding: 8px;
+          border: 1px solid #90caf9;
+          text-align: center !important;
+        }
+      `}</style>
     </div>
   );
 };
-
-// Add these styles to your component or in a global CSS file
-const styles = `
-  .custom-calendar {
-    font-family: 'Arial', sans-serif;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-
-  .custom-calendar .react-datepicker__header {
-    background-color: #e3f2fd;
-    border-bottom: 1px solid #ddd;
-  }
-
-  .custom-calendar .react-datepicker__day--selected {
-    background-color: #00acc1;
-    color: white;
-  }
-
-  .custom-calendar .react-datepicker__day:hover {
-    background-color: #e3f2fd;
-  }
-
-  .custom-datepicker-wrapper {
-    width: 100%;
-  }
-
-  .custom-popper {
-    z-index: 1000;
-  }
-`;
-
-// Add this to your document head
-const styleSheet = document.createElement("style");
-styleSheet.innerText = styles;
-document.head.appendChild(styleSheet);
 
 export default EnquiryConversion;

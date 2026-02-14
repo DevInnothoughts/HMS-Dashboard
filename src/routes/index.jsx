@@ -13,13 +13,13 @@ import { IpdRoutes } from "./IpdRoutes";
 export default function AppRoutes() {
   return (
     <Routes>
+      {ReportRoutes}
       {AuthRoutes}
       {DashboardRoutes}
       {/* {DoctorRoutes} */}
       {IpdRoutes}
       {PatientRoutes}
       {ReceptionistRoutes}
-      {ReportRoutes}
       {/* {SettingsRoutes} */}
       {UtilityRoutes}
     </Routes>
