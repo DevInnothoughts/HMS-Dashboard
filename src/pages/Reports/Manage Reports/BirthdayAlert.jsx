@@ -13,7 +13,7 @@ import autoTable from "jspdf-autotable";
 
 import { decodeJwt } from "../../../utils/decode-jwt"; // Ensure path is correct
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const BirthdayAlert = () => {
     const currentDate = moment().format("DD-MM-YYYY");
@@ -58,6 +58,7 @@ const BirthdayAlert = () => {
   
         if (response.ok) {
           const result = await response.json();
+          console.log("BIRTHDAY ALERT: ", result)
           // Extracting data from your controller's structure: result.reportsdetails.data
           const birthdayData = result.reportsdetails?.data || [];
           setPatients(birthdayData);

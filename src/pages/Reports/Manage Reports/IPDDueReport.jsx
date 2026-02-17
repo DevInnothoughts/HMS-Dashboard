@@ -17,7 +17,7 @@
 // import PageBreadcrumb from "../../../components/PageBreadcrumb";
 // import SimpleBar from "simplebar-react";
 
-// const BASE_URL = "http://localhost:5100/api";
+// const BASE_URL = "http://194.195.117.79:5100/api";
 
 // const IPDDueReport = () => {
 //   const [fromDate, setFromDate] = useState("");
@@ -417,7 +417,7 @@ import PageBreadcrumb from "../../../components/PageBreadcrumb";
 import SimpleBar from "simplebar-react";
 import { decodeJwt } from "../../../utils/decode-jwt"; // Ensure this helper exists
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const IPDDueReport = () => {
   const [fromDate, setFromDate] = useState("");
