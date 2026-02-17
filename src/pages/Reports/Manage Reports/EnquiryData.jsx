@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import PageBreadcrumb from "../../../components/PageBreadcrumb";
 import { Row, Col, Card, Container, Form } from "react-bootstrap";
 import SimpleBar from "simplebar-react";
@@ -10,6 +10,7 @@ import { saveAs } from "file-saver";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { decodeJwt } from "../../../utils/decode-jwt";
 
 const BASE_URL = "http://localhost:5100/api";
 
@@ -20,9 +21,21 @@ const EnquiryData = () => {
   const [searchText, setSearchText] = useState("");
   const [rows, setRows] = useState(10);
   const [loading, setLoading] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState("default");
   const [filters, setFilters] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
+
+  // Fetch location from JWT on mount
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const payload = decodeJwt(token);
+      if (payload && payload.jobLocation) {
+        setCurrentLocation(payload.jobLocation);
+      }
+    }
+  }, []);
 
   const onGlobalFilterChange = (e) => {
     const value = e.target.value;
@@ -36,55 +49,48 @@ const EnquiryData = () => {
     if (e) e.preventDefault();
 
     if (!fromDate || !toDate) {
-      alert("Please Enter all fields details..");
+      alert("Please select both From and To dates.");
       return;
     }
 
     setLoading(true);
     try {
-      const formatDateForBackend = (dateStr) => {
-        const date = new Date(dateStr);
-        const day = String(date.getDate()).padStart(2, "0");
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const year = date.getFullYear();
-        return `${day}/${month}/${year}`;
-      };
-
-      const formattedFromDate = formatDateForBackend(fromDate);
-      const formattedToDate = formatDateForBackend(toDate);
-
-      const response = await fetch(
-        `${BASE_URL}/V1/enquiry/listEnquiry?from=${formattedFromDate}&to=${formattedToDate}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
+      // Your controller expects Fromdate and Todate in the body via POST
+      const response = await fetch(`${BASE_URL}/V1/managereports/getEnquiryReport`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
         },
-      );
+        body: JSON.stringify({
+          location: currentLocation,
+          Fromdate: fromDate, // Standard HTML date input is already YYYY-MM-DD
+          Todate: toDate
+        }),
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(`Server error: ${errorData.message || "Unknown error"}`);
+        throw new Error(errorData.message || "Server error");
       }
 
-      const responseData = await response.json();
-      const data = responseData.data || [];
+      const data = await response.json();
 
       const formattedData = data.map((item, index) => ({
         ...item,
         srNo: index + 1,
-        displayDate: item.date ? new Date(item.date).toLocaleDateString("en-GB") : "",
+        // Convert SQL date for display: YYYY-MM-DD to DD/MM/YYYY
+        displayDate: item.date ? item.date.split('-').reverse().join('/') : "N/A",
       }));
 
       setTableData(formattedData);
 
       if (formattedData.length === 0) {
-        alert("No records found for the selected date range");
+        alert("No records found for this range.");
       }
     } catch (error) {
-      console.error("Error fetching data:", error);
-      alert(`Failed to fetch data: ${error.message}`);
+      console.error("Fetch Error:", error);
+      alert(`Error: ${error.message}`);
       setTableData([]);
     } finally {
       setLoading(false);

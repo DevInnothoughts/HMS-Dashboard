@@ -100,6 +100,11 @@ export const receiptlocations = {
     "phone": "8792950455",
     "hospitalcode": "HSR"
   },
+  "HSR Layout": {
+    "address": "<b>HSR : </b><br>1st Floor, Krishna Complex, HSR Layout - 1st Sector, 17th Cross Road, 27th Main Road, Opposite to Sri Basaveshwara Gayatri Temple, Above More Supermarket, Bengaluru – 560102",
+    "phone": "8792950455",
+    "hospitalcode": "HSR"
+  },
   "Sahakarnagar": {
     "address": "<b>Sahakarnagar : </b><br>1st Floor, 490/8, above McDonalds,F Block, Sahakar Nagar,Byatarayanapura, Bengaluru,Karnataka 560092.",
     "phone": "9731118056",

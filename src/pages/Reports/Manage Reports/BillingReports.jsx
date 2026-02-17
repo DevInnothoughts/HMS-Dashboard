@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PageBreadcrumb from "../../../components/PageBreadcrumb";
 import { Row, Col, Card, Container, Form } from "react-bootstrap";
 import SimpleBar from "simplebar-react";
@@ -10,46 +10,32 @@ import { saveAs } from "file-saver";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { decodeJwt } from "../../../utils/decode-jwt";
+
+const BASE_URL = "http://localhost:5100/api";
 
 const BillingReport = () => {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [billingData, setBillingData] = useState([]); // State for API data
   const [searchText, setSearchText] = useState("");
   const [rows, setRows] = useState(10);
   const [loading, setLoading] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState("default");
   const [filters, setFilters] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
 
-  const [billingData, setBillingData] = useState([
-    {
-      date: "2025-01-01",
-      invoiceId: "INV-001",
-      patientName: "John Doe",
-      invoiceType: "OPD",
-      packageAmount: 5000,
-      approvedAmount: 4500,
-      payableAmount: 500,
-    },
-    {
-      date: "2025-01-03",
-      invoiceId: "INV-002",
-      patientName: "Jane Smith",
-      invoiceType: "IPD",
-      packageAmount: 3000,
-      approvedAmount: 3000,
-      payableAmount: 0,
-    },
-    {
-      date: "2025-01-05",
-      invoiceId: "INV-003",
-      patientName: "Bob Williams",
-      invoiceType: "OPD",
-      packageAmount: 7000,
-      approvedAmount: 6000,
-      payableAmount: 1000,
-    },
-  ]);
+  // 1. Get Location from JWT
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const payload = decodeJwt(token);
+      if (payload?.jobLocation) {
+        setCurrentLocation(payload.jobLocation);
+      }
+    }
+  }, []);
 
   const onGlobalFilterChange = (e) => {
     const value = e.target.value;
@@ -59,13 +45,52 @@ const BillingReport = () => {
     setSearchText(value);
   };
 
-  const handleFindClick = (e) => {
-    e.preventDefault();
+  // 2. Fetch Data from Backend
+  const handleFindClick = async (e) => {
+    if (e) e.preventDefault();
+    if (!fromDate || !toDate) {
+      alert("Please select both From and To dates.");
+      return;
+    }
+
     setLoading(true);
-    // Logic for fetching or filtering data based on dates
-    setTimeout(() => {
+    try {
+      const response = await fetch(`${BASE_URL}/V1/managereports/getBillingReport`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify({
+          location: currentLocation,
+          Fromdate: fromDate,
+          Todate: toDate
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch billing data");
+
+      const data = await response.json();
+      
+      // 3. Map Database fields to UI fields
+      const formattedData = data.map((item) => ({
+        ...item,
+        date: item.creation_date ? item.creation_date.split('T')[0] : "N/A",
+        invoiceId: item.invoice_id,
+        patientName: item.PatientName,
+        invoiceType: item.status,
+        packageAmount: item.totalamt,
+        approvedAmount: item.receivedamt,
+        payableAmount: item.payable_amt
+      }));
+
+      setBillingData(formattedData);
+    } catch (error) {
+      console.error("Fetch Error:", error);
+      alert("Error fetching billing reports.");
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
   const exportToExcel = () => {

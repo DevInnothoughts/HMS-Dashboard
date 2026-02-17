@@ -159,6 +159,11 @@ export const clinincLoc = {
     "invoiceHelplineNo": "8792950455",
     "EmergencySMS": ""
   },
+  "HSR Layout": {
+    "invoiceAddress": "<b>Healing Hands Clinic</b><br> 1st Floor, Krishna Complex, HSR Layout - 1st Sector, 17th Cross Road, 27th Main Road, Opposite to Sri Basaveshwara Gayatri Temple, Above More Supermarket, Bengaluru – 560102",
+    "invoiceHelplineNo": "8792950455",
+    "EmergencySMS": ""
+  },
   "Gurgaon-49": {
     "invoiceAddress": "<b>Healing Hands Clinic</b><br>Spaze ITech Park Tower C, Ground Floor, Unit no 06,07 and 08 Sohna road, Sector 49, Gurugram, Haryana 122018",
     "invoiceHelplineNo": "9990479800",

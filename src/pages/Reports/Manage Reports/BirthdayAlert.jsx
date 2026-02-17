@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import PageBreadcrumb from "../../../components/PageBreadcrumb";
 import { Row, Col, Card, Container, Spinner, Form, Button } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
@@ -72,6 +72,8 @@ const BirthdayAlert = () => {
     useEffect(() => {
       fetchBirthdays();
     }, [fetchBirthdays]);
+
+
   const onGlobalFilterChange = (e) => {
     const value = e.target.value;
     let _filters = { ...filters };
@@ -97,7 +99,7 @@ const BirthdayAlert = () => {
     doc.text(`Date: ${currentDate}`, 14, 22);
 
     const tableColumn = ["Sr No", "Patient Name", "Contact Number", "Address"];
-    const tableRows = doctorsData.sort((a, b) => a.name.localeCompare(b.name)).map((item, index) => [
+    const tableRows = patients.sort((a, b) => a.name.localeCompare(b.name)).map((item, index) => [
       index + 1,
       item.name,
       item.phone,
@@ -262,7 +264,7 @@ const BirthdayAlert = () => {
                 </Card.Header>
                 <Card.Body style={{ padding: "5px" }}>
                   <DataTable
-                    value={[...doctorsData].sort((a, b) => a.name.localeCompare(b.name))}
+                    value={[...patients].sort((a, b) => a.name.localeCompare(b.name))}
                     paginator
                     rows={rows}
                     first={first}
