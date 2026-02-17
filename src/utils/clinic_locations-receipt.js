@@ -132,7 +132,7 @@ export const receiptlocations = {
   },
   "Lucknow": {
     "address": "<b>Lucknow : </b><br>B-2/885, Vinay Khand 2 Husariya, Amar Shaheed Path, Gomti Nagar, Lucknow, Uttar Pradesh 226010",
-    "phone": "",
+    "phone": "8855865060",
     "hospitalcode": "LUC"
   },
   "Belagavi": {

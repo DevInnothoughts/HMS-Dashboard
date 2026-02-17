@@ -237,7 +237,7 @@ export default function ReceiptList() {
     if (!selectedReceipt) return;
     console.log(" printing  RECEPT: ", selectedReceipt);
 
-    const clinicAddr = receiptlocations["HSR"] || {
+    const clinicAddr = receiptlocations[currentLocation] || {
       address:
         "Healing Hands Clinic Pvt Ltd, DP Road, Ground Floor, Millenium Star Extension, Adjacent to Ruby Hall Clinic, Pune 411001",
       phone: "8888288884 | 020-26164488/99",
