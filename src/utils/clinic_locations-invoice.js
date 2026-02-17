@@ -44,7 +44,7 @@ export const clinincLoc = {
     "invoiceHelplineNo": "9175232308",
     "EmergencySMS": ""
   },
-  "Salunkhe-Vihar": {
+  "Salunkhe Vihar": {
     "invoiceAddress": "<b>Healing Hands Clinic</b><br> 101/102 Girme Towers, Salunkhe Vihar Road, Next to HDFC Bank, Opp. Kotak Mahindra Bank, Oxford Village, Kedari Nagar, Wanowrie, Pune, Maharashtra 411004.",
     "invoiceHelplineNo": "8888522226",
     "EmergencySMS": ""

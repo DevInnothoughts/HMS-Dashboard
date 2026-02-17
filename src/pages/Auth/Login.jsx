@@ -23,7 +23,7 @@ const LOCATIONS_LIST = [
   "Navi Mumbai",
   "Chinchwad",
   "Nashik",
-  "Salunke Vihar",
+  "Salunkhe Vihar",
   "Chakan",
   "Baner",
   "Kolhapur",

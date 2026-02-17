@@ -1112,7 +1112,7 @@ export default function All_patient() {
         "DP Road",
         "Baner",
         "Tilak Road",
-        "Salunkhe-Vihar",
+        "Salunkhe Vihar",
         "Pimpri-Chinchwad",
         "Chakan",
         "Dighi",
