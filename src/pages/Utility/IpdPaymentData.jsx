@@ -121,7 +121,6 @@ const IpdPaymentData = () => {
                                 boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
                                 background: "white",
                                 border: "1px solid #00bcd4",
-                                padding: "5px",
                                 overflow: "visible",
                                 marginBottom: "20px"
                             }}
@@ -130,7 +129,7 @@ const IpdPaymentData = () => {
                                 <Row className="align-items-end">
                                     <Col lg={3} md={6} className="mb-3 position-relative" ref={dropdownRef}>
                                         <Form.Group>
-                                            <Form.Label style={{ fontWeight: "600", color: "#00838f" }}>Enter Invoice ID</Form.Label>
+                                            <Form.Label style={{ fontSize: "13px", fontWeight: "600", color: "#00838f" }}>Enter Invoice ID</Form.Label>
                                             <InputGroup>
                                                 <Form.Control
                                                     type="text"
@@ -138,7 +137,7 @@ const IpdPaymentData = () => {
                                                     value={invoiceId}
                                                     onChange={(e) => setInvoiceId(e.target.value)}
                                                     onFocus={() => invoiceId && setShowDropdown(true)}
-                                                    style={{ borderRadius: "8px", border: "1px solid #80deea" }}
+                                                    style={{ borderRadius: "10px", border: "1px solid #80deea" }}
                                                 />
                                             </InputGroup>
                                         </Form.Group>
@@ -179,36 +178,36 @@ const IpdPaymentData = () => {
 
                                     <Col lg={3} md={6} className="mb-3">
                                         <Form.Group>
-                                            <Form.Label style={{ fontWeight: "600", color: "#00838f" }}>Patient Name</Form.Label>
+                                            <Form.Label style={{ fontSize: "13px", fontWeight: "600", color: "#00838f" }}>Patient Name</Form.Label>
                                             <Form.Control
                                                 type="text"
                                                 value={patientName}
                                                 readOnly
-                                                style={{ borderRadius: "8px", backgroundColor: "#f5f5f5", cursor: "not-allowed", border: "1px solid #80deea" }}
+                                                style={{ borderRadius: "10px", backgroundColor: "#f5f5f5", cursor: "not-allowed", border: "1px solid #80deea" }}
                                             />
                                         </Form.Group>
                                     </Col>
 
-                                    <Col lg={2} md={6} className="mb-3">
+                                    <Col lg={3} md={6} className="mb-3">
                                         <Form.Group>
-                                            <Form.Label style={{ fontWeight: "600", color: "#00838f" }}>UID No</Form.Label>
+                                            <Form.Label style={{ fontSize: "13px", fontWeight: "600", color: "#00838f" }}>UID No</Form.Label>
                                             <Form.Control
                                                 type="text"
                                                 value={uhid}
                                                 readOnly
-                                                style={{ borderRadius: "8px", backgroundColor: "#f5f5f5", cursor: "not-allowed", border: "1px solid #80deea" }}
+                                                style={{ borderRadius: "10px", backgroundColor: "#f5f5f5", cursor: "not-allowed", border: "1px solid #80deea" }}
                                             />
                                         </Form.Group>
                                     </Col>
 
                                     <Col lg={2} md={6} className="mb-3">
                                         <Button
-                                            variant="info"
+                                            variant="primary"
                                             disabled={!isInvoiceFound}
                                             onClick={handleViewBillDetails}
                                             style={{
                                                 width: "100%",
-                                                borderRadius: "8px",
+                                                borderRadius: "10px",
                                                 fontWeight: "600",
                                                 backgroundColor: isInvoiceFound ? "#00bcd4" : "#b2ebf2",
                                                 borderColor: isInvoiceFound ? "#00bcd4" : "#b2ebf2",
@@ -265,31 +264,31 @@ const IpdPaymentData = () => {
                                                 {payments.map((pay) => (
                                                     <tr key={pay.srNo} style={{ borderBottom: "1px solid #e0f2f1" }}>
                                                         <td style={{ verticalAlign: "middle" }}>
-                                                            <div style={{ padding: "6px", border: "1px solid #b2ebf2", borderRadius: "4px", width: "40px", textAlign: "center", backgroundColor: "#f0fbff", color: "#00838f", fontWeight: "600" }}>{pay.srNo}</div>
+                                                            <div style={{ padding: "6px", borderRadius: "4px", width: "40px", textAlign: "center", backgroundColor: "#f0fbff", color: "#00838f", fontWeight: "600", border: "1px solid #80deea" }}>{pay.srNo}</div>
                                                         </td>
                                                         <td style={{ verticalAlign: "middle" }}>
-                                                            <Form.Control size="sm" readOnly value={pay.date} style={{ backgroundColor: "#fafafa", border: "1px solid #e0e0e0" }} />
+                                                            <Form.Control size="sm" readOnly value={pay.date} style={{ backgroundColor: "#fafafa", border: "1px solid #80deea" }} />
                                                         </td>
                                                         <td style={{ verticalAlign: "middle" }}>
-                                                            <Form.Control size="sm" readOnly value={`₹${pay.cash}`} style={{ backgroundColor: "#fafafa", border: "1px solid #e0e0e0" }} />
+                                                            <Form.Control size="sm" readOnly value={`₹${pay.cash}`} style={{ backgroundColor: "#fafafa", border: "1px solid #80deea" }} />
                                                         </td>
                                                         <td style={{ verticalAlign: "middle" }}>
-                                                            <Form.Control size="sm" readOnly value={`₹${pay.card}`} style={{ backgroundColor: "#fafafa", border: "1px solid #e0e0e0" }} />
+                                                            <Form.Control size="sm" readOnly value={`₹${pay.card}`} style={{ backgroundColor: "#fafafa", border: "1px solid #80deea" }} />
                                                         </td>
                                                         <td style={{ verticalAlign: "middle" }}>
-                                                            <Form.Control size="sm" readOnly value={`₹${pay.cheque}`} style={{ backgroundColor: "#fafafa", border: "1px solid #e0e0e0" }} />
+                                                            <Form.Control size="sm" readOnly value={`₹${pay.cheque}`} style={{ backgroundColor: "#fafafa", border: "1px solid #80deea" }} />
                                                         </td>
                                                         <td style={{ verticalAlign: "middle" }}>
-                                                            <Form.Control size="sm" readOnly value={`₹${pay.online}`} style={{ backgroundColor: "#fafafa", border: "1px solid #e0e0e0" }} />
+                                                            <Form.Control size="sm" readOnly value={`₹${pay.online}`} style={{ backgroundColor: "#fafafa", border: "1px solid #80deea" }} />
                                                         </td>
                                                         <td style={{ verticalAlign: "middle" }}>
-                                                            <Form.Control size="sm" readOnly value={`₹${pay.internalDiscount}`} style={{ backgroundColor: "#fafafa", border: "1px solid #e0e0e0" }} />
+                                                            <Form.Control size="sm" readOnly value={`₹${pay.internalDiscount}`} style={{ backgroundColor: "#fafafa", border: "1px solid #80deea" }} />
                                                         </td>
                                                         <td style={{ verticalAlign: "middle" }}>
-                                                            <Form.Control size="sm" readOnly value={`₹${pay.hospitalDiscount}`} style={{ backgroundColor: "#fafafa", border: "1px solid #e0e0e0" }} />
+                                                            <Form.Control size="sm" readOnly value={`₹${pay.hospitalDiscount}`} style={{ backgroundColor: "#fafafa", border: "1px solid #80deea" }} />
                                                         </td>
                                                         <td style={{ verticalAlign: "middle" }}>
-                                                            <Button size="sm" style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "8px", backgroundColor: "#00838f", borderColor: "#00838f", color: "white" }}>
+                                                            <Button size="sm" style={{ width: "40px", display: "flex", alignItems: "center", justifyContent: "center", padding: "10px", backgroundColor: "#00838f", borderColor: "#00838f", color: "white" }}>
                                                                 <FaPrint />
                                                             </Button>
                                                         </td>
@@ -299,7 +298,7 @@ const IpdPaymentData = () => {
                                         </Table>
 
                                         {/* PoS Terminal and Add button */}
-                                        <div className="d-flex justify-content-between align-items-center mt-4 px-3" style={{ padding: "15px", backgroundColor: "#f5fcfd", borderRadius: "8px", border: "1px solid #e0f7fa" }}>
+                                        <div className="d-flex justify-content-between align-items-center mt-4 px-3" style={{ padding: "15px", backgroundColor: "#f5fcfd", borderRadius: "8px", border: "1px solid #80deea" }}>
                                             <div className="d-flex align-items-center" style={{ fontSize: "14px", fontWeight: "700", color: "#006064" }}>
                                                 <span className="me-4">Select PoS Terminal :</span>
                                                 <div className="d-flex">

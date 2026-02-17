@@ -697,7 +697,6 @@ export default function ReceptionistDashboard() {
                                             style={{ width: '160px', borderRadius: '8px', border: '1px solid #d1d5db' }}
                                         />
                                     </div> */}
-
                   <div
                     className="d-flex flex-column"
                     style={{
@@ -831,7 +830,7 @@ export default function ReceptionistDashboard() {
                         fontSize: "16px",
                       }}
                     >
-                      Appointment Detail
+                      Appointment Details
                     </h5>
                   </div>
                 </Card.Header>

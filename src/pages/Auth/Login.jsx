@@ -18,7 +18,7 @@ const LOCATIONS_LIST = [
   "Dighi",
   "Thane",
   "Belagavi",
-  "HSR Layout",
+  "HSR",
   "JP Nagar",
   "Navi Mumbai",
   "Chinchwad",

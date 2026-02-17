@@ -320,7 +320,7 @@ export default function Add_Enquiry() {
                     fontSize: "1rem",
                   }}
                 >
-                  Add New Enquiry Detail
+                  Add New Enquiry Details
                 </h4>
               </div>
 

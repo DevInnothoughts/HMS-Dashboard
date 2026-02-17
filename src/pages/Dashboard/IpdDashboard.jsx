@@ -697,7 +697,7 @@ export default function IpdDashboard() {
                         padding: "7px",
                       }}
                     >
-                      Surgery Detail
+                      Surgery Details
                     </h5>
                   </div>
                 </Card.Header>

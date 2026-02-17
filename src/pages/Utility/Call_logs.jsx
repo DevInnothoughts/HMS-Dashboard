@@ -892,7 +892,7 @@ export default function Call_logs() {
                               border: "1px solid #90caf9",
                               textAlign: "center",
                               padding: "0.75rem",
-                              width: "120px",
+                              width: "110px",
                             }}
                           />
 
@@ -1167,7 +1167,7 @@ export default function Call_logs() {
                     <option value="">Select Type</option>
 
                     {formData.patient_type === "New" ||
-                    formData.patient_id === undefined ? (
+                      formData.patient_id === undefined ? (
                       <option value="New">NEW</option>
                     ) : (
                       <>

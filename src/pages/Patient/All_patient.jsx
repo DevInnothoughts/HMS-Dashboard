@@ -811,17 +811,14 @@ export default function All_patient() {
         break;
       case "old_ref":
         reference_type = "old_ref";
-        ref = `${oldPatientDetails.patient_ref_no || ""},${
-          oldPatientDetails.old_patient_name || ""
-        },${oldPatientDetails.old_patient_id_value || ""},${
-          oldPatientDetails.old_patient_pincode || ""
-        }`;
+        ref = `${oldPatientDetails.patient_ref_no || ""},${oldPatientDetails.old_patient_name || ""
+          },${oldPatientDetails.old_patient_id_value || ""},${oldPatientDetails.old_patient_pincode || ""
+          }`;
         break;
       case "family_friends":
         reference_type = "family_friends";
-        ref = `${referenceDetails.friendname || ""},${
-          referenceDetails.friendno || ""
-        }`;
+        ref = `${referenceDetails.friendname || ""},${referenceDetails.friendno || ""
+          }`;
         break;
       case "hhc_board":
         reference_type = "hhc_board";
@@ -933,11 +930,10 @@ export default function All_patient() {
 
   const statusBodyTemplate = (formData) => (
     <span
-      className={`badge ${
-        formData.status
-          ? ` status- ${formData.status.toLowerCase()}`
-          : "status-unknown"
-      }`}
+      className={`badge ${formData.status
+        ? ` status- ${formData.status.toLowerCase()}`
+        : "status-unknown"
+        }`}
     >
       {formData.status || "Unknown"}
     </span>
@@ -1097,7 +1093,7 @@ export default function All_patient() {
       [
         "Bangalore",
         "Indiranagar",
-        "HSR Layout",
+        "HSR",
         "Sahakarnagar",
         "Rajajinagar",
         "Sarjapura",
@@ -1210,14 +1206,7 @@ export default function All_patient() {
     <p><b>Alternate Contact No :-</b>&nbsp;&nbsp;${patient.mobile_2 || "-"}</p>
   </td>
   <td style="width:50%; vertical-align: top; line-height: 1.3;">
- <p>
-  <b>D.O.B :-</b>&nbsp;&nbsp;
-  {patient.birth_date 
-    ? moment(patient.birth_date, "YYYY-MM-DD").format("DD-MM-YYYY") === "Invalid date" 
-      ? moment(patient.birth_date).format("DD-MM-YYYY")  
-      : moment(patient.birth_date, "YYYY-MM-DD").format("DD-MM-YYYY")
-    : "-"}
-</p>
+    <p><b>D.O.B :-</b>&nbsp;&nbsp;${patient.birth_date ? patient.birth_date : "-"}</p>
     <p><b>Age :-</b>&nbsp;&nbsp;${patient.age || "-"}</p>
     <p><b>Email :-</b>&nbsp;&nbsp;${patient.email || "-"}</p>
     <p><b>Occupation :-</b>&nbsp;&nbsp;${patient.occupation || "-"}</p>
@@ -3095,7 +3084,7 @@ export default function All_patient() {
             style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}
           >
             <FeatherIcon icon="edit" className="me-2" size="16" />
-            Edit Patient Detail
+            Edit Patient Details
           </Modal.Title>
         </Modal.Header>
 

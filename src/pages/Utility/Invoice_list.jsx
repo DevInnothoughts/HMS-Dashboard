@@ -817,15 +817,15 @@ const InvoiceList = () => {
                 </td>
               </tr>
               ${dynamicRows
-                .map(
-                  (row) => `
+          .map(
+            (row) => `
                 <tr>
                 <td style=" color:#000; text-align:left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-bottom: 1px dotted #666666;">${row.label}</td>
                 <td style=" color:#000; text-align:right; width: 100px; white-space: nowrap; border-bottom: 1px dotted #666666;">${parseFloat(row.value).toFixed(2)}</td>
                 </tr>
               `,
-                )
-                .join("")}
+          )
+          .join("")}
             </table>
           </td>
       <td style="width: 50%; vertical-align: top; padding-left: 10px;">
@@ -842,9 +842,8 @@ const InvoiceList = () => {
         ${parseFloat(invoice.totalamt).toLocaleString()}.00
       </td>
     </tr>
-    ${
-      invoice.discount > 0
-        ? `
+    ${invoice.discount > 0
+          ? `
     <tr>
       <td style="padding: 8px 0; border-bottom: 1px dotted #666666;">
         Discount
@@ -854,8 +853,8 @@ const InvoiceList = () => {
       </td>
     </tr>
     `
-        : ""
-    }
+          : ""
+        }
   </table>
 </td>
         </tr>
@@ -916,7 +915,7 @@ const InvoiceList = () => {
   `;
       printWindow.document.write(printContent);
       printWindow.document.close();
-      setTimeout(() => {}, 1000);
+      setTimeout(() => { }, 1000);
     });
   };
 
@@ -1315,7 +1314,7 @@ const InvoiceList = () => {
             style={{ color: "#00838f", fontWeight: "bold", fontSize: "1.1rem" }}
           >
             <FeatherIcon icon="edit" className="me-2" size={18} />
-            Edit Bill Detail
+            Edit Bill Details
           </Modal.Title>
         </Modal.Header>
 
@@ -2087,49 +2086,49 @@ const InvoiceList = () => {
 
                       {(selectedInvoice.bill_Type === "non_insurance" ||
                         selectedInvoice.bill_Type === "charity") && (
-                        <Col md={4}>
-                          <Form.Label
-                            style={{
-                              fontSize: "12px",
-                              fontWeight: "600",
-                              marginBottom: "2px",
-                            }}
-                            className="text-muted"
-                          >
-                            Discount Amount (₹)
-                          </Form.Label>
-                          <Form.Control
-                            size="sm"
-                            onWheel={(e) => e.target.blur()}
-                            type="number"
-                            style={{
-                              borderRadius: "10px",
-                              fontSize: "12px",
-                              border: "1px solid #4dd0e1",
-                            }}
-                            value={selectedInvoice.discount}
-                            onChange={(e) => {
-                              const disc = parseFloat(e.target.value) || 0;
-                              const subTotal =
-                                parseFloat(modalInvoiceData.Sub_Total) || 0;
-                              const newPayable = Math.max(
-                                0,
-                                subTotal - disc,
-                              ).toFixed(2);
-                              setModalInvoiceData((prev) => ({
-                                ...prev,
-                                discount: disc,
-                                payableAmount: newPayable,
-                              }));
-                              setSelectedInvoice((prev) => ({
-                                ...prev,
-                                discount: disc,
-                                payable_amt: newPayable,
-                              }));
-                            }}
-                          />
-                        </Col>
-                      )}
+                          <Col md={4}>
+                            <Form.Label
+                              style={{
+                                fontSize: "12px",
+                                fontWeight: "600",
+                                marginBottom: "2px",
+                              }}
+                              className="text-muted"
+                            >
+                              Discount Amount (₹)
+                            </Form.Label>
+                            <Form.Control
+                              size="sm"
+                              onWheel={(e) => e.target.blur()}
+                              type="number"
+                              style={{
+                                borderRadius: "10px",
+                                fontSize: "12px",
+                                border: "1px solid #4dd0e1",
+                              }}
+                              value={selectedInvoice.discount}
+                              onChange={(e) => {
+                                const disc = parseFloat(e.target.value) || 0;
+                                const subTotal =
+                                  parseFloat(modalInvoiceData.Sub_Total) || 0;
+                                const newPayable = Math.max(
+                                  0,
+                                  subTotal - disc,
+                                ).toFixed(2);
+                                setModalInvoiceData((prev) => ({
+                                  ...prev,
+                                  discount: disc,
+                                  payableAmount: newPayable,
+                                }));
+                                setSelectedInvoice((prev) => ({
+                                  ...prev,
+                                  discount: disc,
+                                  payable_amt: newPayable,
+                                }));
+                              }}
+                            />
+                          </Col>
+                        )}
 
                       <Col md={5}>
                         <Form.Label
