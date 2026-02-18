@@ -45,7 +45,7 @@ export const receiptlocations = {
     "phone": "9175232308",
     "hospitalcode": "VS"
   },
-  "Salunkhe Vihar": {
+  "Salunkhe-Vihar": {
     "address": "<b>Salunkhe-Vihar : </b><br>101/102 Girme Towers, Salunkhe Vihar Road,<br>Next to HDFC Bank, Opp. Kotak Mahindra Bank,<br>Oxford Village, Kedari Nagar, Wanowrie,<br>Pune, Maharashtra 411004.",
     "phone": "8888522226",
     "hospitalcode": "SV"
@@ -110,7 +110,7 @@ export const receiptlocations = {
     "phone": "9731118056",
     "hospitalcode": "SN"
   },
-  "Rajajinagar": {
+  "Rajaji Nagar": {
     "address": "<b>Rajajinagar : </b><br>2nd floor, 9th Cross, Dr MC Modi Hospital Rd, above HDFC Bank, West of Chord Road, Rajajinagar, Bengaluru, Karnataka 560079.",
     "phone": "7996126669",
     "hospitalcode": "RN"

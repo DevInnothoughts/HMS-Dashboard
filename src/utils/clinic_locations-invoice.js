@@ -9,7 +9,7 @@ export const clinincLoc = {
     "invoiceHelplineNo": "8888288884",
     "EmergencySMS": "8888200006"
   },
-  "Pimpri-Chinchwad": {
+  "Pimrpi-Chinchwad": {
     "invoiceAddress": "<b>Healing Hands Clinic </b><br> Premier Plaza,Anand Nagar, Pimpri-Chinchwad-411019",
     "invoiceHelplineNo": "8888200004",
     "EmergencySMS": "8888200006"
@@ -109,7 +109,7 @@ export const clinincLoc = {
     "invoiceHelplineNo": "9731118056",
     "EmergencySMS": ""
   },
-  "Rajajinagar": {
+  "Rajaji Nagar": {
     "invoiceAddress": "Healing Hands Clinic <br> 2nd floor, 9th Cross, Dr MC Modi Hospital Rd, above HDFC Bank, West of Chord Road, Rajajinagar, Bengaluru, Karnataka 560079.",
     "invoiceHelplineNo": "7996126669",
     "EmergencySMS": ""
