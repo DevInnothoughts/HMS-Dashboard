@@ -23,7 +23,10 @@ import "react-datepicker/dist/react-datepicker.css";
 import "../../styles/styles.css";
 import { toast } from "react-hot-toast";
 
-export const BASE_URL = "http://194.195.117.79:5100/api";
+ 
+
+// const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
+const BASE_URL = "http://194.195.117.79:5100/api"
 
 const Toast = Swal.mixin({
   toast: true,
@@ -176,20 +179,26 @@ export default function Call_logs() {
     note: "",
   });
 
+  // const formatToApiDate = (date) => {
+  //   const validDate = date instanceof Date ? date : new Date(date);
+  //   if (isNaN(validDate)) {
+  //     console.error("Invalid date:", date);
+  //     return null;
+  //   }
+  //   const day = String(validDate.getDate()).padStart(2, "0");
+  //   const month = String(validDate.getMonth() + 1).padStart(2, "0");
+  //   const year = validDate.getFullYear();
+  //   return `${day}-${month}-${year}`;
+  // };
+
   const formatToApiDate = (date) => {
-    const validDate = date instanceof Date ? date : new Date(date);
-    if (isNaN(validDate)) {
-      console.error("Invalid date:", date);
-      return null;
-    }
-    const day = String(validDate.getDate()).padStart(2, "0");
-    const month = String(validDate.getMonth() + 1).padStart(2, "0");
-    const year = validDate.getFullYear();
-    return `${day}-${month}-${year}`;
+    if (!date) return null;
+    // Use moment to ensure we get the correct Day-Month-Year regardless of UTC offset
+    return moment(date).format("DD-MM-YYYY");
   };
 
   const fetchCallLogsData = async () => {
-    console.log(currentLocation);
+    console.log(currentLocation, fromDate, toDate);
     setLoading(true);
     try {
       const url = new URL(`${BASE_URL}/V1/ivrdata/listIvrdata`);
@@ -198,7 +207,7 @@ export default function Call_logs() {
         to: formatToApiDate(toDate),
         location: currentLocation,
       };
-      // console.log(params);
+      console.log(params);
 
       Object.keys(params).forEach((key) => {
         if (params[key]) url.searchParams.append(key, params[key]);
@@ -587,9 +596,8 @@ export default function Call_logs() {
             <DatePicker
               selected={toDate ? new Date(toDate) : null}
               onChange={(date) => {
-                const formattedDate = date
-                  ? date.toISOString().split("T")[0]
-                  : "";
+                // FIX: Use moment to format local date instead of toISOString()
+                const formattedDate = date ? moment(date).format("YYYY-MM-DD") : "";
                 setToDate(formattedDate);
               }}
               dateFormat="dd-MM-yyyy"
@@ -870,18 +878,16 @@ export default function Call_logs() {
                               width: "90px",
                             }}
                           />
-
                           <Column
                             field="call_date"
                             header="Date"
                             body={(rowData) => {
                               const rawDate = rowData.call_date;
                               if (!rawDate) return "-";
-                              const dateObj = moment(rawDate, [
-                                "YYYY-DD-MM",
-                                "YYYY-MM-DD",
-                                "DD-MM-YYYY",
-                              ]);
+                              
+                              // Remove the ambiguous "YYYY-DD-MM" format
+                              // Force specific parsing of the ISO date returned by the DB
+                              const dateObj = moment(rawDate, "YYYY-MM-DD");
 
                               return dateObj.isValid()
                                 ? dateObj.format("DD-MM-YYYY")

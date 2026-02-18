@@ -23,6 +23,11 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import moment from "moment";
 
+ 
+
+// const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
+const BASE_URL = "http://194.195.117.79:5100/api"
+
 const NoteCell = ({ note }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -51,7 +56,7 @@ const NoteCell = ({ note }) => {
     </div>
   );
 };
-const BASE_URL = "http://194.195.117.79:5100/api";
+
 const TYPE_LIST = ["New", "Follow", "Post Operative", "Other"];
 const REFERENCE_OPTIONS = [
   "Family / Friends",

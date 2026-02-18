@@ -19,7 +19,10 @@
 // import SimpleBar from "simplebar-react";
 
 // // Placeholder Base URL - replace with actual if API integration is needed later
-// const BASE_URL = "http://194.195.117.79:5100/api";
+//  
+
+// // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
+// const BASE_URL = "http://194.195.117.79:5100/api"
 
 // const PharmacyCollectionReport = () => {
 //   const [fromDate, setFromDate] = useState("");
@@ -429,7 +432,10 @@ import PageBreadcrumb from "../../../components/PageBreadcrumb";
 import SimpleBar from "simplebar-react";
 import { decodeJwt } from "../../../utils/decode-jwt"; // Ensure this utility exists
 
-const BASE_URL = "http://194.195.117.79:5100/api";
+ 
+
+// const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
+const BASE_URL = "http://194.195.117.79:5100/api"
 
 const PharmacyCollectionReport = () => {
   const [fromDate, setFromDate] = useState("");

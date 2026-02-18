@@ -23,6 +23,11 @@ import { FilterMatchMode } from "primereact/api";
 import moment from "moment";
 import Swal from "sweetalert2";
 
+ 
+
+// const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
+const BASE_URL = "http://194.195.117.79:5100/api"
+
 const Toast = Swal.mixin({
   toast: true,
   position: "top-end",
@@ -35,7 +40,6 @@ const Toast = Swal.mixin({
   },
 });
 
-const BASE_URL = "http://194.195.117.79:5100/api";
 
 export default function EnquiryList() {
   const [currentLocation, setCurrentLocation] = useState("default");

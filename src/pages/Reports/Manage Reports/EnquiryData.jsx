@@ -12,7 +12,10 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { decodeJwt } from "../../../utils/decode-jwt";
 
-const BASE_URL = "http://194.195.117.79:5100/api";
+ 
+
+// const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
+const BASE_URL = "http://194.195.117.79:5100/api"
 
 const EnquiryData = () => {
   const [fromDate, setFromDate] = useState("");
@@ -55,6 +58,7 @@ const EnquiryData = () => {
 
     setLoading(true);
     try {
+      console.log(fromDate, toDate);
       // Your controller expects Fromdate and Todate in the body via POST
       const response = await fetch(`${BASE_URL}/V1/managereports/getEnquiryReport`, {
         method: "POST",
@@ -75,7 +79,7 @@ const EnquiryData = () => {
       }
 
       const data = await response.json();
-
+      console.log(data);
       const formattedData = data.map((item, index) => ({
         ...item,
         srNo: index + 1,

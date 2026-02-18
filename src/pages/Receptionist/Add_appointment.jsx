@@ -11,6 +11,11 @@ import { toast } from "react-hot-toast";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import { decodeJwt } from "../../utils/decode-jwt";
 
+ 
+
+// const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
+const BASE_URL = "http://194.195.117.79:5100/api"
+
 const Toast = Swal.mixin({
   toast: true,
   position: "top-end",
@@ -77,7 +82,6 @@ const countryNumberLimits = {
   default: { min: 7, max: 15 },
 };
 
-const BASE_URL = "http://194.195.117.79:5100/api";
 
 export default function Add_appointment() {
   const [loading, setLoading] = useState(false);
