@@ -475,7 +475,7 @@
 //       document.body.removeChild(link);
 //     }
 //   };
-  
+
 //   return (
 //     <div className="themebody-wrap" style={{ padding: "20px", background: "linear-gradient(to right, #e0f7fa, #80deea)", minHeight: "100vh" }}>
 //       <PageBreadcrumb pagename="OPD + IPD Collection Graph" />
@@ -534,7 +534,7 @@ import PageBreadcrumb from "../../../components/PageBreadcrumb";
 import SimpleBar from "simplebar-react";
 import { decodeJwt } from "../../../utils/decode-jwt";
 
- 
+
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
 const BASE_URL = "http://194.195.117.79:5100/api"
@@ -634,14 +634,14 @@ const OPDIPDCollGraph = () => {
   const getBaseOptions = (categories, isDaily) => ({
     chart: { type: 'bar', toolbar: { show: false }, stacked: false },
     plotOptions: { bar: { horizontal: false, columnWidth: '55%', borderRadius: 4 } },
-    xaxis: { 
-      categories, 
+    xaxis: {
+      categories,
       labels: { rotate: -45, style: { fontSize: '10px', fontWeight: 600, colors: '#006064' } },
       title: { text: isDaily ? "Daily Receipt Dates" : "Month and Year", style: { color: '#006064', fontWeight: 'bold' } }
     },
-    yaxis: { 
-        title: { text: 'Amount (₹)', style: { color: '#006064', fontWeight: 'bold' } },
-        labels: { style: { colors: '#006064' } }
+    yaxis: {
+      title: { text: 'Amount (₹)', style: { color: '#006064', fontWeight: 'bold' } },
+      labels: { style: { colors: '#006064' } }
     },
     colors: ['#00acc1', '#007c91'],
     legend: { position: 'top', fontWeight: 'bold' },
@@ -680,8 +680,8 @@ const OPDIPDCollGraph = () => {
                 <Card.Body className="p-4">
                   <Form onSubmit={handleSearch} className="mb-5">
                     <Row className="align-items-end g-2 flex-nowrap">
-                      <Col><Form.Label className="fw-bold small" style={{color: '#006064'}}>From Date</Form.Label><Form.Control type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} style={{border: '2px solid #4dd0e1', backgroundColor: '#e0f7fa'}} /></Col>
-                      <Col><Form.Label className="fw-bold small" style={{color: '#006064'}}>To Date</Form.Label><Form.Control type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} style={{border: '2px solid #4dd0e1', backgroundColor: '#e0f7fa'}} /></Col>
+                      <Col><Form.Label className="fw-bold small" style={{ color: '#006064' }}>From Date</Form.Label><Form.Control type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} style={{ border: '2px solid #4dd0e1', backgroundColor: '#e0f7fa' }} /></Col>
+                      <Col><Form.Label className="fw-bold small" style={{ color: '#006064' }}>To Date</Form.Label><Form.Control type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} style={{ border: '2px solid #4dd0e1', backgroundColor: '#e0f7fa' }} /></Col>
                       <Col><button className="btn btn-primary w-100 fw-bold" type="submit" style={{ height: '42px', background: '#00acc1', border: 'none' }}>{loading ? <Spinner size="sm" /> : "Search"}</button></Col>
                     </Row>
                   </Form>

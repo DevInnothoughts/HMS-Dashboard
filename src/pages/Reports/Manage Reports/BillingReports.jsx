@@ -12,7 +12,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { decodeJwt } from "../../../utils/decode-jwt";
 
- 
+
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
 const BASE_URL = "http://194.195.117.79:5100/api"
@@ -74,7 +74,7 @@ const BillingReport = () => {
       if (!response.ok) throw new Error("Failed to fetch billing data");
 
       const data = await response.json();
-      
+
       // 3. Map Database fields to UI fields
       const formattedData = data.map((item) => ({
         ...item,

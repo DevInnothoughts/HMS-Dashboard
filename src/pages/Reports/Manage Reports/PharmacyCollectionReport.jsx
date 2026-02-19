@@ -144,90 +144,90 @@
 //     saveAs(data, "Pharmacy_Collection_Report" + fileExtension);
 //   };
 
-  // const downloadPDF = () => {
-  //   const doc = new jsPDF();
-  //   doc.text("Pharmacy Collection Report", 14, 15);
+// const downloadPDF = () => {
+//   const doc = new jsPDF();
+//   doc.text("Pharmacy Collection Report", 14, 15);
 
-  //   const tableColumn = ["Sr No", "Date", "Bill No", "Patient Name", "Prescription Type", "Cash", "Online/UPI", "Card", "Discount"];
-  //   const tableRows = tableData.map((item, index) => [
-  //     index + 1,
-  //     formatDateDisplay(item.date),
-  //     item.billNo,
-  //     item.patientName,
-  //     item.prescriptionType,
-  //     item.cashamt,
-  //     item.onlineUpiAmt,
-  //     item.cardamt,
-  //     item.discount,
-  //   ]);
+//   const tableColumn = ["Sr No", "Date", "Bill No", "Patient Name", "Prescription Type", "Cash", "Online/UPI", "Card", "Discount"];
+//   const tableRows = tableData.map((item, index) => [
+//     index + 1,
+//     formatDateDisplay(item.date),
+//     item.billNo,
+//     item.patientName,
+//     item.prescriptionType,
+//     item.cashamt,
+//     item.onlineUpiAmt,
+//     item.cardamt,
+//     item.discount,
+//   ]);
 
-  //   // Add totals row
-  //   tableRows.push([
-  //     "Total", "", "", "", "", totals.cash, totals.onlineUpi, totals.card, totals.discount
-  //   ]);
+//   // Add totals row
+//   tableRows.push([
+//     "Total", "", "", "", "", totals.cash, totals.onlineUpi, totals.card, totals.discount
+//   ]);
 
-  //   autoTable(doc, {
-  //     head: [tableColumn],
-  //     body: tableRows,
-  //     startY: 20,
-  //     theme: 'grid',
-  //     styles: { fontSize: 8 },
-  //     headStyles: { fillColor: [0, 172, 193] }
-  //   });
+//   autoTable(doc, {
+//     head: [tableColumn],
+//     body: tableRows,
+//     startY: 20,
+//     theme: 'grid',
+//     styles: { fontSize: 8 },
+//     headStyles: { fillColor: [0, 172, 193] }
+//   });
 
-  //   doc.save("Pharmacy_Collection_Report.pdf");
-  // };
+//   doc.save("Pharmacy_Collection_Report.pdf");
+// };
 
-  // const renderHeader = () => {
-  //   return (
-  //     <div className="d-flex justify-content-between align-items-center mb-1">
-  //       <div className="d-flex align-items-center" style={{ gap: "20px" }}>
-  //         <div className="d-flex align-items-center">
-  //           <span className="me-1" style={{ fontWeight: "bold", color: "#006064" }}>Show</span>
-  //           <Form.Select
-  //             size="sm"
-  //             style={{ width: "70px", borderRadius: "8px", border: "1px solid #4dd0e1" }}
-  //             value={rows}
-  //             onChange={(e) => setRows(Number(e.target.value))}
-  //           >
-  //             <option value={10}>10</option>
-  //             <option value={25}>25</option>
-  //             <option value={50}>50</option>
-  //             <option value={100}>100</option>
-  //           </Form.Select>
-  //         </div>
-  //         <div className="d-flex align-items-center">
-  //           <span className="me-1" style={{ fontWeight: "bold", color: "#006064" }}>Search</span>
-  //           <span className="p-input-icon-left">
-  //             <InputText
-  //               value={searchText}
-  //               onChange={onGlobalFilterChange}
-  //               placeholder="Global Search..."
-  //               className="p-inputtext-sm"
-  //               style={{ width: "200px", borderRadius: "8px", border: "1px solid #4dd0e1" }}
-  //             />
-  //           </span>
-  //         </div>
-  //       </div>
-  //       <div className="d-flex" style={{ gap: "10px" }}>
-  //         <button
-  //           className="btn btn-success btn-sm"
-  //           onClick={exportToExcel}
-  //           style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px" }}
-  //         >
-  //           <i className="fa fa-file-excel-o"></i> Download Excel
-  //         </button>
-  //         <button
-  //           className="btn btn-danger btn-sm"
-  //           onClick={downloadPDF}
-  //           style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px" }}
-  //         >
-  //           <i className="fa fa-file-pdf-o"></i> Download PDF
-  //         </button>
-  //       </div>
-  //     </div>
-  //   );
-  // };
+// const renderHeader = () => {
+//   return (
+//     <div className="d-flex justify-content-between align-items-center mb-1">
+//       <div className="d-flex align-items-center" style={{ gap: "20px" }}>
+//         <div className="d-flex align-items-center">
+//           <span className="me-1" style={{ fontWeight: "bold", color: "#006064" }}>Show</span>
+//           <Form.Select
+//             size="sm"
+//             style={{ width: "70px", borderRadius: "8px", border: "1px solid #4dd0e1" }}
+//             value={rows}
+//             onChange={(e) => setRows(Number(e.target.value))}
+//           >
+//             <option value={10}>10</option>
+//             <option value={25}>25</option>
+//             <option value={50}>50</option>
+//             <option value={100}>100</option>
+//           </Form.Select>
+//         </div>
+//         <div className="d-flex align-items-center">
+//           <span className="me-1" style={{ fontWeight: "bold", color: "#006064" }}>Search</span>
+//           <span className="p-input-icon-left">
+//             <InputText
+//               value={searchText}
+//               onChange={onGlobalFilterChange}
+//               placeholder="Global Search..."
+//               className="p-inputtext-sm"
+//               style={{ width: "200px", borderRadius: "8px", border: "1px solid #4dd0e1" }}
+//             />
+//           </span>
+//         </div>
+//       </div>
+//       <div className="d-flex" style={{ gap: "10px" }}>
+//         <button
+//           className="btn btn-success btn-sm"
+//           onClick={exportToExcel}
+//           style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px" }}
+//         >
+//           <i className="fa fa-file-excel-o"></i> Download Excel
+//         </button>
+//         <button
+//           className="btn btn-danger btn-sm"
+//           onClick={downloadPDF}
+//           style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px" }}
+//         >
+//           <i className="fa fa-file-pdf-o"></i> Download PDF
+//         </button>
+//       </div>
+//     </div>
+//   );
+// };
 
 //   const footerGroup = (
 //     <ColumnGroup>
@@ -241,7 +241,7 @@
 //     </ColumnGroup>
 //   );
 
-  // const header = renderHeader();
+// const header = renderHeader();
 
 //   return (
 //     <div
@@ -432,7 +432,7 @@ import PageBreadcrumb from "../../../components/PageBreadcrumb";
 import SimpleBar from "simplebar-react";
 import { decodeJwt } from "../../../utils/decode-jwt"; // Ensure this utility exists
 
- 
+
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
 const BASE_URL = "http://194.195.117.79:5100/api"
@@ -448,7 +448,7 @@ const PharmacyCollectionReport = () => {
   const [filters, setFilters] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
-  
+
   const [totals, setTotals] = useState({ cash: 0, onlineUpi: 0, card: 0, discount: 0 });
 
   // 1. Initialize Location from Token
@@ -506,12 +506,12 @@ const PharmacyCollectionReport = () => {
       if (!response.ok) throw new Error("Failed to fetch data");
 
       const result = await response.json();
-      
+
       // 3. Process Data mimicking the AJAX loop logic
       const formattedData = result.map((item) => {
         const paymentMode = item.paymentmode;
         const total = parseFloat(item.final_total) || 0;
-        
+
         return {
           ...item,
           date: item.created_at ? item.created_at.split('T')[0] : "",
@@ -555,7 +555,7 @@ const PharmacyCollectionReport = () => {
       "Card": item.cardamt.toFixed(2),
       "Discount": item.discount.toFixed(2),
     }));
-    
+
     excelData.push({ "Sr No": "TOTAL", "Cash": totals.cash.toFixed(2), "Online/UPI": totals.onlineUpi.toFixed(2), "Card": totals.card.toFixed(2), "Discount": totals.discount.toFixed(2) });
 
     const ws = XLSX.utils.json_to_sheet(excelData);

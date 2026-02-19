@@ -12,7 +12,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { decodeJwt } from "../../../utils/decode-jwt";
 
- 
+
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
 const BASE_URL = "http://194.195.117.79:5100/api"
@@ -25,7 +25,7 @@ const ReferenceReport = () => {
   const [loading, setLoading] = useState(false);
   const chartRef = useRef(null);
   const [currentLocation, setCurrentLocation] = useState("default");
-  
+
   const [referenceData, setReferenceData] = useState([]);
   const [filters, setFilters] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -79,7 +79,7 @@ const ReferenceReport = () => {
 
       if (!response.ok) throw new Error("Failed to fetch data");
       const result = await response.json();
-      
+
       const formattedData = result.map(item => ({
         type: getFriendlyName(item.reference_type),
         count: parseInt(item.refrencecount) || 0

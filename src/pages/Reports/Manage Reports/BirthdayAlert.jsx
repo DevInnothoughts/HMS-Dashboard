@@ -13,69 +13,69 @@ import autoTable from "jspdf-autotable";
 
 import { decodeJwt } from "../../../utils/decode-jwt"; // Ensure path is correct
 
- 
+
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
 const BASE_URL = "http://194.195.117.79:5100/api"
 
 const BirthdayAlert = () => {
-    const currentDate = moment().format("DD-MM-YYYY");
-    const [patients, setPatients] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [currentLocation, setCurrentLocation] = useState("default");
-    
-    const [rows, setRows] = useState(10);
-    const [first, setFirst] = useState(0);
-    const [filters, setFilters] = useState({
-      global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    });
-    const [globalFilterValue, setGlobalFilterValue] = useState("");
-  
-    // 1. Get Location from Token
-    useEffect(() => {
-      const token = localStorage.getItem("token");
-      if (token) {
-        const payload = decodeJwt(token);
-        if (payload?.jobLocation) {
-          setCurrentLocation(payload.jobLocation);
-        }
+  const currentDate = moment().format("DD-MM-YYYY");
+  const [patients, setPatients] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState("default");
+
+  const [rows, setRows] = useState(10);
+  const [first, setFirst] = useState(0);
+  const [filters, setFilters] = useState({
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+  });
+  const [globalFilterValue, setGlobalFilterValue] = useState("");
+
+  // 1. Get Location from Token
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const payload = decodeJwt(token);
+      if (payload?.jobLocation) {
+        setCurrentLocation(payload.jobLocation);
       }
-    }, []);
-  
-    // 2. API Fetching Function
-    const fetchBirthdays = useCallback(async () => {
-      if (currentLocation === "default") return;
-  
-      setLoading(true);
-      try {
-        const response = await fetch(
-          `${BASE_URL}/V1/managereports/getBirthdayAlerts?location=${currentLocation}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-  
-        if (response.ok) {
-          const result = await response.json();
-          console.log("BIRTHDAY ALERT: ", result);
-          // Extracting data from your controller's structure: result.reportsdetails.data
-          const birthdayData = result.reportsdetails?.data || [];
-          setPatients(birthdayData);
+    }
+  }, []);
+
+  // 2. API Fetching Function
+  const fetchBirthdays = useCallback(async () => {
+    if (currentLocation === "default") return;
+
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `${BASE_URL}/V1/managereports/getBirthdayAlerts?location=${currentLocation}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         }
-      } catch (error) {
-        console.error("Error fetching birthdays:", error);
-      } finally {
-        setLoading(false);
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log("BIRTHDAY ALERT: ", result);
+        // Extracting data from your controller's structure: result.reportsdetails.data
+        const birthdayData = result.reportsdetails?.data || [];
+        setPatients(birthdayData);
       }
-    }, [currentLocation]);
-  
-    useEffect(() => {
-      fetchBirthdays();
-    }, [fetchBirthdays]);
+    } catch (error) {
+      console.error("Error fetching birthdays:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentLocation]);
+
+  useEffect(() => {
+    fetchBirthdays();
+  }, [fetchBirthdays]);
 
 
   const onGlobalFilterChange = (e) => {

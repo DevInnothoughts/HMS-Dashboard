@@ -443,7 +443,7 @@ import PageBreadcrumb from "../../../components/PageBreadcrumb";
 import SimpleBar from "simplebar-react";
 import { decodeJwt } from "../../../utils/decode-jwt";
 
- 
+
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
 const BASE_URL = "http://194.195.117.79:5100/api"
@@ -633,8 +633,8 @@ const InsuranceDueReport = () => {
                       <InputText value={searchText} onChange={onGlobalFilterChange} placeholder="Filter records..." className="p-inputtext-sm" />
                     </div>
                     <div className="d-flex gap-2">
-                        <button className="btn btn-success btn-sm" onClick={exportToExcel}>Excel</button>
-                        <button className="btn btn-danger btn-sm" onClick={() => {/* Existing PDF logic */}}>PDF</button>
+                      <button className="btn btn-success btn-sm" onClick={exportToExcel}>Excel</button>
+                      <button className="btn btn-danger btn-sm" onClick={() => {/* Existing PDF logic */ }}>PDF</button>
                     </div>
                   </div>
 

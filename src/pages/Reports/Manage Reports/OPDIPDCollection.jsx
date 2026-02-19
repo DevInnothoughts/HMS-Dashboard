@@ -13,7 +13,7 @@ import PageBreadcrumb from "../../../components/PageBreadcrumb";
 import SimpleBar from "simplebar-react";
 import { decodeJwt } from "../../../utils/decode-jwt"; // Utility for location extraction
 
- 
+
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
 const BASE_URL = "http://194.195.117.79:5100/api"
@@ -118,7 +118,7 @@ const OPDIPDCollection = () => {
       if (!response.ok) throw new Error("Failed to fetch consolidated data");
 
       const result = await response.json();
-      
+
       // Merge OPD and IPD arrays into one table-ready array
       const mergedData = mergeCollectionData(result.opdData || [], result.ipdData || []);
 

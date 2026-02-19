@@ -23,7 +23,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import "../../styles/styles.css";
 import { toast } from "react-hot-toast";
 
- 
+
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
 const BASE_URL = "http://194.195.117.79:5100/api"
@@ -884,7 +884,7 @@ export default function Call_logs() {
                             body={(rowData) => {
                               const rawDate = rowData.call_date;
                               if (!rawDate) return "-";
-                              
+
                               // Remove the ambiguous "YYYY-DD-MM" format
                               // Force specific parsing of the ISO date returned by the DB
                               const dateObj = moment(rawDate, "YYYY-MM-DD");

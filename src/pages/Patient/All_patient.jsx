@@ -25,7 +25,7 @@ import DatePicker from "react-datepicker";
 // import NavBarP from "../../components/NavbarP";
 import logo from "../../assets/images/3.png";
 
- 
+
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
 const BASE_URL = "http://194.195.117.79:5100/api"
@@ -871,6 +871,8 @@ export default function All_patient() {
 
     const updatedPatientData = {
       ...formData,
+      patientName: formData.name,
+      mobileNo: formData.phone,
       date: formData.date || "",
       birth_date: formData.birth_date,
       age: calculateAge(formData.birth_date),
@@ -912,6 +914,8 @@ export default function All_patient() {
               : p,
           ),
         );
+
+        await fetchPatientsData();
 
         setShowEditPatientModal(false);
         setSelectedPatient(null);
@@ -1452,7 +1456,7 @@ export default function All_patient() {
             <label
               className="control-label"
               style={{
-                marginTop: "20px",
+                marginTop: "10px",
                 fontSize: "12px",
                 fontWeight: "bold",
                 marginBottom: "5px",
@@ -1473,6 +1477,7 @@ export default function All_patient() {
                 className="form-control"
                 type="tel"
                 name="patient_ref_no"
+                onWheel={(e) => e.target.blur()}
                 placeholder="Enter Contact Number"
                 value={oldPatientDetails.patient_ref_no || ""}
                 onChange={(e) => {
@@ -3304,6 +3309,7 @@ export default function All_patient() {
                       type="number"
                       name="phone"
                       value={formData.phone}
+                      onWheel={(e) => e.target.blur()}
                       onChange={handleInputChange}
                       placeholder="Enter Contact Number"
                       style={{
@@ -3326,6 +3332,7 @@ export default function All_patient() {
                       type="number"
                       name="mobile_2"
                       value={formData.mobile_2}
+                      onWheel={(e) => e.target.blur()}
                       onChange={handleInputChange}
                       placeholder="Enter Secondary Contact No"
                       style={{
@@ -3376,6 +3383,7 @@ export default function All_patient() {
                       required
                       type="text"
                       name="address"
+                      onWheel={(e) => e.target.blur()}
                       value={formData.address || ""}
                       onChange={handleInputChange}
                       placeholder="Enter Residential Address"
@@ -3399,6 +3407,7 @@ export default function All_patient() {
                       required
                       type="number"
                       name="pincode"
+                      onWheel={(e) => e.target.blur()}
                       value={formData.pincode || ""}
                       onChange={handleInputChange}
                       placeholder="Enter Pincode"
@@ -3474,6 +3483,7 @@ export default function All_patient() {
                           : ""
                       }
                       onChange={handleInputChange}
+                      onWheel={(e) => e.target.blur()}
                       placeholder="Enter ID Number"
                       style={{
                         border: "2px solid rgb(77, 208, 225)",

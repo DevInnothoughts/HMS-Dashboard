@@ -82,48 +82,48 @@
 //     }
 //   };
 
-  // const downloadPDF = () => {
-  //   const doc = new jsPDF();
-  //   doc.text("Condition Wise Report", 14, 15);
+// const downloadPDF = () => {
+//   const doc = new jsPDF();
+//   doc.text("Condition Wise Report", 14, 15);
 
-  //   let finalY = 25;
+//   let finalY = 25;
 
-  //   const generateTable = (title, data) => {
-  //     doc.text(title, 14, finalY);
-  //     const tableColumn = ["Sr No", "Doctor Name", "Piles", "Fistula", "Hernia", "Varicose Veins", "Prolapse", "Circumcision", "Abscess", "Fissure", "IBS"];
-  //     const tableRows = data.map((item, index) => [
-  //       index + 1,
-  //       item.doctorName,
-  //       item.piles,
-  //       item.fistula,
-  //       item.hernia,
-  //       item.varicoseVeins,
-  //       item.prolapse,
-  //       item.circumcision,
-  //       item.abscess,
-  //       item.fissure,
-  //       item.ibs
-  //     ]);
+//   const generateTable = (title, data) => {
+//     doc.text(title, 14, finalY);
+//     const tableColumn = ["Sr No", "Doctor Name", "Piles", "Fistula", "Hernia", "Varicose Veins", "Prolapse", "Circumcision", "Abscess", "Fissure", "IBS"];
+//     const tableRows = data.map((item, index) => [
+//       index + 1,
+//       item.doctorName,
+//       item.piles,
+//       item.fistula,
+//       item.hernia,
+//       item.varicoseVeins,
+//       item.prolapse,
+//       item.circumcision,
+//       item.abscess,
+//       item.fissure,
+//       item.ibs
+//     ]);
 
-  //     autoTable(doc, {
-  //       head: [tableColumn],
-  //       body: tableRows,
-  //       startY: finalY + 5,
-  //       theme: 'grid',
-  //       styles: { fontSize: 8 },
-  //       headStyles: { fillColor: [0, 172, 193] } // Cyan color matching theme
-  //     });
+//     autoTable(doc, {
+//       head: [tableColumn],
+//       body: tableRows,
+//       startY: finalY + 5,
+//       theme: 'grid',
+//       styles: { fontSize: 8 },
+//       headStyles: { fillColor: [0, 172, 193] } // Cyan color matching theme
+//     });
 
-  //     finalY = doc.lastAutoTable.finalY + 15;
-  //   };
+//     finalY = doc.lastAutoTable.finalY + 15;
+//   };
 
-  //   generateTable("Assisted - Condition Wise Performance", assistedData);
-  //   generateTable("Converted - Condition Wise Performance", convertedData);
-  //   generateTable("Total Package - Condition Wise", totalPackageData); // Might need a new page check in real app
-  //   generateTable("Average Package - Condition Wise", averagePackageData);
+//   generateTable("Assisted - Condition Wise Performance", assistedData);
+//   generateTable("Converted - Condition Wise Performance", convertedData);
+//   generateTable("Total Package - Condition Wise", totalPackageData); // Might need a new page check in real app
+//   generateTable("Average Package - Condition Wise", averagePackageData);
 
-  //   doc.save("Condition_Wise_Report.pdf");
-  // };
+//   doc.save("Condition_Wise_Report.pdf");
+// };
 
 //   const renderHeader = () => {
 //     return (
@@ -360,7 +360,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { decodeJwt } from "../../../utils/decode-jwt";
 
- 
+
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
 const BASE_URL = "http://194.195.117.79:5100/api"
@@ -392,11 +392,11 @@ const ConditionWiseReport = () => {
   // --- Core Processing Logic (Replicating AJAX Logic) ---
   const processReportData = (response, type) => {
     const uniqueDoctors = [...new Set(response.map(item => item.consultantDoctor))];
-    
+
     const processed = uniqueDoctors.map(docId => {
       const docRecords = response.filter(r => r.consultantDoctor === docId);
       const doctorName = docRecords[0]?.DoctorName || "Unknown";
-      
+
       const stats = {
         doctorName,
         piles: 0, fistula: 0, hernia: 0, varicoseVeins: 0,
@@ -430,7 +430,7 @@ const ConditionWiseReport = () => {
 
     return processed;
   };
-  
+
   const downloadPDF = () => {
     const doc = new jsPDF();
     doc.text("Condition Wise Report", 14, 15);
@@ -506,7 +506,7 @@ const ConditionWiseReport = () => {
       const detailedProcessed = processReportData(dataDetailed, 'detailed');
 
       setConvertedData(detailedProcessed.map(d => ({ ...d }))); // Converted count
-      
+
       setTotalPackageData(detailedProcessed.map(d => ({
         doctorName: d.doctorName,
         piles: d.totalPiles, fistula: d.totalFistula, hernia: d.totalHernia,
@@ -589,7 +589,7 @@ const ConditionWiseReport = () => {
                       <Col md={4}><Button className="w-100 btn-cyan" onClick={handleFind} disabled={loading}>{loading ? <Spinner size="sm" /> : "Search"}</Button></Col>
                     </Row>
                   </Form>
-                  
+
                   <div className="d-flex justify-content-between mb-3 align-items-center">
                     <InputText value={searchText} onChange={onGlobalFilterChange} placeholder="Filter all tables..." className="p-inputtext-sm" style={{ width: "250px" }} />
                     <Button variant="danger" size="sm" onClick={downloadPDF}><i className="fa fa-file-pdf-o me-2" />PDF</Button>
