@@ -105,7 +105,7 @@ export const receiptlocations = {
     "phone": "8792950455",
     "hospitalcode": "HSR"
   },
-  "Sahakarnagar": {
+  "Sahakar Nagar": {
     "address": "<b>Sahakarnagar : </b><br>1st Floor, 490/8, above McDonalds,F Block, Sahakar Nagar,Byatarayanapura, Bengaluru,Karnataka 560092.",
     "phone": "9731118056",
     "hospitalcode": "SN"

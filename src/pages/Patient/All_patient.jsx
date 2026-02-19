@@ -1103,7 +1103,7 @@ export default function All_patient() {
         "Indiranagar",
         "HSR",
         "Sahakarnagar",
-        "Rajajinagar",
+        "Rajaji Nagar",
         "Sarjapura",
         "Belagavi",
         "Mysore",
@@ -1171,12 +1171,12 @@ export default function All_patient() {
       <head>
         <title>Print Registration Form</title>
         <style>
-.vip-logo-img {
-    width: 20px; 
-    height: auto;
-    vertical-align: middle;
-    margin-bottom:1.5px;
-}
+          .vip-logo-img {
+              width: 20px; 
+              height: auto;
+              vertical-align: middle;
+              margin-bottom:1.5px;
+          }
           body, table, tr, td, p { font-size: 11px !important; text-align: justify; font-family: Arial, sans-serif; }
           .HHClogo { width: 50%; }
           .bgdiv { padding: 10px; }
@@ -1218,23 +1218,23 @@ export default function All_patient() {
           <br><br>
           <table width="100%" border="0">
             <tr>
-  <td style="width:50%; vertical-align: top; line-height: 1.3;">
-    <p><b>UID No :-</b>&nbsp;&nbsp;${patient.Uid_no || "-"}</p>
-    <p style="margin:0;"><b>Name :-</b>&nbsp;&nbsp;${patientName}${vipIcon}</p>
-    <p><b>Gender :-</b>&nbsp;&nbsp;${patient.sex || "-"}</p>
-    <p><b>Address :-</b>&nbsp;&nbsp;${patient.address || "-"}</p>
-    <p><b>Contact No :-</b>&nbsp;&nbsp;${patient.phone || "-"}</p>
-    <p><b>Alternate Contact No :-</b>&nbsp;&nbsp;${patient.mobile_2 || "-"}</p>
-  </td>
-  <td style="width:50%; vertical-align: top; line-height: 1.3;">
-    <p><b>D.O.B :-</b>&nbsp;&nbsp;${patient.birth_date ? patient.birth_date : "-"}</p>
-    <p><b>Age :-</b>&nbsp;&nbsp;${patient.age || "-"}</p>
-    <p><b>Email :-</b>&nbsp;&nbsp;${patient.email || "-"}</p>
-    <p><b>Occupation :-</b>&nbsp;&nbsp;${patient.occupation || "-"}</p>
-    ${patient.companyname ? `<p><b>Company Name :-</b>&nbsp;&nbsp;${patient.companyname}</p>` : ""}
-    ${patient.ref ? `<p><b>Reference :-</b>&nbsp;&nbsp;${patient.ref}</p>` : ""}
-  </td>
-</tr>
+            <td style="width:50%; vertical-align: top; line-height: 1.3;">
+              <p><b>UID No :-</b>&nbsp;&nbsp;${patient.Uid_no || "-"}</p>
+              <p style="margin:0;"><b>Name :-</b>&nbsp;&nbsp;${patientName}${vipIcon}</p>
+              <p><b>Gender :-</b>&nbsp;&nbsp;${patient.sex || "-"}</p>
+              <p><b>Address :-</b>&nbsp;&nbsp;${patient.address || "-"}</p>
+              <p><b>Contact No :-</b>&nbsp;&nbsp;${patient.phone || "-"}</p>
+              <p><b>Alternate Contact No :-</b>&nbsp;&nbsp;${patient.mobile_2 || "-"}</p>
+            </td>
+            <td style="width:50%; vertical-align: top; line-height: 1.3;">
+              <p><b>D.O.B :-</b>&nbsp;&nbsp;${patient.birth_date ? patient.birth_date : "-"}</p>
+              <p><b>Age :-</b>&nbsp;&nbsp;${patient.age || "-"}</p>
+              <p><b>Email :-</b>&nbsp;&nbsp;${patient.email || "-"}</p>
+              <p><b>Occupation :-</b>&nbsp;&nbsp;${patient.occupation || "-"}</p>
+              ${patient.companyname ? `<p><b>Company Name :-</b>&nbsp;&nbsp;${patient.companyname}</p>` : ""}
+              ${patient.ref ? `<p><b>Reference :-</b>&nbsp;&nbsp;${patient.ref}</p>` : ""}
+            </td>
+          </tr>
           </table>
           <hr>
           <table width="100%" border="0">
