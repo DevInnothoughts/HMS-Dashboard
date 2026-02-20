@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import NavbarIpdBills from '../../components/NavbarIpdBills';
-import { Container, Card, Row, Col, Form, Button, InputGroup, ListGroup, Table, Spinner } from 'react-bootstrap';
+import { Container, Card, Row, Col, Form, Button, ListGroup, Table, Spinner } from 'react-bootstrap';
 import PageBreadcrumb from '../../components/PageBreadcrumb';
 import { FaPrint, FaPlus, FaListUl, FaTasks } from 'react-icons/fa';
 import { decodeJwt } from "../../utils/decode-jwt";
@@ -11,15 +11,14 @@ const BASE_URL = "http://194.195.117.79:5100/api";
 const IpdPaymentData = () => {
     const [invoiceId, setInvoiceId] = useState('');
     const [patientDetails, setPatientDetails] = useState({ name: '', uhid: '', patient_id: '', phone: '' });
-    const [searchResults, setSearchResults] = useState([]); // Safety initialized as array
+    const [searchResults, setSearchResults] = useState([]);
     const [showDropdown, setShowDropdown] = useState(false);
     const [showBillDetails, setShowBillDetails] = useState(false);
     const [showAddRow, setShowAddRow] = useState(false);
     const [loading, setLoading] = useState(false);
     const [selectedTerminal, setSelectedTerminal] = useState('HDFC');
     const [currentLocation, setCurrentLocation] = useState("");
-    
-    // State for Database Data
+
     const [summary, setSummary] = useState({ totalBill: 0, insuranceApproved: 0, patientPayable: 0, totalDue: 0 });
     const [payments, setPayments] = useState([]);
     const [newPayment, setNewPayment] = useState({
@@ -37,7 +36,6 @@ const IpdPaymentData = () => {
         }
     }, []);
 
-    // 1. Fixed Search Logic with Type Safety
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
             if (invoiceId.trim().length > 0) {
@@ -47,17 +45,13 @@ const IpdPaymentData = () => {
                 setShowDropdown(false);
             }
         }, 300);
-
         return () => clearTimeout(delayDebounceFn);
     }, [invoiceId]);
 
     const fetchAutocompleteInvoices = async () => {
         try {
-            // console.log("invoice location: ", currentLocation);
             const response = await fetch(`${BASE_URL}/V1/invoice/searchByInvoiceId?invoice_id=${invoiceId}&location=${currentLocation}`);
             const data = await response.json();
-            
-            // FIX: Ensure data is always an array before setting state
             if (data && Array.isArray(data)) {
                 setSearchResults(data);
             } else {
@@ -81,14 +75,11 @@ const IpdPaymentData = () => {
         setShowDropdown(false);
     };
 
-    // 2. Fetch Bill Totals and History
     const handleViewBillDetails = async () => {
         setLoading(true);
         try {
             const resTotal = await fetch(`${BASE_URL}/V1/invoice/searchInvoiceTotal?invoice_id=${invoiceId}&location=${currentLocation}`);
             const totalData = await resTotal.json();
-            
-            // Safety check for array response
             const financialInfo = Array.isArray(totalData) ? totalData[0] : totalData;
 
             if (financialInfo) {
@@ -113,15 +104,14 @@ const IpdPaymentData = () => {
         }
     };
 
-    // 3. Save Payment Logic
     const handleSavePayment = async () => {
         const totalEntered = Object.values(newPayment).reduce((a, b) => (typeof b === 'number' ? a + b : a), 0);
         if (totalEntered <= 0) return Swal.fire("Invalid Amount", "Please enter a payment value", "warning");
 
         setLoading(true);
         try {
-            const endpoint = newPayment.card > 0 && selectedTerminal !== 'OFFLINE' 
-                ? '/V1/invoice/IPDDigitalPayment' 
+            const endpoint = newPayment.card > 0 && selectedTerminal !== 'OFFLINE'
+                ? '/V1/invoice/IPDDigitalPayment'
                 : '/V1/invoice/SaveIPDPayment';
 
             const payload = {
@@ -138,19 +128,16 @@ const IpdPaymentData = () => {
                 PosMachine: selectedTerminal,
                 location: currentLocation
             };
-            // console.log("SAVE IPD PAYMENT PAYLOAD:", payload);
             const response = await fetch(`${BASE_URL}${endpoint}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
             });
-
             const result = await response.json();
-
             if (result.status) {
                 Swal.fire("Success", result.message, "success");
                 setShowAddRow(false);
-                handleViewBillDetails(); // Refresh list
+                handleViewBillDetails();
             } else {
                 Swal.fire("Failed", result.message, "error");
             }
@@ -163,6 +150,12 @@ const IpdPaymentData = () => {
 
     const terminalOptions = ['HDFC', 'PINE LABS', 'OFFLINE', 'BHARATPE 1', 'BHARATPE 2'];
 
+    const formatDate = (dateString) => {
+        if (!dateString) return "";
+        const [year, month, day] = dateString.split('T')[0].split('-');
+        return `${day}-${month}-${year}`;
+    };
+
     return (
         <div className="themebody-wrap custom-ipd-styles">
             <PageBreadcrumb pagename="IPD Payment Data" />
@@ -170,8 +163,7 @@ const IpdPaymentData = () => {
             <Container fluid>
                 <Row>
                     <Col>
-                        {/* Search Section */}
-                        <Card className="shadow-sm border-cyan mb-4 overflow-visible">
+                        <Card className="shadow-sm border-cyan mb-20 overflow-visible">
                             <Card.Body>
                                 <Row className="align-items-end">
                                     <Col lg={3} md={6} className="mb-3 position-relative" ref={dropdownRef}>
@@ -184,7 +176,7 @@ const IpdPaymentData = () => {
                                             className="input-style"
                                         />
                                         {showDropdown && (
-                                            <ListGroup className="position-absolute w-100 z-index-dropdown shadow custom-list">
+                                            <ListGroup className="position-absolute w-300 z-index-dropdown shadow custom-list">
                                                 {Array.isArray(searchResults) && searchResults.map((inv) => (
                                                     <ListGroup.Item key={inv.invoice_id} action onClick={() => handleSelectInvoice(inv)}>
                                                         {inv.invoice_id} - {inv.name}
@@ -199,11 +191,11 @@ const IpdPaymentData = () => {
                                         <Form.Control readOnly value={patientDetails.name} className="input-style" />
                                     </Col>
                                     <Col lg={3} md={6} className="mb-3">
-                                        <Form.Label className="label-style">UID No</Form.Label>
+                                        <Form.Label className="label-style">UID Number</Form.Label>
                                         <Form.Control readOnly value={patientDetails.uhid} className="input-style" />
                                     </Col>
                                     <Col lg={2} md={6} className="mb-3">
-                                        <Button variant="info" className="w-100 text-white fw-bold btn-view" disabled={!invoiceId || loading} onClick={handleViewBillDetails}>
+                                        <Button variant="primary" className="w-200 text-white fw-bold btn-view" disabled={!invoiceId || loading} onClick={handleViewBillDetails}>
                                             {loading ? <Spinner size="sm" /> : "View Bill Details"}
                                         </Button>
                                     </Col>
@@ -214,30 +206,40 @@ const IpdPaymentData = () => {
                         {showBillDetails && (
                             <Card className="shadow-sm border-0 overflow-hidden">
                                 <div className="summary-header">
-                                    <span><FaListUl className="me-2"/>Bill: ₹{summary.totalBill}</span>
-                                    <span><FaTasks className="me-2"/>Insurance: ₹{summary.insuranceApproved}</span>
-                                    <span className="fw-bold">Payable: ₹{summary.patientPayable}</span>
-                                    <span className="bg-danger px-2 rounded">Due: ₹{summary.totalDue}</span>
+                                    <span><FaListUl className="me-1" />Total Bill: {summary.totalBill}</span>
+                                    <span><FaTasks className="me-1" />Insurance Approved: {summary.insuranceApproved}</span>
+                                    <span><FaListUl className="me-1" />Patient Payable: {summary.patientPayable}</span>
+                                    <span><FaListUl className="me-1" />Total Due: {summary.totalDue}</span>
                                 </div>
                                 <Card.Body>
-                                    <Table responsive hover size="sm" className="text-center align-middle custom-table">
+                                    <Table responsive borderless className="align-middle custom-table">
                                         <thead>
                                             <tr>
-                                                <th>Sr</th><th>Date</th><th>Cash</th><th>Card</th><th>Chq</th><th>Onl</th><th>Int. Disc</th><th>Hosp. Disc</th><th>Action</th>
+                                                <th style={{ width: '5%' }}>Sr No</th>
+                                                <th style={{ width: '9%' }}>Date</th>
+                                                <th style={{ width: '10%' }}>Cash</th>
+                                                <th style={{ width: '10%' }}>Card</th>
+                                                <th style={{ width: '10%' }}>Cheque</th>
+                                                <th style={{ width: '10%' }}>Online</th>
+                                                <th style={{ width: '10%' }}>Internal Discount</th>
+                                                <th style={{ width: '3%' }}>Hospital Discount</th>
+                                                <th style={{ width: '1%' }} className="text-center">Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {payments.map((pay, idx) => (
                                                 <tr key={pay.ipdpaymentid}>
-                                                    <td>{idx + 1}</td>
-                                                    <td>{pay.receipt_date?.split('T')[0]}</td>
-                                                    <td>₹{pay.cashamt}</td>
-                                                    <td>₹{pay.cardamt}</td>
-                                                    <td>₹{pay.chequeamt}</td>
-                                                    <td>₹{pay.onlineamt}</td>
-                                                    <td>₹{pay.discountamt}</td>
-                                                    <td>₹{pay.tdsamt}</td>
-                                                    <td><Button variant="outline-primary" size="sm"><FaPrint/></Button></td>
+                                                    <td><Form.Control className="table-input" style={{width:"55px"}} readOnly value={idx + 1} /></td>
+                                                    <td><Form.Control className="table-input" style={{width:"110px"}} readOnly value={pay.receipt_date ? pay.receipt_date.split('T')[0].split('-').reverse().join('-') : ''} /></td>
+                                                    <td><Form.Control className="table-input" style={{width:"135px"}} readOnly value={`₹${pay.cashamt}`} /></td>
+                                                    <td><Form.Control className="table-input" style={{width:"135px"}} readOnly value={`₹${pay.cardamt}`} /></td>
+                                                    <td><Form.Control className="table-input" style={{width:"135px"}} readOnly value={`₹${pay.chequeamt}`} /></td>
+                                                    <td><Form.Control className="table-input" style={{width:"135px"}} readOnly value={`₹${pay.onlineamt}`} /></td>
+                                                    <td><Form.Control className="table-input" style={{width:"135px"}} readOnly value={`₹${pay.discountamt}`} /></td>
+                                                    <td><Form.Control className="table-input" style={{width:"135px"}} readOnly value={`₹${pay.tdsamt}`} /></td>
+                                                    <td className="text-center">
+                                                        <Button title="Print Receipt" variant="outline-primary" className="btn-print"><FaPrint /></Button>
+                                                    </td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -250,19 +252,19 @@ const IpdPaymentData = () => {
                                                 <Form.Check key={opt} inline type="radio" label={opt} checked={selectedTerminal === opt} onChange={() => setSelectedTerminal(opt)} className="fw-bold text-secondary" />
                                             ))}
                                         </div>
-                                        <Button className="btn-add" onClick={() => setShowAddRow(!showAddRow)}><FaPlus/></Button>
+                                        <Button className="btn-add" onClick={() => setShowAddRow(!showAddRow)}><FaPlus /></Button>
                                     </div>
 
                                     {showAddRow && (
                                         <div className="mt-3 p-3 border rounded bg-white add-payment-box">
                                             <Row className="g-2">
-                                                <Col md={2}><Form.Control type="date" className="input-style" value={newPayment.date} onChange={e => setNewPayment({...newPayment, date: e.target.value})} /></Col>
-                                                <Col><Form.Control type="number" placeholder="Cash" className="input-style" onChange={e => setNewPayment({...newPayment, cash: +e.target.value})} /></Col>
-                                                <Col><Form.Control type="number" placeholder="Card" className="input-style" onChange={e => setNewPayment({...newPayment, card: +e.target.value})} /></Col>
-                                                <Col><Form.Control type="number" placeholder="Chq" className="input-style" onChange={e => setNewPayment({...newPayment, cheque: +e.target.value})} /></Col>
-                                                <Col><Form.Control type="number" placeholder="Onl" className="input-style" onChange={e => setNewPayment({...newPayment, online: +e.target.value})} /></Col>
-                                                <Col><Form.Control type="number" placeholder="Int.D" className="input-style" onChange={e => setNewPayment({...newPayment, internalDiscount: +e.target.value})} /></Col>
-                                                <Col><Form.Control type="number" placeholder="TDS" className="input-style" onChange={e => setNewPayment({...newPayment, tds: +e.target.value})} /></Col>
+                                                <Col md={2}><Form.Control type="date" className="input-style" value={newPayment.date} onChange={e => setNewPayment({ ...newPayment, date: e.target.value })} /></Col>
+                                                <Col><Form.Control type="number" placeholder="Cash" className="input-style" onChange={e => setNewPayment({ ...newPayment, cash: +e.target.value })} /></Col>
+                                                <Col><Form.Control type="number" placeholder="Card" className="input-style" onChange={e => setNewPayment({ ...newPayment, card: +e.target.value })} /></Col>
+                                                <Col><Form.Control type="number" placeholder="Cheque" className="input-style" onChange={e => setNewPayment({ ...newPayment, cheque: +e.target.value })} /></Col>
+                                                <Col><Form.Control type="number" placeholder="Online" className="input-style" onChange={e => setNewPayment({ ...newPayment, online: +e.target.value })} /></Col>
+                                                <Col><Form.Control type="number" placeholder="Int. Disc" className="input-style" onChange={e => setNewPayment({ ...newPayment, internalDiscount: +e.target.value })} /></Col>
+                                                <Col><Form.Control type="number" placeholder="Hosp. Disc" className="input-style" onChange={e => setNewPayment({ ...newPayment, tds: +e.target.value })} /></Col>
                                                 <Col md={1}><Button className="w-100 btn-save" onClick={handleSavePayment} disabled={loading}>Save</Button></Col>
                                             </Row>
                                         </div>
@@ -281,25 +283,77 @@ const IpdPaymentData = () => {
                     padding: 10px;
                     font-family: 'Poppins', sans-serif;
                 }
+                .input-style { 
+                    border-radius: 10px !important; 
+                    border: 1px solid #80deea !important; 
+                    height: 30px !important; 
+                    background-color: #ffffff !important; 
+                    font-size: 14px;
+                }
                 .label-style { font-size: 13px; fontWeight: 600; color: #00838f; }
-                .input-style { border-radius: 10px; border: 1px solid #80deea; }
                 .border-cyan { border: 1px solid #00bcd4; }
                 .z-index-dropdown { z-index: 1050; }
                 .summary-header {
-                    background: linear-gradient(to right, #00acc1, #00bcd4);
-                    padding: 12px 20px;
+                    background: #1099ab;
+                    padding: 10px 15px;
                     border-radius: 8px 8px 0 0;
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    font-size: 15px;
-                    font-weight: 600;
+                    font-size: 18px;
+                    font-weight: 700;
                     color: white;
                 }
-                .custom-table thead { background-color: #e0f7fa; color: #006064; }
+
+                .custom-table {
+                    border: none !important;    
+                }
+
+                .custom-table thead th { 
+                    background-color: transparent; 
+                    color: #006064; 
+                    border: none !important;
+                    border-bottom: 2px solid #80deea !important;
+                    padding-bottom: 10px;
+                    font-size: 14px;
+                    text-align: left;
+                }
+
+                .custom-table tbody td {
+                    border: none !important;
+                    padding: 5px 2px !important;
+                    text-align: left;
+                }
+
+                .table-input {
+                    border: 1px solid #80deea !important;
+                    border-radius: 6px !important;
+                    height: 32px !important;
+                     background-color: #f8f9fa !important; /* Slight grey to show read-only */
+                     text-align: left; /* Changed to left */
+                     padding-left: 8px;
+                     width: 100px; /* Reduced width */
+                     max-width: 100%; 
+                     pointer-events: none; 
+                     cursor: not-allowed; /* Visual cue for read-only */
+                     box-shadow: none !important;
+                     font-size: 13px;
+                }
+
                 .btn-view { background-color: #00bcd4; border: none; height: 38px; border-radius: 10px; }
                 .btn-add { background-color: #00bcd4; border: none; border-radius: 6px; }
                 .btn-save { background-color: #00bcd4; border: none; font-weight: 600; }
+                .btn-print { 
+        border-color: #00bcd4 !important; 
+        color: #00bcd4 !important;
+        width: 40px;      /* Reduced width */
+        height: 35px;     /* Reduced height */
+        padding: 0;       /* Remove default padding to center icon */
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px !important; /* Requested border radius */
+    }
                 .text-cyan-dark { color: #00838f; }
                 .custom-list .list-group-item:hover { background-color: #e0f7fa; }
             `}</style>
