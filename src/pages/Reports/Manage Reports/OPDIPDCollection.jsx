@@ -11,12 +11,9 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import PageBreadcrumb from "../../../components/PageBreadcrumb";
 import SimpleBar from "simplebar-react";
-import { decodeJwt } from "../../../utils/decode-jwt"; // Utility for location extraction
+import { decodeJwt } from "../../../utils/decode-jwt";
 
-
-
-// const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api"
+const BASE_URL = "http://localhost:5100/api";
 
 const OPDIPDCollection = () => {
   const [fromDate, setFromDate] = useState("");
@@ -35,7 +32,6 @@ const OPDIPDCollection = () => {
     opdCheque: 0, ipdCheque: 0, opdOnline: 0, ipdOnline: 0,
   });
 
-  // 1. Get Location Context from Token
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -52,11 +48,8 @@ const OPDIPDCollection = () => {
     setSearchText(value);
   };
 
-  // 2. Data Merging Logic
   const mergeCollectionData = (opdData, ipdData) => {
     const mergedMap = {};
-
-    // Process OPD Data
     opdData.forEach(item => {
       const dateKey = item.date.split('T')[0];
       mergedMap[dateKey] = {
@@ -65,11 +58,10 @@ const OPDIPDCollection = () => {
         opdCard: parseFloat(item.opdCard) || 0,
         opdCheque: parseFloat(item.opdCheque) || 0,
         opdOnline: parseFloat(item.opdOnline) || 0,
-        ipdCash: 0, ipdCard: 0, ipdCheque: 0, ipdOnline: 0 // placeholders
+        ipdCash: 0, ipdCard: 0, ipdCheque: 0, ipdOnline: 0
       };
     });
 
-    // Process and Merge IPD Data
     ipdData.forEach(item => {
       const dateKey = item.date.split('T')[0];
       if (!mergedMap[dateKey]) {
@@ -89,7 +81,6 @@ const OPDIPDCollection = () => {
       }
     });
 
-    // Convert map to sorted array
     return Object.values(mergedMap).sort((a, b) => new Date(b.receiptDate) - new Date(a.receiptDate));
   };
 
@@ -116,10 +107,7 @@ const OPDIPDCollection = () => {
       });
 
       if (!response.ok) throw new Error("Failed to fetch consolidated data");
-
       const result = await response.json();
-
-      // Merge OPD and IPD arrays into one table-ready array
       const mergedData = mergeCollectionData(result.opdData || [], result.ipdData || []);
 
       const newTotals = mergedData.reduce((acc, curr) => ({
@@ -135,10 +123,6 @@ const OPDIPDCollection = () => {
 
       setTotals(newTotals);
       setTableData(mergedData);
-
-      if (mergedData.length === 0) {
-        alert("No records found for selected range.");
-      }
     } catch (error) {
       console.error("Error:", error);
       alert(`Error: ${error.message}`);
@@ -148,8 +132,8 @@ const OPDIPDCollection = () => {
   };
 
   const formatDateDisplay = (dateStr) => {
-    if (!dateStr) return "N/A";
-    return dateStr.split("-").reverse().join("-"); // YYYY-MM-DD to DD-MM-YYYY
+    if (!dateStr) return "";
+    return dateStr.split("-").reverse().join("-");
   };
 
   const exportToExcel = () => {
@@ -162,33 +146,31 @@ const OPDIPDCollection = () => {
       "OPD Cheque": item.opdCheque, "IPD Cheque": item.ipdCheque,
       "OPD Online": item.opdOnline, "IPD Online": item.ipdOnline,
     }));
-
-    excelData.push({ "Sr No": "TOTAL", ...totals });
+    excelData.push({ "Sr No": "TOTAL", "Date": "", ...totals });
 
     const ws = XLSX.utils.json_to_sheet(excelData);
     const wb = { Sheets: { data: ws }, SheetNames: ["Consolidated"] };
     const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-    saveAs(new Blob([excelBuffer], { type: fileType }), `Consolidated_Report_${fromDate}.xlsx`);
+    saveAs(new Blob([excelBuffer], { type: fileType }), `Consolidated_Report.xlsx`);
   };
 
   const downloadPDF = () => {
     const doc = new jsPDF("l", "mm", "a4");
     doc.text("Consolidated OPD + IPD Collection Report", 14, 15);
-
     const tableColumn = ["Sr No", "Date", "OPD Cash", "IPD Cash", "OPD Card", "IPD Card", "OPD Chq", "IPD Chq", "OPD Onl", "IPD Onl"];
     const tableRows = tableData.map((item, index) => [
       index + 1, formatDateDisplay(item.receiptDate),
       item.opdCash, item.ipdCash, item.opdCard, item.ipdCard,
       item.opdCheque, item.ipdCheque, item.opdOnline, item.ipdOnline,
     ]);
-
     tableRows.push(["Total", "", totals.opdCash, totals.ipdCash, totals.opdCard, totals.ipdCard, totals.opdCheque, totals.ipdCheque, totals.opdOnline, totals.ipdOnline]);
 
     autoTable(doc, {
-      head: [tableColumn], body: tableRows, startY: 25, theme: 'grid', styles: { fontSize: 8 },
-      headStyles: { fillColor: [0, 172, 193] }
+      head: [tableColumn], body: tableRows, startY: 20, theme: 'grid', styles: { fontSize: 8 },
+      headStyles: { fillColor: [0, 172, 193], halign: 'center' },
+      didParseCell: (data) => { if (data.row.index === tableRows.length - 1) data.cell.styles.fontStyle = 'bold'; }
     });
-    doc.save(`Consolidated_Report_${fromDate}.pdf`);
+    doc.save("Consolidated_Report.pdf");
   };
 
   const footerGroup = (
@@ -207,64 +189,86 @@ const OPDIPDCollection = () => {
     </ColumnGroup>
   );
 
+  const header = (
+    <div className="d-flex justify-content-between align-items-center mb-1">
+      <div className="d-flex align-items-center" style={{ gap: "20px" }}>
+        <div className="d-flex align-items-center">
+          <span className="me-1" style={{ fontWeight: "bold", color: "#006064" }}>Show</span>
+          <Form.Select size="sm" style={{ width: "70px", borderRadius: "8px", border: "1px solid #4dd0e1" }} value={rows} onChange={(e) => setRows(Number(e.target.value))}>
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+          </Form.Select>
+        </div>
+        <div className="d-flex align-items-center">
+          <span className="me-1" style={{ fontWeight: "bold", color: "#006064" }}>Search</span>
+          <span className="p-input-icon-left">
+            <InputText value={searchText} onChange={onGlobalFilterChange} placeholder="Global Search..." className="p-inputtext-sm" style={{ width: "200px", borderRadius: "8px", border: "1px solid #4dd0e1" }} />
+          </span>
+        </div>
+      </div>
+      <div className="d-flex" style={{ gap: "10px" }}>
+        <button className="btn btn-success btn-sm" onClick={exportToExcel} style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px" }}>
+          <i className="fa fa-file-excel-o"></i> Download Excel
+        </button>
+        <button className="btn btn-danger btn-sm" onClick={downloadPDF} style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px" }}>
+          <i className="fa fa-file-pdf-o"></i> Download PDF
+        </button>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="themebody-wrap" style={{ padding: "20px", background: "linear-gradient(to right, #e0f7fa, #80deea)", minHeight: "100vh" }}>
+    <div className="themebody-wrap" style={{ padding: "20px", background: "linear-gradient(to right, #e0f7fa, #80deea)", fontFamily: "'Poppins', Arial, sans-serif", minHeight: "100vh" }}>
       <PageBreadcrumb pagename="OPD + IPD Collection" />
       <SimpleBar className="theme-body common-dash">
         <Container fluid>
           <Row>
             <Col md={12}>
-              <Card style={{ borderRadius: "12px", border: "1px solid #00bcd4", boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)" }}>
-                <Card.Header className="text-center py-3" style={{ background: "linear-gradient(to right, #00acc1, #007c91)", color: "white" }}>
-                  <h4 style={{ margin: 0, fontWeight: "700" }}>Consolidated Collection (OPD + IPD)</h4>
+              <Card style={{ borderRadius: "12px", boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)", border: "1px solid #00bcd4", background: "white" }}>
+                <Card.Header className="text-center" style={{ background: "linear-gradient(to right, #00acc1, #007c91)", color: "white", padding: "0.8rem" }}>
+                  <h4 style={{ margin: 0 }}>OPD + IPD Collection Report</h4>
                 </Card.Header>
-                <Card.Body style={{ padding: "10px" }}>
+                <Card.Body style={{ padding: "5px" }}>
                   <Form onSubmit={handleSearch}>
                     <Row className="align-items-end mb-4 flex-nowrap" style={{ margin: "0 -5px" }}>
                       <Col style={{ padding: "0 5px", flex: "1" }}>
-                        <Form.Label style={{ fontWeight: "bold", fontSize: "12px", color: "#006064" }}>From Date</Form.Label>
-                        <Form.Control type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} style={{ border: "2px solid #4dd0e1", borderRadius: "8px" }} />
+                        <Form.Group className="mb-2">
+                          <Form.Label style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>From Date</Form.Label>
+                          <Form.Control type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }} />
+                        </Form.Group>
                       </Col>
                       <Col style={{ padding: "0 5px", flex: "1" }}>
-                        <Form.Label style={{ fontWeight: "bold", fontSize: "12px", color: "#006064" }}>To Date</Form.Label>
-                        <Form.Control type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} style={{ border: "2px solid #4dd0e1", borderRadius: "8px" }} />
+                        <Form.Group className="mb-2">
+                          <Form.Label style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>To Date</Form.Label>
+                          <Form.Control type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }} />
+                        </Form.Group>
                       </Col>
                       <Col style={{ padding: "0 5px", flex: "1" }}>
-                        <button className="btn btn-primary w-100" type="submit" style={{ height: "35px", background: "#00acc1", borderRadius: "8px", fontWeight: "bold" }}>
-                          {loading ? "Searching..." : "Search"}
-                        </button>
+                        <Form.Group className="mb-2">
+                          <button className="btn btn-primary" type="submit" style={{ height: "35px", width: "100%", backgroundColor: "#00acc1", borderColor: "#00bcd4", color: "white", borderRadius: "8px", fontWeight: "bold", fontSize: "13px" }}>
+                            {loading ? "Loading..." : "Search"}
+                          </button>
+                        </Form.Group>
                       </Col>
                     </Row>
                   </Form>
-
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <div className="d-flex gap-3 align-items-center">
-                      <Form.Select size="sm" value={rows} onChange={(e) => setRows(Number(e.target.value))} style={{ width: "80px" }}>
-                        <option value={10}>10</option>
-                        <option value={25}>25</option>
-                        <option value={50}>50</option>
-                      </Form.Select>
-                      <InputText value={searchText} onChange={onGlobalFilterChange} placeholder="Filter records..." className="p-inputtext-sm" />
-                    </div>
-                    <div className="d-flex gap-2">
-                      <button className="btn btn-success btn-sm" onClick={exportToExcel} style={{ borderRadius: "8px" }}>Excel</button>
-                      <button className="btn btn-danger btn-sm" onClick={downloadPDF} style={{ borderRadius: "8px" }}>PDF</button>
-                    </div>
-                  </div>
 
                   <DataTable
                     value={tableData}
                     paginator rows={rows}
                     filters={filters}
-                    header={null} // custom header used above
+                    header={header}
                     footerColumnGroup={footerGroup}
-                    className="p-datatable-sm custom-datatable"
+                    paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
+                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
                     emptyMessage={loading ? "Loading..." : "No records found."}
-                    stripedRows
-                    responsiveLayout="scroll"
+                    className="p-datatable-sm custom-datatable"
+                    style={{ fontSize: "12px" }}
+                    rowHover stripedRows responsiveLayout="scroll"
                   >
-                    <Column header="Sr No" body={(r, { rowIndex }) => rowIndex + 1} style={{ width: "50px", textAlign: "center" }} />
-                    <Column field="receiptDate" header="Date" body={(r) => formatDateDisplay(r.receiptDate)} />
+                    <Column header="Sr No" body={(rowData, { rowIndex }) => rowIndex + 1} style={{ width: "60px", textAlign: "center" }} />
+                    <Column field="receiptDate" header="Date" body={(rowData) => formatDateDisplay(rowData.receiptDate)} />
                     <Column field="opdCash" header="OPD Cash" />
                     <Column field="ipdCash" header="IPD Cash" />
                     <Column field="opdCard" header="OPD Card" />
@@ -281,8 +285,12 @@ const OPDIPDCollection = () => {
         </Container>
       </SimpleBar>
       <style>{`
-        .custom-datatable .p-datatable-thead > tr > th { background-color: #b2ebf2 !important; font-size: 11px; border: 1px solid #90caf9 !important; text-align: center !important; color: black !important; }
-        .custom-datatable .p-datatable-tbody > tr > td { font-size: 11px; border: 1px solid #90caf9; text-align: center !important; }
+        .custom-datatable .p-datatable-header { background: #e0f7fa; border: 1px solid #4dd0e1; border-top-left-radius: 8px; border-top-right-radius: 8px; padding: 10px; }
+        .custom-datatable .p-datatable-thead > tr > th { background-color: #b2ebf2 !important; color: black !important; font-size: 12px; padding: 10px 8px !important; border: 1px solid #90caf9 !important; text-align: center !important; }
+        .custom-datatable .p-datatable-thead > tr > th .p-column-header-content { justify-content: center !important; }
+        .custom-datatable .p-datatable-tbody > tr > td { font-size: 12px; padding: 8px; border: 1px solid #90caf9; text-align: center !important; }
+        .custom-datatable .p-datatable-tfoot > tr > td { background-color: #e0f7fa !important; color: black !important; padding: 10px 8px; border: 1px solid #90caf9 !important; font-size: 12px; }
+        .custom-datatable .p-paginator { background: #f8fdfe; border: 1px solid #4dd0e1; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; padding: 5px; }
       `}</style>
     </div>
   );

@@ -21,7 +21,7 @@ import SimpleBar from "simplebar-react";
 
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api"
+const BASE_URL = "http://localhost:5100/api"
 
 const OPDCollectionReports = () => {
     const [fromDate, setFromDate] = useState("");
@@ -188,7 +188,7 @@ const OPDCollectionReports = () => {
         const day = String(date.getDate()).padStart(2, "0");
         const month = String(date.getMonth() + 1).padStart(2, "0");
         const year = date.getFullYear();
-        return `${day}/${month}/${year}`;
+        return `${day}-${month}-${year}`;
     };
 
 

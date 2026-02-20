@@ -12,10 +12,8 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { decodeJwt } from "../../../utils/decode-jwt";
 
-
-
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api"
+const BASE_URL = "http://localhost:5100/api"
 
 const EnquiryData = () => {
   const [fromDate, setFromDate] = useState("");
@@ -80,12 +78,26 @@ const EnquiryData = () => {
 
       const data = await response.json();
       console.log(data);
-      const formattedData = data.map((item, index) => ({
-        ...item,
-        srNo: index + 1,
-        // Convert SQL date for display: YYYY-MM-DD to DD/MM/YYYY
-        displayDate: item.date ? item.date.split('-').reverse().join('/') : "N/A",
-      }));
+      const formattedData = data.map((item, index) => {
+        let displayDate = "N/A";
+
+        if (item.date) {
+          const d = new Date(item.date);
+          // Ensure it's a valid date object and handle the ISO string correctly
+          if (!isNaN(d.getTime())) {
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+            const year = d.getFullYear();
+            displayDate = `${day}-${month}-${year}`;
+          }
+        }
+
+        return {
+          ...item,
+          srNo: index + 1,
+          displayDate: displayDate, // This will now be in DD-MM-YYYY format
+        };
+      });
 
       setTableData(formattedData);
 
@@ -231,7 +243,7 @@ const EnquiryData = () => {
                     fontWeight: "bold",
                     backgroundColor: "#e3f2fd",
                     borderBottom: "2px solid #0288d1",
-                    padding: "1rem",
+                    padding: "0.8rem",
                     background: "linear-gradient(to right, #00acc1, #007c91)",
                     color: "white",
                     fontSize: "16px",

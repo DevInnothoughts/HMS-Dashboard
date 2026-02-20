@@ -15,7 +15,7 @@ import { decodeJwt } from "../../../utils/decode-jwt";
 
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api"
+const BASE_URL = "http://localhost:5100/api"
 
 const BillingReport = () => {
   const [fromDate, setFromDate] = useState("");
@@ -76,16 +76,28 @@ const BillingReport = () => {
       const data = await response.json();
 
       // 3. Map Database fields to UI fields
-      const formattedData = data.map((item) => ({
-        ...item,
-        date: item.creation_date ? item.creation_date.split('T')[0] : "N/A",
-        invoiceId: item.invoice_id,
-        patientName: item.PatientName,
-        invoiceType: item.status,
-        packageAmount: item.totalamt,
-        approvedAmount: item.receivedamt,
-        payableAmount: item.payable_amt
-      }));
+      const formattedData = data.map((item) => {
+        // Logic to turn YYYY-MM-DD into DD-MM-YYYY
+        let displayDate = "N/A";
+        if (item.creation_date) {
+          const dateObj = new Date(item.creation_date);
+          const day = String(dateObj.getDate()).padStart(2, '0');
+          const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+          const year = dateObj.getFullYear();
+          displayDate = `${day}-${month}-${year}`;
+        }
+
+        return {
+          ...item,
+          date: displayDate, // This ensures the table, Excel, and PDF show DD-MM-YYYY
+          invoiceId: item.invoice_id,
+          patientName: item.PatientName,
+          invoiceType: item.status,
+          packageAmount: item.totalamt,
+          approvedAmount: item.receivedamt,
+          payableAmount: item.payable_amt
+        };
+      });
 
       setBillingData(formattedData);
     } catch (error) {
@@ -231,7 +243,7 @@ const BillingReport = () => {
                     fontWeight: "bold",
                     backgroundColor: "#e3f2fd",
                     borderBottom: "2px solid #0288d1",
-                    padding: "1rem",
+                    padding: "0.8rem",
                     background: "linear-gradient(to right, #00acc1, #007c91)",
                     color: "white",
                     fontSize: "16px",

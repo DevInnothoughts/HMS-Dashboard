@@ -10,20 +10,16 @@ import { Column } from "primereact/column";
 import { FilterMatchMode } from "primereact/api";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-
-import { decodeJwt } from "../../../utils/decode-jwt"; // Ensure path is correct
-
-
+import { decodeJwt } from "../../../utils/decode-jwt";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api"
+const BASE_URL = "http://localhost:5100/api"
 
 const BirthdayAlert = () => {
   const currentDate = moment().format("DD-MM-YYYY");
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentLocation, setCurrentLocation] = useState("default");
-
   const [rows, setRows] = useState(10);
   const [first, setFirst] = useState(0);
   const [filters, setFilters] = useState({
@@ -31,7 +27,6 @@ const BirthdayAlert = () => {
   });
   const [globalFilterValue, setGlobalFilterValue] = useState("");
 
-  // 1. Get Location from Token
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -42,7 +37,6 @@ const BirthdayAlert = () => {
     }
   }, []);
 
-  // 2. API Fetching Function
   const fetchBirthdays = useCallback(async () => {
     if (currentLocation === "default") return;
 
@@ -102,13 +96,16 @@ const BirthdayAlert = () => {
     doc.setTextColor(100);
     doc.text(`Date: ${currentDate}`, 14, 22);
 
-    const tableColumn = ["Sr No", "Patient Name", "Contact Number", "Address"];
-    const tableRows = patients.sort((a, b) => a.name.localeCompare(b.name)).map((item, index) => [
-      index + 1,
-      item.name,
-      item.phone,
-      item.address,
-    ]);
+    const tableColumn = ["Sr No", "Birth Date", "Patient Name", "Contact Number", "Address"];
+    const tableRows = [...patients]
+      .sort((a, b) => moment(a.birth_date, "DD-MM-YYYY").diff(moment(b.birth_date, "DD-MM-YYYY")))
+      .map((item, index) => [
+        index + 1,
+        moment(item.birth_date).isValid() ? moment(item.birth_date).format("DD-MM-YYYY") : item.birth_date, //
+        item.name,
+        item.phone,
+        item.address,
+      ]);
 
     autoTable(doc, {
       head: [tableColumn],
@@ -256,19 +253,21 @@ const BirthdayAlert = () => {
                   style={{
                     fontWeight: "bold",
                     borderBottom: "none",
-                    padding: "1.2rem",
+                    padding: "0.8rem",
                     background: "linear-gradient(to right, #00acc1, #007c91)",
                     color: "white",
                   }}
                 >
-                  <h4 style={{ margin: 0, fontWeight: "700", letterSpacing: "0.5px" }}>Today's Birthday Alert</h4>
+                  <h4 style={{ margin: 0, letterSpacing: "0.5px" }}>Today's Birthday Alert</h4>
                   <div style={{ fontSize: "16px", marginTop: "5px", opacity: 0.9 }}>
                     {currentDate}
                   </div>
                 </Card.Header>
                 <Card.Body style={{ padding: "5px" }}>
-                  <DataTable
-                    value={[...patients].sort((a, b) => a.name.localeCompare(b.name))}
+                  {/* <DataTable
+                    value={[...patients].sort((a, b) =>
+                      moment(a.birth_date, "DD-MM-YYYY").diff(moment(b.birth_date, "DD-MM-YYYY"))
+                    )}
                     paginator
                     rows={rows}
                     first={first}
@@ -308,11 +307,26 @@ const BirthdayAlert = () => {
                       }}
                     />
                     <Column
+                      field="birth_date"
+                      header="Birth Date"
+                      alignHeader="center"
+                      align="center"
+                      sortable
+                      body={(rowData) => {
+                        return rowData.birth_date ? moment(rowData.birth_date).format("DD-MM-YYYY") : "-";
+                      }}
+                      style={{ border: "1px solid #e0f2f1" }}
+                      headerStyle={{
+                        backgroundColor: "#00bcd4",
+                        color: "white",
+                        fontSize: "13px",
+                      }}
+                    />
+                    <Column
                       field="name"
                       header="Patient Name"
                       alignHeader="center"
                       align="center"
-                      sortable
                       style={{
                         border: "1px solid #e0f2f1",
                       }}
@@ -343,6 +357,7 @@ const BirthdayAlert = () => {
                       alignHeader="center"
                       align="center"
                       style={{
+                        width: "400px",
                         border: "1px solid #e0f2f1",
                       }}
                       headerStyle={{
@@ -351,6 +366,42 @@ const BirthdayAlert = () => {
                         fontSize: "13px",
                       }}
                     />
+                  </DataTable> */}
+                  <DataTable
+                    value={[...patients].sort((a, b) =>
+                      moment(a.birth_date, "DD-MM-YYYY").diff(moment(b.birth_date, "DD-MM-YYYY"))
+                    )}
+                    paginator
+                    rows={rows}
+                    first={first}
+                    onPage={(e) => {
+                      setFirst(e.first);
+                      setRows(e.rows);
+                    }}
+                    header={header}
+                    filters={filters}
+                    globalFilterFields={["name", "phone", "address"]}
+                    paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
+                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
+                    className="p-datatable-sm custom-datatable"
+                    stripedRows
+                    rowHover
+                    responsiveLayout="scroll"
+                    style={{ fontSize: "12px" }}
+                  >
+                    <Column
+                      header="Sr No"
+                      body={(rowData, { rowIndex }) => rowIndex + 1}
+                      style={{ width: "60px", textAlign: "center" }}
+                    />
+                    <Column
+                      field="birth_date"
+                      header="Birth Date"
+                      body={(rowData) => rowData.birth_date ? moment(rowData.birth_date).format("DD-MM-YYYY") : "-"}
+                    />
+                    <Column field="name" header="Patient Name" />
+                    <Column field="phone" header="Contact Number" />
+                    <Column field="address" header="Address" />
                   </DataTable>
                 </Card.Body>
               </Card>
@@ -358,6 +409,41 @@ const BirthdayAlert = () => {
           </Row>
         </Container>
       </div>
+      {/* Add this block at the end of your JSX */}
+      <style>{`
+        .custom-datatable .p-datatable-header {
+          background: #e0f7fa;
+          border: 1px solid #4dd0e1;
+          border-top-left-radius: 8px;
+          border-top-right-radius: 8px;
+          padding: 10px;
+        }
+        .custom-datatable .p-datatable-thead > tr > th {
+          background-color: #b2ebf2 !important;
+          color: black !important;
+          font-size: 12px;
+          padding: 10px 8px !important;
+          border: 1px solid #90caf9 !important;
+          text-align: center !important;
+        }
+        .custom-datatable .p-datatable-thead > tr > th * {
+          color: black !important;
+          justify-content: center !important;
+        }
+        .custom-datatable .p-datatable-tbody > tr > td {
+          font-size: 12px;
+          padding: 8px;
+          border: 1px solid #90caf9;
+          text-align: center !important;
+        }
+        .custom-datatable .p-paginator {
+          background: #f8fdfe;
+          border: 1px solid #4dd0e1;
+          border-bottom-left-radius: 8px;
+          border-bottom-right-radius: 8px;
+          padding: 5px;
+        }
+      `}</style>
     </div>
   );
 };

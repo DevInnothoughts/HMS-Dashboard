@@ -26,7 +26,7 @@ import { toast } from "react-hot-toast";
 
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api"
+const BASE_URL = "http://localhost:5100/api"
 
 const Toast = Swal.mixin({
   toast: true,
@@ -224,6 +224,7 @@ export default function Call_logs() {
       const data = await response.json();
 
       if (response.ok && data.data) {
+        console.log(data.data)
         setCallLogs(data.data);
       } else {
         console.error("Error in response:", data);
@@ -885,8 +886,6 @@ export default function Call_logs() {
                               const rawDate = rowData.call_date;
                               if (!rawDate) return "-";
 
-                              // Remove the ambiguous "YYYY-DD-MM" format
-                              // Force specific parsing of the ISO date returned by the DB
                               const dateObj = moment(rawDate, "YYYY-MM-DD");
 
                               return dateObj.isValid()

@@ -28,7 +28,7 @@ import logo from "../../assets/images/3.png";
 
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api"
+const BASE_URL = "http://localhost:5100/api"
 
 const countries = [
   "Afghanistan",
@@ -765,8 +765,8 @@ export default function All_patient() {
       // specific_work: Boolean(patient.specific_work) || "",
       specific_work: patient.specific_work || "",
       patient_id: patient.patient_id || "",
-      nationality: patient.nationality || "",
-      language: patient.language || "",
+      nationality: patient.additional_info.nationality || "",
+      language: patient.additional_info.language || "",
     });
 
     setWorkPatterns({
@@ -1115,6 +1115,19 @@ export default function All_patient() {
       regionalPatientSignature = `<p><b>Patients Signature:<br>(ರೋಗಿಯ ಸಹಿ)</b></p>`;
       regionalWitnessSignature = `<p><b>Witness Signature:<br>(ಸಾಕ್ಷಿದಾರರ ಸಹಿ)</b></p>`;
       regionalTimeDate = `Time & Date:<br>(ಸಮಯ ಮತ್ತು ದಿನಾಂಕ)`;
+    } 
+    else if (["Ludhiana", "Mohali"].includes(location)) {
+      regionalConsent = `<p>ਮੈਂ, ਹੇਠਾਂ ਹਸਤਾਖਰ ਕਰਨ ਵਾਲਾ ਮਰੀਜ਼ ਜਾਂ ਜ਼ਿੰਮੇਵਾਰ ਰਿਸ਼ਤੇਦਾਰ ..........................................................................................................<br> ਇਸ ਦੁਆਰਾ ਹੀਲਿੰਗ ਹੈਂਡਸ ਕਲੀਨਿਕ ਦੇ ਡਾਕਟਰਾਂ, ਸਰਜਨਾਂ ਅਤੇ ਮੈਡੀਕਲ ਕਰਮਚਾਰੀਆਂ ਨੂੰ ਡਾਕਟਰੀ ਜਾਂਚ, ਤਫਤੀਸ਼, ਡਾਕਟਰੀ ਇਲਾਜ ਅਤੇ ਆਊਟ-ਪੇਸ਼ੈਂਟ ਪ੍ਰਕਿਰਿਆ ਕਰਨ ਦੀ ਸਹਿਮਤੀ ਅਤੇ ਅਧਿਕਾਰ ਦਿੰਦਾ ਹਾਂ, ਜੋ ਕਿ ਡਾਕਟਰੀ ਦੇਖਭਾਲ ਦੇ ਦੌਰਾਨ ਇੱਕ ਆਊਟ-ਪੇਸ਼ੈਂਟ ਵਜੋਂ ਉਚਿਤ ਜਾਂ ਜ਼ਰੂਰੀ ਸਮਝਿਆ ਜਾਂਦਾ ਹੈ।<br>ਮੈਂ ਹੀਲਿੰਗ ਹੈਂਡਸ ਕਲੀਨਿਕ ਦੀਆਂ ਨੀਤੀਆਂ ਨੂੰ ਸਮਝਦਾ ਅਤੇ ਸਵੀਕਾਰ ਕਰਦਾ ਹਾਂ ਅਤੇ ਉਹਨਾਂ ਦੀ ਪਾਲਣਾ ਕਰਨ ਲਈ ਸਹਿਮਤ ਹਾਂ। ਮੈਂ ਕਲੀਨਿਕ ਨੂੰ ਨਿਯੁਕਤੀਆਂ ਅਤੇ ਫਾਲੋ-ਅਪਸ ਦੇ ਸਬੰਧ ਵਿੱਚ ਲੋੜ ਪੈਣ 'ਤੇ ਟੈਲੀਫੋਨ ਰਾਹੀਂ ਮੇਰੇ ਨਾਲ ਸੰਪਰਕ ਕਰਨ ਦੀ ਸਹਿਮਤੀ ਵੀ ਦਿੰਦਾ ਹਾਂ। ਮੈਂ ਕਲੀਨਿਕ ਅਤੇ ਡਾਕਟਰਾਂ ਨੂੰ ਮੇਰੇ ਮੈਡੀਕਲ ਮੁੱਦਿਆਂ ਬਾਰੇ ਆਪਸ ਵਿੱਚ ਚਰਚਾ ਕਰਨ ਦੀ ਇਜਾਜ਼ਤ ਦਿੰਦਾ ਹਾਂ, ਇਹ ਜਾਣਦੇ ਹੋਏ ਕਿ ਗੋਪਨੀਯਤਾ ਬਣਾਈ ਰੱਖੀ ਜਾਵੇਗੀ।<br>ਮੈਂ, ਹੇਠਾਂ ਹਸਤਾਖਰ ਕਰਕੇ, ਮੇਰੀ ਸਲਾਹ/ਇਲਾਜ ਦੌਰਾਨ ਮਿਲੀ ਕਿਸੇ ਵੀ ਨਵੀਂ ਜਾਣਕਾਰੀ ਨੂੰ ਭਵਿੱਖ ਵਿੱਚ ਅਧਿਐਨ ਦੇ ਉਦੇਸ਼ਾਂ/ਖੋਜ ਲਈ ਵਰਤਣ ਦੀ ਇਜਾਜ਼ਤ ਦਿੰਦਾ ਹਾਂ।</p>`;
+      regionalPatientNameLabel = `<p><b>Patients Name (ਮਰੀਜ਼ ਦਾ ਨਾਮ):</b></p>`;
+      regionalPatientSignature = `<p><b>Patients Signature:<br>(ਮਰੀਜ਼ ਦੇ ਦਸਤਖਤ)</b></p>`;
+      regionalWitnessSignature = `<p><b>Witness Signature:<br>(ਗਵਾਹ ਦੇ ਦਸਤਖਤ)</b></p>`;
+      regionalTimeDate = `Time & Date:<br>(ਸਮਾਂ ਅਤੇ ਮਿਤੀ)`;
+    } else if (["Surat", "Ahmedabad"].includes(location)) {
+      regionalConsent = `<p>હું, નીચે સહી કરનાર દર્દી અથવા જવાબદાર સંબંધી ..........................................................................................................<br> આથી હીલિંગ હેન્ડ્સ ક્લિનિકના ડોકટરો, સર્જનો અને તબીબી વ્યક્તિઓને તબીબી તપાસ, તપાસ, તબીબી સારવાર અને આઉટ-પેશન્ટ પ્રક્રિયા કરવા માટે સંમતિ અને અધિકાર આપું છું, જે તબીબી સંભાળ દરમિયાન આઉટ-પેશન્ટ તરીકે યોગ્ય અથવા જરૂરી માનવામાં આવે છે.<br>હું હીલિંગ હેન્ડ્સ ક્લિનિકની નીતિઓને સમજું છું અને સ્વીકારું છું અને તેનું પાલન કરવા સંમત થાઉં છું। એપોઇન્ટમેન્ટ અને ફોલો-અપ્સ અંગે જરૂર પડે તો ટેલિફોન દ્વારા મારો સંપર્ક કરવા માટે હું ક્લિનિકને સંમતિ પણ આપું છું। હું ક્લિનિક અને ડોકટરોને મારી તબીબી સમસ્યાઓ વિશે આપસમાં ચર્ચા કરવાની મંજૂરી આપું છું, એ જાણીને કે ગોપનીયતા જાળવવામાં આવશે।<br>હું, નીચે સહી કરનાર, મારી પરામર્શ/સારવાર દરમિયાન મળેલી કોઈપણ નવી માહિતીનો ભવિષ્યમાં અભ્યાસના હેતુઓ/સંશોધન માટે ઉપયોગ કરવાની પરવાનગી આપું છું।</p>`;
+      regionalPatientNameLabel = `<p><b>Patients Name (દર્દીનું નામ):</b></p>`;
+      regionalPatientSignature = `<p><b>Patients Signature:<br>(દર્દીની સહી)</b></p>`;
+      regionalWitnessSignature = `<p><b>Witness Signature:<br>(સાક્ષીની સહી)</b></p>`;
+      regionalTimeDate = `Time & Date:<br>(સમય અને તારીખ)`;
     } else if (
       [
         "DP Road",
