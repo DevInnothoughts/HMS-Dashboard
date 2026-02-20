@@ -1,416 +1,308 @@
 import React, { useState, useEffect, useRef } from 'react';
 import NavbarIpdBills from '../../components/NavbarIpdBills';
-import { Container, Card, Row, Col, Form, Button, InputGroup, ListGroup, Table } from 'react-bootstrap';
+import { Container, Card, Row, Col, Form, Button, InputGroup, ListGroup, Table, Spinner } from 'react-bootstrap';
 import PageBreadcrumb from '../../components/PageBreadcrumb';
 import { FaPrint, FaPlus, FaListUl, FaTasks } from 'react-icons/fa';
+import { decodeJwt } from "../../utils/decode-jwt";
+import Swal from "sweetalert2";
+
+const BASE_URL = "http://localhost:5100/api";
 
 const IpdPaymentData = () => {
     const [invoiceId, setInvoiceId] = useState('');
-    const [patientName, setPatientName] = useState('');
-    const [uhid, setUhid] = useState('');
-    const [searchResults, setSearchResults] = useState([]);
+    const [patientDetails, setPatientDetails] = useState({ name: '', uhid: '', patient_id: '', phone: '' });
+    const [searchResults, setSearchResults] = useState([]); // Safety initialized as array
     const [showDropdown, setShowDropdown] = useState(false);
-    const [isInvoiceFound, setIsInvoiceFound] = useState(false);
     const [showBillDetails, setShowBillDetails] = useState(false);
     const [showAddRow, setShowAddRow] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [selectedTerminal, setSelectedTerminal] = useState('HDFC');
+    const [currentLocation, setCurrentLocation] = useState("");
+    
+    // State for Database Data
+    const [summary, setSummary] = useState({ totalBill: 0, insuranceApproved: 0, patientPayable: 0, totalDue: 0 });
+    const [payments, setPayments] = useState([]);
+    const [newPayment, setNewPayment] = useState({
+        date: new Date().toISOString().split('T')[0],
+        cash: 0, card: 0, cheque: 0, online: 0, internalDiscount: 0, tds: 0
+    });
+
     const dropdownRef = useRef(null);
 
-    // Mock data for payments
-    const [payments, setPayments] = useState([
-        { srNo: 1, date: '13-02-2026', cash: 27000, card: 0, cheque: 0, online: 0, internalDiscount: 0, hospitalDiscount: 0 },
-        { srNo: 2, date: '02-02-2026', cash: 20000, card: 0, cheque: 0, online: 0, internalDiscount: 0, hospitalDiscount: 0 },
-        { srNo: 3, date: '01-02-2026', cash: 1000, card: 0, cheque: 0, online: 0, internalDiscount: 0, hospitalDiscount: 0 },
-        { srNo: 4, date: '25-01-2026', cash: 1000, card: 0, cheque: 0, online: 0, internalDiscount: 0, hospitalDiscount: 0 },
-        { srNo: 5, date: '31-12-2025', cash: 500, card: 0, cheque: 0, online: 0, internalDiscount: 0, hospitalDiscount: 0 },
-        { srNo: 6, date: '31-12-2025', cash: 500, card: 0, cheque: 0, online: 0, internalDiscount: 0, hospitalDiscount: 0 },
-        { srNo: 7, date: '11-07-2025', cash: 30000, card: 0, cheque: 0, online: 30000, internalDiscount: 0, hospitalDiscount: 0 },
-    ]);
-
-    // Summary mock values
-    const summary = {
-        totalBill: 110000,
-        insuranceApproved: 50000,
-        patientPayable: 60000,
-        totalDue: 0
-    };
-
-    // Mock data for invoice search
-    const mockInvoices = [
-        { id: 'INV-001', name: 'John Doe', uhid: 'UHID-12345' },
-        { id: 'INV-002', name: 'Jane Smith', uhid: 'UHID-67890' },
-        { id: 'INV-003', name: 'Robert Brown', uhid: 'UHID-11223' },
-        { id: 'INV-101', name: 'Alice Johnson', uhid: 'UHID-44556' },
-    ];
-
     useEffect(() => {
-        if (invoiceId.trim() === '') {
-            setSearchResults([]);
-            setShowDropdown(false);
-            setPatientName('');
-            setUhid('');
-            setIsInvoiceFound(false);
-            setShowBillDetails(false);
-            return;
+        const token = localStorage.getItem("token");
+        if (token) {
+            const payload = decodeJwt(token);
+            if (payload?.jobLocation) setCurrentLocation(payload.jobLocation);
         }
-
-        const filtered = mockInvoices.filter(inv =>
-            inv.id.toLowerCase().includes(invoiceId.toLowerCase())
-        );
-        setSearchResults(filtered);
-        setShowDropdown(true);
-
-        const perfectMatch = mockInvoices.find(inv => inv.id.toLowerCase() === invoiceId.toLowerCase());
-        if (perfectMatch) {
-            setPatientName(perfectMatch.name);
-            setUhid(perfectMatch.uhid);
-            setIsInvoiceFound(true);
-        } else {
-            setPatientName('');
-            setUhid('');
-            setIsInvoiceFound(false);
-            setShowBillDetails(false);
-        }
-    }, [invoiceId]);
-
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setShowDropdown(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const handleSelectInvoice = (invoice) => {
-        setInvoiceId(invoice.id);
-        setPatientName(invoice.name);
-        setUhid(invoice.uhid);
-        setIsInvoiceFound(true);
+    // 1. Fixed Search Logic with Type Safety
+    useEffect(() => {
+        const delayDebounceFn = setTimeout(() => {
+            if (invoiceId.trim().length > 0) {
+                fetchAutocompleteInvoices();
+            } else {
+                setSearchResults([]);
+                setShowDropdown(false);
+            }
+        }, 300);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [invoiceId]);
+
+    const fetchAutocompleteInvoices = async () => {
+        try {
+            // console.log("invoice location: ", currentLocation);
+            const response = await fetch(`${BASE_URL}/V1/invoice/searchByInvoiceId?invoice_id=${invoiceId}&location=${currentLocation}`);
+            const data = await response.json();
+            
+            // FIX: Ensure data is always an array before setting state
+            if (data && Array.isArray(data)) {
+                setSearchResults(data);
+            } else {
+                setSearchResults([]);
+            }
+            setShowDropdown(true);
+        } catch (error) {
+            console.error("Autocomplete error:", error);
+            setSearchResults([]);
+        }
+    };
+
+    const handleSelectInvoice = (inv) => {
+        setInvoiceId(inv.invoice_id);
+        setPatientDetails({
+            name: inv.name,
+            uhid: inv.Uid_no,
+            patient_id: inv.patient_id,
+            phone: inv.phone
+        });
         setShowDropdown(false);
     };
 
-    const handleViewBillDetails = () => {
-        if (isInvoiceFound) {
-            setShowBillDetails(true);
+    // 2. Fetch Bill Totals and History
+    const handleViewBillDetails = async () => {
+        setLoading(true);
+        try {
+            const resTotal = await fetch(`${BASE_URL}/V1/invoice/searchInvoiceTotal?invoice_id=${invoiceId}&location=${currentLocation}`);
+            const totalData = await resTotal.json();
+            
+            // Safety check for array response
+            const financialInfo = Array.isArray(totalData) ? totalData[0] : totalData;
+
+            if (financialInfo) {
+                setSummary({
+                    totalBill: financialInfo.totalamt || 0,
+                    insuranceApproved: financialInfo.receivedamt || 0,
+                    patientPayable: financialInfo.payableamt || 0,
+                    totalDue: financialInfo.totalduedamt || 0
+                });
+
+                const resHistory = await fetch(`${BASE_URL}/V1/invoice/searchInvoiceDetails?invoice_id=${invoiceId}&location=${currentLocation}`);
+                const historyData = await resHistory.json();
+                setPayments(Array.isArray(historyData) ? historyData : []);
+                setShowBillDetails(true);
+            } else {
+                Swal.fire("Error", "Invoice financial data not found", "error");
+            }
+        } catch (error) {
+            Swal.fire("Error", "Failed to fetch bill details", "error");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // 3. Save Payment Logic
+    const handleSavePayment = async () => {
+        const totalEntered = Object.values(newPayment).reduce((a, b) => (typeof b === 'number' ? a + b : a), 0);
+        if (totalEntered <= 0) return Swal.fire("Invalid Amount", "Please enter a payment value", "warning");
+
+        setLoading(true);
+        try {
+            const endpoint = newPayment.card > 0 && selectedTerminal !== 'OFFLINE' 
+                ? '/V1/invoice/IPDDigitalPayment' 
+                : '/V1/invoice/SaveIPDPayment';
+
+            const payload = {
+                PatientId: patientDetails.patient_id,
+                InvoiceId: invoiceId,
+                InvoiceDate: newPayment.date,
+                CashAmt: newPayment.cash,
+                CardAmt: newPayment.card,
+                ChequeAmt: newPayment.cheque,
+                OnlineAmt: newPayment.online,
+                DiscountAmt: newPayment.internalDiscount,
+                TdsAmt: newPayment.tds,
+                Totalinvoiceamt: summary.patientPayable,
+                PosMachine: selectedTerminal,
+                location: currentLocation
+            };
+            // console.log("SAVE IPD PAYMENT PAYLOAD:", payload);
+            const response = await fetch(`${BASE_URL}${endpoint}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+
+            if (result.status) {
+                Swal.fire("Success", result.message, "success");
+                setShowAddRow(false);
+                handleViewBillDetails(); // Refresh list
+            } else {
+                Swal.fire("Failed", result.message, "error");
+            }
+        } catch (error) {
+            Swal.fire("Error", "Server communication failed", "error");
+        } finally {
+            setLoading(false);
         }
     };
 
     const terminalOptions = ['HDFC', 'PINE LABS', 'OFFLINE', 'BHARATPE 1', 'BHARATPE 2'];
 
     return (
-        <div
-            className="themebody-wrap"
-            style={{
-                background: "linear-gradient(to right, #e0f7fa, #80deea)",
-                minHeight: "100vh",
-                padding: "10px",
-                fontFamily: "'Poppins', Arial, sans-serif",
-            }}
-        >
+        <div className="themebody-wrap custom-ipd-styles">
             <PageBreadcrumb pagename="IPD Payment Data" />
             <NavbarIpdBills />
             <Container fluid>
                 <Row>
                     <Col>
-                        {/* Search Card */}
-                        <Card
-                            style={{
-                                borderRadius: "8px",
-                                boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
-                                background: "white",
-                                border: "1px solid #00bcd4",
-                                overflow: "visible",
-                                marginBottom: "20px"
-                            }}
-                        >
+                        {/* Search Section */}
+                        <Card className="shadow-sm border-cyan mb-4 overflow-visible">
                             <Card.Body>
                                 <Row className="align-items-end">
                                     <Col lg={3} md={6} className="mb-3 position-relative" ref={dropdownRef}>
-                                        <Form.Group>
-                                            <Form.Label style={{ fontSize: "13px", fontWeight: "600", color: "#00838f" }}>Enter Invoice ID</Form.Label>
-                                            <InputGroup>
-                                                <Form.Control
-                                                    type="text"
-                                                    placeholder="Search Invoice ID"
-                                                    value={invoiceId}
-                                                    onChange={(e) => setInvoiceId(e.target.value)}
-                                                    onFocus={() => invoiceId && setShowDropdown(true)}
-                                                    style={{ borderRadius: "10px", border: "1px solid #80deea" }}
-                                                />
-                                            </InputGroup>
-                                        </Form.Group>
-
+                                        <Form.Label className="label-style">Search Invoice ID</Form.Label>
+                                        <Form.Control
+                                            type="text"
+                                            value={invoiceId}
+                                            onChange={(e) => setInvoiceId(e.target.value)}
+                                            placeholder="Enter Invoice ID..."
+                                            className="input-style"
+                                        />
                                         {showDropdown && (
-                                            <ListGroup
-                                                style={{
-                                                    position: 'absolute',
-                                                    top: '100%',
-                                                    left: '15px',
-                                                    right: '15px',
-                                                    zIndex: 1000,
-                                                    boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-                                                    maxHeight: '200px',
-                                                    overflowY: 'auto',
-                                                    borderRadius: '0 0 8px 8px'
-                                                }}
-                                            >
-                                                {searchResults.length > 0 ? (
-                                                    searchResults.map((inv) => (
-                                                        <ListGroup.Item
-                                                            key={inv.id}
-                                                            action
-                                                            onClick={() => handleSelectInvoice(inv)}
-                                                            style={{ cursor: 'pointer', fontSize: '14px' }}
-                                                        >
-                                                            {inv.id} - {inv.name}
-                                                        </ListGroup.Item>
-                                                    ))
-                                                ) : (
-                                                    <ListGroup.Item style={{ color: 'red', fontSize: '14px' }}>
-                                                        No invoice found
+                                            <ListGroup className="position-absolute w-100 z-index-dropdown shadow custom-list">
+                                                {Array.isArray(searchResults) && searchResults.map((inv) => (
+                                                    <ListGroup.Item key={inv.invoice_id} action onClick={() => handleSelectInvoice(inv)}>
+                                                        {inv.invoice_id} - {inv.name}
                                                     </ListGroup.Item>
-                                                )}
+                                                ))}
+                                                {searchResults.length === 0 && <ListGroup.Item className="text-danger">No invoice found</ListGroup.Item>}
                                             </ListGroup>
                                         )}
                                     </Col>
-
                                     <Col lg={3} md={6} className="mb-3">
-                                        <Form.Group>
-                                            <Form.Label style={{ fontSize: "13px", fontWeight: "600", color: "#00838f" }}>Patient Name</Form.Label>
-                                            <Form.Control
-                                                type="text"
-                                                value={patientName}
-                                                readOnly
-                                                style={{ borderRadius: "10px", backgroundColor: "#f5f5f5", cursor: "not-allowed", border: "1px solid #80deea" }}
-                                            />
-                                        </Form.Group>
+                                        <Form.Label className="label-style">Patient Name</Form.Label>
+                                        <Form.Control readOnly value={patientDetails.name} className="input-style" />
                                     </Col>
-
                                     <Col lg={3} md={6} className="mb-3">
-                                        <Form.Group>
-                                            <Form.Label style={{ fontSize: "13px", fontWeight: "600", color: "#00838f" }}>UID No</Form.Label>
-                                            <Form.Control
-                                                type="text"
-                                                value={uhid}
-                                                readOnly
-                                                style={{ borderRadius: "10px", backgroundColor: "#f5f5f5", cursor: "not-allowed", border: "1px solid #80deea" }}
-                                            />
-                                        </Form.Group>
+                                        <Form.Label className="label-style">UID No</Form.Label>
+                                        <Form.Control readOnly value={patientDetails.uhid} className="input-style" />
                                     </Col>
-
                                     <Col lg={2} md={6} className="mb-3">
-                                        <Button
-                                            variant="primary"
-                                            disabled={!isInvoiceFound}
-                                            onClick={handleViewBillDetails}
-                                            style={{
-                                                width: "100%",
-                                                borderRadius: "10px",
-                                                fontWeight: "600",
-                                                backgroundColor: isInvoiceFound ? "#00bcd4" : "#b2ebf2",
-                                                borderColor: isInvoiceFound ? "#00bcd4" : "#b2ebf2",
-                                                color: "white",
-                                                height: "38px"
-                                            }}
-                                        >
-                                            View Bill Details
+                                        <Button variant="info" className="w-100 text-white fw-bold btn-view" disabled={!invoiceId || loading} onClick={handleViewBillDetails}>
+                                            {loading ? <Spinner size="sm" /> : "View Bill Details"}
                                         </Button>
                                     </Col>
                                 </Row>
                             </Card.Body>
                         </Card>
 
-                        {/* Bill Details Section */}
                         {showBillDetails && (
-                            <Card style={{ borderRadius: "8px", boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)", border: "none" }}>
-                                <Card.Body style={{ padding: "0" }}>
-                                    {/* Summary Header */}
-                                    <div style={{
-                                        background: "linear-gradient(to right, #00acc1, #00bcd4)",
-                                        padding: "12px 20px",
-                                        borderRadius: "8px 8px 0 0",
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                        alignItems: "center",
-                                        fontSize: "15px",
-                                        fontWeight: "600",
-                                        color: "white"
-                                    }}>
-                                        <div className="d-flex align-items-center"><FaListUl className="me-2" /> Total Bill : ₹{summary.totalBill}</div>
-                                        <div className="d-flex align-items-center"><FaTasks className="me-2" /> Insurance Approved: ₹{summary.insuranceApproved}</div>
-                                        <div>Patient Payable : ₹{summary.patientPayable}</div>
-                                        <div>Total Due : ₹{summary.totalDue}</div>
-                                    </div>
-
-                                    {/* Payments Table */}
-                                    <div style={{ padding: "15px" }}>
-                                        <Table responsive hover className="mb-0" style={{ fontSize: "13px" }}>
-                                            <thead style={{ backgroundColor: "#e0f7fa", color: "#006064", borderBottom: "2px solid #80deea" }}>
-                                                <tr>
-                                                    <th className="py-3">Sr.No</th>
-                                                    <th className="py-3">Date</th>
-                                                    <th className="py-3">Cash</th>
-                                                    <th className="py-3">Card</th>
-                                                    <th className="py-3">Cheque</th>
-                                                    <th className="py-3">Online</th>
-                                                    <th className="py-3">Internal Discount</th>
-                                                    <th className="py-3">Hospital Discount</th>
-                                                    <th className="py-3">Action</th>
+                            <Card className="shadow-sm border-0 overflow-hidden">
+                                <div className="summary-header">
+                                    <span><FaListUl className="me-2"/>Bill: ₹{summary.totalBill}</span>
+                                    <span><FaTasks className="me-2"/>Insurance: ₹{summary.insuranceApproved}</span>
+                                    <span className="fw-bold">Payable: ₹{summary.patientPayable}</span>
+                                    <span className="bg-danger px-2 rounded">Due: ₹{summary.totalDue}</span>
+                                </div>
+                                <Card.Body>
+                                    <Table responsive hover size="sm" className="text-center align-middle custom-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Sr</th><th>Date</th><th>Cash</th><th>Card</th><th>Chq</th><th>Onl</th><th>Int. Disc</th><th>Hosp. Disc</th><th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {payments.map((pay, idx) => (
+                                                <tr key={pay.ipdpaymentid}>
+                                                    <td>{idx + 1}</td>
+                                                    <td>{pay.receipt_date?.split('T')[0]}</td>
+                                                    <td>₹{pay.cashamt}</td>
+                                                    <td>₹{pay.cardamt}</td>
+                                                    <td>₹{pay.chequeamt}</td>
+                                                    <td>₹{pay.onlineamt}</td>
+                                                    <td>₹{pay.discountamt}</td>
+                                                    <td>₹{pay.tdsamt}</td>
+                                                    <td><Button variant="outline-primary" size="sm"><FaPrint/></Button></td>
                                                 </tr>
-                                            </thead>
-                                            <tbody>
-                                                {payments.map((pay) => (
-                                                    <tr key={pay.srNo} style={{ borderBottom: "1px solid #e0f2f1" }}>
-                                                        <td style={{ verticalAlign: "middle" }}>
-                                                            <div style={{ padding: "6px", borderRadius: "4px", width: "40px", textAlign: "center", backgroundColor: "#f0fbff", color: "#00838f", fontWeight: "600", border: "1px solid #80deea" }}>{pay.srNo}</div>
-                                                        </td>
-                                                        <td style={{ verticalAlign: "middle" }}>
-                                                            <Form.Control size="sm" readOnly value={pay.date} style={{ backgroundColor: "#fafafa", border: "1px solid #80deea" }} />
-                                                        </td>
-                                                        <td style={{ verticalAlign: "middle" }}>
-                                                            <Form.Control size="sm" readOnly value={`₹${pay.cash}`} style={{ backgroundColor: "#fafafa", border: "1px solid #80deea" }} />
-                                                        </td>
-                                                        <td style={{ verticalAlign: "middle" }}>
-                                                            <Form.Control size="sm" readOnly value={`₹${pay.card}`} style={{ backgroundColor: "#fafafa", border: "1px solid #80deea" }} />
-                                                        </td>
-                                                        <td style={{ verticalAlign: "middle" }}>
-                                                            <Form.Control size="sm" readOnly value={`₹${pay.cheque}`} style={{ backgroundColor: "#fafafa", border: "1px solid #80deea" }} />
-                                                        </td>
-                                                        <td style={{ verticalAlign: "middle" }}>
-                                                            <Form.Control size="sm" readOnly value={`₹${pay.online}`} style={{ backgroundColor: "#fafafa", border: "1px solid #80deea" }} />
-                                                        </td>
-                                                        <td style={{ verticalAlign: "middle" }}>
-                                                            <Form.Control size="sm" readOnly value={`₹${pay.internalDiscount}`} style={{ backgroundColor: "#fafafa", border: "1px solid #80deea" }} />
-                                                        </td>
-                                                        <td style={{ verticalAlign: "middle" }}>
-                                                            <Form.Control size="sm" readOnly value={`₹${pay.hospitalDiscount}`} style={{ backgroundColor: "#fafafa", border: "1px solid #80deea" }} />
-                                                        </td>
-                                                        <td style={{ verticalAlign: "middle" }}>
-                                                            <Button size="sm" style={{ width: "40px", display: "flex", alignItems: "center", justifyContent: "center", padding: "10px", backgroundColor: "#00838f", borderColor: "#00838f", color: "white" }}>
-                                                                <FaPrint />
-                                                            </Button>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </Table>
+                                            ))}
+                                        </tbody>
+                                    </Table>
 
-                                        {/* PoS Terminal and Add button */}
-                                        <div className="d-flex justify-content-between align-items-center mt-4 px-3" style={{ padding: "15px", backgroundColor: "#f5fcfd", borderRadius: "8px", border: "1px solid #80deea" }}>
-                                            <div className="d-flex align-items-center" style={{ fontSize: "14px", fontWeight: "700", color: "#006064" }}>
-                                                <span className="me-4">Select PoS Terminal :</span>
-                                                <div className="d-flex">
-                                                    {terminalOptions.map(option => (
-                                                        <Form.Check
-                                                            key={option}
-                                                            type="radio"
-                                                            label={option}
-                                                            name="terminal"
-                                                            id={`terminal-${option}`}
-                                                            checked={selectedTerminal === option}
-                                                            onChange={() => setSelectedTerminal(option)}
-                                                            className="me-4"
-                                                            style={{ fontWeight: "600", color: "#00838f" }}
-                                                        />
-                                                    ))}
-                                                </div>
-                                            </div>
-                                            <Button
-                                                variant="info"
-                                                size="sm"
-                                                onClick={() => setShowAddRow(!showAddRow)}
-                                                style={{ width: "32px", height: "32px", borderRadius: "6px", padding: 0, backgroundColor: "#00bcd4", borderColor: "#00bcd4", color: "white" }}
-                                            >
-                                                <FaPlus size={14} />
-                                            </Button>
+                                    <div className="d-flex justify-content-between mt-4 p-3 rounded border align-items-center">
+                                        <div className="d-flex align-items-center">
+                                            <span className="me-3 fw-bold text-cyan-dark">PoS Terminal:</span>
+                                            {terminalOptions.map(opt => (
+                                                <Form.Check key={opt} inline type="radio" label={opt} checked={selectedTerminal === opt} onChange={() => setSelectedTerminal(opt)} className="fw-bold text-secondary" />
+                                            ))}
                                         </div>
-
-                                        {/* Add Payment Row */}
-                                        {showAddRow && (
-                                            <div style={{ marginTop: "15px", padding: "5px", border: "1px solid #80deea", borderRadius: "8px", backgroundColor: "#fff" }}>
-                                                {/* <h6 style={{ color: "#007c91", fontWeight: "700", marginBottom: "15px" }}>Add New Payment Entry</h6> */}
-                                                <Table responsive borderless style={{ fontSize: "13px" }}>
-                                                    <thead style={{ backgroundColor: "#f0fbff", color: "#00838f" }}>
-                                                        <tr>
-                                                            <th>Sr.No</th>
-                                                            <th>Date</th>
-                                                            <th>Cash</th>
-                                                            <th>Card</th>
-                                                            <th>Cheque</th>
-                                                            <th>Online</th>
-                                                            <th>Internal Discount</th>
-                                                            <th>Hospital Discount</th>
-                                                            <th>Action</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <tr>
-                                                            <td style={{ verticalAlign: "middle" }}>
-                                                                <div style={{ padding: "6px", border: "1px solid #80deea", borderRadius: "4px", width: "40px", textAlign: "center", backgroundColor: "#e0f7fa", color: "#00838f", fontWeight: "600" }}>{payments.length + 1}</div>
-                                                            </td>
-                                                            <td style={{ verticalAlign: "middle" }}>
-                                                                <Form.Control
-                                                                    size="sm"
-                                                                    type="date"
-                                                                    defaultValue={new Date().toISOString().split('T')[0]}
-                                                                    style={{ border: "1px solid #80deea" }}
-                                                                />
-                                                            </td>
-                                                            <td style={{ verticalAlign: "middle" }}>
-                                                                <InputGroup size="sm">
-                                                                    <InputGroup.Text style={{ backgroundColor: "#e0f7fa", border: "1px solid #80deea", color: "#00838f" }}>₹</InputGroup.Text>
-                                                                    <Form.Control type="number" defaultValue="0" style={{ border: "1px solid #80deea" }} />
-                                                                </InputGroup>
-                                                            </td>
-                                                            <td style={{ verticalAlign: "middle" }}>
-                                                                <InputGroup size="sm">
-                                                                    <InputGroup.Text style={{ backgroundColor: "#e0f7fa", border: "1px solid #80deea", color: "#00838f" }}>₹</InputGroup.Text>
-                                                                    <Form.Control type="number" defaultValue="0" style={{ border: "1px solid #80deea" }} />
-                                                                </InputGroup>
-                                                            </td>
-                                                            <td style={{ verticalAlign: "middle" }}>
-                                                                <InputGroup size="sm">
-                                                                    <InputGroup.Text style={{ backgroundColor: "#e0f7fa", border: "1px solid #80deea", color: "#00838f" }}>₹</InputGroup.Text>
-                                                                    <Form.Control type="number" defaultValue="0" style={{ border: "1px solid #80deea" }} />
-                                                                </InputGroup>
-                                                            </td>
-                                                            <td style={{ verticalAlign: "middle" }}>
-                                                                <InputGroup size="sm">
-                                                                    <InputGroup.Text style={{ backgroundColor: "#e0f7fa", border: "1px solid #80deea", color: "#00838f" }}>₹</InputGroup.Text>
-                                                                    <Form.Control type="number" defaultValue="0" style={{ border: "1px solid #80deea" }} />
-                                                                </InputGroup>
-                                                            </td>
-                                                            <td style={{ verticalAlign: "middle" }}>
-                                                                <InputGroup size="sm">
-                                                                    <InputGroup.Text style={{ backgroundColor: "#e0f7fa", border: "1px solid #80deea", color: "#00838f" }}>₹</InputGroup.Text>
-                                                                    <Form.Control type="number" defaultValue="0" style={{ border: "1px solid #80deea" }} />
-                                                                </InputGroup>
-                                                            </td>
-                                                            <td style={{ verticalAlign: "middle" }}>
-                                                                <InputGroup size="sm">
-                                                                    <InputGroup.Text style={{ backgroundColor: "#e0f7fa", border: "1px solid #80deea", color: "#00838f" }}>₹</InputGroup.Text>
-                                                                    <Form.Control type="number" defaultValue="0" style={{ border: "1px solid #80deea" }} />
-                                                                </InputGroup>
-                                                            </td>
-                                                            <td style={{ verticalAlign: "middle" }}>
-                                                                <Button size="sm" style={{ backgroundColor: "#00bcd4", borderColor: "#00bcd4", fontWeight: "600", width: "100%" }}>
-                                                                    Save
-                                                                </Button>
-                                                            </td>
-                                                        </tr>
-                                                    </tbody>
-                                                </Table>
-                                            </div>
-                                        )}
+                                        <Button className="btn-add" onClick={() => setShowAddRow(!showAddRow)}><FaPlus/></Button>
                                     </div>
+
+                                    {showAddRow && (
+                                        <div className="mt-3 p-3 border rounded bg-white add-payment-box">
+                                            <Row className="g-2">
+                                                <Col md={2}><Form.Control type="date" className="input-style" value={newPayment.date} onChange={e => setNewPayment({...newPayment, date: e.target.value})} /></Col>
+                                                <Col><Form.Control type="number" placeholder="Cash" className="input-style" onChange={e => setNewPayment({...newPayment, cash: +e.target.value})} /></Col>
+                                                <Col><Form.Control type="number" placeholder="Card" className="input-style" onChange={e => setNewPayment({...newPayment, card: +e.target.value})} /></Col>
+                                                <Col><Form.Control type="number" placeholder="Chq" className="input-style" onChange={e => setNewPayment({...newPayment, cheque: +e.target.value})} /></Col>
+                                                <Col><Form.Control type="number" placeholder="Onl" className="input-style" onChange={e => setNewPayment({...newPayment, online: +e.target.value})} /></Col>
+                                                <Col><Form.Control type="number" placeholder="Int.D" className="input-style" onChange={e => setNewPayment({...newPayment, internalDiscount: +e.target.value})} /></Col>
+                                                <Col><Form.Control type="number" placeholder="TDS" className="input-style" onChange={e => setNewPayment({...newPayment, tds: +e.target.value})} /></Col>
+                                                <Col md={1}><Button className="w-100 btn-save" onClick={handleSavePayment} disabled={loading}>Save</Button></Col>
+                                            </Row>
+                                        </div>
+                                    )}
                                 </Card.Body>
                             </Card>
                         )}
                     </Col>
                 </Row>
             </Container>
+
+            <style>{`
+                .custom-ipd-styles {
+                    background: linear-gradient(to right, #e0f7fa, #80deea);
+                    min-height: 100vh;
+                    padding: 10px;
+                    font-family: 'Poppins', sans-serif;
+                }
+                .label-style { font-size: 13px; fontWeight: 600; color: #00838f; }
+                .input-style { border-radius: 10px; border: 1px solid #80deea; }
+                .border-cyan { border: 1px solid #00bcd4; }
+                .z-index-dropdown { z-index: 1050; }
+                .summary-header {
+                    background: linear-gradient(to right, #00acc1, #00bcd4);
+                    padding: 12px 20px;
+                    border-radius: 8px 8px 0 0;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    font-size: 15px;
+                    font-weight: 600;
+                    color: white;
+                }
+                .custom-table thead { background-color: #e0f7fa; color: #006064; }
+                .btn-view { background-color: #00bcd4; border: none; height: 38px; border-radius: 10px; }
+                .btn-add { background-color: #00bcd4; border: none; border-radius: 6px; }
+                .btn-save { background-color: #00bcd4; border: none; font-weight: 600; }
+                .text-cyan-dark { color: #00838f; }
+                .custom-list .list-group-item:hover { background-color: #e0f7fa; }
+            `}</style>
         </div>
     );
 };
