@@ -134,7 +134,7 @@ export default function Sidebar() {
     const renderReceptionistMenu = () => (
         <ul>
             <li className="cdxmenu-title">
-                <h5>Receptionist</h5>
+                <h5>Receptionist(OPD)</h5>
             </li>
 
             <li className={`menu-item ${activeIndex === "/reception-dashboard" ? "active" : ""}`}>

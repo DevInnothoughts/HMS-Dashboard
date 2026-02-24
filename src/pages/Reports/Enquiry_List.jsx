@@ -26,7 +26,7 @@ import Swal from "sweetalert2";
 
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api"
+const BASE_URL = "http://localhost:5100/api"
 
 const Toast = Swal.mixin({
   toast: true,
@@ -461,7 +461,7 @@ export default function EnquiryList() {
                           width: "150px",
                         }}
                       />
-                      <Column
+                      {/* <Column
                         field="doctorName"
                         header="Doctor Name"
                         body={(rowData) => rowData.doctorName || "-"}
@@ -471,7 +471,7 @@ export default function EnquiryList() {
                           textAlign: "center",
                           width: "150px",
                         }}
-                      />
+                      /> */}
                       <Column
                         field="FDE_Name"
                         header="FDE Name"

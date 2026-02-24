@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { FaPlus } from "react-icons/fa";
 import moment from "moment";
 import { Paginator } from "primereact/paginator";
@@ -33,7 +33,7 @@ import "../../styles/styles.css";
 
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api"
+const BASE_URL = "http://localhost:5100/api"
 
 const Toast = Swal.mixin({
   toast: true,
@@ -193,92 +193,92 @@ const InvoiceList = () => {
 
   const initialFormData = { ...formData };
 
-  useEffect(() => {
-    // Helper function moved inside to ensure availability
-    const formatToApiDateLocal = (date) => {
-      if (!date) return null;
-      const d = new Date(date);
-      if (isNaN(d.getTime())) return null;
-      const day = String(d.getDate()).padStart(2, "0");
-      const month = String(d.getMonth() + 1).padStart(2, "0");
-      const year = d.getFullYear();
-      return `${day}-${month}-${year}`; // Matches your DD-MM-YYYY backend expectation
-    };
+  // Helper function moved to component scope
+  const formatToApiDateLocal = (date) => {
+    if (!date) return null;
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return null;
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`; // Matches your DD-MM-YYYY backend expectation
+  };
 
-    const fetchInvoices = async () => {
-      if (!currentLocation) return;
+  const fetchInvoices = useCallback(async () => {
+    if (!currentLocation) return;
 
-      setLoading(true);
-      setError("");
+    setLoading(true);
+    setError("");
 
-      try {
-        // 1. Create the base URL
-        const url = new URL(`${BASE_URL}/V1/invoice/listInvoice`);
+    try {
+      // 1. Create the base URL
+      const url = new URL(`${BASE_URL}/V1/invoice/listInvoice`);
 
-        // 2. Prepare the parameters
-        const params = {
-          location: currentLocation,
-          from: formatToApiDateLocal(fromDate),
-          to: formatToApiDateLocal(toDate),
-        };
+      // 2. Prepare the parameters
+      const params = {
+        location: currentLocation,
+        from: formatToApiDateLocal(fromDate),
+        to: formatToApiDateLocal(toDate),
+      };
 
-        // 3. Cleanly append parameters
-        Object.keys(params).forEach((key) => {
-          if (params[key]) {
-            url.searchParams.append(key, params[key]);
-          }
-        });
-
-        console.log("Fetching URL:", url.toString());
-
-        const response = await fetch(url.toString(), {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`, // Good practice to include
-          },
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          // Flatten data if backend returns nested array [ [] ]
-          const rawData = Array.isArray(data.data[0])
-            ? data.data[0]
-            : data.data || [];
-
-          const processedInvoices = rawData.map((invoice) => ({
-            ...invoice,
-            totalamt: parseFloat(invoice.totalamt) || 0,
-            discount: parseFloat(invoice.discount) || 0,
-            advance_amt: parseFloat(invoice.advance_amt) || 0,
-            receivedamt: parseFloat(invoice.receivedamt) || 0,
-            payable_amt: calculatePayableAmt(invoice),
-            due_amt:
-              (parseFloat(invoice.totalamt) || 0) -
-              (parseFloat(invoice.receivedamt) || 0),
-            pay_mode:
-              invoice.chequeno && invoice.chequeno !== "NULL"
-                ? "PDC"
-                : invoice.insurancecompany
-                  ? "INSURANCE"
-                  : "CASH/CARD",
-            patient_name: invoice.patient_name || "N/A",
-            patient_phone: invoice.patient_phone || "N/A",
-          }));
-
-          setInvoices(processedInvoices);
-        } else {
-          throw new Error(data.message || "Failed to fetch invoices.");
+      // 3. Cleanly append parameters
+      Object.keys(params).forEach((key) => {
+        if (params[key]) {
+          url.searchParams.append(key, params[key]);
         }
-      } catch (err) {
-        console.error("Fetch error:", err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+      });
 
+      console.log("Fetching URL:", url.toString());
+
+      const response = await fetch(url.toString(), {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`, // Good practice to include
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Flatten data if backend returns nested array [ [] ]
+        const rawData = Array.isArray(data.data[0])
+          ? data.data[0]
+          : data.data || [];
+
+        const processedInvoices = rawData.map((invoice) => ({
+          ...invoice,
+          totalamt: parseFloat(invoice.totalamt) || 0,
+          discount: parseFloat(invoice.discount) || 0,
+          advance_amt: parseFloat(invoice.advance_amt) || 0,
+          receivedamt: parseFloat(invoice.receivedamt) || 0,
+          payable_amt: calculatePayableAmt(invoice),
+          due_amt:
+            (parseFloat(invoice.totalamt) || 0) -
+            (parseFloat(invoice.receivedamt) || 0),
+          pay_mode:
+            invoice.chequeno && invoice.chequeno !== "NULL"
+              ? "PDC"
+              : invoice.insurancecompany
+                ? "INSURANCE"
+                : "CASH/CARD",
+          patient_name: invoice.patient_name || "N/A",
+          patient_phone: invoice.patient_phone || "N/A",
+        }));
+
+        setInvoices(processedInvoices);
+      } else {
+        throw new Error(data.message || "Failed to fetch invoices.");
+      }
+    } catch (err) {
+      console.error("Fetch error:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentLocation, fromDate, toDate]);
+
+  useEffect(() => {
     fetchInvoices();
   }, [currentLocation, fromDate, toDate]); // Added fromDate and toDate so it refreshes when dates change
 
@@ -594,13 +594,6 @@ const InvoiceList = () => {
       const result = await response.json();
 
       if (response.ok) {
-        setInvoices((prev) =>
-          prev.map((inv) =>
-            inv.invoice_id === selectedInvoice.invoice_id
-              ? { ...inv, package: titleString }
-              : inv,
-          ),
-        );
         Swal.fire({
           icon: "success",
           title: "Updated!",
@@ -608,6 +601,7 @@ const InvoiceList = () => {
           timer: 2000,
           showConfirmButton: false,
         });
+        fetchInvoices(); // Refresh the list from the server
         handleCloseModal();
       } else {
         Toast.fire({
