@@ -675,6 +675,8 @@ export default function All_patient() {
         companyname: selectedPatient.companyname || "",
         specific_work: selectedPatient.specific_work || false,
         reference_type: selectedPatient.reference_type,
+        nationality: selectedPatient.additional_info?.nationality || "",
+        language: selectedPatient.additional_info?.language || "",
       });
 
       const workPatternsArray = (selectedPatient.specific_work || "")
@@ -763,8 +765,8 @@ export default function All_patient() {
       // specific_work: Boolean(patient.specific_work) || "",
       specific_work: patient.specific_work || "",
       patient_id: patient.patient_id || "",
-      nationality: patient.additional_info.nationality || "",
-      language: patient.additional_info.language || "",
+      nationality: patient.additional_info?.nationality || "",
+      language: patient.additional_info?.language || "",
     });
 
     setWorkPatterns({
@@ -1113,7 +1115,7 @@ export default function All_patient() {
       regionalPatientSignature = `<p><b>Patients Signature:<br>(ರೋಗಿಯ ಸಹಿ)</b></p>`;
       regionalWitnessSignature = `<p><b>Witness Signature:<br>(ಸಾಕ್ಷಿದಾರರ ಸಹಿ)</b></p>`;
       regionalTimeDate = `Time & Date:<br>(ಸಮಯ ಮತ್ತು ದಿನಾಂಕ)`;
-    } 
+    }
     else if (["Ludhiana", "Mohali"].includes(location)) {
       regionalConsent = `<p>ਮੈਂ, ਹੇਠਾਂ ਹਸਤਾਖਰ ਕਰਨ ਵਾਲਾ ਮਰੀਜ਼ ਜਾਂ ਜ਼ਿੰਮੇਵਾਰ ਰਿਸ਼ਤੇਦਾਰ ..........................................................................................................<br> ਇਸ ਦੁਆਰਾ ਹੀਲਿੰਗ ਹੈਂਡਸ ਕਲੀਨਿਕ ਦੇ ਡਾਕਟਰਾਂ, ਸਰਜਨਾਂ ਅਤੇ ਮੈਡੀਕਲ ਕਰਮਚਾਰੀਆਂ ਨੂੰ ਡਾਕਟਰੀ ਜਾਂਚ, ਤਫਤੀਸ਼, ਡਾਕਟਰੀ ਇਲਾਜ ਅਤੇ ਆਊਟ-ਪੇਸ਼ੈਂਟ ਪ੍ਰਕਿਰਿਆ ਕਰਨ ਦੀ ਸਹਿਮਤੀ ਅਤੇ ਅਧਿਕਾਰ ਦਿੰਦਾ ਹਾਂ, ਜੋ ਕਿ ਡਾਕਟਰੀ ਦੇਖਭਾਲ ਦੇ ਦੌਰਾਨ ਇੱਕ ਆਊਟ-ਪੇਸ਼ੈਂਟ ਵਜੋਂ ਉਚਿਤ ਜਾਂ ਜ਼ਰੂਰੀ ਸਮਝਿਆ ਜਾਂਦਾ ਹੈ।<br>ਮੈਂ ਹੀਲਿੰਗ ਹੈਂਡਸ ਕਲੀਨਿਕ ਦੀਆਂ ਨੀਤੀਆਂ ਨੂੰ ਸਮਝਦਾ ਅਤੇ ਸਵੀਕਾਰ ਕਰਦਾ ਹਾਂ ਅਤੇ ਉਹਨਾਂ ਦੀ ਪਾਲਣਾ ਕਰਨ ਲਈ ਸਹਿਮਤ ਹਾਂ। ਮੈਂ ਕਲੀਨਿਕ ਨੂੰ ਨਿਯੁਕਤੀਆਂ ਅਤੇ ਫਾਲੋ-ਅਪਸ ਦੇ ਸਬੰਧ ਵਿੱਚ ਲੋੜ ਪੈਣ 'ਤੇ ਟੈਲੀਫੋਨ ਰਾਹੀਂ ਮੇਰੇ ਨਾਲ ਸੰਪਰਕ ਕਰਨ ਦੀ ਸਹਿਮਤੀ ਵੀ ਦਿੰਦਾ ਹਾਂ। ਮੈਂ ਕਲੀਨਿਕ ਅਤੇ ਡਾਕਟਰਾਂ ਨੂੰ ਮੇਰੇ ਮੈਡੀਕਲ ਮੁੱਦਿਆਂ ਬਾਰੇ ਆਪਸ ਵਿੱਚ ਚਰਚਾ ਕਰਨ ਦੀ ਇਜਾਜ਼ਤ ਦਿੰਦਾ ਹਾਂ, ਇਹ ਜਾਣਦੇ ਹੋਏ ਕਿ ਗੋਪਨੀਯਤਾ ਬਣਾਈ ਰੱਖੀ ਜਾਵੇਗੀ।<br>ਮੈਂ, ਹੇਠਾਂ ਹਸਤਾਖਰ ਕਰਕੇ, ਮੇਰੀ ਸਲਾਹ/ਇਲਾਜ ਦੌਰਾਨ ਮਿਲੀ ਕਿਸੇ ਵੀ ਨਵੀਂ ਜਾਣਕਾਰੀ ਨੂੰ ਭਵਿੱਖ ਵਿੱਚ ਅਧਿਐਨ ਦੇ ਉਦੇਸ਼ਾਂ/ਖੋਜ ਲਈ ਵਰਤਣ ਦੀ ਇਜਾਜ਼ਤ ਦਿੰਦਾ ਹਾਂ।</p>`;
       regionalPatientNameLabel = `<p><b>Patients Name (ਮਰੀਜ਼ ਦਾ ਨਾਮ):</b></p>`;
