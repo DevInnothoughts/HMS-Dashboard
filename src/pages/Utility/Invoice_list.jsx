@@ -1825,343 +1825,112 @@ const InvoiceList = () => {
               </Card>
 
               <Col md={12}>
-                <Card
-                  style={{
-                    border: "none",
-                    borderRadius: "10px",
-                    borderTop: "3px solid #00bcd4",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-                  }}
-                >
+                <Card style={{ border: "none", borderRadius: "10px", borderTop: "3px solid #00bcd4", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
                   <Card.Body style={{ padding: "10px" }}>
-                    <h6
-                      style={{
-                        fontSize: "0.95rem",
-                        fontWeight: "600",
-                        color: "#00838f",
-                      }}
-                    >
-                      Billing Settings
-                    </h6>
+                    <h6 style={{ fontSize: "0.95rem", fontWeight: "600", color: "#00838f" }}>Billing Settings</h6>
                     <Row className="g-2">
-                      <Col md={3}>
-                        <Form.Label
-                          style={{
-                            fontSize: "12px",
-                            fontWeight: "600",
-                            marginBottom: "2px",
-                          }}
-                          className="text-muted"
-                        >
-                          Bill Type{" "}
-                          <span style={{ color: "red" }} className="required">
-                            *
-                          </span>
+                      <Col md={4}>
+                        <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
+                          Bill Type <span className="text-danger">*</span>
                         </Form.Label>
                         <Form.Select
-                          required
                           size="sm"
-                          style={{
-                            borderRadius: "10px",
-                            fontSize: "12px",
-                            border: "1px solid #4dd0e1",
-                          }}
-                          value={selectedInvoice.bill_Type}
+                          style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                          value={selectedInvoice.bill_Type || (selectedInvoice.insurancecompany ? "insurance" : "non_insurance")}
                           onChange={(e) => {
+                            const type = e.target.value;
                             setSelectedInvoice({
                               ...selectedInvoice,
-                              bill_Type: e.target.value,
-                              bill_method: "",
-                              chequeno: "",
-                              pdc: "0.00",
-                              insurancecompany: "",
-                              tpa: "",
+                              bill_Type: type,
+                              // Reset insurance details if switching away from insurance
+                              ...(type !== "insurance" && {
+                                insurancecompany: null,
+                                tpa: null,
+                                bill_method: "non_insurance"
+                              })
                             });
                           }}
                         >
-                          <option value="">Select Type</option>
-                          <option value="insurance">Insurance</option>
                           <option value="non_insurance">Non-Insurance</option>
+                          <option value="insurance">Insurance</option>
                           <option value="charity">Charity</option>
                         </Form.Select>
                       </Col>
 
-                      {selectedInvoice.bill_Type === "insurance" && (
-                        <>
-                          <Col md={9}>
-                            <Form.Label
-                              style={{
-                                fontSize: "12px",
-                                fontWeight: "600",
-                                marginBottom: "2px",
-                              }}
-                              className="text-muted"
-                            >
-                              Insurance Company
-                            </Form.Label>
-                            <Form.Select
-                              size="sm"
-                              style={{
-                                borderRadius: "10px",
-                                fontSize: "12px",
-                                border: "1px solid #4dd0e1",
-                              }}
-                              value={selectedInvoice?.insurancecompany || ""}
-                              onChange={(e) =>
-                                setSelectedInvoice({
-                                  ...selectedInvoice,
-                                  insurancecompany: e.target.value,
-                                })
-                              }
-                            >
-                              <option value="">Select Company</option>
-                              {insurance.map((co) => (
-                                <option
-                                  key={co.companyname}
-                                  value={co.companyname}
-                                >
-                                  {co.companyname}
-                                </option>
-                              ))}
-                            </Form.Select>
-                          </Col>
-                          <Col md={8}>
-                            <Form.Label
-                              style={{
-                                fontSize: "12px",
-                                fontWeight: "600",
-                                marginBottom: "2px",
-                              }}
-                              className="text-muted"
-                            >
-                              TPA
-                            </Form.Label>
-                            <Form.Select
-                              size="sm"
-                              style={{
-                                borderRadius: "10px",
-                                fontSize: "12px",
-                                border: "1px solid #4dd0e1",
-                              }}
-                              value={selectedInvoice?.tpa || ""}
-                              onChange={(e) =>
-                                setSelectedInvoice({
-                                  ...selectedInvoice,
-                                  tpa: e.target.value,
-                                })
-                              }
-                            >
-                              <option value="">Select TPA</option>
-                              {[
-                                ...new Set([
-                                  ...invoices.map((i) => i.tpa),
-                                  ...tpa.map((t) => t.companyname),
-                                ]),
-                              ].map((name, i) => (
-                                <option key={i} value={name}>
-                                  {name}
-                                </option>
-                              ))}
-                            </Form.Select>
-                          </Col>
-                          <Col md={4}>
-                            <Form.Label
-                              style={{
-                                fontSize: "12px",
-                                fontWeight: "600",
-                                marginBottom: "2px",
-                              }}
-                              className="text-muted"
-                            >
-                              Bill Method
-                            </Form.Label>
-                            <Form.Select
-                              size="sm"
-                              style={{
-                                borderRadius: "10px",
-                                fontSize: "12px",
-                                border: "1px solid #4dd0e1",
-                              }}
-                              value={selectedInvoice.bill_method || ""}
-                              onChange={(e) => {
-                                const method = e.target.value;
-                                setSelectedInvoice({
-                                  ...selectedInvoice,
-                                  bill_method: method,
-                                  ...(method !== "PDC" && {
-                                    chequeno: "",
-                                    pdc: "0.00",
-                                  }),
-                                });
-                              }}
-                            >
-                              <option value="">SELECT BILL METHOD</option>
-                              <option value="cashless">Cashless</option>
-                              <option value="PDC">PDC</option>
-                              <option value="reimbursement">
-                                Reimbursement
-                              </option>
-                            </Form.Select>
-                          </Col>
-
-                          {selectedInvoice.bill_method === "PDC" && (
-                            <>
-                              <Col md={6}>
-                                <Form.Label
-                                  style={{
-                                    fontSize: "12px",
-                                    fontWeight: "600",
-                                    marginBottom: "2px",
-                                  }}
-                                  className="text-muted"
-                                >
-                                  Cheque No.
-                                </Form.Label>
-                                <Form.Control
-                                  size="sm"
-                                  type="text"
-                                  style={{
-                                    borderRadius: "10px",
-                                    fontSize: "12px",
-                                    border: "1px solid #4dd0e1",
-                                  }}
-                                  value={selectedInvoice.chequeno || ""}
-                                  onChange={(e) =>
-                                    setSelectedInvoice({
-                                      ...selectedInvoice,
-                                      chequeno: e.target.value,
-                                    })
-                                  }
-                                />
-                              </Col>
-                              <Col md={6}>
-                                <Form.Label
-                                  style={{
-                                    fontSize: "12px",
-                                    fontWeight: "600",
-                                    marginBottom: "2px",
-                                  }}
-                                  className="text-muted"
-                                >
-                                  PDC Amount (₹)
-                                </Form.Label>
-                                <Form.Control
-                                  size="sm"
-                                  type="number"
-                                  onWheel={(e) => e.target.blur()}
-                                  style={{
-                                    borderRadius: "10px",
-                                    fontSize: "12px",
-                                    border: "1px solid #4dd0e1",
-                                  }}
-                                  value={selectedInvoice.pdc || ""}
-                                  onChange={(e) => {
-                                    const val = e.target.value;
-                                    const subTotal =
-                                      parseFloat(modalInvoiceData.Sub_Total) ||
-                                      0;
-                                    const newPayable = Math.max(
-                                      0,
-                                      subTotal - (parseFloat(val) || 0),
-                                    ).toFixed(2);
-                                    setSelectedInvoice({
-                                      ...selectedInvoice,
-                                      pdc: val,
-                                      payable_amt: newPayable,
-                                    });
-                                    setModalInvoiceData((prev) => ({
-                                      ...prev,
-                                      pdc: val,
-                                      payableAmount: newPayable,
-                                    }));
-                                  }}
-                                />
-                              </Col>
-                            </>
-                          )}
-                        </>
+                      {/* 1. Show Insurance Company Dropdown */}
+                      {(selectedInvoice.bill_Type === "insurance" || selectedInvoice.insurancecompany) && (
+                        <Col md={4}>
+                          <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
+                            Insurance Company
+                          </Form.Label>
+                          <Form.Select
+                            size="sm"
+                            style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                            value={selectedInvoice.insurancecompany || ""}
+                            onChange={(e) => setSelectedInvoice({ ...selectedInvoice, insurancecompany: e.target.value })}
+                          >
+                            <option value="">Select Company</option>
+                            {insurance.map((co, idx) => (
+                              <option key={idx} value={co.companyname}>{co.companyname}</option>
+                            ))}
+                          </Form.Select>
+                        </Col>
                       )}
 
-                      {(selectedInvoice.bill_Type === "non_insurance" ||
-                        selectedInvoice.bill_Type === "charity") && (
-                          <Col md={4}>
-                            <Form.Label
-                              style={{
-                                fontSize: "12px",
-                                fontWeight: "600",
-                                marginBottom: "2px",
-                              }}
-                              className="text-muted"
-                            >
-                              Discount Amount (₹)
-                            </Form.Label>
-                            <Form.Control
-                              size="sm"
-                              onWheel={(e) => e.target.blur()}
-                              type="number"
-                              style={{
-                                borderRadius: "10px",
-                                fontSize: "12px",
-                                border: "1px solid #4dd0e1",
-                              }}
-                              value={selectedInvoice.discount}
-                              onChange={(e) => {
-                                const disc = parseFloat(e.target.value) || 0;
-                                const subTotal =
-                                  parseFloat(modalInvoiceData.Sub_Total) || 0;
-                                const newPayable = Math.max(
-                                  0,
-                                  subTotal - disc,
-                                ).toFixed(2);
-                                setModalInvoiceData((prev) => ({
-                                  ...prev,
-                                  discount: disc,
-                                  payableAmount: newPayable,
-                                }));
-                                setSelectedInvoice((prev) => ({
-                                  ...prev,
-                                  discount: disc,
-                                  payable_amt: newPayable,
-                                }));
-                              }}
-                            />
-                          </Col>
-                        )}
+                      {/* 2. Show TPA Dropdown */}
+                      {(selectedInvoice.bill_Type === "insurance" || selectedInvoice.tpa) && (
+                        <Col md={4}>
+                          <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
+                            TPA
+                          </Form.Label>
+                          <Form.Select
+                            size="sm"
+                            style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                            value={selectedInvoice.tpa || ""}
+                            onChange={(e) => setSelectedInvoice({ ...selectedInvoice, tpa: e.target.value })}
+                          >
+                            <option value="">Select TPA</option>
+                            {tpa.map((t, idx) => (
+                              <option key={idx} value={t.companyname}>{t.companyname}</option>
+                            ))}
+                          </Form.Select>
+                        </Col>
+                      )}
 
-                      <Col md={5}>
-                        <Form.Label
-                          style={{
-                            fontSize: "12px",
-                            fontWeight: "600",
-                            marginBottom: "2px",
-                          }}
-                          className="text-muted"
-                        >
-                          Note
+                      {/* 3. Bill Method (Cashless/Reimbursement/PDC) */}
+                      <Col md={4}>
+                        <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
+                          Bill Method
                         </Form.Label>
+                        <Form.Select
+                          size="sm"
+                          style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                          value={selectedInvoice.bill_method || ""}
+                          onChange={(e) => setSelectedInvoice({ ...selectedInvoice, bill_method: e.target.value })}
+                        >
+                          <option value="non_insurance">CASH/CARD</option>
+                          <option value="cashless">Cashless</option>
+                          <option value="reimbursement">Reimbursement</option>
+                          <option value="PDC">PDC</option>
+                        </Form.Select>
+                      </Col>
+
+                      {/* Note Area */}
+                      <Col md={12}>
+                        <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">Note</Form.Label>
                         <Form.Control
                           size="sm"
                           as="textarea"
                           rows={1}
-                          style={{
-                            borderRadius: "10px",
-                            fontSize: "12px",
-                            border: "1px solid #4dd0e1",
-                          }}
-                          value={selectedInvoice.note}
-                          onChange={(e) =>
-                            setSelectedInvoice({
-                              ...selectedInvoice,
-                              note: e.target.value,
-                            })
-                          }
+                          style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                          value={selectedInvoice.note || ""}
+                          onChange={(e) => setSelectedInvoice({ ...selectedInvoice, note: e.target.value })}
                         />
                       </Col>
                     </Row>
                   </Card.Body>
                 </Card>
               </Col>
-
               <Col md={12}>
                 <Card
                   style={{
