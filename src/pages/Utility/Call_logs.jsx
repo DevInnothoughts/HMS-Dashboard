@@ -112,13 +112,15 @@ export default function Call_logs() {
         headers: { "Content-Type": "application/json" },
       });
 
-      if (!response.ok) {
+      if (!response.ok || response.statusCode === 404) {
+        console.log("res:", response);
         setFormData((prev) => ({ ...prev, patient_type: "" }));
         setShowAddModal(true);
         return;
       }
 
       const data = await response.json();
+      console.log("res:",response);
       if (data.statusCode === 200 && data.data) {
         try {
           const confirmUrl = `${BASE_URL}/V1/appointment/getPatientByApptConfirm?patient_phone=${patient_phone}&location=${currentLocation}`;

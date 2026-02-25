@@ -654,7 +654,7 @@ export default function Appointment_list() {
     console.log(updatePayload);
     try {
       const response = await fetch(
-        `${BASE_URL}/V1/appointment/editAppointment/${selectedAppointment.patient_phone}?location=${currentLocation}`,
+        `${BASE_URL}/V1/appointment/editAppointment/${selectedAppointment.appointment_id}?location=${currentLocation}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
