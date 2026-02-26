@@ -6,7 +6,7 @@ import { FaPrint, FaPlus, FaListUl, FaTasks } from 'react-icons/fa';
 import { decodeJwt } from "../../utils/decode-jwt";
 import Swal from "sweetalert2";
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const IpdPaymentData = () => {
     const [invoiceId, setInvoiceId] = useState('');
