@@ -44,50 +44,50 @@
 //     setTimeout(() => setLoading(false), 500);
 //   };
 
-  // const exportChart = async (chartRef, format, title) => {
-  //   if (!chartRef.current || !chartRef.current.chart) return;
+// const exportChart = async (chartRef, format, title) => {
+//   if (!chartRef.current || !chartRef.current.chart) return;
 
-  //   const { imgURI } = await chartRef.current.chart.dataURI();
+//   const { imgURI } = await chartRef.current.chart.dataURI();
 
-  //   if (format === 'print') {
-  //     const printWindow = window.open('', '_blank');
-  //     printWindow.document.write(`
-  //       <html>
-  //         <head>
-  //           <title>${title}</title>
-  //           <style>
-  //             body { 
-  //               margin: 0; 
-  //               padding: 40px; 
-  //               display: flex; 
-  //               flex-direction: column; 
-  //               align-items: center; 
-  //               font-family: 'Poppins', sans-serif;
-  //             }
-  //             h1 { color: #006064; margin-bottom: 20px; }
-  //             img { max-width: 100%; height: auto; border: 1px solid #e0f7fa; border-radius: 8px; }
-  //             @media print {
-  //               h1 { margin-top: 0; }
-  //               img { width: 100%; }
-  //             }
-  //           </style>
-  //         </head>
-  //         <body>
-  //           <h1>${title}</h1>
-  //           <img src="${imgURI}" onload="setTimeout(() => { window.print(); window.close(); }, 500);" />
-  //         </body>
-  //       </html>
-  //     `);
-  //     printWindow.document.close();
-  //   } else {
-  //     const link = document.createElement('a');
-  //     link.href = imgURI;
-  //     link.download = `${title.replace(/\s+/g, '_')}.${format}`;
-  //     document.body.appendChild(link);
-  //     link.click();
-  //     document.body.removeChild(link);
-  //   }
-  // };
+//   if (format === 'print') {
+//     const printWindow = window.open('', '_blank');
+//     printWindow.document.write(`
+//       <html>
+//         <head>
+//           <title>${title}</title>
+//           <style>
+//             body { 
+//               margin: 0; 
+//               padding: 40px; 
+//               display: flex; 
+//               flex-direction: column; 
+//               align-items: center; 
+//               font-family: 'Poppins', sans-serif;
+//             }
+//             h1 { color: #006064; margin-bottom: 20px; }
+//             img { max-width: 100%; height: auto; border: 1px solid #e0f7fa; border-radius: 8px; }
+//             @media print {
+//               h1 { margin-top: 0; }
+//               img { width: 100%; }
+//             }
+//           </style>
+//         </head>
+//         <body>
+//           <h1>${title}</h1>
+//           <img src="${imgURI}" onload="setTimeout(() => { window.print(); window.close(); }, 500);" />
+//         </body>
+//       </html>
+//     `);
+//     printWindow.document.close();
+//   } else {
+//     const link = document.createElement('a');
+//     link.href = imgURI;
+//     link.download = `${title.replace(/\s+/g, '_')}.${format}`;
+//     document.body.appendChild(link);
+//     link.click();
+//     document.body.removeChild(link);
+//   }
+// };
 
 //   const getBaseOptions = (categories) => ({
 //     chart: {
@@ -343,7 +343,7 @@ import SimpleBar from "simplebar-react";
 import { decodeJwt } from "../../../utils/decode-jwt";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api"
+const BASE_URL = "http://localhost:5100/api"
 
 const OPDIPDCollGraph = () => {
   const [fromDate, setFromDate] = useState("");
@@ -480,15 +480,31 @@ const OPDIPDCollGraph = () => {
           <Row>
             <Col md={12}>
               <Card style={{ borderRadius: "12px", border: "1px solid #00bcd4", boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)" }}>
-                <Card.Header className="text-center" style={{ background: "linear-gradient(to right, #00acc1, #007c91)", color: "white", borderBottom: "2px solid #0288d1" }}>
+                <Card.Header className="text-center" style={{ padding: "0.8rem", background: "linear-gradient(to right, #00acc1, #007c91)", color: "white", borderBottom: "2px solid #0288d1" }}>
                   <h4 className="mb-0">Consolidated Collection Graph (OPD + IPD)</h4>
                 </Card.Header>
                 <Card.Body className="p-4">
                   <Form onSubmit={handleSearch} className="mb-5">
-                    <Row className="align-items-end g-2 flex-nowrap">
-                      <Col><Form.Label className="fw-bold small" style={{ color: '#006064' }}>From Date</Form.Label><Form.Control type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} style={{ border: '2px solid #4dd0e1', backgroundColor: '#e0f7fa' }} /></Col>
-                      <Col><Form.Label className="fw-bold small" style={{ color: '#006064' }}>To Date</Form.Label><Form.Control type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} style={{ border: '2px solid #4dd0e1', backgroundColor: '#e0f7fa' }} /></Col>
-                      <Col><button className="btn btn-primary w-100 fw-bold" type="submit" style={{ height: '42px', background: '#00acc1', border: 'none' }}>{loading ? <Spinner size="sm" /> : "Search"}</button></Col>
+                    <Row className="align-items-end mb-4 flex-nowrap" style={{ margin: "0 -5px" }}>
+                      <Col style={{ padding: "0 5px", flex: "1" }}>
+                        <Form.Group className="mb-2">
+                          <Form.Label style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>From Date</Form.Label>
+                          <Form.Control type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }} />
+                        </Form.Group>
+                      </Col>
+                      <Col style={{ padding: "0 5px", flex: "1" }}>
+                        <Form.Group className="mb-2">
+                          <Form.Label style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>To Date</Form.Label>
+                          <Form.Control type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }} />
+                        </Form.Group>
+                      </Col>
+                      <Col style={{ padding: "0 5px", flex: "1" }}>
+                        <Form.Group className="mb-2">
+                          <button className="btn btn-primary" type="submit" style={{ height: "35px", width: "100%", backgroundColor: "#00acc1", borderColor: "#00bcd4", color: "white", borderRadius: "8px", fontWeight: "bold", fontSize: "13px" }}>
+                            {loading ? "Loading..." : "Search"}
+                          </button>
+                        </Form.Group>
+                      </Col>
                     </Row>
                   </Form>
 

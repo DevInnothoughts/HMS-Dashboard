@@ -13,7 +13,7 @@ import autoTable from "jspdf-autotable";
 import { decodeJwt } from "../../../utils/decode-jwt";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api"
+const BASE_URL = "http://localhost:5100/api"
 
 const BirthdayAlert = () => {
   const currentDate = moment().format("DD-MM-YYYY");
@@ -125,10 +125,10 @@ const BirthdayAlert = () => {
         className="d-flex justify-content-between align-items-center"
         style={{
           backgroundColor: "#e0f7fa",
-          padding: "10px 15px",
+          padding: "6px 12px",
           borderRadius: "8px",
-          border: "1px solid #4dd0e1",
-          marginBottom: "5px"
+          border: "1.5px solid #4dd0e1",
+          marginBottom: "6px"
         }}
       >
         <div className="d-flex align-items-center gap-3">
@@ -264,109 +264,7 @@ const BirthdayAlert = () => {
                   </div>
                 </Card.Header>
                 <Card.Body style={{ padding: "5px" }}>
-                  {/* <DataTable
-                    value={[...patients].sort((a, b) =>
-                      moment(a.birth_date, "DD-MM-YYYY").diff(moment(b.birth_date, "DD-MM-YYYY"))
-                    )}
-                    paginator
-                    rows={rows}
-                    first={first}
-                    onPage={(e) => {
-                      setFirst(e.first);
-                      setRows(e.rows);
-                    }}
-                    header={header}
-                    rowsPerPageOptions={[10, 25, 50]}
-                    filters={filters}
-                    globalFilterFields={["name", "phone", "address"]}
-                    responsiveLayout="scroll"
-                    paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
-                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
-                    className="p-datatable-customers datatable-compact-style"
-                    rowClassName={(rowData, { rowIndex }) => ({
-                      style: {
-                        backgroundColor: rowIndex % 2 === 0 ? "#f8fdfe" : "white",
-                        transition: "background-color 0.2s ease",
-                      },
-                    })}
-                  >
-                    <Column
-                      field="id"
-                      header="Sr No"
-                      alignHeader="center"
-                      align="center"
-                      body={(rowData, { rowIndex }) => rowIndex + 1}
-                      style={{
-                        width: "80px",
-                        border: "1px solid #e0f2f1",
-                      }}
-                      headerStyle={{
-                        backgroundColor: "#00bcd4",
-                        color: "white",
-                        fontSize: "13px",
-                      }}
-                    />
-                    <Column
-                      field="birth_date"
-                      header="Birth Date"
-                      alignHeader="center"
-                      align="center"
-                      sortable
-                      body={(rowData) => {
-                        return rowData.birth_date ? moment(rowData.birth_date).format("DD-MM-YYYY") : "-";
-                      }}
-                      style={{ border: "1px solid #e0f2f1" }}
-                      headerStyle={{
-                        backgroundColor: "#00bcd4",
-                        color: "white",
-                        fontSize: "13px",
-                      }}
-                    />
-                    <Column
-                      field="name"
-                      header="Patient Name"
-                      alignHeader="center"
-                      align="center"
-                      style={{
-                        border: "1px solid #e0f2f1",
-                      }}
-                      headerStyle={{
-                        backgroundColor: "#00bcd4",
-                        color: "white",
-                        fontSize: "13px",
-                      }}
-                    />
-                    <Column
-                      field="phone"
-                      header="Contact Number"
-                      alignHeader="center"
-                      align="center"
-                      style={{
-                        width: "200px",
-                        border: "1px solid #e0f2f1",
-                      }}
-                      headerStyle={{
-                        backgroundColor: "#00bcd4",
-                        color: "white",
-                        fontSize: "13px",
-                      }}
-                    />
-                    <Column
-                      field="address"
-                      header="Address"
-                      alignHeader="center"
-                      align="center"
-                      style={{
-                        width: "400px",
-                        border: "1px solid #e0f2f1",
-                      }}
-                      headerStyle={{
-                        backgroundColor: "#00bcd4",
-                        color: "white",
-                        fontSize: "13px",
-                      }}
-                    />
-                  </DataTable> */}
+                  {renderHeader()}
                   <DataTable
                     value={[...patients].sort((a, b) =>
                       moment(a.birth_date, "DD-MM-YYYY").diff(moment(b.birth_date, "DD-MM-YYYY"))
@@ -378,7 +276,6 @@ const BirthdayAlert = () => {
                       setFirst(e.first);
                       setRows(e.rows);
                     }}
-                    header={header}
                     filters={filters}
                     globalFilterFields={["name", "phone", "address"]}
                     paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"

@@ -13,7 +13,7 @@ import autoTable from "jspdf-autotable";
 import { decodeJwt } from "../../../utils/decode-jwt";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api"
+const BASE_URL = "http://localhost:5100/api"
 
 const EnquiryData = () => {
   const [fromDate, setFromDate] = useState("");
@@ -165,10 +165,10 @@ const EnquiryData = () => {
       <div className="d-flex justify-content-between align-items-center mb-1">
         <div className="d-flex align-items-center" style={{ gap: "20px" }}>
           <div className="d-flex align-items-center">
-            <span className="me-1" style={{ fontWeight: "bold", color: "#006064" }}>Show</span>
+            <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Show</span>
             <Form.Select
               size="sm"
-              style={{ width: "70px", borderRadius: "8px", border: "1px solid #4dd0e1" }}
+              style={{ width: "70px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
               value={rows}
               onChange={(e) => setRows(Number(e.target.value))}
             >
@@ -179,14 +179,14 @@ const EnquiryData = () => {
             </Form.Select>
           </div>
           <div className="d-flex align-items-center">
-            <span className="me-1" style={{ fontWeight: "bold", color: "#006064" }}>Search</span>
+            <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Search</span>
             <span className="p-input-icon-left">
               <InputText
                 value={searchText}
                 onChange={onGlobalFilterChange}
                 placeholder="Global Search..."
                 className="p-inputtext-sm"
-                style={{ width: "200px", borderRadius: "8px", border: "1px solid #4dd0e1" }}
+                style={{ width: "200px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
               />
             </span>
           </div>

@@ -15,7 +15,7 @@ import { decodeJwt } from "../../../utils/decode-jwt";
 
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api"
+const BASE_URL = "http://localhost:5100/api"
 
 const ReferenceReport = () => {
   const [fromDate, setFromDate] = useState("");
@@ -129,10 +129,10 @@ const ReferenceReport = () => {
     <div className="d-flex justify-content-between align-items-center mb-1">
       <div className="d-flex align-items-center" style={{ gap: "20px" }}>
         <div className="d-flex align-items-center">
-          <span className="me-1" style={{ fontWeight: "bold", color: "#006064" }}>Show</span>
+          <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "13px" }}>Show</span>
           <Form.Select
             size="sm"
-            style={{ width: "70px", borderRadius: "8px", border: "1px solid #4dd0e1" }}
+            style={{ width: "70px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
             value={rows}
             onChange={(e) => setRows(Number(e.target.value))}
           >
@@ -142,20 +142,22 @@ const ReferenceReport = () => {
           </Form.Select>
         </div>
         <div className="d-flex align-items-center">
-          <span className="me-1" style={{ fontWeight: "bold", color: "#006064" }}>Search</span>
-          <InputText
-            value={searchText}
-            onChange={onGlobalFilterChange}
-            placeholder="Global Search..."
-            className="p-inputtext-sm"
-            style={{ width: "200px", borderRadius: "8px", border: "1px solid #4dd0e1" }}
-          />
+          <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "13px" }}>Search</span>
+          <span className="p-input-icon-left">
+            <InputText
+              value={searchText}
+              onChange={onGlobalFilterChange}
+              placeholder="Global Search..."
+              className="p-inputtext-sm"
+              style={{ width: "200px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
+            />
+          </span>
         </div>
       </div>
       <button
         className="btn btn-danger btn-sm"
         onClick={downloadPDF}
-        style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px" }}
+        style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px", fontWeight: "600" }}
       >
         <i className="fa fa-file-pdf-o"></i> Download PDF
       </button>
@@ -163,35 +165,37 @@ const ReferenceReport = () => {
   );
 
   return (
-    <div className="themebody-wrap" style={{ padding: "20px", background: "linear-gradient(to right, #e0f7fa, #80deea)", fontFamily: "'Poppins', sans-serif", minHeight: "100vh" }}>
+    <div className="themebody-wrap" style={{ padding: "20px", background: "linear-gradient(to right, #e0f7fa, #80deea)", fontFamily: "'Poppins', Arial, sans-serif", minHeight: "100vh" }}>
       <PageBreadcrumb pagename="Reference Report" />
       <SimpleBar className="theme-body common-dash">
         <Container fluid>
           <Row>
             <Col md={12}>
               <Card style={{ borderRadius: "12px", boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)", border: "1px solid #00bcd4" }}>
-                <Card.Header className="text-center" style={{ background: "linear-gradient(to right, #00acc1, #007c91)", color: "white", padding: "1rem" }}>
+                <Card.Header className="text-center" style={{ background: "linear-gradient(to right, #00acc1, #007c91)", color: "white", padding: "0.8rem" }}>
                   <h4 style={{ margin: 0 }}>Reference Report</h4>
                 </Card.Header>
-                <Card.Body style={{ padding: "15px" }}>
+                <Card.Body style={{ padding: "5px" }}>
                   <Form onSubmit={handleFindClick}>
-                    <Row className="align-items-end mb-4">
-                      <Col md={4}>
-                        <Form.Group>
+                    <Row className="align-items-end mb-4 flex-nowrap" style={{ margin: "0 -5px" }}>
+                      <Col style={{ padding: "0 5px", flex: "1" }}>
+                        <Form.Group className="mb-2">
                           <Form.Label style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>From Date</Form.Label>
-                          <Form.Control type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} style={{ border: "2px solid #4dd0e1", borderRadius: "8px", backgroundColor: "#e0f7fa" }} />
+                          <Form.Control type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }} />
                         </Form.Group>
                       </Col>
-                      <Col md={4}>
-                        <Form.Group>
+                      <Col style={{ padding: "0 5px", flex: "1" }}>
+                        <Form.Group className="mb-2">
                           <Form.Label style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>To Date</Form.Label>
-                          <Form.Control type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} style={{ border: "2px solid #4dd0e1", borderRadius: "8px", backgroundColor: "#e0f7fa" }} />
+                          <Form.Control type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }} />
                         </Form.Group>
                       </Col>
-                      <Col md={4}>
-                        <button className="btn btn-primary w-100" type="submit" style={{ backgroundColor: "#00acc1", borderColor: "#00bcd4", borderRadius: "8px", fontWeight: "bold", height: "38px" }} disabled={loading}>
-                          {loading ? <Spinner size="sm" /> : "Search"}
-                        </button>
+                      <Col style={{ padding: "0 5px", flex: "1" }}>
+                        <Form.Group className="mb-2">
+                          <button className="btn btn-primary" type="submit" style={{ height: "35px", width: "100%", backgroundColor: "#00acc1", borderColor: "#00bcd4", color: "white", borderRadius: "8px", fontWeight: "bold", fontSize: "13px" }} disabled={loading}>
+                            {loading ? "Loading..." : "Search"}
+                          </button>
+                        </Form.Group>
                       </Col>
                     </Row>
                   </Form>
@@ -202,11 +206,15 @@ const ReferenceReport = () => {
                     rows={rows}
                     filters={filters}
                     header={renderHeader()}
+                    paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
+                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
                     className="p-datatable-sm custom-datatable mb-4"
                     stripedRows
+                    rowHover
                     responsiveLayout="scroll"
+                    style={{ fontSize: "12px" }}
                   >
-                    <Column header="Sr No" body={(r, { rowIndex }) => rowIndex + 1} style={{ width: "60px", textAlign: "center" }} />
+                    <Column header="Sr No" body={(r, { rowIndex }) => rowIndex + 1} style={{ width: "100px", textAlign: "center" }} />
                     <Column field="type" header="Reference Type" sortable />
                     <Column field="count" header="Reference Count" sortable />
                   </DataTable>
@@ -228,6 +236,7 @@ const ReferenceReport = () => {
       <style>{`
         .custom-datatable .p-datatable-header { background: #e0f7fa; border: 1px solid #4dd0e1; padding: 10px; border-radius: 8px 8px 0 0; }
         .custom-datatable .p-datatable-thead > tr > th { background-color: #b2ebf2 !important; color: black !important; font-size: 12px; border: 1px solid #90caf9 !important; text-align: center !important; }
+        .custom-datatable .p-datatable-thead > tr > th .p-column-header-content { justify-content: center !important; }
         .custom-datatable .p-datatable-tbody > tr > td { font-size: 12px; padding: 8px; border: 1px solid #90caf9; text-align: center !important; }
         .custom-datatable .p-paginator { background: #f8fdfe; border: 1px solid #4dd0e1; border-radius: 0 0 8px 8px; }
       `}</style>

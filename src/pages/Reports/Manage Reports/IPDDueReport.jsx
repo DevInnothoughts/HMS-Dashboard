@@ -12,7 +12,7 @@ import PageBreadcrumb from "../../../components/PageBreadcrumb";
 import SimpleBar from "simplebar-react";
 import { decodeJwt } from "../../../utils/decode-jwt";
 
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 const IPDDueReport = () => {
   const [fromDate, setFromDate] = useState("");
@@ -154,8 +154,8 @@ const IPDDueReport = () => {
     <div className="d-flex justify-content-between align-items-center mb-1">
       <div className="d-flex align-items-center" style={{ gap: "20px" }}>
         <div className="d-flex align-items-center">
-          <span className="me-1" style={{ fontWeight: "bold", color: "#006064" }}>Show</span>
-          <Form.Select size="sm" style={{ width: "70px", borderRadius: "8px", border: "1px solid #4dd0e1" }} value={rows} onChange={(e) => setRows(Number(e.target.value))}>
+          <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Show</span>
+          <Form.Select size="sm" style={{ width: "70px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }} value={rows} onChange={(e) => setRows(Number(e.target.value))}>
             <option value={10}>10</option>
             <option value={25}>25</option>
             <option value={50}>50</option>
@@ -163,9 +163,9 @@ const IPDDueReport = () => {
           </Form.Select>
         </div>
         <div className="d-flex align-items-center">
-          <span className="me-1" style={{ fontWeight: "bold", color: "#006064" }}>Search</span>
+          <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Search</span>
           <span className="p-input-icon-left">
-            <InputText value={searchText} onChange={onGlobalFilterChange} placeholder="Global Search..." className="p-inputtext-sm" style={{ width: "200px", borderRadius: "8px", border: "1px solid #4dd0e1" }} />
+            <InputText value={searchText} onChange={onGlobalFilterChange} placeholder="Global Search..." className="p-inputtext-sm" style={{ width: "200px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }} />
           </span>
         </div>
       </div>
