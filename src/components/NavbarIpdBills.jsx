@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Container } from "react-bootstrap";
+import FeatherIcon from "feather-icons-react";
 import {
   FaPlusCircle,
   FaFileInvoiceDollar,
@@ -24,6 +25,15 @@ export default function NavbarIpdBills() {
         <div className="navbar-content">
           <nav className="breadcrumb-nav">
             <Link
+              to="/reception-dashboard"
+              className={`nav-link ${location.pathname === "/reception-dashboard" ? "active" : ""
+                }`}
+            >
+              <span className="nav-icon"><FeatherIcon icon="grid" size={16} /></span>
+              Dashboard
+            </Link>
+            <span className="separator">•</span>
+            <Link
               to="/invoices"
               className={`nav-link ${location.pathname === "/invoices" ? "active" : ""
                 }`}
@@ -46,7 +56,7 @@ export default function NavbarIpdBills() {
               className={`nav-link ${location.pathname === "/invoices/payment-data" ? "active" : ""
                 }`}
             >
-              <span className="nav-icon"><FaChartBar /></span>
+              <span className="nav-icon"><FaFileInvoiceDollar /></span>
               IPD Payment Data
             </Link>
           </nav>
@@ -87,7 +97,7 @@ export default function NavbarIpdBills() {
             align-items: center;
             gap: 10px;
             text-decoration: none;
-            color: #2c3e50;
+            color: #000000ff;
             padding: 8px 10px;
             border-radius: 8px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);

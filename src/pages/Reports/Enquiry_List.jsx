@@ -344,7 +344,7 @@ export default function EnquiryList() {
                   border: "1.5px solid #00bcd4",
                 }}
               >
-                <Card.Body>
+                <Card.Body style={{ marginTop: "-6px" }}>
                   {loading ? (
                     <div
                       className="d-flex justify-content-center py-5"

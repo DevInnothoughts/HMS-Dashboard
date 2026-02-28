@@ -835,7 +835,7 @@ export default function Call_logs() {
                   }}
                 >
                   <Card.Body>
-                    <Row className="Product_list">
+                    <Row className="Product_list" style={{ marginTop: "-18px" }}>
                       {loading ? (
                         <div
                           className="d-flex justify-content-center py-5"

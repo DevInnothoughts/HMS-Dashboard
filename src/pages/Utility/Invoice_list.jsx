@@ -1118,7 +1118,7 @@ const InvoiceList = () => {
                 border: "1px solid #00bcd4",
               }}
             >
-              <Card.Body>
+              <Card.Body style={{ margin: "4px" }}>
                 {/* <div className="d-flex justify-content-end">
                   <Link to="/invoice/add">
                     <Button variant="primary" style={{ padding: "12px", marginBottom: "7px", fontSize: "12px" }}>

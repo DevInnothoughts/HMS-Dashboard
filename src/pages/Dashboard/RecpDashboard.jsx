@@ -18,7 +18,6 @@ import moment from "moment";
 import Swal from "sweetalert2";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
-
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
 const BASE_URL = "http://194.195.117.79:5100/api"
 
@@ -269,7 +268,7 @@ export default function ReceptionistDashboard() {
         Toast.fire({ icon: "success", title: "Arrival Confirmed" });
         setSelectedEvent((prev) => ({
           ...prev,
-          confirmTime: moment().format("HH:mm"), // Sets a visual check-in time immediately
+          confirmTime: moment().format("HH:mm"), 
         }));
         await fetchAppointmentsForRange(selectedDate, selectedDoctorId);
       }
@@ -509,7 +508,7 @@ export default function ReceptionistDashboard() {
 .legend-title { 
     font-size: 7px; 
     color: #1eb3caff; 
-    font-weight: 700; 
+    font-weight: 600; 
     margin-bottom: 5px; 
     letter-spacing: 0.4px; 
     text-transform: uppercase;
@@ -525,8 +524,8 @@ export default function ReceptionistDashboard() {
 }
 
 .dot { 
-    width: 9px; 
-    height: 9px; 
+    width: 10px; 
+    height: 10px; 
     border-radius: 50%; 
     margin-right: 6px; 
 }
@@ -637,9 +636,14 @@ export default function ReceptionistDashboard() {
     text-align: center;
 }
 
-/* Optional: Slight padding adjustment for the event rows */
 .rbc-month-row {
     overflow: visible !important;
+}
+
+.cnt{
+font-size: 13px;
+font-weight: 800;
+margin-left: 1px;
 }
                 `}</style>
       <PageBreadcrumb pagename="Receptionist Dashboard" />

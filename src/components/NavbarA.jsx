@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Container } from "react-bootstrap";
+import FeatherIcon from "feather-icons-react";
 import {
   FaClock,
   FaCalendarAlt,
@@ -34,8 +35,8 @@ export default function NavBarA() {
               className={`nav-link ${location.pathname === "/reception-dashboard" ? "active" : ""
                 }`}
             >
-              <span className="fa fa-th"></span>
-              Reception Dashboard
+              <span className="nav-icon"><FeatherIcon icon="grid" size={16} /></span>
+              Dashboard
             </Link>
             <span className="separator">•</span>
             <Link
@@ -94,7 +95,7 @@ export default function NavBarA() {
             padding: 10px 15px;
             border-radius: 16px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            margin: 20px;
+            margin: 10px;
             border: 1px solid rgba(255, 255, 255, 0.8);
           }
 
@@ -118,9 +119,9 @@ export default function NavBarA() {
           .nav-link {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 5px;
             text-decoration: none;
-            color: #2c3e50;
+            color: #000000ff;
             padding: 8px 10px;
             border-radius: 8px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -145,9 +146,9 @@ export default function NavBarA() {
           }
 
           .separator {
-            color: #94a3b8;
+            color: #888888ff;
             font-size: 12px;
-            margin: 0 4px;
+            margin: 4px;
           }
 
           .date-time {

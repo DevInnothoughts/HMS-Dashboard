@@ -106,16 +106,16 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
     minWidth: "33px",
     borderRadius: "4px",
     border: `1px solid ${disabled
-        ? "#ddd"
-        : isDanger
-          ? "#dc3545"
-          : isEdit
-            ? "#007bff"
-            : isConfirm
-              ? "#28a745"
-              : isBlueAction
-                ? "#0babb9ff"
-                : defaultBorder
+      ? "#ddd"
+      : isDanger
+        ? "#dc3545"
+        : isEdit
+          ? "#007bff"
+          : isConfirm
+            ? "#28a745"
+            : isBlueAction
+              ? "#0babb9ff"
+              : defaultBorder
       }`,
     backgroundColor: disabled ? "#f8f9fa" : defaultBg,
     color: disabled
@@ -171,14 +171,14 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
               : "#e0e0e0";
 
       e.currentTarget.style.border = `1px solid ${isDanger
-          ? "#c82333"
-          : isEdit
-            ? "#007bff"
-            : isConfirm
-              ? "#218838"
-              : isBlueAction
-                ? "#007bff"
-                : "#b0b0b0"
+        ? "#c82333"
+        : isEdit
+          ? "#007bff"
+          : isConfirm
+            ? "#218838"
+            : isBlueAction
+              ? "#007bff"
+              : "#b0b0b0"
         }`;
 
       e.currentTarget.style.color = "white";
@@ -202,14 +202,14 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
               : defaultColor;
 
       e.currentTarget.style.border = `1px solid ${isDanger
-          ? "#dc3545"
-          : isEdit
-            ? "#007bff"
-            : isConfirm
-              ? "#28a745"
-              : isBlueAction
-                ? "#007bff"
-                : defaultBorder
+        ? "#dc3545"
+        : isEdit
+          ? "#007bff"
+          : isConfirm
+            ? "#28a745"
+            : isBlueAction
+              ? "#007bff"
+              : defaultBorder
         }`;
 
       if (e.currentTarget.children[0]) {
@@ -1595,7 +1595,7 @@ export default function Appointment_list() {
                   border: "1px solid #00bcd4",
                 }}
               >
-                <Card.Body>
+                <Card.Body style={{ marginTop: "-6px" }}>
                   {loading ? (
                     <div
                       className="d-flex justify-content-center py-5"
@@ -1970,7 +1970,7 @@ export default function Appointment_list() {
               </div>
 
               {billingItems.map((item, index) => (
-                <Row key={index} className="mb-10 align-items-end">
+                <Row key={index} className="mb-1 align-items-end">
                   <Col md={6}>
                     <Form.Label style={{ fontSize: "12px", fontWeight: "500" }}>
                       Consultation Type{" "}

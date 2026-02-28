@@ -14,7 +14,6 @@ const SidebarLinesCSS = () => (
       transition: all 0.3s ease;
     }
 
-    /* Sidebar collapsed logic */
     .codex-sidebar.collapsed { width: 80px; }
     .codex-sidebar.collapsed span, 
     .codex-sidebar.collapsed .fa-angle-down,
@@ -24,13 +23,12 @@ const SidebarLinesCSS = () => (
       display: none !important;
     }
 
-    /* Submenu Container */
     .submenu-list {
       position: relative;
       list-style: none;
-      margin-left: 35px !important; /* Spacing for the lines */
+      margin-left: 35px !important; 
       padding-left: 0 !important;
-      border-left: 2px solid #00aaff; /* The Main Vertical Line */
+      border-left: 2px solid #00aaff; 
     }
 
     .submenu-list li {
@@ -39,23 +37,20 @@ const SidebarLinesCSS = () => (
       margin-bottom: 0;
     }
 
-    /* The Horizontal Line (Branch) */
     .submenu-list li::before {
       content: "";
       position: absolute;
-      top: 15px; /* Centers the line with the text height */
+      top: 15px; 
       left: 0;
       width: 15px; 
       height: 2px;
       background-color: #00aaff;
     }
 
-    /* Hiding the excess vertical line after the last item */
     .submenu-list li:last-child {
-      background: white; /* Matches sidebar background to "cut" the line */
+      background: white; 
     }
     
-    /* Alternative "Cut" method: A white box that covers the bottom of the vertical line */
     .submenu-list li:last-child::after {
       content: "";
       position: absolute;
@@ -63,7 +58,7 @@ const SidebarLinesCSS = () => (
       left: -2px;
       width: 2px;
       height: 100%;
-      background-color: white; /* Matches sidebar background */
+      background-color: white; 
     }
 
     .submenu-list li a {
@@ -74,8 +69,10 @@ const SidebarLinesCSS = () => (
       transition: 0.2s;
     }
 
-    .submenu-list li a:hover {
-      color: #00aaff;
+    .submenu-list li a:hover,
+    .submenu-list li a.active {
+      color: #2279faff;
+      font-weight: 600;
     }
   `}</style>
 );
@@ -91,6 +88,19 @@ export default function Sidebar() {
     useEffect(() => {
         setActiveIndex(location.pathname);
     }, [location.pathname]);
+
+    const reportRoutes = [
+        "/appointmentConversion", "/BillingReport", "/BirthdayAlert", "/conditionWiseReport",
+        "/dailyOPDReport", "/enquiryConversation", "/enquiryData", "/insuranceduereport",
+        "/IPDCollectionReport", "/ipdduereport", "/opdipdcollgraph", "/opdipdcollection",
+        "/OPDCollectionReports", "/oPDReceiptsReport", "/PharmacyCollectionReport",
+        "/referenceReport", "/sxconversionreport"
+    ];
+
+    const doctorReportRoutes = ["/diagnosis-report", "/opd-surgery-report"];
+
+    const isReportActive = reportRoutes.includes(location.pathname) || activeIndex === "/manage-reports";
+    const isDoctorReportActive = doctorReportRoutes.includes(location.pathname) || activeIndex === "/manage-doctor-reports";
 
     const handleMenuClick = (path) => {
         setActiveIndex((prevPath) => (prevPath === path ? null : path));
@@ -191,38 +201,64 @@ export default function Sidebar() {
             </li>
 
             <li
-                className={`menu-item ${activeIndex === "/manage-reports" ? "active" : ""}`}
+                className={`menu-item ${activeIndex === "/bed-allotment" ? "active" : ""
+                    }`}
+            >
+                <Link to="/bed-allotment">
+                    <div className="icon-item">
+                        <i className="fa fa-bed"></i>
+                    </div>
+                    {!isCollapsed && <span>Bed Allotment</span>}
+                </Link>
+            </li>
+
+            <li
+                className={`menu-item ${activeIndex === "/daily-closing" ? "active" : ""
+                    }`}
+            >
+                <Link to="/daily-closing">
+                    <div className="icon-item">
+                        <i className="fa fa-money"></i>
+                    </div>
+                    {!isCollapsed && <span>Daily closing</span>}
+                </Link>
+            </li>
+
+            <li
+                className={`menu-item ${isReportActive ? "active" : ""}`}
             >
                 <Link to="#" onClick={() => handleMenuClick("/manage-reports")}>
                     <div className="icon-item">
                         <i className="fa fa-list-alt"></i>
                     </div>
                     {!isCollapsed && <span>Manage Reports</span>}
-                    <i className="fa fa-angle-down"></i>
+                    {!isCollapsed && (
+                        <i className={`fa ${isReportActive ? "fa-angle-down" : "fa-angle-right"}`}></i>
+                    )}
                 </Link>
                 <ul
                     className="submenu-list"
                     style={{
-                        display: activeIndex === "/manage-reports" ? "block" : "none",
+                        display: isReportActive ? "block" : "none",
                     }}
                 >
-                    <li><Link to="/appointmentConversion">Appointment Conversion</Link></li>
-                    <li><Link to="/BillingReport">Billing Report</Link></li>
-                    <li><Link to="/BirthdayAlert">Birthday Alert</Link></li>
-                    <li><Link to="/conditionWiseReport">Condition Wise Report</Link></li>
-                    <li><Link to="/dailyOPDReport">Daily OPD Report</Link></li>
-                    <li><Link to="/enquiryConversation">Enquiry Conversion</Link></li>
-                    <li><Link to="/enquiryData">Enquiry Data</Link></li>
-                    <li><Link to="/insuranceduereport">Insurance Due Report</Link></li>
-                    <li><Link to="/IPDCollectionReport">IPD Collection Report</Link></li>
-                    <li><Link to="/ipdduereport">IPD Due Report</Link></li>
-                    <li><Link to="/opdipdcollgraph">OPD + IPD Collection Graph</Link></li>
-                    <li><Link to="/opdipdcollection">OPD + IPD Collection Report</Link></li>
-                    <li><Link to="/OPDCollectionReports">OPD Collection Report</Link></li>
-                    <li><Link to="/oPDReceiptsReport">OPD Receipts Report</Link></li>
-                    <li><Link to="/PharmacyCollectionReport">Pharmacy Collection Report</Link></li>
-                    <li><Link to="/referenceReport">Reference Report</Link></li>
-                    <li><Link to="/sxconversionreport">SX Conversion Report</Link></li>
+                    <li><Link to="/appointmentConversion" className={location.pathname === "/appointmentConversion" ? "active" : ""}>Appointment Conversion</Link></li>
+                    <li><Link to="/BillingReport" className={location.pathname === "/BillingReport" ? "active" : ""}>Billing Report</Link></li>
+                    <li><Link to="/BirthdayAlert" className={location.pathname === "/BirthdayAlert" ? "active" : ""}>Birthday Alert</Link></li>
+                    <li><Link to="/conditionWiseReport" className={location.pathname === "/conditionWiseReport" ? "active" : ""}>Condition Wise Report</Link></li>
+                    <li><Link to="/dailyOPDReport" className={location.pathname === "/dailyOPDReport" ? "active" : ""}>Daily OPD Report</Link></li>
+                    <li><Link to="/enquiryConversation" className={location.pathname === "/enquiryConversation" ? "active" : ""}>Enquiry Conversion</Link></li>
+                    <li><Link to="/enquiryData" className={location.pathname === "/enquiryData" ? "active" : ""}>Enquiry Data</Link></li>
+                    <li><Link to="/insuranceduereport" className={location.pathname === "/insuranceduereport" ? "active" : ""}>Insurance Due Report</Link></li>
+                    <li><Link to="/IPDCollectionReport" className={location.pathname === "/IPDCollectionReport" ? "active" : ""}>IPD Collection Report</Link></li>
+                    <li><Link to="/ipdduereport" className={location.pathname === "/ipdduereport" ? "active" : ""}>IPD Due Report</Link></li>
+                    <li><Link to="/opdipdcollgraph" className={location.pathname === "/opdipdcollgraph" ? "active" : ""}>OPD + IPD Collection Graph</Link></li>
+                    <li><Link to="/opdipdcollection" className={location.pathname === "/opdipdcollection" ? "active" : ""}>OPD + IPD Collection Report</Link></li>
+                    <li><Link to="/OPDCollectionReports" className={location.pathname === "/OPDCollectionReports" ? "active" : ""}>OPD Collection Report</Link></li>
+                    <li><Link to="/oPDReceiptsReport" className={location.pathname === "/oPDReceiptsReport" ? "active" : ""}>OPD Receipts Report</Link></li>
+                    <li><Link to="/PharmacyCollectionReport" className={location.pathname === "/PharmacyCollectionReport" ? "active" : ""}>Pharmacy Collection Report</Link></li>
+                    <li><Link to="/referenceReport" className={location.pathname === "/referenceReport" ? "active" : ""}>Reference Report</Link></li>
+                    <li><Link to="/sxconversionreport" className={location.pathname === "/sxconversionreport" ? "active" : ""}>SX Conversion Report</Link></li>
                 </ul>
             </li>
         </ul>
@@ -256,7 +292,7 @@ export default function Sidebar() {
             </li>
 
             <li
-                className={`menu-item ${activeIndex === "/manage-doctor-reports" ? "active" : ""
+                className={`menu-item ${isDoctorReportActive ? "active" : ""
                     }`}
             >
                 <Link to="#" onClick={() => handleMenuClick("/manage-doctor-reports")}>
@@ -264,20 +300,20 @@ export default function Sidebar() {
                         <FeatherIcon icon="file-text" />
                     </div>
                     <span>Manage Reports</span>
-                    <i className="fa fa-angle-down"></i>
+                    <i className={`fa ${isDoctorReportActive ? "fa-angle-down" : "fa-angle-right"}`}></i>
                 </Link>
                 <ul
                     className="submenu-list"
                     style={{
                         display:
-                            activeIndex === "/manage-doctor-reports" ? "block" : "none",
+                            isDoctorReportActive ? "block" : "none",
                     }}
                 >
                     <li>
-                        <Link to="/diagnosis-report">Diagnosis Report</Link>
+                        <Link to="/diagnosis-report" className={location.pathname === "/diagnosis-report" ? "active" : ""}>Diagnosis Report</Link>
                     </li>
                     <li>
-                        <Link to="/opd-surgery-report">OPD Surgery Report</Link>
+                        <Link to="/opd-surgery-report" className={location.pathname === "/opd-surgery-report" ? "active" : ""}>OPD Surgery Report</Link>
                     </li>
                 </ul>
             </li>
