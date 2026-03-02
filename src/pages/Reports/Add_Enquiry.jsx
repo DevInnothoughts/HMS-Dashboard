@@ -300,6 +300,8 @@ export default function Add_Enquiry() {
                 border: "none",
                 background: "white",
                 overflow: "hidden",
+                margin: "5px",
+                marginTop: "-3px",
               }}
             >
               <div

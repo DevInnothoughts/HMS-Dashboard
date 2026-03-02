@@ -103,6 +103,7 @@ export default function AddBedAllotment() {
                                 background: "white",
                                 overflow: "hidden",
                                 minHeight: "250px",
+                                margin: "5px"
                             }}
                         >
                             <div style={cardHeaderStyle}>

@@ -502,6 +502,8 @@ export default function Add_appointment() {
                 border: "none",
                 background: "white",
                 overflow: "hidden",
+                margin: "6px",
+                marginTop: "-4px",
               }}
             >
               <div style={cardHeaderStyle}>

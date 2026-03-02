@@ -5,6 +5,7 @@ import "simplebar/dist/simplebar.min.css";
 import FeatherIcon from "feather-icons-react";
 import { useSidebarContext } from "../pages/api/useSidebarContext";
 import logo from "/src/assets/images/logo/icon-logo.png";
+import { FaFileInvoiceDollar, FaClipboardList } from "react-icons/fa";
 
 
 const SidebarLinesCSS = () => (
@@ -201,14 +202,26 @@ export default function Sidebar() {
             </li>
 
             <li
-                className={`menu-item ${activeIndex === "/bed-allotment" ? "active" : ""
+                className={`menu-item ${activeIndex === "/invoices/payment-data" ? "active" : ""
                     }`}
             >
-                <Link to="/bed-allotment">
+                <Link to="/invoices/payment-data">
                     <div className="icon-item">
-                        <i className="fa fa-bed"></i>
+                        <FaFileInvoiceDollar />
                     </div>
-                    {!isCollapsed && <span>Bed Allotment</span>}
+                    {!isCollapsed && <span>IPD Payment Data</span>}
+                </Link>
+            </li>
+
+            <li
+                className={`menu-item ${activeIndex === "/reports/receipts" ? "active" : ""
+                    }`}
+            >
+                <Link to="/reports/receipts">
+                    <div className="icon-item">
+                        <FeatherIcon icon="file-text" />
+                    </div>
+                    {!isCollapsed && <span>OPD Receipt</span>}
                 </Link>
             </li>
 
@@ -221,6 +234,18 @@ export default function Sidebar() {
                         <i className="fa fa-money"></i>
                     </div>
                     {!isCollapsed && <span>Daily closing</span>}
+                </Link>
+            </li>
+
+            <li
+                className={`menu-item ${activeIndex === "/bed-allotment" ? "active" : ""
+                    }`}
+            >
+                <Link to="/bed-allotment">
+                    <div className="icon-item">
+                        <i className="fa fa-bed"></i>
+                    </div>
+                    {!isCollapsed && <span>Bed Allotment</span>}
                 </Link>
             </li>
 

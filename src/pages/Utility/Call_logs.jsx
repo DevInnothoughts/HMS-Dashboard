@@ -120,7 +120,7 @@ export default function Call_logs() {
       }
 
       const data = await response.json();
-      console.log("res:",response);
+      console.log("res:", response);
       if (data.statusCode === 200 && data.data) {
         try {
           const confirmUrl = `${BASE_URL}/V1/appointment/getPatientByApptConfirm?patient_phone=${patient_phone}&location=${currentLocation}`;
@@ -826,12 +826,13 @@ export default function Call_logs() {
               <Col>
                 <Card
                   style={{
-                    borderRadius: "12px",
+                    borderRadius: "10px",
                     boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
                     borderColor: "#00bcd4",
                     background: "white",
                     border: "1.5px solid #00bcd4",
                     padding: "5px",
+                    margin: "10px -10px 12px -10px",
                   }}
                 >
                   <Card.Body>

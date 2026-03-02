@@ -16,7 +16,7 @@ const IpdPaymentData = () => {
     const [showBillDetails, setShowBillDetails] = useState(false);
     const [showAddRow, setShowAddRow] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [selectedTerminal, setSelectedTerminal] = useState('HDFC');
+    const [selectedTerminal, setSelectedTerminal] = useState('');
     const [currentLocation, setCurrentLocation] = useState("");
 
     const [summary, setSummary] = useState({ totalBill: 0, insuranceApproved: 0, patientPayable: 0, totalDue: 0 });
@@ -284,6 +284,10 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
             if (result.statusCode === 201 || result.statusCode === 200) {
                     Swal.fire("Success", "Receipt Generated Successfully", "success");
                 setShowAddRow(false);
+                setNewPayment({
+                    date: new Date().toISOString().split('T')[0],
+                    cash: 0, card: 0, cheque: 0, online: 0, internalDiscount: 0, tds: 0
+                });
                 handleViewBillDetails();
             } else if (
                     result.statusCode === 202 &&
@@ -321,10 +325,10 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
         <div className="themebody-wrap custom-ipd-styles">
             <PageBreadcrumb pagename="IPD Payment Data" />
             <NavbarIpdBills />
-            <Container fluid>
+            <Container fluid className="p-0">
                 <Row>
                     <Col>
-                        <Card className="shadow-sm border-cyan mb-20 overflow-visible">
+                        <Card className="shadow-sm border-cyan mb-20 mt-1 overflow-visible" style={{ marginLeft: "17px", marginRight: "17px" }}>
                             <Card.Body>
                                 <Row className="align-items-end">
                                     <Col lg={3} md={6} className="mb-3 position-relative" ref={dropdownRef}>
@@ -332,7 +336,11 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
                                         <Form.Control
                                             type="text"
                                             value={invoiceId}
-                                            onChange={(e) => setInvoiceId(e.target.value)}
+                                            onChange={(e) => {
+                                                setInvoiceId(e.target.value);
+                                                setPatientDetails({ name: '', uhid: '', patient_id: '', phone: '' });
+                                                setShowBillDetails(false);
+                                            }}
                                             placeholder="Enter Invoice ID..."
                                             className="input-style"
                                         />
@@ -343,7 +351,7 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
                                                         {inv.invoice_id} - {inv.name}
                                                     </ListGroup.Item>
                                                 ))}
-                                                {searchResults.length === 0 && <ListGroup.Item className="text-danger">No invoice found</ListGroup.Item>}
+                                                {searchResults.length === 0 && <ListGroup.Item className="text-danger">No Invoice Id Found</ListGroup.Item>}
                                             </ListGroup>
                                         )}
                                     </Col>
@@ -356,7 +364,7 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
                                         <Form.Control readOnly value={patientDetails.uhid} className="input-style" />
                                     </Col>
                                     <Col lg={2} md={6} className="mb-3">
-                                        <Button variant="primary" className="w-200 text-white fw-bold btn-view" disabled={!invoiceId || loading} onClick={handleViewBillDetails}>
+                                        <Button variant="primary" className="w-200 text-white fw-bold btn-view" disabled={!patientDetails.patient_id || loading} onClick={handleViewBillDetails}>
                                             {loading ? <Spinner size="sm" /> : "View Bill Details"}
                                         </Button>
                                     </Col>
@@ -365,7 +373,7 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
                         </Card>
 
                         {showBillDetails && (
-                            <Card className="shadow-sm border-0 overflow-hidden">
+                            <Card className="shadow-sm border-0 overflow-hidden" style={{ marginLeft: "22px", marginRight: "20px" }}>
                                 <div className="summary-header">
                                     <span><FaListUl className="me-1" />Total Bill: {summary.totalBill}</span>
                                     <span><FaTasks className="me-1" />Insurance Approved: {summary.insuranceApproved}</span>
@@ -390,42 +398,44 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
                                         <tbody>
                                             {payments.map((pay, idx) => (
                                                 <tr key={pay.ipdpaymentid}>
-                                                    <td><Form.Control className="table-input" style={{width:"55px"}} readOnly value={idx + 1} /></td>
-                                                    <td><Form.Control className="table-input" style={{width:"110px"}} readOnly value={pay.receipt_date ? pay.receipt_date.split('T')[0].split('-').reverse().join('-') : ''} /></td>
-                                                    <td><Form.Control className="table-input" style={{width:"135px"}} readOnly value={`₹${pay.cashamt}`} /></td>
-                                                    <td><Form.Control className="table-input" style={{width:"135px"}} readOnly value={`₹${pay.cardamt}`} /></td>
-                                                    <td><Form.Control className="table-input" style={{width:"135px"}} readOnly value={`₹${pay.chequeamt}`} /></td>
-                                                    <td><Form.Control className="table-input" style={{width:"135px"}} readOnly value={`₹${pay.onlineamt}`} /></td>
-                                                    <td><Form.Control className="table-input" style={{width:"135px"}} readOnly value={`₹${pay.discountamt}`} /></td>
-                                                    <td><Form.Control className="table-input" style={{width:"135px"}} readOnly value={`₹${pay.tdsamt}`} /></td>
+                                                    <td><Form.Control className="table-input" style={{ width: "55px" }} readOnly value={idx + 1} /></td>
+                                                    <td><Form.Control className="table-input" style={{ width: "110px" }} readOnly value={pay.receipt_date ? pay.receipt_date.split('T')[0].split('-').reverse().join('-') : ''} /></td>
+                                                    <td><Form.Control className="table-input" style={{ width: "135px" }} readOnly value={`₹${pay.cashamt}`} /></td>
+                                                    <td><Form.Control className="table-input" style={{ width: "135px" }} readOnly value={`₹${pay.cardamt}`} /></td>
+                                                    <td><Form.Control className="table-input" style={{ width: "135px" }} readOnly value={`₹${pay.chequeamt}`} /></td>
+                                                    <td><Form.Control className="table-input" style={{ width: "135px" }} readOnly value={`₹${pay.onlineamt}`} /></td>
+                                                    <td><Form.Control className="table-input" style={{ width: "135px" }} readOnly value={`₹${pay.discountamt}`} /></td>
+                                                    <td><Form.Control className="table-input" style={{ width: "135px" }} readOnly value={`₹${pay.tdsamt}`} /></td>
                                                     <td className="text-center">
-                                                        <Button title="Print Receipt" variant="outline-primary" className="btn-print"><FaPrint /></Button>
+                                                        <Button title="Print Receipt" variant="primary" className="btn-print"><FaPrint /></Button>
                                                     </td>
                                                 </tr>
                                             ))}
                                         </tbody>
                                     </Table>
 
-                                    <div className="d-flex justify-content-between mt-4 p-3 rounded border align-items-center">
-                                        <div className="d-flex align-items-center">
-                                            <span className="me-3 fw-bold text-cyan-dark">PoS Terminal:</span>
+                                    <div className="d-flex justify-content-between mt-4 pt-8 border-top align-items-center">
+                                        <div className="pos-terminal-box">
+                                            <span className="fw-bold text-cyan-dark" style={{ fontSize: "14px" }}>PoS Terminal:</span>
                                             {terminalOptions.map(opt => (
-                                                <Form.Check key={opt} inline type="radio" label={opt} checked={selectedTerminal === opt} onChange={() => setSelectedTerminal(opt)} className="fw-bold text-secondary" />
+                                                <Form.Check key={opt} inline type="radio" label={opt} checked={selectedTerminal === opt} onChange={() => setSelectedTerminal(opt)} className="fw-bold text-secondary" style={{ cursor: "pointer", fontSize: "12px" }} />
                                             ))}
                                         </div>
-                                        <Button className="btn-add" onClick={() => setShowAddRow(!showAddRow)}><FaPlus /></Button>
+                                        <Button className="btn-add" onClick={() => setShowAddRow(!showAddRow)}>
+                                            <FaPlus className="me-2" /> <span>Add Entry</span>
+                                        </Button>
                                     </div>
 
                                     {showAddRow && (
                                         <div className="mt-3 p-3 border rounded bg-white add-payment-box">
                                             <Row className="g-2">
                                                 <Col md={2}><Form.Control type="date" className="input-style" value={newPayment.date} onChange={e => setNewPayment({ ...newPayment, date: e.target.value })} /></Col>
-                                                <Col><Form.Control type="number" placeholder="Cash" className="input-style" onChange={e => setNewPayment({ ...newPayment, cash: +e.target.value })} /></Col>
-                                                <Col><Form.Control type="number" placeholder="Card" className="input-style" onChange={e => setNewPayment({ ...newPayment, card: +e.target.value })} /></Col>
-                                                <Col><Form.Control type="number" placeholder="Cheque" className="input-style" onChange={e => setNewPayment({ ...newPayment, cheque: +e.target.value })} /></Col>
-                                                <Col><Form.Control type="number" placeholder="Online" className="input-style" onChange={e => setNewPayment({ ...newPayment, online: +e.target.value })} /></Col>
-                                                <Col><Form.Control type="number" placeholder="Int. Disc" className="input-style" onChange={e => setNewPayment({ ...newPayment, internalDiscount: +e.target.value })} /></Col>
-                                                <Col><Form.Control type="number" placeholder="Hosp. Disc" className="input-style" onChange={e => setNewPayment({ ...newPayment, tds: +e.target.value })} /></Col>
+                                                <Col><Form.Control type="number" placeholder="Cash" className="input-style" value={newPayment.cash || ''} onChange={e => setNewPayment({ ...newPayment, cash: +e.target.value })} /></Col>
+                                                <Col><Form.Control type="number" placeholder="Card" className="input-style" value={newPayment.card || ''} disabled={newPayment.online > 0} onChange={e => setNewPayment({ ...newPayment, card: +e.target.value })} /></Col>
+                                                <Col><Form.Control type="number" placeholder="Cheque" className="input-style" value={newPayment.cheque || ''} onChange={e => setNewPayment({ ...newPayment, cheque: +e.target.value })} /></Col>
+                                                <Col><Form.Control type="number" placeholder="Online" className="input-style" value={newPayment.online || ''} disabled={newPayment.card > 0} onChange={e => setNewPayment({ ...newPayment, online: +e.target.value })} /></Col>
+                                                <Col><Form.Control type="number" placeholder="Internal Discount" className="input-style" value={newPayment.internalDiscount || ''} onChange={e => setNewPayment({ ...newPayment, internalDiscount: +e.target.value })} /></Col>
+                                                <Col><Form.Control type="number" placeholder="Hospital Discount" className="input-style" value={newPayment.tds || ''} onChange={e => setNewPayment({ ...newPayment, tds: +e.target.value })} /></Col>
                                                 <Col md={1}><Button className="w-100 btn-save" onClick={handleSavePayment} disabled={loading}>Save</Button></Col>
                                             </Row>
                                         </div>
@@ -450,6 +460,11 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
                     height: 30px !important; 
                     background-color: #ffffff !important; 
                     font-size: 14px;
+                }
+                .input-style:disabled, 
+                .input-style[readonly] { 
+                    background-color: #f1f3f5 !important; 
+                    cursor: not-allowed !important; 
                 }
                 .label-style { font-size: 13px; fontWeight: 600; color: #00838f; }
                 .border-cyan { border: 1px solid #00bcd4; }
@@ -490,23 +505,52 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
                     border: 1px solid #80deea !important;
                     border-radius: 6px !important;
                     height: 32px !important;
-                     background-color: #f8f9fa !important; /* Slight grey to show read-only */
-                     text-align: left; /* Changed to left */
+                     background-color: #f1f3f5 !important; /* Consistent with header read-only */
+                     text-align: left; 
                      padding-left: 8px;
-                     width: 100px; /* Reduced width */
+                     width: 100px; 
                      max-width: 100%; 
-                     pointer-events: none; 
-                     cursor: not-allowed; /* Visual cue for read-only */
+                     cursor: not-allowed !important; 
                      box-shadow: none !important;
                      font-size: 13px;
                 }
-
-                .btn-view { background-color: #00bcd4; border: none; height: 38px; border-radius: 10px; }
-                .btn-add { background-color: #00bcd4; border: none; border-radius: 6px; }
-                .btn-save { background-color: #00bcd4; border: none; font-weight: 600; }
+                .btn-view { 
+                    background-color: #00bcd4; 
+                    border: none; 
+                    height: 30px !important; 
+                    border-radius: 10px; 
+                    font-size: 13px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    line-height: 1;
+                }
+                .btn-add { 
+                    background-color: #00bcd4; 
+                    border: none; 
+                    border-radius: 6px; 
+                    height: 32px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 0 15px;
+                    color: white;
+                    font-weight: 600;
+                    font-size: 14px;
+                }
+                .btn-save { 
+                    background-color: #00bcd4; 
+                    border: 1px solid #80deea !important; 
+                    border-radius: 10px !important; 
+                    height: 30px !important; 
+                    font-weight: 600; 
+                    color: white;
+                    font-size: 14px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
                 .btn-print { 
-        border-color: #00bcd4 !important; 
-        color: #00bcd4 !important;
         width: 40px;      /* Reduced width */
         height: 35px;     /* Reduced height */
         padding: 0;       /* Remove default padding to center icon */
@@ -516,6 +560,35 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
         border-radius: 10px !important; /* Requested border radius */
     }
                 .text-cyan-dark { color: #00838f; }
+                .pos-terminal-box {
+                    background-color: #94e2eeff;
+                    border: 2px solid rgb(77, 208, 225) !important;
+                    padding: 8px 15px;
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    gap: 20px;
+                }
+                .pos-terminal-box .form-check {
+                    display: flex;
+                    align-items: center;
+                    margin-bottom: 0 !important;
+                    padding-left: 0;
+                    gap: 8px;
+                    margin-left: 5px;
+                }
+                .pos-terminal-box .form-check-input {
+                    margin-top: 0 !important;
+                    cursor: pointer;
+                    width: 16px;
+                    height: 16px;
+                }
+                .pos-terminal-box .form-check-label {
+                    cursor: pointer;
+                    line-height: 1;
+                    padding-bottom: 2px;
+                    
+                }
                 .custom-list .list-group-item:hover { background-color: #e0f7fa; }
             `}</style>
         </div>

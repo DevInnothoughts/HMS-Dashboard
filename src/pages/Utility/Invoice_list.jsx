@@ -147,6 +147,32 @@ const formatDateForDisplay = (dateValue) => {
   }
 };
 
+const rowClassName = (rowData) => {
+  // Logic to match PHP: (status === "Charity" || status === "NonInsurance") && (creation_date != today && totaldue > 0)
+  const status = (rowData.status || "").trim();
+  const creationDate = (rowData.creation_date || "").split("T")[0];
+  const currentDate = new Date().toISOString().split("T")[0];
+  // Use backend totaldue if available, otherwise fallback to calculated due_amt
+  const dueAmt = rowData.totaldue !== undefined ? rowData.totaldue : (rowData.due_amt || 0);
+
+  // Normalize status for comparisons (handle case-insensitivity just in case, but prioritize PHP exact strings)
+  const isTargetMode =
+    status === "Charity" ||
+    status === "NonInsurance" ||
+    status.toLowerCase() === "charity" ||
+    status.toLowerCase() === "noninsurance" ||
+    status.toLowerCase() === "non_insurance";
+
+  if (
+    isTargetMode &&
+    creationDate !== currentDate &&
+    dueAmt > 0
+  ) {
+    return "red-row";
+  }
+  return "";
+};
+
 const InvoiceList = () => {
   const [rows, setRows] = useState(10);
   const [first, setFirst] = useState(0);
@@ -252,6 +278,7 @@ const InvoiceList = () => {
           discount: parseFloat(invoice.discount) || 0,
           advance_amt: parseFloat(invoice.advance_amt) || 0,
           receivedamt: parseFloat(invoice.receivedamt) || 0,
+          totaldue: parseFloat(invoice.totaldue) || 0,
           payable_amt: calculatePayableAmt(invoice),
           due_amt:
             (parseFloat(invoice.totalamt) || 0) -
@@ -264,6 +291,7 @@ const InvoiceList = () => {
                 : "CASH/CARD",
           patient_name: invoice.patient_name || "N/A",
           patient_phone: invoice.patient_phone || "N/A",
+          status: invoice.status || "",
         }));
 
         setInvoices(processedInvoices);
@@ -899,8 +927,8 @@ const InvoiceList = () => {
       <div class="footer">
         <table class="footer-table">
           <tr>
-            <td>For queries call ${clinicAddr.invoiceHelplineNo || "7774099753"}</td>
-            <td style="text-align:right;">For Emergency SMS ${clinicAddr.EmergencySMS || "7774053187"}</td>
+            <td>For Queries Call: <b>${clinicAddr.invoiceHelplineNo || "7774099753"}</b></td>
+            <td style="text-align:right;">For Emergency SMS: <b>${clinicAddr.EmergencySMS || "7774053187"}</b></td>
           </tr>
         </table>
       </div>
@@ -1106,7 +1134,7 @@ const InvoiceList = () => {
     >
       <PageBreadcrumb pagename="IPD Bills" />
       <NavbarIpdBills />
-      <Container fluid>
+      <Container fluid className="p-0">
         <Row>
           <Col>
             <Card
@@ -1116,6 +1144,8 @@ const InvoiceList = () => {
                 borderColor: "#00bcd4",
                 background: "white",
                 border: "1px solid #00bcd4",
+                marginLeft: "17px",
+                marginRight: "17px",
               }}
             >
               <Card.Body style={{ margin: "4px" }}>
@@ -1171,6 +1201,7 @@ const InvoiceList = () => {
                     paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
                     currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
                     responsiveLayout="scroll"
+                    rowClassName={rowClassName}
                     className="custom-datatable-centered datatable-medium-small"
                   >
                     <Column
@@ -1212,9 +1243,18 @@ const InvoiceList = () => {
                     />
                     <Column
                       headerClassName="datatable-header-center"
-                      field="pay_mode"
+                      field="status"
                       header="Payment Mode"
                       style={{ width: "110px", border: "1px solid #4dd0e1" }}
+                      body={(rowData) => {
+                        const status = rowData.status || "";
+                        const isCashless = status.toLowerCase() === "cashless";
+                        return (
+                          <div className={isCashless ? "cashless-patient" : ""}>
+                            {status || rowData.pay_mode}
+                          </div>
+                        );
+                      }}
                     />
                     <Column
                       headerClassName="datatable-header-center"

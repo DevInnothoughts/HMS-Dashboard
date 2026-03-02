@@ -471,7 +471,7 @@ export default function ReceiptList() {
 
                 <div class="footer-details">
                   In Words : <b>${amountInWords}</b><br><br>
-                  Payment Mode : <span style="text-transform: capitalize;"><b>${selectedReceipt.paymentmode}</b></span>
+                  Payment Mode : <span style="text-transform: capitalize;"><b>${selectedReceipt.paymentmode?.toLowerCase() === "upi" ? "UPI" : selectedReceipt.paymentmode}</b></span>
                   <div class="flex-footer">
                     <div></div>
                     <div class="signature-area">Signature</div>
@@ -479,7 +479,7 @@ export default function ReceiptList() {
                 </div>
 
                 <div class="legal-text">
-                  In case you have not received the correct receipt for the paid amount, or for any discrepancies in transaction please write us on info@healinghandsclinic.co.in or whatsapp on ${clinicAddr.phone}
+                  In case you have not received the correct receipt for the paid amount, or for any discrepancies in transaction please write us on <b>info@healinghandsclinic.co.in</b> or whatsapp on <b>${clinicAddr.phone}</b>
                 </div>
               </td>
             </tr>
@@ -502,7 +502,7 @@ export default function ReceiptList() {
     <div className="d-flex align-items-center justify-content-center">
       <Button
         onClick={() => handlePrintReceipt(receipt)}
-        className="btn btn-extra-small btn-icon me-1"
+        className="btn btn-extra-small btn-icon me-2"
         variant="primary"
         title="Print"
       >
@@ -704,7 +704,7 @@ export default function ReceiptList() {
         background: "linear-gradient(to right, #e0f7fa, #80deea)",
         fontFamily: "'Poppins', Arial, sans-serif",
         minHeight: "100vh",
-        padding: "20px",
+        padding: "10px",
       }}
     >
       <PageBreadcrumb pagename="OPD Receipt List" />
@@ -720,6 +720,7 @@ export default function ReceiptList() {
                   borderColor: "#00bcd4",
                   background: "white",
                   border: "1.5px solid #00bcd4",
+                  margin: "-6px",
                 }}
               >
                 <Card.Body style={{ marginTop: "-5px" }}>

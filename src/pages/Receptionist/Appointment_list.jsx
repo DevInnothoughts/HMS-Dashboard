@@ -1586,14 +1586,16 @@ export default function Appointment_list() {
             <Col md={12}>
               <Card
                 style={{
-                  marginLeft: "-10px",
-                  marginRight: "-10px",
+                  marginLeft: "-6px",
+                  marginRight: "-5px",
                   borderRadius: "15px",
                   boxShadow: "0px 4px 8px rgba(0, 0, 0, 0.1)",
                   borderColor: "#00bcd4",
                   background: "white",
                   border: "1px solid #00bcd4",
+                  marginTop: "-5px",
                 }}
+
               >
                 <Card.Body style={{ marginTop: "-6px" }}>
                   {loading ? (

@@ -182,7 +182,7 @@ const BedAllotment = () => {
                 <Row>
                     <Col>
                         <NavbarBedAllotment />
-                        <Card style={{ borderRadius: "12px", boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)", borderColor: "#00bcd4", background: "white", border: "1px solid #00bcd4" }}>
+                        <Card style={{ borderRadius: "12px", boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)", borderColor: "#00bcd4", background: "white", border: "1px solid #00bcd4", margin: "5px" }}>
                             <Card.Body style={{ margin: "4px" }}>
                                 {renderHeader()}
                                 <DataTable

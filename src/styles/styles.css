@@ -96,7 +96,7 @@ textarea.form-control {
     }
 
     .btn-primary {
-            width: 100%;
+        width: 100%;
     }
 }
 
@@ -149,4 +149,20 @@ textarea.form-control {
 .react-datepicker__input-container {
     margin-bottom: 0 !important;
     display: block;
+}
+
+/* Highlight styles for Invoice List */
+.red-row {
+    background-color: #D9534F !important;
+    color: white !important;
+}
+
+.red-row td {
+    background-color: #D9534F !important;
+    color: white !important;
+}
+
+.cashless-patient {
+    color: red;
+    font-weight: bold;
 }

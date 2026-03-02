@@ -268,7 +268,7 @@ export default function ReceptionistDashboard() {
         Toast.fire({ icon: "success", title: "Arrival Confirmed" });
         setSelectedEvent((prev) => ({
           ...prev,
-          confirmTime: moment().format("HH:mm"), 
+          confirmTime: moment().format("HH:mm"),
         }));
         await fetchAppointmentsForRange(selectedDate, selectedDoctorId);
       }
@@ -480,6 +480,7 @@ export default function ReceptionistDashboard() {
       style={{
         background: "linear-gradient(to right, #e0f7fa, #80deea)",
         minHeight: "100vh",
+        padding: "10px",
       }}
     >
       <style>{`

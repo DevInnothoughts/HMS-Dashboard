@@ -68,10 +68,10 @@ export default function NavbarIpdBills() {
         {`
           .navbar-container {
             background: linear-gradient(135deg, #ffffff 0%, #f0f4f8 100%);
-            padding: 10px 15px;
+            padding: 10px 12px;
             border-radius: 16px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            margin: 20px;
+            margin: 15px 22px 16px 22px;
             border: 1px solid rgba(255, 255, 255, 0.8);
           }
 
@@ -95,7 +95,7 @@ export default function NavbarIpdBills() {
           .nav-link {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 5px;
             text-decoration: none;
             color: #000000ff;
             padding: 8px 10px;

@@ -342,6 +342,7 @@ export default function EnquiryList() {
                   borderColor: "#00bcd4",
                   background: "white",
                   border: "1.5px solid #00bcd4",
+                  margin: "-6px",
                 }}
               >
                 <Card.Body style={{ marginTop: "-6px" }}>

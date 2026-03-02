@@ -131,7 +131,7 @@ const handleSave = async () => {
             <Container fluid>
                 <Row>
                     <Col>
-                        <Card style={{ borderRadius: "12px", boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)", borderColor: "#00bcd4", background: "white", border: "1px solid #00bcd4" }}>
+                        <Card style={{ borderRadius: "5px", boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)", borderColor: "#00bcd4", background: "white", border: "1px solid #00bcd4", margin: "10px 5px 12px 5px", }}>
                             <Card.Header style={{ backgroundColor: "#f8f9fa", borderBottom: "1px solid #4dd0e1", padding: "10px 15px", display: "flex", alignItems: "center", justifyContent: "flex-start" }}>
                                 <i className="fa fa-list" style={{ marginRight: "8px", color: "#333" }}></i>
                                 <h5 style={{ margin: 0, fontSize: "14px", fontWeight: "bold", color: "#333", textTransform: "uppercase" }}>DATEWISE CASH COLLECTION</h5>

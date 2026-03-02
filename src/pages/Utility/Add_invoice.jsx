@@ -397,8 +397,10 @@ const AddInvoice = () => {
     borderTop: "4px solid #00bcd4",
     boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
     marginBottom: "10px",
-    marginTop: "15px",
+    marginTop: "5px",
     backgroundColor: "#fff",
+    marginLeft: "24px",
+    marginRight: "24px",
   };
 
   return (
@@ -413,7 +415,7 @@ const AddInvoice = () => {
     >
       <PageBreadcrumb pagename="Add New Invoice Form" />
       <NavbarIpdBills />
-      <Container style={{ paddingLeft: "20px", paddingRight: "20px" }}>
+      <Container className="p-0">
         <Form onSubmit={handleSubmit}>
           <Card style={cardStyle}>
             <Card.Body className="p-4">
