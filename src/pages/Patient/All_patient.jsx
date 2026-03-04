@@ -529,49 +529,40 @@ export default function All_patient() {
     const { name, value } = e.target;
     console.log("Input Change:", name, value);
 
-    if (["phone", "mobile_2", "identityNumber"].includes(name)) {
-      const numericValue = value.replace(/\D/g, "");
-      if (name === "phone" || name === "mobile_2") {
-        if (numericValue.length > 10) return;
+    setFormData((prev) => {
+      let nextState = { ...prev };
+
+      // Handle numeric fields
+      if (["phone", "mobile_2", "identityNumber"].includes(name)) {
+        const numericValue = value.replace(/\D/g, "");
+        if (name === "phone" || name === "mobile_2") {
+          if (numericValue.length > 10) return prev;
+        }
+        nextState[name] = numericValue;
+      } else {
+        nextState[name] = value;
       }
-      setFormData((prev) => ({ ...prev, [name]: numericValue }));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
 
-    setFormData((prevState) => {
-      let identityType = prevState.identity
-        ? prevState.identity.split(",")[0]
-        : "";
-      let identityNumber = prevState.identity
-        ? prevState.identity.split(",")[1] || ""
-        : "";
-
+      // Handle identity composition
+      let [identityType, identityNumber] = (nextState.identity || "").split(",");
       if (name === "identity") {
         identityType = value;
       } else if (name === "identityNumber") {
         identityNumber = value;
       }
+      nextState.identity = `${identityType || ""},${identityNumber || ""}`;
 
+      // Handle birth_date and age
       if (name === "birth_date") {
-        const formattedDate = new Date(value).toISOString().split("T")[0];
+        const formattedDate = value instanceof Date
+          ? value.toISOString().split("T")[0]
+          : value;
         const age = calculateAge(formattedDate);
-
-        console.log("Formatted Birth Date:", formattedDate, "Age:", age);
-
-        setFormData((prev) => ({
-          ...prev,
-          birth_date: formattedDate,
-          age: age || prev.age,
-        }));
-      } else {
-        name !== "identityNumber" &&
-          setFormData((prev) => ({ ...prev, [name]: value }));
+        nextState.birth_date = formattedDate;
+        nextState.age = age || nextState.age;
       }
-      return {
-        ...prevState,
-        identity: `${identityType},${identityNumber}`,
-      };
+
+      return nextState;
     });
   };
 
@@ -633,76 +624,7 @@ export default function All_patient() {
     }
   }, [currentLocation, fromDate, toDate]);
 
-  useEffect(() => {
-    if (selectedPatient) {
-      console.log("Selected Ptient Data:", selectedPatient);
-      const birthDateString = selectedPatient.birth_date || "";
-      let formattedBirthDate = "";
 
-      if (birthDateString) {
-        try {
-          const [day, month, year] = birthDateString.split("/");
-          formattedBirthDate = `${year}-${month}-${day}`;
-        } catch (error) {
-          console.error("Error formatting birth date:", error);
-          formattedBirthDate = "";
-        }
-      }
-
-      if (selectedPatient) {
-        // const workPatternsArray = (setSelectedPatient.specific_work || "")
-        const workPatternsArray = (selectedPatient.specific_work || "")
-          .split(",")
-          .map((pattern) => pattern.trim());
-      }
-
-      setFormData({
-        // Uid_no: selectedPatient.uid || "",
-        Uid_no: selectedPatient.Uid_no || selectedPatient.uid || "",
-        date: formatDate(selectedPatient.date) || "",
-        prefix: selectedPatient.prefix || "",
-        name: selectedPatient.name || "",
-        patient_type: selectedPatient.patient_type || false,
-        email: selectedPatient.email || "",
-        address: selectedPatient.address || "",
-        // country: selectedPatient.country || "",
-        // state: selectedPatient.state || "",
-        // city: selectedPatient.city || "",
-        sex: selectedPatient.sex || "",
-        phone: selectedPatient.phone || "",
-        mobile_2: selectedPatient.mobile_2 || "",
-        pincode: selectedPatient.pincode || "",
-        blood_group: selectedPatient.blood_group || "",
-        identity: selectedPatient.identity || "",
-        identityNumber: selectedPatient.identityNumber || "",
-        birth_date: selectedPatient.birth_date || "",
-        age: selectedPatient.birth_date
-          ? calculateAge(selectedPatient.birth_date)
-          : "",
-        occupation: selectedPatient.occupation || "",
-        companyname: selectedPatient.companyname || "",
-        specific_work: selectedPatient.specific_work || false,
-        reference_type: selectedPatient.reference_type,
-        nationality: selectedPatient.additional_info?.nationality || "",
-        language: selectedPatient.additional_info?.language || "",
-      });
-
-      const workPatternsArray = (selectedPatient.specific_work || "")
-        .split(",")
-        .map((pattern) => pattern.trim());
-
-      setWorkPatterns({
-        Sedentary: workPatternsArray.includes("Sedentary"),
-        Travelling: workPatternsArray.includes("Travelling"),
-        "Strenuous (Physical Activity)": workPatternsArray.includes(
-          "Strenuous (Physical Activity)",
-        ),
-        "Mentally Stressful": workPatternsArray.includes("Mentally Stressful"),
-      });
-
-      console.log("formatted Birth Date:", formattedBirthDate);
-    }
-  }, [selectedPatient]);
 
   const formatDateToDisplay = (dateString) => {
     if (!dateString) return "";
@@ -760,11 +682,12 @@ export default function All_patient() {
       }));
     }
 
+    console.log("Setting formData for prefix:", patient.prefix);
     setFormData({
       // Uid_no: patient.uid || "",
       Uid_no: patient.Uid_no || patient.uid || "",
       date: patient.date || "",
-      prefix: patient.prefix || "",
+      prefix: (patient.prefix || "").trim(),
       name: patient.name || "",
       patient_type: Boolean(patient.patient_type),
       email: patient.email || "",
@@ -2681,6 +2604,7 @@ export default function All_patient() {
     </div>
   );
 
+  console.log("Current formData prefix during render:", formData.prefix);
   const header = renderHeader();
 
   const handleWorkPatternChange = (e) => {
@@ -3207,10 +3131,14 @@ export default function All_patient() {
                     >
                       <option value="">Select Prefix</option>
                       <option value="Mr">Mr</option>
+                      <option value="MR">MR</option>
                       <option value="Mrs">Mrs</option>
+                      <option value="MRS">MRS</option>
                       <option value="Master">Master</option>
                       <option value="Ms">Ms</option>
                       <option value="MS">MS</option>
+                      <option value="Miss">Miss</option>
+                      <option value="Dr">Dr</option>
                     </Form.Select>
                   </Form.Group>
                 </Col>
