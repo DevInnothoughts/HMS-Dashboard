@@ -5,8 +5,46 @@ import PageBreadcrumb from '../../components/PageBreadcrumb';
 import { FaPrint, FaPlus, FaListUl, FaTasks } from 'react-icons/fa';
 import { decodeJwt } from "../../utils/decode-jwt";
 import Swal from "sweetalert2";
+import logo from "../../assets/images/3.png";
+import receiptLogo from "../../assets/images/4.png";
+import { clinincLoc } from "../../utils/clinic_locations-invoice.js";
+import { receiptlocations } from "../../utils/clinic_locations-receipt.js";
 
 const BASE_URL = "http://localhost:5100/api";
+const IMAGE_BASE_URL = "http://localhost:5100";
+
+const convertToWords = (number) => {
+    if (number === 0) return "Zero";
+    const words = {
+        0: '', 1: 'One', 2: 'Two', 3: 'Three', 4: 'Four', 5: 'Five', 6: 'Six', 7: 'Seven', 8: 'Eight', 9: 'Nine',
+        10: 'Ten', 11: 'Eleven', 12: 'Twelve', 13: 'Thirteen', 14: 'Fourteen', 15: 'Fifteen', 16: 'Sixteen',
+        17: 'Seventeen', 18: 'Eighteen', 19: 'Nineteen', 20: 'Twenty', 30: 'Thirty', 40: 'Forty', 50: 'Fifty',
+        60: 'Sixty', 70: 'Seventy', 80: 'Eighty', 90: 'Ninety'
+    };
+    const digits = ['', 'Hundred', 'Thousand', 'Lakh', 'Crore'];
+    let no = Math.floor(number);
+    let str = [];
+    let i = 0;
+    while (i < 9) {
+        let divider = (i === 2) ? 10 : 100;
+        let n = Math.floor(no % divider);
+        no = Math.floor(no / divider);
+        i += (divider === 10) ? 1 : 2;
+        if (n) {
+            let counter = str.length;
+            let plural = (counter > 0 && n > 9) ? 's' : '';
+            let hundred = (counter === 1 && str[0]) ? ' and ' : '';
+            if (n < 21) {
+                str.push(words[n] + " " + digits[counter] + plural + " " + hundred);
+            } else {
+                str.push(words[Math.floor(n / 10) * 10] + " " + words[n % 10] + " " + digits[counter] + plural + " " + hundred);
+            }
+        } else {
+            str.push(null);
+        }
+    }
+    return str.reverse().filter(x => x).join('').trim();
+};
 
 const IpdPaymentData = () => {
     const [invoiceId, setInvoiceId] = useState('');
@@ -315,6 +353,158 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
 
     const terminalOptions = ['HDFC', 'PineLabs', 'OFFLINE', 'BharatPe1', 'BharatPe2'];
 
+    const getBase64Image = (imgUrl) => {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.onload = () => {
+                const canvas = document.createElement("canvas");
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0);
+                resolve(canvas.toDataURL("image/png"));
+            };
+            img.onerror = () => resolve("");
+            img.src = imgUrl;
+        });
+    };
+
+    const handlePrintReceipt = async (pay) => {
+        const totalAmt = Number(pay.cashamt || 0) + Number(pay.cardamt || 0) + Number(pay.chequeamt || 0) + Number(pay.onlineamt || 0);
+        const words = convertToWords(totalAmt);
+        const invoiceInfo = clinincLoc[currentLocation] || { invoiceAddress: "", invoiceHelplineNo: "", EmergencySMS: "" };
+        const receiptInfo = receiptlocations[currentLocation] || { hospitalcode: "HHC" };
+        const hospitalCode = receiptInfo.hospitalcode;
+        const year = new Date().getFullYear();
+        const receiptNo = `HHC/${hospitalCode}/${year}/${pay.ipdpaymentid}`;
+        const dateFormatted = pay.receipt_date ? pay.receipt_date.split('T')[0].split('-').reverse().join('-') : '';
+
+        const cashPayment = pay.cashamt != 0 ? 'Cash ' : '';
+        const cardPayment = pay.cardamt != 0 ? 'Card ' : '';
+        const onlinePayment = pay.onlineamt != 0 ? 'Online ' : '';
+        const chequePayment = pay.chequeamt != 0 ? 'Cheque ' : '';
+
+        const [mainLogoBase64, horizontalReceiptLogoBase64] = await Promise.all([
+            getBase64Image(logo),
+            getBase64Image(receiptLogo)
+        ]);
+
+        const printWindow = window.open('', '_blank', 'width=800,height=800');
+        printWindow.document.write(`
+            <html>
+            <head>
+                <title>Healing Hands Clinic</title>
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+                <style>
+                    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box; }
+                    body, table, tr, td, p { font-size: 11px !important; margin: 0; padding: 0; font-family: sans-serif; }
+                    .print-container { width: 630px; margin: 20px auto; }
+                    .bgdiv { background: #2b9163 !important; padding: 15px; width: 100%; }
+                    .maindiv { background: white !important; border: 1px solid #ccc; border-radius: 15px; padding: 10px; width: 100%; }
+                    .HHClogo { width: 160px; border-color: #ccc; padding-right: 20px; }
+                    .fa-phone { padding: 3px 4px; border: 1px solid grey; border-radius: 50%; font-size: 10px; }
+                    .receipt { width: 100%; height: auto; display: block; }
+                    .print-btn {
+                        background-color: #2b9163;
+                        color: white;
+                        border: none;
+                        padding: 12px 25px;
+                        font-size: 15px;
+                        font-weight: bold;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        margin: 20px auto;
+                        display: block;
+                        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                    }
+                    .print-btn:hover {
+                        background-color: #237a53;
+                    }
+                    @media print {
+                        body { margin: 0; padding: 0; background: white; width: 100%; }
+                        .print-container { width: 100% !important; margin: 0 !important; padding: 0 !important; border: none !important; }
+                        .bgdiv { padding: 10px !important; margin: 0 !important; border-radius: 0 !important; width: 100% !important; }
+                        .maindiv { border: 1px solid #eee !important; border-radius: 12px !important; width: 100% !important; }
+                        .no-print { display: none !important; }
+                        @page { size: auto; margin: 10mm; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="print-container">
+                    <div class="bgdiv">
+                        <div class="maindiv">
+                            <table width="100%" border="0">
+                                <tr>
+                                    <td style="width:50%;"><img src="${mainLogoBase64}" class="HHClogo"></td>
+                                    <td style="width:50%; text-align: right;">
+                                        <table width="100%" border="0">
+                                            <tr><td style="text-align: right;">Receipt No:&nbsp;<b>${receiptNo}</b></td></tr>
+                                        </table><br>
+                                        <table width="100%" border="0">
+                                            <tr><td style="text-align: right;">Date:&nbsp;<b>${dateFormatted}</b></td></tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table><br>
+                            <table width="100%" border="0">
+                                <tr>
+                                    <td style="width:9%; vertical-align: top;"><img src="${horizontalReceiptLogoBase64}" class="receipt"></td>
+                                    <td style="width:88%; padding-left: 10px; vertical-align: top;">
+                                        <table width="100%" border="0">
+                                            <tr>
+                                                <td style="width:1%; white-space: nowrap; line-height:30px;">Received From ${pay.patientprefix || 'Mr/Ms'} : &nbsp;</td>
+                                                <td><p style="border-bottom: dotted; border-color: #ccc; font-weight: 600; text-transform: uppercase;">${patientDetails.name}</p></td>
+                                            </tr>
+                                        </table>
+                                        <table width="100%" border="0">
+                                            <tr>
+                                                <td><div style="width:100%; display: inline-block;">For <span style="font-weight:600; text-transform:uppercase; border-bottom: dotted; border-color: #ccc;">IPD Payment</span></div></td>
+                                            </tr>
+                                        </table>
+                                        <table width="100%" border="0">
+                                            <tr>
+                                                <td style="line-height:30px;">
+                                                    <i class="fa fa-phone"></i>&nbsp; ${invoiceInfo.invoiceHelplineNo}
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        <table width="100%" border="0">
+                                            <tr><td>Email : <b>info@healinghandsclinic.co.in</b> | Website : <b>www.healinghandsclinic.co.in</b></td></tr>
+                                        </table><br>
+                                        <table width="100%" border="0">
+                                            <tr>
+                                                <td style="width:60%; vertical-align: top;">
+                                                    Payment Mode :&nbsp;<b>${cashPayment}${cardPayment}${onlinePayment}${chequePayment}</b><br>
+                                                    In Words :&nbsp;<b>${words} Rupees Only.</b>
+                                                </td>
+                                                <td style="width:30%;"><p style="padding:10px; border:1px solid grey; border-radius:10px; font-weight:600;">Rs.&nbsp;${totalAmt} /-</p></td>
+                                                <td style="width:10%"></td>
+                                            </tr>
+                                        </table>
+                                        <table width="100%" border="0">
+                                            <tr>
+                                                <td style="width:60%;">${invoiceInfo.invoiceAddress}</td>
+                                                 <td style="width:40%; vertical-align: bottom; font-weight:500; text-align: center; padding-top: 50px;"><b>Signature</b></td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="3"><br><p>In case you have not received the correct receipt for the paid amount, or for any discrepancies in transaction please write us on <b>info@healinghandsclinic.co.in</b> or whatsapp on <b>${invoiceInfo.EmergencySMS}</b></p></td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <button onclick="window.print()" class="print-btn no-print">Print Receipt</button>
+                </div>
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+    };
+
     const formatDate = (dateString) => {
         if (!dateString) return "";
         const [year, month, day] = dateString.split('T')[0].split('-');
@@ -363,7 +553,7 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
                                         <Form.Label className="label-style">UID Number</Form.Label>
                                         <Form.Control readOnly value={patientDetails.uhid} className="input-style" />
                                     </Col>
-                                    <Col lg={2} md={6} className="mb-3">
+                                    <Col lg={3} md={6} className="mb-3">
                                         <Button variant="primary" className="w-200 text-white fw-bold btn-view" disabled={!patientDetails.patient_id || loading} onClick={handleViewBillDetails}>
                                             {loading ? <Spinner size="sm" /> : "View Bill Details"}
                                         </Button>
@@ -407,7 +597,7 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
                                                     <td><Form.Control className="table-input" style={{ width: "135px" }} readOnly value={`₹${pay.discountamt}`} /></td>
                                                     <td><Form.Control className="table-input" style={{ width: "135px" }} readOnly value={`₹${pay.tdsamt}`} /></td>
                                                     <td className="text-center">
-                                                        <Button title="Print Receipt" variant="primary" className="btn-print"><FaPrint /></Button>
+                                                        <Button title="Print Receipt" variant="outline-secondary" className="btn-print" onClick={() => handlePrintReceipt(pay)}><FaPrint /></Button>
                                                     </td>
                                                 </tr>
                                             ))}
@@ -421,7 +611,7 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
                                                 <Form.Check key={opt} inline type="radio" label={opt} checked={selectedTerminal === opt} onChange={() => setSelectedTerminal(opt)} className="fw-bold text-secondary" style={{ cursor: "pointer", fontSize: "12px" }} />
                                             ))}
                                         </div>
-                                        <Button className="btn-add" onClick={() => setShowAddRow(!showAddRow)}>
+                                        <Button variant='info' className="btn-add" onClick={() => setShowAddRow(!showAddRow)}>
                                             <FaPlus className="me-2" /> <span>Add Entry</span>
                                         </Button>
                                     </div>
@@ -436,7 +626,7 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
                                                 <Col><Form.Control type="number" placeholder="Online" className="input-style" value={newPayment.online || ''} disabled={newPayment.card > 0} onChange={e => setNewPayment({ ...newPayment, online: +e.target.value })} /></Col>
                                                 <Col><Form.Control type="number" placeholder="Internal Discount" className="input-style" value={newPayment.internalDiscount || ''} onChange={e => setNewPayment({ ...newPayment, internalDiscount: +e.target.value })} /></Col>
                                                 <Col><Form.Control type="number" placeholder="Hospital Discount" className="input-style" value={newPayment.tds || ''} onChange={e => setNewPayment({ ...newPayment, tds: +e.target.value })} /></Col>
-                                                <Col md={1}><Button className="w-100 btn-save" onClick={handleSavePayment} disabled={loading}>Save</Button></Col>
+                                                <Col md={1}><Button variant='primary' className="w-100 btn-save" onClick={handleSavePayment} disabled={loading}>Save</Button></Col>
                                             </Row>
                                         </div>
                                     )}
@@ -539,8 +729,6 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
                     font-size: 14px;
                 }
                 .btn-save { 
-                    background-color: #00bcd4; 
-                    border: 1px solid #80deea !important; 
                     border-radius: 10px !important; 
                     height: 30px !important; 
                     font-weight: 600; 
