@@ -46,27 +46,15 @@ const BedAllotment = () => {
         { value: "SEMI4", label: "SEMI4 - Suite" },
     ];
 
-    // Mock data for demonstration as requested "same to same" layout
+    // Show under development alert
     useEffect(() => {
-        const mockData = [
-            {
-                id: 1,
-                bed_number: "B-101",
-                bed_type: "ICU",
-                patient_name: "John Doe",
-                allotment_datetime: "01-10-2023 10:00 AM",
-                discharge_datetime: "05-10-2023 02:00 PM",
-            },
-            {
-                id: 2,
-                bed_number: "B-102",
-                bed_type: "General Ward",
-                patient_name: "Jane Smith",
-                allotment_datetime: "02-10-2023 09:30 AM",
-                discharge_datetime: "06-10-2023 11:45 AM",
-            }
-        ];
-        setBedAllotments(mockData);
+        Swal.fire({
+            title: "Information",
+            text: "This feature is under development",
+            icon: "info",
+            confirmButtonColor: "#00bcd4",
+        });
+        setBedAllotments([]); // Ensure it's empty as requested
     }, []);
 
     const handleEdit = (allotment) => {

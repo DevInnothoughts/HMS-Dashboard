@@ -19,7 +19,9 @@ const BASE_URL = "http://194.195.117.79:5100/api"
 const initialReportState = {
   opdCounts: [],
   opdDetails: [],
-  collectionDetails: [],
+  overallCollectionDetails: [],
+  labCollectionDetails: [],
+  pharmacyCollectionDetails: [],
   testDetails: [],
 };
 
@@ -33,7 +35,7 @@ const DailyOPDReport = () => {
   const formattedDate = `${String(today.getDate()).padStart(2, "0")}-${String(today.getMonth() + 1).padStart(2, "0")}-${today.getFullYear()}`;
 
   // 2. Remove 'selectedDate' from the useCallback dependencies
-  const fetchDailyReport = useCallback(async (location) => {
+  const fetchDailyReport = useCallback(async (currentLocation) => {
     try {
       setLoading(true);
 
@@ -41,10 +43,10 @@ const DailyOPDReport = () => {
       const apiDate = new Date().toISOString().split("T")[0];
 
       const response = await fetch(
-        `${BASE_URL}/V1/appointment/daily-opd?location=${location}&date=${apiDate}`,
+        `${BASE_URL}/V1/appointment/daily-opd?location=${currentLocation}&date=${apiDate}`,
       );
       const result = await response.json();
-
+      console.log(result);
       if (result.statusCode === 200) {
         const d = result.description;
         setReportData({
@@ -65,10 +67,19 @@ const DailyOPDReport = () => {
               total: row[3],
             };
           }),
-          collectionDetails: d.overallCollection.map((item) => ({
+          overallCollectionDetails: d.overallCollection.map((item) => ({
             method: item[0],
             amount: item[1],
           })),
+          labCollectionDetails: d.labCollection.map((item) => ({
+            method: item[0],
+            amount: item[1],
+          })),
+          pharmacyCollectionDetails: d.pharmacyCollection.map((item) => ({
+            method: item[0],
+            amount: item[1],
+          })),
+
           testDetails: d.testReport.map((test) => ({
             testName: test[0],
             amount: test[1],
@@ -275,9 +286,9 @@ const DailyOPDReport = () => {
   
           <!-- COLLECTIONS -->
           <div class="row justify-content-center">
-            ${buildCollectionTable("Overall Collection Detail (Rs)", reportData.collectionDetails)}
-            ${buildCollectionTable("LAB Collection Detail (Rs)", reportData.collectionDetails)}
-            ${buildCollectionTable("Pharmacy Collection Detail (Rs)", reportData.collectionDetails)}
+            ${buildCollectionTable("Overall Collection Detail (Rs)", reportData.overallCollectionDetails)}
+            ${buildCollectionTable("LAB Collection Detail (Rs)", reportData.labCollectionDetails)}
+            ${buildCollectionTable("Pharmacy Collection Detail (Rs)", reportData.pharmacyCollectionDetails)}
           </div>
   
         </div>
@@ -567,15 +578,15 @@ const DailyOPDReport = () => {
                   {[
                     {
                       title: "Overall Collection Detail(Rs)",
-                      data: reportData.collectionDetails,
+                      data: reportData.overallCollectionDetails,
                     },
                     {
                       title: "LAB Collection Detail(Rs)",
-                      data: reportData.collectionDetails,
+                      data: reportData.labCollectionDetails,
                     },
                     {
                       title: "Pharmacy Collection Detail(Rs)",
-                      data: reportData.collectionDetails,
+                      data: reportData.pharmacyCollectionDetails,
                     },
                   ].map((section, idx) => (
                     <Col key={idx} xs={12} lg={4} className="mb-4">

@@ -494,9 +494,17 @@ export default function All_patient() {
     if (!birthDate) return "";
 
     let formattedDate = birthDate;
-    if (typeof birthDate === "string" && birthDate.includes("/")) {
-      const [day, month, year] = birthDate.split("/");
-      formattedDate = `${year}-${month}-${day}`;
+    if (typeof birthDate === "string") {
+      if (birthDate.includes("/")) {
+        const [day, month, year] = birthDate.split("/");
+        formattedDate = `${year}-${month}-${day}`;
+      } else if (birthDate.includes("-")) {
+        const parts = birthDate.split("-");
+        if (parts[0].length !== 4) {
+          const [day, month, year] = parts;
+          formattedDate = `${year}-${month}-${day}`;
+        }
+      }
     }
 
     const today = new Date();
@@ -699,18 +707,32 @@ export default function All_patient() {
   const formatDateToDisplay = (dateString) => {
     if (!dateString) return "";
 
-    const dateParts = dateString.split("-");
+    // If it's already DD-MM-YYYY, return as is
+    if (/^\d{2}-\d{2}-\d{4}$/.test(dateString)) {
+      return dateString;
+    }
 
+    // If it's YYYY-MM-DD, convert to DD-MM-YYYY
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      const [year, month, day] = dateString.split("-");
+      return `${day}-${month}-${year}`;
+    }
+
+    // Fallback split logic if format is unexpected but has 3 parts
+    const dateParts = dateString.split(/[-/]/);
     if (dateParts.length === 3) {
-      const [year, month, day] = dateParts;
-
-      if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+      if (dateParts[0].length === 4) {
+        // YYYY-MM-DD
+        const [year, month, day] = dateParts;
+        return `${day}-${month}-${year}`;
+      } else {
+        // Assume DD-MM-YYYY or similar
+        const [day, month, year] = dateParts;
         return `${day}-${month}-${year}`;
       }
     }
 
-    console.error("Invalid date format:", dateString);
-    return "";
+    return dateString;
   };
 
   const handleEditPatient = (patient) => {
@@ -758,10 +780,11 @@ export default function All_patient() {
       identity: patient.identity || "",
       identityNumber: patient.identityNumber || "",
       birth_date: formattedBirthDate,
-      age: patient.birth_date ? calculateAge(patient.birth_date) : "",
+      age: age,
       occupation: patient.occupation || "",
       companyname: patient.companyname || "",
       reference_type: patient.reference_type || "",
+      ref: patient.ref || "",
       // specific_work: Boolean(patient.specific_work) || "",
       specific_work: patient.specific_work || "",
       patient_id: patient.patient_id || "",
@@ -1689,7 +1712,7 @@ export default function All_patient() {
                         }));
                       }}
                       // checked={referenceDetails.internet === source}
-                      checked={formData.ref === source}
+                      checked={formData.ref === source || referenceDetails.internet === source}
                       style={{ marginRight: "5px" }}
                     />
                     {source}
@@ -2749,6 +2772,12 @@ export default function All_patient() {
         return isNaN(date.getTime()) ? null : date;
       }
 
+      if (/^\d{2}-\d{2}-\d{4}$/.test(dateString)) {
+        const [day, month, year] = dateString.split("-");
+        const date = new Date(year, month - 1, day);
+        return isNaN(date.getTime()) ? null : date;
+      }
+
       const date = new Date(dateString);
       return isNaN(date.getTime()) ? null : date;
     } catch (error) {
@@ -3181,6 +3210,7 @@ export default function All_patient() {
                       <option value="Mrs">Mrs</option>
                       <option value="Master">Master</option>
                       <option value="Ms">Ms</option>
+                      <option value="MS">MS</option>
                     </Form.Select>
                   </Form.Group>
                 </Col>

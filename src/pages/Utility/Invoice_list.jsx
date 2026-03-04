@@ -30,8 +30,6 @@ import { FilterMatchMode } from "primereact/api";
 import FeatherIcon from "feather-icons-react";
 import "../../styles/styles.css";
 
-
-
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
 const BASE_URL = "http://194.195.117.79:5100/api"
 
@@ -48,59 +46,94 @@ const Toast = Swal.mixin({
 });
 
 
+// const getDynamicRowsFromInvoice = (invoice) => {
+//   const dynamicRows = [];
+//   let titleCalculatedTotal = 0;
+
+//   if (!invoice) return { dynamicRows: [], Sub_Total: "0.00" };
+//   console.log(invoice.package);
+
+//   if (invoice.package && typeof invoice.package === "string") {
+//     invoice.package.split(",").forEach((entry) => {
+//       const parts = entry.split(":");
+//       if (parts.length === 2) {
+//         const label = parts[0].trim();
+//         const value = parseFloat(parts[1].trim()) || 0;
+
+//         if (label !== "") {
+//           dynamicRows.push({
+//             label: label,
+//             value: value.toFixed(2),
+//             field: "title_parsed",
+//           });
+//           titleCalculatedTotal += value;
+//         }
+//       }
+//     });
+
+//     console.log("Dynamic rows:", dynamicRows);
+//   }
+
+//   const itemMap = {
+//     surgeon_amt: invoice.surgeon_desc || "Surgeon Fee",
+//     assistant_amt: invoice.assistant_desc || "Assistant Fee",
+//     anaesthetists_amt: invoice.anaesthetists_desc || "Anaesthetist Fee",
+//     bed_amt: invoice.bed_desc || "Bed Charges",
+//     medico_amt: "Medication Charges",
+//     medico_ot_amt: "Medication OT Charges",
+//     visit_amt: invoice.visit_desc || "Doctor Visits",
+//     lab_amt: "Lab Charges",
+//     procedures_amt: "Other Procedures",
+//     diet_amt: "Diet Charges",
+//     consumables_amt: "Consumables",
+//     miscellaneous_amt: "Miscellaneous",
+//     admin_amt: invoice.admin_desc || "Admin Charges",
+//     nurse_amt: invoice.nurse_desc || "Nursing Charges",
+//     colonoscopy_amt: "Colonoscopy",
+//     colonhydrotherapy_amt: "Colon Hydrotherapy",
+//     ot_amt: "OT Charges",
+//   };
+
+//   const Sub_Total =
+//     titleCalculatedTotal > 0
+//       ? titleCalculatedTotal
+//       : parseFloat(invoice.totalamt) || 0;
+//   return { dynamicRows, Sub_Total: Sub_Total.toFixed(2) };
+// };
+
 const getDynamicRowsFromInvoice = (invoice) => {
   const dynamicRows = [];
   let titleCalculatedTotal = 0;
 
-  if (!invoice) return { dynamicRows: [], Sub_Total: "0.00" };
-  console.log(invoice.package);
-
-  if (invoice.package && typeof invoice.package === "string") {
-    invoice.package.split(",").forEach((entry) => {
-      const parts = entry.split(":");
-      if (parts.length === 2) {
-        const label = parts[0].trim();
-        const value = parseFloat(parts[1].trim()) || 0;
-
-        if (label !== "") {
-          dynamicRows.push({
-            label: label,
-            value: value.toFixed(2),
-            field: "title_parsed",
-          });
-          titleCalculatedTotal += value;
-        }
-      }
-    });
-
-    console.log("Dynamic rows:", dynamicRows);
+  if (!invoice || typeof invoice.package !== "string") {
+    return { dynamicRows: [], Sub_Total: "0.00" };
   }
 
-  const itemMap = {
-    surgeon_amt: invoice.surgeon_desc || "Surgeon Fee",
-    assistant_amt: invoice.assistant_desc || "Assistant Fee",
-    anaesthetists_amt: invoice.anaesthetists_desc || "Anaesthetist Fee",
-    bed_amt: invoice.bed_desc || "Bed Charges",
-    medico_amt: "Medication Charges",
-    medico_ot_amt: "Medication OT Charges",
-    visit_amt: invoice.visit_desc || "Doctor Visits",
-    lab_amt: "Lab Charges",
-    procedures_amt: "Other Procedures",
-    diet_amt: "Diet Charges",
-    consumables_amt: "Consumables",
-    miscellaneous_amt: "Miscellaneous",
-    admin_amt: invoice.admin_desc || "Admin Charges",
-    nurse_amt: invoice.nurse_desc || "Nursing Charges",
-    colonoscopy_amt: "Colonoscopy",
-    colonhydrotherapy_amt: "Colon Hydrotherapy",
-    ot_amt: "OT Charges",
-  };
+  const items = invoice.package.split(",");
+
+  for (let i = 0; i < items.length; i += 2) {
+    const label = items[i]?.trim();
+    const value = parseFloat(items[i + 1]) || 0;
+
+    if (label) {
+      dynamicRows.push({
+        label,
+        value: value.toFixed(2),
+        field: "title_parsed",
+      });
+      titleCalculatedTotal += value;
+    }
+  }
 
   const Sub_Total =
     titleCalculatedTotal > 0
       ? titleCalculatedTotal
       : parseFloat(invoice.totalamt) || 0;
-  return { dynamicRows, Sub_Total: Sub_Total.toFixed(2) };
+
+  return {
+    dynamicRows,
+    Sub_Total: Sub_Total.toFixed(2),
+  };
 };
 
 const calculatePayableAmt = (invoice) => {
@@ -365,6 +398,30 @@ const InvoiceList = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    setSelectedInvoice((prev) => ({ ...prev, [name]: value }));
+
+    if (
+      ["bill_method", "bill_Type", "pdc", "discount"].includes(name)
+    ) {
+      setModalInvoiceData((prevModalData) => {
+        const updatedModalData = { ...prevModalData, [name]: value };
+        const newSubTotal = parseFloat(updatedModalData.Sub_Total) || 0;
+        const discountVal = parseFloat(updatedModalData.discount) || 0;
+        const pdcVal = parseFloat(updatedModalData.pdc) || 0;
+
+        let payable =
+          newSubTotal -
+          (updatedModalData.bill_method === "PDC" ? pdcVal : discountVal);
+        updatedModalData.payableAmount = Math.max(0, payable).toFixed(2);
+
+        setSelectedInvoice((prevInvoice) => ({
+          ...prevInvoice,
+          payable_amt: updatedModalData.payableAmount,
+        }));
+
+        return updatedModalData;
+      });
+    }
   };
 
   const handleDynamicRowChange = (index, field, value) => {
@@ -513,6 +570,7 @@ const InvoiceList = () => {
   // };
 
   const handleEditInvoice = (invoice) => {
+    console.log("Editing Invoice:", invoice);
     const { dynamicRows, Sub_Total } = getDynamicRowsFromInvoice(invoice);
 
     const displayRows =
@@ -538,21 +596,73 @@ const InvoiceList = () => {
       return `${year}-${month}-${day}`;
     };
 
+    /**
+     * Helper to format time for <select> options which expect HH:mm (24h)
+     */
+    const formatTimeForInput = (timeStr) => {
+      if (!timeStr) return "";
+      // If already in 24h format "00:00"
+      if (/^\d{2}:\d{2}$/.test(timeStr)) return timeStr;
+
+      // Handle "hh:mm AM/PM" or "hh:mm AM/PM" (case insensitive)
+      const match = timeStr.match(/(\d{1,2}):(\d{2})\s*([AP]M)/i);
+      if (match) {
+        let [_, h, m, p] = match;
+        let hours = parseInt(h, 10);
+        const period = p.toUpperCase();
+        if (period === "PM" && hours < 12) hours += 12;
+        if (period === "AM" && hours === 12) hours = 0;
+        return `${String(hours).padStart(2, "0")}:${m}`;
+      }
+      return timeStr;
+    };
+
+    // Determine bill_method and bill_Type based on status, pay_mode or insurancecompany
+    const bill_method =
+      invoice.bill_method ||
+      (invoice.chequeno && invoice.chequeno !== "NULL"
+        ? "PDC"
+        : invoice.status?.toLowerCase() === "cashless"
+          ? "cashless"
+          : invoice.status?.toLowerCase() === "reimbursement"
+            ? "reimbursement"
+            : "non_insurance");
+
+    const bill_Type =
+      invoice.bill_Type ||
+      (invoice.status?.toLowerCase() === "cashless" ||
+        invoice.status?.toLowerCase() === "reimbursement" ||
+        invoice.insurancecompany
+        ? "insurance"
+        : "non_insurance");
+
+    const chequeno =
+      invoice.chequeno === "NULL" || !invoice.chequeno ? "" : invoice.chequeno;
+    const pdc = invoice.pdc || (bill_method === "PDC" ? invoice.advance_amt : "0.00");
+
     setSelectedInvoice({
       ...invoice,
-      // Explicitly format these for the modal inputs
+      // Explicitly format dates and times for the modal inputs
       creation_date: formatForInput(invoice.creation_date),
       due_date: formatForInput(invoice.due_date),
+      admissiontime: formatTimeForInput(invoice.admissiontime),
+      dischargetime: formatTimeForInput(invoice.dischargetime),
+      bill_method,
+      bill_Type,
+      chequeno,
+      pdc,
+      // Ensure we have fallback for bed category from existing fields
+      bed_no: invoice.bed_no || invoice.bed_desc || "",
     });
 
     setModalInvoiceData({
       dynamicRows: displayRows,
       Sub_Total: Sub_Total,
       discount: invoice.discount || "0.00",
-      pdc: parseFloat(invoice.pdc) || "0.00",
+      pdc: parseFloat(pdc) || 0.0,
       payableAmount: payableAmount,
-      bill_method: invoice.bill_method || "non_insurance",
-      bill_Type: invoice.bill_Type || "non_insurance",
+      bill_method,
+      bill_Type,
     });
 
     setShowModal(true);
@@ -1684,6 +1794,14 @@ const InvoiceList = () => {
                             {c.name}
                           </option>
                         ))}
+                        {selectedInvoice.consultant &&
+                          !consultants.some(
+                            (c) => c.name === selectedInvoice.consultant,
+                          ) && (
+                            <option value={selectedInvoice.consultant}>
+                              {selectedInvoice.consultant}
+                            </option>
+                          )}
                       </Form.Select>
                     </Col>
                     <Col md={4}>
@@ -1718,6 +1836,14 @@ const InvoiceList = () => {
                             {s.name}
                           </option>
                         ))}
+                        {selectedInvoice.prepared_doctor &&
+                          !surgeons.some(
+                            (s) => s.name === selectedInvoice.prepared_doctor,
+                          ) && (
+                            <option value={selectedInvoice.prepared_doctor}>
+                              {selectedInvoice.prepared_doctor}
+                            </option>
+                          )}
                       </Form.Select>
                     </Col>
                     <Col md={4}>
@@ -1743,10 +1869,15 @@ const InvoiceList = () => {
                           border: "1px solid #4dd0e1",
                         }}
                         type="text"
-                        value={selectedInvoice.bed_desc}
+                        value={
+                          selectedInvoice.bed_no ||
+                          selectedInvoice.bed_desc ||
+                          ""
+                        }
                         onChange={(e) =>
                           setSelectedInvoice({
                             ...selectedInvoice,
+                            bed_no: e.target.value,
                             bed_desc: e.target.value,
                           })
                         }
@@ -1879,15 +2010,39 @@ const InvoiceList = () => {
                           value={selectedInvoice.bill_Type || (selectedInvoice.insurancecompany ? "insurance" : "non_insurance")}
                           onChange={(e) => {
                             const type = e.target.value;
-                            setSelectedInvoice({
-                              ...selectedInvoice,
+                            setSelectedInvoice((prev) => ({
+                              ...prev,
                               bill_Type: type,
                               // Reset insurance details if switching away from insurance
                               ...(type !== "insurance" && {
                                 insurancecompany: null,
                                 tpa: null,
-                                bill_method: "non_insurance"
-                              })
+                                bill_method: "non_insurance",
+                              }),
+                            }));
+
+                            // Also update modal calculation state
+                            setModalInvoiceData((prev) => {
+                              const updated = {
+                                ...prev,
+                                bill_Type: type,
+                                ...(type !== "insurance" && {
+                                  bill_method: "non_insurance",
+                                }),
+                              };
+                              const subTotal = parseFloat(updated.Sub_Total) || 0;
+                              const discount = parseFloat(updated.discount) || 0;
+                              const pdc = parseFloat(updated.pdc) || 0;
+                              const payable =
+                                subTotal -
+                                (updated.bill_method === "PDC" ? pdc : discount);
+                              updated.payableAmount = Math.max(0, payable).toFixed(2);
+
+                              setSelectedInvoice((prevInvoice) => ({
+                                ...prevInvoice,
+                                payable_amt: updated.payableAmount,
+                              }));
+                              return updated;
                             });
                           }}
                         >
@@ -1944,9 +2099,10 @@ const InvoiceList = () => {
                         </Form.Label>
                         <Form.Select
                           size="sm"
+                          name="bill_method"
                           style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                           value={selectedInvoice.bill_method || ""}
-                          onChange={(e) => setSelectedInvoice({ ...selectedInvoice, bill_method: e.target.value })}
+                          onChange={handleInputChange}
                         >
                           <option value="non_insurance">CASH/CARD</option>
                           <option value="cashless">Cashless</option>
@@ -1954,6 +2110,40 @@ const InvoiceList = () => {
                           <option value="PDC">PDC</option>
                         </Form.Select>
                       </Col>
+
+                      {selectedInvoice.bill_method === "PDC" && (
+                        <>
+                          <Col md={4}>
+                            <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
+                              Cheque No
+                            </Form.Label>
+                            <Form.Control
+                              size="sm"
+                              name="chequeno"
+                              style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                              placeholder="Enter cheque No"
+                              type="number"
+                              value={selectedInvoice.chequeno || ""}
+                              onChange={handleInputChange}
+                            />
+                          </Col>
+                          <Col md={4}>
+                            <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
+                              PDC Amount (₹)
+                            </Form.Label>
+                            <Form.Control
+                              size="sm"
+                              name="pdc"
+                              onWheel={(e) => e.target.blur()}
+                              style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                              placeholder="Enter PDC Amount"
+                              type="number"
+                              value={selectedInvoice.pdc || ""}
+                              onChange={handleInputChange}
+                            />
+                          </Col>
+                        </>
+                      )}
 
                       {/* Note Area */}
                       <Col md={12}>

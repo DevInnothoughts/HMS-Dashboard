@@ -17,6 +17,15 @@ export default function AddBedAllotment() {
         dischargeDate: "",
     });
 
+    useEffect(() => {
+        Swal.fire({
+            title: "Information",
+            text: "This feature is under development",
+            icon: "info",
+            confirmButtonColor: "#00bcd4",
+        });
+    }, []);
+
     const bedOptions = [
         { value: "W1", label: "W1 - General Ward" },
         { value: "W2", label: "W2 - Semi AC" },
@@ -239,6 +248,7 @@ export default function AddBedAllotment() {
                                         <Button
                                             variant="secondary"
                                             onClick={handleCancel}
+                                            disabled
                                             style={{
                                                 fontSize: "13px",
                                                 borderRadius: "10px",
@@ -250,7 +260,7 @@ export default function AddBedAllotment() {
                                         <Button
                                             type="submit"
                                             variant="primary"
-                                            disabled={loading}
+                                            disabled
                                             style={{
                                                 fontSize: "13px",
                                                 borderRadius: "10px",
@@ -259,7 +269,7 @@ export default function AddBedAllotment() {
                                                 backgroundColor: "#00bcd4"
                                             }}
                                         >
-                                            {loading ? "Submitting..." : "Submit"}
+                                            Submit
                                         </Button>
                                     </div>
                                 </Form>

@@ -868,6 +868,7 @@ const AddInvoice = () => {
                       </Form.Label>
                       <Form.Control
                         style={inputStyle}
+                        onWheel={(e) => e.target.blur()}
                         placeholder="Enter cheque No"
                         type="number"
                         name="chequeno"
