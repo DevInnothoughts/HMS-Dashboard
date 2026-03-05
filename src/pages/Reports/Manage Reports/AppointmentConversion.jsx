@@ -565,7 +565,7 @@
 // export default AppointmentConversion;
 
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PageBreadcrumb from "../../../components/PageBreadcrumb";
 import { Row, Col, Card, Container, Form } from "react-bootstrap";
 import SimpleBar from "simplebar-react";
@@ -578,7 +578,7 @@ import { InputText } from "primereact/inputtext";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import ReactApexChart from "react-apexcharts"; // Using the project's existing chart tool
-
+import { decodeJwt } from "../../../utils/decode-jwt";
 const BASE_URL = "http://194.195.117.79:5100/api";
 
 const appointmentTypes = [
@@ -602,6 +602,18 @@ const AppointmentConversion = () => {
   const [appointments, setAppointments] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [rows, setRows] = useState(10);
+
+   const [currentLocation, setCurrentLocation] = useState("");
+  
+       useEffect(() => {
+          const token = localStorage.getItem("token");
+          if (token) {
+            const payload = decodeJwt(token);
+            if (payload && payload.jobLocation) {
+              setCurrentLocation(payload.jobLocation);
+            }
+          }
+        }, []);
 
   // New State for Analytics (Matches PHP Logic)
   const [dailyChartData, setDailyChartData] = useState({ categories: [], series: [] });
@@ -635,13 +647,23 @@ const AppointmentConversion = () => {
     try {
       // 1. Fetch Table Data & Analytics Data Concurrently (Mimicking PHP's multiple AJAX calls)
       const [resList, resNew, resFO, resPO, resMonthNew, resMonthFO, resMonthPO] = await Promise.all([
-        fetch(`${BASE_URL}/V1/appointment/listAppointments?from=${fromDate}&to=${toDate}`, { headers: authHeaders }),
-        fetch(`${BASE_URL}/V1/managereports/NewAppointmentDetails`, { method: "POST", headers: authHeaders, body: JSON.stringify({ Fromdate: fromDate, Todate: toDate }) }),
-        fetch(`${BASE_URL}/V1/managereports/FollowAppointmentDetails`, { method: "POST", headers: authHeaders, body: JSON.stringify({ Fromdate: fromDate, Todate: toDate }) }),
-        fetch(`${BASE_URL}/V1/managereports/POAppointmentDetails`, { method: "POST", headers: authHeaders, body: JSON.stringify({ Fromdate: fromDate, Todate: toDate }) }),
-        fetch(`${BASE_URL}/V1/managereports/MonthwiseNewAppointment`, { method: "POST", headers: authHeaders, body: JSON.stringify({ Fromdate: fromDate, Todate: toDate }) }),
-        fetch(`${BASE_URL}/V1/managereports/MonthwiseFOAppointment`, { method: "POST", headers: authHeaders, body: JSON.stringify({ Fromdate: fromDate, Todate: toDate }) }),
-        fetch(`${BASE_URL}/V1/managereports/MonthwisePOAppointment`, { method: "POST", headers: authHeaders, body: JSON.stringify({ Fromdate: fromDate, Todate: toDate }) })
+        fetch(`${BASE_URL}/V1/managereports/listConvAppointments`, { 
+          method: "POST", 
+          headers: authHeaders, 
+          body: JSON.stringify({ 
+            location: currentLocation, // Sending in body
+            Fromdate: fromDate, 
+            Todate: toDate,
+            AppointmentType: appointmentType, // Added missing filters
+            AppointmentStatus: appointmentStatus 
+          }) 
+        }),
+        fetch(`${BASE_URL}/V1/managereports/NewAppointmentDetails`, { method: "POST", headers: authHeaders, body: JSON.stringify({ location: currentLocation, Fromdate: fromDate, Todate: toDate }) }),
+        fetch(`${BASE_URL}/V1/managereports/FollowAppointmentDetails`, { method: "POST", headers: authHeaders, body: JSON.stringify({ location: currentLocation,Fromdate: fromDate, Todate: toDate }) }),
+        fetch(`${BASE_URL}/V1/managereports/POAppointmentDetails`, { method: "POST", headers: authHeaders, body: JSON.stringify({ location: currentLocation,Fromdate: fromDate, Todate: toDate }) }),
+        fetch(`${BASE_URL}/V1/managereports/MonthwiseNewAppointment`, { method: "POST", headers: authHeaders, body: JSON.stringify({ location: currentLocation,Fromdate: fromDate, Todate: toDate }) }),
+        fetch(`${BASE_URL}/V1/managereports/MonthwiseFOAppointment`, { method: "POST", headers: authHeaders, body: JSON.stringify({ location: currentLocation,Fromdate: fromDate, Todate: toDate }) }),
+        fetch(`${BASE_URL}/V1/managereports/MonthwisePOAppointment`, { method: "POST", headers: authHeaders, body: JSON.stringify({ location: currentLocation, Fromdate: fromDate, Todate: toDate }) })
       ]);
 
       const listData = await resList.json();
@@ -652,8 +674,9 @@ const AppointmentConversion = () => {
       const mFO = await resMonthFO.json();
       const mPO = await resMonthPO.json();
 
+      // console.log(listData);
       // Update Main Table with filtering
-      let filtered = listData.data || [];
+      let filtered = listData || [];
       if (appointmentType) {
         filtered = filtered.filter(app =>
           (app.patient_type || app.appointmentType || "").toLowerCase() === appointmentType.toLowerCase()

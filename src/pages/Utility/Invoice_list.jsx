@@ -913,11 +913,11 @@ const InvoiceList = () => {
           <td>Admission No:</td><td>${invoice.admission_no}</td>
         </tr>
         <tr>
-          <td>Insurance Name:</td><td>${invoice.status === "Cashless" ? invoice.insurance_company || "" : ""}</td>
+          <td>Insurance Name:</td><td>${invoice.status === "Cashless" ? invoice.insurancecompany || "" : ""}</td>
           <td>Bed Category:</td><td>${invoice.bed_desc || invoice.bed_no || "N/A"}</td>
         </tr>
         <tr>
-          <td>TPA Name:</td><td>${invoice.status === "Cashless" ? invoice.tpa_company || "" : ""}</td>
+          <td>TPA Name:</td><td>${invoice.status === "Cashless" ? invoice.tpa || "" : ""}</td>
           <td>Admission Date & Time:</td><td>${formatDateForDisplay(invoice.creation_date)} &nbsp; ${invoice.admissiontime}</td>
         </tr>
         <tr>

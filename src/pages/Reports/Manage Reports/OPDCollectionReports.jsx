@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     Row,
     Col,
@@ -17,8 +17,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import PageBreadcrumb from "../../../components/PageBreadcrumb";
 import SimpleBar from "simplebar-react";
-
-
+import { decodeJwt } from "../../../utils/decode-jwt";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
 const BASE_URL = "http://194.195.117.79:5100/api"
@@ -26,43 +25,26 @@ const BASE_URL = "http://194.195.117.79:5100/api"
 const OPDCollectionReports = () => {
     const [fromDate, setFromDate] = useState("");
     const [toDate, setToDate] = useState("");
-    const [tableData, setTableData] = useState([
-        {
-            patientName: "John Doe",
-            receipt_date: "2024-05-10",
-            consultation: "General",
-            cashamt: 1000,
-            cardamt: 2000,
-            paytmamt: 1500,
-            onlineamt: 4000,
-            discount: 500,
-            utr: "UTR123456"
-        },
-        {
-            patientName: "Jane Smith",
-            receipt_date: "2024-05-12",
-            consultation: "Specialist",
-            cashamt: 5000,
-            cardamt: 0,
-            paytmamt: 0,
-            onlineamt: 1000,
-            discount: 200,
-            utr: "UTR789012"
-        }
-    ]);
+    const [tableData, setTableData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [searchText, setSearchText] = useState("");
     const [rows, setRows] = useState(10);
+    const [currentLocation, setCurrentLocation] = useState("");
+
+     useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (token) {
+          const payload = decodeJwt(token);
+          if (payload && payload.jobLocation) {
+            setCurrentLocation(payload.jobLocation);
+          }
+        }
+      }, []);
+    
     const [filters, setFilters] = useState({
         global: { value: null, matchMode: FilterMatchMode.CONTAINS },
     });
-    const [totals, setTotals] = useState({
-        cash: 6000,
-        card: 2000,
-        paytm: 1500,
-        online: 5000,
-        discount: 700,
-    });
+    const [totals, setTotals] = useState({});
 
     const onGlobalFilterChange = (e) => {
         const value = e.target.value;
@@ -78,7 +60,7 @@ const OPDCollectionReports = () => {
             alert("Please Enter the all fields details..");
             return;
         }
-
+    
         setLoading(true);
         try {
             const formatDateForAPI = (dateStr) => {
@@ -88,57 +70,106 @@ const OPDCollectionReports = () => {
                 const year = date.getFullYear();
                 return `${day}-${month}-${year}`;
             };
-
+    
             const params = new URLSearchParams({
+                location: currentLocation,
                 Fromdate: formatDateForAPI(fromDate),
                 Todate: formatDateForAPI(toDate),
             });
-
-            // Assuming same API endpoint or similar structure, keeping as placeholder or same URL
+    
             const response = await fetch(
-                `${BASE_URL}/V1/invoice/listInvoice?${params}`,
+                `${BASE_URL}/V1/managereports/OpdCollectionReportDetails?${params}`,
                 {
                     method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
+                    headers: { "Content-Type": "application/json" },
                 },
             );
-
+    
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.message || "Failed to fetch data");
             }
-
-            const responseData = await response.json();
-            const data = Array.isArray(responseData)
-                ? responseData
-                : responseData.data && Array.isArray(responseData.data)
-                    ? responseData.data
-                    : [];
-
-            const newTotals = data.reduce(
-                (acc, curr) => ({
-                    cash: acc.cash + (parseInt(curr.cashamt) || 0),
-                    card: acc.card + (parseInt(curr.cardamt) || 0),
-                    paytm: acc.paytm + (parseInt(curr.paytmamt) || 0),
-                    online: acc.online + (parseInt(curr.onlineamt) || 0),
-                    discount: acc.discount + (parseInt(curr.discountamt) || 0),
-                }),
-                { cash: 0, card: 0, paytm: 0, online: 0, discount: 0 },
-            );
-
-            setTotals(newTotals);
-            setTableData(data);
-
-            if (data.length === 0) {
-                alert("No records found for the selected date range");
+    
+            const msg = await response.json();
+            console.log("msg:", msg);
+            // 1. Handle Backup/File Download logic from PHP
+            if (msg.serachdata2?.success) {
+                if (window.confirm(msg.serachdata2.message + "\n\nDo you want to download the backup file?")) {
+                    window.location.href = msg.serachdata2.file_url;
+                    setLoading(false);
+                    return;
+                }
             }
+    
+            // 2. Process Data logic (Replicating PHP calculation loop)
+            const rawData = msg.serachdata1 || [];
+            
+            let TotalCash = 0, TotalCard = 0, TotalPaytm = 0, TotalOnline = 0, TotalDiscount = 0;
+    
+            const processedData = rawData.map((row) => {
+                const total = isNaN(Number(row.total)) ? 0 : Number(row.total);
+                const discount = isNaN(Number(row.discountamt)) ? 0 : Number(row.discountamt);
+                const paymentMode = row.payment_mode || '';
+                
+                let cash = 0, card = 0, paytm = 0, online = 0;
+    
+                // Mapping amounts to columns based on payment mode logic
+                switch (paymentMode) {
+                    case 'Cash': cash = total; TotalCash += total; break;
+                    case 'Card': card = total; TotalCard += total; break;
+                    case 'Paytm': paytm = total; TotalPaytm += total; break;
+                    case 'Online':
+                    case 'UPI': online = total; TotalOnline += total; break;
+                    default: break;
+                }
+                TotalDiscount += discount;
+    
+                // Parse additional_info JSON logic (Case 1, 2, and 3)
+                let utrValue = "";
+                try {
+                    if (row.additional_info) {
+                        const info = JSON.parse(row.additional_info);
+                        if (Array.isArray(info) && info.length > 0) {
+                            utrValue = info[0].paymentMode === 'CardPayment' ? info[0].partnerTxnId : info[0].pgwTxnid;
+                        } else if (info && typeof info === 'object') {
+                            if ('ResponseCode' in info && Array.isArray(info.TransactionData)) {
+                                const rrnObj = info.TransactionData.find(e => e.Tag === 'RRN');
+                                utrValue = rrnObj ? rrnObj.Value : '';
+                            } else if ('rrn' in info) {
+                                utrValue = info.rrn;
+                            }
+                        }
+                    }
+                } catch (err) { console.warn("JSON parse error", err); }
+    
+                return {
+                    ...row,
+                    receipt_date: row.item_date || 'N/A',
+                    patientName: row.patient || 'N/A',
+                    consultation: row.consultation === 'OTHERS' ? `OTHERS (${row.comment || ''})` : row.consultation,
+                    cashamt: cash,
+                    cardamt: card,
+                    paytmamt: paytm,
+                    onlineamt: online,
+                    discount: discount,
+                    utr: utrValue || ''
+                };
+            });
+    
+            // 3. Set State
+            setTotals({
+                cash: TotalCash,
+                card: TotalCard,
+                paytm: TotalPaytm,
+                online: TotalOnline,
+                discount: TotalDiscount
+            });
+            setTableData(processedData);
+    
         } catch (error) {
             console.error("Error:", error);
             alert(`Failed to fetch data: ${error.message}`);
             setTableData([]);
-            setTotals({ cash: 0, card: 0, paytm: 0, online: 0, discount: 0 });
         } finally {
             setLoading(false);
         }

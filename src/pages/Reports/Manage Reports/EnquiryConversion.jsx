@@ -16,7 +16,7 @@ import { FilterMatchMode } from "primereact/api";
 import { InputText } from "primereact/inputtext";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-
+import { decodeJwt } from "../../../utils/decode-jwt";
 
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
@@ -38,6 +38,17 @@ const EnquiryConversion = () => {
   const [filters, setFilters] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
+  const [currentLocation, setCurrentLocation] = useState("");
+    
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const payload = decodeJwt(token);
+      if (payload && payload.jobLocation) {
+        setCurrentLocation(payload.jobLocation);
+      }
+    }
+  }, []);
 
   const onGlobalFilterChange = (e) => {
     const value = e.target.value;
@@ -56,72 +67,69 @@ const EnquiryConversion = () => {
     }
 
     try {
-      const formattedFromDate = fromDate.split("-").reverse().join("/");
-      const formattedToDate = toDate.split("-").reverse().join("/");
-
-      const appointmentResponse = await fetch(
-        `${BASE_URL}/V1/appointment/listAppointments?from=${formattedFromDate}&to=${formattedToDate}`,
-        {
+      // 1. Format dates for the API (DD/MM/YYYY)
+      // const formattedFromDate = fromDate.split("-").reverse().join("-");
+      // const formattedToDate = toDate.split("-").reverse().join("-");
+      console.log(fromDate, toDate);
+      // 2. Fetch both datasets concurrently using Promise.all
+      const [appointmentResponse, callBackResponse] = await Promise.all([
+        fetch(`${BASE_URL}/V1/managereports/listEnqConv?location=${currentLocation}&from=${fromDate}&to=${toDate}`, {
           method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        },
-      );
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+        }),
+        fetch(`${BASE_URL}/V1/managereports/listEnqConvCallBack?location=${currentLocation}&from=${fromDate}&to=${toDate}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+        })
+      ]);
 
-      if (!appointmentResponse.ok) {
-        throw new Error(`Failed to fetch appointment data: ${appointmentResponse.status}`);
+      if (!appointmentResponse.ok || !callBackResponse.ok) {
+        throw new Error("Failed to fetch data from the server");
       }
 
       const appointmentData = await appointmentResponse.json();
-
-      const enquiryResponse = await fetch(
-        `${BASE_URL}/V1/enquiry/listEnquiry?from=${formattedFromDate}&to=${formattedToDate}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        },
-      );
-
-      if (!enquiryResponse.ok) {
-        throw new Error(`Failed to fetch enquiry data: ${enquiryResponse.status}`);
-      }
-
-      const enquiryData = await enquiryResponse.json();
-
+      const callBackData = await callBackResponse.json();
+      // console.log(appointmentData, callBackData);
+      // 3. Process Appointment Logic (Counters and Unique Enquiries)
       let confirmedPatients = 0;
       let dnwPatients = 0;
       let dntPatients = 0;
+      const uniqueEnquiryList = [];
 
-      if (appointmentData && appointmentData.data && Array.isArray(appointmentData.data)) {
-        appointmentData.data.forEach((appointment) => {
-          if (appointment.confirm_time !== 0) {
-            confirmedPatients++;
-          }
-          if (appointment.executivechk === 0 && appointment.confirm_time !== 0) {
-            dnwPatients++;
-          }
-          if (appointment.confirm_time === 0) {
-            dntPatients++;
-          }
-        });
-      }
+      const appointments = appointmentData?.data || [];
+      
+      appointments.forEach((item) => {
+        // Visited: confirm_time is not 0
+        if (item.confirm_time !== 0) {
+          confirmedPatients++;
+        }
+        // DNW (Do Not Wait): executivechk is 0 AND confirmed
+        if (item.executivechk === 0 && item.confirm_time !== 0) {
+          dnwPatients++;
+        }
+        // DNT (Did Not Turnup): confirm_time is 0
+        if (item.confirm_time === 0) {
+          dntPatients++;
+        }
+        // Collect unique total enquiries
+        if (item.totalenquiry && !uniqueEnquiryList.includes(item.totalenquiry)) {
+          uniqueEnquiryList.push(item.totalenquiry);
+        }
+      });
 
+      // 4. Update State with combined results
       setReportData({
-        bookedAppointments: appointmentData?.data?.length || 0,
+        bookedAppointments: appointments.length || 0,
         visited: confirmedPatients,
         dnw: dnwPatients,
         dnt: dntPatients,
-        totalEnquiries: enquiryData?.data?.length || 0,
-        callBack: 0,
+        totalEnquiries: uniqueEnquiryList.length > 0 ? uniqueEnquiryList[0] : 0,
+        callBack: callBackData?.data?.length || 0,
       });
+
     } catch (error) {
-      console.error("Error fetching data:", error);
-      alert(`Error fetching data: ${error.message}`);
+      console.error("Error fetching conversion data:", error);
+      alert(`Error: ${error.message}`);
       setReportData({
         bookedAppointments: "-",
         visited: "-",
