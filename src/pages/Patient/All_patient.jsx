@@ -300,8 +300,8 @@ export default function All_patient() {
     // global: { value: null, matchMode: FilterMatchMode.CONTAINS },
     global: { value: null, matchMode: FilterMatchMode.EQUALS },
   });
-  const [fromDate, setFromDate] = useState(new Date());
-  const [toDate, setToDate] = useState(new Date());
+  const [fromDate, setFromDate] = useState(null);
+  const [toDate, setToDate] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditPatientModal, setShowEditPatientModal] = useState(false);
@@ -572,6 +572,52 @@ export default function All_patient() {
     setShowAddModal(false);
   };
 
+  // const fetchPatientsData = async () => {
+  //   if (!currentLocation || currentLocation === "default") {
+  //     console.warn("Location not set yet, skipping patient fetch.");
+  //     return;
+  //   }
+  //   setLoading(true);
+  //   try {
+  //     const url = new URL(
+  //       `${BASE_URL}/V1/patient/listPatient?location=${encodeURIComponent(
+  //         currentLocation,
+  //       )}`,
+  //     );
+
+  //     const params = {
+  //       from: formatToApiDate(fromDate),
+  //       to: formatToApiDate(toDate),
+  //     };
+
+  //     Object.keys(params).forEach((key) => {
+  //       if (params[key]) url.searchParams.append(key, params[key]);
+  //     });
+
+  //     const response = await fetch(url, {
+  //       method: "GET",
+  //       headers: { "Content-Type": "application/json" },
+  //     });
+
+  //     const data = await response.json();
+  //     console.log(data);
+  //     if (response.ok) {
+  //       console.log("Fetched Data (All Patients):", data.data);
+  //       setPatients(data.data || []);
+  //     } else {
+  //       console.error(
+  //         "Error fetching patients:",
+  //         data.message || "Unknown error",
+  //       );
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching patients:", error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+
   const fetchPatientsData = async () => {
     if (!currentLocation || currentLocation === "default") {
       console.warn("Location not set yet, skipping patient fetch.");
@@ -585,10 +631,13 @@ export default function All_patient() {
         )}`,
       );
 
-      const params = {
-        from: formatToApiDate(fromDate),
-        to: formatToApiDate(toDate),
-      };
+      // Create an empty params object
+      const params = {};
+
+      // ONLY add dates if they are explicitly selected/truthy
+      // If your state defaults to null or "", this will prevent them from being sent
+      if (fromDate) params.from = formatToApiDate(fromDate);
+      if (toDate) params.to = formatToApiDate(toDate);
 
       Object.keys(params).forEach((key) => {
         if (params[key]) url.searchParams.append(key, params[key]);
@@ -600,15 +649,11 @@ export default function All_patient() {
       });
 
       const data = await response.json();
-      console.log(data);
+      
       if (response.ok) {
-        console.log("Fetched Data (All Patients):", data.data);
         setPatients(data.data || []);
       } else {
-        console.error(
-          "Error fetching patients:",
-          data.message || "Unknown error",
-        );
+        console.error("Error:", data.message);
       }
     } catch (error) {
       console.error("Error fetching patients:", error);
@@ -623,8 +668,6 @@ export default function All_patient() {
       fetchDropdownData();
     }
   }, [currentLocation, fromDate, toDate]);
-
-
 
   const formatDateToDisplay = (dateString) => {
     if (!dateString) return "";
