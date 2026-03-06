@@ -133,6 +133,7 @@ const AddInvoice = () => {
         ]);
 
         if (cRes.ok) setConsultants(c.data ?? []);
+        console.log(c);
         if (sRes.ok) setSurgeons(s.data ?? []);
         if (iRes.ok) setInsurance(i.data ?? []);
         if (tRes.ok) setTpa(t.data ?? []);
@@ -644,7 +645,7 @@ const AddInvoice = () => {
                   >
                     <option value="">SELECT CONSULTANT</option>
                     {consultants.map((c) => (
-                      <option key={c._id} value={c.name}>
+                      <option key={c.doctor_id} value={c.doctor_id}>
                         {c.name}
                       </option>
                     ))}
@@ -669,7 +670,7 @@ const AddInvoice = () => {
                   >
                     <option value="">SELECT SURGEON</option>
                     {surgeons.map((surgeon) => (
-                      <option key={surgeon._id} value={surgeon.name}>
+                      <option key={surgeon.doctor_id} value={surgeon.doctor_id}>
                         {surgeon.name}
                       </option>
                     ))}
@@ -799,7 +800,7 @@ const AddInvoice = () => {
                       >
                         <option value="">SELECT COMPANY</option>
                         {insurance.map((i) => (
-                          <option key={i._id} value={i.companyname}>
+                          <option key={i.comapny_id} value={i.comapny_id}>
                             {i.companyname}
                           </option>
                         ))}
@@ -823,7 +824,7 @@ const AddInvoice = () => {
                       >
                         <option value="">SELECT</option>
                         {tpa.map((t) => (
-                          <option key={t._id} value={t.companyname}>
+                          <option key={t.comapny_id} value={t.comapny_id}>
                             {t.companyname}
                           </option>
                         ))}
