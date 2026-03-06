@@ -15,6 +15,7 @@ import BillingReports from "../pages/Reports/Manage Reports/BillingReports.jsx";
 import IPDCollectionReport from "../pages/Reports/Manage Reports/IPDCollectionReport.jsx";
 import ReferenceReport from "../pages/Reports/Manage Reports/ReferenceReport.jsx";
 import ConditionWiseReport from "../pages/Reports/Manage Reports/ConditionWiseReport.jsx";
+import CashDepositReport from "../pages/Reports/Manage Reports/CashDepositReport.jsx";
 import OPDCollectionReports from "../pages/Reports/Manage Reports/OPDCollectionReports.jsx";
 import PharmacyCollectionReport from "../pages/Reports/Manage Reports/PharmacyCollectionReport.jsx";
 import SxConversionReport from "../pages/Reports/Manage Reports/SxConversionReport.jsx";
@@ -48,5 +49,6 @@ export const ReportRoutes = (
     <Route path="/PharmacyCollectionReport" element={<PharmacyCollectionReport />} />
     <Route path="/referenceReport" element={<ReferenceReport />} />
     <Route path="/conditionWiseReport" element={<ConditionWiseReport />} />
+    <Route path="/cashDepositReport" element={<CashDepositReport />} />
   </>
 );

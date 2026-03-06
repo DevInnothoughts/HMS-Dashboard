@@ -91,7 +91,7 @@ export default function Sidebar() {
     }, [location.pathname]);
 
     const reportRoutes = [
-        "/appointmentConversion", "/BillingReport", "/BirthdayAlert", "/conditionWiseReport",
+        "/appointmentConversion", "/BillingReport", "/BirthdayAlert", "/cashDepositReport", "/conditionWiseReport",
         "/dailyOPDReport", "/enquiryConversation", "/enquiryData", "/insuranceduereport",
         "/IPDCollectionReport", "/ipdduereport", "/opdipdcollgraph", "/opdipdcollection",
         "/OPDCollectionReports", "/oPDReceiptsReport", "/PharmacyCollectionReport",
@@ -270,6 +270,7 @@ export default function Sidebar() {
                     <li><Link to="/appointmentConversion" className={location.pathname === "/appointmentConversion" ? "active" : ""}>Appointment Conversion</Link></li>
                     <li><Link to="/BillingReport" className={location.pathname === "/BillingReport" ? "active" : ""}>Billing Report</Link></li>
                     <li><Link to="/BirthdayAlert" className={location.pathname === "/BirthdayAlert" ? "active" : ""}>Birthday Alert</Link></li>
+                    <li><Link to="/cashDepositReport" className={location.pathname === "/cashDepositReport" ? "active" : ""}>Cash Deposit Report</Link></li>
                     <li><Link to="/conditionWiseReport" className={location.pathname === "/conditionWiseReport" ? "active" : ""}>Condition Wise Report</Link></li>
                     <li><Link to="/dailyOPDReport" className={location.pathname === "/dailyOPDReport" ? "active" : ""}>Daily OPD Report</Link></li>
                     <li><Link to="/enquiryConversation" className={location.pathname === "/enquiryConversation" ? "active" : ""}>Enquiry Conversion</Link></li>

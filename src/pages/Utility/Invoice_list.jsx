@@ -870,9 +870,10 @@ const InvoiceList = () => {
         .left_align { text-align: left; width: 25%; }
         .right_align { text-align: right !important; width: 25%; }
         
-        .itemized-table {table-layout: fixed; width: 100%; border-collapse: collapse; table-layout: fixed; }
-        .itemized-table td { width: 50%; display: inline-block; padding: 4px 0;  }
-        .itemized-table td:nth-child(odd) { text-align: left; width: 65%; }
+        .itemized-table { width: 100%; border-collapse: collapse; }
+        .itemized-table td { padding: 4px 0; vertical-align: top; border-bottom: 1px dotted #666666; color: #000; }
+        .itemized-table tr:first-child td { border-bottom: 1px solid #666666; font-weight: bold; padding-bottom: 5px; }
+        .itemized-table td:nth-child(odd) { text-align: left; }
         .itemized-table td:nth-child(even) { text-align: right; }
   
         .total-row-container { width: 100%; border: 2px solid #000; border-collapse: collapse; }
@@ -913,11 +914,11 @@ const InvoiceList = () => {
           <td>Admission No:</td><td>${invoice.admission_no}</td>
         </tr>
         <tr>
-          <td>Insurance Name:</td><td>${invoice.status === "Cashless" ? invoice.insurancecompany || "" : ""}</td>
+          <td>Insurance Name:</td><td>${(invoice.status === "Cashless" || invoice.status === "Reimbursement") ? invoice.insurancecompany || "" : ""}</td>
           <td>Bed Category:</td><td>${invoice.bed_desc || invoice.bed_no || "N/A"}</td>
         </tr>
         <tr>
-          <td>TPA Name:</td><td>${invoice.status === "Cashless" ? invoice.tpa || "" : ""}</td>
+          <td>TPA Name:</td><td>${(invoice.status === "Cashless" || invoice.status === "Reimbursement") ? invoice.tpa || "" : ""}</td>
           <td>Admission Date & Time:</td><td>${formatDateForDisplay(invoice.creation_date)} &nbsp; ${invoice.admissiontime}</td>
         </tr>
         <tr>
@@ -942,22 +943,18 @@ const InvoiceList = () => {
   
       <table width="100%">
         <tr>
-          <td style="width: 50%; vertical-align: top; border-right: 1px solid #666666;">
+          <td style="width: 50%; vertical-align: top; border-right: 1px solid #666666; padding-right: 10px;">
             <table class="itemized-table">
               <tr>
-                <td style="font-weight:bold; color:#000; text-align:left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-bottom: 1px solid #666666;">
-                  Items/Services
-                </td>
-                <td style="font-weight:bold; color:#000; text-align:right; width: 100px; white-space: nowrap; border-bottom: 1px solid #666666;">
-                  Amount (INR)
-                </td>
+                <td>Items/Services</td>
+                <td>Amount (INR)</td>
               </tr>
               ${dynamicRows
           .map(
             (row) => `
                 <tr>
-                <td style=" color:#000; text-align:left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-bottom: 1px dotted #666666;">${row.label}</td>
-                <td style=" color:#000; text-align:right; width: 100px; white-space: nowrap; border-bottom: 1px dotted #666666;">${parseFloat(row.value).toFixed(2)}</td>
+                  <td>${row.label}</td>
+                  <td>${parseFloat(row.value).toFixed(2)}</td>
                 </tr>
               `,
           )
@@ -965,28 +962,20 @@ const InvoiceList = () => {
             </table>
           </td>
       <td style="width: 50%; vertical-align: top; padding-left: 10px;">
-  <table width="100%" style="border-collapse: collapse;">
+  <table class="itemized-table">
     <tr>
-      <td style="font-weight:bold; color:#000; border-bottom: 1px solid #666666; padding-bottom: 5px;">Heading</td>
-      <td style="font-weight:bold; color:#000; text-align:right; border-bottom: 1px solid #666666; padding-bottom: 5px;">Amount (INR)</td>
+      <td>Heading</td>
+      <td>Amount (INR)</td>
     </tr>
     <tr>
-      <td style="padding: 8px 0; border-bottom: 1px dotted #666666;">
-        Total
-      </td>
-      <td style="text-align:right; padding: 8px 0; border-bottom: 1px dotted #666666;">
-        ${parseFloat(invoice.totalamt).toLocaleString()}.00
-      </td>
+      <td>Total</td>
+      <td>${parseFloat(invoice.totalamt).toLocaleString()}.00</td>
     </tr>
     ${invoice.discount > 0
           ? `
     <tr>
-      <td style="padding: 8px 0; border-bottom: 1px dotted #666666;">
-        Discount
-      </td>
-      <td style="text-align:right; padding: 8px 0; border-bottom: 1px dotted #666666;">
-        ${parseFloat(invoice.discount).toLocaleString()}.00
-      </td>
+      <td>Discount</td>
+      <td>${parseFloat(invoice.discount).toLocaleString()}.00</td>
     </tr>
     `
           : ""
