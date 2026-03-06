@@ -174,43 +174,47 @@ const ConditionWiseReport = () => {
   // Replicating the Top Header with Search and Show options
   const renderHeader = () => {
     return (
-      <div className="d-flex justify-content-between align-items-center mb-1">
-        <div className="d-flex align-items-center" style={{ gap: "20px" }}>
-          <div className="d-flex align-items-center">
-            <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Show</span>
-            <Form.Select
-              size="sm"
-              style={{ width: "70px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
-              value={rows}
-              onChange={(e) => setRows(Number(e.target.value))}
-            >
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </Form.Select>
+      <Row className="align-items-center mb-1" style={{ margin: "0 -5px" }}>
+        <Col style={{ padding: "0 5px" }} className="d-flex align-items-center">
+          <div className="d-flex align-items-center" style={{ gap: "20px" }}>
+            <div className="d-flex align-items-center">
+              <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Show</span>
+              <Form.Select
+                size="sm"
+                style={{ width: "70px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
+                value={rows}
+                onChange={(e) => setRows(Number(e.target.value))}
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </Form.Select>
+            </div>
+            <div className="d-flex align-items-center">
+              <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Search</span>
+              <span className="p-input-icon-left">
+                <InputText
+                  value={searchText}
+                  onChange={onGlobalFilterChange}
+                  placeholder="Global Search..."
+                  className="p-inputtext-sm"
+                  style={{ width: "200px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
+                />
+              </span>
+            </div>
           </div>
-          <div className="d-flex align-items-center">
-            <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Search</span>
-            <span className="p-input-icon-left">
-              <InputText
-                value={searchText}
-                onChange={onGlobalFilterChange}
-                placeholder="Global Search..."
-                className="p-inputtext-sm"
-                style={{ width: "200px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
-              />
-            </span>
-          </div>
-        </div>
-        <button
-          className="btn btn-danger btn-sm"
-          onClick={downloadPDF}
-          style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px" }}
-        >
-          <i className="fa fa-file-pdf-o"></i> Download PDF
-        </button>
-      </div>
+        </Col>
+        <Col style={{ padding: "0 5px" }} className="d-flex justify-content-end">
+          <button
+            className="btn btn-danger btn-sm"
+            onClick={downloadPDF}
+            style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px", fontWeight: "600", height: "35px" }}
+          >
+            <i className="fa fa-file-pdf-o"></i> Download PDF
+          </button>
+        </Col>
+      </Row>
     );
   };
 
@@ -252,7 +256,7 @@ const ConditionWiseReport = () => {
     <div
       className="themebody-wrap"
       style={{
-        padding: "20px",
+        padding: "10px",
         background: "linear-gradient(to right, #e0f7fa, #80deea)",
         fontFamily: "'Poppins', Arial, sans-serif",
         minHeight: "100vh",

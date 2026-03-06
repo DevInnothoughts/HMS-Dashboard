@@ -473,7 +473,7 @@ const OPDIPDCollGraph = () => {
   };
 
   return (
-    <div className="themebody-wrap" style={{ padding: "20px", background: "linear-gradient(to right, #e0f7fa, #80deea)", minHeight: "100vh", fontFamily: "'Poppins', sans-serif" }}>
+    <div className="themebody-wrap" style={{ padding: "10px", background: "linear-gradient(to right, #e0f7fa, #80deea)", minHeight: "100vh", fontFamily: "'Poppins', sans-serif" }}>
       <PageBreadcrumb pagename="OPD + IPD Collection Graph" />
       <SimpleBar className="theme-body common-dash">
         <Container fluid>

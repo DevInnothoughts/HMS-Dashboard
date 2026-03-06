@@ -603,17 +603,17 @@ const AppointmentConversion = () => {
   const [searchText, setSearchText] = useState("");
   const [rows, setRows] = useState(10);
 
-   const [currentLocation, setCurrentLocation] = useState("");
-  
-       useEffect(() => {
-          const token = localStorage.getItem("token");
-          if (token) {
-            const payload = decodeJwt(token);
-            if (payload && payload.jobLocation) {
-              setCurrentLocation(payload.jobLocation);
-            }
-          }
-        }, []);
+  const [currentLocation, setCurrentLocation] = useState("");
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const payload = decodeJwt(token);
+      if (payload && payload.jobLocation) {
+        setCurrentLocation(payload.jobLocation);
+      }
+    }
+  }, []);
 
   // New State for Analytics (Matches PHP Logic)
   const [dailyChartData, setDailyChartData] = useState({ categories: [], series: [] });
@@ -647,22 +647,22 @@ const AppointmentConversion = () => {
     try {
       // 1. Fetch Table Data & Analytics Data Concurrently (Mimicking PHP's multiple AJAX calls)
       const [resList, resNew, resFO, resPO, resMonthNew, resMonthFO, resMonthPO] = await Promise.all([
-        fetch(`${BASE_URL}/V1/managereports/listConvAppointments`, { 
-          method: "POST", 
-          headers: authHeaders, 
-          body: JSON.stringify({ 
+        fetch(`${BASE_URL}/V1/managereports/listConvAppointments`, {
+          method: "POST",
+          headers: authHeaders,
+          body: JSON.stringify({
             location: currentLocation, // Sending in body
-            Fromdate: fromDate, 
+            Fromdate: fromDate,
             Todate: toDate,
             AppointmentType: appointmentType, // Added missing filters
-            AppointmentStatus: appointmentStatus 
-          }) 
+            AppointmentStatus: appointmentStatus
+          })
         }),
         fetch(`${BASE_URL}/V1/managereports/NewAppointmentDetails`, { method: "POST", headers: authHeaders, body: JSON.stringify({ location: currentLocation, Fromdate: fromDate, Todate: toDate }) }),
-        fetch(`${BASE_URL}/V1/managereports/FollowAppointmentDetails`, { method: "POST", headers: authHeaders, body: JSON.stringify({ location: currentLocation,Fromdate: fromDate, Todate: toDate }) }),
-        fetch(`${BASE_URL}/V1/managereports/POAppointmentDetails`, { method: "POST", headers: authHeaders, body: JSON.stringify({ location: currentLocation,Fromdate: fromDate, Todate: toDate }) }),
-        fetch(`${BASE_URL}/V1/managereports/MonthwiseNewAppointment`, { method: "POST", headers: authHeaders, body: JSON.stringify({ location: currentLocation,Fromdate: fromDate, Todate: toDate }) }),
-        fetch(`${BASE_URL}/V1/managereports/MonthwiseFOAppointment`, { method: "POST", headers: authHeaders, body: JSON.stringify({ location: currentLocation,Fromdate: fromDate, Todate: toDate }) }),
+        fetch(`${BASE_URL}/V1/managereports/FollowAppointmentDetails`, { method: "POST", headers: authHeaders, body: JSON.stringify({ location: currentLocation, Fromdate: fromDate, Todate: toDate }) }),
+        fetch(`${BASE_URL}/V1/managereports/POAppointmentDetails`, { method: "POST", headers: authHeaders, body: JSON.stringify({ location: currentLocation, Fromdate: fromDate, Todate: toDate }) }),
+        fetch(`${BASE_URL}/V1/managereports/MonthwiseNewAppointment`, { method: "POST", headers: authHeaders, body: JSON.stringify({ location: currentLocation, Fromdate: fromDate, Todate: toDate }) }),
+        fetch(`${BASE_URL}/V1/managereports/MonthwiseFOAppointment`, { method: "POST", headers: authHeaders, body: JSON.stringify({ location: currentLocation, Fromdate: fromDate, Todate: toDate }) }),
         fetch(`${BASE_URL}/V1/managereports/MonthwisePOAppointment`, { method: "POST", headers: authHeaders, body: JSON.stringify({ location: currentLocation, Fromdate: fromDate, Todate: toDate }) })
       ]);
 
@@ -955,52 +955,54 @@ const AppointmentConversion = () => {
                   </Form>
 
                   {/* Move controls above graphs */}
-                  <div className="d-flex justify-content-between align-items-center mb-4">
-                    <div className="d-flex align-items-center" style={{ gap: "20px" }}>
-                      <div className="d-flex align-items-center">
-                        <span className="me-2" style={{ fontWeight: "bold", color: "#006064" }}>Show</span>
-                        <Form.Select
-                          size="sm"
-                          style={{ width: "75px", borderRadius: "8px", border: "1px solid #4dd0e1" }}
-                          value={rows}
-                          onChange={(e) => setRows(Number(e.target.value))}
-                        >
-                          <option value={10}>10</option>
-                          <option value={25}>25</option>
-                          <option value={50}>50</option>
-                          <option value={100}>100</option>
-                        </Form.Select>
+                  <Row className="align-items-center mb-4" style={{ margin: "0 -5px" }}>
+                    <Col style={{ padding: "0 5px" }} className="d-flex align-items-center">
+                      <div className="d-flex align-items-center" style={{ gap: "20px" }}>
+                        <div className="d-flex align-items-center">
+                          <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Show</span>
+                          <Form.Select
+                            size="sm"
+                            style={{ width: "70px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
+                            value={rows}
+                            onChange={(e) => setRows(Number(e.target.value))}
+                          >
+                            <option value={10}>10</option>
+                            <option value={25}>25</option>
+                            <option value={50}>50</option>
+                            <option value={100}>100</option>
+                          </Form.Select>
+                        </div>
+                        <div className="d-flex align-items-center">
+                          <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Search</span>
+                          <span className="p-input-icon-left">
+                            <InputText
+                              value={searchText}
+                              onChange={onGlobalFilterChange}
+                              placeholder="Global Search..."
+                              className="p-inputtext-sm"
+                              style={{ width: "200px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
+                            />
+                          </span>
+                        </div>
                       </div>
-                      <div className="d-flex align-items-center">
-                        <span className="me-2" style={{ fontWeight: "bold", color: "#006064" }}>Search</span>
-                        <span className="p-input-icon-left">
-                          <InputText
-                            value={searchText}
-                            onChange={onGlobalFilterChange}
-                            placeholder="Global Search..."
-                            className="p-inputtext-sm"
-                            style={{ width: "250px", borderRadius: "8px", border: "1px solid #4dd0e1" }}
-                          />
-                        </span>
-                      </div>
-                    </div>
-                    <div className="d-flex" style={{ gap: "12px" }}>
+                    </Col>
+                    <Col style={{ padding: "0 5px" }} className="d-flex justify-content-end align-items-center gap-2">
                       <button
-                        className="btn btn-success"
+                        className="btn btn-success btn-sm"
                         onClick={exportToExcel}
-                        style={{ display: "flex", alignItems: "center", gap: "8px", borderRadius: "8px", padding: "8px 16px", fontWeight: "600" }}
+                        style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px", fontWeight: "600", height: "35px" }}
                       >
                         <i className="fa fa-file-excel-o"></i> Download Excel
                       </button>
                       <button
-                        className="btn btn-danger"
+                        className="btn btn-danger btn-sm"
                         onClick={downloadPDF}
-                        style={{ display: "flex", alignItems: "center", gap: "8px", borderRadius: "8px", padding: "8px 16px", fontWeight: "600" }}
+                        style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px", fontWeight: "600", height: "35px" }}
                       >
                         <i className="fa fa-file-pdf-o"></i> Download PDF
                       </button>
-                    </div>
-                  </div>
+                    </Col>
+                  </Row>
 
                   <DataTable
                     value={appointments}

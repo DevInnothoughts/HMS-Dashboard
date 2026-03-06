@@ -256,54 +256,58 @@ const SxConversionReport = () => {
 
 
   const renderHeader = () => (
-    <div className="d-flex justify-content-between align-items-center mb-1">
-      <div className="d-flex align-items-center" style={{ gap: "20px" }}>
-        <div className="d-flex align-items-center">
-          <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "13px" }}>Show</span>
-          <Form.Select
-            size="sm"
-            style={{ width: "70px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
-            value={rows}
-            onChange={(e) => setRows(Number(e.target.value))}
-          >
-            <option value={10}>10</option>
-            <option value={25}>25</option>
-            <option value={50}>50</option>
-          </Form.Select>
+    <Row className="align-items-center" style={{ margin: "0 -5px" }}>
+      <Col style={{ padding: "0 5px" }} className="d-flex align-items-center">
+        <div className="d-flex align-items-center" style={{ gap: "20px" }}>
+          <div className="d-flex align-items-center">
+            <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Show</span>
+            <Form.Select
+              size="sm"
+              style={{ width: "70px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
+              value={rows}
+              onChange={(e) => setRows(Number(e.target.value))}
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+            </Form.Select>
+          </div>
+          <div className="d-flex align-items-center">
+            <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Search</span>
+            <span className="p-input-icon-left">
+              <InputText
+                value={searchText}
+                onChange={onGlobalFilterChange}
+                placeholder="Global Search..."
+                className="p-inputtext-sm"
+                style={{ width: "200px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
+              />
+            </span>
+          </div>
         </div>
-        <div className="d-flex align-items-center">
-          <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "13px" }}>Search</span>
-          <span className="p-input-icon-left">
-            <InputText
-              value={searchText}
-              onChange={onGlobalFilterChange}
-              placeholder="Global Search..."
-              className="p-inputtext-sm"
-              style={{ width: "200px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
-            />
-          </span>
-        </div>
-      </div>
-      <button
-        className="btn btn-danger btn-sm"
-        onClick={downloadPDF}
-        style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px", fontWeight: "600" }}
-      >
-        <i className="fa fa-file-pdf-o"></i> Download PDF
-      </button>
-    </div>
+      </Col>
+      <Col style={{ padding: "0 5px" }} className="d-flex justify-content-end">
+        <button
+          className="btn btn-danger btn-sm"
+          onClick={downloadPDF}
+          style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px", fontWeight: "600", height: "35px" }}
+        >
+          <i className="fa fa-file-pdf-o"></i> Download PDF
+        </button>
+      </Col>
+    </Row>
   );
 
   return (
-    <div className="themebody-wrap" style={{ padding: "20px", background: "linear-gradient(to right, #e0f7fa, #80deea)", fontFamily: "'Poppins', Arial, sans-serif", minHeight: "100vh" }}>
-      <PageBreadcrumb pagename="Surgery Conversion Report" />
+    <div className="themebody-wrap" style={{ padding: "10px", background: "linear-gradient(to right, #e0f7fa, #80deea)", fontFamily: "'Poppins', Arial, sans-serif", minHeight: "100vh" }}>
+      <PageBreadcrumb pagename="SX Conversion Report" />
       <SimpleBar className="theme-body common-dash">
         <Container fluid>
           <Row>
             <Col md={12}>
               <Card style={{ borderRadius: "12px", boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)", border: "1px solid #00bcd4" }}>
                 <Card.Header className="text-center" style={{ background: "linear-gradient(to right, #00acc1, #007c91)", color: "white", padding: "0.8rem" }}>
-                  <h4 style={{ margin: 0 }}>Surgery Conversion Analytics</h4>
+                  <h4 style={{ margin: 0 }}>SX Conversion Report</h4>
                 </Card.Header>
                 <Card.Body className="p-3">
                   <Form onSubmit={(e) => { e.preventDefault(); handleSearch(); }}>

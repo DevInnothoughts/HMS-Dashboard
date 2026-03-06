@@ -251,7 +251,7 @@ const InsuranceDueReport = () => {
   );
 
   return (
-    <div className="themebody-wrap" style={{ padding: "20px", background: "linear-gradient(to right, #e0f7fa, #80deea)", fontFamily: "'Poppins', Arial, sans-serif", minHeight: "100vh" }}>
+    <div className="themebody-wrap" style={{ padding: "10px", background: "linear-gradient(to right, #e0f7fa, #80deea)", fontFamily: "'Poppins', Arial, sans-serif", minHeight: "100vh" }}>
       <PageBreadcrumb pagename="Insurance Due Report" />
       <SimpleBar className="theme-body common-dash">
         <Container fluid>

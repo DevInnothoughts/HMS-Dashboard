@@ -31,16 +31,16 @@ const OPDCollectionReports = () => {
     const [rows, setRows] = useState(10);
     const [currentLocation, setCurrentLocation] = useState("");
 
-     useEffect(() => {
+    useEffect(() => {
         const token = localStorage.getItem("token");
         if (token) {
-          const payload = decodeJwt(token);
-          if (payload && payload.jobLocation) {
-            setCurrentLocation(payload.jobLocation);
-          }
+            const payload = decodeJwt(token);
+            if (payload && payload.jobLocation) {
+                setCurrentLocation(payload.jobLocation);
+            }
         }
-      }, []);
-    
+    }, []);
+
     const [filters, setFilters] = useState({
         global: { value: null, matchMode: FilterMatchMode.CONTAINS },
     });
@@ -60,7 +60,7 @@ const OPDCollectionReports = () => {
             alert("Please Enter the all fields details..");
             return;
         }
-    
+
         setLoading(true);
         try {
             const formatDateForAPI = (dateStr) => {
@@ -70,13 +70,13 @@ const OPDCollectionReports = () => {
                 const year = date.getFullYear();
                 return `${day}-${month}-${year}`;
             };
-    
+
             const params = new URLSearchParams({
                 location: currentLocation,
                 Fromdate: formatDateForAPI(fromDate),
                 Todate: formatDateForAPI(toDate),
             });
-    
+
             const response = await fetch(
                 `${BASE_URL}/V1/managereports/OpdCollectionReportDetails?${params}`,
                 {
@@ -84,12 +84,12 @@ const OPDCollectionReports = () => {
                     headers: { "Content-Type": "application/json" },
                 },
             );
-    
+
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.message || "Failed to fetch data");
             }
-    
+
             const msg = await response.json();
             console.log("msg:", msg);
             // 1. Handle Backup/File Download logic from PHP
@@ -100,19 +100,19 @@ const OPDCollectionReports = () => {
                     return;
                 }
             }
-    
+
             // 2. Process Data logic (Replicating PHP calculation loop)
             const rawData = msg.serachdata1 || [];
-            
+
             let TotalCash = 0, TotalCard = 0, TotalPaytm = 0, TotalOnline = 0, TotalDiscount = 0;
-    
+
             const processedData = rawData.map((row) => {
                 const total = isNaN(Number(row.total)) ? 0 : Number(row.total);
                 const discount = isNaN(Number(row.discountamt)) ? 0 : Number(row.discountamt);
                 const paymentMode = row.payment_mode || '';
-                
+
                 let cash = 0, card = 0, paytm = 0, online = 0;
-    
+
                 // Mapping amounts to columns based on payment mode logic
                 switch (paymentMode) {
                     case 'Cash': cash = total; TotalCash += total; break;
@@ -123,7 +123,7 @@ const OPDCollectionReports = () => {
                     default: break;
                 }
                 TotalDiscount += discount;
-    
+
                 // Parse additional_info JSON logic (Case 1, 2, and 3)
                 let utrValue = "";
                 try {
@@ -141,7 +141,7 @@ const OPDCollectionReports = () => {
                         }
                     }
                 } catch (err) { console.warn("JSON parse error", err); }
-    
+
                 return {
                     ...row,
                     receipt_date: row.item_date || 'N/A',
@@ -155,7 +155,7 @@ const OPDCollectionReports = () => {
                     utr: utrValue || ''
                 };
             });
-    
+
             // 3. Set State
             setTotals({
                 cash: TotalCash,
@@ -165,7 +165,7 @@ const OPDCollectionReports = () => {
                 discount: TotalDiscount
             });
             setTableData(processedData);
-    
+
         } catch (error) {
             console.error("Error:", error);
             alert(`Failed to fetch data: ${error.message}`);
@@ -343,7 +343,7 @@ const OPDCollectionReports = () => {
         <div
             className="themebody-wrap"
             style={{
-                padding: "20px",
+                padding: "10px",
                 background: "linear-gradient(to right, #e0f7fa, #80deea)",
                 fontFamily: "'Poppins', Arial, sans-serif",
                 minHeight: "100vh",

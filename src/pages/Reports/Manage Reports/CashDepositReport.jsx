@@ -130,7 +130,7 @@ const CashDepositReport = () => {
         <div
             className="themebody-wrap"
             style={{
-                padding: "20px",
+                padding: "10px",
                 background: "linear-gradient(to right, #e0f7fa, #80deea)",
                 fontFamily: "'Poppins', Arial, sans-serif",
                 minHeight: "100vh",

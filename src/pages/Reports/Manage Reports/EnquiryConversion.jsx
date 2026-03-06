@@ -39,7 +39,7 @@ const EnquiryConversion = () => {
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
   const [currentLocation, setCurrentLocation] = useState("");
-    
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -97,7 +97,7 @@ const EnquiryConversion = () => {
       const uniqueEnquiryList = [];
 
       const appointments = appointmentData?.data || [];
-      
+
       appointments.forEach((item) => {
         // Visited: confirm_time is not 0
         if (item.confirm_time !== 0) {
@@ -247,7 +247,7 @@ const EnquiryConversion = () => {
     <div
       className="themebody-wrap"
       style={{
-        padding: "20px",
+        padding: "10px",
         background: "linear-gradient(to right, #e0f7fa, #80deea)",
         fontFamily: "'Poppins', Arial, sans-serif",
         minHeight: "100vh",
