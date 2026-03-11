@@ -12,6 +12,10 @@ import { FilterMatchMode } from "primereact/api";
 import { InputText } from "primereact/inputtext";
 import PageBreadcrumb from "../../../components/PageBreadcrumb";
 import SimpleBar from "simplebar-react";
+import { decodeJwt } from "../../../utils/decode-jwt";
+
+const BASE_URL = "http://localhost:5100/api";
+
 
 const CashDepositReport = () => {
     const [fromDate, setFromDate] = useState("");
@@ -20,22 +24,23 @@ const CashDepositReport = () => {
     const [loading, setLoading] = useState(false);
     const [searchText, setSearchText] = useState("");
     const [rows, setRows] = useState(10);
+    const [currentLocation, setCurrentLocation] = useState("");
+    
+
+
+      useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (token) {
+          const payload = decodeJwt(token);
+          if (payload?.jobLocation) setCurrentLocation(payload.jobLocation);
+        }
+      }, []);
+    
 
     const [filters, setFilters] = useState({
         global: { value: null, matchMode: FilterMatchMode.CONTAINS },
     });
 
-    // Dummy data initialization
-    useEffect(() => {
-        const dummyData = [
-            { id: 1, date: "2024-03-01", opdCash: 5000, ipdCash: 15000, total: 20000, cashDeposited: "", receiptNo: "", difference: "" },
-            { id: 2, date: "2024-03-02", opdCash: 4500, ipdCash: 12000, total: 16500, cashDeposited: "", receiptNo: "", difference: "" },
-            { id: 3, date: "2024-03-03", opdCash: 6000, ipdCash: 18000, total: 24000, cashDeposited: "", receiptNo: "", difference: "" },
-            { id: 4, date: "2024-03-04", opdCash: 3500, ipdCash: 10000, total: 13500, cashDeposited: "", receiptNo: "", difference: "" },
-            { id: 5, date: "2024-03-05", opdCash: 5500, ipdCash: 14000, total: 19500, cashDeposited: "", receiptNo: "", difference: "" },
-        ];
-        setTableData(dummyData);
-    }, []);
 
     const onGlobalFilterChange = (e) => {
         const value = e.target.value;
@@ -45,17 +50,53 @@ const CashDepositReport = () => {
         setSearchText(value);
     };
 
-    const handleFind = (e) => {
+    const handleFind = async (e) => {
         if (e) e.preventDefault();
         if (!fromDate || !toDate) {
             alert("Please Enter the all fields details..");
             return;
         }
+    
         setLoading(true);
-        // Simulate search
-        setTimeout(() => {
+        try {
+            const response = await fetch(`${BASE_URL}/V1/managereports/getCashDepositReport`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`
+                },
+                body: JSON.stringify({ 
+                    location: currentLocation,
+                    Fromdate: fromDate, 
+                    Todate: toDate 
+                })
+            });
+    
+            const result = await response.json();
+            // console.log(result);
+            if (result.success) {
+                // Mapping backend fields to your table state
+                // Logic: total = opd + ipd
+                const formattedData = result.data.map((item, index) => ({
+                    id: index + 1,
+                    date: item.date,
+                    opdCash: parseFloat(item.opd_cash) || 0,
+                    ipdCash: parseFloat(item.ipd_cash) || 0,
+                    total: (parseFloat(item.opd_cash) || 0) + (parseFloat(item.ipd_cash) || 0),
+                    cashDeposited: "",
+                    receiptNo: "",
+                    difference: ""
+                }));
+                setTableData(formattedData);
+            } else {
+                alert(result.message || "Failed to fetch records");
+            }
+        } catch (error) {
+            console.error("Search Error:", error);
+            alert("Error connecting to server");
+        } finally {
             setLoading(false);
-        }, 500);
+        }
     };
 
     const formatDateDisplay = (dateStr) => {
@@ -83,10 +124,50 @@ const CashDepositReport = () => {
         });
         setTableData(updatedData);
     };
-
-    const handleAddReceipt = (rowData) => {
-        alert(`Adding Receipt for Date: ${formatDateDisplay(rowData.date)}\nReceipt No: ${rowData.receiptNo}\nAmount: ${rowData.cashDeposited}`);
-        // Implement save logic here
+    const handleAddReceipt = async (rowData) => {
+        const { date, opdCash, ipdCash, cashDeposited, receiptNo, difference } = rowData;
+    
+        // Validation exactly like your AJAX: if(depositedcash== "" || receiptno == "" || cashdiffernce == "")
+        if (!cashDeposited || !receiptNo || !difference) {
+            alert('Please Enter the all fields details..');
+            return;
+        }
+    
+        try {
+            // Replicating: $.ajax({ url: "index.php?receptionist/SaveDatewiseCash" })
+            const response = await fetch(`${BASE_URL}/V1/managereports/SaveDatewiseCash`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`
+                },
+                body: JSON.stringify({
+                    location: currentLocation,
+                    entrydate: date,
+                    opdcash: opdCash,
+                    ipdcash: ipdCash,
+                    pharmacycash: 0, // Defaulting as per your PHP logic flow
+                    upiamt: 0,
+                    cardamt: 0,
+                    bankdeposit: cashDeposited, // This maps to depositedamt in backend
+                    receiptno: receiptNo,
+                    cashdiffernce: difference
+                })
+            });
+    
+            const result = await response.json();
+    
+            if (result.success) {
+                alert('Your record saved Successfully');
+                // Refresh the data to show the updated "Cash in Hand" or clear inputs
+                handleFind(); 
+            } else {
+                alert(result.message || "Failed to save record");
+            }
+        } catch (error) {
+            console.error("Save Error:", error);
+            alert("Error saving record to database");
+        }
     };
 
     const renderHeader = () => {

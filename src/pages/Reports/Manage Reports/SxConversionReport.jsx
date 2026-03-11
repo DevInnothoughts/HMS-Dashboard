@@ -23,32 +23,10 @@ const SxConversionReport = () => {
   // Performance Table States
   const [consultantData, setConsultantData] = useState([]);
   const [assistantData, setAssistantData] = useState([]);
-
-  // State for Tables
-  const [mainConversionData, setMainConversionData] = useState([
-    { DoctorName: "DR ASHWIN PORWAL", count: 5 },
-    { DoctorName: "DR ASHWIN PORWAL", count: 5 }
-  ]);
-  const [assistantConversionData, setAssistantConversionData] = useState([
-    { DoctorName: "DR LEENA DHOLE", count: 2 },
-    { DoctorName: "DR MADHURA BHATE", count: 2 },
-    { DoctorName: "DR NAMITA AMBIKE", count: 1 },
-    { DoctorName: "DR LEENA DHOLE", count: 2 },
-    { DoctorName: "DR MADHURA BHATE", count: 2 },
-    { DoctorName: "DR NAMITA AMBIKE", count: 1 }
-  ]);
-  const [mainOverallData, setMainOverallData] = useState([
-    { DoctorName: "DR ASHWIN PORWAL", count: 5 },
-    { DoctorName: "DR ASHWIN PORWAL", count: 5 }
-  ]);
-  const [assistantOverallData, setAssistantOverallData] = useState([
-    { DoctorName: "DR LEENA DHOLE", count: 2 },
-    { DoctorName: "DR MADHURA BHATE", count: 2 },
-    { DoctorName: "DR NAMITA AMBIKE", count: 1 },
-    { DoctorName: "DR LEENA DHOLE", count: 2 },
-    { DoctorName: "DR MADHURA BHATE", count: 2 },
-    { DoctorName: "DR NAMITA AMBIKE", count: 1 }
-  ]);
+  const [mainConversionData, setMainConversionData] = useState([]);
+  const [assistantConversionData, setAssistantConversionData] = useState([]);
+  const [mainOverallData, setMainOverallData] = useState([]);
+  const [assistantOverallData, setAssistantOverallData] = useState([]);
 
   const [filters, setFilters] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -69,11 +47,52 @@ const SxConversionReport = () => {
   };
 
   // 1. Function to process Performance Data (Main or Assistant)
+  // const processPerformanceData = (rawMsg) => {
+  //   const uniqueIds = [];
+  //   const doctorNames = [];
+
+  //   // Step 1: Identify Unique Doctors
+  //   rawMsg.forEach((item) => {
+  //     const docId = item.consultantDoctor || item.assistanceDoctor;
+  //     if (!uniqueIds.includes(docId)) {
+  //       uniqueIds.push(docId);
+  //       doctorNames.push(item.DoctorName);
+  //     }
+  //   });
+
+  //   // Step 2: Tally Stats per Unique Doctor (Replicating PHP nested loop & Switch)
+  //   return uniqueIds.map((id, index) => {
+  //     const stats = { new: 0, follow: 0, postop: 0, med: 0, sur: 0, test: 0 };
+
+  //     rawMsg.forEach((msg) => {
+  //       if ((msg.consultantDoctor || msg.assistanceDoctor) === id) {
+  //         // Patient Type Tally
+  //         switch (msg.patient_type) {
+  //           case "New": stats.new++; break;
+  //           case "Follow": stats.follow++; break;
+  //           case "Postoperative": stats.postop++; break;
+  //           default: break;
+  //         }
+  //         // Diagnosis Advice Tally
+  //         const advice = msg.diagnosisAdvice || "";
+  //         if (advice.includes("Medication")) stats.med++;
+  //         if (advice.includes("Surgery")) stats.sur++;
+  //         if (advice.includes("Test")) stats.test++;
+  //       }
+  //     });
+
+  //     return {
+  //       sr: index + 1,
+  //       doctorName: doctorNames[index],
+  //       ...stats
+  //     };
+  //   });
+  // };
+
   const processPerformanceData = (rawMsg) => {
     const uniqueIds = [];
     const doctorNames = [];
 
-    // Step 1: Identify Unique Doctors
     rawMsg.forEach((item) => {
       const docId = item.consultantDoctor || item.assistanceDoctor;
       if (!uniqueIds.includes(docId)) {
@@ -82,20 +101,17 @@ const SxConversionReport = () => {
       }
     });
 
-    // Step 2: Tally Stats per Unique Doctor (Replicating PHP nested loop & Switch)
     return uniqueIds.map((id, index) => {
       const stats = { new: 0, follow: 0, postop: 0, med: 0, sur: 0, test: 0 };
 
       rawMsg.forEach((msg) => {
         if ((msg.consultantDoctor || msg.assistanceDoctor) === id) {
-          // Patient Type Tally
           switch (msg.patient_type) {
             case "New": stats.new++; break;
             case "Follow": stats.follow++; break;
             case "Postoperative": stats.postop++; break;
             default: break;
           }
-          // Diagnosis Advice Tally
           const advice = msg.diagnosisAdvice || "";
           if (advice.includes("Medication")) stats.med++;
           if (advice.includes("Surgery")) stats.sur++;
@@ -105,7 +121,8 @@ const SxConversionReport = () => {
 
       return {
         sr: index + 1,
-        doctorName: doctorNames[index],
+        DoctorName: doctorNames[index], // Capitalized to match conversion tables
+        count: stats.sur, // Used for the "Conversion" view
         ...stats
       };
     });
@@ -163,6 +180,47 @@ const SxConversionReport = () => {
   //   }
   // };
 
+  // const handleSearch = async () => {
+  //   if (!fromDate || !toDate) {
+  //     alert('Please select a date range.');
+  //     return;
+  //   }
+
+  //   setLoading(true);
+  //   try {
+  //     const response = await fetch(`${BASE_URL}/V1/managereports/getDoctorPerformanceAnalytics`, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         "Authorization": `Bearer ${localStorage.getItem("token")}`
+  //       },
+  //       body: JSON.stringify({
+  //         location: currentLocation,
+  //         Fromdate: fromDate,
+  //         Todate: toDate
+  //       })
+  //     });
+
+  //     const result = await response.json();
+
+  //     if (result.success) {
+  //       const { data } = result;
+
+  //       // Process and set all states at once
+  //       setConsultantData(processPerformanceData(data.mainPerformance));
+  //       setAssistantData(processPerformanceData(data.asstPerformance));
+  //       setMainConversionData(data.mainConversion);
+  //       setAssistantConversionData(data.asstConversion);
+  //       setMainOverallData(data.mainOverall);
+  //       setAssistantOverallData(data.asstOverall);
+  //     }
+  //   } catch (error) {
+  //     console.error("Batch fetch error:", error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const handleSearch = async () => {
     if (!fromDate || !toDate) {
       alert('Please select a date range.');
@@ -185,17 +243,25 @@ const SxConversionReport = () => {
       });
 
       const result = await response.json();
-
+      console.log(result);
       if (result.success) {
         const { data } = result;
 
-        // Process and set all states at once
+        // Process Performance Data (Aggregating counts)
         setConsultantData(processPerformanceData(data.mainPerformance));
         setAssistantData(processPerformanceData(data.asstPerformance));
-        setMainConversionData(data.mainConversion);
-        setAssistantConversionData(data.asstConversion);
-        setMainOverallData(data.mainOverall);
-        setAssistantOverallData(data.asstOverall);
+
+        // Helper to map pcount -> count and handle capital DoctorName
+        const mapData = (list) => list.map(item => ({
+          ...item,
+          count: item.pcount || 0,
+          DoctorName: item.DoctorName || item.doctorName // Handles both case variants
+        }));
+
+        setMainConversionData(mapData(data.mainConversion));
+        setAssistantConversionData(mapData(data.asstConversion));
+        setMainOverallData(mapData(data.mainOverall));
+        setAssistantOverallData(mapData(data.asstOverall));
       }
     } catch (error) {
       console.error("Batch fetch error:", error);
@@ -203,6 +269,7 @@ const SxConversionReport = () => {
       setLoading(false);
     }
   };
+
   const downloadPDF = () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -220,8 +287,8 @@ const SxConversionReport = () => {
     let currentY = 30;
 
     const tables = [
-      { title: "Main Doctor Conversion", data: mainConversionData },
-      { title: "Assistance Doctor Conversion", data: assistantConversionData },
+      { title: "Main Doctor Conversion", data: consultantData },
+      { title: "Assistance Doctor Conversion", data: assistantData },
       { title: "Assistance Doctor Overall Conversion", data: assistantOverallData },
       { title: "Main Doctor Overall Conversion", data: mainOverallData }
     ];
@@ -351,7 +418,7 @@ const SxConversionReport = () => {
                         </Card.Header>
                         <Card.Body className="p-3">
                           <DataTable
-                            value={mainConversionData}
+                            value={consultantData}
                             rows={rows}
                             filters={filters}
                             className="p-datatable-sm custom-datatable"
@@ -378,7 +445,7 @@ const SxConversionReport = () => {
                         </Card.Header>
                         <Card.Body className="p-3">
                           <DataTable
-                            value={assistantConversionData}
+                            value={assistantData}
                             rows={rows}
                             filters={filters}
                             className="p-datatable-sm custom-datatable"
