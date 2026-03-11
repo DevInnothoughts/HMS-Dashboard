@@ -15,23 +15,22 @@ const Toast = Swal.mixin({
 
 const BASE_URL = "http://localhost:5100/api";
 
-
 const DailyClosing = () => {
     const [currentDate, setCurrentDate] = useState("");
     const [loading, setLoading] = useState(false);
-    
+
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [currentLocation, setCurrentLocation] = useState("");
 
-     useEffect(() => {
-            const token = localStorage.getItem("token");
-            if (token) {
-                const payload = decodeJwt(token);
-                if (payload?.jobLocation) setCurrentLocation(payload.jobLocation);
-            }
-        }, []);
-    
-    
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (token) {
+            const payload = decodeJwt(token);
+            if (payload?.jobLocation) setCurrentLocation(payload.jobLocation);
+        }
+    }, []);
+
+
     const [formData, setFormData] = useState({
         opdCash: "",
         ipdCash: "",
@@ -75,55 +74,55 @@ const DailyClosing = () => {
 
     // ... inside the DailyClosing component ...
 
-const handleSave = async () => {
-    // Basic Validation
-    if (!formData.opdCash || !formData.bankDeposit) {
-        return Swal.fire("Required", "Please fill essential fields", "warning");
-    }
-
-    setLoading(true); // Add a loading state if you wish
-    try {
-        // Prepare data matching PHP expected types
-        // Convert DD-MM-YYYY to YYYY-MM-DD for backend
-        const [dd, mm, yyyy] = currentDate.split("-");
-        const entryDate = `${yyyy}-${mm}-${dd}`;
-        console.log(formData);
-        const response = await fetch(`${BASE_URL}/V1/managereports/dailyclosing?location=${currentLocation}`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${localStorage.getItem("token")}`
-            },
-            body: JSON.stringify({
-                ...formData,
-                entryDate: entryDate
-            }),
-        });
-
-        const result = await response.json();
-
-        if (response.ok && result.success) {
-            const submission = {
-                date: currentDate,
-                data: formData,
-                isSubmitted: true
-            };
-            localStorage.setItem("hms_daily_closing", JSON.stringify(submission));
-            setIsSubmitted(true);
-
-            Toast.fire({
-                icon: "success",
-                title: "Daily closing saved to database",
-            });
-        } else {
-            throw new Error(result.error || "Save failed");
+    const handleSave = async () => {
+        // Basic Validation
+        if (!formData.opdCash || !formData.bankDeposit) {
+            return Swal.fire("Required", "Please fill essential fields", "warning");
         }
-    } catch (err) {
-        Swal.fire("Error", err.message, "error");
-    } finally {
-        setLoading(false);
-    }
-};
+
+        setLoading(true); // Add a loading state if you wish
+        try {
+            // Prepare data matching PHP expected types
+            // Convert DD-MM-YYYY to YYYY-MM-DD for backend
+            const [dd, mm, yyyy] = currentDate.split("-");
+            const entryDate = `${yyyy}-${mm}-${dd}`;
+            console.log(formData);
+            const response = await fetch(`${BASE_URL}/V1/managereports/dailyclosing?location=${currentLocation}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`
+                },
+                body: JSON.stringify({
+                    ...formData,
+                    entryDate: entryDate
+                }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                const submission = {
+                    date: currentDate,
+                    data: formData,
+                    isSubmitted: true
+                };
+                localStorage.setItem("hms_daily_closing", JSON.stringify(submission));
+                setIsSubmitted(true);
+
+                Toast.fire({
+                    icon: "success",
+                    title: "Daily closing saved to database",
+                });
+            } else {
+                throw new Error(result.error || "Save failed");
+            }
+        } catch (err) {
+            Swal.fire("Error", err.message, "error");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <div className="themebody-wrap" style={{ background: "linear-gradient(to right, #e0f7fa, #80deea)", minHeight: "100vh", padding: "10px", fontFamily: "'Poppins', Arial, sans-serif" }}>
