@@ -117,7 +117,7 @@ export default function Add_appointment() {
   });
   const [errors, setErrors] = useState({});
   const newPatientTypes = ["New"];
-  const existingPatientTypes = ["Follow-UP", "Post Operative", "OTHER"];
+  const existingPatientTypes = ["Follow", "Postoperative", "Other"];
 
   useEffect(() => {
     const token = localStorage.getItem("token");

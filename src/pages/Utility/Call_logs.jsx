@@ -23,10 +23,35 @@ import "react-datepicker/dist/react-datepicker.css";
 import "../../styles/styles.css";
 import { toast } from "react-hot-toast";
 
-
-
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
 const BASE_URL = "http://194.195.117.79:5100/api"
+
+const NoteCell = ({ note }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  if (!note) return <span>-</span>;
+
+  const noteStyle = {
+    whiteSpace: isExpanded ? "normal" : "nowrap",
+    textAlign: "center",
+    fontSize: "12px",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    maxWidth: "150px", // Limits width to trigger the dots
+    cursor: "pointer",
+    display: "block",
+  };
+
+  return (
+    <div
+      onClick={() => setIsExpanded(!isExpanded)}
+      title={!isExpanded ? "Click to expand" : "Click to collapse"}
+      style={noteStyle}
+    >
+      {note}
+    </div>
+  );
+};
 
 const Toast = Swal.mixin({
   toast: true,
@@ -1002,7 +1027,7 @@ export default function Call_logs() {
                               width: "130px",
                             }}
                           />
-                          <Column
+                          {/* <Column
                             field="note"
                             header="Note"
                             body={(rowData) => rowData.note || "-"}
@@ -1013,6 +1038,19 @@ export default function Call_logs() {
                               padding: "0.75rem",
                               width: "180px",
                             }}
+                          /> */}
+                          <Column
+                            field="note"
+                            header="Note"
+                            style={{
+                              minWidth: "150px",
+                              maxWidth: "150px",
+                              textAlign: "center",
+                              border: "1px solid #90caf9",
+                            }}
+                            // This uses the component we just created
+                            body={(rowData) => <NoteCell note={rowData.note} />}
+                            headerClassName="datatable-header-center"
                           />
 
                           <Column
