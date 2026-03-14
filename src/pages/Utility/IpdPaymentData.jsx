@@ -10,8 +10,8 @@ import receiptLogo from "../../assets/images/4.png";
 import { clinincLoc } from "../../utils/clinic_locations-invoice.js";
 import { receiptlocations } from "../../utils/clinic_locations-receipt.js";
 
-const BASE_URL = "http://localhost:5100/api";
-const IMAGE_BASE_URL = "http://localhost:5100";
+const BASE_URL = "http://194.195.117.79:5100/api";
+const IMAGE_BASE_URL = "http://194.195.117.79:5100";
 
 const convertToWords = (number) => {
     if (number === 0) return "Zero";
@@ -144,41 +144,41 @@ const IpdPaymentData = () => {
 
     // ... inside your IpdPaymentData component ...
 
-// 1. Updated cancelPayment logic to match IPD requirements
-const cancelPayment = async (referenceId, originalPayload, apidata) => {
-    try {
-        // Prepare the specific cancellation payload for IPD
-        const cancelPayload = {
-            reference_id: referenceId,
-            transaction_id: originalPayload.transaction_id || referenceId,
-            PosMachine: originalPayload.PosMachine,
-            MachineType: 'IPD', // Explicitly set to IPD
-            // Pass along financial context if needed by backend cancel logic
-            InvoiceId: originalPayload.InvoiceId,
-            PatientId: originalPayload.PatientId,
-            apidata: apidata,
-        };
-        console.log(cancelPayload);
-        const response = await fetch(
-            `${BASE_URL}/V1/invoice/cancelIPDPaymentStatus?location=${currentLocation}`,
-            {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(cancelPayload),
-            }
-        );
+    // 1. Updated cancelPayment logic to match IPD requirements
+    const cancelPayment = async (referenceId, originalPayload, apidata) => {
+        try {
+            // Prepare the specific cancellation payload for IPD
+            const cancelPayload = {
+                reference_id: referenceId,
+                transaction_id: originalPayload.transaction_id || referenceId,
+                PosMachine: originalPayload.PosMachine,
+                MachineType: 'IPD', // Explicitly set to IPD
+                // Pass along financial context if needed by backend cancel logic
+                InvoiceId: originalPayload.InvoiceId,
+                PatientId: originalPayload.PatientId,
+                apidata: apidata,
+            };
+            console.log(cancelPayload);
+            const response = await fetch(
+                `${BASE_URL}/V1/invoice/cancelIPDPaymentStatus?location=${currentLocation}`,
+                {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(cancelPayload),
+                }
+            );
 
-        return await response.json();
-    } catch (err) {
-        throw new Error(err.message);
-    }
-};
+            return await response.json();
+        } catch (err) {
+            throw new Error(err.message);
+        }
+    };
 
-// 2. Updated showPaymentPendingPopup to handle the IPD status check loop
-const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
-    Swal.fire({
-        title: "Transaction in Progress",
-        html: `
+    // 2. Updated showPaymentPendingPopup to handle the IPD status check loop
+    const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
+        Swal.fire({
+            title: "Transaction in Progress",
+            html: `
             <div style="padding: 10px;">
                 <div class="spinner-border text-info mb-3" role="status"></div>
                 <p><strong>Waiting for card swipe...</strong></p>
@@ -187,104 +187,104 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
                 <p style="font-size: 13px;">Please check the POS terminal and click "Check Status" once the swipe is completed.</p>
             </div>
         `,
-        icon: "info",
-        allowOutsideClick: false,
-        showCancelButton: true,
-        confirmButtonText: "Check Status",
-        cancelButtonText: "Cancel Payment",
-        confirmButtonColor: "#00bcd4",
-        cancelButtonColor: "#cfd8dc",
-        showLoaderOnConfirm: true,
-        preConfirm: async () => {
-            try {
-                // Prepare payload for status check
-                const statusPayload = {
-                    receiptData: originalPayload, // Contains all CashAmt, CardAmt, etc.
-                    reference_id: apidata.reference_id,
-                    transaction_id: referenceId,
-                    PosMachine: originalPayload.PosMachine,
-                    MachineType: 'IPD',
-                    InvoiceId: originalPayload.InvoiceId,
-                    PatientId: originalPayload.PatientId,
-                    Totalinvoiceamt: originalPayload.Totalinvoiceamt
-                };
-                console.log("INITITATION DATA IN PENDING POPUP: ", apidata);2
-                console.log(statusPayload);
-                const response = await fetch(
-                    `${BASE_URL}/V1/invoice/checkIPDPaymentStatus?location=${currentLocation}`,
-                    {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(statusPayload),
-                    }
-                );
-
-                const result = await response.json();
-                
-                // If status check returns 200/201, the payment is recorded in DB
-                if (response.ok && (result.success || result.statusCode === 201 || result.statusCode === 200)) {
-                    return result;
-                } else {
-                    Swal.showValidationMessage(
-                        result.message || "Swipe not detected yet. Please try again after swiping."
-                    );
-                    return false;
-                }
-            } catch (error) {
-                Swal.showValidationMessage(`Check failed: ${error.message}`);
-            }
-        },
-    }).then(async (result) => {
-        if (result.isConfirmed) {
-            Swal.fire({
-                title: "Paid!",
-                text: "IPD Receipt Generated Successfully",
-                icon: "success",
-                timer: 2000,
-            });
-            setShowAddRow(false);
-            handleViewBillDetails(); // Refresh the table and summary
-        } else if (result.dismiss === Swal.DismissReason.cancel) {
-            // Confirmation before calling the actual backend cancellation
-            const confirmCancel = await Swal.fire({
-                title: "Are you sure?",
-                text: "This will attempt to stop the current payment request on the terminal.",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonText: "Yes, Cancel it!",
-                cancelButtonText: "No, Keep Waiting",
-            });
-
-            if (confirmCancel.isConfirmed) {
+            icon: "info",
+            allowOutsideClick: false,
+            showCancelButton: true,
+            confirmButtonText: "Check Status",
+            cancelButtonText: "Cancel Payment",
+            confirmButtonColor: "#00bcd4",
+            cancelButtonColor: "#cfd8dc",
+            showLoaderOnConfirm: true,
+            preConfirm: async () => {
                 try {
-                    Swal.fire({
-                        title: "Processing Cancellation...",
-                        allowOutsideClick: false,
-                        didOpen: () => Swal.showLoading(),
-                    });
+                    // Prepare payload for status check
+                    const statusPayload = {
+                        receiptData: originalPayload, // Contains all CashAmt, CardAmt, etc.
+                        reference_id: apidata.reference_id,
+                        transaction_id: referenceId,
+                        PosMachine: originalPayload.PosMachine,
+                        MachineType: 'IPD',
+                        InvoiceId: originalPayload.InvoiceId,
+                        PatientId: originalPayload.PatientId,
+                        Totalinvoiceamt: originalPayload.Totalinvoiceamt
+                    };
+                    console.log("INITITATION DATA IN PENDING POPUP: ", apidata); 2
+                    console.log(statusPayload);
+                    const response = await fetch(
+                        `${BASE_URL}/V1/invoice/checkIPDPaymentStatus?location=${currentLocation}`,
+                        {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(statusPayload),
+                        }
+                    );
 
-                    const cancelResult = await cancelPayment(referenceId, originalPayload, apidata);
+                    const result = await response.json();
 
-                    if (cancelResult?.success || cancelResult?.statusCode === 200) {
-                        await Swal.fire("Cancelled", "Transaction has been cancelled successfully.", "success");
-                        setShowAddRow(false);
+                    // If status check returns 200/201, the payment is recorded in DB
+                    if (response.ok && (result.success || result.statusCode === 201 || result.statusCode === 200)) {
+                        return result;
                     } else {
-                        Swal.fire(
-                            "Cancellation Error",
-                            cancelResult?.message || "Remote cancel failed. Please cancel manually on the POS machine.",
-                            "error"
+                        Swal.showValidationMessage(
+                            result.message || "Swipe not detected yet. Please try again after swiping."
                         );
+                        return false;
                     }
-                } catch (err) {
-                    Swal.fire("Error", "Server error during cancellation process", "error");
+                } catch (error) {
+                    Swal.showValidationMessage(`Check failed: ${error.message}`);
                 }
-            } else {
-                // If user backs out of cancellation, re-open the pending popup
-                showPaymentPendingPopup(referenceId, originalPayload, apidata);
+            },
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: "Paid!",
+                    text: "IPD Receipt Generated Successfully",
+                    icon: "success",
+                    timer: 2000,
+                });
+                setShowAddRow(false);
+                handleViewBillDetails(); // Refresh the table and summary
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+                // Confirmation before calling the actual backend cancellation
+                const confirmCancel = await Swal.fire({
+                    title: "Are you sure?",
+                    text: "This will attempt to stop the current payment request on the terminal.",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "Yes, Cancel it!",
+                    cancelButtonText: "No, Keep Waiting",
+                });
+
+                if (confirmCancel.isConfirmed) {
+                    try {
+                        Swal.fire({
+                            title: "Processing Cancellation...",
+                            allowOutsideClick: false,
+                            didOpen: () => Swal.showLoading(),
+                        });
+
+                        const cancelResult = await cancelPayment(referenceId, originalPayload, apidata);
+
+                        if (cancelResult?.success || cancelResult?.statusCode === 200) {
+                            await Swal.fire("Cancelled", "Transaction has been cancelled successfully.", "success");
+                            setShowAddRow(false);
+                        } else {
+                            Swal.fire(
+                                "Cancellation Error",
+                                cancelResult?.message || "Remote cancel failed. Please cancel manually on the POS machine.",
+                                "error"
+                            );
+                        }
+                    } catch (err) {
+                        Swal.fire("Error", "Server error during cancellation process", "error");
+                    }
+                } else {
+                    // If user backs out of cancellation, re-open the pending popup
+                    showPaymentPendingPopup(referenceId, originalPayload, apidata);
+                }
             }
-        }
-    });
-};
+        });
+    };
 
     const handleSavePayment = async () => {
         const totalEntered = Object.values(newPayment).reduce((a, b) => (typeof b === 'number' ? a + b : a), 0);
@@ -320,7 +320,7 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
             const result = await response.json();
             console.log("INITIATION RESULT: ", result);
             if (result.statusCode === 201 || result.statusCode === 200) {
-                    Swal.fire("Success", "Receipt Generated Successfully", "success");
+                Swal.fire("Success", "Receipt Generated Successfully", "success");
                 setShowAddRow(false);
                 setNewPayment({
                     date: new Date().toISOString().split('T')[0],
@@ -328,22 +328,22 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
                 });
                 handleViewBillDetails();
             } else if (
-                    result.statusCode === 202 &&
-                    (result.data?.result === "success" || result.data?.stat === "success")
-                  ) {
-                    // showPaymentPendingPopup(result.data.transaction_id, payload, result.data.pos_tid);
-                    showPaymentPendingPopup(
-                      result.data.transaction_id,
-                      payload,
-                      result.data,
-                    );
-                  } else {
-                    Swal.fire(
-                      "Error",
-                      result.message || "Failed to initiate payment",
-                      "error",
-                    );
-                  }
+                result.statusCode === 202 &&
+                (result.data?.result === "success" || result.data?.stat === "success")
+            ) {
+                // showPaymentPendingPopup(result.data.transaction_id, payload, result.data.pos_tid);
+                showPaymentPendingPopup(
+                    result.data.transaction_id,
+                    payload,
+                    result.data,
+                );
+            } else {
+                Swal.fire(
+                    "Error",
+                    result.message || "Failed to initiate payment",
+                    "error",
+                );
+            }
         } catch (error) {
             Swal.fire("Error", "Server communication failed", "error");
         } finally {
@@ -620,12 +620,12 @@ const showPaymentPendingPopup = (referenceId, originalPayload, apidata) => {
                                         <div className="mt-3 p-3 border rounded bg-white add-payment-box">
                                             <Row className="g-2">
                                                 <Col md={2}><Form.Control type="date" className="input-style" value={newPayment.date} onChange={e => setNewPayment({ ...newPayment, date: e.target.value })} /></Col>
-                                                <Col><Form.Control type="number" placeholder="Cash" className="input-style" value={newPayment.cash || ''} onChange={e => setNewPayment({ ...newPayment, cash: +e.target.value })} /></Col>
-                                                <Col><Form.Control type="number" placeholder="Card" className="input-style" value={newPayment.card || ''} disabled={newPayment.online > 0} onChange={e => setNewPayment({ ...newPayment, card: +e.target.value })} /></Col>
-                                                <Col><Form.Control type="number" placeholder="Cheque" className="input-style" value={newPayment.cheque || ''} onChange={e => setNewPayment({ ...newPayment, cheque: +e.target.value })} /></Col>
-                                                <Col><Form.Control type="number" placeholder="Online" className="input-style" value={newPayment.online || ''} disabled={newPayment.card > 0} onChange={e => setNewPayment({ ...newPayment, online: +e.target.value })} /></Col>
-                                                <Col><Form.Control type="number" placeholder="Internal Discount" className="input-style" value={newPayment.internalDiscount || ''} onChange={e => setNewPayment({ ...newPayment, internalDiscount: +e.target.value })} /></Col>
-                                                <Col><Form.Control type="number" placeholder="Hospital Discount" className="input-style" value={newPayment.tds || ''} onChange={e => setNewPayment({ ...newPayment, tds: +e.target.value })} /></Col>
+                                                <Col><Form.Control type="number" onWheel={(e) => e.target.blur()} placeholder="Cash" className="input-style" value={newPayment.cash || ''} onChange={e => setNewPayment({ ...newPayment, cash: +e.target.value })} /></Col>
+                                                <Col><Form.Control type="number" onWheel={(e) => e.target.blur()} placeholder="Card" className="input-style" value={newPayment.card || ''} disabled={newPayment.online > 0} onChange={e => setNewPayment({ ...newPayment, card: +e.target.value })} /></Col>
+                                                <Col><Form.Control type="number" onWheel={(e) => e.target.blur()} placeholder="Cheque" className="input-style" value={newPayment.cheque || ''} onChange={e => setNewPayment({ ...newPayment, cheque: +e.target.value })} /></Col>
+                                                <Col><Form.Control type="number" onWheel={(e) => e.target.blur()} placeholder="Online" className="input-style" value={newPayment.online || ''} disabled={newPayment.card > 0} onChange={e => setNewPayment({ ...newPayment, online: +e.target.value })} /></Col>
+                                                <Col><Form.Control type="number" onWheel={(e) => e.target.blur()} placeholder="Internal Discount" className="input-style" value={newPayment.internalDiscount || ''} onChange={e => setNewPayment({ ...newPayment, internalDiscount: +e.target.value })} /></Col>
+                                                <Col><Form.Control type="number" onWheel={(e) => e.target.blur()} placeholder="Hospital Discount" className="input-style" value={newPayment.tds || ''} onChange={e => setNewPayment({ ...newPayment, tds: +e.target.value })} /></Col>
                                                 <Col md={1}><Button variant='primary' className="w-100 btn-save" onClick={handleSavePayment} disabled={loading}>Save</Button></Col>
                                             </Row>
                                         </div>

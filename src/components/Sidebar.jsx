@@ -109,10 +109,6 @@ export default function Sidebar() {
 
     const renderIPDReceptionDemoMenu = () => (
         <ul>
-            <li className="cdxmenu-title">
-                <h5>Receptionist(IPD)</h5>
-            </li>
-
             <li className={`menu-item ${activeIndex === "/ipd-dashboard" ? "active" : ""}`}>
                 <Link to="/ipd-dashboard">
                     <div className="icon-item">
@@ -144,10 +140,6 @@ export default function Sidebar() {
 
     const renderReceptionistMenu = () => (
         <ul>
-            <li className="cdxmenu-title">
-                <h5>Receptionist(OPD)</h5>
-            </li>
-
             <li className={`menu-item ${activeIndex === "/reception-dashboard" ? "active" : ""}`}>
                 <Link to="/reception-dashboard">
                     <div className="icon-item">
@@ -290,61 +282,52 @@ export default function Sidebar() {
         </ul>
     );
 
-    const renderDoctorMenu = () => (
-        <ul>
-            <li className="cdxmenu-title">
-                <h4>Doctor</h4>
-            </li>
+    const renderDoctorMenu = () => {
+        const dashboardPath = department === "IPD" ? "/doctor-ipd-dashboard" : "/doctor-opd-dashboard";
+        return (
+            <ul>
+                <li className={`menu-item ${activeIndex === dashboardPath ? "active" : ""}`}>
+                    <Link to={dashboardPath}>
+                        <div className="icon-item">
+                            <FeatherIcon icon="home" />
+                        </div>
+                        <span>Doctor Dashboard</span>
+                    </Link>
+                </li>
+                <li className={`menu-item ${activeIndex === "/doctor-patients" ? "active" : ""}`}>
+                    <Link to="/doctor-patients">
+                        <div className="icon-item">
+                            <FeatherIcon icon="users" />
+                        </div>
+                        <span>Patient</span>
+                    </Link>
+                </li>
 
-            <li
-                className={`menu-item ${activeIndex === "/doctor-dashboard" ? "active" : ""
-                    }`}
-            >
-                <Link to="#" onClick={() => handleMenuClick("/doctor-dashboard")}>
-                    <div className="icon-item">
-                        <FeatherIcon icon="home" />
-                    </div>
-                    <Link to="/doctor-dashboard">Doctor Dashboard</Link>
-                </Link>
-            </li>
-
-            <li className={`menu-item ${activeIndex === "/patient" ? "active" : ""}`}>
-                <Link to="/patient">
-                    <div className="icon-item">
-                        <FeatherIcon icon="users" />
-                    </div>
-                    <span>Patient</span>
-                </Link>
-            </li>
-
-            <li
-                className={`menu-item ${isDoctorReportActive ? "active" : ""
-                    }`}
-            >
-                <Link to="#" onClick={() => handleMenuClick("/manage-doctor-reports")}>
-                    <div className="icon-item">
-                        <FeatherIcon icon="file-text" />
-                    </div>
-                    <span>Manage Reports</span>
-                    <i className={`fa ${isDoctorReportActive ? "fa-angle-down" : "fa-angle-right"}`}></i>
-                </Link>
-                <ul
-                    className="submenu-list"
-                    style={{
-                        display:
-                            isDoctorReportActive ? "block" : "none",
-                    }}
-                >
-                    <li>
-                        <Link to="/diagnosis-report" className={location.pathname === "/diagnosis-report" ? "active" : ""}>Diagnosis Report</Link>
-                    </li>
-                    <li>
-                        <Link to="/opd-surgery-report" className={location.pathname === "/opd-surgery-report" ? "active" : ""}>OPD Surgery Report</Link>
-                    </li>
-                </ul>
-            </li>
-        </ul>
-    );
+                <li className={`menu-item ${isDoctorReportActive ? "active" : ""}`}>
+                    <Link to="#" onClick={() => handleMenuClick("/manage-doctor-reports")}>
+                        <div className="icon-item">
+                            <FeatherIcon icon="file-text" />
+                        </div>
+                        <span>Manage Reports</span>
+                        <i className={`fa ${isDoctorReportActive ? "fa-angle-down" : "fa-angle-right"}`}></i>
+                    </Link>
+                    <ul
+                        className="submenu-list"
+                        style={{
+                            display: isDoctorReportActive ? "block" : "none",
+                        }}
+                    >
+                        <li>
+                            <Link to="/diagnosis-report" className={location.pathname === "/diagnosis-report" ? "active" : ""}>Diagnosis Report</Link>
+                        </li>
+                        <li>
+                            <Link to="/opd-surgery-report" className={location.pathname === "/opd-surgery-report" ? "active" : ""}>OPD Surgery Report</Link>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        );
+    };
 
     const renderContent = () => {
         if (department === "IPD" && accountType === "reception") {

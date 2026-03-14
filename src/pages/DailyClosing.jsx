@@ -13,7 +13,7 @@ const Toast = Swal.mixin({
     timerProgressBar: true,
 });
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const DailyClosing = () => {
     const [currentDate, setCurrentDate] = useState("");
@@ -157,6 +157,7 @@ const DailyClosing = () => {
                                                     type="number"
                                                     placeholder="0.00"
                                                     name="opdCash"
+                                                    onWheel={(e) => e.target.blur()}
                                                     value={formData.opdCash}
                                                     onChange={handleChange}
                                                     readOnly={isSubmitted}
@@ -170,6 +171,7 @@ const DailyClosing = () => {
                                                     type="number"
                                                     placeholder="0.00"
                                                     name="ipdCash"
+                                                    onWheel={(e) => e.target.blur()}
                                                     value={formData.ipdCash}
                                                     onChange={handleChange}
                                                     readOnly={isSubmitted}
@@ -183,6 +185,7 @@ const DailyClosing = () => {
                                                     type="number"
                                                     placeholder="0.00"
                                                     name="pharmacyCash"
+                                                    onWheel={(e) => e.target.blur()}
                                                     value={formData.pharmacyCash}
                                                     onChange={handleChange}
                                                     readOnly={isSubmitted}
@@ -196,6 +199,7 @@ const DailyClosing = () => {
                                                     type="number"
                                                     placeholder="0.00"
                                                     name="upiSettlement"
+                                                    onWheel={(e) => e.target.blur()}
                                                     value={formData.upiSettlement}
                                                     onChange={handleChange}
                                                     readOnly={isSubmitted}
@@ -209,6 +213,7 @@ const DailyClosing = () => {
                                                     type="number"
                                                     placeholder="0.00"
                                                     name="cardSettlement"
+                                                    onWheel={(e) => e.target.blur()}
                                                     value={formData.cardSettlement}
                                                     onChange={handleChange}
                                                     readOnly={isSubmitted}
@@ -222,6 +227,7 @@ const DailyClosing = () => {
                                                     type="number"
                                                     placeholder="0.00"
                                                     name="bankDeposit"
+                                                    onWheel={(e) => e.target.blur()}
                                                     value={formData.bankDeposit}
                                                     onChange={handleChange}
                                                     readOnly={isSubmitted}

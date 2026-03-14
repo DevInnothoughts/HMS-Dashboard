@@ -26,7 +26,7 @@ import DatePicker from "react-datepicker";
 import logo from "../../assets/images/3.png";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://localhost:5100/api"
+const BASE_URL = "http://194.195.117.79:5100/api"
 
 const countries = [
   "Afghanistan",
@@ -328,16 +328,6 @@ export default function All_patient() {
     }
   }, []);
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      const payload = decodeJwt(token);
-      if (payload && payload.jobLocation) {
-        setCurrentLocation(payload.jobLocation);
-      }
-    }
-  }, []);
-
   const [workPatterns, setWorkPatterns] = useState({
     Sedentary: false,
     Travelling: false,
@@ -555,7 +545,7 @@ export default function All_patient() {
       // Handle birth_date and age
       if (name === "birth_date") {
         const formattedDate = value instanceof Date
-          ? value.toISOString().split("T")[0]
+          ? moment(value).format("DD-MM-YYYY")
           : value;
         const age = calculateAge(formattedDate);
         nextState.birth_date = formattedDate;
@@ -649,7 +639,7 @@ export default function All_patient() {
       });
 
       const data = await response.json();
-      
+
       if (response.ok) {
         setPatients(data.data || []);
       } else {
@@ -703,7 +693,7 @@ export default function All_patient() {
   const handleEditPatient = (patient) => {
     console.log("Editing patient:", patient);
 
-    const formattedBirthDate = formatDateToDisplay(patient.birth_date);
+    const formattedBirthDate = patient.birth_date || "";
     const workPatternsArray = (patient.specific_work || "")
       .split(",")
       .map((item) => item.trim());
@@ -718,6 +708,12 @@ export default function All_patient() {
         old_patient_id_value: parts[2] || "",
         old_patient_pincode: parts[3] || "",
       });
+    } else if (patient.reference_type === "dr_ref") {
+      setReferenceDetails((prev) => ({
+        ...prev,
+        dr_name: patient.ref_doctor_name || patient.ref || "",
+        dr_id: (patient.ref_doctor_name) ? (patient.ref || "") : ""
+      }));
     } else {
       setReferenceDetails((prev) => ({
         ...prev,
@@ -788,7 +784,7 @@ export default function All_patient() {
         break;
       case "dr_ref":
         reference_type = "dr_ref";
-        ref = referenceDetails.dr_name || "";
+        ref = referenceDetails.dr_id || referenceDetails.dr_name || "";
         break;
       case "internet":
         reference_type = "internet";
@@ -987,7 +983,7 @@ export default function All_patient() {
       patient_phone: formData.phone,
       patient_id: formData.patient_id,
       // patient_type: "Follow",
-      patient_type: formData.patient_type,
+      patient_type: formData.patient_type === "Post Operative" ? "Postoperative" : formData.patient_type,
       appointment_time: formData.appointmentTime,
       FDE_Name: formData.FDE_Name,
       note: formData.note,
@@ -1216,12 +1212,12 @@ export default function All_patient() {
               <p><b>Alternate Contact No :-</b>&nbsp;&nbsp;${patient.mobile_2 || "-"}</p>
             </td>
             <td style="width:50%; vertical-align: top; line-height: 1.3;">
-              <p><b>D.O.B :-</b>&nbsp;&nbsp;${patient.birth_date ? patient.birth_date : "-"}</p>
+              <p><b>D.O.B :-</b>&nbsp;&nbsp;${patient.birth_date || "-"}</p>
               <p><b>Age :-</b>&nbsp;&nbsp;${patient.age || "-"}</p>
               <p><b>Email :-</b>&nbsp;&nbsp;${patient.email || "-"}</p>
               <p><b>Occupation :-</b>&nbsp;&nbsp;${patient.occupation || "-"}</p>
               ${patient.companyname ? `<p><b>Company Name :-</b>&nbsp;&nbsp;${patient.companyname}</p>` : ""}
-              ${patient.ref ? `<p><b>Reference :-</b>&nbsp;&nbsp;${patient.ref}</p>` : ""}
+              ${patient.ref_doctor_name || patient.ref ? `<p><b>Reference :-</b>&nbsp;&nbsp;${patient.ref_doctor_name || patient.ref}</p>` : ""}
             </td>
           </tr>
           </table>
@@ -1288,7 +1284,7 @@ export default function All_patient() {
         onClick={() => handlePrint(patient)}
         className="print btn btn-primary btn-extra-small btn-icon"
         to=""
-        title="Print"
+        title="Print Registration Form"
       >
         <FeatherIcon icon="printer" size="16" />
       </Link>
@@ -1953,6 +1949,7 @@ export default function All_patient() {
                           onClick={() => {
                             setReferenceDetails({
                               dr_name: doc.ref_doctor_name,
+                              dr_id: doc.reference_doctor_id,
                               dr_contact:
                                 doc.ref_doctor_phone || doc.reference_doctor_no,
                               dr_specialty: doc.reference_doctor_speciality,
@@ -1960,7 +1957,7 @@ export default function All_patient() {
                             });
                             setFormData((prev) => ({
                               ...prev,
-                              ref: doc.ref_doctor_name,
+                              ref: doc.reference_doctor_id,
                             }));
                             setDoctorSearchResults([]);
                           }}
@@ -2436,10 +2433,11 @@ export default function All_patient() {
     internet: "",
     MediaRef: "",
     TVShow: "",
-    reference_doctor_name: "",
-    reference_doctor_no: "",
-    reference_doctor_speciality: "",
-    reference_doctor_location: "",
+    dr_name: "",
+    dr_id: "",
+    dr_contact: "",
+    dr_specialty: "",
+    dr_location: "",
     patient_ref_no: "",
     old_patient_name: "",
     friendname: "",
@@ -2678,7 +2676,7 @@ export default function All_patient() {
       return;
     }
 
-    const formattedDate = date.toISOString().split("T")[0];
+    const formattedDate = moment(date).format("DD-MM-YYYY");
     console.log("Formatted Date:", formattedDate);
 
     setFormData((prevState) => {
@@ -3174,14 +3172,9 @@ export default function All_patient() {
                     >
                       <option value="">Select Prefix</option>
                       <option value="Mr">Mr</option>
-                      <option value="MR">MR</option>
                       <option value="Mrs">Mrs</option>
-                      <option value="MRS">MRS</option>
                       <option value="Master">Master</option>
-                      <option value="Ms">Ms</option>
-                      <option value="MS">MS</option>
                       <option value="Miss">Miss</option>
-                      <option value="Dr">Dr</option>
                     </Form.Select>
                   </Form.Group>
                 </Col>
@@ -3560,7 +3553,7 @@ export default function All_patient() {
                         })
                       }
                       className="form-control custom-datepicker"
-                      dateFormat="yyyy-MM-dd"
+                      dateFormat="dd-MM-yyyy"
                       placeholderText="Select Date"
                       showMonthDropdown
                       showYearDropdown
@@ -4022,6 +4015,19 @@ export default function All_patient() {
                           textAlign: "center",
                           padding: "0.75rem",
                           width: "60px",
+                        }}
+                      />
+
+                      <Column
+                        field="birth_date"
+                        header="DOB"
+                        headerClassName="datatable-header-center"
+                        body={(rowData) => rowData.birth_date || "-"}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "110px",
                         }}
                       />
 

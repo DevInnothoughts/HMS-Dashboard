@@ -7,9 +7,8 @@ import eyeIcon from "../../assets/images/Eye/view.png";
 import eyeSlashIcon from "../../assets/images/Eye/invisible.png";
 import logo from "../../assets/images/logo/hhclogo.webp";
 
-
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://localhost:5100/api"
+const BASE_URL = "http://194.195.117.79:5100/api"
 
 const MySwal = withReactContent(Swal);
 
@@ -85,7 +84,10 @@ export default function Login() {
 
   const getAccountOptions = () => {
     if (formData.department === "OPD")
-      return [{ value: "reception", label: "Reception" }];
+      return [
+        { value: "reception", label: "Reception" },
+        { value: "doctor", label: "Doctor" },
+      ];
     if (formData.department === "IPD") {
       return [
         { value: "reception", label: "Reception" },
@@ -124,10 +126,18 @@ export default function Login() {
         localStorage.setItem("department", formData.department);
         localStorage.setItem("jobLocation", formData.jobLocation);
 
-        if (formData.department === "IPD") {
-          navigate("/ipd-dashboard", { replace: true });
+        if (data.data.role === "doctor") {
+          if (formData.department === "IPD") {
+            navigate("/doctor-ipd-dashboard", { replace: true });
+          } else {
+            navigate("/doctor-opd-dashboard", { replace: true });
+          }
         } else {
-          navigate("/reception-dashboard", { replace: true });
+          if (formData.department === "IPD") {
+            navigate("/ipd-dashboard", { replace: true });
+          } else {
+            navigate("/reception-dashboard", { replace: true });
+          }
         }
       } else {
         setErrorMessage(
@@ -176,7 +186,7 @@ export default function Login() {
 
             {errorMessage ? (
               <div style={errorBannerStyle}>
-                <strong>Login Failed</strong>
+                <strong>{errorMessage}</strong>
               </div>
             ) : (
               <p

@@ -1,0 +1,210 @@
+import React from "react";
+import { Row, Col, Form, Button, Table } from "react-bootstrap";
+import FeatherIcon from "feather-icons-react";
+
+const OpdPrescriptionCard = ({
+  prescriptionData,
+  currentMedicine,
+  handlePrescriptionChange,
+  handlePrescriptionCheckboxChange,
+  handleAddMedicine,
+  handleRemoveMedicine,
+  setCurrentMedicine
+}) => {
+  const timeSlots = ["Before Breakfast", "After Breakfast", "Before Lunch", "After Lunch", "Before Dinner", "After Dinner", "After Evening Snacks", "LA"];
+
+  return (
+    <div className="animate__animated animate__fadeIn">
+      <style>{`
+        .form-check-input {
+          border: 1px solid black !important;
+        }
+      `}</style>
+      <div className="p-3 bg-white rounded shadow-sm border mb-3" style={{ borderLeft: "5px solid #0097a7" }}>
+        <h5 className="fw-bold mb-3" style={{ color: "#00838f", textTransform: "uppercase", letterSpacing: "1px", fontSize: "14px" }}>
+          <FeatherIcon icon="file-text" size="18" className="me-2 text-info" />Outpatient Prescription (OPD)
+        </h5>
+
+        <Row>
+          <Col md={3} className="mb-3">
+            <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Prescription Type <span className="text-danger">*</span></Form.Label>
+            <Form.Select value={prescriptionData.prescription_type} onChange={(e) => handlePrescriptionChange("prescription_type", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }}>
+              <option value="">Select Prescription Type</option>
+              <option value="Proctology">Proctology</option>
+              <option value="Urology">Urology</option>
+              <option value="Other">Other</option>
+            </Form.Select>
+          </Col>
+          <Col md={3} className="mb-3">
+            <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Date of Prescription</Form.Label>
+            <Form.Control type="date" value={prescriptionData.creation_timestamp} onChange={(e) => handlePrescriptionChange("creation_timestamp", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+          </Col>
+          <Col md={3} className="mb-3">
+            <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Assistance Doctor</Form.Label>
+            <Form.Select
+              value={prescriptionData.prescription_type === "Urology" ? prescriptionData.udoctor_id : prescriptionData.doctor_id}
+              onChange={(e) => handlePrescriptionChange(prescriptionData.prescription_type === "Urology" ? "udoctor_id" : "doctor_id", e.target.value)}
+              style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }}
+            >
+              <option value="">Select Doctor</option>
+              <option value="1">Dr. Rajesh Patel</option>
+              <option value="2">Dr. Sneha Gupta</option>
+            </Form.Select>
+          </Col>
+          <Col md={3} className="mb-3">
+            <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Test Advice</Form.Label>
+            <Form.Select
+              value=""
+              onChange={(e) => handlePrescriptionCheckboxChange(prescriptionData.prescription_type === "Urology" ? "uroadvice" : "surgical_advice", e.target.value)}
+              style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }}
+            >
+              <option value="">Add Test...</option>
+              {prescriptionData.prescription_type === "Urology" ? (
+                ["UROFLOWMETRY", "URINE C/S", "USG KUB", "RGU/MCU", "DTPA SCAN", "DMSA SCAN", "CBNAAT"].map(t => <option key={t} value={t}>{t}</option>)
+              ) : (
+                ["CBC", "X-RAY", "MRI", "CT SCAN", "URINE TEST", "LFT", "KFT", "HIV", "HCV", "HbsAg", "BSL(F/PP)", "ECG", "3D ENDO ANAL IMAGING", "COLONOSCOPY"].map(t => <option key={t} value={t}>{t}</option>)
+              )}
+            </Form.Select>
+          </Col>
+        </Row>
+
+        <Row>
+          <Col md={3} className="mb-3">
+            <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Known Allergies</Form.Label>
+            <Form.Control as="textarea" rows={2} value={prescriptionData.allergy} onChange={(e) => handlePrescriptionChange("allergy", e.target.value)} placeholder="e.g. Penicillin, Sulfa..." style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+          </Col>
+          <Col md={3} className="mb-3">
+            <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Diagnosis</Form.Label>
+            <Form.Control as="textarea" rows={2} value={prescriptionData.diagnosis} onChange={(e) => handlePrescriptionChange("diagnosis", e.target.value)} placeholder="Core diagnosis for this visit..." style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+          </Col>
+          <Col md={3} className="mb-3">
+            <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Advice sx</Form.Label>
+            <Form.Control as="textarea" rows={2} value={prescriptionData.advicesx} onChange={(e) => handlePrescriptionChange("advicesx", e.target.value)} style={{ borderRadius: "8px", border: "2px solid #b2ebf2", fontSize: "12px" }} />
+          </Col>
+          <Col md={3} className="mb-3">
+            <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Admission Note</Form.Label>
+            <Form.Control as="textarea" rows={2} value={prescriptionData.admmisionnote} onChange={(e) => handlePrescriptionChange("admmisionnote", e.target.value)} style={{ borderRadius: "8px", border: "2px solid #b2ebf2", fontSize: "12px" }} />
+          </Col>
+        </Row>
+        <Row>
+          <Col md={6} className="mb-3">
+            <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Next Appointment <span className="text-danger">*</span></Form.Label>
+            <Form.Select value={prescriptionData.patient_type} onChange={(e) => handlePrescriptionChange("patient_type", e.target.value)} style={{ borderRadius: "10px", border: "1px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }}>
+              <option value="">Select Appointment Type</option>
+              <option value="Follow">Follow Up Patient</option>
+              <option value="Postoperative">Post Operative Patient</option>
+              <option value="surgery_patient">Surgery Patient</option>
+              <option value="nofollowupappointment">No Followup Appointment</option>
+            </Form.Select>
+          </Col>
+          <Col md={6} className="mb-3">
+            <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Date</Form.Label>
+            <Form.Control type="date" value={prescriptionData["next-appo-date"]} onChange={(e) => handlePrescriptionChange("next-appo-date", e.target.value)} style={{ borderRadius: "10px", border: "1px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+          </Col>
+        </Row>
+
+        <hr className="my-4" style={{ opacity: "0.1" }} />
+
+        <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ color: "#005979ff", fontSize: "14px" }}>
+          <FeatherIcon icon="plus-circle" size="16" className="me-2 text-success" /> Meditative Advice & Pharmacy Orders
+        </h6>
+
+
+        <Row className="align-items-end g-2">
+          <Col md={3}>
+            <Form.Label className="fw-bold text-muted" style={{ fontSize: "11px" }}>Advice Medicine</Form.Label>
+            <Form.Control type="text" value={currentMedicine.name} onChange={(e) => setCurrentMedicine(prev => ({ ...prev, name: e.target.value }))} placeholder="Start typing name..." style={{ borderRadius: "8px", border: "2px solid #e0f2f1", padding: "6px", fontSize: "12px" }} />
+          </Col>
+          <Col md={1}>
+            <Form.Label className="fw-bold text-muted" style={{ fontSize: "11px" }}>Qty</Form.Label>
+            <Form.Select value={currentMedicine.qty} onChange={(e) => setCurrentMedicine(prev => ({ ...prev, qty: e.target.value }))} style={{ borderRadius: "8px", border: "2px solid #e0f2f1", padding: "6px", fontSize: "12px" }}>
+              <option value="">Qty</option>
+              {[...Array(60)].map((_, i) => (
+                <option key={i + 1} value={i + 1}>{i + 1}</option>
+              ))}
+            </Form.Select>
+          </Col>
+          <Col md={6}>
+            <div className="d-flex flex-wrap gap-1 justify-content-between mb-1">
+              {timeSlots.map(slot => (
+                <div key={slot} className="d-flex flex-column align-items-center" style={{ minWidth: "45px" }}>
+                  <Form.Check
+                    type="checkbox"
+                    id={`inline-slot-${slot}`}
+                    checked={currentMedicine.times?.includes(slot)}
+                    onChange={(e) => {
+                      const updated = e.target.checked
+                        ? [...(currentMedicine.times || []), slot]
+                        : (currentMedicine.times || []).filter(t => t !== slot);
+                      setCurrentMedicine(prev => ({ ...prev, times: updated }));
+                    }}
+                    className="m-0 p-0"
+                  />
+                  <label htmlFor={`inline-slot-${slot}`} className="text-center m-0 mt-1" style={{ fontSize: "9px", lineHeight: "1", cursor: "pointer", fontWeight: "600", color: "#555", whiteSpace: "pre-wrap" }}>
+                    {slot.split(" ").join("\n")}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </Col>
+          <Col md={1}>
+            <Form.Label className="fw-bold text-muted" style={{ fontSize: "11px" }}>Days</Form.Label>
+            <Form.Select value={currentMedicine.days} onChange={(e) => setCurrentMedicine(prev => ({ ...prev, days: e.target.value }))} style={{ borderRadius: "8px", border: "2px solid #e0f2f1", padding: "6px", fontSize: "12px" }}>
+              <option value="">Day</option>
+              {["1", "2", "3", "5", "7", "10", "15", "30", "45", "60", "90", "120", "SOS"].map(d => <option key={d} value={d}>{d}</option>)}
+            </Form.Select>
+          </Col>
+          <Col md={1}>
+            <Button onClick={handleAddMedicine} className="w-100 py-1 btn-info shadow-sm" style={{ borderRadius: "8px" }}>
+              <FeatherIcon icon="plus" size="18" />
+            </Button>
+          </Col>
+        </Row>
+
+        {prescriptionData.medicines?.length > 0 && (
+          <div className="mt-4 rounded overflow-hidden border">
+            <Table responsive hover className="mb-0">
+              <thead style={{ backgroundColor: "#f1fcfd", borderBottom: "2px solid #b2ebf2" }}>
+                <tr>
+                  <th className="py-2 px-3 border-0" style={{ fontSize: "12px" }}>Medicine Name</th>
+                  <th className="py-2 px-3 border-0" style={{ fontSize: "12px" }}>Qty</th>
+                  <th className="py-2 px-3 border-0" style={{ fontSize: "12px" }}>Dosage Intervals</th>
+                  <th className="py-2 px-3 border-0" style={{ fontSize: "12px" }}>Duration</th>
+                  <th className="py-2 px-3 border-0 text-center" style={{ fontSize: "12px" }}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {prescriptionData.medicines.map((m, idx) => (
+                  <tr key={idx} className="align-middle">
+                    <td className="py-2 px-3 fw-bold" style={{ fontSize: "12px" }}>{m.name}</td>
+                    <td className="py-2 px-3 fw-bold"><span className="px-2 py-1" style={{ fontSize: "11px" }}>{m.qty} Units</span></td>
+                    <td className="py-2 px-3 fw-bold">
+                      <div className="d-flex flex-wrap gap-1 ">
+                        {m.times?.map(t => <span key={t} className="py-1 px-2" style={{ fontSize: "11px" }}>{t}</span>)}
+                      </div>
+                    </td>
+                    <td className="py-2 px-3 fw-semibold fw-bold" style={{ fontSize: "11px" }}>{m.days} Days</td>
+                    <td className="py-2 px-3 text-center">
+                      <Button variant="outline-danger" size="lg" className="p-5" onClick={() => handleRemoveMedicine(idx)}>
+                        <FeatherIcon icon="trash" size="14" />
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </div>
+        )}
+
+      </div>
+
+      <div className="text-center mb-5 pb-5">
+        <Button style={{ backgroundColor: "#00796b", borderColor: "#00796b", padding: "10px 40px", borderRadius: "50px", fontWeight: "800", fontSize: "13px", boxShadow: "0 10px 30px rgba(0, 121, 107, 0.3)", textTransform: "uppercase", letterSpacing: "1px" }}>
+          <FeatherIcon icon="printer" size="18" className="me-2" /> FINALIZE & PRINT PRESCRIPTION
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+export default OpdPrescriptionCard;

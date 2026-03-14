@@ -1,15 +1,15 @@
-// import React from "react";
-// import { Route } from "react-router-dom";
-// import All_doctor from "../pages/Doctor/All_doctor";
-// import DoctorSchedule from "../pages/Doctor/Doctor_schedule";
-// import Add_doctor from "../pages/Doctor/Add_doctor";
-// import Edit_doctor from "../pages/Doctor/Edit_doctor";
+import React from "react";
+import { Route } from "react-router-dom";
+import DoctorOpdDashboard from "../pages/doctor/DoctorOpdDashboard";
+import DoctorIpdDashboard from "../pages/doctor/DoctorIpdDashboard";
+import DoctorPatientList from "../pages/doctor/DoctorPatientList";
+import DoctorPatientDetails from "../pages/doctor/DoctorPatientDetails";
 
-// export const DoctorRoutes = (
-//   <>
-//     <Route path="/doctors" element={<All_doctor />} />
-//     <Route path="/doctor/add" element={<Add_doctor/>} />
-//     <Route path="/doctor/edit/:id" element={<Edit_doctor />} />
-//     <Route path="/doctor/schedule" element={<DoctorSchedule/>} />
-//   </>
-// );
+export const DoctorRoutes = (
+  <>
+    <Route path="/doctor-opd-dashboard" element={<DoctorOpdDashboard />} />
+    <Route path="/doctor-ipd-dashboard" element={<DoctorIpdDashboard />} />
+    <Route path="/doctor-patients" element={<DoctorPatientList />} />
+    <Route path="/doctor-patient-details" element={<DoctorPatientDetails />} />
+  </>
+);

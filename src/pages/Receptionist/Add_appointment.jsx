@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Row, Col, Form, Container, Card, Button } from "react-bootstrap";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useParams, useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import FeatherIcon from "feather-icons-react";
 import "react-datepicker/dist/react-datepicker.css";
@@ -14,7 +14,7 @@ import { decodeJwt } from "../../utils/decode-jwt";
 
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://localhost:5100/api"
+const BASE_URL = "http://194.195.117.79:5100/api"
 
 const Toast = Swal.mixin({
   toast: true,
@@ -94,6 +94,7 @@ export default function Add_appointment() {
   const [type, setType] = useState("");
   const location = useLocation();
   const { phone } = useParams();
+  const navigate = useNavigate();
   const [currentLocation, setCurrentLocation] = useState(null);
   const [formData, setFormData] = useState({
     treatment: "",
@@ -116,7 +117,7 @@ export default function Add_appointment() {
   });
   const [errors, setErrors] = useState({});
   const newPatientTypes = ["New"];
-  const existingPatientTypes = ["Follow-UP", "POST-OPERATIVE", "OTHER"];
+  const existingPatientTypes = ["Follow-UP", "Post Operative", "OTHER"];
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -371,7 +372,7 @@ export default function Add_appointment() {
       setLoading(true);
       const payload = {
         doctor_id: formData.doctor_id,
-        patient_type: formData.patient_type,
+        patient_type: formData.patient_type === "Post Operative" ? "Postoperative" : formData.patient_type,
         patient_phone: formData.patient_phone,
         appointment_timestamp: formData.date,
         appointment_time: to24HourFormat(formData.appointmentTime),
@@ -405,8 +406,10 @@ export default function Add_appointment() {
             icon: "success",
             title: "Success!",
             text: "Appointment booked successfully.",
+          }).then(() => {
+            handleReset();
+            navigate("/appointments");
           });
-          handleReset();
         } else {
           const errorData = await response.json();
           Swal.fire({

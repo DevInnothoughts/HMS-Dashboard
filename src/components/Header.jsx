@@ -13,6 +13,8 @@ export default function Header() {
   const navigate = useNavigate();
   const [theme, setTheme] = useState('light');
   const [currentLocation, setCurrentLocation] = useState(null);
+  const [accountType, setAccountType] = useState("");
+  const [department, setDepartment] = useState("");
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -22,6 +24,8 @@ export default function Header() {
         setCurrentLocation(payload.jobLocation);
       }
     }
+    setAccountType(localStorage.getItem("accountType") || "");
+    setDepartment(localStorage.getItem("department") || "");
   }, []);
 
   const toggleTheme = () => {
@@ -324,7 +328,32 @@ export default function Header() {
               </li> 
               */}
 
-              <li className="nav-profile">
+              <li className="nav-profile" style={{ display: "flex", alignItems: "center" }}>
+                {accountType && (
+                  <span
+                    style={{
+                      marginRight: "12px",
+                      fontSize: "12px",
+                      fontWeight: "700",
+                      color: "#2a96d0ff",
+                      background: "rgba(26, 110, 124, 0.14)",
+                      padding: "5px 12px",
+                      borderRadius: "10px",
+                      border: "1px solid #2a96d087",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "5px",
+                    }}
+                  >
+                    <i
+                      className="fa fa-user-circle-o"
+                      style={{ fontSize: "14px", color: "#2a96d0ff" }}
+                    ></i>
+                    {department} | {accountType}
+                  </span>
+                )}
                 <Link className="action-toggle" href="javascript:void(0)">
                   <div className="media">
                     <div className="user-icon">

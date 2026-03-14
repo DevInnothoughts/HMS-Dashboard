@@ -26,7 +26,7 @@ import { toast } from "react-hot-toast";
 
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://localhost:5100/api"
+const BASE_URL = "http://194.195.117.79:5100/api"
 
 const Toast = Swal.mixin({
   toast: true,
@@ -226,8 +226,12 @@ export default function Call_logs() {
       const data = await response.json();
 
       if (response.ok && data.data) {
-        console.log(data.data)
-        setCallLogs(data.data);
+        const processedData = data.data.map((log) => ({
+          ...log,
+          // Strip leading zeros from caller_no
+          caller_no: log.caller_no ? String(log.caller_no).replace(/^0+/, "") : log.caller_no,
+        }));
+        setCallLogs(processedData);
       } else {
         console.error("Error in response:", data);
         Toast.fire({
@@ -660,7 +664,10 @@ export default function Call_logs() {
     const end = moment().startOf("day").add(23, "hours").add(45, "minutes");
 
     while (start <= end) {
-      slots.push(start.format("hh:mm A"));
+      slots.push({
+        label: start.format("hh:mm A"),
+        value: start.format("HH:mm"),
+      });
       start.add(15, "minutes");
     }
     return slots;
@@ -684,9 +691,12 @@ export default function Call_logs() {
     const payload = {
       fde_id: formData.FDE_Name,
       FDE_Name: fdeName,
-      appointment_time: formData.appointmentTime,
+      // Ensure time is in 24-hour HH:mm format for database consistency
+      appointment_time: formData.appointmentTime
+        ? moment(formData.appointmentTime, ["hh:mm A", "HH:mm"]).format("HH:mm")
+        : "",
       patient_phone: formData.caller_no,
-      patient_type: formData.patient_type,
+      patient_type: formData.patient_type === "Post Operative" ? "Postoperative" : formData.patient_type,
       appointment_timestamp: moment(formData.date).format("YYYY-MM-DD"),
       doctorName: doctorName,
       doctor_id: formData.doctor_id,
@@ -745,7 +755,7 @@ export default function Call_logs() {
 
     const payload = {
       patient_location: currentLocation,
-      patient_type: "NEW",
+      patient_type: "New",
       date: moment(enquiryForm.date).format("YYYY-MM-DD"),
       // time: enquiryForm.time,
       time: "0",
@@ -756,7 +766,7 @@ export default function Call_logs() {
       // patient_type: "New",
       enquirytype: enquiryForm.enquirytype,
       fdeId: enquiryForm.FDE_Name || null,
-      FDE_Name: enquiryForm.FDE_Name || null,
+      FDE_Name: enquiryForm.fdeName || null, // ✅ Send Name instead of ID
       // reference: enquiryForm.reference || null,
       reference: "0",
       note: enquiryForm.note || "",
@@ -793,6 +803,7 @@ export default function Call_logs() {
         caller_no: "",
         enquirytype: "",
         FDE_Name: "",
+        fdeName: "",
         fdeId: "",
         note: "",
       });
@@ -1106,8 +1117,8 @@ export default function Call_logs() {
                   >
                     <option value="">Select Time</option>
                     {timeSlots.map((time, index) => (
-                      <option key={index} value={time}>
-                        {time}
+                      <option key={index} value={time.value}>
+                        {time.label}
                       </option>
                     ))}
                   </Form.Select>

@@ -26,7 +26,7 @@ import moment from "moment";
 
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://localhost:5100/api"
+const BASE_URL = "http://194.195.117.79:5100/api"
 
 const NoteCell = ({ note }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -296,7 +296,14 @@ export default function Appointment_list() {
       doctor_id: receiptForm.doctor_id,
       appointment_date: moment(new Date()).format("DD-MM-YYYY"),
       consultations: consultationData,
-      paymentmode: receiptForm.paymentMode,
+      paymentmode:
+        receiptForm.paymentMode === "card"
+          ? "Card"
+          : receiptForm.paymentMode === "cash"
+            ? "Cash"
+            : receiptForm.paymentMode === "upi"
+              ? "UPI"
+              : receiptForm.paymentMode,
       regtype: receiptForm.registrationType,
       expectedamt: parseFloat(payable) || 0,
       discountamt: parseFloat(receiptForm.discountAmt) || 0,
@@ -546,22 +553,43 @@ export default function Appointment_list() {
     return slots;
   };
 
-  const fetchAppointmentData = useCallback(async () => {
+
+  const fetchAppointmentData = useCallback(async (manualShowPending = null) => {
     setLoading(true);
     try {
       if (!fromDate || !toDate || currentLocation === "default") return;
 
       const formattedFromDate = formatDateToDDMMYYYY(fromDate);
       const formattedToDate = formatDateToDDMMYYYY(toDate);
-      // console.log(formattedFromDate, formattedToDate);
-      const url = `${BASE_URL}/V1/appointment/listAppointments?from=${formattedFromDate}&to=${formattedToDate}&location=${currentLocation}`;
+
+      const isToday =
+        moment(fromDate).isSame(moment(), "day") &&
+        moment(toDate).isSame(moment(), "day");
+
+      // Logic:
+      // 1. If manualShowPending is provided (e.g. from Refresh button), use it.
+      // 2. Otherwise, if it's the 'Today' view, we want to show pending records from the past (as previously requested).
+      // 3. If it's a specific date range (not today), we want strict filtering (showPending = false).
+      const showPending =
+        manualShowPending !== null ? manualShowPending : isToday;
+
+      const url = `${BASE_URL}/V1/appointment/listAppointments?from=${formattedFromDate}&to=${formattedToDate}&location=${currentLocation}&showPending=${showPending}`;
+
+      console.log("Fetching appointments with URL:", url);
 
       const response = await fetch(url, { method: "GET" });
       const data = await response.json();
 
       if (response.ok && data.data) {
-        console.log(data.data);
-        setAppointmentData(data.data);
+        console.log("Data fetched successfully:", data.data.length, "records");
+        const mappedData = data.data.map((app) => ({
+          ...app,
+          patient_type:
+            app.patient_type === "Postoperative"
+              ? "Post Operative"
+              : app.patient_type,
+        }));
+        setAppointmentData(mappedData);
       } else {
         console.error(
           "Error fetching appointments:",
@@ -608,7 +636,8 @@ export default function Appointment_list() {
       fetchAppointmentData();
       fetchDropdownData();
     }
-  }, [fetchAppointmentData, fetchDropdownData, currentLocation]);
+    // We want to fetch data whenever any of these values change
+  }, [fromDate, toDate, currentLocation, fetchAppointmentData, fetchDropdownData]);
 
   useEffect(() => {
     if (selectedAppointment) {
@@ -648,6 +677,10 @@ export default function Appointment_list() {
     console.log(dateOnly);
     const updatePayload = {
       ...selectedAppointment,
+      patient_type:
+        selectedAppointment.patient_type === "Post Operative"
+          ? "Postoperative"
+          : selectedAppointment.patient_type,
       appointment_timestamp: dateOnly,
       patient_location: currentLocation,
     };
@@ -757,8 +790,10 @@ export default function Appointment_list() {
         );
         console.log(response);
       } else {
+        const mappedPatientType =
+          patient_type === "Post Operative" ? "Postoperative" : patient_type;
         response = await fetch(
-          `${BASE_URL}/V1/appointment/${endpoint}?appId=${appId}&location=${currentLocation}&patientType=${patient_type}&patientPhone=${patient_phone}`,
+          `${BASE_URL}/V1/appointment/${endpoint}?appId=${appId}&location=${currentLocation}&patientType=${mappedPatientType}&patientPhone=${patient_phone}`,
           { method: "PUT", headers: { "Content-Type": "application/json" } },
         );
         console.log(response);
@@ -1122,7 +1157,7 @@ export default function Appointment_list() {
           </div>
           <Button
             variant="primary"
-            onClick={fetchAppointmentData}
+            onClick={() => fetchAppointmentData()}
             style={{
               backgroundColor: "#00bcd4",
               border: "none",
@@ -1693,7 +1728,7 @@ export default function Appointment_list() {
                         field="patient_type"
                         header="Patient Type"
                         style={{
-                          ...getColumnStyle("75px"),
+                          ...getColumnStyle("90px"),
                           border: "1px solid #90caf9",
                         }}
                         body={(rowData) => rowData.patient_type || "-"}

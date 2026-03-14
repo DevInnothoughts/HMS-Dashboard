@@ -14,7 +14,7 @@ import PageBreadcrumb from "../../../components/PageBreadcrumb";
 import SimpleBar from "simplebar-react";
 import { decodeJwt } from "../../../utils/decode-jwt";
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 
 const CashDepositReport = () => {
@@ -25,17 +25,17 @@ const CashDepositReport = () => {
     const [searchText, setSearchText] = useState("");
     const [rows, setRows] = useState(10);
     const [currentLocation, setCurrentLocation] = useState("");
-    
 
 
-      useEffect(() => {
+
+    useEffect(() => {
         const token = localStorage.getItem("token");
         if (token) {
-          const payload = decodeJwt(token);
-          if (payload?.jobLocation) setCurrentLocation(payload.jobLocation);
+            const payload = decodeJwt(token);
+            if (payload?.jobLocation) setCurrentLocation(payload.jobLocation);
         }
-      }, []);
-    
+    }, []);
+
 
     const [filters, setFilters] = useState({
         global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -56,7 +56,7 @@ const CashDepositReport = () => {
             alert("Please Enter the all fields details..");
             return;
         }
-    
+
         setLoading(true);
         try {
             const response = await fetch(`${BASE_URL}/V1/managereports/getCashDepositReport`, {
@@ -65,13 +65,13 @@ const CashDepositReport = () => {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${localStorage.getItem("token")}`
                 },
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     location: currentLocation,
-                    Fromdate: fromDate, 
-                    Todate: toDate 
+                    Fromdate: fromDate,
+                    Todate: toDate
                 })
             });
-    
+
             const result = await response.json();
             // console.log(result);
             if (result.success) {
@@ -126,13 +126,13 @@ const CashDepositReport = () => {
     };
     const handleAddReceipt = async (rowData) => {
         const { date, opdCash, ipdCash, cashDeposited, receiptNo, difference } = rowData;
-    
+
         // Validation exactly like your AJAX: if(depositedcash== "" || receiptno == "" || cashdiffernce == "")
         if (!cashDeposited || !receiptNo || !difference) {
             alert('Please Enter the all fields details..');
             return;
         }
-    
+
         try {
             // Replicating: $.ajax({ url: "index.php?receptionist/SaveDatewiseCash" })
             const response = await fetch(`${BASE_URL}/V1/managereports/SaveDatewiseCash`, {
@@ -154,13 +154,13 @@ const CashDepositReport = () => {
                     cashdiffernce: difference
                 })
             });
-    
+
             const result = await response.json();
-    
+
             if (result.success) {
                 alert('Your record saved Successfully');
                 // Refresh the data to show the updated "Cash in Hand" or clear inputs
-                handleFind(); 
+                handleFind();
             } else {
                 alert(result.message || "Failed to save record");
             }
@@ -325,6 +325,7 @@ const CashDepositReport = () => {
                                                     type="number"
                                                     size="sm"
                                                     value={rowData.cashDeposited}
+                                                    onWheel={(e) => e.target.blur()}
                                                     onChange={(e) => handleInputChange(e, rowData, "cashDeposited")}
                                                     style={{ fontSize: "12px", borderRadius: "4px", border: "1px solid #4dd0e1" }}
                                                 />
@@ -336,6 +337,7 @@ const CashDepositReport = () => {
                                                 <Form.Control
                                                     type="text"
                                                     size="sm"
+                                                    onWheel={(e) => e.target.blur()}
                                                     value={rowData.receiptNo}
                                                     onChange={(e) => handleInputChange(e, rowData, "receiptNo")}
                                                     style={{ fontSize: "12px", borderRadius: "4px", border: "1px solid #4dd0e1" }}
@@ -348,6 +350,7 @@ const CashDepositReport = () => {
                                                 <Form.Control
                                                     type="number"
                                                     size="sm"
+                                                    onWheel={(e) => e.target.blur()}
                                                     value={rowData.difference}
                                                     onChange={(e) => handleInputChange(e, rowData, "difference")}
                                                     style={{ fontSize: "12px", borderRadius: "4px", border: "1px solid #4dd0e1" }}

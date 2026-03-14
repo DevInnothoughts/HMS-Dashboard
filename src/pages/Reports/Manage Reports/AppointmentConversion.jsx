@@ -19,7 +19,7 @@
 // import ReactApexChart from "react-apexcharts";
 
 // // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-// const BASE_URL = "http://localhost:5100/api"
+// const BASE_URL = "http://194.195.117.79:5100/api"
 
 // const appointmentTypes = [
 //   { value: "New", label: "New" },
@@ -579,7 +579,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import ReactApexChart from "react-apexcharts"; // Using the project's existing chart tool
 import { decodeJwt } from "../../../utils/decode-jwt";
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const appointmentTypes = [
   { value: "New", label: "New" },
@@ -687,7 +687,14 @@ const AppointmentConversion = () => {
           (app.status || "").toLowerCase() === appointmentStatus.toLowerCase()
         );
       }
-      setAppointments(filtered);
+      const mappedList = filtered.map((app) => ({
+        ...app,
+        patient_type:
+          app.patient_type === "Postoperative"
+            ? "Post Operative"
+            : app.patient_type,
+      }));
+      setAppointments(mappedList);
 
       // 2. Process Daily Data (Stacked Column Logic)
       const dailyDates = [...new Set([...dailyNew.map(d => d.appointment_timestamp), ...dailyFO.map(d => d.appointment_timestamp)])].sort();

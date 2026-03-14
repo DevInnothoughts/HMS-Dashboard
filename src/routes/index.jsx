@@ -2,7 +2,7 @@ import React from "react";
 import { Routes } from "react-router-dom";
 import { AuthRoutes } from "./AuthRoutes";
 import { DashboardRoutes } from "./DashboardRoutes";
-// import { DoctorRoutes } from "./DoctorRoutes";
+import { DoctorRoutes } from "./DoctorRoutes";
 import { PatientRoutes } from "./PatientRoutes";
 import { ReceptionistRoutes } from "./ReceptionistRoutes";
 import { ReportRoutes } from "./ReportsRoutes";
@@ -16,7 +16,7 @@ export default function AppRoutes() {
       {ReportRoutes}
       {AuthRoutes}
       {DashboardRoutes}
-      {/* {DoctorRoutes} */}
+      {DoctorRoutes}
       {IpdRoutes}
       {PatientRoutes}
       {ReceptionistRoutes}

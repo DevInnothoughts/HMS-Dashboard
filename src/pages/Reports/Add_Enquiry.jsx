@@ -20,7 +20,7 @@ import { decodeJwt } from "../../utils/decode-jwt";
 
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://localhost:5100/api"
+const BASE_URL = "http://194.195.117.79:5100/api"
 
 const getCountryCode = (patient_phone) => {
   if (!patient_phone) return "Unknown";
@@ -74,11 +74,9 @@ export default function Add_Enquiry() {
     patient_type: "New",
     patient_name: "",
     patient_phone: "",
-    time: new Date().toLocaleTimeString("en-US", {
+    time: new Date().toLocaleTimeString("en-GB", {
       hour: "2-digit",
       minute: "2-digit",
-      second: "2-digit",
-      hour12: false,
     }),
     patient_location: "",
     reference: "",
@@ -160,11 +158,9 @@ export default function Add_Enquiry() {
       reference: "",
       FDE_Name: "",
       note: "",
-      time: new Date().toLocaleTimeString("en-US", {
+      time: new Date().toLocaleTimeString("en-GB", {
         hour: "2-digit",
         minute: "2-digit",
-        second: "2-digit",
-        hour12: false,
       }),
     });
     setErrors({});
