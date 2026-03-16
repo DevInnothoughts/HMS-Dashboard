@@ -726,7 +726,7 @@ export default function All_patient() {
       // Uid_no: patient.uid || "",
       Uid_no: patient.Uid_no || patient.uid || "",
       date: patient.date || "",
-      prefix: (patient.prefix || "").trim(),
+      prefix: (patient.prefix || "").trim().toUpperCase(),
       name: patient.name || "",
       patient_type: Boolean(patient.patient_type),
       email: patient.email || "",
@@ -856,6 +856,7 @@ export default function All_patient() {
 
     const updatedPatientData = {
       ...formData,
+      prefix: (formData.prefix || "").toUpperCase(),
       patientName: formData.name,
       mobileNo: formData.phone,
       date: formData.date || "",
@@ -3171,10 +3172,10 @@ export default function All_patient() {
                       }}
                     >
                       <option value="">Select Prefix</option>
-                      <option value="Mr">Mr</option>
-                      <option value="Mrs">Mrs</option>
-                      <option value="Master">Master</option>
-                      <option value="Miss">Miss</option>
+                      <option value="MR">MR</option>
+                      <option value="MRS">MRS</option>
+                      <option value="MASTER">MASTER</option>
+                      <option value="MISS">MISS</option>
                     </Form.Select>
                   </Form.Group>
                 </Col>
