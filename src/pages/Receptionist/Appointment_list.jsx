@@ -606,8 +606,8 @@ export default function Appointment_list() {
   const fetchDropdownData = useCallback(async () => {
     try {
       const endpoints = [
-        `${BASE_URL}/V1/appointment/consultationDropdown?location=${currentLocation}`,
-        `${BASE_URL}/V1/appointment/doctorDropdown?location=${currentLocation}`,
+        `${BASE_URL}/V1/doctor/consultationDropdown?location=${currentLocation}`,
+        `${BASE_URL}/V1/doctor/doctorDropdown?location=${currentLocation}`,
         `${BASE_URL}/V1/appointment/fdeDropdown?location=${currentLocation}`,
       ];
 

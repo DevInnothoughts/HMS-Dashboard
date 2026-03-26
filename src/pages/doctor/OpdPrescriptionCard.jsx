@@ -1,6 +1,8 @@
-import React from "react";
-import { Row, Col, Form, Button, Table } from "react-bootstrap";
+import React, { useState, useEffect } from "react";
+import { Row, Col, Form, Button, Table, Dropdown } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
+
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const OpdPrescriptionCard = ({
   prescriptionData,
@@ -9,8 +11,88 @@ const OpdPrescriptionCard = ({
   handlePrescriptionCheckboxChange,
   handleAddMedicine,
   handleRemoveMedicine,
-  setCurrentMedicine
+  setCurrentMedicine,
+  previousPrescriptionList = [],
+  selectedPrescriptionId = null,
+  onSelectPrescription,
+  onNewPrescription,
+  assistanceDoctors = [],
+  location = "default"
 }) => {
+  const [testAdviceOptions, setTestAdviceOptions] = useState([]);
+  const [preopInvestOptions, setPreopInvestOptions] = useState([]);
+  const [filteredAssistanceDoctors, setFilteredAssistanceDoctors] = useState([]);
+
+  useEffect(() => {
+    const fetchDynamicData = async () => {
+      if (!prescriptionData.prescription_type) {
+        setTestAdviceOptions([]);
+        setPreopInvestOptions([]);
+        setFilteredAssistanceDoctors(assistanceDoctors);
+        return;
+      }
+
+      const type = prescriptionData.prescription_type.toLowerCase();
+      let deptId = null;
+      let adviceCategory = null;
+
+      if (type === "urology") {
+        deptId = 6;
+        adviceCategory = "urology";
+      } else if (type === "proctology") {
+        deptId = 5;
+        adviceCategory = "proctology";
+      }
+
+      // Fetch Test Advice
+      if (adviceCategory) {
+        try {
+          const res = await fetch(`${BASE_URL}/V1/doctor/prescriptionAdviceDropdown?location=${location}&testadvice=${adviceCategory}`);
+          const result = await res.json();
+          if (result.statusCode === 200) {
+            setTestAdviceOptions(result.data || []);
+          }
+        } catch (error) {
+          console.error("Error fetching test advice:", error);
+        }
+      } else {
+        setTestAdviceOptions([]);
+      }
+
+      // Fetch PREOP Investigations (only for Urology)
+      if (type === "urology") {
+        try {
+          const res = await fetch(`${BASE_URL}/V1/doctor/prescriptionAdviceDropdown?location=${location}&testadvice=PREOP`);
+          const result = await res.json();
+          if (result.statusCode === 200) {
+            setPreopInvestOptions(result.data || []);
+          }
+        } catch (error) {
+          console.error("Error fetching PREOP investigations:", error);
+        }
+      } else {
+        setPreopInvestOptions([]);
+      }
+
+      // Fetch filtered Assistance Doctors
+      if (deptId) {
+        try {
+          const res = await fetch(`${BASE_URL}/V1/doctor/assistanceDoctorDropdown?location=${location}&departmentId=${deptId}`);
+          const result = await res.json();
+          if (result.statusCode === 200) {
+            setFilteredAssistanceDoctors(result.data || []);
+          }
+        } catch (error) {
+          console.error("Error fetching filtered assistance doctors:", error);
+        }
+      } else {
+        setFilteredAssistanceDoctors(assistanceDoctors);
+      }
+    };
+
+    fetchDynamicData();
+  }, [prescriptionData.prescription_type, location, assistanceDoctors]);
+
   const timeSlots = ["Before Breakfast", "After Breakfast", "Before Lunch", "After Lunch", "Before Dinner", "After Dinner", "After Evening Snacks", "LA"];
 
   return (
@@ -21,9 +103,42 @@ const OpdPrescriptionCard = ({
         }
       `}</style>
       <div className="p-3 bg-white rounded shadow-sm border mb-3" style={{ borderLeft: "5px solid #0097a7" }}>
-        <h5 className="fw-bold mb-3" style={{ color: "#00838f", textTransform: "uppercase", letterSpacing: "1px", fontSize: "14px" }}>
-          <FeatherIcon icon="file-text" size="18" className="me-2 text-info" />Outpatient Prescription (OPD)
-        </h5>
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h5 className="fw-bold mb-0" style={{ color: "#00838f", textTransform: "uppercase", letterSpacing: "1px", fontSize: "14px" }}>
+            <FeatherIcon icon="file-text" size="18" className="me-2 text-info" />Outpatient Prescription (OPD)
+          </h5>
+          <div className="d-flex gap-2">
+            <Button
+              variant="outline-info"
+              size="sm"
+              onClick={onNewPrescription}
+              style={{ borderRadius: "20px", fontSize: "11px", fontWeight: "700" }}
+            >
+              <FeatherIcon icon="plus" size="14" className="me-1" /> NEW RECORD
+            </Button>
+            <Dropdown onSelect={onSelectPrescription}>
+              <Dropdown.Toggle
+                variant="info"
+                id="previous-pres-dropdown"
+                size="sm"
+                style={{ borderRadius: "20px", fontSize: "11px", fontWeight: "700", color: "white" }}
+              >
+                <FeatherIcon icon="calendar" size="14" className="me-1" /> PREVIOUS DATES
+              </Dropdown.Toggle>
+              <Dropdown.Menu style={{ fontSize: "12px", borderRadius: "10px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}>
+                {previousPrescriptionList.length > 0 ? (
+                  previousPrescriptionList.map((pr) => (
+                    <Dropdown.Item key={pr.id} eventKey={pr.id}>
+                      {pr.date} {pr.id === selectedPrescriptionId && <FeatherIcon icon="check" size="12" className="ms-2 text-success" />}
+                    </Dropdown.Item>
+                  ))
+                ) : (
+                  <Dropdown.Item disabled>No previous records</Dropdown.Item>
+                )}
+              </Dropdown.Menu>
+            </Dropdown>
+          </div>
+        </div>
 
         <Row>
           <Col md={3} className="mb-3">
@@ -47,11 +162,14 @@ const OpdPrescriptionCard = ({
               style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }}
             >
               <option value="">Select Doctor</option>
-              <option value="1">Dr. Rajesh Patel</option>
-              <option value="2">Dr. Sneha Gupta</option>
+              {filteredAssistanceDoctors.map((doc) => (
+                <option key={doc.doctor_id} value={doc.doctor_id}>
+                  {doc.name}
+                </option>
+              ))}
             </Form.Select>
           </Col>
-          <Col md={3} className="mb-3">
+          <Col md={prescriptionData.prescription_type === "Urology" ? 3 : 3} className="mb-20">
             <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Test Advice</Form.Label>
             <Form.Select
               value=""
@@ -59,33 +177,79 @@ const OpdPrescriptionCard = ({
               style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }}
             >
               <option value="">Add Test...</option>
-              {prescriptionData.prescription_type === "Urology" ? (
-                ["UROFLOWMETRY", "URINE C/S", "USG KUB", "RGU/MCU", "DTPA SCAN", "DMSA SCAN", "CBNAAT"].map(t => <option key={t} value={t}>{t}</option>)
-              ) : (
-                ["CBC", "X-RAY", "MRI", "CT SCAN", "URINE TEST", "LFT", "KFT", "HIV", "HCV", "HbsAg", "BSL(F/PP)", "ECG", "3D ENDO ANAL IMAGING", "COLONOSCOPY"].map(t => <option key={t} value={t}>{t}</option>)
-              )}
+              {testAdviceOptions.map((t) => (
+                <option key={t.padvice_id} value={t.padvice_desc}>
+                  {t.padvice_desc}
+                </option>
+              ))}
             </Form.Select>
           </Col>
-        </Row>
-
-        <Row>
+          {prescriptionData.prescription_type === "Urology" && (
+            <Col md={3} className="mb-3">
+              <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>PREOP Investigation</Form.Label>
+              <Form.Select
+                value=""
+                onChange={(e) => handlePrescriptionCheckboxChange("preopinvestigation", e.target.value)}
+                style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }}
+              >
+                <option value="">Add PREOP Test...</option>
+                {preopInvestOptions.map((t) => (
+                  <option key={t.padvice_id} value={t.padvice_desc}>
+                    {t.padvice_desc}
+                  </option>
+                ))}
+              </Form.Select>
+            </Col>
+          )}
           <Col md={3} className="mb-3">
             <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Known Allergies</Form.Label>
             <Form.Control as="textarea" rows={2} value={prescriptionData.allergy} onChange={(e) => handlePrescriptionChange("allergy", e.target.value)} placeholder="e.g. Penicillin, Sulfa..." style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
           </Col>
           <Col md={3} className="mb-3">
             <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Diagnosis</Form.Label>
-            <Form.Control as="textarea" rows={2} value={prescriptionData.diagnosis} onChange={(e) => handlePrescriptionChange("diagnosis", e.target.value)} placeholder="Core diagnosis for this visit..." style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+            {prescriptionData.prescription_type === "Urology" ? (
+              <Form.Control as="textarea" rows={2} value={prescriptionData.urodiagnosis} onChange={(e) => handlePrescriptionChange("urodiagnosis", e.target.value)} placeholder="Urology diagnosis..." style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+            ) : (
+              <Form.Control as="textarea" rows={2} value={prescriptionData.diagnosis} onChange={(e) => handlePrescriptionChange("diagnosis", e.target.value)} placeholder="Core diagnosis for this visit..." style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+            )}
           </Col>
-          <Col md={3} className="mb-3">
-            <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Advice sx</Form.Label>
-            <Form.Control as="textarea" rows={2} value={prescriptionData.advicesx} onChange={(e) => handlePrescriptionChange("advicesx", e.target.value)} style={{ borderRadius: "8px", border: "2px solid #b2ebf2", fontSize: "12px" }} />
-          </Col>
+          {prescriptionData.prescription_type !== "Urology" && (
+            <Col md={3} className="mb-3">
+              <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Advice sx</Form.Label>
+              <Form.Control as="textarea" rows={2} value={prescriptionData.advicesx} onChange={(e) => handlePrescriptionChange("advicesx", e.target.value)} style={{ borderRadius: "8px", border: "2px solid #b2ebf2", fontSize: "12px" }} />
+            </Col>
+          )}
           <Col md={3} className="mb-3">
             <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Admission Note</Form.Label>
             <Form.Control as="textarea" rows={2} value={prescriptionData.admmisionnote} onChange={(e) => handlePrescriptionChange("admmisionnote", e.target.value)} style={{ borderRadius: "8px", border: "2px solid #b2ebf2", fontSize: "12px" }} />
           </Col>
         </Row>
+
+        {/* Urology Specific Fields */}
+        {prescriptionData.prescription_type === "Urology" && (
+          <>
+            <Row>
+              <Col md={6} className="mb-3">
+                <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Chief Complaints (C/O)</Form.Label>
+                <Form.Control as="textarea" rows={2} value={prescriptionData.medicalchiefcomplaints} onChange={(e) => handlePrescriptionChange("medicalchiefcomplaints", e.target.value)} placeholder="Enter chief complaints..." style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+              </Col>
+              <Col md={6} className="mb-3">
+                <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Known Case Of</Form.Label>
+                <Form.Control as="textarea" rows={2} value={prescriptionData.medicalhistory} onChange={(e) => handlePrescriptionChange("medicalhistory", e.target.value)} placeholder="Medical history..." style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+              </Col>
+            </Row>
+            <Row>
+              <Col md={6} className="mb-3">
+                <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Past Surgical History (S/P)</Form.Label>
+                <Form.Control as="textarea" rows={2} value={prescriptionData.medicalpasthistory} onChange={(e) => handlePrescriptionChange("medicalpasthistory", e.target.value)} placeholder="Past surgeries..." style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+              </Col>
+              <Col md={6} className="mb-3">
+                <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Investigation</Form.Label>
+                <Form.Control as="textarea" rows={2} value={prescriptionData.investigation} onChange={(e) => handlePrescriptionChange("investigation", e.target.value)} placeholder="Previous investigations..." style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+              </Col>
+            </Row>
+          </>
+        )}
         <Row>
           <Col md={6} className="mb-3">
             <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Next Appointment <span className="text-danger">*</span></Form.Label>

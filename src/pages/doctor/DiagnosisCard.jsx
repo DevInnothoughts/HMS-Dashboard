@@ -1,5 +1,5 @@
 import React from "react";
-import { Row, Col, Card, Nav, Form, Button, Spinner } from "react-bootstrap";
+import { Row, Col, Card, Nav, Form, Button, Spinner, Dropdown } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 
 const DiagnosisCard = ({
@@ -9,15 +9,67 @@ const DiagnosisCard = ({
   handleSpecialityCheckboxChange,
   handleMedicalAdviceNoteChange,
   loading,
-  setDiagnosisData
+  setDiagnosisData,
+  previousDiagnosisList = [],
+  selectedDiagnosisId = null,
+  onSelectDiagnosis,
+  onNewDiagnosis,
+  onPrintDiagnosis,
+  doctors = [],
+  assistanceDoctors = []
 }) => {
   return (
     <div className="animate__animated animate__fadeIn">
+      <style>{`
+        .form-check-input { border: 1px solid black !important; }
+        .form-check-input:checked { background-color: #00838f; border-color: black !important; }
+      `}</style>
       {/* 1. Primary Diagnosis Section */}
       <div className="p-3 bg-white rounded shadow-sm border mb-3" style={{ borderLeft: "5px solid #00bcd4" }}>
-        <h5 className="fw-bold mb-3" style={{ color: "#00838f", textTransform: "uppercase", letterSpacing: "1px", fontSize: "14px" }}>
-          <FeatherIcon icon="activity" size="18" className="me-2 text-info" />Primary Diagnosis & Orders
-        </h5>
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h5 className="fw-bold mb-0" style={{ color: "#00838f", textTransform: "uppercase", letterSpacing: "1px", fontSize: "14px" }}>
+            <FeatherIcon icon="activity" size="18" className="me-2 text-info" />Primary Diagnosis & Orders
+          </h5>
+          <div className="d-flex gap-2">
+            <Button
+              variant="outline-info"
+              size="sm"
+              onClick={onNewDiagnosis}
+              style={{ borderRadius: "20px", fontSize: "11px", fontWeight: "700" }}
+            >
+              <FeatherIcon icon="plus" size="14" className="me-1" /> NEW RECORD
+            </Button>
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              onClick={onPrintDiagnosis}
+              style={{ borderRadius: "20px", fontSize: "11px", fontWeight: "700" }}
+            >
+              <FeatherIcon icon="printer" size="14" className="me-1" /> PRINT
+            </Button>
+            <Dropdown onSelect={onSelectDiagnosis}>
+              <Dropdown.Toggle
+                variant="info"
+                id="previous-diagnosis-dropdown"
+                size="sm"
+                style={{ borderRadius: "20px", fontSize: "11px", fontWeight: "700", color: "white" }}
+              >
+                <FeatherIcon icon="calendar" size="14" className="me-1" /> PREVIOUS DATES
+              </Dropdown.Toggle>
+              <Dropdown.Menu style={{ fontSize: "12px", borderRadius: "10px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}>
+                {previousDiagnosisList.length > 0 ? (
+                  previousDiagnosisList.map((diag) => (
+                    <Dropdown.Item key={diag.id} eventKey={diag.id}>
+                      {diag.date} {diag.id === selectedDiagnosisId && <FeatherIcon icon="check" size="12" className="ms-2 text-success" />}
+                    </Dropdown.Item>
+                  ))
+                ) : (
+                  <Dropdown.Item disabled>No previous records</Dropdown.Item>
+                )}
+              </Dropdown.Menu>
+            </Dropdown>
+          </div>
+        </div>
         <Row>
           <Col md={2} className="mb-3">
             <Form.Label className="fw-bold" style={{ fontSize: "13px", color: "#006064" }}>Diagnosis Date</Form.Label>
@@ -29,7 +81,7 @@ const DiagnosisCard = ({
           </Col>
           <Col md={5} className="mb-2">
             <Form.Label className="fw-bold" style={{ fontSize: "13px", color: "#006064" }}>Detailed Diagnosis <span className="text-danger">*</span></Form.Label>
-            <Form.Control as="textarea" rows={3} placeholder="Provide a clinical conclusion..." value={diagnosisData.diagnosis_text} onChange={(e) => handleDiagnosisChange("diagnosis_text", e.target.value)} required style={{ borderRadius: "8px", border: "2px solid #00acc1", fontSize: "13px", padding: "8px 12px" }} />
+            <Form.Control as="textarea" rows={3} placeholder="Provide a clinical conclusion..." value={diagnosisData.diagnosis_text} onChange={(e) => handleDiagnosisChange("diagnosis_text", e.target.value)} required style={{ borderRadius: "8px", border: "2px solid #b2ebf2", fontSize: "13px", padding: "8px 12px" }} />
           </Col>
         </Row>
       </div>
@@ -208,19 +260,25 @@ const DiagnosisCard = ({
         <h5 className="fw-bold mb-3" style={{ color: "#00838f", textTransform: "uppercase", fontSize: "14px" }}>Doctor Allocation</h5>
         <Row className="g-2">
           <Col md={6}>
-            <Form.Label className="fw-bold" style={{ fontSize: "13px" }}>Primary Consultant Doctor</Form.Label>
+            <Form.Label className="fw-bold" style={{ fontSize: "13px" }}>Consultant Doctor</Form.Label>
             <Form.Select value={diagnosisData.consultant_doctor} onChange={(e) => handleDiagnosisChange("consultant_doctor", e.target.value)} style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "13px" }}>
-              <option value="">Select Primary Doctor</option>
-              <option value="1">Dr. Amit Shah</option>
-              <option value="2">Dr. Priya Sharma</option>
+              <option value="">Select Consultant Doctor</option>
+              {doctors.map((doc) => (
+                <option key={doc.doctor_id} value={doc.doctor_id}>
+                  {doc.name}
+                </option>
+              ))}
             </Form.Select>
           </Col>
           <Col md={6}>
-            <Form.Label className="fw-bold" style={{ fontSize: "13px" }}>Assigned Assistance Doctor</Form.Label>
+            <Form.Label className="fw-bold" style={{ fontSize: "13px" }}>Assistance Doctor</Form.Label>
             <Form.Select value={diagnosisData.assistance_doctor} onChange={(e) => handleDiagnosisChange("assistance_doctor", e.target.value)} style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "13px" }}>
               <option value="">Select Assistance Doctor</option>
-              <option value="3">Dr. Kabir Singh</option>
-              <option value="4">Dr. Aditi Rao</option>
+              {assistanceDoctors.map((doc) => (
+                <option key={doc.doctor_id} value={doc.doctor_id}>
+                  {doc.name}
+                </option>
+              ))}
             </Form.Select>
           </Col>
         </Row>

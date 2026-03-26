@@ -342,7 +342,7 @@ export default function DoctorPatientList() {
 
     try {
       const doctorResponse = await fetch(
-        `${BASE_URL}/V1/appointment/doctorDropdown?location=${currentLocation}`,
+        `${BASE_URL}/V1/doctor/doctorDropdown?location=${currentLocation}`,
         {
           method: "GET",
           headers: {

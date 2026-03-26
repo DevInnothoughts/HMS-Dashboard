@@ -246,7 +246,8 @@ export default function Add_appointment() {
     if (!currentLocation) return;
     try {
       const fetchApi = async (endpoint) => {
-        const url = `${BASE_URL}/V1/appointment/${endpoint}?location=${currentLocation}`;
+        const route = endpoint === "doctorDropdown" ? "doctor" : "appointment";
+        const url = `${BASE_URL}/V1/${route}/${endpoint}?location=${currentLocation}`;
         const response = await fetch(url, {
           method: "GET",
           headers: { "Content-Type": "application/json" },

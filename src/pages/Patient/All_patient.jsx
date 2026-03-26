@@ -715,9 +715,11 @@ export default function All_patient() {
         dr_id: (patient.ref_doctor_name) ? (patient.ref || "") : ""
       }));
     } else {
+      const standardNewspapers = ["Sakal", "TOI", "MT", "Lokmat", "Pune Mirror"];
       setReferenceDetails((prev) => ({
         ...prev,
         [patient.reference_type]: patient.ref || "",
+        Other_Newspaper: (patient.reference_type === "newspaper" && !standardNewspapers.includes(patient.ref)) ? patient.ref : ""
       }));
     }
 
@@ -788,15 +790,15 @@ export default function All_patient() {
         break;
       case "internet":
         reference_type = "internet";
-        ref = referenceDetails.internet || "";
+        ref = referenceDetails.internet || formData.ref || "";
         break;
       case "MediaRef":
         reference_type = "MediaRef";
-        ref = referenceDetails.MediaRef || "";
+        ref = referenceDetails.MediaRef || formData.ref || "";
         break;
       case "TVShow":
         reference_type = "TVShow";
-        ref = referenceDetails.TVShow || "";
+        ref = referenceDetails.TVShow || formData.ref || "";
         break;
       case "old_ref":
         reference_type = "old_ref";
@@ -811,35 +813,35 @@ export default function All_patient() {
         break;
       case "hhc_board":
         reference_type = "hhc_board";
-        ref = referenceDetails.HHC_board || "";
+        ref = referenceDetails.HHC_board || formData.ref || "";
         break;
       case "HHF":
         reference_type = "HHF";
-        ref = referenceDetails.HHF || "";
+        ref = referenceDetails.HHF || formData.ref || "";
         break;
       case "other":
         reference_type = "other";
-        ref = referenceDetails.other || "";
+        ref = referenceDetails.other || formData.ref || "";
         break;
       case "WOM":
         reference_type = "WOM";
-        ref = referenceDetails.WOM || "";
+        ref = referenceDetails.WOM || formData.ref || "";
         break;
       case "awareness_lecture":
         reference_type = "awareness_lecture";
-        ref = referenceDetails.awareness_lecture || "";
+        ref = referenceDetails.awareness_lecture || formData.ref || "";
         break;
       case "treated_past":
         reference_type = "treated_past";
-        ref = referenceDetails.treated_past_status || "";
+        ref = referenceDetails.treated_past_status || formData.ref || "";
         break;
       case "hhc_branch":
         reference_type = "hhc_branch";
-        ref = referenceDetails.hhc_branch || "";
+        ref = referenceDetails.hhc_branch || formData.ref || "";
         break;
       case "aggregators":
         reference_type = "aggregators";
-        ref = referenceDetails.aggregators || "";
+        ref = referenceDetails.aggregators || formData.ref || "";
         break;
       default:
         reference_type = null;
@@ -1344,10 +1346,14 @@ export default function All_patient() {
                         name="newspaper"
                         value={paper}
                         onChange={(e) => {
-                          handleReferenceChange(e);
+                          const val = e.target.value;
+                          setReferenceDetails((prev) => ({
+                            ...prev,
+                            newspaper: val,
+                          }));
                           setFormData((prev) => ({
                             ...prev,
-                            ref: paper,
+                            ref: val,
                             reference_type: "newspaper",
                           }));
                         }}
@@ -1667,10 +1673,14 @@ export default function All_patient() {
                       name="internet"
                       value={source}
                       onChange={(e) => {
-                        handleReferenceChange(e);
+                        const val = e.target.value;
+                        setReferenceDetails((prev) => ({
+                          ...prev,
+                          internet: val,
+                        }));
                         setFormData((prev) => ({
                           ...prev,
-                          ref: source,
+                          ref: val,
                           reference_type: "internet",
                         }));
                       }}
@@ -1730,10 +1740,14 @@ export default function All_patient() {
                       name="MediaRef"
                       value={media}
                       onChange={(e) => {
-                        handleReferenceChange(e);
+                        const val = e.target.value;
+                        setReferenceDetails((prev) => ({
+                          ...prev,
+                          MediaRef: val,
+                        }));
                         setFormData((prev) => ({
                           ...prev,
-                          ref: media,
+                          ref: val,
                           reference_type: "MediaRef",
                         }));
                       }}
@@ -1810,10 +1824,14 @@ export default function All_patient() {
                       name="TVShow"
                       value={show}
                       onChange={(e) => {
-                        handleReferenceChange(e);
+                        const val = e.target.value;
+                        setReferenceDetails((prev) => ({
+                          ...prev,
+                          TVShow: val,
+                        }));
                         setFormData((prev) => ({
                           ...prev,
-                          ref: show,
+                          ref: val,
                           reference_type: "TVShow",
                         }));
                       }}

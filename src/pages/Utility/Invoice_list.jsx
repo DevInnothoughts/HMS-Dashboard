@@ -105,66 +105,81 @@ const getDynamicRowsFromInvoice = (invoice) => {
   const dynamicRows = [];
   let titleCalculatedTotal = 0;
 
-  if (!invoice || typeof invoice.package !== "string") {
-    return { dynamicRows: [], Sub_Total: "0.00" };
+  const rowSource =
+    invoice.package && typeof invoice.package === "string" && invoice.package !== ""
+      ? invoice.package
+      : invoice.title && typeof invoice.title === "string"
+        ? invoice.title
+        : "";
+
+  if (!rowSource) {
+    return { dynamicRows: [], Sub_Total: "0.00", totalamt: "0.00" };
   }
 
-  const items = invoice.package.split(",");
+  const entries = rowSource.split(",").map((s) => s.trim());
+  const hasColons = entries.some((e) => e.includes(":"));
 
-  for (let i = 0; i < items.length; i += 2) {
-    const label = items[i]?.trim();
-    const value = parseFloat(items[i + 1]) || 0;
-
-    if (label) {
-      dynamicRows.push({
-        label,
-        value: value.toFixed(2),
-        field: "title_parsed",
-      });
-      titleCalculatedTotal += value;
+  if (!hasColons && entries.length >= 2) {
+    // Legacy format: Label, Value, Label, Value
+    for (let i = 0; i < entries.length; i += 2) {
+      const label = entries[i];
+      const value = parseFloat(entries[i + 1]) || 0;
+      if (label) {
+        dynamicRows.push({ label, value: Math.round(value).toString(), field: "title_parsed" });
+        titleCalculatedTotal += value;
+      }
     }
+  } else {
+    // New format or mixed: Label: Value, Label: Value
+    entries.forEach((entry) => {
+      const parts = entry.split(":");
+      if (parts.length >= 2) {
+        const label = parts[0].trim();
+        const value = parseFloat(parts[1].trim()) || 0;
+        if (label) {
+          dynamicRows.push({ label, value: Math.round(value).toString(), field: "title_parsed" });
+          titleCalculatedTotal += value;
+        }
+      } else if (parts[0].trim()) {
+        dynamicRows.push({ label: parts[0].trim(), value: "0.00", field: "title_parsed" });
+      }
+    });
   }
 
   const Sub_Total =
     titleCalculatedTotal > 0
       ? titleCalculatedTotal
-      : parseFloat(invoice.totalamt) || 0;
+      : parseFloat(invoice.totalamt || invoice.totalAmt || 0);
 
   return {
-    dynamicRows,
+    dynamicRows: dynamicRows.length > 0 ? dynamicRows : [{ label: "", value: "0.00", field: "" }],
     Sub_Total: Sub_Total.toFixed(2),
+    totalamt: Sub_Total.toFixed(2),
   };
 };
 
-const calculatePayableAmt = (invoice) => {
-  const totalAmt = parseFloat(invoice.totalamt) || 0;
-  const discount = parseFloat(invoice.discount) || 0;
-  const pdc = parseFloat(invoice.pdc) || 0;
-  const billMethod =
-    invoice.bill_method || (invoice.chequeno !== "NULL" && invoice.chequeno)
-      ? "PDC"
-      : "non_insurance";
-  const billType =
-    invoice.bill_Type ||
-    (invoice.insurancecompany ? "insurance" : "non_insurance");
+const calculateActivePayableAmt = (invoice, subtotal, discount, pdc, billType, billMethod) => {
+  const totalAmt = parseFloat(subtotal) || 0;
+  const disc = parseFloat(discount) || 0;
+  const p = parseFloat(pdc) || 0;
 
-  if (billMethod === "PDC") {
-    return Math.max(0, totalAmt - pdc).toFixed(2);
+  if (billMethod === "pdc" || billMethod === "PDC") {
+    return Math.max(0, totalAmt - p).toFixed(0);
   }
-
-  if (
-    billType === "non_insurance" ||
-    billType === "charity" ||
-    billMethod === "reimbursement"
-  ) {
-    return Math.max(0, totalAmt - discount).toFixed(2);
-  }
-
-  return (
-    parseFloat(invoice.payable_amt) || Math.max(0, totalAmt - discount)
-  ).toFixed(2);
+  return Math.max(0, totalAmt - disc).toFixed(0);
 };
 
+const calculatePayableAmt = (invoice) => {
+  const totalAmt = parseFloat(invoice.totalamt || invoice.totalAmt || 0);
+  const discount = parseFloat(invoice.discount || 0);
+  const pdc = parseFloat(invoice.pdc || 0);
+  const billMethod = (invoice.bill_method || "").toLowerCase();
+
+  if (billMethod === "pdc") {
+    return Math.max(0, totalAmt - pdc).toFixed(0);
+  }
+  return Math.max(0, totalAmt - discount).toFixed(0);
+};
 const formatDateForDisplay = (dateValue) => {
   if (!dateValue) return "N/A";
   try {
@@ -209,8 +224,8 @@ const rowClassName = (rowData) => {
 const InvoiceList = () => {
   const [rows, setRows] = useState(10);
   const [first, setFirst] = useState(0);
-  const [fromDate, setFromDate] = useState(new Date());
-  const [toDate, setToDate] = useState(new Date());
+  const [fromDate, setFromDate] = useState(null);
+  const [toDate, setToDate] = useState(null);
   const [invoices, setInvoices] = useState([]);
   const [consultants, setConsultants] = useState([]);
   const [surgeons, setSurgeons] = useState([]);
@@ -229,6 +244,8 @@ const InvoiceList = () => {
     pdc: "0.00",
     payableAmount: "0.00",
   });
+  const [invoiceWarning, setInvoiceWarning] = useState("");
+  const [originalInvoiceId, setOriginalInvoiceId] = useState(null);
   const [filters1, setFilters1] = useState({
     // global: { value: null, matchMode: FilterMatchMode.CONTAINS },
     global: { value: null, matchMode: FilterMatchMode.EQUALS },
@@ -262,6 +279,34 @@ const InvoiceList = () => {
     const year = d.getFullYear();
     return `${day}-${month}-${year}`; // Matches your DD-MM-YYYY backend expectation
   };
+
+  useEffect(() => {
+    // Only check if it's different from the record we are currently editing
+    if (!currentLocation || !selectedInvoice?.invoice_id || selectedInvoice.invoice_id === originalInvoiceId) {
+      setInvoiceWarning("");
+      return;
+    }
+
+    const checkTimeout = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `${BASE_URL}/V1/invoice/checkInvoiceId?invoice_id=${selectedInvoice.invoice_id}&location=${currentLocation}`,
+        );
+        const result = await response.json();
+        if (result.data?.exists) {
+          setInvoiceWarning(
+            `Invoice ID already exists for patient: ${result.data.patient_name}`,
+          );
+        } else {
+          setInvoiceWarning("");
+        }
+      } catch (err) {
+        console.error("Invoice ID check failed:", err);
+      }
+    }, 500);
+
+    return () => clearTimeout(checkTimeout);
+  }, [selectedInvoice?.invoice_id, currentLocation, originalInvoiceId]);
 
   const fetchInvoices = useCallback(async () => {
     if (!currentLocation) return;
@@ -305,27 +350,40 @@ const InvoiceList = () => {
           ? data.data[0]
           : data.data || [];
 
-        const processedInvoices = rawData.map((invoice) => ({
-          ...invoice,
-          totalamt: parseFloat(invoice.totalamt) || 0,
-          discount: parseFloat(invoice.discount) || 0,
-          advance_amt: parseFloat(invoice.advance_amt) || 0,
-          receivedamt: parseFloat(invoice.receivedamt) || 0,
-          totaldue: parseFloat(invoice.totaldue) || 0,
-          payable_amt: calculatePayableAmt(invoice),
-          due_amt:
-            (parseFloat(invoice.totalamt) || 0) -
-            (parseFloat(invoice.receivedamt) || 0),
-          pay_mode:
-            invoice.chequeno && invoice.chequeno !== "NULL"
-              ? "PDC"
-              : invoice.insurancecompany
-                ? "INSURANCE"
-                : "CASH/CARD",
-          patient_name: invoice.patient_name || "N/A",
-          patient_phone: invoice.patient_phone || "N/A",
-          status: invoice.status || "",
-        }));
+        const processedInvoices = rawData.map((invoice) => {
+          // Normalize values with fallbacks for different backend naming conventions
+          const totalamt = parseFloat(invoice.totalamt || invoice.total_amt || 0) || 0;
+          const receivedamt = parseFloat(invoice.receivedamt || invoice.received_amt || 0) || 0;
+          const discount = parseFloat(invoice.discount || 0) || 0;
+          const pdc = parseFloat(invoice.pdc || invoice.advance_amt || 0) || 0;
+
+          const payable_amt = calculatePayableAmt({ ...invoice, totalamt, discount, pdc });
+          const due_amt = payable_amt - receivedamt;
+
+          return {
+            ...invoice,
+            totalamt,
+            receivedamt,
+            discount,
+            pdc,
+            due_amt,
+            payable_amt,
+            pay_mode:
+              (invoice.status === "PDC" || invoice.bill_method === "PDC" || (invoice.chequeno && invoice.chequeno !== "NULL"))
+                ? "PDC"
+                : (invoice.status === "Cashless" || invoice.bill_method === "Cashless")
+                  ? "Cashless"
+                  : (invoice.status === "Reimbursement" || invoice.bill_method === "Reimbursement")
+                    ? "Reimbursement"
+                    : (invoice.bill_Type === "charity" || invoice.status === "Charity")
+                      ? "Charity"
+                      : "NonInsurance",
+            patient_name: invoice.patient_name || invoice.name || "N/A",
+            patient_phone: invoice.patient_phone || invoice.phone || "N/A",
+            patient_uid: invoice.patient_uid || invoice.Uid_no || invoice.uid || "N/A",
+            status: invoice.status || "",
+          };
+        });
 
         setInvoices(processedInvoices);
       } else {
@@ -396,23 +454,42 @@ const InvoiceList = () => {
     formData.bill_method,
   ]);
 
+  const calculatePayableAmount = (data) => {
+    const subTotal = parseFloat(data.Sub_Total || 0);
+    const discountVal = parseFloat(data.discount || 0);
+    const discountAmountVal = parseFloat(data.discountAmount || 0);
+    const pdcVal = parseFloat(data.pdc || 0);
+
+    let deduction = 0;
+    if (data.bill_Type === "charity") {
+      deduction = discountAmountVal;
+    } else if (data.bill_method === "PDC") {
+      deduction = pdcVal;
+    } else if (data.bill_Type === "non_insurance") {
+      deduction = discountVal;
+    }
+
+    return Math.max(0, subTotal - deduction).toFixed(2);
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
+    // Restriction for invoice_id: only integers allowed
+    if (name === "invoice_id") {
+      const integerOnly = value.replace(/[^0-9]/g, "");
+      setSelectedInvoice((prev) => ({ ...prev, [name]: integerOnly }));
+      return;
+    }
+
     setSelectedInvoice((prev) => ({ ...prev, [name]: value }));
 
     if (
-      ["bill_method", "bill_Type", "pdc", "discount"].includes(name)
+      ["bill_method", "bill_Type", "pdc", "discount", "discountAmount"].includes(name)
     ) {
       setModalInvoiceData((prevModalData) => {
         const updatedModalData = { ...prevModalData, [name]: value };
-        const newSubTotal = parseFloat(updatedModalData.Sub_Total) || 0;
-        const discountVal = parseFloat(updatedModalData.discount) || 0;
-        const pdcVal = parseFloat(updatedModalData.pdc) || 0;
-
-        let payable =
-          newSubTotal -
-          (updatedModalData.bill_method === "PDC" ? pdcVal : discountVal);
-        updatedModalData.payableAmount = Math.max(0, payable).toFixed(2);
+        updatedModalData.payableAmount = calculatePayableAmount(updatedModalData);
 
         setSelectedInvoice((prevInvoice) => ({
           ...prevInvoice,
@@ -441,12 +518,7 @@ const InvoiceList = () => {
         Sub_Total: newSubTotal.toFixed(2),
       };
 
-      const discount = parseFloat(updatedModalData.discount || 0);
-      const pdc = parseFloat(updatedModalData.pdc || 0);
-
-      let payable =
-        newSubTotal - (updatedModalData.bill_method === "PDC" ? pdc : discount);
-      updatedModalData.payableAmount = Math.max(0, payable).toFixed(2);
+      updatedModalData.payableAmount = calculatePayableAmount(updatedModalData);
 
       setSelectedInvoice((prevInvoice) => ({
         ...prevInvoice,
@@ -524,11 +596,7 @@ const InvoiceList = () => {
         Sub_Total: newSubTotal.toFixed(2),
       };
 
-      const discount = parseFloat(updatedModalData.discount || 0);
-      const pdc = parseFloat(updatedModalData.pdc || 0);
-      let payable =
-        newSubTotal - (updatedModalData.bill_method === "PDC" ? pdc : discount);
-      updatedModalData.payableAmount = Math.max(0, payable).toFixed(2);
+      updatedModalData.payableAmount = calculatePayableAmount(updatedModalData);
 
       setSelectedInvoice((prevInvoice) => ({
         ...prevInvoice,
@@ -571,6 +639,7 @@ const InvoiceList = () => {
 
   const handleEditInvoice = (invoice) => {
     console.log("Editing Invoice:", invoice);
+    setOriginalInvoiceId(invoice.invoice_id);
     const { dynamicRows, Sub_Total } = getDynamicRowsFromInvoice(invoice);
 
     const displayRows =
@@ -617,24 +686,29 @@ const InvoiceList = () => {
       return timeStr;
     };
 
-    // Determine bill_method and bill_Type based on status, pay_mode or insurancecompany
+    // Determine bill_method and bill_Type based on status as the source of truth
+    const statusVal = (invoice.status || "").trim().toLowerCase();
+
     const bill_method =
       invoice.bill_method ||
-      (invoice.chequeno && invoice.chequeno !== "NULL"
-        ? "PDC"
-        : invoice.status?.toLowerCase() === "cashless"
-          ? "cashless"
-          : invoice.status?.toLowerCase() === "reimbursement"
-            ? "reimbursement"
-            : "non_insurance");
+      (statusVal === "cashless"
+        ? "Cashless"
+        : statusVal === "reimbursement"
+          ? "Reimbursement"
+          : statusVal === "pdc" || (invoice.chequeno && invoice.chequeno !== "NULL")
+            ? "PDC"
+            : "NonInsurance");
 
     const bill_Type =
       invoice.bill_Type ||
-      (invoice.status?.toLowerCase() === "cashless" ||
-        invoice.status?.toLowerCase() === "reimbursement" ||
+      (statusVal === "cashless" ||
+        statusVal === "reimbursement" ||
+        statusVal === "pdc" ||
         invoice.insurancecompany
         ? "insurance"
-        : "non_insurance");
+        : statusVal === "charity"
+          ? "charity"
+          : "non_insurance");
 
     const chequeno =
       invoice.chequeno === "NULL" || !invoice.chequeno ? "" : invoice.chequeno;
@@ -657,10 +731,10 @@ const InvoiceList = () => {
 
     setModalInvoiceData({
       dynamicRows: displayRows,
-      Sub_Total: Sub_Total,
-      discount: invoice.discount || "0.00",
-      pdc: parseFloat(pdc) || 0.0,
-      payableAmount: payableAmount,
+      Sub_Total: Math.round(parseFloat(Sub_Total || 0)).toString(),
+      discount: Math.round(parseFloat(invoice.discount || 0)).toString(),
+      pdc: Math.round(parseFloat(pdc || 0)).toString(),
+      payableAmount: Math.round(parseFloat(payableAmount || 0)).toString(),
       bill_method,
       bill_Type,
     });
@@ -690,6 +764,16 @@ const InvoiceList = () => {
   const handleSaveChanges = async () => {
     if (!selectedInvoice) return;
 
+    if (invoiceWarning) {
+      Swal.fire({
+        icon: "error",
+        title: "Duplicate Invoice ID",
+        text: invoiceWarning,
+        confirmButtonColor: "#00acc1",
+      });
+      return;
+    }
+
     if (!currentLocation) {
       toast.error("Cannot save changes: Location data is missing.");
       return;
@@ -699,19 +783,48 @@ const InvoiceList = () => {
       .filter((row) => row.label.trim() !== "")
       .map(
         (row) =>
-          `${row.label.trim()}: ${parseFloat(row.value || 0).toFixed(2)}`,
+          `${row.label.trim()},${Math.round(parseFloat(row.value || 0))}`,
       )
-      .join(", ");
+      .join(",");
+
+    // Map bill_method and bill_Type to backend 'status' field for persistence
+    let status = "NonInsurance";
+    if (modalInvoiceData.bill_Type === "insurance") {
+      status = modalInvoiceData.bill_method; // E.g., cashless, pdc, reimbursement
+    } else if (modalInvoiceData.bill_Type === "charity") {
+      status = "Charity";
+    }
+
+    const convertTo12Hour = (time24) => {
+      if (!time24) return "";
+      if (time24.includes("AM") || time24.includes("PM")) return time24;
+      let [hours, minutes] = time24.split(":");
+      let period = "AM";
+      hours = parseInt(hours, 10);
+      if (hours === 0) {
+        hours = 12;
+      } else if (hours === 12) {
+        period = "PM";
+      } else if (hours > 12) {
+        hours -= 12;
+        period = "PM";
+      }
+      return `${String(hours).padStart(2, "0")}:${minutes} ${period}`;
+    };
 
     const payload = {
       ...selectedInvoice,
       ...modalInvoiceData,
+      status: status, // Sync backend status column
       package: titleString,
+      title: titleString,
       location: currentLocation,
-      totalamt: modalInvoiceData.Sub_Total,
-      payable_amt: modalInvoiceData.payableAmount,
-      discount: modalInvoiceData.discount,
-      pdc: modalInvoiceData.pdc,
+      totalamt: Math.round(parseFloat(modalInvoiceData.Sub_Total || 0)),
+      payable_amt: Math.round(parseFloat(modalInvoiceData.payableAmount || 0)),
+      discount: Math.round(parseFloat(modalInvoiceData.discount || 0)),
+      advance_amt: Math.round(parseFloat(modalInvoiceData.pdc || 0)), // Map PDC amount to advance_amt column
+      admissiontime: convertTo12Hour(selectedInvoice.admissiontime),
+      dischargetime: convertTo12Hour(selectedInvoice.dischargetime),
     };
 
     console.log(
@@ -910,23 +1023,25 @@ const InvoiceList = () => {
           <td>Gender / Age:</td><td>${invoice.sex || invoice.gender || "N/A"} / ${invoice.age}</td>
         </tr>
         <tr>
-          <td>Patient ID:</td><td>${invoice.admission_no}</td>
+          <td>Patient ID:</td><td>${invoice.patient_uid || "N/A"}</td>
           <td>Admission No:</td><td>${invoice.admission_no}</td>
         </tr>
         <tr>
-          <td>Insurance Name:</td><td>${(invoice.status === "Cashless" || invoice.status === "Reimbursement") ? invoice.insurancecompany || "" : ""}</td>
+          <td>Insurance Name:</td>
+          <td>${((invoice.status || "").toLowerCase() === "cashless" || (invoice.status || "").toLowerCase() === "reimbursement" || (invoice.status || "").toLowerCase() === "pdc" || invoice.bill_Type === "insurance") ? invoice.insurance_company_name || "" : ""}</td>
           <td>Bed Category:</td><td>${invoice.bed_desc || invoice.bed_no || "N/A"}</td>
         </tr>
         <tr>
-          <td>TPA Name:</td><td>${(invoice.status === "Cashless" || invoice.status === "Reimbursement") ? invoice.tpa || "" : ""}</td>
+          <td>TPA Name:</td>
+          <td>${((invoice.status || "").toLowerCase() === "cashless" || (invoice.status || "").toLowerCase() === "reimbursement" || (invoice.status || "").toLowerCase() === "pdc" || invoice.bill_Type === "insurance") ? invoice.tpa_name || "" : ""}</td>
           <td>Admission Date & Time:</td><td>${formatDateForDisplay(invoice.creation_date)} &nbsp; ${invoice.admissiontime}</td>
         </tr>
         <tr>
-          <td>Doctor Name:</td><td>${invoice.consultant}</td>
+          <td>Doctor Name:</td><td>${invoice.consultant_name}</td>
           <td>Discharge Date & Time:</td><td>${formatDateForDisplay(invoice.due_date)} &nbsp; ${invoice.dischargetime}</td>
         </tr>
         <tr>
-          <td>Surgeon Name:</td><td>${invoice.prepared_doctor}</td>
+          <td>Surgeon Name:</td><td>${invoice.surgeon_name}</td>
           <td></td><td></td>
         </tr>
       </table>
@@ -954,7 +1069,7 @@ const InvoiceList = () => {
             (row) => `
                 <tr>
                   <td>${row.label}</td>
-                  <td>${parseFloat(row.value).toFixed(2)}</td>
+                  <td>${Math.round(parseFloat(row.value))}</td>
                 </tr>
               `,
           )
@@ -969,13 +1084,13 @@ const InvoiceList = () => {
     </tr>
     <tr>
       <td>Total</td>
-      <td>${parseFloat(invoice.totalamt).toLocaleString()}.00</td>
+      <td>${(Math.round(parseFloat(invoice.totalamt || Sub_Total)) || 0).toLocaleString()}</td>
     </tr>
-    ${invoice.discount > 0
+    ${(Math.round(parseFloat(invoice.discount)) || 0) > 0
           ? `
     <tr>
       <td>Discount</td>
-      <td>${parseFloat(invoice.discount).toLocaleString()}.00</td>
+      <td>${(Math.round(parseFloat(invoice.discount)) || 0).toLocaleString()}</td>
     </tr>
     `
           : ""
@@ -990,10 +1105,10 @@ const InvoiceList = () => {
       <table class="total-row-container" border="1">
         <tr>
           <td class="left_align" style="border-right:0;">Total:</td>
-          <td class="right_align" style="border-left:0; font-weight:bold;">${parseFloat(invoice.totalamt).toLocaleString()}.00</td>
+          <td class="right_align" style="border-left:0; font-weight:bold;">₹ ${(Math.round(parseFloat(invoice.totalamt || Sub_Total)) || 0).toLocaleString()}</td>
           <td class="left_align" style="border-right:0;">Please Pay:</td>
           <td class="right_align" style="border-left:0; font-weight:bold;">
-            ${parseFloat(invoice.payable_amt).toLocaleString()}.00
+            ₹ ${(Math.round(parseFloat(invoice.payable_amt || calculatePayableAmt(invoice))) || 0).toLocaleString()}
           </td>
         </tr>
       </table>
@@ -1357,16 +1472,23 @@ const InvoiceList = () => {
                     />
                     <Column
                       headerClassName="datatable-header-center"
-                      field="due_amt"
-                      header="Due Amount"
-                      body={(rowData) => rowData.due_amt.toFixed(2)}
-                      style={{ width: "110px", border: "1px solid #4dd0e1" }}
+                      field="payable_amt"
+                      header="Payable Amount"
+                      body={(rowData) => {
+                        const val = parseFloat(rowData.payable_amt) || 0;
+                        return val.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                      }}
+                      style={{ width: "110px", border: "1px solid #4dd0e1", textAlign: "right" }}
                     />
                     <Column
                       headerClassName="datatable-header-center"
-                      field="payable_amt"
-                      header="Payable Amount"
-                      style={{ width: "110px", border: "1px solid #4dd0e1" }}
+                      field="due_amt"
+                      header="Due Amount"
+                      body={(rowData) => {
+                        const val = parseFloat(rowData.due_amt) || 0;
+                        return val.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                      }}
+                      style={{ width: "110px", border: "1px solid #4dd0e1", textAlign: "right" }}
                     />
                     <Column
                       headerClassName="datatable-header-center"
@@ -1494,24 +1616,27 @@ const InvoiceList = () => {
                         }}
                         className="text-muted"
                       >
-                        Invoice Number{" "}
-                        <span style={{ color: "red" }} className="required">
-                          *
-                        </span>
+                        Invoice Number
                       </Form.Label>
                       <Form.Control
                         size="sm"
                         type="text"
+                        name="invoice_id"
                         value={selectedInvoice.invoice_id}
-                        readOnly
+                        onChange={handleInputChange}
+                        isInvalid={!!invoiceWarning}
                         style={{
                           borderRadius: "10px",
                           fontSize: "12px",
-                          cursor: "not-allowed",
-                          backgroundColor: "#e7ebebff",
+                          backgroundColor: "#fff",
                           border: "1px solid #4dd0e1",
                         }}
                       />
+                      {invoiceWarning && (
+                        <div className="text-danger" style={{ fontSize: "10px", marginTop: "4px", fontWeight: "600" }}>
+                          {invoiceWarning}
+                        </div>
+                      )}
                     </Col>
                     <Col md={4}>
                       <Form.Label
@@ -1528,6 +1653,34 @@ const InvoiceList = () => {
                         size="sm"
                         type="text"
                         value={selectedInvoice.admission_no}
+                        style={{
+                          borderRadius: "10px",
+                          fontSize: "12px",
+                          border: "1px solid #4dd0e1",
+                        }}
+                        onChange={(e) =>
+                          setSelectedInvoice({
+                            ...selectedInvoice,
+                            admission_no: e.target.value,
+                          })
+                        }
+                      />
+                    </Col>
+                    <Col md={4}>
+                      <Form.Label
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: "600",
+                          marginBottom: "2px",
+                        }}
+                        className="text-muted"
+                      >
+                        Patient Name
+                      </Form.Label>
+                      <Form.Control
+                        size="sm"
+                        type="text"
+                        value={selectedInvoice.patient_name}
                         readOnly
                         style={{
                           borderRadius: "10px",
@@ -1547,15 +1700,12 @@ const InvoiceList = () => {
                         }}
                         className="text-muted"
                       >
-                        Patient Name{" "}
-                        <span style={{ color: "red" }} className="required">
-                          *
-                        </span>
+                        Contact Number
                       </Form.Label>
                       <Form.Control
                         size="sm"
                         type="text"
-                        value={selectedInvoice.patient_name}
+                        value={selectedInvoice.patient_phone || "N/A"}
                         readOnly
                         style={{
                           borderRadius: "10px",
@@ -1566,7 +1716,32 @@ const InvoiceList = () => {
                         }}
                       />
                     </Col>
-                    <Col md={3}>
+                    <Col md={4}>
+                      <Form.Label
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: "600",
+                          marginBottom: "2px",
+                        }}
+                        className="text-muted"
+                      >
+                        UID Number
+                      </Form.Label>
+                      <Form.Control
+                        size="sm"
+                        type="text"
+                        value={selectedInvoice.patient_uid || "N/A"}
+                        readOnly
+                        style={{
+                          borderRadius: "10px",
+                          fontSize: "12px",
+                          cursor: "not-allowed",
+                          backgroundColor: "#e7ebebff",
+                          border: "1px solid #4dd0e1",
+                        }}
+                      />
+                    </Col>
+                    <Col md={4}>
                       <Form.Label
                         style={{
                           fontSize: "12px",
@@ -1598,7 +1773,7 @@ const InvoiceList = () => {
                         }
                       />
                     </Col>
-                    <Col md={3}>
+                    <Col md={4}>
                       <Form.Label
                         style={{
                           fontSize: "12px",
@@ -1644,7 +1819,7 @@ const InvoiceList = () => {
                         })}
                       </Form.Select>
                     </Col>
-                    <Col md={3}>
+                    <Col md={4}>
                       <Form.Label
                         style={{
                           fontSize: "12px",
@@ -1677,7 +1852,7 @@ const InvoiceList = () => {
                         }
                       />
                     </Col>
-                    <Col md={3}>
+                    <Col md={4}>
                       <Form.Label
                         style={{
                           fontSize: "12px",
@@ -1779,16 +1954,16 @@ const InvoiceList = () => {
                       >
                         <option value="">Select Consultant</option>
                         {consultants.map((c, i) => (
-                          <option key={i} value={c.name}>
+                          <option key={i} value={c.doctor_id}>
                             {c.name}
                           </option>
                         ))}
                         {selectedInvoice.consultant &&
                           !consultants.some(
-                            (c) => c.name === selectedInvoice.consultant,
+                            (c) => c.doctor_id == selectedInvoice.consultant,
                           ) && (
                             <option value={selectedInvoice.consultant}>
-                              {selectedInvoice.consultant}
+                              {selectedInvoice.consultant_name || selectedInvoice.consultant}
                             </option>
                           )}
                       </Form.Select>
@@ -1821,16 +1996,16 @@ const InvoiceList = () => {
                       >
                         <option value="">Select Surgeon</option>
                         {surgeons.map((s, i) => (
-                          <option key={i} value={s.name}>
+                          <option key={i} value={s.doctor_id}>
                             {s.name}
                           </option>
                         ))}
                         {selectedInvoice.prepared_doctor &&
                           !surgeons.some(
-                            (s) => s.name === selectedInvoice.prepared_doctor,
+                            (s) => s.doctor_id == selectedInvoice.prepared_doctor,
                           ) && (
                             <option value={selectedInvoice.prepared_doctor}>
-                              {selectedInvoice.prepared_doctor}
+                              {selectedInvoice.surgeon_name || selectedInvoice.prepared_doctor}
                             </option>
                           )}
                       </Form.Select>
@@ -2025,8 +2200,8 @@ const InvoiceList = () => {
                               const payable =
                                 subTotal -
                                 (updated.bill_method === "PDC" ? pdc : discount);
-                              updated.payableAmount = Math.max(0, payable).toFixed(2);
-
+                              updated.payableAmount = Math.max(0, payable).toFixed(0);
+                              
                               setSelectedInvoice((prevInvoice) => ({
                                 ...prevInvoice,
                                 payable_amt: updated.payableAmount,
@@ -2048,6 +2223,7 @@ const InvoiceList = () => {
                             Insurance Company
                           </Form.Label>
                           <Form.Select
+                            required
                             size="sm"
                             style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
                             value={selectedInvoice.insurancecompany || ""}
@@ -2055,8 +2231,16 @@ const InvoiceList = () => {
                           >
                             <option value="">Select Company</option>
                             {insurance.map((co, idx) => (
-                              <option key={idx} value={co.companyname}>{co.companyname}</option>
+                              <option key={idx} value={co.comapny_id}>{co.companyname}</option>
                             ))}
+                            {selectedInvoice.insurancecompany &&
+                              !insurance.some(
+                                (co) => co.comapny_id == selectedInvoice.insurancecompany,
+                              ) && (
+                                <option value={selectedInvoice.insurancecompany}>
+                                  {selectedInvoice.insurance_company_name || selectedInvoice.insurancecompany}
+                                </option>
+                              )}
                           </Form.Select>
                         </Col>
                       )}
@@ -2075,64 +2259,115 @@ const InvoiceList = () => {
                           >
                             <option value="">Select TPA</option>
                             {tpa.map((t, idx) => (
-                              <option key={idx} value={t.companyname}>{t.companyname}</option>
+                              <option key={idx} value={t.comapny_id}>{t.companyname}</option>
                             ))}
+                            {selectedInvoice.tpa &&
+                              !tpa.some(
+                                (t) => t.comapny_id == selectedInvoice.tpa,
+                              ) && (
+                                <option value={selectedInvoice.tpa}>
+                                  {selectedInvoice.tpa_name || selectedInvoice.tpa}
+                                </option>
+                              )}
                           </Form.Select>
                         </Col>
                       )}
 
-                      {/* 3. Bill Method (Cashless/Reimbursement/PDC) */}
-                      <Col md={4}>
-                        <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
-                          Bill Method
-                        </Form.Label>
-                        <Form.Select
-                          size="sm"
-                          name="bill_method"
-                          style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
-                          value={selectedInvoice.bill_method || ""}
-                          onChange={handleInputChange}
-                        >
-                          <option value="non_insurance">CASH/CARD</option>
-                          <option value="cashless">Cashless</option>
-                          <option value="reimbursement">Reimbursement</option>
-                          <option value="PDC">PDC</option>
-                        </Form.Select>
-                      </Col>
-
-                      {selectedInvoice.bill_method === "PDC" && (
-                        <>
-                          <Col md={4}>
-                            <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
-                              Cheque No
-                            </Form.Label>
-                            <Form.Control
-                              size="sm"
-                              name="chequeno"
-                              style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
-                              placeholder="Enter cheque No"
-                              type="number"
-                              value={selectedInvoice.chequeno || ""}
-                              onChange={handleInputChange}
-                            />
-                          </Col>
-                          <Col md={4}>
-                            <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
-                              PDC Amount (₹)
-                            </Form.Label>
-                            <Form.Control
-                              size="sm"
-                              name="pdc"
-                              onWheel={(e) => e.target.blur()}
-                              style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
-                              placeholder="Enter PDC Amount"
-                              type="number"
-                              value={selectedInvoice.pdc || ""}
-                              onChange={handleInputChange}
-                            />
-                          </Col>
-                        </>
+                      {/* 3. Bill Method - Only shown if type is insurance */}
+                      {selectedInvoice.bill_Type === "insurance" && (
+                        <Col md={4}>
+                          <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
+                            Bill Method
+                          </Form.Label>
+                          <Form.Select
+                            size="sm"
+                            name="bill_method"
+                            style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                            value={selectedInvoice.bill_method || ""}
+                            onChange={(e) => {
+                              const method = e.target.value;
+                              setSelectedInvoice(prev => ({ ...prev, bill_method: method }));
+                              setModalInvoiceData(prev => ({
+                                ...prev,
+                                bill_method: method,
+                                payableAmount: calculateActivePayableAmt(selectedInvoice, prev.Sub_Total, prev.discount, prev.pdc, prev.bill_Type, method)
+                              }));
+                            }}
+                          >
+                            <option value="">Select Method</option>
+                            <option value="Cashless">Cashless</option>
+                            <option value="Reimbursement">Reimbursement</option>
+                            <option value="PDC">PDC</option>
+                          </Form.Select>
+                        </Col>
                       )}
+
+                      {/* 4. Deduction Fields (Discount/PDC) based on type/method */}
+                      {(selectedInvoice.bill_Type === "non_insurance" || selectedInvoice.bill_Type === "charity") && (
+                        <Col md={4}>
+                          <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
+                            Discount Amount (₹)
+                          </Form.Label>
+                          <Form.Control
+                            size="sm"
+                            type="number"
+                            min="0"
+                            onWheel={(e) => e.target.blur()}
+                            style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                            value={modalInvoiceData.discount || ""}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setModalInvoiceData(prev => ({
+                                ...prev,
+                                discount: val,
+                                payableAmount: calculateActivePayableAmt(selectedInvoice, prev.Sub_Total, val, prev.pdc, prev.bill_Type, prev.bill_method)
+                              }));
+                            }}
+                          />
+                        </Col>
+                      )}
+
+                      {selectedInvoice.bill_Type === "insurance" && selectedInvoice.bill_method === "PDC" && (
+                        <Col md={4}>
+                          <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
+                            PDC Amount (₹)
+                          </Form.Label>
+                          <Form.Control
+                            size="sm"
+                            type="number"
+                            min="0"
+                            onWheel={(e) => e.target.blur()}
+                            style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                            value={modalInvoiceData.pdc || ""}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setModalInvoiceData(prev => ({
+                                ...prev,
+                                pdc: val,
+                                payableAmount: calculateActivePayableAmt(selectedInvoice, prev.Sub_Total, prev.discount, val, prev.bill_Type, prev.bill_method)
+                              }));
+                            }}
+                          />
+                        </Col>
+                      )}
+
+                      {selectedInvoice.bill_Type === "insurance" && selectedInvoice.bill_method === "PDC" && (
+                        <Col md={4}>
+                          <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
+                            Cheque No
+                          </Form.Label>
+                          <Form.Control
+                            size="sm"
+                            name="chequeno"
+                            style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                            placeholder="Enter cheque No"
+                            type="number"
+                            value={selectedInvoice.chequeno || ""}
+                            onChange={handleInputChange}
+                          />
+                        </Col>
+                      )}
+
 
                       {/* Note Area */}
                       <Col md={12}>
@@ -2229,7 +2464,7 @@ const InvoiceList = () => {
                           fontSize: "13px",
                         }}
                       >
-                        <span>Sub-Total:</span>
+                        <span>Sub-Total (₹):</span>
                         <span style={{ fontWeight: "600" }}>
                           ₹{" "}
                           {parseFloat(
@@ -2246,11 +2481,11 @@ const InvoiceList = () => {
                           fontSize: "13px",
                         }}
                       >
-                        <span>Discount:</span>
+                        <span>{selectedInvoice.bill_method === "PDC" ? "PDC Amount" : "Discount"} (₹):</span>
                         <span style={{ fontWeight: "600" }}>
                           - ₹{" "}
                           {parseFloat(
-                            selectedInvoice.discount || 0,
+                            (selectedInvoice.bill_method === "PDC" ? modalInvoiceData.pdc : modalInvoiceData.discount) || 0,
                           ).toLocaleString()}
                         </span>
                       </div>
@@ -2266,7 +2501,7 @@ const InvoiceList = () => {
                         }}
                       >
                         <span style={{ fontSize: "13px", fontWeight: "500" }}>
-                          Payable:
+                          Total Payable (₹):
                         </span>
                         <span style={{ fontSize: "16px", fontWeight: "700" }}>
                           ₹{" "}

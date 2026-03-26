@@ -56,7 +56,6 @@ const IpdPaymentData = () => {
     const [loading, setLoading] = useState(false);
     const [selectedTerminal, setSelectedTerminal] = useState('');
     const [currentLocation, setCurrentLocation] = useState("");
-
     const [summary, setSummary] = useState({ totalBill: 0, insuranceApproved: 0, patientPayable: 0, totalDue: 0 });
     const [payments, setPayments] = useState([]);
     const [newPayment, setNewPayment] = useState({
@@ -65,6 +64,17 @@ const IpdPaymentData = () => {
     });
 
     const dropdownRef = useRef(null);
+    const isManualSelection = useRef(false);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setShowDropdown(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -75,8 +85,13 @@ const IpdPaymentData = () => {
     }, []);
 
     useEffect(() => {
+        if (isManualSelection.current) {
+            isManualSelection.current = false;
+            return;
+        }
+
         const delayDebounceFn = setTimeout(() => {
-            if (invoiceId.trim().length > 0) {
+            if (String(invoiceId).trim().length > 0) {
                 fetchAutocompleteInvoices();
             } else {
                 setSearchResults([]);
@@ -103,6 +118,7 @@ const IpdPaymentData = () => {
     };
 
     const handleSelectInvoice = (inv) => {
+        isManualSelection.current = true;
         setInvoiceId(inv.invoice_id);
         setPatientDetails({
             name: inv.name,
@@ -319,8 +335,8 @@ const IpdPaymentData = () => {
             });
             const result = await response.json();
             console.log("INITIATION RESULT: ", result);
-            if (result.statusCode === 201 || result.statusCode === 200) {
-                Swal.fire("Success", "Receipt Generated Successfully", "success");
+            if (result.statusCode === 201 || result.statusCode === 200 || result.status === true) {
+                Swal.fire("Success", result.message || "Receipt Generated Successfully", "success");
                 setShowAddRow(false);
                 setNewPayment({
                     date: new Date().toISOString().split('T')[0],
@@ -331,7 +347,7 @@ const IpdPaymentData = () => {
                 result.statusCode === 202 &&
                 (result.data?.result === "success" || result.data?.stat === "success")
             ) {
-                // showPaymentPendingPopup(result.data.transaction_id, payload, result.data.pos_tid);
+                // ...
                 showPaymentPendingPopup(
                     result.data.transaction_id,
                     payload,
@@ -378,7 +394,7 @@ const IpdPaymentData = () => {
         const hospitalCode = receiptInfo.hospitalcode;
         const year = new Date().getFullYear();
         const receiptNo = `HHC/${hospitalCode}/${year}/${pay.ipdpaymentid}`;
-        const dateFormatted = pay.receipt_date ? pay.receipt_date.split('T')[0].split('-').reverse().join('-') : '';
+        const dateFormatted = formatDate(pay.receipt_date);
 
         const cashPayment = pay.cashamt != 0 ? 'Cash ' : '';
         const cardPayment = pay.cardamt != 0 ? 'Card ' : '';
@@ -507,7 +523,13 @@ const IpdPaymentData = () => {
 
     const formatDate = (dateString) => {
         if (!dateString) return "";
-        const [year, month, day] = dateString.split('T')[0].split('-');
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) {
+            return dateString.split('T')[0].split('-').reverse().join('-');
+        }
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
         return `${day}-${month}-${year}`;
     };
 
@@ -589,7 +611,7 @@ const IpdPaymentData = () => {
                                             {payments.map((pay, idx) => (
                                                 <tr key={pay.ipdpaymentid}>
                                                     <td><Form.Control className="table-input" style={{ width: "55px" }} readOnly value={idx + 1} /></td>
-                                                    <td><Form.Control className="table-input" style={{ width: "110px" }} readOnly value={pay.receipt_date ? pay.receipt_date.split('T')[0].split('-').reverse().join('-') : ''} /></td>
+                                                    <td><Form.Control className="table-input" style={{ width: "110px" }} readOnly value={formatDate(pay.receipt_date)} /></td>
                                                     <td><Form.Control className="table-input" style={{ width: "135px" }} readOnly value={`₹${pay.cashamt}`} /></td>
                                                     <td><Form.Control className="table-input" style={{ width: "135px" }} readOnly value={`₹${pay.cardamt}`} /></td>
                                                     <td><Form.Control className="table-input" style={{ width: "135px" }} readOnly value={`₹${pay.chequeamt}`} /></td>
@@ -604,6 +626,13 @@ const IpdPaymentData = () => {
                                         </tbody>
                                     </Table>
 
+                                    {summary.totalDue === 0 && (
+                                        <div className="alert alert-success mx-3 mt-3 text-center fw-bold" style={{ borderRadius: "10px", border: "2px solid #2b9163" }}>
+                                            <i className="fa fa-check-circle me-2"></i>
+                                            This bill is already fully paid. No further payments are required.
+                                        </div>
+                                    )}
+
                                     <div className="d-flex justify-content-between mt-4 pt-8 border-top align-items-center">
                                         <div className="pos-terminal-box">
                                             <span className="fw-bold text-cyan-dark" style={{ fontSize: "14px" }}>PoS Terminal:</span>
@@ -611,23 +640,47 @@ const IpdPaymentData = () => {
                                                 <Form.Check key={opt} inline type="radio" label={opt} checked={selectedTerminal === opt} onChange={() => setSelectedTerminal(opt)} className="fw-bold text-secondary" style={{ cursor: "pointer", fontSize: "12px" }} />
                                             ))}
                                         </div>
-                                        <Button variant='info' className="btn-add" onClick={() => setShowAddRow(!showAddRow)}>
+                                        <Button 
+                                            variant='info' 
+                                            className="btn-add" 
+                                            onClick={() => setShowAddRow(!showAddRow)}
+                                            disabled={summary.totalDue <= 0}
+                                        >
                                             <FaPlus className="me-2" /> <span>Add Entry</span>
                                         </Button>
                                     </div>
 
                                     {showAddRow && (
                                         <div className="mt-3 p-3 border rounded bg-white add-payment-box">
-                                            <Row className="g-2">
-                                                <Col md={2}><Form.Control type="date" className="input-style" value={newPayment.date} onChange={e => setNewPayment({ ...newPayment, date: e.target.value })} /></Col>
-                                                <Col><Form.Control type="number" onWheel={(e) => e.target.blur()} placeholder="Cash" className="input-style" value={newPayment.cash || ''} onChange={e => setNewPayment({ ...newPayment, cash: +e.target.value })} /></Col>
-                                                <Col><Form.Control type="number" onWheel={(e) => e.target.blur()} placeholder="Card" className="input-style" value={newPayment.card || ''} disabled={newPayment.online > 0} onChange={e => setNewPayment({ ...newPayment, card: +e.target.value })} /></Col>
-                                                <Col><Form.Control type="number" onWheel={(e) => e.target.blur()} placeholder="Cheque" className="input-style" value={newPayment.cheque || ''} onChange={e => setNewPayment({ ...newPayment, cheque: +e.target.value })} /></Col>
-                                                <Col><Form.Control type="number" onWheel={(e) => e.target.blur()} placeholder="Online" className="input-style" value={newPayment.online || ''} disabled={newPayment.card > 0} onChange={e => setNewPayment({ ...newPayment, online: +e.target.value })} /></Col>
-                                                <Col><Form.Control type="number" onWheel={(e) => e.target.blur()} placeholder="Internal Discount" className="input-style" value={newPayment.internalDiscount || ''} onChange={e => setNewPayment({ ...newPayment, internalDiscount: +e.target.value })} /></Col>
-                                                <Col><Form.Control type="number" onWheel={(e) => e.target.blur()} placeholder="Hospital Discount" className="input-style" value={newPayment.tds || ''} onChange={e => setNewPayment({ ...newPayment, tds: +e.target.value })} /></Col>
-                                                <Col md={1}><Button variant='primary' className="w-100 btn-save" onClick={handleSavePayment} disabled={loading}>Save</Button></Col>
-                                            </Row>
+                                            {(() => {
+                                                const currentTotal = (Number(newPayment.cash) || 0) + 
+                                                                   (Number(newPayment.card) || 0) + 
+                                                                   (Number(newPayment.cheque) || 0) + 
+                                                                   (Number(newPayment.online) || 0) + 
+                                                                   (Number(newPayment.internalDiscount) || 0) + 
+                                                                   (Number(newPayment.tds) || 0);
+                                                const isOverpaid = currentTotal > summary.totalDue;
+                                                
+                                                return (
+                                                    <>
+                                                        {isOverpaid && (
+                                                            <div className="alert alert-danger p-2 mb-3 text-center small fw-bold">
+                                                                Warning: Entered amount (₹{currentTotal}) exceeds the remaining due (₹{summary.totalDue}). Please correct the values.
+                                                            </div>
+                                                        )}
+                                                        <Row className="g-2">
+                                                            <Col md={2}><Form.Control type="date" className="input-style" value={newPayment.date} onChange={e => setNewPayment({ ...newPayment, date: e.target.value })} /></Col>
+                                                            <Col><Form.Control type="number" onWheel={(e) => e.target.blur()} placeholder="Cash" className="input-style" value={newPayment.cash || ''} onChange={e => setNewPayment({ ...newPayment, cash: +e.target.value })} /></Col>
+                                                            <Col><Form.Control type="number" onWheel={(e) => e.target.blur()} placeholder="Card" className="input-style" value={newPayment.card || ''} disabled={newPayment.online > 0} onChange={e => setNewPayment({ ...newPayment, card: +e.target.value })} /></Col>
+                                                            <Col><Form.Control type="number" onWheel={(e) => e.target.blur()} placeholder="Cheque" className="input-style" value={newPayment.cheque || ''} onChange={e => setNewPayment({ ...newPayment, cheque: +e.target.value })} /></Col>
+                                                            <Col><Form.Control type="number" onWheel={(e) => e.target.blur()} placeholder="Online" className="input-style" value={newPayment.online || ''} disabled={newPayment.card > 0} onChange={e => setNewPayment({ ...newPayment, online: +e.target.value })} /></Col>
+                                                            <Col><Form.Control type="number" onWheel={(e) => e.target.blur()} placeholder="Internal Discount" className="input-style" value={newPayment.internalDiscount || ''} onChange={e => setNewPayment({ ...newPayment, internalDiscount: +e.target.value })} /></Col>
+                                                            <Col><Form.Control type="number" onWheel={(e) => e.target.blur()} placeholder="Hospital Discount" className="input-style" value={newPayment.tds || ''} onChange={e => setNewPayment({ ...newPayment, tds: +e.target.value })} /></Col>
+                                                            <Col md={1}><Button variant='primary' className="w-100 btn-save" onClick={handleSavePayment} disabled={loading || isOverpaid}>Save</Button></Col>
+                                                        </Row>
+                                                    </>
+                                                );
+                                            })()}
                                         </div>
                                     )}
                                 </Card.Body>

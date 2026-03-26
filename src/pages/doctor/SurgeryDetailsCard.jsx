@@ -1,8 +1,17 @@
 import React from "react";
-import { Row, Col, Form, Button } from "react-bootstrap";
+import { Row, Col, Form, Button, Dropdown } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 
-const SurgeryDetailsCard = ({ surgeryData, handleSurgeryChange, handleSurgeryCheckboxChange }) => {
+const SurgeryDetailsCard = ({ 
+  surgeryData, 
+  handleSurgeryChange, 
+  handleSurgeryCheckboxChange,
+  previousSurgeryList = [],
+  selectedSurgeryId = null,
+  onSelectSurgery,
+  onNewSurgery,
+  assistanceDoctors = []
+}) => {
   return (
     <div className="animate__animated animate__fadeIn">
       <style>{`
@@ -11,9 +20,42 @@ const SurgeryDetailsCard = ({ surgeryData, handleSurgeryChange, handleSurgeryChe
         }
       `}</style>
       <div className="p-3 bg-white rounded shadow-sm border mb-3" style={{ borderLeft: "5px solid #00bcd4" }}>
-        <h5 className="fw-bold mb-3" style={{ color: "#00838f", textTransform: "uppercase", letterSpacing: "1px", fontSize: "14px" }}>
-          <FeatherIcon icon="scissors" size="18" className="me-2 text-info" />Surgical Procedure & Clinical Records
-        </h5>
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h5 className="fw-bold mb-0" style={{ color: "#00838f", textTransform: "uppercase", letterSpacing: "1px", fontSize: "14px" }}>
+            <FeatherIcon icon="scissors" size="18" className="me-2 text-info" />Surgical Procedure & Clinical Records
+          </h5>
+          <div className="d-flex gap-2">
+            <Button 
+              variant="outline-info" 
+              size="sm" 
+              onClick={onNewSurgery}
+              style={{ borderRadius: "20px", fontSize: "11px", fontWeight: "700" }}
+            >
+              <FeatherIcon icon="plus" size="14" className="me-1" /> NEW RECORD
+            </Button>
+            <Dropdown onSelect={onSelectSurgery}>
+              <Dropdown.Toggle 
+                variant="info" 
+                id="previous-surg-dropdown" 
+                size="sm" 
+                style={{ borderRadius: "20px", fontSize: "11px", fontWeight: "700", color: "white" }}
+              >
+                <FeatherIcon icon="calendar" size="14" className="me-1" /> PREVIOUS DATES
+              </Dropdown.Toggle>
+              <Dropdown.Menu style={{ fontSize: "12px", borderRadius: "10px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}>
+                {previousSurgeryList.length > 0 ? (
+                  previousSurgeryList.map((s) => (
+                    <Dropdown.Item key={s.id} eventKey={s.id}>
+                      {s.date} {s.id === selectedSurgeryId && <FeatherIcon icon="check" size="12" className="ms-2 text-success" />}
+                    </Dropdown.Item>
+                  ))
+                ) : (
+                  <Dropdown.Item disabled>No previous records</Dropdown.Item>
+                )}
+              </Dropdown.Menu>
+            </Dropdown>
+          </div>
+        </div>
 
         <Row className="mb-3 g-2">
           <Col md={4}>
@@ -40,8 +82,11 @@ const SurgeryDetailsCard = ({ surgeryData, handleSurgeryChange, handleSurgeryChe
             <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>Assistance Doctor</Form.Label>
             <Form.Select value={surgeryData.assistance_doctor} onChange={(e) => handleSurgeryChange("assistance_doctor", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }}>
               <option value="">Select Assistance Doctor</option>
-              <option value="1">Dr. Amit Shah</option>
-              <option value="2">Dr. Priya Sharma</option>
+              {assistanceDoctors.map((doc) => (
+                <option key={doc.doctor_id} value={doc.doctor_id}>
+                  {doc.name}
+                </option>
+              ))}
             </Form.Select>
           </Col>
           <Col md={6}>

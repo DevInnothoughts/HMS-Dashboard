@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import NavbarIpdBills from "../../components/NavbarIpdBills";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import { Row, Col, Form, Container, Card, Button } from "react-bootstrap";
@@ -23,10 +24,14 @@ const Toast = Swal.mixin({
 });
 
 const AddInvoice = () => {
+  const navigate = useNavigate();
   const initialFormData = {
     invoice_id: "",
     admission_no: "",
     patient_id: "",
+    patient_name: "",
+    phone_number: "",
+    uid_no: "",
     discharge_date: "",
     dischargetime: "",
     bed_category: "",
@@ -57,6 +62,9 @@ const AddInvoice = () => {
   const [insurance, setInsurance] = useState([]);
   const [tpa, setTpa] = useState([]);
   const [currentLocation, setCurrentLocation] = useState(null);
+  const [patientResults, setPatientResults] = useState([]);
+  const [showPatientDropdown, setShowPatientDropdown] = useState(false);
+  const [invoiceWarning, setInvoiceWarning] = useState("");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -82,28 +90,34 @@ const AddInvoice = () => {
 
   const timeOptions = generateTimeOptions();
 
-  useEffect(() => {
-    if (!currentLocation) return;
 
-    const fetchNextId = async () => {
+
+  useEffect(() => {
+    if (!currentLocation || !formData.invoice_id) {
+      setInvoiceWarning("");
+      return;
+    }
+
+    const checkTimeout = setTimeout(async () => {
       try {
         const response = await fetch(
-          `${BASE_URL}/V1/invoice/getNextInvoiceId?location=${currentLocation}`,
+          `${BASE_URL}/V1/invoice/checkInvoiceId?invoice_id=${formData.invoice_id}&location=${currentLocation}`,
         );
-        const data = await response.json();
-        if (response.ok) {
-          setFormData((prev) => ({
-            ...prev,
-            invoice_id: data.nextId,
-          }));
+        const result = await response.json();
+        if (result.data?.exists) {
+          setInvoiceWarning(
+            `Invoice ID already exists for patient: ${result.data.patient_name}`,
+          );
+        } else {
+          setInvoiceWarning("");
         }
       } catch (err) {
-        console.error("Failed to fetch next Invoice ID:", err);
+        console.error("Invoice ID check failed:", err);
       }
-    };
+    }, 500);
 
-    fetchNextId();
-  }, [currentLocation]);
+    return () => clearTimeout(checkTimeout);
+  }, [formData.invoice_id, currentLocation]);
 
   useEffect(() => {
     if (!currentLocation) return;
@@ -171,8 +185,35 @@ const AddInvoice = () => {
     return newErrors;
   };
 
+  const calculatePayableAmount = (data) => {
+    const subTotal = parseFloat(data.Sub_Total || 0);
+    const discountNonIns = parseFloat(data.discount || 0);
+    const discountCharity = parseFloat(data.discountAmount || 0);
+    const pdc = parseFloat(data.pdc || 0);
+
+    let deduction = 0;
+    if (data.bill_Type === "charity") {
+      deduction = discountCharity;
+    } else if (data.bill_method === "PDC") {
+      deduction = pdc;
+    } else if (data.bill_Type === "non_insurance") {
+      deduction = discountNonIns;
+    }
+
+    const payable = subTotal - deduction;
+    return Math.max(payable, 0).toFixed(0);
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
+    // Restriction for invoice_id: only integers allowed
+    if (name === "invoice_id") {
+      const integerOnly = value.replace(/[^0-9]/g, "");
+      setFormData((prev) => ({ ...prev, [name]: integerOnly }));
+      return;
+    }
+
     let updatedFormData = { ...formData, [name]: value };
 
     if (name === "bill_Type") {
@@ -200,25 +241,58 @@ const AddInvoice = () => {
         "bill_method",
       ].includes(name)
     ) {
-      const subTotal = parseFloat(updatedFormData.Sub_Total || 0);
-      const discount = parseFloat(updatedFormData.discount || 0);
-      const discountAmount = parseFloat(updatedFormData.discountAmount || 0);
-      const pdc = parseFloat(updatedFormData.pdc || 0);
-
-      let payable = subTotal;
-      if (updatedFormData.bill_Type === "charity") {
-        payable = subTotal - discountAmount;
-      } else if (updatedFormData.bill_method === "PDC") {
-        payable = subTotal - pdc;
-      } else if (updatedFormData.bill_Type === "non_insurance") {
-        payable = subTotal - discount;
-      } else {
-        payable = subTotal;
-      }
-      updatedFormData.payableAmount = Math.max(payable, 0).toFixed(2);
+      updatedFormData.payableAmount = calculatePayableAmount(updatedFormData);
     }
 
     setFormData(updatedFormData);
+  };
+
+  const handlePatientSearch = async (query) => {
+    setFormData((prev) => ({
+      ...prev,
+      patient_name: query,
+      // If user clears the input, clear selected patient details
+      ...(query === "" && {
+        patient_id: "",
+        phone_number: "",
+        uid_no: "",
+      }),
+    }));
+
+    if (query.length > 2) {
+      try {
+        const response = await fetch(
+          `${BASE_URL}/V1/patient/searchPatient?query=${query}&location=${currentLocation}`,
+        );
+        const data = await response.json();
+        if (response.ok) {
+          setPatientResults(data.data || []);
+          setShowPatientDropdown(true);
+        }
+      } catch (err) {
+        console.error("Patient search failed:", err);
+      }
+    } else {
+      setPatientResults([]);
+      setShowPatientDropdown(false);
+    }
+  };
+
+  const selectPatient = (patient) => {
+    setFormData((prev) => ({
+      ...prev,
+      patient_id: patient.patient_id,
+      patient_name: patient.name,
+      phone_number: patient.phone,
+      uid_no: patient.Uid_no,
+    }));
+    setShowPatientDropdown(false);
+  };
+
+  const handlePatientBlur = () => {
+    setTimeout(() => {
+      setShowPatientDropdown(false);
+    }, 200);
   };
 
   const handleDynamicRowChange = (index, field, value) => {
@@ -230,12 +304,13 @@ const AddInvoice = () => {
       0,
     );
 
-    setFormData({
+    const updatedFormData = {
       ...formData,
       dynamicRows: updatedRows,
-      Sub_Total: newSubTotal.toFixed(2),
-      payableAmount: newSubTotal.toFixed(2),
-    });
+      Sub_Total: Math.round(newSubTotal).toString(),
+    };
+    updatedFormData.payableAmount = calculatePayableAmount(updatedFormData);
+    setFormData(updatedFormData);
   };
 
   const addDynamicRow = () => {
@@ -254,12 +329,13 @@ const AddInvoice = () => {
       0,
     );
 
-    setFormData({
+    const updatedFormData = {
       ...formData,
       dynamicRows: updatedRows,
-      Sub_Total: newSubTotal.toFixed(2),
-      payableAmount: newSubTotal.toFixed(2),
-    });
+      Sub_Total: Math.round(newSubTotal).toString(),
+    };
+    updatedFormData.payableAmount = calculatePayableAmount(updatedFormData);
+    setFormData(updatedFormData);
   };
 
   const resetForm = () => {
@@ -267,36 +343,21 @@ const AddInvoice = () => {
     setErrors({});
   };
 
-  // const getChargeBreakdown = () => {
-  //   const subTotal = parseFloat(formData.Sub_Total) || 0;
-  //   const discount = parseFloat(formData.discountAmount) || 0;
-  //   const payable = subTotal - discount;
-
-  //   return {
-  //     subTotal: subTotal.toFixed(2),
-  //     discount: discount.toFixed(2),
-  //     payable: payable.toFixed(2),
-  //   };
-  // };
-
   const getChargeBreakdown = () => {
-    const subTotal = parseFloat(formData.Sub_Total) || 0;
-
+    const subTotal = parseFloat(formData.Sub_Total || 0);
     let discount = 0;
     if (formData.bill_Type === "charity") {
-      discount = parseFloat(formData.discountAmount) || 0;
-    } else if (formData.bill_Type === "non_insurance") {
-      discount = parseFloat(formData.discount) || 0;
+      discount = parseFloat(formData.discountAmount || 0);
     } else if (formData.bill_method === "PDC") {
-      discount = parseFloat(formData.pdc) || 0;
+      discount = parseFloat(formData.pdc || 0);
+    } else {
+      discount = parseFloat(formData.discount || 0);
     }
-
-    const payable = subTotal - discount;
 
     return {
       subTotal: subTotal.toFixed(2),
       discount: discount.toFixed(2),
-      payable: Math.max(payable, 0).toFixed(2),
+      payableAmount: formData.payableAmount,
     };
   };
 
@@ -310,12 +371,60 @@ const AddInvoice = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (invoiceWarning) {
+      Swal.fire({
+        icon: "error",
+        title: "Duplicate Invoice ID",
+        text: invoiceWarning,
+        confirmButtonColor: "#00acc1",
+      });
+      return;
+    }
+
     console.log(formData);
     const validationErrors = validate();
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length === 0) {
       setLoading(true);
+
+      const convertTo12Hour = (time24) => {
+        if (!time24) return "";
+        if (time24.includes("AM") || time24.includes("PM")) return time24;
+        let [hours, minutes] = time24.split(":");
+        let period = "AM";
+        hours = parseInt(hours);
+        if (hours === 0) {
+          hours = 12;
+        } else if (hours === 12) {
+          period = "PM";
+        } else if (hours > 12) {
+          hours -= 12;
+          period = "PM";
+        }
+        return `${hours.toString().padStart(2, "0")}:${minutes} ${period}`;
+      };
+
+      // Map bill_method and bill_Type to backend 'status' field for persistence
+      let status = "NonInsurance";
+      if (formData.bill_Type === "insurance") {
+        // Normalize for legacy compatibility (e.g., 'cashless' -> 'Cashless')
+        const method = formData.bill_method;
+        if (method === "cashless") status = "Cashless";
+        else if (method === "reimbursement") status = "Reimbursement";
+        else if (method === "PDC") status = "PDC";
+        else status = method || "NonInsurance";
+      } else if (formData.bill_Type === "charity") {
+        status = "Charity";
+      }
+
+      const finalPayload = {
+        ...formData,
+        status: status, // Map to the backend 'status' column
+        admissiontime: convertTo12Hour(formData.admissiontime),
+        dischargetime: convertTo12Hour(formData.dischargetime),
+      };
 
       try {
         const response = await fetch(
@@ -325,7 +434,7 @@ const AddInvoice = () => {
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify(formData),
+            body: JSON.stringify(finalPayload),
           },
         );
 
@@ -340,13 +449,10 @@ const AddInvoice = () => {
             showConfirmButton: true,
             confirmButtonText: "Okay",
             confirmButtonColor: "#00acc1",
+          }).then(() => {
+            resetForm();
+            navigate("/invoices");
           });
-          resetForm();
-          const nextIdRes = await fetch(
-            `${BASE_URL}/V1/invoice/getNextInvoiceId?location=${currentLocation}`,
-          );
-          const nextIdData = await nextIdRes.json();
-          setFormData((prev) => ({ ...prev, invoice_id: nextIdData.nextId }));
         } else {
           Swal.fire({
             title: "Ops...",
@@ -423,76 +529,115 @@ const AddInvoice = () => {
               <h5 style={sectionTitleStyle}>Patient & Admission Information</h5>
               <Row className="g-3">
                 <Col md={2}>
-                  <Form.Label
-                    style={{
-                      fontSize: "12px",
-                      fontWeight: "600",
-                      marginBottom: "2px",
-                    }}
-                  >
-                    Invoice No <span className="text-danger">*</span>
+                  <Form.Label style={labelStyle}>
+                    Invoice Number <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
                     name="invoice_id"
                     value={formData.invoice_id}
                     onChange={handleInputChange}
-                    isInvalid={errors.invoice_id}
-                    placeholder="Fetching ID..."
-                    readOnly
+                    isInvalid={errors.invoice_id || !!invoiceWarning}
+                    placeholder="Enter Invoice Number"
                     style={{
                       ...inputStyle,
-                      backgroundColor: "#e7ebebff",
-                      cursor: "not-allowed",
+                      backgroundColor: "#fff",
                     }}
                   />
+                  {invoiceWarning && (
+                    <div className="text-danger" style={{ fontSize: "10px", marginTop: "4px", fontWeight: "600" }}>
+                      {invoiceWarning}
+                    </div>
+                  )}
                 </Col>
                 <Col md={2}>
-                  <Form.Label
-                    style={{
-                      fontSize: "12px",
-                      fontWeight: "600",
-                      marginBottom: "2px",
-                    }}
-                  >
-                    Admission No
-                  </Form.Label>
+                  <Form.Label style={labelStyle}>Admission Number</Form.Label>
                   <Form.Control
                     name="admission_no"
                     style={inputStyle}
                     value={formData.admission_no}
                     onChange={handleInputChange}
                     isInvalid={errors.admission_no}
-                    placeholder="Enter Admission No"
+                    placeholder="Enter Admission Number"
                   />
                 </Col>
-                <Col md={2}>
-                  <Form.Label
-                    style={{
-                      fontSize: "12px",
-                      fontWeight: "600",
-                      marginBottom: "2px",
-                    }}
-                  >
-                    Patient ID <span className="text-danger">*</span>
+                <Col md={3} className="position-relative">
+                  <Form.Label style={labelStyle}>
+                    Patient Name <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
                     required
-                    name="patient_id"
+                    name="patient_name"
                     style={inputStyle}
-                    value={formData.patient_id}
-                    onChange={handleInputChange}
+                    value={formData.patient_name}
+                    onChange={(e) => handlePatientSearch(e.target.value)}
+                    onBlur={handlePatientBlur}
                     isInvalid={errors.patient_id}
-                    placeholder="Enter Patient ID"
+                    placeholder="Search Patient Name"
+                    autoComplete="off"
                   />
+                  {showPatientDropdown && patientResults.length > 0 && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: "100%",
+                        left: "15px",
+                        right: "15px",
+                        backgroundColor: "white",
+                        border: "1px solid #ddd",
+                        borderRadius: "8px",
+                        boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+                        zIndex: 1000,
+                        maxHeight: "200px",
+                        overflowY: "auto",
+                      }}
+                    >
+                      {patientResults.map((patient) => (
+                        <div
+                          key={patient.patient_id}
+                          style={{
+                            padding: "8px 12px",
+                            cursor: "pointer",
+                            fontSize: "12px",
+                            borderBottom: "1px solid #eee",
+                          }}
+                          onMouseDown={() => selectPatient(patient)}
+                          className="patient-search-item"
+                        >
+                          <strong>{patient.name}</strong> - {patient.phone}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </Col>
                 <Col md={2}>
-                  <Form.Label
+                  <Form.Label style={labelStyle}>Contact Number</Form.Label>
+                  <Form.Control
+                    readOnly
                     style={{
-                      fontSize: "12px",
-                      fontWeight: "600",
-                      marginBottom: "2px",
+                      ...inputStyle,
+                      backgroundColor: "#f5f5f5",
+                      cursor: "not-allowed",
                     }}
-                  >
+                    value={formData.phone_number}
+                    placeholder="Enter Contact Number"
+                  />
+                </Col>
+                <Col md={3}>
+                  <Form.Label style={labelStyle}>UID Number</Form.Label>
+                  <Form.Control
+                    readOnly
+                    style={{
+                      ...inputStyle,
+                      backgroundColor: "#f5f5f5",
+                      cursor: "not-allowed",
+                    }}
+                    value={formData.uid_no}
+                    placeholder="Enter UID Number"
+                  />
+                </Col>
+
+                <Col md={2}>
+                  <Form.Label style={labelStyle}>
                     Admission Date <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
@@ -506,17 +651,8 @@ const AddInvoice = () => {
                   />
                 </Col>
                 <Col md={2}>
-                  <Form.Label
-                    style={{
-                      fontSize: "12px",
-                      fontWeight: "600",
-                      marginBottom: "2px",
-                    }}
-                  >
-                    Admission Time{" "}
-                    <span style={{ color: "red" }} className="required">
-                      *
-                    </span>
+                  <Form.Label style={labelStyle}>
+                    Admission Time <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Select
                     required
@@ -547,13 +683,7 @@ const AddInvoice = () => {
                   </Form.Select>
                 </Col>
                 <Col md={2}>
-                  <Form.Label
-                    style={{
-                      fontSize: "12px",
-                      fontWeight: "600",
-                      marginBottom: "2px",
-                    }}
-                  >
+                  <Form.Label style={labelStyle}>
                     Discharge Date <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
@@ -568,14 +698,8 @@ const AddInvoice = () => {
                   />
                 </Col>
                 <Col md={2}>
-                  <Form.Label
-                    style={{
-                      fontSize: "12px",
-                      fontWeight: "600",
-                      marginBottom: "2px",
-                    }}
-                  >
-                    Discharge Time <span style={{ color: "red" }}>*</span>
+                  <Form.Label style={labelStyle}>
+                    Discharge Time <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Select
                     required
@@ -606,13 +730,7 @@ const AddInvoice = () => {
                   </Form.Select>
                 </Col>
                 <Col md={4}>
-                  <Form.Label
-                    style={{
-                      fontSize: "12px",
-                      fontWeight: "600",
-                      marginBottom: "2px",
-                    }}
-                  >
+                  <Form.Label style={labelStyle}>
                     Bed Category <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
@@ -626,13 +744,7 @@ const AddInvoice = () => {
                   />
                 </Col>
                 <Col md={3}>
-                  <Form.Label
-                    style={{
-                      fontSize: "12px",
-                      fontWeight: "600",
-                      marginBottom: "2px",
-                    }}
-                  >
+                  <Form.Label style={labelStyle}>
                     Consultant Name <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Select
@@ -652,15 +764,7 @@ const AddInvoice = () => {
                   </Form.Select>
                 </Col>
                 <Col md={3}>
-                  <Form.Label
-                    style={{
-                      fontSize: "12px",
-                      fontWeight: "600",
-                      marginBottom: "2px",
-                    }}
-                  >
-                    Surgeon Name
-                  </Form.Label>
+                  <Form.Label style={labelStyle}>Surgeon Name</Form.Label>
                   <Form.Select
                     style={inputStyle}
                     name="surgeonName"
@@ -932,7 +1036,7 @@ const AddInvoice = () => {
                         marginBottom: "2px",
                       }}
                     >
-                      Charity Discount (₹)
+                      Discount Amount (₹)
                     </Form.Label>
                     <Form.Control
                       style={inputStyle}
@@ -1008,7 +1112,7 @@ const AddInvoice = () => {
                         >
                           <span>{item.label || `Item ${idx + 1}`} :</span>
                           <span>
-                            ₹ {parseFloat(item.value || 0).toFixed(2)}
+                            ₹ {parseFloat(item.value || 0).toFixed(0)}
                           </span>
                         </div>
                       ))}
@@ -1039,7 +1143,7 @@ const AddInvoice = () => {
                           paddingTop: "5px",
                         }}
                       >
-                        Total Payable: ₹ {getChargeBreakdown().payable}
+                        Total Payable: ₹ {getChargeBreakdown().payableAmount}
                       </div>
                     </div>
                   </Col>

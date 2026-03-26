@@ -151,7 +151,7 @@ export default function ReceptionistDashboard() {
   const fetchDropdowns = useCallback(async () => {
     if (currentLocation === "default") return;
     try {
-      const url = `${BASE_URL}/V1/appointment/doctorDropdown?location=${currentLocation}`;
+      const url = `${BASE_URL}/V1/doctor/doctorDropdown?location=${currentLocation}`;
       const response = await fetch(url);
       const data = await response.json();
       if (data.statusCode === 200 && Array.isArray(data.data)) {

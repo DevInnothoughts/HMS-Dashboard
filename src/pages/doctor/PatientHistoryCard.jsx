@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Row, Col, Form, Card, Nav, Button, Table } from "react-bootstrap";
+import { Row, Col, Form, Card, Nav, Button, Table, Dropdown, Spinner } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 
 const PatientHistoryCard = ({
@@ -8,7 +8,14 @@ const PatientHistoryCard = ({
   handleHistoryCheckboxChange,
   handleInvestigationCommentChange,
   handleMedicationChange,
-  loading
+  loading,
+  previousHistoryList = [],
+  selectedHistoryId = null,
+  onSelectHistory,
+  onNewRecord,
+  onSaveHistory,
+  assistanceDoctors = [],
+  uploadBaseUrl
 }) => {
   const [historyActiveSubTab, setHistoryActiveSubTab] = useState("piles");
 
@@ -188,7 +195,40 @@ const PatientHistoryCard = ({
     <div className="animate__animated animate__fadeIn">
       {/* Date & Physical Metadata */}
       <div className="p-3 bg-white rounded shadow-sm border mb-3" style={{ borderLeft: "5px solid #00bcd4" }}>
-        <h5 className="fw-bold mb-3" style={{ color: "#00838f", textTransform: "uppercase", letterSpacing: "1px", fontSize: "14px" }}>Clinical Measurements</h5>
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h5 className="fw-bold mb-0" style={{ color: "#00838f", textTransform: "uppercase", letterSpacing: "1px", fontSize: "14px" }}>Clinical Measurements</h5>
+          <div className="d-flex gap-2">
+            <Button
+              variant="outline-info"
+              size="sm"
+              onClick={onNewRecord}
+              style={{ borderRadius: "20px", fontSize: "11px", fontWeight: "700" }}
+            >
+              <FeatherIcon icon="plus" size="14" className="me-1" /> NEW RECORD
+            </Button>
+            <Dropdown onSelect={onSelectHistory}>
+              <Dropdown.Toggle
+                variant="info"
+                id="previous-dates-dropdown"
+                size="sm"
+                style={{ borderRadius: "20px", fontSize: "11px", fontWeight: "700", color: "white" }}
+              >
+                <FeatherIcon icon="calendar" size="14" className="me-1" /> PREVIOUS DATES
+              </Dropdown.Toggle>
+              <Dropdown.Menu style={{ fontSize: "12px", borderRadius: "10px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}>
+                {previousHistoryList.length > 0 ? (
+                  previousHistoryList.map((hist) => (
+                    <Dropdown.Item key={hist.id} eventKey={hist.id}>
+                      {hist.date} {hist.id === selectedHistoryId && <FeatherIcon icon="check" size="12" className="ms-2 text-success" />}
+                    </Dropdown.Item>
+                  ))
+                ) : (
+                  <Dropdown.Item disabled>No previous records</Dropdown.Item>
+                )}
+              </Dropdown.Menu>
+            </Dropdown>
+          </div>
+        </div>
         <Row>
           <Col md={4} className="mb-2">
             <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Consultation Date</Form.Label>
@@ -206,7 +246,12 @@ const PatientHistoryCard = ({
       </div>
 
       {/* Sub-Speciality Selection */}
-      <style>{` .custom-subnav::-webkit-scrollbar { height: 4px; } .custom-subnav::-webkit-scrollbar-thumb { background: #b2ebf2; border-radius: 10px; } `}</style>
+      <style>{` 
+        .custom-subnav::-webkit-scrollbar { height: 4px; } 
+        .custom-subnav::-webkit-scrollbar-thumb { background: #b2ebf2; border-radius: 10px; } 
+        .form-check-input { border: 1px solid black !important; }
+        .form-check-input:checked { background-color: #00838f; border-color: black !important; }
+      `}</style>
       {renderHistorySubTabs()}
 
       {/* Vitals Section */}
@@ -222,20 +267,20 @@ const PatientHistoryCard = ({
             </Col>
             <Col md={3} className="mb-2">
               <Form.Label className="fw-bold" style={{ fontSize: "11px", color: "#006064" }}>BP (mm Hg)</Form.Label>
-              <Form.Control value={historyData.vital_bp} onChange={(e) => handleHistoryChange("vital_bp", e.target.value)} placeholder="120/80" style={{ borderRadius: "10px", border: "2px solid #80deea", padding: "6px 12px", fontSize: "12px" }} />
+              <Form.Control value={historyData.vital_bp} onChange={(e) => handleHistoryChange("vital_bp", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #80deea", padding: "6px 12px", fontSize: "12px" }} />
             </Col>
             <Col md={3} className="mb-2">
               <Form.Label className="fw-bold" style={{ fontSize: "11px", color: "#006064" }}>Pulse (/min)</Form.Label>
-              <Form.Control value={historyData.vital_pulse} onChange={(e) => handleHistoryChange("vital_pulse", e.target.value)} placeholder="72" style={{ borderRadius: "10px", border: "2px solid #80deea", padding: "6px 12px", fontSize: "12px" }} />
+              <Form.Control value={historyData.vital_pulse} onChange={(e) => handleHistoryChange("vital_pulse", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #80deea", padding: "6px 12px", fontSize: "12px" }} />
             </Col>
             <Col md={3} className="mb-5">
               <Form.Label className="fw-bold" style={{ fontSize: "11px", color: "#006064" }}>RR (/min)</Form.Label>
-              <Form.Control value={historyData.vital_rr} onChange={(e) => handleHistoryChange("vital_rr", e.target.value)} placeholder="16" style={{ borderRadius: "10px", border: "2px solid #80deea", padding: "6px 12px", fontSize: "12px" }} />
+              <Form.Control value={historyData.vital_rr} onChange={(e) => handleHistoryChange("vital_rr", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #80deea", padding: "6px 12px", fontSize: "12px" }} />
             </Col>
-            {['rs', 'cvs', 'cns', 'pa'].map(field => (
+            {['rs', 'cvs', 'cns', 'p/a'].map(field => (
               <Col md={3} key={field}>
                 <Form.Label className="fw-bold" style={{ fontSize: "11px", color: "#006064" }}>{field.toUpperCase()}</Form.Label>
-                <Form.Control value={historyData[field]} onChange={(e) => handleHistoryChange(field, e.target.value)} placeholder={`Findings for ${field.toUpperCase()}`} style={{ borderRadius: "10px", border: "1px solid #b2ebf2", fontSize: "12px", padding: "6px 12px" }} />
+                <Form.Control value={historyData[field]} onChange={(e) => handleHistoryChange(field, e.target.value)} style={{ borderRadius: "10px", border: "2px solid #80deea", fontSize: "12px", padding: "6px 12px" }} />
               </Col>
             ))}
           </Row>
@@ -300,9 +345,9 @@ const PatientHistoryCard = ({
             {historyData.medication_history.map((row, idx) => (
               <tr key={idx}>
                 <td className="text-center p-2 fw-bold" style={{ backgroundColor: "#f8fbfc", color: "#00838f", fontSize: "12px", verticalAlign: "middle" }}>{idx + 1}</td>
-                <td className="p-1"><Form.Control value={row.medicine} onChange={(e) => handleMedicationChange(idx, "medicine", e.target.value)} placeholder="Medicine name" style={{ border: "1px solid #b2ebf2", borderRadius: "6px", padding: "8px", fontSize: "12px" }} /></td>
-                <td className="p-1"><Form.Control value={row.indication} onChange={(e) => handleMedicationChange(idx, "indication", e.target.value)} placeholder="e.g. HTN" style={{ border: "1px solid #b2ebf2", borderRadius: "6px", padding: "8px", fontSize: "12px" }} /></td>
-                <td className="p-1"><Form.Control value={row.since} onChange={(e) => handleMedicationChange(idx, "since", e.target.value)} placeholder="e.g. 1 year" style={{ border: "1px solid #b2ebf2", borderRadius: "6px", padding: "8px", fontSize: "12px" }} /></td>
+                <td className="p-1"><Form.Control value={row.medicine} onChange={(e) => handleMedicationChange(idx, "medicine", e.target.value)} placeholder="Medicine name" style={{ border: "2px solid #b2ebf2", borderRadius: "6px", padding: "8px", fontSize: "12px" }} /></td>
+                <td className="p-1"><Form.Control value={row.indication} onChange={(e) => handleMedicationChange(idx, "indication", e.target.value)} placeholder="e.g. HTN" style={{ border: "2px solid #b2ebf2", borderRadius: "6px", padding: "8px", fontSize: "12px" }} /></td>
+                <td className="p-1"><Form.Control value={row.since} onChange={(e) => handleMedicationChange(idx, "since", e.target.value)} placeholder="e.g. 1 year" style={{ border: "2px solid #b2ebf2", borderRadius: "6px", padding: "8px", fontSize: "12px" }} /></td>
               </tr>
             ))}
           </tbody>
@@ -323,7 +368,7 @@ const PatientHistoryCard = ({
           <Col md={12} className="mb-3">
             <div className="p-3 border rounded shadow-sm" style={{ borderLeft: "8px solid #00acc1", backgroundColor: "#fff" }}>
               <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "13px" }}><FeatherIcon icon="help-circle" size="16" className="me-2" /> Present Complaints (C/O)</h6>
-              <Form.Control as="textarea" rows={3} placeholder="Describe the current symptoms in detail..." value={historyData.present_complaints} onChange={(e) => handleHistoryChange("present_complaints", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #00acc1", fontSize: "12px", padding: "8px" }} />
+              <Form.Control as="textarea" rows={3} placeholder="Describe the current symptoms in detail..." value={historyData.present_complaints} onChange={(e) => handleHistoryChange("present_complaints", e.target.value)} style={{ borderRadius: "10px", border: "1px solid #0097a7", fontSize: "12px", padding: "8px" }} />
             </div>
           </Col>
           <Col md={12} className="mb-3">
@@ -364,7 +409,19 @@ const PatientHistoryCard = ({
           <Row>
             <Col md={12}>
               <Form.Group className="mb-2">
-                <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>Upload Report Copy</Form.Label>
+                <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>Upload Investigation Image</Form.Label>
+                {historyData.upload_investigation_existing && (
+                  <div className="mb-2 text-center p-2 rounded" style={{ backgroundColor: "#f0fdfa", border: "1px dashed #00acc1" }}>
+                    <a href={`${uploadBaseUrl}/${historyData.upload_investigation_existing}`} target="_blank" rel="noreferrer">
+                      <img 
+                        src={`${uploadBaseUrl}/${historyData.upload_investigation_existing}`} 
+                        alt="Existing Investigation" 
+                        style={{ maxHeight: "150px", maxWidth: "100%", borderRadius: "8px", objectFit: "contain" }} 
+                      />
+                    </a>
+                    <div className="mt-1 small text-muted">Currently stored: {historyData.upload_investigation_existing}</div>
+                  </div>
+                )}
                 <Form.Control type="file" onChange={(e) => handleHistoryChange("upload_investigation", e.target.files[0])} style={{ borderRadius: "10px", padding: "6px", border: "2px solid #b2ebf2", fontSize: "11px" }} />
               </Form.Group>
             </Col>
@@ -386,8 +443,11 @@ const PatientHistoryCard = ({
             <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>Assistance Doctor</Form.Label>
             <Form.Select value={historyData.assistance_doctor} onChange={(e) => handleHistoryChange("assistance_doctor", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px", fontSize: "12px" }}>
               <option value="">Select Assistance Doctor</option>
-              <option value="1">Dr. Rajesh Kumar</option>
-              <option value="2">Dr. Sneha Patil</option>
+              {assistanceDoctors.map((doc) => (
+                <option key={doc.doctor_id} value={doc.doctor_id}>
+                  {doc.name}
+                </option>
+              ))}
             </Form.Select>
           </Col>
         </Row>
@@ -396,6 +456,7 @@ const PatientHistoryCard = ({
       <div className="text-center mb-5 pb-5">
         <Button
           disabled={loading}
+          onClick={onSaveHistory}
           style={{ backgroundColor: "#00acc1", borderColor: "#00acc1", padding: "10px 40px", borderRadius: "40px", fontWeight: "800", fontSize: "13px", boxShadow: "0 8px 25px rgba(0, 172, 193, 0.4)", textTransform: "uppercase", letterSpacing: "1px" }}>
           {loading ? <Spinner size="sm" className="me-2" /> : <FeatherIcon icon="save" size="18" className="me-2" />}
           SAVE PATIENT HISTORY

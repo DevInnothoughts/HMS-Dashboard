@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import moment from "moment";
+import { useReactToPrint } from "react-to-print";
 import {
   Container,
   Row,
@@ -16,6 +17,7 @@ import {
 import FeatherIcon from "feather-icons-react";
 import PatientHistoryCard from "./PatientHistoryCard";
 import DiagnosisCard from "./DiagnosisCard";
+import DiagnosisPrintView from "./DiagnosisPrintView";
 import FollowUpCard from "./FollowUpCard";
 import OtherTestsCard from "./OtherTestsCard";
 import ProctoscopyCard from "./ProctoscopyCard";
@@ -29,6 +31,7 @@ import { toast } from "react-hot-toast";
 import { decodeJwt } from "../../utils/decode-jwt";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
+const UPLOAD_BASE_URL = "http://194.195.117.79:5100/uploads";
 
 const countries = [
   "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda",
@@ -212,7 +215,355 @@ const DoctorPatientDetails = () => {
     upload_investigation: null,
   });
 
-  const [diagnosisData, setDiagnosisData] = useState({
+  const [previousHistoryList, setPreviousHistoryList] = useState([]);
+  const [selectedHistoryId, setSelectedHistoryId] = useState(null);
+
+  const fetchHistoryDates = async () => {
+    if (!formData.patient_id) return;
+    try {
+      const response = await fetch(`${BASE_URL}/V1/doctor/list-history-dates/${formData.patient_id}?location=${currentLocation}`, {
+        headers: { 
+          "location": currentLocation,
+          "x-hms-location": currentLocation
+        }
+      });
+      const result = await response.json();
+      if (result.statusCode === 200) {
+        const formattedList = (result.data || []).map(item => {
+          const jsDate = new Date(item.date);
+          // Format based on local timezone to avoid UTC shifting issues
+          const year = jsDate.getFullYear();
+          const month = String(jsDate.getMonth() + 1).padStart(2, '0');
+          const day = String(jsDate.getDate()).padStart(2, '0');
+
+          return {
+            ...item,
+            id: item.id.toString(),
+            date: `${year}-${month}-${day}`
+          };
+        });
+        setPreviousHistoryList(formattedList);
+      }
+    } catch (error) {
+      console.error("Error fetching history dates:", error);
+    }
+  };
+
+  const handleSaveHistory = async () => {
+    setLoading(true);
+    try {
+      const formDataObj = new FormData();
+      
+      // Append all history data fields to FormData
+      Object.keys(historyData).forEach(key => {
+        if (key === 'upload_investigation') {
+          if (historyData[key]) {
+            formDataObj.append(key, historyData[key]);
+          }
+        } else if (Array.isArray(historyData[key]) || typeof historyData[key] === 'object') {
+          formDataObj.append(key, JSON.stringify(historyData[key]));
+        } else {
+          formDataObj.append(key, historyData[key]);
+        }
+      });
+
+      const response = await fetch(`${BASE_URL}/V1/doctor/save-patient-history/${formData.patient_id}?location=${currentLocation}`, {
+        method: "POST",
+        headers: {
+          // Do NOT set Content-Type header when sending FormData, the browser will set it with the correct boundary
+          "location": currentLocation,
+          "x-hms-location": currentLocation
+        },
+        body: formDataObj,
+      });
+      const data = await response.json();
+      if (data.statusCode === 200) {
+        Swal.fire({
+          icon: "success",
+          title: "Success",
+          text: "Patient history saved successfully!",
+          timer: 3000,
+          timerProgressBar: true
+        });
+        fetchHistoryDates();
+        setHistoryData(initialHistoryState);
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: data.message || "Failed to save history"
+        });
+      }
+    } catch (error) {
+      console.error("Error saving history:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "An error occurred while saving patient history."
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const initialHistoryState = {
+    patient_date: new Date().toISOString().split("T")[0],
+    height_feet: "",
+    weight_kg: "",
+    painscale: "1",
+    vital_bp: "",
+    vital_pulse: "",
+    vital_rr: "",
+    rs: "",
+    cvs: "",
+    cns: "",
+    pa: "",
+    family_history: [],
+    family_history_other: "",
+    general_history: [],
+    weightloss_comment: "",
+    past_medical_history: [],
+    past_medical_history_other: "",
+    habits: [],
+    drug_allergy: "",
+    medication_history: [
+      { medicine: "", indication: "", since: "" },
+      { medicine: "", indication: "", since: "" },
+      { medicine: "", indication: "", since: "" },
+      { medicine: "", indication: "", since: "" },
+      { medicine: "", indication: "", since: "" },
+    ],
+    past_surgical_history: "",
+    any_other_complaints: "",
+    present_complaints: "",
+    ongoing_medicines: [],
+    ongoing_medicines_other: "",
+    previous_investigation: [],
+    investigation_comments: {},
+    known_case_of: "",
+    assistance_doctor: "",
+    piles_data: [],
+    piles_duration: "",
+    fistula_data: [],
+    fistula_duration: "",
+    hernia_data: [],
+    hernia_duration: "",
+    varicose_data: [],
+    varicose_duration: "",
+    urinary_incontinence: false,
+    urinary_duration: "",
+    fecal_incontinence: false,
+    fecal_duration: "",
+    urology_data: [],
+    urology_duration: "",
+    ods_data: [],
+    ods_bowel_habits: "",
+    ods_duration: "",
+    pilonidal_data: [],
+    pilonidal_comment: "",
+    circumcision_comment: "",
+    investigations: [],
+    investigation_notes: {},
+    investigation: "",
+    upload_investigation: null,
+    upload_investigation_existing: "",
+  };
+
+  const handleSelectHistory = async (id) => {
+    setSelectedHistoryId(id);
+    const selected = previousHistoryList.find(h => h.id === id);
+    if (!selected) return;
+
+    try {
+      setLoading(true);
+      const response = await fetch(`${BASE_URL}/V1/doctor/get-patient-history/${formData.patient_id}?historyId=${id}&location=${currentLocation}`, {
+        headers: { 
+          "location": currentLocation,
+          "x-hms-location": currentLocation
+        }
+      });
+      const result = await response.json();
+      
+      if (result.statusCode === 200 && result.data) {
+        const d = result.data;
+        const toArray = (str) => str ? str.split(",").map(s => s.trim()).filter(Boolean) : [];
+        const symptomsArr = toArray(d.symptoms);
+
+        // Define symptom groups to filter category-specific data
+        const pilesOpts = ["PR Bleeding:Painless", "PR Bleeding:Painful", "Burning", "Pricking", "Itching", "Incomplete Evacuation", "Prolapse", "Swelling", "Pain at Anal Region", "Mucus Mixed Blood"];
+        const fistulaOpts = ["Pus Discharge", "Boil", "Watery Discharge", "Swelling near anal region"];
+        const herniaOpts = ["Swelling:Umbilical", "Right Inguinal", "Left Inguinal", "Swelling:Abdominal", "Reducible", "Nonreducible", "Past Sx"];
+        const varicoseOpts = ["Pain", "Enlarged veins", "Swelling", "Ulcer", "Right", "Left", "B/L"];
+        const urologyOpts = ["Pain", "Burning urination", "Nausea", "Vomiting", "LUTS", "Urgency of urination", "Incomplete evacuation", "Stream of urine", "Nocturia"];
+        const odsOpts = ["Excessive Straining", "Digitation", "Hard Stools", "Enema / Laxative", "Fragmented Defecation", "Chronic constipation", "Urgency", "Frequency"];
+        const pilonidalOpts = ["Pain", "Boil", "Swelling", "Pus / Watery Discharge"];
+
+        let parsedOdsBowelHabits = "";
+        let parsedOdsDuration = "";
+        if (d.ODS_duration) {
+          try {
+            const arr = JSON.parse(d.ODS_duration);
+            if (Array.isArray(arr)) {
+              parsedOdsBowelHabits = arr[0] || "";
+              parsedOdsDuration = arr[1] || "";
+            }
+          } catch(e){}
+        }
+
+        const investigationTypes = [
+            "HB", "BSL-R", "Bleding Time-BT", "Clotting Time-BT", "PT INR", "HIV", 
+            "Hbsag", "SR.Creatinine", "Vit B12", "HbA1C", "Thyroid", "LVEF", "Glucose Fasting"
+        ];
+        const commentsArr = d.newInvestigation_comment ? d.newInvestigation_comment.split(",") : [];
+        let investigationStates = toArray(d.newInvestigation);
+        let notes = {};
+        let existingImgFilename = "";
+
+        // Determine if there is an image filename in the comments array
+        // Slot 14 (index 13) is our new standard, slot 10 (index 9) is legacy fallback
+        if (commentsArr.length >= 14) {
+          existingImgFilename = commentsArr[13];
+        } else if (commentsArr.length === 10) {
+          // If exactly 10 items, slot 10 is usually the image in PHP legacy
+          existingImgFilename = commentsArr[9];
+        }
+
+        // Map notes to types, ignoring the image slots if they exist
+        investigationTypes.forEach((type, index) => {
+          if (commentsArr[index] && index < 13) {
+            // Only assign as note if it's not the image slot (or if it's valid note data)
+            // If it's index 9 and looks like a filename, we skip it for notes if it's legacy
+            if (index === 9 && (commentsArr[index].includes("inv_") || commentsArr[index].includes("_"))) {
+               // Skip legacy image filename accidentally mapping to HbA1C note
+            } else {
+               notes[type] = commentsArr[index];
+            }
+          }
+        });
+
+        // Helper to separate known options from free-text "other" options
+        const parseHistoryFields = (rawStr, knownOpts) => {
+          const all = toArray(rawStr);
+          const known = [];
+          const other = [];
+          all.forEach(item => {
+            const match = knownOpts.find(opt => opt.trim().toLowerCase() === item.toLowerCase());
+            if (match) known.push(match);
+            else other.push(item);
+          });
+          return { known, otherStr: other.join(", ") };
+        };
+
+        const familyParsed = parseHistoryFields(d.family_history, ['Piles', 'Constipation', 'DM', 'HTN', 'Heart Disease']);
+        const pastMedicalParsed = parseHistoryFields(d.past_history, ['DM', 'HTN', 'Br Asthma', 'Thyroid', 'IHD', 'Migraine', 'Epilepsy', 'CKD', 'CLD', 'CVA', 'IBS', 'Insomnia']);
+        const generalParsed = parseHistoryFields(d.general_history, ['H/O Wt Loss', 'Dec Appetite', 'H/O Straining for urination', 'Acidity', 'Gas', 'Bloating']);
+        const ongoingMedsParsed = parseHistoryFields(d.ongoing_medicines, ['Aspirin', 'Clopidogrel', 'Warfarin', 'Acitrom']); // Using common ones as placeholder if not specified, otherwise others will just fall smoothly
+
+        const formatLocalDate = (isoDate) => {
+            if (!isoDate) return "";
+            const jsDate = new Date(isoDate);
+            if(isNaN(jsDate)) return isoDate;
+            const year = jsDate.getFullYear();
+            const month = String(jsDate.getMonth() + 1).padStart(2, '0');
+            const day = String(jsDate.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
+        const loadedState = {
+          ...initialHistoryState,
+          patient_date: formatLocalDate(d.patient_date) || formatLocalDate(selected.date),
+          assistance_doctor: d.doctor_id?.toString() || "",
+          height_feet: d.height || "",
+          weight_kg: d.weight || "",
+          painscale: d.painscale?.toString() || "1",
+          vital_bp: d.BP || "",
+          vital_pulse: d.Pulse || "",
+          vital_rr: d.RR || "",
+          rs: d.RS || "",
+          cvs: d.CVS || "",
+          cns: d.CNS || "",
+          pa: "",
+          "p/a": d.PA || "", // This is the one used by the UI
+          
+          piles_duration: d.piles_duration || "",
+          fistula_duration: d.fistula_duration || "",
+          hernia_duration: d.hernia_duration || "",
+          varicose_duration: d.varicose_duration || "",
+          urology_duration: d.uro_duration || "",
+          pilonidal_comment: d.pilonidalsinus || "",
+          circumcision_comment: d.circumcision || "",
+          
+          urinary_duration: d.Urinary_incontinence_duration || "",
+          urinary_incontinence: symptomsArr.includes("Urinary Incontinence"),
+          
+          fecal_duration: d.Fecal_incontinence_duration || "",
+          fecal_incontinence: symptomsArr.includes("Fecal Incontinence"),
+          
+          ods_bowel_habits: parsedOdsBowelHabits,
+          ods_duration: parsedOdsDuration,
+          
+          family_history: familyParsed.known,
+          family_history_other: familyParsed.otherStr,
+ 
+          general_history: generalParsed.known,
+          weightloss_comment: generalParsed.otherStr,
+ 
+          past_medical_history: pastMedicalParsed.known,
+          past_medical_history_other: pastMedicalParsed.otherStr,
+ 
+          habits: toArray(d.habits),
+          drug_allergy: d.drugs_allery || "",
+          past_surgical_history: d.comment || "",
+          present_complaints: d.presentcomplaints || "",
+          any_other_complaints: d.complaints || "",
+          
+          ongoing_medicines: ongoingMedsParsed.known,
+          ongoing_medicines_other: ongoingMedsParsed.otherStr,
+ 
+          investigations: investigationStates,
+          investigation_notes: notes,
+          investigation: d.investigation || "",
+          known_case_of: d.knowncaseof || "",
+          upload_investigation_existing: existingImgFilename,
+ 
+          piles_data: symptomsArr.filter(s => pilesOpts.includes(s)),
+          fistula_data: symptomsArr.filter(s => fistulaOpts.includes(s)),
+          hernia_data: symptomsArr.filter(s => herniaOpts.includes(s)),
+          varicose_data: symptomsArr.filter(s => varicoseOpts.includes(s)),
+          urology_data: symptomsArr.filter(s => urologyOpts.includes(s)),
+          ods_data: symptomsArr.filter(s => odsOpts.includes(s)),
+          pilonidal_data: symptomsArr.filter(s => pilonidalOpts.includes(s)),
+        };
+
+        if (d.medication_history && d.medication_history.length > 0) {
+           const meds = d.medication_history.map((m) => ({
+               medicine: m.medicine || "", indication: m.indication || "", since: m.since || ""
+           }));
+           while(meds.length < 5) meds.push({ medicine: "", indication: "", since: "" });
+           loadedState.medication_history = meds.slice(0, 5);
+        }
+
+        setHistoryData(loadedState);
+        console.log("[DEBUG] Loaded History State for UI:", loadedState);
+        toast.success(`Loaded history from ${selected.date}`);
+      } else {
+        toast.error("Could not fetch history record data");
+      }
+    } catch (error) {
+      console.error("Error fetching history:", error);
+      toast.error("An error occurred while loading history.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNewRecord = () => {
+    setSelectedHistoryId(null);
+    setHistoryData(initialHistoryState);
+    toast.info("Started a new record session");
+  };
+
+  const initialDiagnosisState = {
     date_diagnosis: new Date().toISOString().split("T")[0],
     investigation_orders: "",
     diagnosis_text: "",
@@ -242,6 +593,38 @@ const DoctorPatientDetails = () => {
     medical_advice_notes: {},
     consultant_doctor: "",
     assistance_doctor: ""
+  };
+
+  const [diagnosisData, setDiagnosisData] = useState(initialDiagnosisState);
+
+  const [previousDiagnosisList, setPreviousDiagnosisList] = useState([
+    { id: "101", date: "2026-03-12" },
+    { id: "102", date: "2026-03-08" }
+  ]);
+  const [selectedDiagnosisId, setSelectedDiagnosisId] = useState(null);
+
+  const handleSelectDiagnosis = (id) => {
+    setSelectedDiagnosisId(id);
+    const selected = previousDiagnosisList.find(d => d.id === id);
+    if (selected) {
+      setDiagnosisData(prev => ({
+        ...prev,
+        date_diagnosis: selected.date,
+        diagnosis_text: `Historical diagnosis for date ${selected.date}`
+      }));
+      toast.success(`Loaded diagnosis for ${selected.date}`);
+    }
+  };
+
+  const handleNewDiagnosis = () => {
+    setSelectedDiagnosisId(null);
+    setDiagnosisData(initialDiagnosisState);
+    toast.info("Started a new diagnosis session");
+  };
+
+  const diagPrintRef = useRef();
+  const handlePrintDiagnosis = useReactToPrint({
+    contentRef: diagPrintRef,
   });
 
   const [followUpData, setFollowUpData] = useState({
@@ -254,7 +637,7 @@ const DoctorPatientDetails = () => {
     visit_count: "0"
   });
 
-  const [otherTestData, setOtherTestData] = useState({
+  const initialOtherTestsState = {
     lab_type: "",
     test_date: new Date().toISOString().split("T")[0],
     test_type: [],
@@ -262,15 +645,58 @@ const DoctorPatientDetails = () => {
     testFeeStatus: "",
     visitType: "OPD",
     test_comment: ""
-  });
+  };
 
-  const [proctoscopyData, setProctoscopyData] = useState({
+  const [otherTestData, setOtherTestData] = useState(initialOtherTestsState);
+  const [previousTestsList, setPreviousTestsList] = useState([
+    { id: "T1", date: "2026-03-10" },
+    { id: "T2", date: "2026-03-01" }
+  ]);
+  const [selectedTestId, setSelectedTestId] = useState(null);
+
+  const handleSelectTest = (id) => {
+    setSelectedTestId(id);
+    const selected = previousTestsList.find(t => t.id === id);
+    if (selected) {
+      setOtherTestData(prev => ({ ...prev, test_date: selected.date, test_comment: `History for ${selected.date}` }));
+      toast.success(`Loaded tests for ${selected.date}`);
+    }
+  };
+
+  const handleNewTest = () => {
+    setSelectedTestId(null);
+    setOtherTestData(initialOtherTestsState);
+    toast.info("Started a new lab request");
+  };
+
+  const initialProctoscopyState = {
     procto_date: new Date().toISOString().split("T")[0],
     interpretation: "",
     images: []
-  });
+  };
 
-  const [prescriptionData, setPrescriptionData] = useState({
+  const [proctoscopyData, setProctoscopyData] = useState(initialProctoscopyState);
+  const [previousProctoscopyList, setPreviousProctoscopyList] = useState([
+    { id: "P1", date: "2026-03-10" }
+  ]);
+  const [selectedProctoscopyId, setSelectedProctoscopyId] = useState(null);
+
+  const handleSelectProctoscopy = (id) => {
+    setSelectedProctoscopyId(id);
+    const selected = previousProctoscopyList.find(p => p.id === id);
+    if (selected) {
+      setProctoscopyData(prev => ({ ...prev, procto_date: selected.date, interpretation: `History for ${selected.date}` }));
+      toast.success(`Loaded proctoscopy for ${selected.date}`);
+    }
+  };
+
+  const handleNewProctoscopy = () => {
+    setSelectedProctoscopyId(null);
+    setProctoscopyData(initialProctoscopyState);
+    toast.info("Started a new proctoscopy report");
+  };
+
+  const initialPrescriptionState = {
     prescription_type: "",
     creation_timestamp: new Date().toISOString().split("T")[0],
     allergy: "",
@@ -282,7 +708,29 @@ const DoctorPatientDetails = () => {
     patient_type: "",
     next_appo_date: new Date(Date.now() + 86400000).toISOString().split("T")[0],
     medicines: []
-  });
+  };
+
+  const [prescriptionData, setPrescriptionData] = useState(initialPrescriptionState);
+  const [previousPrescriptionList, setPreviousPrescriptionList] = useState([
+    { id: "PR1", date: "2026-03-12" },
+    { id: "PR2", date: "2026-02-20" }
+  ]);
+  const [selectedPrescriptionId, setSelectedPrescriptionId] = useState(null);
+
+  const handleSelectPrescription = (id) => {
+    setSelectedPrescriptionId(id);
+    const selected = previousPrescriptionList.find(pr => pr.id === id);
+    if (selected) {
+      setPrescriptionData(prev => ({ ...prev, creation_timestamp: selected.date, diagnosis: `History for ${selected.date}` }));
+      toast.success(`Loaded prescription for ${selected.date}`);
+    }
+  };
+
+  const handleNewPrescription = () => {
+    setSelectedPrescriptionId(null);
+    setPrescriptionData(initialPrescriptionState);
+    toast.info("Started a new prescription");
+  };
 
   const [currentMedicine, setCurrentMedicine] = useState({
     name: "",
@@ -291,7 +739,7 @@ const DoctorPatientDetails = () => {
     days: ""
   });
 
-  const [surgeryData, setSurgeryData] = useState({
+  const initialSurgeryState = {
     admission_date: new Date().toISOString().split("T")[0],
     surgery_date: new Date().toISOString().split("T")[0],
     risk_consent: "",
@@ -303,9 +751,30 @@ const DoctorPatientDetails = () => {
     plan: "",
     surgery_note: "",
     additional_comment: ""
-  });
+  };
 
-  const [dischargeData, setDischargeData] = useState({
+  const [surgeryData, setSurgeryData] = useState(initialSurgeryState);
+  const [previousSurgeryList, setPreviousSurgeryList] = useState([
+    { id: "S1", date: "2026-02-15" }
+  ]);
+  const [selectedSurgeryId, setSelectedSurgeryId] = useState(null);
+
+  const handleSelectSurgery = (id) => {
+    setSelectedSurgeryId(id);
+    const selected = previousSurgeryList.find(s => s.id === id);
+    if (selected) {
+      setSurgeryData(prev => ({ ...prev, surgery_date: selected.date, surgery_note: `History for ${selected.date}` }));
+      toast.success(`Loaded surgery details for ${selected.date}`);
+    }
+  };
+
+  const handleNewSurgery = () => {
+    setSelectedSurgeryId(null);
+    setSurgeryData(initialSurgeryState);
+    toast.info("Started a new surgery record");
+  };
+
+  const initialDischargeState = {
     patient_name: "",
     patient_age: "",
     patient_sex: "",
@@ -337,8 +806,36 @@ const DoctorPatientDetails = () => {
     local_care: "",
     note_advice: "",
     fistula_cases: [],
-    balloon_drain: ""
-  });
+    balloon_drain: "",
+    issue_date: new Date().toISOString().split("T")[0],
+    follow_date: "",
+    treating_by: "",
+    made_by: "",
+    checked_by: "",
+    assistance_doctor: "",
+    assistance_surgeon: ""
+  };
+
+  const [dischargeData, setDischargeData] = useState(initialDischargeState);
+  const [previousDischargesList, setPreviousDischargesList] = useState([
+    { id: "D1", date: "2026-01-10" }
+  ]);
+  const [selectedDischargeId, setSelectedDischargeId] = useState(null);
+
+  const handleSelectDischarge = (id) => {
+    setSelectedDischargeId(id);
+    const selected = previousDischargesList.find(d => d.id === id);
+    if (selected) {
+      setDischargeData(prev => ({ ...prev, dod: selected.date, diagnosis: `History for ${selected.date}`, patient_name: formData.name, patient_age: formData.age, patient_sex: formData.sex }));
+      toast.success(`Loaded discharge summary for ${selected.date}`);
+    }
+  };
+
+  const handleNewDischarge = () => {
+    setSelectedDischargeId(null);
+    setDischargeData({ ...initialDischargeState, patient_name: formData.name, patient_age: formData.age, patient_sex: formData.sex });
+    toast.info("Started a new discharge summary");
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -412,8 +909,9 @@ const DoctorPatientDetails = () => {
           }));
         }
       }
+      fetchHistoryDates();
     }
-  }, [initialPatient]);
+  }, [initialPatient, formData.patient_id]);
 
   const calculateAge = (birthDate) => {
     if (!birthDate) return "";
@@ -903,6 +1401,40 @@ const DoctorPatientDetails = () => {
       patient_sex: formData.sex || ""
     }));
   }, [formData.name, formData.age, formData.sex]);
+
+  const [assistanceDoctors, setAssistanceDoctors] = useState([]);
+  const [doctors, setDoctors] = useState([]);
+
+  useEffect(() => {
+    const fetchAssistanceDoctors = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/V1/doctor/assistanceDoctorDropdown?location=${currentLocation}`);
+        const result = await response.json();
+        if (result.statusCode === 200) {
+          setAssistanceDoctors(result.data || []);
+        }
+      } catch (error) {
+        console.error("Error fetching assistance doctors:", error);
+      }
+    };
+
+    const fetchDoctors = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/V1/doctor/doctorDropdown?location=${currentLocation}`);
+        const result = await response.json();
+        if (result.statusCode === 200) {
+          setDoctors(result.data || []);
+        }
+      } catch (error) {
+        console.error("Error fetching doctors:", error);
+      }
+    };
+
+    if (currentLocation && currentLocation !== "default") {
+      fetchAssistanceDoctors();
+      fetchDoctors();
+    }
+  }, [currentLocation]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -1425,6 +1957,13 @@ const DoctorPatientDetails = () => {
                   handleInvestigationCommentChange={handleInvestigationCommentChange}
                   handleMedicationChange={handleMedicationChange}
                   loading={loading}
+                  previousHistoryList={previousHistoryList}
+                  selectedHistoryId={selectedHistoryId}
+                  onSelectHistory={handleSelectHistory}
+                  onNewRecord={handleNewRecord}
+                  onSaveHistory={handleSaveHistory}
+                  assistanceDoctors={assistanceDoctors}
+                  uploadBaseUrl={UPLOAD_BASE_URL}
                 />
               )}
               {activeTab === "diagnosis" && (
@@ -1436,6 +1975,13 @@ const DoctorPatientDetails = () => {
                   setDiagnosisData={setDiagnosisData}
                   handleMedicalAdviceNoteChange={handleMedicalAdviceNoteChange}
                   loading={loading}
+                  previousDiagnosisList={previousDiagnosisList}
+                  selectedDiagnosisId={selectedDiagnosisId}
+                  onSelectDiagnosis={handleSelectDiagnosis}
+                  onNewDiagnosis={handleNewDiagnosis}
+                  onPrintDiagnosis={handlePrintDiagnosis}
+                  doctors={doctors}
+                  assistanceDoctors={assistanceDoctors}
                 />
               )}
               {activeTab === "follow-up" && (
@@ -1450,6 +1996,11 @@ const DoctorPatientDetails = () => {
                   otherTestData={otherTestData}
                   handleOtherTestChange={handleOtherTestChange}
                   handleOtherTestCheckboxChange={handleOtherTestCheckboxChange}
+                  previousTestsList={previousTestsList}
+                  selectedTestId={selectedTestId}
+                  onSelectTest={handleSelectTest}
+                  onNewTest={handleNewTest}
+                  assistanceDoctors={assistanceDoctors}
                 />
               )}
               {activeTab === "proctoscopy" && (
@@ -1457,6 +2008,10 @@ const DoctorPatientDetails = () => {
                   proctoscopyData={proctoscopyData}
                   formData={formData}
                   handleProctoscopyChange={handleProctoscopyChange}
+                  previousProctoscopyList={previousProctoscopyList}
+                  selectedProctoscopyId={selectedProctoscopyId}
+                  onSelectProctoscopy={handleSelectProctoscopy}
+                  onNewProctoscopy={handleNewProctoscopy}
                 />
               )}
               {activeTab === "opd-prescription" && (
@@ -1468,6 +2023,12 @@ const DoctorPatientDetails = () => {
                   handleRemoveMedicine={handleRemoveMedicine}
                   handlePrescriptionChange={handlePrescriptionChange}
                   handlePrescriptionCheckboxChange={handlePrescriptionCheckboxChange}
+                  previousPrescriptionList={previousPrescriptionList}
+                  selectedPrescriptionId={selectedPrescriptionId}
+                  onSelectPrescription={handleSelectPrescription}
+                  onNewPrescription={handleNewPrescription}
+                  assistanceDoctors={assistanceDoctors}
+                  location={currentLocation}
                 />
               )}
               {activeTab === "surgery-details" && (
@@ -1475,6 +2036,11 @@ const DoctorPatientDetails = () => {
                   surgeryData={surgeryData}
                   handleSurgeryChange={handleSurgeryChange}
                   handleSurgeryCheckboxChange={handleSurgeryCheckboxChange}
+                  previousSurgeryList={previousSurgeryList}
+                  selectedSurgeryId={selectedSurgeryId}
+                  onSelectSurgery={handleSelectSurgery}
+                  onNewSurgery={handleNewSurgery}
+                  assistanceDoctors={assistanceDoctors}
                 />
               )}
               {activeTab === "discharge-card" && (
@@ -1482,6 +2048,12 @@ const DoctorPatientDetails = () => {
                   dischargeData={dischargeData}
                   handleDischargeChange={handleDischargeChange}
                   handleDischargeInvestigationChange={handleDischargeInvestigationChange}
+                  previousDischargesList={previousDischargesList}
+                  selectedDischargeId={selectedDischargeId}
+                  onSelectDischarge={handleSelectDischarge}
+                  onNewDischarge={handleNewDischarge}
+                  doctors={doctors}
+                  assistanceDoctors={assistanceDoctors}
                 />
               )}
               {!["personal", "patient-history", "diagnosis", "follow-up", "other-tests", "proctoscopy", "opd-prescription", "surgery-details", "discharge-card"].includes(activeTab) && (
@@ -1505,6 +2077,26 @@ const DoctorPatientDetails = () => {
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate__fadeIn { animation-name: fadeIn; }
       `}</style>
+      <div style={{ display: "none" }}>
+        <DiagnosisPrintView 
+          ref={diagPrintRef} 
+          patient={formData} 
+          historyList={previousHistoryList.map(h => ({ 
+            patient_date: h.date, 
+            height: "170", // Mock values for printing as in PHP it fetches from DB
+            weight: "70",
+            BP: "120/80",
+            painscale: "2",
+            presentcomplaints: "Sample complaint recorded in history."
+          }))} 
+          diagnosisList={previousDiagnosisList.map(d => ({
+            date_diagnosis: d.date,
+            diagnosis: "Clinical Diagnosis",
+            investigationorders: "Blood Test",
+            advice: "Standard Plan"
+          }))}
+        />
+      </div>
     </div>
   );
 };

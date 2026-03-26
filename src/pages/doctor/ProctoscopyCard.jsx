@@ -1,14 +1,55 @@
 import React from "react";
-import { Row, Col, Form, Button } from "react-bootstrap";
+import { Row, Col, Form, Button, Dropdown } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 
-const ProctoscopyCard = ({ proctoscopyData, formData, handleProctoscopyChange }) => {
+const ProctoscopyCard = ({ 
+  proctoscopyData, 
+  formData, 
+  handleProctoscopyChange,
+  previousProctoscopyList = [],
+  selectedProctoscopyId = null,
+  onSelectProctoscopy,
+  onNewProctoscopy
+}) => {
   return (
     <div className="animate__animated animate__fadeIn">
       <div className="p-3 bg-white rounded shadow-sm border mb-3" style={{ borderLeft: "5px solid #00acc1" }}>
-        <h5 className="fw-bold mb-3" style={{ color: "#00838f", textTransform: "uppercase", letterSpacing: "1px", fontSize: "14px" }}>
-          <FeatherIcon icon="image" size="18" className="me-2 text-info" />Proctoscopy Examination Report
-        </h5>
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h5 className="fw-bold mb-0" style={{ color: "#00838f", textTransform: "uppercase", letterSpacing: "1px", fontSize: "14px" }}>
+            <FeatherIcon icon="image" size="18" className="me-2 text-info" />Proctoscopy Examination Report
+          </h5>
+          <div className="d-flex gap-2">
+            <Button 
+              variant="outline-info" 
+              size="sm" 
+              onClick={onNewProctoscopy}
+              style={{ borderRadius: "20px", fontSize: "11px", fontWeight: "700" }}
+            >
+              <FeatherIcon icon="plus" size="14" className="me-1" /> NEW RECORD
+            </Button>
+            <Dropdown onSelect={onSelectProctoscopy}>
+              <Dropdown.Toggle 
+                variant="info" 
+                id="previous-procto-dropdown" 
+                size="sm" 
+                style={{ borderRadius: "20px", fontSize: "11px", fontWeight: "700", color: "white" }}
+              >
+                <FeatherIcon icon="calendar" size="14" className="me-1" /> PREVIOUS DATES
+              </Dropdown.Toggle>
+              <Dropdown.Menu style={{ fontSize: "12px", borderRadius: "10px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}>
+                {previousProctoscopyList.length > 0 ? (
+                  previousProctoscopyList.map((p) => (
+                    <Dropdown.Item key={p.id} eventKey={p.id}>
+                      {p.date} {p.id === selectedProctoscopyId && <FeatherIcon icon="check" size="12" className="ms-2 text-success" />}
+                    </Dropdown.Item>
+                  ))
+                ) : (
+                  <Dropdown.Item disabled>No previous records</Dropdown.Item>
+                )}
+              </Dropdown.Menu>
+            </Dropdown>
+          </div>
+        </div>
 
         <Row className="g-2">
           <Col md={3} className="mb-2">
