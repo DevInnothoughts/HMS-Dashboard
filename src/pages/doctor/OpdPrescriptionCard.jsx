@@ -16,6 +16,7 @@ const OpdPrescriptionCard = ({
   selectedPrescriptionId = null,
   onSelectPrescription,
   onNewPrescription,
+  onSavePrescription,
   assistanceDoctors = [],
   location = "default"
 }) => {
@@ -363,7 +364,10 @@ const OpdPrescriptionCard = ({
       </div>
 
       <div className="text-center mb-5 pb-5">
-        <Button style={{ backgroundColor: "#00796b", borderColor: "#00796b", padding: "10px 40px", borderRadius: "50px", fontWeight: "800", fontSize: "13px", boxShadow: "0 10px 30px rgba(0, 121, 107, 0.3)", textTransform: "uppercase", letterSpacing: "1px" }}>
+        <Button 
+          onClick={onSavePrescription}
+          style={{ backgroundColor: "#00796b", borderColor: "#00796b", padding: "10px 40px", borderRadius: "50px", fontWeight: "800", fontSize: "13px", boxShadow: "0 10px 30px rgba(0, 121, 107, 0.3)", textTransform: "uppercase", letterSpacing: "1px" }}
+        >
           <FeatherIcon icon="printer" size="18" className="me-2" /> FINALIZE & PRINT PRESCRIPTION
         </Button>
       </div>

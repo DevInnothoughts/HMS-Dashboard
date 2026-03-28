@@ -14,6 +14,7 @@ const DiagnosisCard = ({
   selectedDiagnosisId = null,
   onSelectDiagnosis,
   onNewDiagnosis,
+  onSaveDiagnosis,
   onPrintDiagnosis,
   doctors = [],
   assistanceDoctors = []
@@ -91,12 +92,32 @@ const DiagnosisCard = ({
         <h5 className="fw-bold mb-0" style={{ color: "#00838f", textTransform: "uppercase", fontSize: "14px", minWidth: "150px" }}>Advice Strategy</h5>
         <div className="d-flex flex-wrap gap-3 align-items-center px-3" style={{ borderLeft: "2px solid #b2ebf2" }}>
           {["Medication", "Surgery", "Test"].map(type => (
-            <Form.Check key={type} label={type} checked={diagnosisData.advice_types.includes(type)} onChange={() => handleDiagnosisCheckboxChange("advice_types", type)} className="mb-0" style={{ fontSize: "13px", fontWeight: "600" }} />
+            <Form.Check 
+              key={type} 
+              label={type} 
+              checked={diagnosisData.advice_types.includes(type)} 
+              onChange={() => handleDiagnosisCheckboxChange("advice_types", type)} 
+              disabled={
+                (type === "Medication" && diagnosisData.advice_types.includes("Surgery")) ||
+                (type === "Surgery" && diagnosisData.advice_types.includes("Medication"))
+              }
+              className="mb-0" 
+              style={{ fontSize: "13px", fontWeight: "600" }} 
+            />
           ))}
         </div>
-        <div className="ms-auto flex-grow-1" style={{ minWidth: "250px" }}>
-          <Form.Control as="textarea" rows={1} placeholder="Specific comments on advice strategy..." value={diagnosisData.diagnosis_comment} onChange={(e) => handleDiagnosisChange("diagnosis_comment", e.target.value)} style={{ borderRadius: "8px", border: "1px solid #80deea", padding: "6px 12px", fontSize: "13px", height: "100px" }} />
-        </div>
+        {diagnosisData.advice_types.includes("Test") && (
+          <div className="ms-auto flex-grow-1 animate__animated animate__fadeInRight" style={{ minWidth: "250px" }}>
+            <Form.Control 
+              as="textarea" 
+              rows={1} 
+              placeholder="Other / Test Comment" 
+              value={diagnosisData.diagnosis_comment} 
+              onChange={(e) => handleDiagnosisChange("diagnosis_comment", e.target.value)} 
+              style={{ borderRadius: "8px", border: "1px solid #80deea", padding: "6px 12px", fontSize: "13px", height: "80px" }} 
+            />
+          </div>
+        )}
       </div>
 
       {/* 3. Speciality Specific Details */}
@@ -105,7 +126,7 @@ const DiagnosisCard = ({
           <Nav className="flex-nowrap overflow-auto custom-subnav px-1 py-1" style={{ backgroundColor: "#e0f2f1", gap: "4px" }}>
             {[
               { id: "piles", label: "Piles" }, { id: "fistula", label: "Fistula" }, { id: "hernia", label: "Hernia" },
-              { id: "varicose", label: "Varicose Veins" }, { id: "prolapse", label: "Prolapse" }, { id: "circumcision", label: "Circumcision" },
+              { id: "varicosevein", label: "Varicose Veins" }, { id: "prolapse", label: "Prolapse" }, { id: "circumcision", label: "Circumcision" },
               { id: "abscess", label: "Abscess" }, { id: "fissure", label: "Fissure" }, { id: "ibs", label: "IBS" }, { id: "urology", label: "Urology" }
             ].map(sub => (
               <Nav.Item key={sub.id}>
@@ -286,6 +307,7 @@ const DiagnosisCard = ({
 
       <div className="text-center mb-5 pb-5 mt-4">
         <Button
+          onClick={onSaveDiagnosis}
           disabled={loading}
           style={{ backgroundColor: "#00838f", borderColor: "#00838f", padding: "10px 40px", borderRadius: "50px", fontWeight: "800", fontSize: "13px", boxShadow: "0 8px 25px rgba(0, 131, 143, 0.2)", textTransform: "uppercase", letterSpacing: "1px" }}>
           {loading ? <Spinner size="sm" className="me-2" /> : <FeatherIcon icon="check-circle" size="18" className="me-2" />}

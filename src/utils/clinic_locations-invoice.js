@@ -152,7 +152,7 @@ export const clinincLoc = {
   "Mysore": {
     "invoiceAddress": "<b>Healing Hands Clinic</b><br> 1st and 2nd Floor, 13/2,Scarlet Towers, Temple Road,Jayalakshmipuram, Mysore,Karnataka - 570012.",
     "invoiceHelplineNo": "8884884496",
-    "EmergencySMS": ""
+    "EmergencySMS": "8884884485"
   },
   "HSR": {
     "invoiceAddress": "<b>Healing Hands Clinic</b><br> 1st Floor, Krishna Complex, HSR Layout - 1st Sector, 17th Cross Road, 27th Main Road, Opposite to Sri Basaveshwara Gayatri Temple, Above More Supermarket, Bengaluru – 560102",

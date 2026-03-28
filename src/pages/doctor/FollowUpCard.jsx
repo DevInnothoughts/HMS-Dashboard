@@ -2,7 +2,7 @@ import React from "react";
 import { Row, Col, Form, Button } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 
-const FollowUpCard = ({ followUpData, formData, handleFollowUpChange }) => {
+const FollowUpCard = ({ followUpData, formData, handleFollowUpChange, onSaveFollowUp, loading }) => {
   return (
     <div className="animate__animated animate__fadeIn">
       <div className="p-3 bg-white rounded shadow-sm border mb-3" style={{ borderLeft: "5px solid #00acc1" }}>
@@ -71,8 +71,12 @@ const FollowUpCard = ({ followUpData, formData, handleFollowUpChange }) => {
         </Row>
       </div>
       <div className="text-center mb-5 pb-5 mt-4">
-        <Button style={{ backgroundColor: "#00acc1", borderColor: "#00acc1", padding: "10px 40px", borderRadius: "40px", fontWeight: "800", fontSize: "13px", boxShadow: "0 8px 25px rgba(0, 172, 193, 0.4)", textTransform: "uppercase", letterSpacing: "1px" }}>
-          <FeatherIcon icon="save" size="18" className="me-2" /> RECORD FOLLOW UP DATA
+        <Button 
+          disabled={loading}
+          onClick={onSaveFollowUp}
+          style={{ backgroundColor: "#00acc1", borderColor: "#00acc1", padding: "10px 40px", borderRadius: "40px", fontWeight: "800", fontSize: "13px", boxShadow: "0 8px 25px rgba(0, 172, 193, 0.4)", textTransform: "uppercase", letterSpacing: "1px" }}
+        >
+          {loading ? "Saving..." : <><FeatherIcon icon="save" size="18" className="me-2" /> RECORD FOLLOW UP DATA</>}
         </Button>
       </div>
     </div>

@@ -715,12 +715,23 @@ export default function DoctorPatientList() {
       }));
     }
 
-    console.log("Setting formData for prefix:", patient.prefix);
+    const rawPrefix = (patient.prefix || patient.Prefix || "").trim();
+    // Normalize common variants to uppercase for match consistency with dropdown values
+    const prefixOptions = ["MR", "MRS", "MASTER", "MISS", "DR", "MS"];
+    let finalPrefix = rawPrefix.toUpperCase().replace(/\.$/, "");
+    if (finalPrefix === "M/S") finalPrefix = "MISS"; // Common legacy shorthand
+    
+    // Ensure it's one of our standard options or empty
+    if (!prefixOptions.includes(finalPrefix)) {
+      finalPrefix = ""; 
+    }
+
+    console.log("Setting formData for prefix:", finalPrefix);
     setFormData({
       // Uid_no: patient.uid || "",
       Uid_no: patient.Uid_no || patient.uid || "",
       date: patient.date || "",
-      prefix: (patient.prefix || "").trim(),
+      prefix: finalPrefix,
       name: patient.name || "",
       patient_type: Boolean(patient.patient_type),
       email: patient.email || "",
@@ -768,80 +779,65 @@ export default function DoctorPatientList() {
       return;
     }
 
-    let reference_type = selectedPatient.ref;
+    let reference_type = selectedReference;
     let ref = "";
 
     switch (selectedReference) {
       case "newspaper":
-        reference_type = "newspaper";
-        ref = referenceDetails.newspaper || formData.ref || "";
+        ref = referenceDetails.newspaper || referenceDetails.Other_Newspaper || formData.ref || "";
         break;
       case "dr_ref":
-        reference_type = "dr_ref";
         ref = referenceDetails.dr_name || "";
         break;
       case "internet":
-        reference_type = "internet";
-        ref = referenceDetails.internet || "";
+        ref = referenceDetails.internet || formData.ref || "";
         break;
       case "MediaRef":
-        reference_type = "MediaRef";
-        ref = referenceDetails.MediaRef || "";
+        ref = referenceDetails.MediaRef || formData.ref || "";
         break;
       case "TVShow":
-        reference_type = "TVShow";
-        ref = referenceDetails.TVShow || "";
+        ref = referenceDetails.TVShow || formData.ref || "";
         break;
       case "old_ref":
-        reference_type = "old_ref";
         ref = `${oldPatientDetails.patient_ref_no || ""},${oldPatientDetails.old_patient_name || ""
           },${oldPatientDetails.old_patient_id_value || ""},${oldPatientDetails.old_patient_pincode || ""
           }`;
         break;
       case "family_friends":
-        reference_type = "family_friends";
         ref = `${referenceDetails.friendname || ""},${referenceDetails.friendno || ""
           }`;
         break;
       case "hhc_board":
-        reference_type = "hhc_board";
         ref = referenceDetails.HHC_board || "";
         break;
       case "HHF":
-        reference_type = "HHF";
         ref = referenceDetails.HHF || "";
         break;
       case "other":
-        reference_type = "other";
-        ref = referenceDetails.other || "";
+        ref = referenceDetails.other || formData.ref || "";
         break;
       case "WOM":
-        reference_type = "WOM";
         ref = referenceDetails.WOM || "";
         break;
       case "awareness_lecture":
-        reference_type = "awareness_lecture";
         ref = referenceDetails.awareness_lecture || "";
         break;
       case "treated_past":
-        reference_type = "treated_past";
         ref = referenceDetails.treated_past_status || "";
         break;
       case "hhc_branch":
-        reference_type = "hhc_branch";
         ref = referenceDetails.hhc_branch || "";
         break;
       case "aggregators":
-        reference_type = "aggregators";
         ref = referenceDetails.aggregators || "";
         break;
       default:
-        reference_type = null;
-        ref = referenceDetails[selectedReference] || formData.ref;
+        reference_type = formData.reference_type;
+        ref = formData.ref;
     }
 
     console.log("Reference Type:", reference_type);
-    console.log("Reference:", ref);
+    console.log("Ref:", ref);
 
     const specificWork = Object.entries(workPatterns)
       .filter(([_, value]) => value)
@@ -1336,10 +1332,11 @@ export default function DoctorPatientList() {
                         name="newspaper"
                         value={paper}
                         onChange={(e) => {
-                          handleReferenceChange(e);
+                          const val = e.target.value;
+                          setReferenceDetails(prev => ({ ...prev, newspaper: val }));
                           setFormData((prev) => ({
                             ...prev,
-                            ref: paper,
+                            ref: val,
                             reference_type: "newspaper",
                           }));
                         }}
@@ -1659,10 +1656,11 @@ export default function DoctorPatientList() {
                       name="internet"
                       value={source}
                       onChange={(e) => {
-                        handleReferenceChange(e);
+                        const val = e.target.value;
+                        setReferenceDetails(prev => ({ ...prev, internet: val }));
                         setFormData((prev) => ({
                           ...prev,
-                          ref: source,
+                          ref: val,
                           reference_type: "internet",
                         }));
                       }}
@@ -1722,10 +1720,11 @@ export default function DoctorPatientList() {
                       name="MediaRef"
                       value={media}
                       onChange={(e) => {
-                        handleReferenceChange(e);
+                        const val = e.target.value;
+                        setReferenceDetails(prev => ({ ...prev, MediaRef: val }));
                         setFormData((prev) => ({
                           ...prev,
-                          ref: media,
+                          ref: val,
                           reference_type: "MediaRef",
                         }));
                       }}
@@ -1802,10 +1801,11 @@ export default function DoctorPatientList() {
                       name="TVShow"
                       value={show}
                       onChange={(e) => {
-                        handleReferenceChange(e);
+                        const val = e.target.value;
+                        setReferenceDetails(prev => ({ ...prev, TVShow: val }));
                         setFormData((prev) => ({
                           ...prev,
-                          ref: show,
+                          ref: val,
                           reference_type: "TVShow",
                         }));
                       }}

@@ -11,6 +11,8 @@ const OtherTestsCard = ({
   selectedTestId = null,
   onSelectTest,
   onNewTest,
+  onSaveTest,
+  loading = false,
   assistanceDoctors = []
 }) => {
   const testOptions = [
@@ -189,8 +191,16 @@ const OtherTestsCard = ({
         </Row>
       </div>
       <div className="text-center mb-5 pb-5 mt-4">
-        <Button style={{ backgroundColor: "#00acc1", borderColor: "#00acc1", padding: "10px 40px", borderRadius: "40px", fontWeight: "800", fontSize: "13px", boxShadow: "0 8px 25px rgba(0, 172, 193, 0.4)", textTransform: "uppercase", letterSpacing: "1px" }}>
-          <FeatherIcon icon="send" size="18" className="me-2" /> SEND TEST REQUEST
+        <Button 
+          onClick={onSaveTest}
+          disabled={loading}
+          style={{ backgroundColor: "#00acc1", borderColor: "#00acc1", padding: "10px 40px", borderRadius: "40px", fontWeight: "800", fontSize: "13px", boxShadow: "0 8px 25px rgba(0, 172, 193, 0.4)", textTransform: "uppercase", letterSpacing: "1px" }}>
+          {loading ? (
+            <div className="spinner-border spinner-border-sm me-2" role="status"></div>
+          ) : (
+            <FeatherIcon icon="send" size="18" className="me-2" />
+          )}
+          {loading ? "SENDING..." : "SEND TEST REQUEST"}
         </Button>
       </div>
     </div>
