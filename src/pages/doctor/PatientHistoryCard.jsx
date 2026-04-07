@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Row, Col, Form, Card, Nav, Button, Table, Dropdown, Spinner } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 
@@ -32,6 +32,32 @@ const PatientHistoryCard = ({
     { id: "circumcision", label: "Circumcision", icon: "plus-circle" }
   ];
 
+  // Auto-switch to first non-empty tab when loading a history record
+  useEffect(() => {
+    if (selectedHistoryId && historyData) {
+      const firstWithData = subTabs.find(st => hasTabDetail(st.id));
+      if (firstWithData) {
+        setHistoryActiveSubTab(firstWithData.id);
+      }
+    }
+  }, [selectedHistoryId, historyData]);
+
+  const hasTabDetail = (tabId) => {
+    switch (tabId) {
+      case "piles": return (historyData.piles_data && historyData.piles_data.length > 0) || (historyData.piles_duration && historyData.piles_duration.trim() !== "");
+      case "fistula": return (historyData.fistula_data && historyData.fistula_data.length > 0) || (historyData.fistula_duration && historyData.fistula_duration.trim() !== "");
+      case "hernia": return (historyData.hernia_data && historyData.hernia_data.length > 0) || (historyData.hernia_duration && historyData.hernia_duration.trim() !== "");
+      case "varicose": return (historyData.varicose_data && historyData.varicose_data.length > 0) || (historyData.varicose_duration && historyData.varicose_duration.trim() !== "");
+      case "urinary": return historyData.urinary_incontinence || (historyData.urinary_duration && historyData.urinary_duration.trim() !== "");
+      case "fecal": return historyData.fecal_incontinence || (historyData.fecal_duration && historyData.fecal_duration.trim() !== "");
+      case "urology": return (historyData.urology_data && historyData.urology_data.length > 0) || (historyData.urology_duration && historyData.urology_duration.trim() !== "");
+      case "ods": return (historyData.ods_data && historyData.ods_data.length > 0) || (historyData.ods_duration && historyData.ods_duration.trim() !== "") || (historyData.ods_bowel_habits && historyData.ods_bowel_habits.trim() !== "");
+      case "sinus": return (historyData.pilonidal_data && historyData.pilonidal_data.length > 0) || (historyData.pilonidal_comment && historyData.pilonidal_comment.trim() !== "");
+      case "circumcision": return (historyData.circumcision_comment && historyData.circumcision_comment.trim() !== "");
+      default: return false;
+    }
+  };
+
   const renderHistorySubTabs = () => (
     <Card className="shadow-sm border-0 mb-3 overflow-hidden" style={{ borderRadius: "5px" }}>
       <Card.Header className="p-0 border-0">
@@ -45,7 +71,7 @@ const PatientHistoryCard = ({
                 style={{
                   whiteSpace: "nowrap",
                   borderRadius: "30px",
-                  padding: "8px 18px",
+                  padding: "8px 20px",
                   margin: "4px 2px",
                   fontWeight: "700",
                   fontSize: "12px",
@@ -68,7 +94,7 @@ const PatientHistoryCard = ({
         {historyActiveSubTab === "piles" && (
           <div className="animate__animated animate__fadeIn">
             <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "14px" }}>Piles / PR Bleeding Symptoms</h6>
-            <div className="d-flex flex-wrap gap-2 mb-2 p-5  rounded shadow-inner">
+            <div className="d-flex flex-wrap gap-4 mb-2 p-3 rounded shadow-inner">
               {["PR Bleeding:Painless", "PR Bleeding:Painful", "Burning", "Pricking", "Itching", "Incomplete Evacuation", "Prolapse", "Swelling", "Pain at Anal Region", "Mucus Mixed Blood"].map(opt => (
                 <Form.Check key={opt} label={opt} checked={historyData.piles_data.includes(opt)} onChange={() => handleHistoryCheckboxChange("piles_data", opt)} style={{ fontSize: "13px", fontWeight: "600" }} />
               ))}
@@ -82,7 +108,7 @@ const PatientHistoryCard = ({
         {historyActiveSubTab === "fistula" && (
           <div className="animate__animated animate__fadeIn">
             <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "14px" }}>Fistula Symptoms</h6>
-            <div className="d-flex flex-wrap gap-2 mb-2 p-5  rounded shadow-inner">
+            <div className="d-flex flex-wrap gap-4 mb-2 p-3 rounded shadow-inner">
               {["Pus Discharge", "Boil", "Watery Discharge", "Swelling near anal region"].map(opt => (
                 <Form.Check key={opt} label={opt} checked={historyData.fistula_data.includes(opt)} onChange={() => handleHistoryCheckboxChange("fistula_data", opt)} style={{ fontSize: "13px", fontWeight: "600" }} />
               ))}
@@ -96,7 +122,7 @@ const PatientHistoryCard = ({
         {historyActiveSubTab === "hernia" && (
           <div className="animate__animated animate__fadeIn">
             <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "14px" }}>Hernia Details</h6>
-            <div className="d-flex flex-wrap gap-2 mb-2 p-5 rounded shadow-inner">
+            <div className="d-flex flex-wrap gap-4 mb-2 p-3 rounded shadow-inner">
               {["Swelling:Umbilical", "Right Inguinal", "Left Inguinal", "Swelling:Abdominal", "Reducible", "Nonreducible", "Past Sx"].map(opt => (
                 <Form.Check key={opt} label={opt} checked={historyData.hernia_data.includes(opt)} onChange={() => handleHistoryCheckboxChange("hernia_data", opt)} style={{ fontSize: "13px", fontWeight: "600" }} />
               ))}
@@ -110,7 +136,7 @@ const PatientHistoryCard = ({
         {historyActiveSubTab === "varicose" && (
           <div className="animate__animated animate__fadeIn">
             <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "14px" }}>Varicose Veins History</h6>
-            <div className="d-flex flex-wrap gap-2 mb-2 p-5 rounded shadow-inner">
+            <div className="d-flex flex-wrap gap-4 mb-2 p-3 rounded shadow-inner">
               {["Pain", "Enlarged veins", "Swelling", "Ulcer", "Right", "Left", "B/L"].map(opt => (
                 <Form.Check key={opt} label={opt} checked={historyData.varicose_data.includes(opt)} onChange={() => handleHistoryCheckboxChange("varicose_data", opt)} style={{ fontSize: "13px", fontWeight: "600" }} />
               ))}
@@ -142,7 +168,7 @@ const PatientHistoryCard = ({
         {historyActiveSubTab === "urology" && (
           <div className="animate__animated animate__fadeIn">
             <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "14px" }}>Urology Symptoms</h6>
-            <div className="d-flex flex-wrap gap-2 mb-2 p-5 rounded shadow-inner">
+            <div className="d-flex flex-wrap gap-4 mb-2 p-3 rounded shadow-inner">
               {["Pain", "Burning urination", "Nausea", "Vomiting", "LUTS", "Urgency of urination", "Incomplete evacuation", "Stream of urine", "Nocturia"].map(opt => (
                 <Form.Check key={opt} label={opt} checked={historyData.urology_data.includes(opt)} onChange={() => handleHistoryCheckboxChange("urology_data", opt)} style={{ fontSize: "13px", fontWeight: "600" }} />
               ))}
@@ -156,7 +182,7 @@ const PatientHistoryCard = ({
         {historyActiveSubTab === "ods" && (
           <div className="animate__animated animate__fadeIn">
             <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "14px" }}>ODS Symptoms</h6>
-            <div className="d-flex flex-wrap gap-2 mb-2 p-5 rounded shadow-inner">
+            <div className="d-flex flex-wrap gap-4 mb-2 p-3 rounded shadow-inner">
               {["Excessive Straining", "Digitation", "Hard Stools", "Enema / Laxative", "Fragmented Defecation", "Chronic constipation", "Urgency", "Frequency"].map(opt => (
                 <Form.Check key={opt} label={opt} checked={historyData.ods_data.includes(opt)} onChange={() => handleHistoryCheckboxChange("ods_data", opt)} style={{ fontSize: "13px", fontWeight: "600" }} />
               ))}
@@ -170,7 +196,7 @@ const PatientHistoryCard = ({
         {historyActiveSubTab === "sinus" && (
           <div className="animate__animated animate__fadeIn">
             <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "14px" }}>Pilonidal Sinus Details</h6>
-            <div className="d-flex flex-wrap gap-2 mb-2 p-5 rounded shadow-inner">
+            <div className="d-flex flex-wrap gap-4 mb-2 p-3 rounded shadow-inner">
               {["Pain", "Boil", "Swelling", "Pus / Watery Discharge"].map(opt => (
                 <Form.Check key={opt} label={opt} checked={historyData.pilonidal_data.includes(opt)} onChange={() => handleHistoryCheckboxChange("pilonidal_data", opt)} style={{ fontSize: "13px", fontWeight: "600" }} />
               ))}
@@ -194,26 +220,26 @@ const PatientHistoryCard = ({
   return (
     <div className="animate__animated animate__fadeIn">
       {/* Date & Physical Metadata */}
-      <div className="p-3 bg-white rounded shadow-sm border mb-3" style={{ borderLeft: "5px solid #00bcd4" }}>
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <h5 className="fw-bold mb-0" style={{ color: "#00838f", textTransform: "uppercase", letterSpacing: "1px", fontSize: "14px" }}>Clinical Measurements</h5>
+      <div className="p-2 bg-white rounded shadow-sm border mb-2" style={{ borderLeft: "5px solid #00bcd4" }}>
+        <div className="d-flex justify-content-between align-items-center px-1">
+          <h5 className="fw-bold mb-0" style={{ color: "#00838f", textTransform: "uppercase", letterSpacing: "0.5px", fontSize: "13px" }}>Clinical Measurements</h5>
           <div className="d-flex gap-2">
             <Button
               variant="outline-info"
               size="sm"
               onClick={onNewRecord}
-              style={{ borderRadius: "20px", fontSize: "11px", fontWeight: "700" }}
+              style={{ borderRadius: "20px", fontSize: "12px", fontWeight: "700", padding: "7px 10px" }}
             >
-              <FeatherIcon icon="plus" size="14" className="me-1" /> NEW RECORD
+              <FeatherIcon icon="plus" size="13" className="me-1" /> NEW RECORD
             </Button>
             <Dropdown onSelect={onSelectHistory}>
               <Dropdown.Toggle
-                variant="info"
+                variant="outline-info"
                 id="previous-dates-dropdown"
                 size="sm"
-                style={{ borderRadius: "20px", fontSize: "11px", fontWeight: "700", color: "white" }}
+                style={{ borderRadius: "20px", fontSize: "12px", fontWeight: "700", color: "white", padding: "7px 10px" }}
               >
-                <FeatherIcon icon="calendar" size="14" className="me-1" /> PREVIOUS DATES
+                <FeatherIcon icon="calendar" size="13" className="me-1" /> PREVIOUS DATES
               </Dropdown.Toggle>
               <Dropdown.Menu style={{ fontSize: "12px", borderRadius: "10px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}>
                 {previousHistoryList.length > 0 ? (
@@ -229,18 +255,18 @@ const PatientHistoryCard = ({
             </Dropdown>
           </div>
         </div>
-        <Row>
-          <Col md={4} className="mb-2">
-            <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Consultation Date</Form.Label>
-            <Form.Control type="date" value={historyData.patient_date} onChange={(e) => handleHistoryChange("patient_date", e.target.value)} style={{ borderRadius: "10px", fontSize: "12px", border: "2px solid #b2ebf2", padding: "6px" }} />
+        <Row className="g-2 px-1">
+          <Col md={4}>
+            <Form.Label className="fw-bold mb-1" style={{ fontSize: "10px", color: "#006064" }}>Consultation Date</Form.Label>
+            <Form.Control type="date" size="sm" value={historyData.patient_date} onChange={(e) => handleHistoryChange("patient_date", e.target.value)} style={{ borderRadius: "8px", fontSize: "11px", border: "1px solid #b2ebf2", padding: "4px 8px" }} />
           </Col>
-          <Col md={4} className="mb-2">
-            <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Height (Feet/Inches)</Form.Label>
-            <Form.Control type="text" value={historyData.height_feet} onChange={(e) => handleHistoryChange("height_feet", e.target.value)} placeholder="e.g. 5.11" style={{ borderRadius: "10px", fontSize: "12px", border: "2px solid #b2ebf2", padding: "6px 12px" }} />
+          <Col md={4}>
+            <Form.Label className="fw-bold mb-1" style={{ fontSize: "10px", color: "#006064" }}>Height (Feet/Inches)</Form.Label>
+            <Form.Control type="text" size="sm" value={historyData.height_feet} onChange={(e) => handleHistoryChange("height_feet", e.target.value)} placeholder="e.g. 5.11" style={{ borderRadius: "8px", fontSize: "11px", border: "1px solid #b2ebf2", padding: "4px 8px" }} />
           </Col>
-          <Col md={4} className="mb-2">
-            <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Weight (kg)</Form.Label>
-            <Form.Control type="text" value={historyData.weight_kg} onChange={(e) => handleHistoryChange("weight_kg", e.target.value)} placeholder="e.g. 70" style={{ borderRadius: "10px", fontSize: "12px", border: "2px solid #b2ebf2", padding: "6px 12px" }} />
+          <Col md={4}>
+            <Form.Label className="fw-bold mb-1" style={{ fontSize: "10px", color: "#006064" }}>Weight (kg)</Form.Label>
+            <Form.Control type="text" size="sm" value={historyData.weight_kg} onChange={(e) => handleHistoryChange("weight_kg", e.target.value)} placeholder="e.g. 70" style={{ borderRadius: "8px", fontSize: "11px", border: "1px solid #b2ebf2", padding: "4px 8px" }} />
           </Col>
         </Row>
       </div>
@@ -249,38 +275,40 @@ const PatientHistoryCard = ({
       <style>{` 
         .custom-subnav::-webkit-scrollbar { height: 4px; } 
         .custom-subnav::-webkit-scrollbar-thumb { background: #b2ebf2; border-radius: 10px; } 
-        .form-check-input { border: 1px solid black !important; }
+        .form-check-input { border: 1px solid black !important; width: 1.1em; height: 1.1em; margin-top: 0.2em; }
         .form-check-input:checked { background-color: #00838f; border-color: black !important; }
+        .form-check-label { padding-left: 5px; cursor: pointer; }
+        .form-check { display: flex; align-items: center; margin-right: 10px; margin-bottom: 5px; }
       `}</style>
       {renderHistorySubTabs()}
 
       {/* Vitals Section */}
-      <div className="p-3 bg-white rounded shadow-sm border mb-3" style={{ borderLeft: "5px solid #00acc1" }}>
-        <h5 className="fw-bold mb-3" style={{ color: "#00838f", textTransform: "uppercase", fontSize: "14px" }}>Vitals & Systemic Examination</h5>
-        <div className="p-3 rounded mb-3" style={{ backgroundColor: "#f8fbfc", border: "2px solid #e0f2f1" }}>
-          <Row>
-            <Col md={3} className="mb-2">
-              <Form.Label className="fw-bold" style={{ fontSize: "11px", color: "#006064" }}>Pain Score (1-10)</Form.Label>
-              <Form.Select value={historyData.painscale} onChange={(e) => handleHistoryChange("painscale", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #80deea", padding: "6px 12px", fontSize: "12px" }}>
+      <div className="p-2 bg-white rounded shadow-sm border mb-2" style={{ borderLeft: "5px solid #00acc1" }}>
+        <h5 className="fw-bold mb-2 px-1" style={{ color: "#00838f", textTransform: "uppercase", fontSize: "13px" }}>Vitals & Systemic Examination</h5>
+        <div className="p-2 rounded mb-2" style={{ backgroundColor: "#f8fbfc", border: "1px solid #e0f2f1" }}>
+          <Row className="g-2 px-1">
+            <Col md={3}>
+              <Form.Label className="fw-bold mb-1" style={{ fontSize: "10px", color: "#006064" }}>Pain Score (1-10)</Form.Label>
+              <Form.Select size="sm" value={historyData.painscale} onChange={(e) => handleHistoryChange("painscale", e.target.value)} style={{ borderRadius: "8px", border: "1px solid #80deea", padding: "4px 8px", fontSize: "11px" }}>
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => <option key={n} value={n}>{n}</option>)}
               </Form.Select>
             </Col>
-            <Col md={3} className="mb-2">
-              <Form.Label className="fw-bold" style={{ fontSize: "11px", color: "#006064" }}>BP (mm Hg)</Form.Label>
-              <Form.Control value={historyData.vital_bp} onChange={(e) => handleHistoryChange("vital_bp", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #80deea", padding: "6px 12px", fontSize: "12px" }} />
+            <Col md={3}>
+              <Form.Label className="fw-bold mb-1" style={{ fontSize: "10px", color: "#006064" }}>BP (mm Hg)</Form.Label>
+              <Form.Control size="sm" value={historyData.vital_bp} onChange={(e) => handleHistoryChange("vital_bp", e.target.value)} style={{ borderRadius: "8px", border: "1px solid #80deea", padding: "4px 8px", fontSize: "11px" }} />
             </Col>
-            <Col md={3} className="mb-2">
-              <Form.Label className="fw-bold" style={{ fontSize: "11px", color: "#006064" }}>Pulse (/min)</Form.Label>
-              <Form.Control value={historyData.vital_pulse} onChange={(e) => handleHistoryChange("vital_pulse", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #80deea", padding: "6px 12px", fontSize: "12px" }} />
+            <Col md={3}>
+              <Form.Label className="fw-bold mb-1" style={{ fontSize: "10px", color: "#006064" }}>Pulse (/min)</Form.Label>
+              <Form.Control size="sm" value={historyData.vital_pulse} onChange={(e) => handleHistoryChange("vital_pulse", e.target.value)} style={{ borderRadius: "8px", border: "1px solid #80deea", padding: "4px 8px", fontSize: "11px" }} />
             </Col>
-            <Col md={3} className="mb-5">
-              <Form.Label className="fw-bold" style={{ fontSize: "11px", color: "#006064" }}>RR (/min)</Form.Label>
-              <Form.Control value={historyData.vital_rr} onChange={(e) => handleHistoryChange("vital_rr", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #80deea", padding: "6px 12px", fontSize: "12px" }} />
+            <Col md={3}>
+              <Form.Label className="fw-bold mb-1" style={{ fontSize: "10px", color: "#006064" }}>RR (/min)</Form.Label>
+              <Form.Control size="sm" value={historyData.vital_rr} onChange={(e) => handleHistoryChange("vital_rr", e.target.value)} style={{ borderRadius: "8px", border: "1px solid #80deea", padding: "4px 8px", fontSize: "11px" }} />
             </Col>
             {['rs', 'cvs', 'cns', 'p/a'].map(field => (
               <Col md={3} key={field}>
-                <Form.Label className="fw-bold" style={{ fontSize: "11px", color: "#006064" }}>{field.toUpperCase()}</Form.Label>
-                <Form.Control value={historyData[field]} onChange={(e) => handleHistoryChange(field, e.target.value)} style={{ borderRadius: "10px", border: "2px solid #80deea", fontSize: "12px", padding: "6px 12px" }} />
+                <Form.Label className="fw-bold mb-1" style={{ fontSize: "10px", color: "#006064" }}>{field.toUpperCase()}</Form.Label>
+                <Form.Control size="sm" value={historyData[field]} onChange={(e) => handleHistoryChange(field, e.target.value)} style={{ borderRadius: "8px", border: "1px solid #80deea", fontSize: "11px", padding: "4px 8px" }} />
               </Col>
             ))}
           </Row>
@@ -288,9 +316,9 @@ const PatientHistoryCard = ({
       </div>
 
       {/* Summaries Section */}
-      <div className="p-3 bg-white rounded shadow-sm border mb-3" style={{ borderLeft: "5px solid #0097a7" }}>
-        <h5 className="fw-bold mb-3" style={{ color: "#00838f", textTransform: "uppercase", fontSize: "14px" }}>Medical History Summaries</h5>
-        <div className="d-flex flex-column gap-2">
+      <div className="p-2 bg-white rounded shadow-sm border mb-2" style={{ borderLeft: "5px solid #0097a7" }}>
+        <h5 className="fw-bold mb-2 px-1" style={{ color: "#00838f", textTransform: "uppercase", fontSize: "13px" }}>Medical History Summaries</h5>
+        <div className="d-flex flex-column gap-3 px-1">
           {[
             { label: 'Family History', key: 'family_history', opts: ['Piles', 'Constipation ', 'DM', 'HTN', 'Heart Disease'], other: 'family_history_other' },
             { label: 'General Symptoms', key: 'general_history', opts: ['H/O Wt Loss', 'Dec Appetite ', 'H/O Straining for urination', 'Acidity', 'Gas', 'Bloating'], comment: 'weightloss_comment' },
@@ -314,7 +342,7 @@ const PatientHistoryCard = ({
           ))}
           {/* Habits */}
           <div className="p-3 border rounded" style={{ backgroundColor: "#f1fcfd", border: "2px solid #b2ebf2" }}>
-            <h6 className="fw-bold mb-2" style={{ color: "#006064", fontSize: "13px" }}><FeatherIcon icon="activity" size="14" className="me-2" /> Habits</h6>
+            <h6 className="fw-bold mb-2" style={{ color: "#006064", fontSize: "13px" }}>Habits</h6>
             <div className="d-flex flex-wrap gap-3">
               {['Smoking', 'Alcohol', 'Tobacco', 'Drugs'].map(h => (
                 <Form.Check key={h} label={h} checked={historyData.habits.includes(h)} onChange={() => handleHistoryCheckboxChange("habits", h)} style={{ fontSize: "13px", fontWeight: "600" }} />
@@ -323,63 +351,74 @@ const PatientHistoryCard = ({
           </div>
           {/* Drug Allergies */}
           <div className="p-3 border rounded" style={{ backgroundColor: "#f1fcfd", border: "2px solid #b2ebf2" }}>
-            <h6 className="fw-bold mb-2" style={{ color: "#006064", fontSize: "12px" }}><FeatherIcon icon="alert-triangle" size="14" className="me-2" /> Drug Allergies</h6>
+            <h6 className="fw-bold mb-2" style={{ color: "#006064", fontSize: "12px" }}>Drug Allergies</h6>
             <Form.Control as="textarea" rows={1} placeholder="Specify any drug allergies..." value={historyData.drug_allergy} onChange={(e) => handleHistoryChange("drug_allergy", e.target.value)} style={{ borderRadius: "8px", border: "1px solid #80deea", fontSize: "13px", padding: "6px" }} />
           </div>
         </div>
       </div>
 
-      {/* Medication & Habits */}
+      {/* Medication, Habits & Complaints */}
       <div className="p-3 bg-white rounded shadow-sm border mb-3" style={{ borderLeft: "5px solid #00bcd4" }}>
         <h5 className="fw-bold mb-3" style={{ color: "#00838f", textTransform: "uppercase", fontSize: "14px" }}>Medication, Habits & Complaints</h5>
-        <Table responsive bordered hover className="mb-3 overflow-hidden" style={{ borderRadius: "10px", borderCollapse: "separate", borderSpacing: 0 }}>
-          <thead>
-            <tr style={{ backgroundColor: "#00838f", color: "white" }}>
-              <th className="p-2" style={{ fontSize: "12px" }}>#</th>
-              <th className="p-2" style={{ fontSize: "12px" }}>Medication Name</th>
-              <th className="p-2" style={{ fontSize: "12px" }}>Indication</th>
-              <th className="p-2" style={{ fontSize: "12px" }}>Since</th>
-            </tr>
-          </thead>
-          <tbody>
-            {historyData.medication_history.map((row, idx) => (
-              <tr key={idx}>
-                <td className="text-center p-2 fw-bold" style={{ backgroundColor: "#f8fbfc", color: "#00838f", fontSize: "12px", verticalAlign: "middle" }}>{idx + 1}</td>
-                <td className="p-1"><Form.Control value={row.medicine} onChange={(e) => handleMedicationChange(idx, "medicine", e.target.value)} placeholder="Medicine name" style={{ border: "2px solid #b2ebf2", borderRadius: "6px", padding: "8px", fontSize: "12px" }} /></td>
-                <td className="p-1"><Form.Control value={row.indication} onChange={(e) => handleMedicationChange(idx, "indication", e.target.value)} placeholder="e.g. HTN" style={{ border: "2px solid #b2ebf2", borderRadius: "6px", padding: "8px", fontSize: "12px" }} /></td>
-                <td className="p-1"><Form.Control value={row.since} onChange={(e) => handleMedicationChange(idx, "since", e.target.value)} placeholder="e.g. 1 year" style={{ border: "2px solid #b2ebf2", borderRadius: "6px", padding: "8px", fontSize: "12px" }} /></td>
+
+        {/* Medication Table */}
+        <div className="mb-4">
+          <Table responsive bordered hover className="mb-0 overflow-hidden" style={{ borderRadius: "10px", borderCollapse: "separate", borderSpacing: 0 }}>
+            <thead>
+              <tr style={{ backgroundColor: "#00838f", color: "white" }}>
+                <th className="p-2" style={{ fontSize: "12px" }}>#</th>
+                <th className="p-2" style={{ fontSize: "12px" }}>Medication Name</th>
+                <th className="p-2" style={{ fontSize: "12px" }}>Indication</th>
+                <th className="p-2" style={{ fontSize: "12px" }}>Since</th>
               </tr>
-            ))}
-          </tbody>
-        </Table>
+            </thead>
+            <tbody>
+              {historyData.medication_history.map((row, idx) => (
+                <tr key={idx}>
+                  <td className="text-center p-2 fw-bold" style={{ backgroundColor: "#f8fbfc", color: "#00838f", fontSize: "12px", verticalAlign: "middle" }}>{idx + 1}</td>
+                  <td className="p-1"><Form.Control value={row.medicine} onChange={(e) => handleMedicationChange(idx, "medicine", e.target.value)} placeholder="Medicine name" style={{ border: "2px solid #b2ebf2", borderRadius: "6px", padding: "8px", fontSize: "12px" }} /></td>
+                  <td className="p-1"><Form.Control value={row.indication} onChange={(e) => handleMedicationChange(idx, "indication", e.target.value)} placeholder="e.g. HTN" style={{ border: "2px solid #b2ebf2", borderRadius: "6px", padding: "8px", fontSize: "12px" }} /></td>
+                  <td className="p-1"><Form.Control value={row.since} onChange={(e) => handleMedicationChange(idx, "since", e.target.value)} placeholder="e.g. 1 year" style={{ border: "2px solid #b2ebf2", borderRadius: "6px", padding: "8px", fontSize: "12px" }} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </div>
 
-        <Row className="mt-2">
-          <Col md={12} className="mb-3">
-            <div className="h-100 p-3 border rounded shadow-sm" style={{ backgroundColor: "#fefdfa", borderLeft: "8px solid #ffe0b2" }}>
-              <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "13px" }}><FeatherIcon icon="layers" size="16" className="me-2" /> Surgical History & Other Notes</h6>
-              <Form.Control as="textarea" rows={2} placeholder="Past surgical history..." className="mb-3" value={historyData.past_surgical_history} onChange={(e) => handleHistoryChange("past_surgical_history", e.target.value)} style={{ borderRadius: "10px", border: "1px solid #b2ebf2", padding: "8px", fontSize: "12px" }} />
-              <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "13px" }}><FeatherIcon icon="message-square" size="16" className="me-2" /> Any Other Complaints</h6>
-              <Form.Control as="textarea" rows={2} placeholder="Describe other complaints..." value={historyData.any_other_complaints} onChange={(e) => handleHistoryChange("any_other_complaints", e.target.value)} style={{ borderRadius: "10px", border: "1px solid #b2ebf2", padding: "8px", fontSize: "12px" }} />
+        <Row className="g-2">
+          {/* Surgical History & Other Notes */}
+          <Col md={3}>
+            <div className="h-200 p-3 border rounded shadow-sm" style={{ backgroundColor: "#fefdfa", borderLeft: "8px solid #ffe0b2" }}>
+              <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "13px" }}>Surgical History & Other Notes</h6>
+              <Form.Control as="textarea" rows={9} placeholder="Past surgical history..." className="mb-3" value={historyData.past_surgical_history} onChange={(e) => handleHistoryChange("past_surgical_history", e.target.value)} style={{ borderRadius: "10px", border: "1px solid #b2ebf2", padding: "8px", fontSize: "12px" }} />
             </div>
           </Col>
-        </Row>
 
-        <Row className="mt-2">
-          <Col md={12} className="mb-3">
-            <div className="p-3 border rounded shadow-sm" style={{ borderLeft: "8px solid #00acc1", backgroundColor: "#fff" }}>
-              <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "13px" }}><FeatherIcon icon="help-circle" size="16" className="me-2" /> Present Complaints (C/O)</h6>
-              <Form.Control as="textarea" rows={3} placeholder="Describe the current symptoms in detail..." value={historyData.present_complaints} onChange={(e) => handleHistoryChange("present_complaints", e.target.value)} style={{ borderRadius: "10px", border: "1px solid #0097a7", fontSize: "12px", padding: "8px" }} />
+          <Col md={3}>
+            <div className="h-200 p-3 border rounded shadow-sm" style={{ backgroundColor: "#fefdfa", borderLeft: "8px solid #ffe0b2" }}>
+              <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "13px" }}>Any Other Complaints</h6>
+              <Form.Control as="textarea" rows={9} placeholder="Describe other complaints..." value={historyData.any_other_complaints} onChange={(e) => handleHistoryChange("any_other_complaints", e.target.value)} style={{ borderRadius: "10px", border: "1px solid #b2ebf2", padding: "8px", fontSize: "12px" }} />
             </div>
           </Col>
-          <Col md={12} className="mb-3">
-            <div className="p-3 border rounded shadow-sm" style={{ borderLeft: "8px solid #0097a7", backgroundColor: "#f1fcfd" }}>
-              <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "13px" }}><FeatherIcon icon="check-square" size="16" className="me-2" /> Ongoing Medicines</h6>
+
+          {/* Present Complaints (C/O) */}
+          <Col md={3}>
+            <div className="h-200 p-3 border rounded shadow-sm" style={{ borderLeft: "8px solid #00acc1", backgroundColor: "#fff" }}>
+              <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "13px" }}>Present Complaints (C/O)</h6>
+              <Form.Control as="textarea" rows={9} placeholder="Describe the current symptoms in detail..." value={historyData.present_complaints} onChange={(e) => handleHistoryChange("present_complaints", e.target.value)} style={{ borderRadius: "10px", border: "1px solid #b2ebf2", fontSize: "12px", padding: "8px" }} />
+            </div>
+          </Col>
+
+          {/* Ongoing Medicines */}
+          <Col md={3}>
+            <div className="p-3 border rounded shadow-sm" style={{ borderLeft: "8px solid #0097a7", backgroundColor: "#fff" }}>
+              <h6 className="fw-bold mb-7" style={{ color: "#00838f", fontSize: "13px" }}>Ongoing Medicines</h6>
               <div className="d-flex flex-wrap gap-3 mb-2">
                 {['Clopidogrel', 'Aspirin', 'Warfarin'].map(m => (
                   <Form.Check key={m} label={m} checked={historyData.ongoing_medicines.includes(m)} onChange={() => handleHistoryCheckboxChange("ongoing_medicines", m)} style={{ fontSize: "12px", fontWeight: "700" }} />
                 ))}
               </div>
-              <Form.Control as="textarea" rows={2} placeholder="Mention any other daily medications..." value={historyData.ongoing_medicines_other} onChange={(e) => handleHistoryChange("ongoing_medicines_other", e.target.value)} style={{ borderRadius: "10px", border: "1px solid #0097a7", fontSize: "12px", padding: "6px" }} />
+              <Form.Control as="textarea" rows={3} placeholder="Mention any other daily medications..." value={historyData.ongoing_medicines_other} onChange={(e) => handleHistoryChange("ongoing_medicines_other", e.target.value)} style={{ borderRadius: "10px", border: "1px solid #0097a7", fontSize: "12px", padding: "6px" }} />
             </div>
           </Col>
         </Row>
@@ -413,10 +452,10 @@ const PatientHistoryCard = ({
                 {historyData.upload_investigation_existing && (
                   <div className="mb-2 text-center p-2 rounded" style={{ backgroundColor: "#f0fdfa", border: "1px dashed #00acc1" }}>
                     <a href={`${uploadBaseUrl}/${historyData.upload_investigation_existing}`} target="_blank" rel="noreferrer">
-                      <img 
-                        src={`${uploadBaseUrl}/${historyData.upload_investigation_existing}`} 
-                        alt="Existing Investigation" 
-                        style={{ maxHeight: "150px", maxWidth: "100%", borderRadius: "8px", objectFit: "contain" }} 
+                      <img
+                        src={`${uploadBaseUrl}/${historyData.upload_investigation_existing}`}
+                        alt="Existing Investigation"
+                        style={{ maxHeight: "150px", maxWidth: "100%", borderRadius: "8px", objectFit: "contain" }}
                       />
                     </a>
                     <div className="mt-1 small text-muted">Currently stored: {historyData.upload_investigation_existing}</div>
@@ -462,7 +501,7 @@ const PatientHistoryCard = ({
           SAVE PATIENT HISTORY
         </Button>
       </div>
-    </div>
+    </div >
   );
 };
 

@@ -9,7 +9,7 @@ export const clinincLoc = {
     "invoiceHelplineNo": "8888288884",
     "EmergencySMS": "8888200006"
   },
-  "Pimrpi-Chinchwad": {
+  "Chinchwad": {
     "invoiceAddress": "<b>Healing Hands Clinic </b><br> Premier Plaza,Anand Nagar, Pimpri-Chinchwad-411019",
     "invoiceHelplineNo": "8888200004",
     "EmergencySMS": "8888200006"
@@ -44,17 +44,17 @@ export const clinincLoc = {
     "invoiceHelplineNo": "9175232308",
     "EmergencySMS": ""
   },
-  "Salunkhe-Vihar": {
+  "Salunkhe Vihar": {
     "invoiceAddress": "<b>Healing Hands Clinic</b><br> 101/102 Girme Towers, Salunkhe Vihar Road, Next to HDFC Bank, Opp. Kotak Mahindra Bank, Oxford Village, Kedari Nagar, Wanowrie, Pune, Maharashtra 411004.",
     "invoiceHelplineNo": "8888522226",
     "EmergencySMS": ""
   },
-  "Navi-Mumbai": {
+  "Navi Mumbai": {
     "invoiceAddress": "<b>Healing Hands Clinic</b><br> Plot No.5, Gahlot Majesty, Sector 46, Seawoods, Navi Mumbai-400706",
     "invoiceHelplineNo": "8888166667",
     "EmergencySMS": "8693850004"
   },
-  "Kemps-Corner": {
+  "Kemps Corner": {
     "invoiceAddress": "<b>Healing Hands Clinic</b><br> 3rd Floor, Advani Chambers, August Kranti Marg, Kemps Corner-400036",
     "invoiceHelplineNo": "",
     "EmergencySMS": ""
@@ -104,7 +104,7 @@ export const clinincLoc = {
     "invoiceHelplineNo": "8197978641",
     "EmergencySMS": "8197978659"
   },
-  "Sahakarnagar": {
+  "Sahakar Nagar": {
     "invoiceAddress": "<b>Healing Hands Clinic</b><br> 1st Floor, 490/8, above McDonalds,F Block, Sahakar Nagar,Byatarayanapura, Bengaluru,Karnataka 560092.",
     "invoiceHelplineNo": "9731118056",
     "EmergencySMS": ""
@@ -164,12 +164,17 @@ export const clinincLoc = {
     "invoiceHelplineNo": "8792950455",
     "EmergencySMS": ""
   },
-  "Gurgaon-49": {
+  "HSR-Layout": {
+    "invoiceAddress": "<b>Healing Hands Clinic</b><br> 1st Floor, Krishna Complex, HSR Layout - 1st Sector, 17th Cross Road, 27th Main Road, Opposite to Sri Basaveshwara Gayatri Temple, Above More Supermarket, Bengaluru – 560102",
+    "invoiceHelplineNo": "8792950455",
+    "EmergencySMS": ""
+  },
+  "Gurgaon Sector 49": {
     "invoiceAddress": "<b>Healing Hands Clinic</b><br>Spaze ITech Park Tower C, Ground Floor, Unit no 06,07 and 08 Sohna road, Sector 49, Gurugram, Haryana 122018",
     "invoiceHelplineNo": "9990479800",
     "EmergencySMS": ""
   },
-  "Gurgaon-14": {
+  "Gurgaon Sector 14": {
     "invoiceAddress": "<b>Healing Hands Clinic</b><br>1st Floor Sheetla Chamber,Old Delhi Road, Opposite Air Force School,Sector 14, Gurugram,Harayana 122002",
     "invoiceHelplineNo": "9990473800",
     "EmergencySMS": ""

@@ -71,12 +71,12 @@ const FollowUpCard = ({ followUpData, formData, handleFollowUpChange, onSaveFoll
         </Row>
       </div>
       <div className="text-center mb-5 pb-5 mt-4">
-        <Button 
+        <Button
           disabled={loading}
           onClick={onSaveFollowUp}
           style={{ backgroundColor: "#00acc1", borderColor: "#00acc1", padding: "10px 40px", borderRadius: "40px", fontWeight: "800", fontSize: "13px", boxShadow: "0 8px 25px rgba(0, 172, 193, 0.4)", textTransform: "uppercase", letterSpacing: "1px" }}
         >
-          {loading ? "Saving..." : <><FeatherIcon icon="save" size="18" className="me-2" /> RECORD FOLLOW UP DATA</>}
+          {loading ? "SAVING..." : <><FeatherIcon icon="save" size="18" className="me-2" />SAVE FOLLOW UP DATA</>}
         </Button>
       </div>
     </div>

@@ -389,7 +389,12 @@ const IpdPaymentData = () => {
     const handlePrintReceipt = async (pay) => {
         const totalAmt = Number(pay.cashamt || 0) + Number(pay.cardamt || 0) + Number(pay.chequeamt || 0) + Number(pay.onlineamt || 0);
         const words = convertToWords(totalAmt);
-        const invoiceInfo = clinincLoc[currentLocation] || { invoiceAddress: "", invoiceHelplineNo: "", EmergencySMS: "" };
+        const trimmedLocation = currentLocation ? currentLocation.trim() : "";
+        const invoiceInfo = clinincLoc[trimmedLocation] || clinincLoc[currentLocation] || { 
+          invoiceAddress: "<b>Healing Hands Clinic</b>", 
+          invoiceHelplineNo: "8888288884", 
+          EmergencySMS: "" 
+        };
         const receiptInfo = receiptlocations[currentLocation] || { hospitalcode: "HHC" };
         const hospitalCode = receiptInfo.hospitalcode;
         const year = new Date().getFullYear();

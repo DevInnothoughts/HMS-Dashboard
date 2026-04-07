@@ -10,7 +10,7 @@ export const receiptlocations = {
     "phone": "8888288884",
     "hospitalcode": "TK"
   },
-  "Pimpri-Chinchwad": {
+  "Chinchwad": {
     "address": "<b>Pimpri Chinchwad : </b><br>Second floor, Premier Plaza,<br>Near Big Bazar & Big Cinema,<br>Above Mac Donald, Chinchwad, Pune - 411019",
     "phone": "8888200004",
     "hospitalcode": "PCMC"
@@ -45,17 +45,17 @@ export const receiptlocations = {
     "phone": "9175232308",
     "hospitalcode": "VS"
   },
-  "Salunkhe-Vihar": {
+  "Salunkhe Vihar": {
     "address": "<b>Salunkhe-Vihar : </b><br>101/102 Girme Towers, Salunkhe Vihar Road,<br>Next to HDFC Bank, Opp. Kotak Mahindra Bank,<br>Oxford Village, Kedari Nagar, Wanowrie,<br>Pune, Maharashtra 411004.",
     "phone": "8888522226",
     "hospitalcode": "SV"
   },
-  "Navi-Mumbai": {
+  "Navi Mumbai": {
     "address": "<b>Navi-Mumbai : </b>5, Gahlot Majesty sector 46A,<br>Opp NRI Colony, Palm Beach Road,<br>Navi Mumbai - 400706.",
     "phone": "8888166667",
     "hospitalcode": "NM"
   },
-  "Kemps-Corner": {
+  "Kemps Corner": {
     "address": "<b>Kemps-Corner Mumbai : </b><br>3rd Floor, Advani Chambers,<br>August Kranti Marg,<br>South Mumbai - Kemps Corner,<br>Maharashtra 400036",
     "phone": "8888266664",
     "hospitalcode": "KC"
@@ -165,12 +165,12 @@ export const receiptlocations = {
     "phone": "8884884496",
     "hospitalcode": "MYS"
   },
-  "Gurgaon-49": {
+  "Gurgaon Sector 49": {
     "address": "<b>Gurugram : </b><br>Healing Hands Clinic Spaze ITech Park Tower C, Ground Floor, Unit no 06,07 and 08 Sohna road, Sector 49, Gurugram, Haryana 122018",
     "phone": "9990479800",
     "hospitalcode": "G49"
   },
-  "Gurgaon-14": {
+  "Gurgaon Sector 14": {
     "address": "<b>Gurugram : </b><br>Healing Hands Clinic 1st Floor Sheetla Chamber,Old Delhi Road, Opposite Air Force School,Sector 14, Gurugram,Harayana 122002.",
     "phone": "9990473800",
     "hospitalcode": "G14"

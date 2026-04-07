@@ -241,7 +241,8 @@ export default function ReceiptList() {
     if (!selectedReceipt) return;
     console.log(" printing  RECEPT: ", selectedReceipt);
 
-    const clinicAddr = receiptlocations[currentLocation] || {
+    const trimmedLocation = currentLocation ? currentLocation.trim() : "";
+    const clinicAddr = receiptlocations[trimmedLocation] || receiptlocations[currentLocation] || {
       address:
         "Healing Hands Clinic Pvt Ltd, DP Road, Ground Floor, Millenium Star Extension, Adjacent to Ruby Hall Clinic, Pune 411001",
       phone: "8888288884 | 020-26164488/99",
@@ -501,21 +502,21 @@ export default function ReceiptList() {
   const actionBodyTemplate = (receipt) => (
     <div className="d-flex align-items-center justify-content-center">
       <Button
-        onClick={() => handlePrintReceipt(receipt)}
-        className="btn btn-extra-small btn-icon me-2"
-        variant="primary"
-        title="Print"
-      >
-        <FeatherIcon icon="printer" size="14" />
-      </Button>
-      <Button
         style={{ borderRadius: "8px" }}
         onClick={() => handleDeleteReceipt(receipt)}
-        className="btn btn-extra-small btn-icon"
+        className="btn btn-extra-small btn-icon me-2"
         variant="danger"
         title="Delete"
       >
         <FeatherIcon icon="trash-2" size="14" />
+      </Button>
+      <Button
+        onClick={() => handlePrintReceipt(receipt)}
+        className="btn btn-extra-small btn-icon"
+        variant="primary"
+        title="Print"
+      >
+        <FeatherIcon icon="printer" size="14" />
       </Button>
     </div>
   );

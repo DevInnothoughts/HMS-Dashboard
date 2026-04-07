@@ -897,9 +897,10 @@ const InvoiceList = () => {
       return;
     }
     console.log("printing invoice:", invoice);
-    const clinicAddr = clinincLoc[currentLocation] || {
-      address: "Healing Hands Clinic",
-      phone: "8888288884",
+    const trimmedLocation = currentLocation ? currentLocation.trim() : "";
+    const clinicAddr = clinincLoc[trimmedLocation] || clinincLoc[currentLocation] || {
+      invoiceAddress: "<b>Healing Hands Clinic</b>",
+      invoiceHelplineNo: "8888288884",
     };
 
     const { dynamicRows, Sub_Total } = getDynamicRowsFromInvoice(invoice);

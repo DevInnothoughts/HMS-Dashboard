@@ -283,6 +283,39 @@ const DoctorPatientDetails = () => {
   };
 
   const handleSaveHistory = async () => {
+    // Basic validation to prevent saving essentially empty history records
+    const isHistoryEmpty = () => {
+      // Check for filled strings (excluding defaults like date and painscale)
+      const hasTextRecord = Object.entries(historyData).some(([key, val]) => {
+        if (['patient_date', 'painscale', 'upload_investigation_existing', 'assistance_doctor'].includes(key)) return false;
+        if (typeof val === 'string') return val.trim() !== "";
+        return false;
+      });
+
+      // Check for non-empty arrays (with special handling for medication table)
+      const hasArrayRecord = Object.entries(historyData).some(([key, val]) => {
+        if (!Array.isArray(val)) return false;
+        if (key === 'medication_history') {
+          return val.some(m => (m.medicine && m.medicine.trim()) || (m.indication && m.indication.trim()) || (m.since && m.since.trim()));
+        }
+        return val.length > 0;
+      });
+
+      // Check for special fields like file uploads, checkboxes, or investigation notes
+      const hasSpecialRecord = (historyData.upload_investigation !== null) ||
+        historyData.urinary_incontinence ||
+        historyData.fecal_incontinence ||
+        (historyData.investigation_notes && Object.values(historyData.investigation_notes).some(v => v && v.trim() !== ""));
+
+      // If nothing is filled, it's considered empty
+      return !hasTextRecord && !hasArrayRecord && !hasSpecialRecord;
+    };
+
+    if (isHistoryEmpty()) {
+      toast.warning("Please fill in at least one history detail before saving.");
+      return;
+    }
+
     setLoading(true);
     try {
       const formDataObj = new FormData();
@@ -628,6 +661,7 @@ const DoctorPatientDetails = () => {
       urology: ""
     },
     medicines_prescribed: [],
+    other_meds: "",
     surgical_advice: "",
     general_comment: "",
     has_surgical_date: false,
@@ -678,6 +712,20 @@ const DoctorPatientDetails = () => {
   };
 
   const handleSaveDiagnosis = async () => {
+    // Basic validation
+    const hasData =
+      diagnosisData.diagnosis_text?.trim() ||
+      diagnosisData.investigation_orders?.trim() ||
+      diagnosisData.diagnosis_comment?.trim() ||
+      diagnosisData.medical_advice?.length > 0 ||
+      diagnosisData.advice_types?.length > 0 ||
+      Object.values(diagnosisData.speciality_data || {}).some(v => Array.isArray(v) ? v.length > 0 : (v && v.trim() !== ""));
+
+    if (!hasData) {
+      toast.warning("Please fill in diagnosis details before saving.");
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await fetch(`${BASE_URL}/V1/doctor/save-diagnosis/${formData.patient_id}?location=${currentLocation}`, {
@@ -763,7 +811,11 @@ const DoctorPatientDetails = () => {
     if (activeTab === "proctoscopy") {
       fetchProctoscopyDates();
     }
+    if (activeTab === "surgery-details") {
+      fetchSurgeryDates();
+    }
   }, [activeTab]);
+
 
   const initialOtherTestsState = {
     lab_type: "",
@@ -932,6 +984,11 @@ const DoctorPatientDetails = () => {
   };
 
   const handleSaveProctoscopy = async () => {
+    if (!proctoscopyData.interpretation?.trim() && (!proctoscopyData.images || proctoscopyData.images.length === 0)) {
+      toast.warning("Please provide an interpretation or upload images before saving.");
+      return;
+    }
+
     setLoading(true);
     try {
       const formDataToSend = new FormData();
@@ -1075,7 +1132,7 @@ const DoctorPatientDetails = () => {
   const initialSurgeryState = {
     admission_date: new Date().toISOString().split("T")[0],
     surgery_date: new Date().toISOString().split("T")[0],
-    risk_consent: "",
+    risk_consent: "No",
     assistance_doctor: "",
     anaesthetist: "",
     anesthesia: [],
@@ -1087,17 +1144,143 @@ const DoctorPatientDetails = () => {
   };
 
   const [surgeryData, setSurgeryData] = useState(initialSurgeryState);
-  const [previousSurgeryList, setPreviousSurgeryList] = useState([
-    { id: "S1", date: "2026-02-15" }
-  ]);
+  const [previousSurgeryList, setPreviousSurgeryList] = useState([]);
   const [selectedSurgeryId, setSelectedSurgeryId] = useState(null);
 
-  const handleSelectSurgery = (id) => {
-    setSelectedSurgeryId(id);
-    const selected = previousSurgeryList.find(s => s.id === id);
-    if (selected) {
-      setSurgeryData(prev => ({ ...prev, surgery_date: selected.date, surgery_note: `History for ${selected.date}` }));
-      toast.success(`Loaded surgery details for ${selected.date}`);
+  const fetchSurgeryDates = async () => {
+    if (!formData.patient_id) return;
+    try {
+      const response = await fetch(`${BASE_URL}/V1/doctor/list-surgery-dates/${formData.patient_id}?location=${currentLocation}`, {
+        headers: {
+          "location": currentLocation,
+          "x-hms-location": currentLocation
+        }
+      });
+      const result = await response.json();
+      if (result.statusCode === 200) {
+        const formattedList = (result.data || []).map(item => ({
+          ...item,
+          id: item.id.toString(),
+          date: moment(item.date).format("YYYY-MM-DD")
+        }));
+        setPreviousSurgeryList(formattedList);
+      }
+    } catch (error) {
+      console.error("Error fetching surgery dates:", error);
+    }
+  };
+
+  const handleSelectSurgery = async (id) => {
+    if (!id) return;
+    const stringId = id.toString();
+    setSelectedSurgeryId(stringId);
+
+    const selected = previousSurgeryList.find(s => s.id.toString() === stringId);
+    if (!selected) {
+      console.warn("[DEBUG] Could not find selected surgery in list for ID:", id);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const url = `${BASE_URL}/V1/doctor/get-surgery-details/${formData.patient_id}?date=${selected.date}&location=${currentLocation}`;
+      console.log(`[DEBUG] Fetching Surgery Details from: ${url}`);
+
+      const response = await fetch(url, {
+        headers: {
+          "location": currentLocation,
+          "x-hms-location": currentLocation
+        }
+      });
+      const result = await response.json();
+
+      if (result.statusCode === 200 && result.data) {
+        const d = result.data;
+        // Merge with initial state to ensure defaults and normalize values
+        const normalizedData = {
+          ...initialSurgeryState,
+          admission_date: d.admission_date || "",
+          surgery_date: d.surgery_date || "",
+          risk_consent: d.risk_consent || "No",
+          assistance_doctor: d.assistance_doctor?.toString() || "",
+          anaesthetist: d.anaesthetist?.toString() || "",
+          anesthesia: Array.isArray(d.anesthesia) ? d.anesthesia : [],
+          anesthesia_other: d.anesthesia_other || "",
+          surgery_remarks: d.surgery_remarks || "",
+          plan: d.plan || "",
+          surgery_note: d.surgery_note || "",
+          additional_comment: d.additional_comment || ""
+        };
+
+        setSurgeryData(normalizedData);
+        toast.success(`Loaded surgery details for ${selected.date}`);
+      } else {
+        toast.error(result.message || "Could not fetch surgery details");
+      }
+    } catch (error) {
+      console.error("Error fetching surgery details:", error);
+      toast.error("An error occurred while loading surgery details.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  const handleSaveSurgery = async () => {
+    const hasData =
+      surgeryData.anesthesia?.length > 0 ||
+      surgeryData.anesthesia_other?.trim() ||
+      surgeryData.surgery_remarks?.trim() ||
+      surgeryData.plan?.trim() ||
+      surgeryData.surgery_note?.trim() ||
+      surgeryData.additional_comment?.trim() ||
+      surgeryData.anaesthetist ||
+      surgeryData.assistance_doctor;
+
+    if (!hasData) {
+      toast.warning("Please fill in surgery details before saving.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(`${BASE_URL}/V1/doctor/save-surgery-details/${formData.patient_id}?location=${currentLocation}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "location": currentLocation,
+          "x-hms-location": currentLocation
+        },
+        body: JSON.stringify(surgeryData),
+      });
+      const data = await response.json();
+      if (data.statusCode === 200 || data.statusCode === 201) {
+        Swal.fire({
+          icon: "success",
+          title: "Success",
+          text: data.message || "Surgery details saved successfully!",
+          timer: 3000,
+          timerProgressBar: true
+        });
+        fetchSurgeryDates();
+        setSurgeryData(initialSurgeryState);
+        setSelectedSurgeryId(null);
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: data.message || "Failed to save surgery details"
+        });
+      }
+    } catch (error) {
+      console.error("Error saving surgery details:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "An error occurred while saving surgery details."
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1106,6 +1289,7 @@ const DoctorPatientDetails = () => {
     setSurgeryData(initialSurgeryState);
     toast.info("Started a new surgery record");
   };
+
 
   const initialDischargeState = {
     patient_name: "",
@@ -1129,12 +1313,13 @@ const DoctorPatientDetails = () => {
     reason_for_admission: "",
     medical_history: "",
     plan_of_treatment: "",
-    known_allergies: "",
+    allergies: "",
     diagnosis: "",
     surgery_note: "",
     investigations: {
       HB: "", WBC: "", PLT: "", BSL: "", CREATININE: "", BILLIRUBIN: "", PSA: "", BT: "", CT: "", PT: "", INR: "", HIV: "Negative", HCV: "", HBSAG: "Negative"
     },
+    other_investigations: "",
     extra_note: "",
     local_care: "",
     note_advice: "",
@@ -1145,8 +1330,23 @@ const DoctorPatientDetails = () => {
     treating_by: "",
     made_by: "",
     checked_by: "",
+    consultant_doctor: "",
     assistance_doctor: "",
-    assistance_surgeon: ""
+    assistance_surgeon: "",
+    patient_name: "",
+    patient_age: "",
+    patient_sex: "",
+    address: "",
+    treatment_given: [],
+    treatment_on_discharge: [],
+    doa: "",
+    dod: "",
+    admission_time: "",
+    discharge_time: "",
+    ipd_no: "",
+    spo2: "",
+    bp: "",
+    pulse: ""
   };
 
   const [dischargeData, setDischargeData] = useState(initialDischargeState);
@@ -1155,12 +1355,29 @@ const DoctorPatientDetails = () => {
   ]);
   const [selectedDischargeId, setSelectedDischargeId] = useState(null);
 
-  const handleSelectDischarge = (id) => {
+  const handleSelectDischarge = async (id) => {
     setSelectedDischargeId(id);
-    const selected = previousDischargesList.find(d => d.id === id);
-    if (selected) {
-      setDischargeData(prev => ({ ...prev, dod: selected.date, diagnosis: `History for ${selected.date}`, patient_name: formData.name, patient_age: formData.age, patient_sex: formData.sex }));
-      toast.success(`Loaded discharge summary for ${selected.date}`);
+    const patientId = formData.patient_id || initialPatient?.patient_id;
+    if (!patientId) return;
+
+    try {
+      setLoading(true);
+      const response = await fetch(`${BASE_URL}/V1/doctor/get-discharge-card/${patientId}?dischargeId=${id}&location=${currentLocation}`, {
+        headers: {
+          "location": currentLocation,
+          "x-hms-location": currentLocation
+        }
+      });
+      const result = await response.json();
+      if (result.statusCode === 200 && result.data) {
+        setDischargeData(result.data);
+        toast.success(`Loaded discharge summary for ${moment(result.data.dod).format("DD-MM-YYYY")}`);
+      }
+    } catch (error) {
+      console.error("Error fetching discharge card:", error);
+      toast.error("Failed to load discharge card details.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1225,7 +1442,8 @@ const DoctorPatientDetails = () => {
         ...prev,
         patient_name: initialPatient.name || "",
         patient_age: initialPatient.age || "",
-        patient_sex: initialPatient.sex || ""
+        patient_sex: initialPatient.sex || "",
+        address: initialPatient.address || ""
       }));
 
       setWorkPatterns({
@@ -1256,12 +1474,104 @@ const DoctorPatientDetails = () => {
       fetchDiagnosisDates();
       fetchOtherTestDates();
       fetchPrescriptionDates();
+      fetchSurgeryDates();
+      fetchDischargeDates();
     }
   }, [initialPatient, formData.patient_id]);
 
-  const fetchPrescriptionDates = async () => {
+  const fetchDischargeDates = async () => {
+    const patientId = formData.patient_id || initialPatient?.patient_id;
+    if (!patientId) return;
+
     try {
-      const response = await fetch(`${BASE_URL}/V1/doctor/list-opd-prescription-dates/${formData.patient_id}?location=${currentLocation}`);
+      const response = await fetch(`${BASE_URL}/V1/doctor/list-discharge-dates/${patientId}?location=${currentLocation}`);
+      if (!response.ok) return;
+      const data = await response.json();
+      if (data.statusCode === 200) {
+        setPreviousDischargesList(data.data.map(item => ({
+          id: item.id,
+          date: moment(item.date).format("DD-MM-YYYY")
+        })));
+      }
+    } catch (error) {
+      console.error("Error fetching discharge dates:", error);
+    }
+  };
+
+  const handleSaveDischarge = async () => {
+    const patientId = formData.patient_id || initialPatient?.patient_id;
+    if (!patientId) {
+      toast.error("Patient ID not found.");
+      return;
+    }
+
+    const hasData =
+      dischargeData.reason_for_admission?.trim() ||
+      dischargeData.diagnosis?.trim() ||
+      dischargeData.plan_of_treatment?.trim() ||
+      dischargeData.surgery_note?.trim() ||
+      (dischargeData.treatment_given && dischargeData.treatment_given.length > 0) ||
+      (dischargeData.treatment_on_discharge && dischargeData.treatment_on_discharge.length > 0);
+
+    if (!hasData) {
+      toast.warning("Please fill in discharge details before saving.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const payload = {
+        ...dischargeData,
+        treatment_given: JSON.parse(JSON.stringify(dischargeData.treatment_given || [])),
+        treatment_on_discharge: JSON.parse(JSON.stringify(dischargeData.treatment_on_discharge || []))
+      };
+
+      const response = await fetch(`${BASE_URL}/V1/doctor/save-discharge-card/${patientId}?location=${currentLocation}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "location": currentLocation,
+          "x-hms-location": currentLocation
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+      if (data.statusCode === 200) {
+        Swal.fire({
+          icon: "success",
+          title: "Success",
+          text: "Discharge card saved successfully!",
+          timer: 3000,
+          timerProgressBar: true
+        });
+        fetchDischargeDates();
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: data.message || "Failed to save discharge card"
+        });
+      }
+    } catch (error) {
+      console.error("Error saving discharge card:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "An error occurred while saving discharge card."
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchPrescriptionDates = async () => {
+    const patientId = formData.patient_id || initialPatient?.patient_id;
+    if (!patientId) return;
+
+    try {
+      const response = await fetch(`${BASE_URL}/V1/doctor/list-opd-prescription-dates/${patientId}?location=${currentLocation}`);
+      if (!response.ok) return;
       const data = await response.json();
       if (data.statusCode === 200) {
         setPreviousPrescriptionList(data.data.map(item => ({
@@ -1765,6 +2075,7 @@ const DoctorPatientDetails = () => {
 
   const [assistanceDoctors, setAssistanceDoctors] = useState([]);
   const [doctors, setDoctors] = useState([]);
+  const [fistulaCases, setFistulaCases] = useState([]);
 
   useEffect(() => {
     const fetchAssistanceDoctors = async () => {
@@ -1791,9 +2102,22 @@ const DoctorPatientDetails = () => {
       }
     };
 
+    const fetchFistulaCases = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/V1/doctor/fistulaCasesDropdown?location=${currentLocation}`);
+        const result = await response.json();
+        if (result.statusCode === 200) {
+          setFistulaCases(result.data || []);
+        }
+      } catch (error) {
+        console.error("Error fetching fistula cases:", error);
+      }
+    };
+
     if (currentLocation && currentLocation !== "default") {
       fetchAssistanceDoctors();
       fetchDoctors();
+      fetchFistulaCases();
     }
   }, [currentLocation]);
 
@@ -1945,6 +2269,18 @@ const DoctorPatientDetails = () => {
   };
 
   const handleSaveFollowUp = async () => {
+    const hasData =
+      followUpData.diagnosis?.trim() ||
+      followUpData.advice?.trim() ||
+      followUpData.plan?.trim() ||
+      followUpData.present_complaints?.trim() ||
+      followUpData.ongoing_medicines?.trim();
+
+    if (!hasData) {
+      toast.warning("Please fill in follow-up details before saving.");
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await fetch(`${BASE_URL}/V1/doctor/save-followup/${formData.patient_id}?location=${currentLocation}`, {
@@ -2037,9 +2373,20 @@ const DoctorPatientDetails = () => {
   };
 
   const handleSaveOpdPrescription = async () => {
+    const patientId = formData.patient_id || initialPatient?.patient_id;
+    if (!patientId) {
+      toast.error("Patient ID is missing");
+      return;
+    }
+
+    if (!prescriptionData.diagnosis?.trim() && (!prescriptionData.medicines || prescriptionData.medicines.length === 0)) {
+      toast.warning("Please enter a diagnosis or add medicines before saving.");
+      return;
+    }
+
     setLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/V1/doctor/save-opd-prescription/${formData.patient_id}?location=${currentLocation}`, {
+      const response = await fetch(`${BASE_URL}/V1/doctor/save-opd-prescription/${patientId}?location=${currentLocation}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -2345,7 +2692,7 @@ const DoctorPatientDetails = () => {
             </Col>
             <Col md={12} className="text-center mt-3 mb-2">
               <Button type="submit" disabled={loading} style={{ backgroundColor: "#00838f", borderColor: "#00838f", padding: "10px 40px", borderRadius: "50px", fontWeight: "800", fontSize: "13px", boxShadow: "0 8px 25px rgba(0, 131, 143, 0.3)", textTransform: "uppercase", letterSpacing: "1px" }}>
-                {loading ? <Spinner size="sm" /> : <><FeatherIcon icon="save" size="18" className="me-2" /> UPDATE PERSONAL DOSSIER</>}
+                {loading ? <Spinner size="sm" /> : <><FeatherIcon icon="save" size="18" className="me-2" /> UPDATE PERSONAL DETAILS</>}
               </Button>
             </Col>
           </Row>
@@ -2498,20 +2845,27 @@ const DoctorPatientDetails = () => {
                   selectedSurgeryId={selectedSurgeryId}
                   onSelectSurgery={handleSelectSurgery}
                   onNewSurgery={handleNewSurgery}
+                  onSaveSurgery={handleSaveSurgery}
+                  loading={loading}
                   assistanceDoctors={assistanceDoctors}
+                  doctors={doctors}
                 />
+
               )}
               {activeTab === "discharge-card" && (
                 <DischargeCard
                   dischargeData={dischargeData}
+                  doctors={doctors}
+                  assistanceDoctors={assistanceDoctors}
+                  fistulaCases={fistulaCases}
                   handleDischargeChange={handleDischargeChange}
                   handleDischargeInvestigationChange={handleDischargeInvestigationChange}
                   previousDischargesList={previousDischargesList}
                   selectedDischargeId={selectedDischargeId}
                   onSelectDischarge={handleSelectDischarge}
                   onNewDischarge={handleNewDischarge}
-                  doctors={doctors}
-                  assistanceDoctors={assistanceDoctors}
+                  onSaveDischarge={handleSaveDischarge}
+                  loading={loading}
                 />
               )}
               {!["personal", "patient-history", "diagnosis", "follow-up", "other-tests", "proctoscopy", "opd-prescription", "surgery-details", "discharge-card"].includes(activeTab) && (

@@ -27,7 +27,7 @@ const DiagnosisCard = ({
       `}</style>
       {/* 1. Primary Diagnosis Section */}
       <div className="p-3 bg-white rounded shadow-sm border mb-3" style={{ borderLeft: "5px solid #00bcd4" }}>
-        <div className="d-flex justify-content-between align-items-center mb-3">
+        <div className="d-flex justify-content-between align-items-left">
           <h5 className="fw-bold mb-0" style={{ color: "#00838f", textTransform: "uppercase", letterSpacing: "1px", fontSize: "14px" }}>
             <FeatherIcon icon="activity" size="18" className="me-2 text-info" />Primary Diagnosis & Orders
           </h5>
@@ -36,26 +36,26 @@ const DiagnosisCard = ({
               variant="outline-info"
               size="sm"
               onClick={onNewDiagnosis}
-              style={{ borderRadius: "20px", fontSize: "11px", fontWeight: "700" }}
+              style={{ borderRadius: "20px", fontSize: "12px", fontWeight: "700", padding: "7px 10px" }}
             >
-              <FeatherIcon icon="plus" size="14" className="me-1" /> NEW RECORD
+              <FeatherIcon icon="plus" size="13" className="me-1" /> NEW RECORD
             </Button>
             <Button
               variant="outline-secondary"
               size="sm"
               onClick={onPrintDiagnosis}
-              style={{ borderRadius: "20px", fontSize: "11px", fontWeight: "700" }}
+              style={{ borderRadius: "20px", fontSize: "12px", fontWeight: "700", padding: "7px 10px" }}
             >
-              <FeatherIcon icon="printer" size="14" className="me-1" /> PRINT
+              <FeatherIcon icon="printer" size="13" className="me-1" /> PRINT
             </Button>
             <Dropdown onSelect={onSelectDiagnosis}>
               <Dropdown.Toggle
-                variant="info"
+                variant="outline-info"
                 id="previous-diagnosis-dropdown"
                 size="sm"
-                style={{ borderRadius: "20px", fontSize: "11px", fontWeight: "700", color: "white" }}
+                style={{ borderRadius: "20px", fontSize: "12px", fontWeight: "700", padding: "7px 10px" }}
               >
-                <FeatherIcon icon="calendar" size="14" className="me-1" /> PREVIOUS DATES
+                <FeatherIcon icon="calendar" size="13" className="me-1" /> PREVIOUS DATES
               </Dropdown.Toggle>
               <Dropdown.Menu style={{ fontSize: "12px", borderRadius: "10px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}>
                 {previousDiagnosisList.length > 0 ? (
@@ -78,43 +78,43 @@ const DiagnosisCard = ({
           </Col>
           <Col md={5} className="mb-3">
             <Form.Label className="fw-bold" style={{ fontSize: "13px", color: "#006064" }}>Investigation Orders</Form.Label>
-            <Form.Control as="textarea" rows={1} value={diagnosisData.investigation_orders} onChange={(e) => handleDiagnosisChange("investigation_orders", e.target.value)} placeholder="e.g. USG, CBC, Chest X-Ray..." style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "13px" }} />
+            <Form.Control as="textarea" rows={2} value={diagnosisData.investigation_orders} onChange={(e) => handleDiagnosisChange("investigation_orders", e.target.value)} placeholder="e.g. USG, CBC, Chest X-Ray..." style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "13px" }} />
           </Col>
           <Col md={5} className="mb-2">
-            <Form.Label className="fw-bold" style={{ fontSize: "13px", color: "#006064" }}>Detailed Diagnosis <span className="text-danger">*</span></Form.Label>
-            <Form.Control as="textarea" rows={3} placeholder="Provide a clinical conclusion..." value={diagnosisData.diagnosis_text} onChange={(e) => handleDiagnosisChange("diagnosis_text", e.target.value)} required style={{ borderRadius: "8px", border: "2px solid #b2ebf2", fontSize: "13px", padding: "8px 12px" }} />
+            <Form.Label className="fw-bold" style={{ fontSize: "13px", color: "#006064" }}>Diagnosis <span className="text-danger">*</span></Form.Label>
+            <Form.Control as="textarea" rows={2} placeholder="Provide a clinical conclusion..." value={diagnosisData.diagnosis_text} onChange={(e) => handleDiagnosisChange("diagnosis_text", e.target.value)} required style={{ borderRadius: "8px", border: "2px solid #b2ebf2", fontSize: "13px", padding: "8px 12px" }} />
           </Col>
         </Row>
       </div>
 
       {/* 2. Management Advice Types */}
       <div className="p-3 bg-white rounded shadow-sm border mb-3 d-flex flex-wrap align-items-center gap-3" style={{ borderLeft: "5px solid #00838f" }}>
-        <h5 className="fw-bold mb-0" style={{ color: "#00838f", textTransform: "uppercase", fontSize: "14px", minWidth: "150px" }}>Advice Strategy</h5>
+        <h5 className="fw-bold mb-0" style={{ color: "#00838f", textTransform: "uppercase", fontSize: "14px", minWidth: "100px" }}>Advice Type</h5>
         <div className="d-flex flex-wrap gap-3 align-items-center px-3" style={{ borderLeft: "2px solid #b2ebf2" }}>
           {["Medication", "Surgery", "Test"].map(type => (
-            <Form.Check 
-              key={type} 
-              label={type} 
-              checked={diagnosisData.advice_types.includes(type)} 
-              onChange={() => handleDiagnosisCheckboxChange("advice_types", type)} 
+            <Form.Check
+              key={type}
+              label={type}
+              checked={diagnosisData.advice_types.includes(type)}
+              onChange={() => handleDiagnosisCheckboxChange("advice_types", type)}
               disabled={
                 (type === "Medication" && diagnosisData.advice_types.includes("Surgery")) ||
                 (type === "Surgery" && diagnosisData.advice_types.includes("Medication"))
               }
-              className="mb-0" 
-              style={{ fontSize: "13px", fontWeight: "600" }} 
+              className="mb-0"
+              style={{ fontSize: "13px", fontWeight: "600" }}
             />
           ))}
         </div>
         {diagnosisData.advice_types.includes("Test") && (
           <div className="ms-auto flex-grow-1 animate__animated animate__fadeInRight" style={{ minWidth: "250px" }}>
-            <Form.Control 
-              as="textarea" 
-              rows={1} 
-              placeholder="Other / Test Comment" 
-              value={diagnosisData.diagnosis_comment} 
-              onChange={(e) => handleDiagnosisChange("diagnosis_comment", e.target.value)} 
-              style={{ borderRadius: "8px", border: "1px solid #80deea", padding: "6px 12px", fontSize: "13px", height: "80px" }} 
+            <Form.Control
+              as="textarea"
+              rows={1}
+              placeholder="Other / Test Comment"
+              value={diagnosisData.diagnosis_comment}
+              onChange={(e) => handleDiagnosisChange("diagnosis_comment", e.target.value)}
+              style={{ borderRadius: "8px", border: "1px solid #80deea", padding: "6px 12px", fontSize: "13px", height: "80px" }}
             />
           </div>
         )}
@@ -137,7 +137,7 @@ const DiagnosisCard = ({
                   style={{
                     whiteSpace: "nowrap",
                     borderRadius: "30px",
-                    padding: "8px 18px",
+                    padding: "8px 29px",
                     margin: "4px 2px",
                     fontWeight: "700",
                     fontSize: "12px",
@@ -211,29 +211,35 @@ const DiagnosisCard = ({
         <h5 className="fw-bold mb-3" style={{ color: "#00838f", textTransform: "uppercase", fontSize: "14px" }}>Medicines & Procedures</h5>
         <div className="p-3 rounded mb-3" style={{ backgroundColor: "#f8fbfc", border: "2px solid #e0f2f1" }}>
           <div className="d-flex flex-wrap align-items-center gap-3 mb-3">
-            <h6 className="fw-bold mb-0" style={{ color: "#006064", fontSize: "13px", minWidth: "150px" }}>Common Medications</h6>
+            <h6 className="fw-bold mb-0" style={{ color: "#006064", fontSize: "13px", minWidth: "150px" }}>Medicines Prescribed</h6>
             <div className="d-flex flex-wrap gap-3 align-items-center px-3" style={{ borderLeft: "2px solid #b2ebf2" }}>
               {["AAC", "PROBIOTICS", "NSAIDS", "ANTIBIOTICS", "ANTACID"].map(m => (
                 <Form.Check key={m} label={m} checked={diagnosisData.medicines_prescribed.includes(m)} onChange={() => handleDiagnosisCheckboxChange("medicines_prescribed", m)} className="mb-0" style={{ fontSize: "13px", fontWeight: "600", color: "#006064" }} />
               ))}
             </div>
             <div className="flex-grow-1" style={{ minWidth: "200px", maxWidth: "400px" }}>
-              <Form.Control size="sm" placeholder="Other Medications..." style={{ width: "100%", borderRadius: "8px", border: "1px solid #80deea", padding: "6px 12px", fontSize: "13px" }} />
+              <Form.Control
+                size="sm"
+                placeholder="Other Medications..."
+                value={diagnosisData.other_meds || ""}
+                onChange={(e) => handleDiagnosisChange("other_meds", e.target.value)}
+                style={{ width: "100%", borderRadius: "8px", border: "1px solid #80deea", padding: "6px 12px", fontSize: "13px" }}
+              />
             </div>
           </div>
           <hr className="my-3" style={{ borderColor: "#b2ebf2" }} />
           <Row>
-            <Col md={6} className="mb-2">
-              <Form.Label className="fw-bold" style={{ fontSize: "13px", color: "#006064" }}>Surgical Procedure Advice</Form.Label>
+            <Col md={4} className="mb-2">
+              <Form.Label className="fw-bold" style={{ fontSize: "13px", color: "#006064" }}>Surgical Advice</Form.Label>
               <Form.Control as="textarea" rows={2} placeholder="Describe recommended surgery..." value={diagnosisData.surgical_advice} onChange={(e) => handleDiagnosisChange("surgical_advice", e.target.value)} style={{ borderRadius: "8px", border: "1px solid #b2ebf2", padding: "6px 12px", fontSize: "13px" }} />
             </Col>
-            <Col md={6} className="mb-15">
-              <Form.Label className="fw-bold" style={{ fontSize: "13px", color: "#006064" }}>General Clinical Notes</Form.Label>
+            <Col md={4} className="mb-10">
+              <Form.Label className="fw-bold" style={{ fontSize: "13px", color: "#006064" }}>Comment</Form.Label>
               <Form.Control as="textarea" rows={2} placeholder="Additional advice or comments..." value={diagnosisData.general_comment} onChange={(e) => handleDiagnosisChange("general_comment", e.target.value)} style={{ borderRadius: "8px", border: "1px solid #b2ebf2", padding: "6px 12px", fontSize: "13px" }} />
             </Col>
-            <Col md={12}>
-              <div className="d-flex align-items-center gap-3 p-10 rounded" style={{ backgroundColor: "#50aab6ff" }}>
-                <Form.Check type="checkbox" label="Check Surgery Date" checked={diagnosisData.has_surgical_date} onChange={(e) => handleDiagnosisChange("has_surgical_date", e.target.checked)} style={{ fontSize: "13px", fontWeight: "700", color: "#000000ff" }} />
+            <Col md={4} style={{ marginTop: "50px" }}>
+              <div className="d-flex align-items-center gap-3 p-10 rounded" style={{ backgroundColor: "#6ce4e2ff" }}>
+                <Form.Check type="checkbox" label="Check Surgical Date" checked={diagnosisData.has_surgical_date} onChange={(e) => handleDiagnosisChange("has_surgical_date", e.target.checked)} style={{ fontSize: "13px", fontWeight: "700", color: "#000000ff" }} />
                 {diagnosisData.has_surgical_date && (
                   <Form.Control type="date" value={diagnosisData.surgical_date} onChange={(e) => handleDiagnosisChange("surgical_date", e.target.value)} className="animate__animated animate__fadeInLeft" style={{ width: "180px", borderRadius: "8px", border: "2px solid #00acc1", padding: "4px 8px", fontSize: "13px" }} />
                 )}
@@ -244,16 +250,15 @@ const DiagnosisCard = ({
       </div>
 
       {/* 5. Payments & Administration */}
-      {/* 5. Payments & Administration */}
       <div className="p-3 bg-white rounded shadow-sm border mb-3 d-flex flex-wrap align-items-center gap-3" style={{ borderLeft: "5px solid #00838f" }}>
-        <h5 className="fw-bold mb-0" style={{ color: "#00838f", textTransform: "uppercase", fontSize: "14px", minWidth: "200px" }}>Financial Category</h5>
+        <h5 className="fw-bold mb-0" style={{ color: "#00838f", textTransform: "uppercase", fontSize: "14px", minWidth: "50px" }}>Category</h5>
         <div className="d-flex flex-wrap gap-3 align-items-center px-3" style={{ borderLeft: "2px solid #b2ebf2" }}>
           {["Cashless", "Reimbursement", "HHF", "Cash"].map(cat => (
-            <Form.Check key={cat} label={cat} checked={diagnosisData.categories.includes(cat)} onChange={() => handleDiagnosisCheckboxChange("categories", cat)} className="mb-0" style={{ fontSize: "13px", fontWeight: "700", color: "#795548" }} />
+            <Form.Check key={cat} label={cat} checked={diagnosisData.categories.includes(cat)} onChange={() => handleDiagnosisCheckboxChange("categories", cat)} className="mb-0" style={{ color: "#00838f", fontSize: "13px", fontWeight: "700" }} />
           ))}
         </div>
         <div className="ms-auto flex-grow-1" style={{ minWidth: "250px" }}>
-          <Form.Control as="textarea" rows={1} placeholder="Policy or payment details..." value={diagnosisData.category_comment} onChange={(e) => handleDiagnosisChange("category_comment", e.target.value)} style={{ borderRadius: "8px", border: "1px solid #ffe0b2", padding: "6px 12px", fontSize: "13px" }} />
+          <Form.Control as="textarea" rows={1} placeholder="Policy or payment details..." value={diagnosisData.category_comment} onChange={(e) => handleDiagnosisChange("category_comment", e.target.value)} style={{ borderRadius: "8px", border: "1px solid #80deea", padding: "6px 12px", fontSize: "13px" }} />
         </div>
       </div>
 
@@ -310,8 +315,8 @@ const DiagnosisCard = ({
           onClick={onSaveDiagnosis}
           disabled={loading}
           style={{ backgroundColor: "#00838f", borderColor: "#00838f", padding: "10px 40px", borderRadius: "50px", fontWeight: "800", fontSize: "13px", boxShadow: "0 8px 25px rgba(0, 131, 143, 0.2)", textTransform: "uppercase", letterSpacing: "1px" }}>
-          {loading ? <Spinner size="sm" className="me-2" /> : <FeatherIcon icon="check-circle" size="18" className="me-2" />}
-          COMPLETE & SAVE DIAGNOSIS
+          {loading ? <Spinner size="sm" className="me-2" /> : <FeatherIcon icon="save" size="18" className="me-2" />}
+          SAVE DIAGNOSIS DATA
         </Button>
       </div>
     </div>

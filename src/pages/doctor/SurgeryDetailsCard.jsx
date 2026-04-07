@@ -2,16 +2,22 @@ import React from "react";
 import { Row, Col, Form, Button, Dropdown } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 
-const SurgeryDetailsCard = ({ 
-  surgeryData, 
-  handleSurgeryChange, 
+const SurgeryDetailsCard = ({
+  surgeryData,
+  handleSurgeryChange,
   handleSurgeryCheckboxChange,
   previousSurgeryList = [],
   selectedSurgeryId = null,
   onSelectSurgery,
   onNewSurgery,
-  assistanceDoctors = []
+  onSaveSurgery,
+  loading = false,
+  assistanceDoctors = [],
+  doctors = []
 }) => {
+
+
+
   return (
     <div className="animate__animated animate__fadeIn">
       <style>{`
@@ -25,19 +31,19 @@ const SurgeryDetailsCard = ({
             <FeatherIcon icon="scissors" size="18" className="me-2 text-info" />Surgical Procedure & Clinical Records
           </h5>
           <div className="d-flex gap-2">
-            <Button 
-              variant="outline-info" 
-              size="sm" 
+            <Button
+              variant="outline-info"
+              size="sm"
               onClick={onNewSurgery}
               style={{ borderRadius: "20px", fontSize: "11px", fontWeight: "700" }}
             >
               <FeatherIcon icon="plus" size="14" className="me-1" /> NEW RECORD
             </Button>
             <Dropdown onSelect={onSelectSurgery}>
-              <Dropdown.Toggle 
-                variant="info" 
-                id="previous-surg-dropdown" 
-                size="sm" 
+              <Dropdown.Toggle
+                variant="info"
+                id="previous-surg-dropdown"
+                size="sm"
                 style={{ borderRadius: "20px", fontSize: "11px", fontWeight: "700", color: "white" }}
               >
                 <FeatherIcon icon="calendar" size="14" className="me-1" /> PREVIOUS DATES
@@ -93,10 +99,14 @@ const SurgeryDetailsCard = ({
             <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>Anaesthetist</Form.Label>
             <Form.Select value={surgeryData.anaesthetist} onChange={(e) => handleSurgeryChange("anaesthetist", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }}>
               <option value="">Select Anaesthetist</option>
-              <option value="1">Dr. S. K. Khanna</option>
-              <option value="2">Dr. Meera Nair</option>
+              {doctors.map((doc) => (
+                <option key={doc.doctor_id} value={doc.doctor_id}>
+                  {doc.name}
+                </option>
+              ))}
             </Form.Select>
           </Col>
+
         </Row>
         <div className="p-2 px-3 rounded border mb-3 d-flex align-items-center gap-4 flex-wrap" style={{ margin: "5px", backgroundColor: "#f0f9ff", borderColor: "#bae6fd" }}>
           <Form.Label className="fw-bold mb-0" style={{ color: "#0369a1", fontSize: "13px", whiteSpace: "nowrap", padding: "6px" }}>Type of Anesthesia Administered:</Form.Label>
@@ -144,10 +154,19 @@ const SurgeryDetailsCard = ({
         </Row>
       </div>
       <div className="text-center mb-5 pb-5 mt-4">
-        <Button style={{ backgroundColor: "#00acc1", borderColor: "#00acc1", padding: "10px 40px", borderRadius: "40px", fontWeight: "800", fontSize: "13px", boxShadow: "0 8px 25px rgba(0, 172, 193, 0.4)", textTransform: "uppercase", letterSpacing: "1px" }}>
-          <FeatherIcon icon="save" size="18" className="me-2" /> RECORD SURGICAL SUMMARY
+        <Button
+          onClick={onSaveSurgery}
+          disabled={loading}
+          style={{ backgroundColor: "#00acc1", borderColor: "#00acc1", padding: "10px 40px", borderRadius: "40px", fontWeight: "800", fontSize: "13px", boxShadow: "0 8px 25px rgba(0, 172, 193, 0.4)", textTransform: "uppercase", letterSpacing: "1px" }}
+        >
+          {loading ? "SAVING..." : (
+            <>
+              <FeatherIcon icon="save" size="18" className="me-2" />SAVE SURGICAL DATA
+            </>
+          )}
         </Button>
       </div>
+
     </div >
   );
 };

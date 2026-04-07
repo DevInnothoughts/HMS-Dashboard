@@ -39,7 +39,7 @@ const LOCATIONS_LIST = [
   "Latur",
   "Indore",
   "Mysore",
-  "Undri",
+  "Undri",  
   "Vashi",
   "Hinjewadi",
   "Lucknow",
@@ -66,6 +66,12 @@ export default function Login() {
     email: "",
     password: "",
   });
+  const [shakingField, setShakingField] = useState("");
+
+  const triggerShake = (fieldName) => {
+    setShakingField(fieldName);
+    setTimeout(() => setShakingField(""), 500);
+  };
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
@@ -77,6 +83,10 @@ export default function Login() {
       const nextData = { ...prev, [name]: value };
       if (name === "department") {
         nextData.accountType = "";
+        nextData.jobLocation = "";
+      }
+      if (name === "accountType") {
+        nextData.jobLocation = "";
       }
       return nextData;
     });
@@ -157,6 +167,15 @@ export default function Login() {
 
   return (
     <div style={containerStyle}>
+      <style>
+        {`
+          @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
+            20%, 40%, 60%, 80% { transform: translateX(6px); }
+          }
+        `}
+      </style>
       <div style={blobStyle}></div>
       <div style={blob2Style}></div>
       <div className="login-card" style={cardStyle}>
@@ -198,13 +217,18 @@ export default function Login() {
           </div>
 
           <Form onSubmit={handleSubmit}>
-            <Form.Group className="mb-13">
+            <Form.Group className="mb-15">
               <Form.Label style={labelStyle}>Department Type</Form.Label>
               <Form.Select
                 name="department"
                 value={formData.department}
                 onChange={handleChange}
-                style={inputStyle}
+                style={{
+                  ...inputStyle,
+                  borderColor: shakingField === "department" ? "#e53e3e" : inputStyle.borderColor,
+                  animation: shakingField === "department" ? "shake 0.5s ease-in-out" : "none",
+                  backgroundColor: shakingField === "department" ? "#fff5f5" : inputStyle.backgroundColor,
+                }}
               >
                 <option value="">Select Department</option>
                 <option value="IPD">IPD</option>
@@ -212,13 +236,23 @@ export default function Login() {
               </Form.Select>
             </Form.Group>
 
-            <Form.Group className="mb-13">
+            <Form.Group
+              className="mb-15"
+              onClick={() => !formData.department && triggerShake("department")}
+              style={{ cursor: !formData.department ? "pointer" : "default" }}
+            >
               <Form.Label style={labelStyle}>Account Type</Form.Label>
               <Form.Select
                 name="accountType"
                 value={formData.accountType}
                 onChange={handleChange}
-                style={inputStyle}
+                style={{
+                  ...inputStyle,
+                  borderColor: shakingField === "accountType" ? "#e53e3e" : inputStyle.borderColor,
+                  animation: shakingField === "accountType" ? "shake 0.5s ease-in-out" : "none",
+                  backgroundColor: shakingField === "accountType" ? "#fff5f5" : inputStyle.backgroundColor,
+                  pointerEvents: !formData.department ? "none" : "auto",
+                }}
                 disabled={!formData.department}
               >
                 <option value="">Select Account Type</option>
@@ -230,13 +264,24 @@ export default function Login() {
               </Form.Select>
             </Form.Group>
 
-            <Form.Group className="mb-13">
+            <Form.Group
+              className="mb-15"
+              onClick={() => !formData.accountType && triggerShake("accountType")}
+              style={{ cursor: !formData.accountType ? "pointer" : "default" }}
+            >
               <Form.Label style={labelStyle}>Clinic Location</Form.Label>
               <Form.Select
                 name="jobLocation"
                 value={formData.jobLocation}
                 onChange={handleChange}
-                style={inputStyle}
+                style={{
+                  ...inputStyle,
+                  borderColor: shakingField === "jobLocation" ? "#e53e3e" : inputStyle.borderColor,
+                  animation: shakingField === "jobLocation" ? "shake 0.5s ease-in-out" : "none",
+                  backgroundColor: shakingField === "jobLocation" ? "#fff5f5" : inputStyle.backgroundColor,
+                  pointerEvents: !formData.accountType ? "none" : "auto",
+                }}
+                disabled={!formData.accountType}
               >
                 <option value="">Select Location</option>
                 {LOCATIONS_LIST.map((loc, index) => (
@@ -247,7 +292,7 @@ export default function Login() {
               </Form.Select>
             </Form.Group>
 
-            <Form.Group className="mb-13">
+            <Form.Group className="mb-15">
               <Form.Label style={labelStyle}>Email Address</Form.Label>
               <Form.Control
                 type="email"
@@ -364,7 +409,7 @@ const cardStyle = {
   backdropFilter: "blur(10px)",
   borderRadius: "30px",
   boxShadow: "0 25px 50px -12px rgba(0, 70, 80, 0.15)",
-  maxWidth: "950px",
+  maxWidth: "850px",
   width: "100%",
   overflow: "hidden",
   zIndex: 1,
@@ -385,15 +430,15 @@ const brandSectionStyle = {
 };
 
 const dreamQuoteStyle = {
-  fontSize: "19px",
+  fontSize: "20px",
   fontStyle: "italic",
   lineHeight: "1.4",
   marginTop: "10px",
-  color: "rgba(255, 255, 255, 0.9)",
+  color: "rgba(255, 255, 255, 0.93)",
 };
 
 const focusedTaglineStyle = {
-  fontSize: "21px",
+  fontSize: "20px",
   fontWeight: "700",
   textTransform: "uppercase",
   letterSpacing: "1px",
@@ -406,7 +451,7 @@ const focusedTaglineStyle = {
 
 const formSectionStyle = {
   flex: "1.2",
-  padding: "30px 25px",
+  padding: "30px 15px",
   backgroundColor: "#ffffff",
 };
 
@@ -418,22 +463,22 @@ const logoStyle = {
 };
 
 const brandTaglineStyle = {
-  fontSize: "18px",
+  fontSize: "15px",
   fontWeight: "500",
-  marginTop: "5px",
+  marginTop: "1px",
 };
 
 const dividerStyle = {
   width: "50px",
   height: "3px",
   background: "rgba(255, 255, 255, 0.5)",
-  margin: "15px 0",
+  margin: "10px 0",
   borderRadius: "2px",
 };
 
 const brandDescStyle = {
-  fontSize: "16px",
-  marginTop: "16px",
+  fontSize: "15px",
+  marginTop: "15px",
   lineHeight: "1.6",
   color: "rgba(255, 255, 255, 0.85)",
   maxWidth: "320px",
@@ -443,19 +488,19 @@ const welcomeTitleStyle = {
   fontSize: "22px",
   fontWeight: "700",
   color: "#178aaeff",
-  marginBottom: "5px",
+  marginBottom: "1px",
 };
 
 const labelStyle = {
   fontSize: "13px",
   fontWeight: "600",
-  color: "#415066ff",
-  marginBottom: "5px",
+  color: "#394659ff",
+  marginBottom: "3px",
   marginLeft: "2px",
 };
 
 const inputStyle = {
-  padding: "5px 15px",
+  padding: "6px 10px",
   borderRadius: "12px",
   border: "1px solid #6db8c2ff",
   backgroundColor: "#fafdff",

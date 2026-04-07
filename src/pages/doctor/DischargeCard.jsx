@@ -1,23 +1,28 @@
 import React, { useState } from "react";
 import { Row, Col, Form, Button, Modal, Dropdown } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
+import Select from "react-select";
 
-const DischargeCard = ({ 
-  dischargeData, 
-  handleDischargeChange, 
+const DischargeCard = ({
+  dischargeData,
+  handleDischargeChange,
   handleDischargeInvestigationChange,
   previousDischargesList = [],
   selectedDischargeId = null,
   onSelectDischarge,
   onNewDischarge,
+  onSaveDischarge,
+  loading,
   doctors = [],
-  assistanceDoctors = []
+  assistanceDoctors = [],
+  fistulaCases = []
 }) => {
   const [newTreatmentGiven, setNewTreatmentGiven] = useState({ medicine_name: "", times: "", route: "" });
   const [newTreatmentOnDischarge, setNewTreatmentOnDischarge] = useState({
     medicine_name: "",
     qty: "",
     strength_unit: "",
+    medicine_time: [],
     frequency: "",
     days: ""
   });
@@ -65,9 +70,18 @@ const DischargeCard = ({
       medicine_name: "",
       qty: "",
       strength_unit: "",
+      medicine_time: [],
       frequency: "",
       days: ""
     });
+  };
+
+  const toggleMedicineTime = (time) => {
+    const current = newTreatmentOnDischarge.medicine_time || [];
+    const updated = current.includes(time)
+      ? current.filter(t => t !== time)
+      : [...current, time];
+    setNewTreatmentOnDischarge(prev => ({ ...prev, medicine_time: updated }));
   };
 
   const removeTreatmentOnDischarge = (id) => {
@@ -76,6 +90,10 @@ const DischargeCard = ({
   };
 
 
+  const handleFinalize = () => {
+    handleDischargeChange("final_dc", true);
+    onSaveDischarge();
+  };
 
   return (
     <div className="animate__animated animate__fadeIn">
@@ -112,19 +130,19 @@ const DischargeCard = ({
             <FeatherIcon icon="log-out" size="20" className="me-2 text-info" />Inpatient Discharge Summary
           </h5>
           <div className="d-flex gap-2">
-            <Button 
-              variant="outline-info" 
-              size="sm" 
+            <Button
+              variant="outline-info"
+              size="sm"
               onClick={onNewDischarge}
               style={{ borderRadius: "20px", fontSize: "11px", fontWeight: "700" }}
             >
               <FeatherIcon icon="plus" size="14" className="me-1" /> NEW RECORD
             </Button>
             <Dropdown onSelect={onSelectDischarge}>
-              <Dropdown.Toggle 
-                variant="info" 
-                id="previous-discharges-dropdown" 
-                size="sm" 
+              <Dropdown.Toggle
+                variant="primary"
+                id="previous-discharges-dropdown"
+                size="sm"
                 style={{ borderRadius: "20px", fontSize: "11px", fontWeight: "700", color: "white" }}
               >
                 <FeatherIcon icon="calendar" size="14" className="me-1" /> PREVIOUS DATES
@@ -231,14 +249,19 @@ const DischargeCard = ({
 
         <Row className="g-3 mb-4">
           <Col md={3}>
-            <Form.Label className="fw-bold text-muted small mb-1">CONSULTANT NAME</Form.Label>
-            <Form.Control
-              type="text"
-              value={dischargeData.consultant_name}
-              onChange={(e) => handleDischargeChange("consultant_name", e.target.value)}
-              placeholder="Consultant Doctor Name"
-              style={{ borderRadius: "8px", border: "2px solid #b2ebf2", fontSize: "13px" }}
-            />
+            <Form.Label className="fw-bold text-muted small mb-1">CONSULTANT DOCTOR</Form.Label>
+            <Form.Select
+              value={dischargeData.consultant_doctor}
+              onChange={(e) => handleDischargeChange("consultant_doctor", e.target.value)}
+              style={{ borderRadius: "8px", border: "2px solid #b2ebf2", fontSize: "12px" }}
+            >
+              <option value="">Select Consultant Doctor</option>
+              {doctors.map((doc) => (
+                <option key={doc.doctor_id} value={doc.doctor_id}>
+                  {doc.name}
+                </option>
+              ))}
+            </Form.Select>
           </Col>
         </Row>
       </div>
@@ -369,25 +392,70 @@ const DischargeCard = ({
           </Col>
           <Col md={3}>
             <Form.Label className="fw-bold small text-muted">FISTULA CASES</Form.Label>
-            <Form.Select
-              value={dischargeData.fistula_cases}
-              onChange={(e) => handleDischargeChange("fistula_cases", e.target.value)}
-              style={{ borderRadius: "8px", fontSize: "12px" }}
-            >
-              <option value="">Select Case Type</option>
-              <option value="GLUTEAL">GLUTEAL</option>
-              <option value="HIGH">HIGH</option>
-              <option value="HORSESHOE">HORSESHOE</option>
-              <option value="NIDAL">NIDAL</option>
-              <option value="SCROTAL">SCROTAL</option>
-              <option value="SUPRALEVATOR">SUPRALEVATOR</option>
-              <option value="TRANSPHINCTERIC">TRANSPHINCTERIC</option>
-              <option value="INTERSPHINCTERIC">INTERSPHINCTERIC</option>
-              <option value="VAGINAL">VAGINAL</option>
-              <option value="VULVAL">VULVAL</option>
-              <option value="COMPLEX">COMPLEX</option>
-              <option value="RECURRENT">RECURRENT</option>
-            </Form.Select>
+            <Dropdown className="w-100">
+              <Dropdown.Toggle
+                variant="outline-info"
+                id="fistula-cases-dropdown"
+                className="w-100 d-flex justify-content-between align-items-center"
+                style={{
+                  borderRadius: "8px",
+                  border: "2px solid #b2ebf2",
+                  fontSize: "12px",
+                  backgroundColor: "#fff",
+                  minHeight: "58px", // To match textarea rows={2} roughly
+                  textAlign: "left",
+                  padding: "6px 12px",
+                  color: "#475569"
+                }}
+              >
+                <div style={{ whiteSpace: "normal", lineHeight: "1.2" }}>
+                  {(dischargeData.fistula_cases || []).length > 0
+                    ? `${(dischargeData.fistula_cases || []).map(id => fistulaCases.find(f => f.id.toString() === id)?.condition_name).join(", ")}`
+                    : "Select Fistula Cases"}
+                </div>
+              </Dropdown.Toggle>
+
+              <Dropdown.Menu
+                className="w-100 p-3 shadow"
+                style={{
+                  maxHeight: "250px",
+                  overflowY: "auto",
+                  borderRadius: "12px",
+                  border: "1px solid #b2ebf2"
+                }}
+              >
+                {fistulaCases.length > 0 ? (
+                  fistulaCases.map((fcase) => (
+                    <div
+                      key={fcase.id}
+                      className="px-2 py-1 mb-1 rounded hover-bg-light"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Form.Check
+                        type="checkbox"
+                        id={`dropdown-fistula-${fcase.id}`}
+                        label={fcase.condition_name}
+                        checked={(dischargeData.fistula_cases || []).includes(fcase.id.toString())}
+                        onChange={(e) => {
+                          const current = dischargeData.fistula_cases || [];
+                          const valueStr = fcase.id.toString();
+                          let updated;
+                          if (e.target.checked) {
+                            updated = [...current, valueStr];
+                          } else {
+                            updated = current.filter((id) => id !== valueStr);
+                          }
+                          handleDischargeChange("fistula_cases", updated);
+                        }}
+                        style={{ fontSize: "13px", fontWeight: "500", color: "#006064" }}
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center text-muted small py-2">No cases found</div>
+                )}
+              </Dropdown.Menu>
+            </Dropdown>
           </Col>
           <Col md={12}>
             <Form.Label className="fw-bold small text-muted">CONSENT</Form.Label>
@@ -503,7 +571,7 @@ const DischargeCard = ({
           <FeatherIcon icon="clipboard" size="18" className="me-2" /> TREATMENT ON DISCHARGE
         </h6>
         <Row className="g-2 mb-3">
-          <Col md={4}>
+          <Col md={3}>
             <Form.Label className="fw-bold small text-muted">MEDICINE NAME</Form.Label>
             <Form.Control
               type="text"
@@ -520,9 +588,9 @@ const DischargeCard = ({
               onChange={(e) => setNewTreatmentOnDischarge({ ...newTreatmentOnDischarge, qty: e.target.value })}
               style={{ borderRadius: "8px", fontSize: "12px", border: "2px solid #b2ebf2" }}
             >
-              <option value="">#</option>
-              {[...Array(60)].map((_, i) => (
-                <option key={i + 1} value={i + 1}>{i + 1}</option>
+              <option value="">Qty</option>
+              {Array.from({ length: 60 }, (_, i) => i + 1).map(num => (
+                <option key={num} value={num}>{num}</option>
               ))}
             </Form.Select>
           </Col>
@@ -537,17 +605,49 @@ const DischargeCard = ({
             />
           </Col>
           <Col md={3}>
-            <Form.Label className="fw-bold small text-muted">FREQUENCY / TIMING</Form.Label>
-            <Form.Select
+            <Form.Label className="fw-bold small text-muted">Medicine time</Form.Label>
+            <Dropdown className="w-200">
+              <Dropdown.Toggle
+                variant="outline-info"
+                id="medicine-time-dropdown"
+                className="w-200 d-flex justify-content-between align-items-center"
+                style={{ borderRadius: "8px", border: "2px solid #b2ebf2", fontSize: "12px", height: "38px" }}
+              >
+                <span className="text-truncate">
+                  {newTreatmentOnDischarge.medicine_time.length > 0
+                    ? newTreatmentOnDischarge.medicine_time.join(", ")
+                    : "Select Time"}
+                </span>
+              </Dropdown.Toggle>
+              <Dropdown.Menu className="w-100 shadow-sm border-0 py-2 px-1" style={{ maxHeight: "300px", overflowY: "auto", borderRadius: "10px" }}>
+                {[
+                  "Before Breakfast", "After Breakfast", "Before Lunch", "After Lunch",
+                  "Before Dinner", "After Dinner", "After Evening Snacks",
+                  "On Clear Liquid", "SOS", "LA"
+                ].map(time => (
+                  <div key={time} className="dropdown-item d-flex align-items-center py-2 rounded-2 mb-1" style={{ cursor: "pointer" }} onClick={(e) => { e.stopPropagation(); toggleMedicineTime(time); }}>
+                    <Form.Check
+                      type="checkbox"
+                      id={`time-${time}`}
+                      checked={newTreatmentOnDischarge.medicine_time.includes(time)}
+                      onChange={() => { }} // Controlled by outer div
+                      className="me-2"
+                    />
+                    <label className="mb-0 flex-grow-1" style={{ cursor: "pointer", fontSize: "12px", color: "#475569" }}>{time}</label>
+                  </div>
+                ))}
+              </Dropdown.Menu>
+            </Dropdown>
+          </Col>
+          <Col md={2}>
+            <Form.Label className="fw-bold small text-muted text-uppercase">Frequency</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Frequency"
               value={newTreatmentOnDischarge.frequency}
               onChange={(e) => setNewTreatmentOnDischarge({ ...newTreatmentOnDischarge, frequency: e.target.value })}
               style={{ borderRadius: "8px", fontSize: "12px", border: "2px solid #b2ebf2" }}
-            >
-              <option value="">Select Timing</option>
-              {["Before Breakfast", "After Breakfast", "Before Lunch", "After Lunch", "After Evening Snacks", "Before Dinner", "After Dinner", "SOS", "LA"].map(opt => (
-                <option key={opt} value={opt}>{opt}</option>
-              ))}
-            </Form.Select>
+            />
           </Col>
           <Col md={1}>
             <Form.Label className="fw-bold small text-muted">DAYS</Form.Label>
@@ -557,44 +657,52 @@ const DischargeCard = ({
               style={{ borderRadius: "8px", fontSize: "12px", border: "2px solid #b2ebf2" }}
             >
               <option value="">Days</option>
-              {[1, 2, 3, 5, 7, 10, 15, 30, 45, 60, 90, 120, 'SOS'].map(opt => (
-                <option key={opt} value={opt}>{opt}</option>
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 30, 45, 60, 90, 120, "SOS"].map(num => (
+                <option key={num} value={num}>{num}</option>
               ))}
             </Form.Select>
           </Col>
-          <Col md={1} className="d-flex align-items-end">
-            <Button
-              variant="danger"
-              className="w-100"
-              onClick={addTreatmentOnDischarge}
-              style={{ height: "38px", borderRadius: "8px" }}
-            >
-              <FeatherIcon icon="plus" size="20" />
-            </Button>
-          </Col>
         </Row>
+        <div className="d-flex justify-content-end mb-4">
+          <Button
+            variant="info"
+            className="text-white fw-bold d-flex align-items-center px-4"
+            onClick={addTreatmentOnDischarge}
+            style={{ borderRadius: "8px", boxShadow: "0 4px 8px rgba(0, 188, 212, 0.2)" }}
+          >
+            <FeatherIcon icon="plus" size="18" className="me-2" /> ADD MEDICINE
+          </Button>
+        </div>
 
         {dischargeData.treatment_on_discharge?.length > 0 && (
           <div className="table-responsive">
             <table className="table table-sm table-hover align-middle" style={{ fontSize: "12px" }}>
               <thead className="table-light">
                 <tr>
-                  <th className="ps-3">Medicine</th>
+                  <th className="ps-3">Medicine Name</th>
                   <th>Qty</th>
-                  <th>Strength</th>
-                  <th>Frequency/Timing</th>
+                  <th>Strength/Unit</th>
+                  <th>Medicine time</th>
+                  <th>Frequency</th>
                   <th>Days</th>
-                  <th className="text-center">Action</th>
+                  <th className="text-center" style={{ width: "50px" }}>Action</th>
                 </tr>
               </thead>
               <tbody>
                 {dischargeData.treatment_on_discharge.map((item) => (
                   <tr key={item.id}>
                     <td className="ps-3 fw-bold text-dark">{item.medicine_name}</td>
-                    <td>{item.qty}</td>
-                    <td>{item.strength_unit}</td>
-                    <td><span className="badge bg-danger-subtle text-danger border border-danger-subtle">{item.frequency}</span></td>
-                    <td>{item.days}</td>
+                    <td className="text-center">{item.qty}</td>
+                    <td className="text-center">{item.strength_unit}</td>
+                    <td>
+                      <div className="d-flex flex-wrap gap-1">
+                        {(item.medicine_time || []).map((t, idx) => (
+                          <span key={idx} className="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2" style={{ fontSize: "10px" }}>{t}</span>
+                        ))}
+                      </div>
+                    </td>
+                    <td>{item.frequency}</td>
+                    <td className="fw-bold">{item.days}</td>
                     <td className="text-center">
                       <Button variant="link" className="text-danger p-0" onClick={() => removeTreatmentOnDischarge(item.id)}>
                         <FeatherIcon icon="trash-2" size="14" />
@@ -625,7 +733,7 @@ const DischargeCard = ({
             >
               <option value="">Select Doctor</option>
               {doctors.map((doc) => (
-                <option key={doc.doctor_id} value={doc.name}>{doc.name}</option>
+                <option key={doc.doctor_id} value={doc.doctor_id}>{doc.name}</option>
               ))}
             </Form.Select>
           </Col>
@@ -636,10 +744,18 @@ const DischargeCard = ({
               onChange={(e) => handleDischargeChange("made_by", e.target.value)}
               style={{ borderRadius: "6px", fontSize: "12px", border: "2px solid #b2ebf2" }}
             >
-              <option value="">Select Staff</option>
-              {/* This might need its own list, but I'll leave as is or use a placeholder */}
-              <option value="Staff 1">Staff 1</option>
-              <option value="Staff 2">Staff 2</option>
+              <option value="">Select Doctor</option>
+              {doctors
+                .filter((doc) => {
+                  if (!doc.doctor_type) return false;
+                  const roles = doc.doctor_type.toLowerCase().split(",").map((r) => r.trim());
+                  return roles.includes("madeby") || roles.includes("made");
+                })
+                .map((doc) => (
+                  <option key={doc.doctor_id} value={doc.doctor_id}>
+                    {doc.name}
+                  </option>
+                ))}
             </Form.Select>
           </Col>
           <Col md={3}>
@@ -650,9 +766,17 @@ const DischargeCard = ({
               style={{ borderRadius: "6px", fontSize: "12px", border: "2px solid #b2ebf2" }}
             >
               <option value="">Select Doctor</option>
-              {doctors.map((doc) => (
-                <option key={doc.doctor_id} value={doc.name}>{doc.name}</option>
-              ))}
+              {doctors
+                .filter((doc) => {
+                  if (!doc.doctor_type) return false;
+                  const roles = doc.doctor_type.toLowerCase().split(",").map((r) => r.trim());
+                  return roles.includes("checkby") || roles.includes("check");
+                })
+                .map((doc) => (
+                  <option key={doc.doctor_id} value={doc.doctor_id}>
+                    {doc.name}
+                  </option>
+                ))}
             </Form.Select>
           </Col>
           <Col md={3}>
@@ -664,7 +788,7 @@ const DischargeCard = ({
             >
               <option value="">Select Doctor</option>
               {assistanceDoctors.map((doc) => (
-                <option key={doc.doctor_id} value={doc.name}>{doc.name}</option>
+                <option key={doc.doctor_id} value={doc.doctor_id}>{doc.name}</option>
               ))}
             </Form.Select>
           </Col>
@@ -677,7 +801,7 @@ const DischargeCard = ({
             >
               <option value="">Select Surgeon</option>
               {assistanceDoctors.map((doc) => (
-                <option key={doc.doctor_id} value={doc.name}>{doc.name}</option>
+                <option key={doc.doctor_id} value={doc.doctor_id}>{doc.name}</option>
               ))}
             </Form.Select>
           </Col>
@@ -702,6 +826,7 @@ const DischargeCard = ({
         </Row>
       </div>
 
+      {/* Save Button Container */}
       <Modal show={showUploadModal} onHide={() => setShowUploadModal(false)} centered size="lg">
         <Modal.Header closeButton style={{ backgroundColor: "#00838f", color: "white" }}>
           <Modal.Title className="fw-bold text-uppercase" style={{ fontSize: "16px", letterSpacing: "1px" }}>
@@ -810,8 +935,21 @@ const DischargeCard = ({
       </Modal>
 
       <div className="text-center mb-5 pb-5 mt-4">
-        <Button style={{ backgroundColor: "#00838f", borderColor: "#00838f", padding: "12px 60px", borderRadius: "50px", fontWeight: "800", fontSize: "14px", boxShadow: "0 10px 30px rgba(0, 131, 143, 0.3)", textTransform: "uppercase", letterSpacing: "1.5px" }}>
-          <FeatherIcon icon="check-circle" size="20" className="me-2" /> FINALIZE DISCHARGE SUMMARY
+        <Button
+          disabled={loading}
+          onClick={handleFinalize}
+          style={{ backgroundColor: "#00838f", borderColor: "#00838f", padding: "12px 60px", borderRadius: "50px", fontWeight: "800", fontSize: "14px", boxShadow: "0 10px 30px rgba(0, 131, 143, 0.3)", textTransform: "uppercase", letterSpacing: "1.5px" }}
+        >
+          {loading ? (
+            <>
+              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              SAVING...
+            </>
+          ) : (
+            <>
+              <FeatherIcon icon="save" size="20" className="me-2" />SAVE DISCHARGE DATA
+            </>
+          )}
         </Button>
       </div>
     </div>

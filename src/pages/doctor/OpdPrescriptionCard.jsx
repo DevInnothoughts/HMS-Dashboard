@@ -40,7 +40,7 @@ const OpdPrescriptionCard = ({
       if (type === "urology") {
         deptId = 6;
         adviceCategory = "urology";
-      } else if (type === "proctology") {
+      } else if (type === "proctology" || type === "other") {
         deptId = 5;
         adviceCategory = "proctology";
       }
@@ -101,6 +101,17 @@ const OpdPrescriptionCard = ({
       <style>{`
         .form-check-input {
           border: 1px solid black !important;
+        }
+        .hover-bg-light:hover {
+          background-color: #f1fcfd;
+          transition: background-color 0.2s;
+        }
+        .cursor-pointer {
+          cursor: pointer;
+        }
+        .custom-checkbox input:checked {
+          background-color: #00bcd4;
+          border-color: #00bcd4;
         }
       `}</style>
       <div className="p-3 bg-white rounded shadow-sm border mb-3" style={{ borderLeft: "5px solid #0097a7" }}>
@@ -172,34 +183,106 @@ const OpdPrescriptionCard = ({
           </Col>
           <Col md={prescriptionData.prescription_type === "Urology" ? 3 : 3} className="mb-20">
             <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Test Advice</Form.Label>
-            <Form.Select
-              value=""
-              onChange={(e) => handlePrescriptionCheckboxChange(prescriptionData.prescription_type === "Urology" ? "uroadvice" : "surgical_advice", e.target.value)}
-              style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }}
-            >
-              <option value="">Add Test...</option>
-              {testAdviceOptions.map((t) => (
-                <option key={t.padvice_id} value={t.padvice_desc}>
-                  {t.padvice_desc}
-                </option>
+            <Dropdown>
+              <Dropdown.Toggle
+                variant="outline-info"
+                id="test-advice-dropdown"
+                className="w-100 text-start d-flex justify-content-between align-items-center"
+                style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px", backgroundColor: "white", color: "#333" }}
+              >
+                Select Tests...
+              </Dropdown.Toggle>
+              <Dropdown.Menu className="w-200 shadow-sm border-0" style={{ maxHeight: "300px", overflowY: "auto", padding: "10px", borderRadius: "12px" }}>
+                {testAdviceOptions.length > 0 ? (
+                  testAdviceOptions.map((t) => {
+                    const isChecked = (prescriptionData.prescription_type === "Urology" ? prescriptionData.uroadvice : prescriptionData.surgical_advice)?.includes(t.padvice_desc);
+                    return (
+                      <div
+                        key={t.padvice_id}
+                        className="px-2 py-1 mb-1 rounded hover-bg-light"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Form.Check
+                          type="checkbox"
+                          id={`test-advice-${t.padvice_id}`}
+                          label={<span style={{ fontSize: "12px", cursor: "pointer" }}>{t.padvice_desc}</span>}
+                          checked={isChecked}
+                          onChange={() => handlePrescriptionCheckboxChange(prescriptionData.prescription_type === "Urology" ? "uroadvice" : "surgical_advice", t.padvice_desc)}
+                          className="custom-checkbox"
+                        />
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="text-muted text-center p-2" style={{ fontSize: "11px" }}>No options available</div>
+                )}
+              </Dropdown.Menu>
+            </Dropdown>
+            <div className="mt-2 d-flex flex-wrap gap-1">
+              {(prescriptionData.prescription_type === "Urology" ? prescriptionData.uroadvice : prescriptionData.surgical_advice)?.map((item, idx) => (
+                <span key={idx} className="badge bg-info text-white d-flex align-items-center" style={{ fontSize: "10px", borderRadius: "20px", padding: "4px 10px", fontWeight: "600" }}>
+                  {item}
+                  <FeatherIcon
+                    icon="x"
+                    size="12"
+                    className="ms-2 cursor-pointer hover-text-danger"
+                    onClick={() => handlePrescriptionCheckboxChange(prescriptionData.prescription_type === "Urology" ? "uroadvice" : "surgical_advice", item)}
+                  />
+                </span>
               ))}
-            </Form.Select>
+            </div>
           </Col>
           {prescriptionData.prescription_type === "Urology" && (
             <Col md={3} className="mb-3">
               <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>PREOP Investigation</Form.Label>
-              <Form.Select
-                value=""
-                onChange={(e) => handlePrescriptionCheckboxChange("preopinvestigation", e.target.value)}
-                style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }}
-              >
-                <option value="">Add PREOP Test...</option>
-                {preopInvestOptions.map((t) => (
-                  <option key={t.padvice_id} value={t.padvice_desc}>
-                    {t.padvice_desc}
-                  </option>
+              <Dropdown>
+                <Dropdown.Toggle
+                  variant="outline-secondary"
+                  id="preop-invest-dropdown"
+                  className="w-100 text-start d-flex justify-content-between align-items-center"
+                  style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px", backgroundColor: "white", color: "#333" }}
+                >
+                  Select PREOP...
+                </Dropdown.Toggle>
+                <Dropdown.Menu className="w-100 shadow-sm border-0" style={{ maxHeight: "300px", overflowY: "auto", padding: "10px", borderRadius: "12px" }}>
+                  {preopInvestOptions.length > 0 ? (
+                    preopInvestOptions.map((t) => {
+                      const isChecked = prescriptionData.preopinvestigation?.includes(t.padvice_desc);
+                      return (
+                        <div
+                          key={t.padvice_id}
+                          className="px-2 py-1 mb-1 rounded hover-bg-light"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Form.Check
+                            type="checkbox"
+                            id={`preop-invest-${t.padvice_id}`}
+                            label={<span style={{ fontSize: "12px", cursor: "pointer" }}>{t.padvice_desc}</span>}
+                            checked={isChecked}
+                            onChange={() => handlePrescriptionCheckboxChange("preopinvestigation", t.padvice_desc)}
+                            className="custom-checkbox"
+                          />
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="text-muted text-center p-2" style={{ fontSize: "11px" }}>No options available</div>
+                  )}
+                </Dropdown.Menu>
+              </Dropdown>
+              <div className="mt-2 d-flex flex-wrap gap-1">
+                {prescriptionData.preopinvestigation?.map((item, idx) => (
+                  <span key={idx} className="badge bg-secondary text-white d-flex align-items-center" style={{ fontSize: "10px", borderRadius: "20px", padding: "4px 10px", fontWeight: "600" }}>
+                    {item}
+                    <FeatherIcon
+                      icon="x"
+                      size="12"
+                      className="ms-2 cursor-pointer hover-text-danger"
+                      onClick={() => handlePrescriptionCheckboxChange("preopinvestigation", item)}
+                    />
+                  </span>
                 ))}
-              </Form.Select>
+              </div>
             </Col>
           )}
           <Col md={3} className="mb-3">
@@ -263,7 +346,7 @@ const OpdPrescriptionCard = ({
             </Form.Select>
           </Col>
           <Col md={6} className="mb-3">
-            <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Date</Form.Label>
+            <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Next Appointment Date</Form.Label>
             <Form.Control type="date" value={prescriptionData["next-appo-date"]} onChange={(e) => handlePrescriptionChange("next-appo-date", e.target.value)} style={{ borderRadius: "10px", border: "1px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
           </Col>
         </Row>
@@ -364,11 +447,11 @@ const OpdPrescriptionCard = ({
       </div>
 
       <div className="text-center mb-5 pb-5">
-        <Button 
+        <Button
           onClick={onSavePrescription}
           style={{ backgroundColor: "#00796b", borderColor: "#00796b", padding: "10px 40px", borderRadius: "50px", fontWeight: "800", fontSize: "13px", boxShadow: "0 10px 30px rgba(0, 121, 107, 0.3)", textTransform: "uppercase", letterSpacing: "1px" }}
         >
-          <FeatherIcon icon="printer" size="18" className="me-2" /> FINALIZE & PRINT PRESCRIPTION
+          <FeatherIcon icon="save" size="18" className="me-2" />SAVE PRESCRIPTION DATA
         </Button>
       </div>
     </div>
