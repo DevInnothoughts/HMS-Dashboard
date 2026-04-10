@@ -390,10 +390,10 @@ const IpdPaymentData = () => {
         const totalAmt = Number(pay.cashamt || 0) + Number(pay.cardamt || 0) + Number(pay.chequeamt || 0) + Number(pay.onlineamt || 0);
         const words = convertToWords(totalAmt);
         const trimmedLocation = currentLocation ? currentLocation.trim() : "";
-        const invoiceInfo = clinincLoc[trimmedLocation] || clinincLoc[currentLocation] || { 
-          invoiceAddress: "<b>Healing Hands Clinic</b>", 
-          invoiceHelplineNo: "8888288884", 
-          EmergencySMS: "" 
+        const invoiceInfo = clinincLoc[trimmedLocation] || clinincLoc[currentLocation] || {
+            invoiceAddress: "<b>Healing Hands Clinic</b>",
+            invoiceHelplineNo: "8888288884",
+            EmergencySMS: ""
         };
         const receiptInfo = receiptlocations[currentLocation] || { hospitalcode: "HHC" };
         const hospitalCode = receiptInfo.hospitalcode;
@@ -549,7 +549,7 @@ const IpdPaymentData = () => {
                             <Card.Body>
                                 <Row className="align-items-end">
                                     <Col lg={3} md={6} className="mb-3 position-relative" ref={dropdownRef}>
-                                        <Form.Label className="label-style">Search Invoice ID</Form.Label>
+                                        <Form.Label className="label-style">Invoice ID</Form.Label>
                                         <Form.Control
                                             type="text"
                                             value={invoiceId}
@@ -645,9 +645,9 @@ const IpdPaymentData = () => {
                                                 <Form.Check key={opt} inline type="radio" label={opt} checked={selectedTerminal === opt} onChange={() => setSelectedTerminal(opt)} className="fw-bold text-secondary" style={{ cursor: "pointer", fontSize: "12px" }} />
                                             ))}
                                         </div>
-                                        <Button 
-                                            variant='info' 
-                                            className="btn-add" 
+                                        <Button
+                                            variant='info'
+                                            className="btn-add"
                                             onClick={() => setShowAddRow(!showAddRow)}
                                             disabled={summary.totalDue <= 0}
                                         >
@@ -658,14 +658,14 @@ const IpdPaymentData = () => {
                                     {showAddRow && (
                                         <div className="mt-3 p-3 border rounded bg-white add-payment-box">
                                             {(() => {
-                                                const currentTotal = (Number(newPayment.cash) || 0) + 
-                                                                   (Number(newPayment.card) || 0) + 
-                                                                   (Number(newPayment.cheque) || 0) + 
-                                                                   (Number(newPayment.online) || 0) + 
-                                                                   (Number(newPayment.internalDiscount) || 0) + 
-                                                                   (Number(newPayment.tds) || 0);
+                                                const currentTotal = (Number(newPayment.cash) || 0) +
+                                                    (Number(newPayment.card) || 0) +
+                                                    (Number(newPayment.cheque) || 0) +
+                                                    (Number(newPayment.online) || 0) +
+                                                    (Number(newPayment.internalDiscount) || 0) +
+                                                    (Number(newPayment.tds) || 0);
                                                 const isOverpaid = currentTotal > summary.totalDue;
-                                                
+
                                                 return (
                                                     <>
                                                         {isOverpaid && (

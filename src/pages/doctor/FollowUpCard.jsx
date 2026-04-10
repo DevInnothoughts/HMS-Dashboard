@@ -6,7 +6,7 @@ const FollowUpCard = ({ followUpData, formData, handleFollowUpChange, onSaveFoll
   return (
     <div className="animate__animated animate__fadeIn">
       <div className="p-3 bg-white rounded shadow-sm border mb-3" style={{ borderLeft: "5px solid #00acc1" }}>
-        <h5 className="fw-bold mb-3" style={{ color: "#00838f", textTransform: "uppercase", letterSpacing: "1px", fontSize: "14px" }}>
+        <h5 className="fw-bold mb-3" style={{ color: "#00838f", padding: "5px", textTransform: "uppercase", letterSpacing: "1px", fontSize: "14px" }}>
           <FeatherIcon icon="calendar" size="18" className="me-2 text-info" />Patient Follow Up Tracking
         </h5>
 
@@ -14,11 +14,11 @@ const FollowUpCard = ({ followUpData, formData, handleFollowUpChange, onSaveFoll
         <div className="p-3 mb-4 rounded border" style={{ backgroundColor: "#f1fcfd", border: "2px solid #b2ebf2" }}>
           <Row className="g-3">
             {[
-              { label: "UID Number", value: formData.Uid_no },
+              { label: "UID No", value: formData.Uid_no },
               { label: "Patient Name", value: formData.name },
               { label: "Age / Sex", value: `${formData.age} yrs / ${formData.sex}` },
-              { label: "Contact", value: formData.phone },
-              { label: "Email", value: formData.email },
+              { label: "Contact No", value: formData.phone },
+              { label: "Email ID", value: formData.email },
               { label: "Occupation", value: formData.occupation },
               { label: "Reference", value: formData.ref, type: formData.reference_type },
               { label: "Address", value: formData.address }
@@ -44,28 +44,28 @@ const FollowUpCard = ({ followUpData, formData, handleFollowUpChange, onSaveFoll
         </div>
 
         <Row>
-          <Col md={6} className="mb-3">
-            <Form.Label className="fw-bold" style={{ fontSize: "13px", color: "#006064" }}>Diagnosis</Form.Label>
+          <Col md={4} className="mb-10">
+            <Form.Label className="fw-bold mb-3" style={{ fontSize: "11px", color: "#006064" }}>Diagnosis</Form.Label>
             <Form.Control as="textarea" rows={1} value={followUpData.diagnosis} onChange={(e) => handleFollowUpChange("diagnosis", e.target.value)} placeholder="Duration" style={{ borderRadius: "8px", border: "2px solid #80deea", padding: "8px 12px", fontSize: "13px" }} />
           </Col>
-          <Col md={6} className="mb-3">
-            <Form.Label className="fw-bold" style={{ fontSize: "13px", color: "#006064" }}>Advice</Form.Label>
+          <Col md={4} className="mb-1">
+            <Form.Label className="fw-bold mb-3" style={{ fontSize: "11px", color: "#006064" }}>Advice</Form.Label>
             <Form.Control as="textarea" rows={2} value={followUpData.advice} onChange={(e) => handleFollowUpChange("advice", e.target.value)} placeholder="Instructions for the patient..." style={{ borderRadius: "8px", border: "2px solid #80deea", padding: "8px 12px", fontSize: "13px" }} />
           </Col>
-          <Col md={6} className="mb-3">
-            <Form.Label className="fw-bold" style={{ fontSize: "13px", color: "#006064" }}>Plan</Form.Label>
+          <Col md={4} className="mb-1">
+            <Form.Label className="fw-bold mb-3" style={{ fontSize: "11px", color: "#006064" }}>Plan</Form.Label>
             <Form.Control as="textarea" rows={2} value={followUpData.plan} onChange={(e) => handleFollowUpChange("plan", e.target.value)} placeholder="Next steps in treatment..." style={{ borderRadius: "8px", border: "2px solid #80deea", padding: "8px 12px", fontSize: "13px" }} />
           </Col>
-          <Col md={6} className="mb-1">
-            <Form.Label className="fw-bold" style={{ fontSize: "13px", color: "#006064" }}>Present Complaints</Form.Label>
+          <Col md={4} className="mb-1">
+            <Form.Label className="fw-bold mb-3" style={{ fontSize: "11px", color: "#006064" }}>Present Complaints</Form.Label>
             <Form.Control as="textarea" rows={2} placeholder="Describe the present symptoms..." value={followUpData.present_complaints} onChange={(e) => handleFollowUpChange("present_complaints", e.target.value)} style={{ borderRadius: "8px", border: "2px solid #80deea", fontSize: "13px", padding: "8px 12px" }} />
           </Col>
-          <Col md={6} className="mb-3">
-            <Form.Label className="fw-bold" style={{ fontSize: "13px", color: "#006064" }}>First Visit Date</Form.Label>
+          <Col md={4} className="mb-1">
+            <Form.Label className="fw-bold mb-3" style={{ fontSize: "11px", color: "#006064" }}>First Visit Date</Form.Label>
             <Form.Control type="date" value={followUpData.first_visit_date} onChange={(e) => handleFollowUpChange("first_visit_date", e.target.value)} style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "8px 12px", fontSize: "13px" }} />
           </Col>
-          <Col md={6} className="mb-3">
-            <Form.Label className="fw-bold" style={{ fontSize: "13px", color: "#006064" }}>Follow Up Visit No</Form.Label>
+          <Col md={4} className="mb-1">
+            <Form.Label className="fw-bold mb-3" style={{ fontSize: "11px", color: "#006064" }}>Follow Up Visit No</Form.Label>
             <Form.Control type="number" value={followUpData.visit_count} onChange={(e) => handleFollowUpChange("visit_count", e.target.value)} style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "8px 12px", fontSize: "13px" }} />
           </Col>
         </Row>

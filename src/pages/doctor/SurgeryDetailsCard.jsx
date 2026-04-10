@@ -13,8 +13,9 @@ const SurgeryDetailsCard = ({
   onSaveSurgery,
   loading = false,
   assistanceDoctors = [],
-  doctors = []
+  anaesthetists = []
 }) => {
+
 
 
 
@@ -35,16 +36,16 @@ const SurgeryDetailsCard = ({
               variant="outline-info"
               size="sm"
               onClick={onNewSurgery}
-              style={{ borderRadius: "20px", fontSize: "11px", fontWeight: "700" }}
+              style={{ borderRadius: "20px", fontSize: "12px", fontWeight: "700", padding: "7px 10px" }}
             >
               <FeatherIcon icon="plus" size="14" className="me-1" /> NEW RECORD
             </Button>
             <Dropdown onSelect={onSelectSurgery}>
               <Dropdown.Toggle
-                variant="info"
+                variant="outline-info"
                 id="previous-surg-dropdown"
                 size="sm"
-                style={{ borderRadius: "20px", fontSize: "11px", fontWeight: "700", color: "white" }}
+                style={{ borderRadius: "20px", fontSize: "12px", fontWeight: "700", color: "white", padding: "7px 10px" }}
               >
                 <FeatherIcon icon="calendar" size="14" className="me-1" /> PREVIOUS DATES
               </Dropdown.Toggle>
@@ -65,11 +66,11 @@ const SurgeryDetailsCard = ({
 
         <Row className="mb-3 g-2">
           <Col md={4}>
-            <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>Date Of Admission</Form.Label>
+            <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px", color: "#006064" }}>Date Of Admission</Form.Label>
             <Form.Control type="date" value={surgeryData.admission_date} onChange={(e) => handleSurgeryChange("admission_date", e.target.value)} style={{ borderRadius: "10px", border: "1px solid #b2ebf2", padding: "4px 10px", fontSize: "12px" }} />
           </Col>
           <Col md={4}>
-            <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>Date Of Surgery</Form.Label>
+            <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px", color: "#006064" }}>Date Of Surgery</Form.Label>
             <Form.Control type="date" value={surgeryData.surgery_date} onChange={(e) => handleSurgeryChange("surgery_date", e.target.value)} style={{ borderRadius: "10px", border: "1px solid #b2ebf2", padding: "4px 10px", fontSize: "12px" }} />
           </Col>
           <Col md={4}>
@@ -85,7 +86,7 @@ const SurgeryDetailsCard = ({
 
         <Row className="mb-3 g-2">
           <Col md={6}>
-            <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>Assistance Doctor</Form.Label>
+            <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px", color: "#006064" }}>Assistance Doctor</Form.Label>
             <Form.Select value={surgeryData.assistance_doctor} onChange={(e) => handleSurgeryChange("assistance_doctor", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }}>
               <option value="">Select Assistance Doctor</option>
               {assistanceDoctors.map((doc) => (
@@ -96,10 +97,10 @@ const SurgeryDetailsCard = ({
             </Form.Select>
           </Col>
           <Col md={6}>
-            <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>Anaesthetist</Form.Label>
+            <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px", color: "#006064" }}>Anaesthetist</Form.Label>
             <Form.Select value={surgeryData.anaesthetist} onChange={(e) => handleSurgeryChange("anaesthetist", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }}>
               <option value="">Select Anaesthetist</option>
-              {doctors.map((doc) => (
+              {anaesthetists.map((doc) => (
                 <option key={doc.doctor_id} value={doc.doctor_id}>
                   {doc.name}
                 </option>
@@ -122,31 +123,31 @@ const SurgeryDetailsCard = ({
 
         <Row className="g-3">
           <Col md={12}>
-            <div className="p-3 border rounded shadow-inner" style={{ backgroundColor: "#fdfcf9", borderLeft: "5px solid #d97706" }}>
-              <h6 className="fw-bold mb-2" style={{ color: "#92400e", fontSize: "13px" }}><FeatherIcon icon="crosshair" size="16" className="me-2" />Surgery Procedure Plan & Diagnosis</h6>
+            <div className="p-3 border rounded shadow-inner" style={{ backgroundColor: "#fdfcf9", borderLeft: "5px solid #b2ebf2" }}>
+              <h6 className="fw-bold mb-2" style={{ color: "#4b5563", fontSize: "13px", padding: "5px", color: "#006064" }}><FeatherIcon icon="crosshair" size="16" className="me-2" />Surgery Procedure Plan & Diagnosis</h6>
               <Row className="g-2">
                 <Col md={6}>
-                  <Form.Label className="fw-semibold mb-1" style={{ fontSize: "11px" }}>Surgery Plan</Form.Label>
-                  <Form.Control as="textarea" rows={2} placeholder="Detailed steps..." value={surgeryData.surgery_remarks} onChange={(e) => handleSurgeryChange("surgery_remarks", e.target.value)} style={{ borderRadius: "10px", border: "1px solid #fde68a", padding: "6px 12px", fontSize: "12px" }} />
+                  <Form.Label className="fw-semibold mb-1" style={{ fontSize: "11px", color: "#006064" }}>Surgery Plan</Form.Label>
+                  <Form.Control as="textarea" rows={2} placeholder="Detailed steps..." value={surgeryData.surgery_remarks} onChange={(e) => handleSurgeryChange("surgery_remarks", e.target.value)} style={{ borderRadius: "10px", border: "1px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
                 </Col>
                 <Col md={6}>
-                  <Form.Label className="fw-semibold mb-1" style={{ fontSize: "11px" }}>Plan-Diagnosis</Form.Label>
-                  <Form.Control as="textarea" rows={2} placeholder="diagnosis..." value={surgeryData.plan} onChange={(e) => handleSurgeryChange("plan", e.target.value)} style={{ borderRadius: "10px", border: "1px solid #fde68a", padding: "6px 12px", fontSize: "12px" }} />
+                  <Form.Label className="fw-semibold mb-1" style={{ fontSize: "11px", color: "#006064" }}>Plan-Diagnosis</Form.Label>
+                  <Form.Control as="textarea" rows={2} placeholder="diagnosis..." value={surgeryData.plan} onChange={(e) => handleSurgeryChange("plan", e.target.value)} style={{ borderRadius: "10px", border: "1px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
                 </Col>
               </Row>
             </div>
           </Col>
           <Col md={12}>
-            <div className="p-3 border rounded shadow-inner" style={{ backgroundColor: "#f9fafb", borderLeft: "5px solid #4b5563" }}>
-              <h6 className="fw-bold mb-2" style={{ color: "#1f2937", fontSize: "13px" }}><FeatherIcon icon="edit-3" size="16" className="me-2" />Intra-Operative Notes & Post-Op Comments</h6>
+            <div className="p-3 border rounded shadow-inner" style={{ backgroundColor: "#f9fafb", borderLeft: "5px solid #b2ebf2" }}>
+              <h6 className="fw-bold mb-2" style={{ color: "#1f2937", fontSize: "13px", padding: "5px", color: "#006064" }}><FeatherIcon icon="edit-3" size="16" className="me-2" />Intra-Operative Notes & Post-Op Comments</h6>
               <Row className="g-2">
                 <Col md={6}>
-                  <Form.Label className="fw-semibold mb-1" style={{ fontSize: "11px" }}>Surgery Notes</Form.Label>
-                  <Form.Control as="textarea" rows={2} placeholder="Observations..." value={surgeryData.surgery_note} onChange={(e) => handleSurgeryChange("surgery_note", e.target.value)} style={{ borderRadius: "10px", border: "1px solid #d1d5db", padding: "6px 12px", fontSize: "12px" }} />
+                  <Form.Label className="fw-semibold mb-1" style={{ fontSize: "11px", color: "#006064" }}>Surgery Notes</Form.Label>
+                  <Form.Control as="textarea" rows={2} placeholder="Observations..." value={surgeryData.surgery_note} onChange={(e) => handleSurgeryChange("surgery_note", e.target.value)} style={{ borderRadius: "10px", border: "1px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
                 </Col>
                 <Col md={6}>
-                  <Form.Label className="fw-semibold mb-1" style={{ fontSize: "11px" }}>Additional Comments (If Any)</Form.Label>
-                  <Form.Control as="textarea" rows={2} placeholder="Comments..." value={surgeryData.additional_comment} onChange={(e) => handleSurgeryChange("additional_comment", e.target.value)} style={{ borderRadius: "10px", border: "1px solid #d1d5db", padding: "6px 12px", fontSize: "12px" }} />
+                  <Form.Label className="fw-semibold mb-1" style={{ fontSize: "11px", color: "#006064" }}>Additional Comments (If Any)</Form.Label>
+                  <Form.Control as="textarea" rows={2} placeholder="Comments..." value={surgeryData.additional_comment} onChange={(e) => handleSurgeryChange("additional_comment", e.target.value)} style={{ borderRadius: "10px", border: "1px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
                 </Col>
               </Row>
             </div>

@@ -71,7 +71,7 @@ const PatientHistoryCard = ({
                 style={{
                   whiteSpace: "nowrap",
                   borderRadius: "30px",
-                  padding: "8px 20px",
+                  padding: "8px 19px",
                   margin: "4px 2px",
                   fontWeight: "700",
                   fontSize: "12px",
@@ -93,7 +93,7 @@ const PatientHistoryCard = ({
       <Card.Body className="bg-white p-2" style={{ minHeight: "120px" }}>
         {historyActiveSubTab === "piles" && (
           <div className="animate__animated animate__fadeIn">
-            <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "14px" }}>Piles / PR Bleeding Symptoms</h6>
+            <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "14px", padding: "5px" }}>Piles / PR Bleeding Symptoms</h6>
             <div className="d-flex flex-wrap gap-4 mb-2 p-3 rounded shadow-inner">
               {["PR Bleeding:Painless", "PR Bleeding:Painful", "Burning", "Pricking", "Itching", "Incomplete Evacuation", "Prolapse", "Swelling", "Pain at Anal Region", "Mucus Mixed Blood"].map(opt => (
                 <Form.Check key={opt} label={opt} checked={historyData.piles_data.includes(opt)} onChange={() => handleHistoryCheckboxChange("piles_data", opt)} style={{ fontSize: "13px", fontWeight: "600" }} />
@@ -107,7 +107,7 @@ const PatientHistoryCard = ({
         )}
         {historyActiveSubTab === "fistula" && (
           <div className="animate__animated animate__fadeIn">
-            <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "14px" }}>Fistula Symptoms</h6>
+            <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "14px", padding: "5px" }}>Fistula Symptoms</h6>
             <div className="d-flex flex-wrap gap-4 mb-2 p-3 rounded shadow-inner">
               {["Pus Discharge", "Boil", "Watery Discharge", "Swelling near anal region"].map(opt => (
                 <Form.Check key={opt} label={opt} checked={historyData.fistula_data.includes(opt)} onChange={() => handleHistoryCheckboxChange("fistula_data", opt)} style={{ fontSize: "13px", fontWeight: "600" }} />
@@ -121,7 +121,7 @@ const PatientHistoryCard = ({
         )}
         {historyActiveSubTab === "hernia" && (
           <div className="animate__animated animate__fadeIn">
-            <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "14px" }}>Hernia Details</h6>
+            <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "14px", padding: "5px" }}>Hernia Details</h6>
             <div className="d-flex flex-wrap gap-4 mb-2 p-3 rounded shadow-inner">
               {["Swelling:Umbilical", "Right Inguinal", "Left Inguinal", "Swelling:Abdominal", "Reducible", "Nonreducible", "Past Sx"].map(opt => (
                 <Form.Check key={opt} label={opt} checked={historyData.hernia_data.includes(opt)} onChange={() => handleHistoryCheckboxChange("hernia_data", opt)} style={{ fontSize: "13px", fontWeight: "600" }} />
@@ -135,9 +135,9 @@ const PatientHistoryCard = ({
         )}
         {historyActiveSubTab === "varicose" && (
           <div className="animate__animated animate__fadeIn">
-            <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "14px" }}>Varicose Veins History</h6>
+            <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "14px", padding: "5px" }}>Varicose Veins History</h6>
             <div className="d-flex flex-wrap gap-4 mb-2 p-3 rounded shadow-inner">
-              {["Pain", "Enlarged veins", "Swelling", "Ulcer", "Right", "Left", "B/L"].map(opt => (
+              {["Pain in Legs", "Enlarged veins", "Swelling in Legs", "Ulcer", "Right", "Left", "B/L"].map(opt => (
                 <Form.Check key={opt} label={opt} checked={historyData.varicose_data.includes(opt)} onChange={() => handleHistoryCheckboxChange("varicose_data", opt)} style={{ fontSize: "13px", fontWeight: "600" }} />
               ))}
             </div>
@@ -149,7 +149,7 @@ const PatientHistoryCard = ({
         )}
         {historyActiveSubTab === "urinary" && (
           <div className="animate__animated animate__fadeIn">
-            <Form.Check label="Urinary Incontinence Present" checked={historyData.urinary_incontinence} onChange={(e) => handleHistoryChange("urinary_incontinence", e.target.checked)} className="mb-2 fw-bold" style={{ color: "#00838f", fontSize: "14px" }} />
+            <Form.Check label="Urinary Incontinence Present" checked={historyData.urinary_incontinence} onChange={(e) => handleHistoryChange("urinary_incontinence", e.target.checked)} className="mb-2 fw-bold" style={{ color: "#00838f", fontSize: "15px", margin: "5px" }} />
             <Form.Group>
               <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>Duration / Frequency</Form.Label>
               <Form.Control as="textarea" rows={2} value={historyData.urinary_duration} onChange={(e) => handleHistoryChange("urinary_duration", e.target.value)} style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
@@ -167,7 +167,7 @@ const PatientHistoryCard = ({
         )}
         {historyActiveSubTab === "urology" && (
           <div className="animate__animated animate__fadeIn">
-            <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "14px" }}>Urology Symptoms</h6>
+            <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "14px", padding: "5px" }}>Urology Symptoms</h6>
             <div className="d-flex flex-wrap gap-4 mb-2 p-3 rounded shadow-inner">
               {["Pain", "Burning urination", "Nausea", "Vomiting", "LUTS", "Urgency of urination", "Incomplete evacuation", "Stream of urine", "Nocturia"].map(opt => (
                 <Form.Check key={opt} label={opt} checked={historyData.urology_data.includes(opt)} onChange={() => handleHistoryCheckboxChange("urology_data", opt)} style={{ fontSize: "13px", fontWeight: "600" }} />
@@ -181,7 +181,7 @@ const PatientHistoryCard = ({
         )}
         {historyActiveSubTab === "ods" && (
           <div className="animate__animated animate__fadeIn">
-            <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "14px" }}>ODS Symptoms</h6>
+            <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "14px", padding: "5px" }}>ODS Symptoms</h6>
             <div className="d-flex flex-wrap gap-4 mb-2 p-3 rounded shadow-inner">
               {["Excessive Straining", "Digitation", "Hard Stools", "Enema / Laxative", "Fragmented Defecation", "Chronic constipation", "Urgency", "Frequency"].map(opt => (
                 <Form.Check key={opt} label={opt} checked={historyData.ods_data.includes(opt)} onChange={() => handleHistoryCheckboxChange("ods_data", opt)} style={{ fontSize: "13px", fontWeight: "600" }} />
@@ -195,9 +195,9 @@ const PatientHistoryCard = ({
         )}
         {historyActiveSubTab === "sinus" && (
           <div className="animate__animated animate__fadeIn">
-            <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "14px" }}>Pilonidal Sinus Details</h6>
+            <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "14px", padding: "5px" }}>Pilonidal Sinus Details</h6>
             <div className="d-flex flex-wrap gap-4 mb-2 p-3 rounded shadow-inner">
-              {["Pain", "Boil", "Swelling", "Pus / Watery Discharge"].map(opt => (
+              {["Pain:Tailbone", "Boil:Tailbone", "Swelling:Tailbone", "Pus / Watery Discharge"].map(opt => (
                 <Form.Check key={opt} label={opt} checked={historyData.pilonidal_data.includes(opt)} onChange={() => handleHistoryCheckboxChange("pilonidal_data", opt)} style={{ fontSize: "13px", fontWeight: "600" }} />
               ))}
             </div>
@@ -209,7 +209,7 @@ const PatientHistoryCard = ({
         )}
         {historyActiveSubTab === "circumcision" && (
           <div className="animate__animated animate__fadeIn">
-            <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "14px" }}>Circumcision Details</h6>
+            <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "14px", padding: "5px" }}>Circumcision Details</h6>
             <Form.Control as="textarea" rows={3} placeholder="Enter details..." value={historyData.circumcision_comment} onChange={(e) => handleHistoryChange("circumcision_comment", e.target.value)} style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
           </div>
         )}
@@ -257,15 +257,15 @@ const PatientHistoryCard = ({
         </div>
         <Row className="g-2 px-1">
           <Col md={4}>
-            <Form.Label className="fw-bold mb-1" style={{ fontSize: "10px", color: "#006064" }}>Consultation Date</Form.Label>
+            <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px", color: "#006064" }}>Consultation Date</Form.Label>
             <Form.Control type="date" size="sm" value={historyData.patient_date} onChange={(e) => handleHistoryChange("patient_date", e.target.value)} style={{ borderRadius: "8px", fontSize: "11px", border: "1px solid #b2ebf2", padding: "4px 8px" }} />
           </Col>
           <Col md={4}>
-            <Form.Label className="fw-bold mb-1" style={{ fontSize: "10px", color: "#006064" }}>Height (Feet/Inches)</Form.Label>
+            <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px", color: "#006064" }}>Height (Feet/Inches)</Form.Label>
             <Form.Control type="text" size="sm" value={historyData.height_feet} onChange={(e) => handleHistoryChange("height_feet", e.target.value)} placeholder="e.g. 5.11" style={{ borderRadius: "8px", fontSize: "11px", border: "1px solid #b2ebf2", padding: "4px 8px" }} />
           </Col>
           <Col md={4}>
-            <Form.Label className="fw-bold mb-1" style={{ fontSize: "10px", color: "#006064" }}>Weight (kg)</Form.Label>
+            <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px", color: "#006064" }}>Weight (kg)</Form.Label>
             <Form.Control type="text" size="sm" value={historyData.weight_kg} onChange={(e) => handleHistoryChange("weight_kg", e.target.value)} placeholder="e.g. 70" style={{ borderRadius: "8px", fontSize: "11px", border: "1px solid #b2ebf2", padding: "4px 8px" }} />
           </Col>
         </Row>
@@ -284,30 +284,30 @@ const PatientHistoryCard = ({
 
       {/* Vitals Section */}
       <div className="p-2 bg-white rounded shadow-sm border mb-2" style={{ borderLeft: "5px solid #00acc1" }}>
-        <h5 className="fw-bold mb-2 px-1" style={{ color: "#00838f", textTransform: "uppercase", fontSize: "13px" }}>Vitals & Systemic Examination</h5>
+        <h5 className="fw-bold mb-2 px-1" style={{ color: "#00838f", textTransform: "uppercase", fontSize: "13px", padding: "5px" }}>Vitals & Systemic Examination</h5>
         <div className="p-2 rounded mb-2" style={{ backgroundColor: "#f8fbfc", border: "1px solid #e0f2f1" }}>
           <Row className="g-2 px-1">
             <Col md={3}>
-              <Form.Label className="fw-bold mb-1" style={{ fontSize: "10px", color: "#006064" }}>Pain Score (1-10)</Form.Label>
+              <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px", color: "#006064" }}>Pain Score (1-10)</Form.Label>
               <Form.Select size="sm" value={historyData.painscale} onChange={(e) => handleHistoryChange("painscale", e.target.value)} style={{ borderRadius: "8px", border: "1px solid #80deea", padding: "4px 8px", fontSize: "11px" }}>
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => <option key={n} value={n}>{n}</option>)}
               </Form.Select>
             </Col>
             <Col md={3}>
-              <Form.Label className="fw-bold mb-1" style={{ fontSize: "10px", color: "#006064" }}>BP (mm Hg)</Form.Label>
+              <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px", color: "#006064" }}>BP (mm Hg)</Form.Label>
               <Form.Control size="sm" value={historyData.vital_bp} onChange={(e) => handleHistoryChange("vital_bp", e.target.value)} style={{ borderRadius: "8px", border: "1px solid #80deea", padding: "4px 8px", fontSize: "11px" }} />
             </Col>
             <Col md={3}>
-              <Form.Label className="fw-bold mb-1" style={{ fontSize: "10px", color: "#006064" }}>Pulse (/min)</Form.Label>
+              <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px", color: "#006064" }}>Pulse (/min)</Form.Label>
               <Form.Control size="sm" value={historyData.vital_pulse} onChange={(e) => handleHistoryChange("vital_pulse", e.target.value)} style={{ borderRadius: "8px", border: "1px solid #80deea", padding: "4px 8px", fontSize: "11px" }} />
             </Col>
             <Col md={3}>
-              <Form.Label className="fw-bold mb-1" style={{ fontSize: "10px", color: "#006064" }}>RR (/min)</Form.Label>
+              <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px", color: "#006064" }}>RR (/min)</Form.Label>
               <Form.Control size="sm" value={historyData.vital_rr} onChange={(e) => handleHistoryChange("vital_rr", e.target.value)} style={{ borderRadius: "8px", border: "1px solid #80deea", padding: "4px 8px", fontSize: "11px" }} />
             </Col>
             {['rs', 'cvs', 'cns', 'p/a'].map(field => (
               <Col md={3} key={field}>
-                <Form.Label className="fw-bold mb-1" style={{ fontSize: "10px", color: "#006064" }}>{field.toUpperCase()}</Form.Label>
+                <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px", color: "#006064" }}>{field.toUpperCase()}</Form.Label>
                 <Form.Control size="sm" value={historyData[field]} onChange={(e) => handleHistoryChange(field, e.target.value)} style={{ borderRadius: "8px", border: "1px solid #80deea", fontSize: "11px", padding: "4px 8px" }} />
               </Col>
             ))}
@@ -317,11 +317,11 @@ const PatientHistoryCard = ({
 
       {/* Summaries Section */}
       <div className="p-2 bg-white rounded shadow-sm border mb-2" style={{ borderLeft: "5px solid #0097a7" }}>
-        <h5 className="fw-bold mb-2 px-1" style={{ color: "#00838f", textTransform: "uppercase", fontSize: "13px" }}>Medical History Summaries</h5>
+        <h5 className="fw-bold mb-2 px-1" style={{ color: "#00838f", textTransform: "uppercase", fontSize: "13px", padding: "5px" }}>Medical History Summaries</h5>
         <div className="d-flex flex-column gap-3 px-1">
           {[
-            { label: 'Family History', key: 'family_history', opts: ['Piles', 'Constipation ', 'DM', 'HTN', 'Heart Disease'], other: 'family_history_other' },
-            { label: 'General Symptoms', key: 'general_history', opts: ['H/O Wt Loss', 'Dec Appetite ', 'H/O Straining for urination', 'Acidity', 'Gas', 'Bloating'], comment: 'weightloss_comment' },
+            { label: 'Family History', key: 'family_history', opts: ['Piles', 'Constipation', 'DM', 'HTN', 'Heart Disease'], other: 'family_history_other' },
+            { label: 'General Symptoms', key: 'general_history', opts: ['H/O Wt Loss', 'Dec Appetite', 'H/O Straining for urination', 'Acidity', 'Gas', 'Bloating'], comment: 'weightloss_comment' },
             { label: 'Past Medical History', key: 'past_medical_history', opts: ['DM', 'HTN', 'Br Asthma', 'Thyroid', 'IHD', 'Migraine', 'Epilepsy', 'CKD', 'CLD', 'CVA', 'IBS', 'Insomnia'], other: 'past_medical_history_other' }
           ].map(sec => (
             <div key={sec.label} className="p-3 border rounded" style={{ backgroundColor: "#f1fcfd", border: "2px solid #b2ebf2" }}>
@@ -359,7 +359,7 @@ const PatientHistoryCard = ({
 
       {/* Medication, Habits & Complaints */}
       <div className="p-3 bg-white rounded shadow-sm border mb-3" style={{ borderLeft: "5px solid #00bcd4" }}>
-        <h5 className="fw-bold mb-3" style={{ color: "#00838f", textTransform: "uppercase", fontSize: "14px" }}>Medication, Habits & Complaints</h5>
+        <h5 className="fw-bold mb-3" style={{ color: "#00838f", textTransform: "uppercase", fontSize: "14px", padding: "5px" }}>Medication, Habits & Complaints</h5>
 
         {/* Medication Table */}
         <div className="mb-4">
@@ -426,7 +426,7 @@ const PatientHistoryCard = ({
 
       {/* Investigations Section */}
       <div className="p-3 bg-white rounded shadow-sm border mb-3" style={{ borderLeft: "5px solid #0097a7" }}>
-        <h5 className="fw-bold mb-3" style={{ color: "#00838f", textTransform: "uppercase", fontSize: "14px" }}>External Investigations</h5>
+        <h5 className="fw-bold mb-3" style={{ color: "#00838f", textTransform: "uppercase", fontSize: "14px", padding: "5px" }}>External Investigations</h5>
         <div className="p-3 border rounded" style={{ backgroundColor: "#f8fbfc", border: "2px solid #e0f2f1" }}>
           <Row className="g-2">
             {[

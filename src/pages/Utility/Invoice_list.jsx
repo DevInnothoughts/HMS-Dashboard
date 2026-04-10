@@ -170,12 +170,12 @@ const calculateActivePayableAmt = (invoice, subtotal, discount, pdc, billType, b
 };
 
 const calculatePayableAmt = (invoice) => {
-  const totalAmt = parseFloat(invoice.totalamt || invoice.totalAmt || 0);
+  const totalAmt = parseFloat(invoice.totalamt || invoice.total_amt || 0);
   const discount = parseFloat(invoice.discount || 0);
-  const pdc = parseFloat(invoice.pdc || 0);
-  const billMethod = (invoice.bill_method || "").toLowerCase();
+  const pdc = parseFloat(invoice.pdc || invoice.advance_amt || 0);
+  const billMethod = (invoice.bill_method || invoice.status || "").toLowerCase();
 
-  if (billMethod === "pdc") {
+  if (billMethod === "pdc" || billMethod === "PDC" || (invoice.status && invoice.status.toLowerCase() === "pdc")) {
     return Math.max(0, totalAmt - pdc).toFixed(0);
   }
   return Math.max(0, totalAmt - discount).toFixed(0);
@@ -357,8 +357,8 @@ const InvoiceList = () => {
           const discount = parseFloat(invoice.discount || 0) || 0;
           const pdc = parseFloat(invoice.pdc || invoice.advance_amt || 0) || 0;
 
-          const payable_amt = calculatePayableAmt({ ...invoice, totalamt, discount, pdc });
-          const due_amt = payable_amt - receivedamt;
+          const payable_amt = parseFloat(invoice.payable_amt) || calculatePayableAmt({ ...invoice, totalamt, discount, pdc });
+          const due_amt = invoice.totaldue !== undefined ? parseFloat(invoice.totaldue) : (payable_amt - receivedamt);
 
           return {
             ...invoice,

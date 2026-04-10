@@ -88,16 +88,16 @@ const OtherTestsCard = ({
               variant="outline-info"
               size="sm"
               onClick={onNewTest}
-              style={{ borderRadius: "20px", fontSize: "11px", fontWeight: "700" }}
+              style={{ borderRadius: "20px", fontSize: "12px", fontWeight: "700", padding: "7px 10px" }}
             >
               <FeatherIcon icon="plus" size="14" className="me-1" /> NEW RECORD
             </Button>
             <Dropdown onSelect={onSelectTest}>
               <Dropdown.Toggle
-                variant="info"
+                variant="outline-info"
                 id="previous-tests-dropdown"
                 size="sm"
-                style={{ borderRadius: "20px", fontSize: "11px", fontWeight: "700", color: "white" }}
+                style={{ borderRadius: "20px", fontSize: "12px", fontWeight: "700", color: "white", padding: "7px 10px" }}
               >
                 <FeatherIcon icon="calendar" size="14" className="me-1" /> PREVIOUS DATES
               </Dropdown.Toggle>

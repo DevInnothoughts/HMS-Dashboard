@@ -124,16 +124,16 @@ const OpdPrescriptionCard = ({
               variant="outline-info"
               size="sm"
               onClick={onNewPrescription}
-              style={{ borderRadius: "20px", fontSize: "11px", fontWeight: "700" }}
+              style={{ borderRadius: "20px", fontSize: "12px", fontWeight: "700", padding: "7px 10px" }}
             >
               <FeatherIcon icon="plus" size="14" className="me-1" /> NEW RECORD
             </Button>
             <Dropdown onSelect={onSelectPrescription}>
               <Dropdown.Toggle
-                variant="info"
+                variant="outline-info"
                 id="previous-pres-dropdown"
                 size="sm"
-                style={{ borderRadius: "20px", fontSize: "11px", fontWeight: "700", color: "white" }}
+                style={{ borderRadius: "20px", fontSize: "12px", fontWeight: "700", color: "white", padding: "7px 10px" }}
               >
                 <FeatherIcon icon="calendar" size="14" className="me-1" /> PREVIOUS DATES
               </Dropdown.Toggle>
@@ -286,11 +286,11 @@ const OpdPrescriptionCard = ({
             </Col>
           )}
           <Col md={3} className="mb-3">
-            <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Known Allergies</Form.Label>
+            <Form.Label className="fw-bold" style={{ fontSize: "12px" }}>Allergy</Form.Label>
             <Form.Control as="textarea" rows={2} value={prescriptionData.allergy} onChange={(e) => handlePrescriptionChange("allergy", e.target.value)} placeholder="e.g. Penicillin, Sulfa..." style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
           </Col>
           <Col md={3} className="mb-3">
-            <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Diagnosis</Form.Label>
+            <Form.Label className="fw-bold" style={{ fontSize: "12px" }}>Diagnosis</Form.Label>
             {prescriptionData.prescription_type === "Urology" ? (
               <Form.Control as="textarea" rows={2} value={prescriptionData.urodiagnosis} onChange={(e) => handlePrescriptionChange("urodiagnosis", e.target.value)} placeholder="Urology diagnosis..." style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
             ) : (
@@ -353,7 +353,7 @@ const OpdPrescriptionCard = ({
 
         <hr className="my-4" style={{ opacity: "0.1" }} />
 
-        <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ color: "#005979ff", fontSize: "14px" }}>
+        <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ color: "#005979ff", fontSize: "14px", padding: "5px" }}>
           <FeatherIcon icon="plus-circle" size="16" className="me-2 text-success" /> Meditative Advice & Pharmacy Orders
         </h6>
 

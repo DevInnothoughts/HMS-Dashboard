@@ -29,16 +29,16 @@ const ProctoscopyCard = ({
               variant="outline-info"
               size="sm"
               onClick={onNewProctoscopy}
-              style={{ borderRadius: "20px", fontSize: "11px", fontWeight: "700" }}
+              style={{ borderRadius: "20px", fontSize: "12px", fontWeight: "700", padding: "7px 10px" }}
             >
               <FeatherIcon icon="plus" size="14" className="me-1" /> NEW RECORD
             </Button>
             <Dropdown onSelect={onSelectProctoscopy}>
               <Dropdown.Toggle
-                variant="info"
+                variant="outline-info"
                 id="previous-procto-dropdown"
                 size="sm"
-                style={{ borderRadius: "20px", fontSize: "11px", fontWeight: "700", color: "white" }}
+                style={{ borderRadius: "20px", fontSize: "12px", fontWeight: "700", color: "white", padding: "7px 10px" }}
               >
                 <FeatherIcon icon="calendar" size="14" className="me-1" /> PREVIOUS DATES
               </Dropdown.Toggle>
@@ -61,39 +61,38 @@ const ProctoscopyCard = ({
         <div className="p-3 mb-4 rounded border" style={{ backgroundColor: "#f1fcfd", border: "2px solid #b2ebf2" }}>
           <Row className="g-3">
             {[
-              { label: "Date", value: proctoscopyData.procto_date, isEditable: true, field: "procto_date" },
               { label: "UID NO", value: formData.Uid_no, isReadonly: true },
               { label: "Patient Name", value: formData.name, isReadonly: true },
               { label: "Age / Sex", value: `${formData.age} / ${formData.sex}`, isReadonly: true },
             ].map((item, idx) => (
-              <Col md={3} key={idx}>
+              <Col md={4} key={idx}>
                 <div className="mb-1" style={{ fontSize: "11px", color: "#006064", textTransform: "uppercase", fontWeight: "700", letterSpacing: "0.5px" }}>
                   {item.label}
                 </div>
-                {item.isEditable ? (
-                  <Form.Control
-                    type="date"
-                    value={item.value}
-                    onChange={(e) => handleProctoscopyChange(item.field, e.target.value)}
-                    style={{ borderRadius: "10px", border: "1px solid #80deea", padding: "4px 10px", fontSize: "12px", background: "white" }}
-                  />
-                ) : (
-                  <div className="fw-bold text-dark p-2 rounded" style={{ fontSize: "13px", backgroundColor: "#f8fbfc", border: "1px solid #80deea", cursor: "not-allowed" }}>
-                    {item.value || "-"}
-                  </div>
-                )}
+                <div className="fw-bold text-dark p-2 rounded" style={{ fontSize: "13px", backgroundColor: "#d9dee0ff", border: "1px solid #80deea", cursor: "not-allowed" }}>
+                  {item.value || "-"}
+                </div>
               </Col>
             ))}
           </Row>
         </div>
 
-        {/* Main Content Layout - 3 Columns Side-by-Side */}
+        {/* Main Content Layout - 4 Columns Side-by-Side */}
         <Row className="g-3">
-          {/* Column 1: Interpretations */}
-          <Col md={4}>
-            <h6 className="fw-bold mb-1" style={{ color: "#006064", fontSize: "14px" }}>
-              <FeatherIcon icon="file-text" size="14" className="me-2" />Interpretations
-            </h6>
+          {/* Column 1: Date Picker */}
+          <Col md={3}>
+            <h6 className="fw-bold mb-5" style={{ color: "#006064", fontSize: "12px" }}>Date</h6>
+            <Form.Control
+              type="date"
+              value={proctoscopyData.procto_date}
+              onChange={(e) => handleProctoscopyChange("procto_date", e.target.value)}
+              style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "8px 10px", fontSize: "12px", background: "white", minHeight: "38px" }}
+            />
+          </Col>
+
+          {/* Column 2: Interpretations */}
+          <Col md={3}>
+            <h6 className="fw-bold mb-5" style={{ color: "#006064", fontSize: "12px" }}>Interpretations</h6>
             <Form.Control
               as="textarea"
               rows={4}
@@ -104,13 +103,13 @@ const ProctoscopyCard = ({
             />
           </Col>
 
-          {/* Column 2: Uploads */}
-          <Col md={4}>
-            <h6 className="fw-bold mb-1" style={{ color: "#006064", fontSize: "14px" }}>
-              <FeatherIcon icon="upload-cloud" size="14" className="me-2" />Investigation Images
+          {/* Column 3: Uploads */}
+          <Col md={3}>
+            <h6 className="fw-bold mb-5" style={{ color: "#006064", fontSize: "12px" }}>
+              <FeatherIcon icon="upload-cloud" size="14" className="me-2" />Upload Images
             </h6>
             <div className="p-2 rounded border bg-white shadow-sm" style={{ border: "2px dashed #80deea", backgroundColor: "#f8fbfc", minHeight: "110px" }}>
-              
+
               {/* Previews Summary */}
               {(proctoscopyData.upload_img || (proctoscopyData.images && proctoscopyData.images.length > 0)) && (
                 <div className="d-flex flex-wrap gap-1 mb-2">
@@ -135,23 +134,28 @@ const ProctoscopyCard = ({
             </div>
           </Col>
 
-          {/* Column 3: AI Tool */}
-          <Col md={4}>
-            <h6 className="fw-bold mb-1" style={{ color: "#006064", fontSize: "14px" }}>
-              <FeatherIcon icon="cpu" size="14" className="me-2" />AI Analysis
-            </h6>
-            <div className="p-3 rounded border bg-white shadow-sm" style={{ borderLeft: "5px solid #673ab7", backgroundColor: "#f3e5f5", minHeight: "110px" }}>
-              <h6 className="fw-bold mb-2" style={{ color: "#4527a0", fontSize: "13px" }}>
-                <FeatherIcon icon="activity" size="14" className="me-2" />AI Proctoscopy
+          {/* Column 4: AI Tool */}
+          <Col md={3}>
+            <div className="mb-1">
+              <h6 className="fw-bold mb-0" style={{ color: "#006064", fontSize: "12px" }}>
+                <FeatherIcon icon="cpu" size="14" className="me-2" />AI Proctoscopy
               </h6>
-              <Button 
-                variant="primary" 
-                size="sm" 
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={() => window.open('https://hdfstransformersjshmsintegration.vercel.app/', '_blank')}
-                className="w-100 mt-1"
-                style={{ borderRadius: "8px", fontSize: "11px", fontWeight: "700", backgroundColor: "#673ab7", borderColor: "#673ab7", padding: "8px" }}
+                style={{
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  fontWeight: "700",
+                  backgroundColor: "#673ab7",
+                  borderColor: "#673ab7",
+                  padding: "7px 10px",
+                  marginTop: "8px",
+                  width: "100%"
+                }}
               >
-                <FeatherIcon icon="external-link" size="14" className="me-2" /> OPEN AI
+                <FeatherIcon icon="external-link" size="14" className="me-1" />OPEN LINK
               </Button>
             </div>
           </Col>
@@ -163,14 +167,14 @@ const ProctoscopyCard = ({
         <Button
           onClick={onSaveProctoscopy}
           disabled={loading}
-          style={{ backgroundColor: "#00838f", borderColor: "#00838f", padding: "12px 60px", borderRadius: "40px", fontWeight: "800", fontSize: "14px", boxShadow: "0 8px 25px rgba(0, 131, 143, 0.4)", textTransform: "uppercase", letterSpacing: "1px" }}
+          style={{ backgroundColor: "#00838f", borderColor: "#00838f", padding: "10px 60px", borderRadius: "40px", fontWeight: "800", fontSize: "14px", boxShadow: "0 8px 25px rgba(0, 131, 143, 0.4)", textTransform: "uppercase", letterSpacing: "1px" }}
         >
           {loading ? (
             <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
           ) : (
             <FeatherIcon icon="save" size="20" className="me-2" />
           )}
-          {loading ? "SAVING..." : "SAVE PROCTOSCOPY REPORT"}
+          {loading ? "SAVING..." : "SAVE PROCTOSCOPY DATA"}
         </Button>
       </div>
     </div>

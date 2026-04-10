@@ -166,6 +166,7 @@ const DoctorPatientDetails = () => {
     cvs: "",
     cns: "",
     pa: "",
+    "p/a": "",
     family_history: [],
     family_history_other: "",
     general_history: [],
@@ -212,11 +213,16 @@ const DoctorPatientDetails = () => {
     circumcision_comment: "",
     investigations: [],
     investigation_notes: {},
+    investigation: "",
     upload_investigation: null,
+    upload_investigation_existing: "",
   });
 
   const [previousHistoryList, setPreviousHistoryList] = useState([]);
   const [selectedHistoryId, setSelectedHistoryId] = useState(null);
+  const [allHistoryDataForPrint, setAllHistoryDataForPrint] = useState([]);
+  const [allDiagnosisDataForPrint, setAllDiagnosisDataForPrint] = useState([]);
+  const [isPrintReady, setIsPrintReady] = useState(false);
 
   const fetchHistoryDates = async () => {
     if (!formData.patient_id) return;
@@ -230,16 +236,20 @@ const DoctorPatientDetails = () => {
       const result = await response.json();
       if (result.statusCode === 200) {
         const formattedList = (result.data || []).map(item => {
-          const jsDate = new Date(item.date);
-          // Format based on local timezone to avoid UTC shifting issues
-          const year = jsDate.getFullYear();
-          const month = String(jsDate.getMonth() + 1).padStart(2, '0');
-          const day = String(jsDate.getDate()).padStart(2, '0');
+          let displayDate = item.date;
+          if (item.date && item.date.includes('-')) {
+            const parts = item.date.split('-');
+            if (parts[0].length === 4) {
+              // YYYY-MM-DD to DD-MM-YYYY
+              const [year, month, day] = parts;
+              displayDate = `${day}-${month}-${year}`;
+            }
+          }
 
           return {
             ...item,
             id: item.id.toString(),
-            date: `${year}-${month}-${day}`
+            date: displayDate
           };
         });
         setPreviousHistoryList(formattedList);
@@ -264,15 +274,19 @@ const DoctorPatientDetails = () => {
       const result = await response.json();
       if (result.statusCode === 200) {
         const formattedList = (result.data || []).map(item => {
-          const jsDate = new Date(item.date);
-          const year = jsDate.getFullYear();
-          const month = String(jsDate.getMonth() + 1).padStart(2, '0');
-          const day = String(jsDate.getDate()).padStart(2, '0');
+          let displayDate = item.date;
+          if (item.date && item.date.includes('-')) {
+            const parts = item.date.split('-');
+            if (parts[0].length === 4) {
+              const [year, month, day] = parts;
+              displayDate = `${day}-${month}-${year}`;
+            }
+          }
 
           return {
             ...item,
             id: item.id.toString(),
-            date: `${year}-${month}-${day}`
+            date: displayDate
           };
         });
         setPreviousDiagnosisList(formattedList);
@@ -322,14 +336,16 @@ const DoctorPatientDetails = () => {
 
       // Append all history data fields to FormData
       Object.keys(historyData).forEach(key => {
+        const val = historyData[key];
         if (key === 'upload_investigation') {
-          if (historyData[key]) {
-            formDataObj.append(key, historyData[key]);
-          }
-        } else if (Array.isArray(historyData[key]) || typeof historyData[key] === 'object') {
-          formDataObj.append(key, JSON.stringify(historyData[key]));
+          if (val) formDataObj.append(key, val);
+        } else if (Array.isArray(val)) {
+          // Always stringify arrays for consistency with backend expectations for jsonFields
+          formDataObj.append(key, JSON.stringify(val));
+        } else if (typeof val === 'object' && val !== null) {
+          formDataObj.append(key, JSON.stringify(val));
         } else {
-          formDataObj.append(key, historyData[key]);
+          formDataObj.append(key, val);
         }
       });
 
@@ -384,6 +400,7 @@ const DoctorPatientDetails = () => {
     cvs: "",
     cns: "",
     pa: "",
+    "p/a": "",
     family_history: [],
     family_history_other: "",
     general_history: [],
@@ -459,10 +476,10 @@ const DoctorPatientDetails = () => {
         const pilesOpts = ["PR Bleeding:Painless", "PR Bleeding:Painful", "Burning", "Pricking", "Itching", "Incomplete Evacuation", "Prolapse", "Swelling", "Pain at Anal Region", "Mucus Mixed Blood"];
         const fistulaOpts = ["Pus Discharge", "Boil", "Watery Discharge", "Swelling near anal region"];
         const herniaOpts = ["Swelling:Umbilical", "Right Inguinal", "Left Inguinal", "Swelling:Abdominal", "Reducible", "Nonreducible", "Past Sx"];
-        const varicoseOpts = ["Pain", "Enlarged veins", "Swelling", "Ulcer", "Right", "Left", "B/L"];
+        const varicoseOpts = ["Pain in Legs", "Enlarged veins", "Swelling in Legs", "Ulcer", "Right", "Left", "B/L"];
         const urologyOpts = ["Pain", "Burning urination", "Nausea", "Vomiting", "LUTS", "Urgency of urination", "Incomplete evacuation", "Stream of urine", "Nocturia"];
         const odsOpts = ["Excessive Straining", "Digitation", "Hard Stools", "Enema / Laxative", "Fragmented Defecation", "Chronic constipation", "Urgency", "Frequency"];
-        const pilonidalOpts = ["Pain", "Boil", "Swelling", "Pus / Watery Discharge"];
+        const pilonidalOpts = ["Pain:Tailbone", "Boil:Tailbone", "Swelling:Tailbone", "Pus / Watery Discharge"];
 
         let parsedOdsBowelHabits = "";
         let parsedOdsDuration = "";
@@ -526,8 +543,18 @@ const DoctorPatientDetails = () => {
 
         const formatLocalDate = (isoDate) => {
           if (!isoDate) return "";
-          const jsDate = new Date(isoDate);
-          if (isNaN(jsDate)) return isoDate;
+          // If it's already YYYY-MM-DD, return as is (for input type="date")
+          if (/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return isoDate;
+
+          // If it's DD-MM-YYYY, convert to YYYY-MM-DD
+          if (/^\d{2}-\d{2}-\d{4}$/.test(isoDate)) {
+            const [day, month, year] = isoDate.split('-');
+            return `${year}-${month}-${day}`;
+          }
+
+          // Fallback for full ISO strings or others
+          const jsDate = moment(isoDate).toDate();
+          if (isNaN(jsDate.getTime())) return isoDate;
           const year = jsDate.getFullYear();
           const month = String(jsDate.getMonth() + 1).padStart(2, '0');
           const day = String(jsDate.getDate()).padStart(2, '0');
@@ -683,7 +710,8 @@ const DoctorPatientDetails = () => {
 
     try {
       setLoading(true);
-      const response = await fetch(`${BASE_URL}/V1/doctor/get-diagnosis/${formData.patient_id}?date=${selected.date}&location=${currentLocation}`, {
+      const apiDate = moment(selected.date, "DD-MM-YYYY").format("YYYY-MM-DD");
+      const response = await fetch(`${BASE_URL}/V1/doctor/get-diagnosis/${formData.patient_id}?date=${apiDate}&location=${currentLocation}`, {
         headers: {
           "location": currentLocation,
           "x-hms-location": currentLocation
@@ -692,7 +720,36 @@ const DoctorPatientDetails = () => {
       const result = await response.json();
 
       if (result.statusCode === 200 && result.data) {
-        setDiagnosisData(result.data);
+        const d = result.data;
+        const toArray = (val) => {
+          if (!val) return [];
+          if (Array.isArray(val)) return val;
+          if (typeof val === 'string') return val.split(',').map(s => s.trim()).filter(Boolean);
+          return [];
+        };
+
+        const parsedData = {
+          ...d,
+          advice_types: toArray(d.advice_types),
+          medical_advice: toArray(d.medical_advice),
+          medicines_prescribed: toArray(d.medicines_prescribed),
+          categories: toArray(d.categories),
+          speciality_data: {
+            ...d.speciality_data,
+            piles: toArray(d.speciality_data?.piles),
+            fistula: toArray(d.speciality_data?.fistula),
+            hernia: toArray(d.speciality_data?.hernia),
+            varicosevein: toArray(d.speciality_data?.varicosevein),
+            prolapse: toArray(d.speciality_data?.prolapse),
+            circumcision: d.speciality_data?.circumcision || "",
+            abscess: d.speciality_data?.abscess || "",
+            fissure: d.speciality_data?.fissure || "",
+            ibs: d.speciality_data?.ibs || "",
+            urology: d.speciality_data?.urology || ""
+          }
+        };
+
+        setDiagnosisData(parsedData);
         toast.success(`Loaded diagnosis for ${selected.date}`);
       } else {
         toast.error("Could not fetch diagnosis record data");
@@ -768,9 +825,53 @@ const DoctorPatientDetails = () => {
   };
 
   const diagPrintRef = useRef();
-  const handlePrintDiagnosis = useReactToPrint({
+  const triggerPrint = useReactToPrint({
     contentRef: diagPrintRef,
   });
+
+  // Trigger print only after async data has loaded into state
+  useEffect(() => {
+    if (isPrintReady) {
+      triggerPrint();
+      setIsPrintReady(false);
+    }
+  }, [isPrintReady]);
+
+  const handlePrintDiagnosis = async () => {
+    setLoading(true);
+    try {
+      const historyResults = await Promise.all(
+        previousHistoryList.map(async (h) => {
+          const response = await fetch(
+            `${BASE_URL}/V1/doctor/get-patient-history/${formData.patient_id}?historyId=${h.id}&location=${currentLocation}`,
+            { headers: { "location": currentLocation, "x-hms-location": currentLocation } }
+          );
+          const result = await response.json();
+          return result.statusCode === 200 ? result.data : null;
+        })
+      );
+
+      const diagnosisResults = await Promise.all(
+        previousDiagnosisList.map(async (d) => {
+          const response = await fetch(
+            `${BASE_URL}/V1/doctor/get-diagnosis/${formData.patient_id}?date=${d.date}&location=${currentLocation}`,
+            { headers: { "location": currentLocation, "x-hms-location": currentLocation } }
+          );
+          const result = await response.json();
+          return result.statusCode === 200 ? result.data : null;
+        })
+      );
+
+      setAllHistoryDataForPrint(historyResults.filter(Boolean));
+      setAllDiagnosisDataForPrint(diagnosisResults.filter(Boolean));
+      setIsPrintReady(true);
+    } catch (error) {
+      console.error("Error loading data for print:", error);
+      toast.error("Could not load data for printing.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const [followUpData, setFollowUpData] = useState({
     diagnosis: "",
@@ -845,7 +946,7 @@ const DoctorPatientDetails = () => {
         const formattedList = (result.data || []).map(item => ({
           ...item,
           id: item.id.toString(),
-          date: moment(item.date).format("YYYY-MM-DD")
+          date: moment(item.date).format("DD-MM-YYYY")
         }));
         setPreviousTestsList(formattedList);
       }
@@ -893,7 +994,8 @@ const DoctorPatientDetails = () => {
 
     try {
       setLoading(true);
-      const response = await fetch(`${BASE_URL}/V1/doctor/get-other-test-details/${formData.patient_id}?date=${selected.date}&location=${currentLocation}`, {
+      const apiDate = moment(selected.date, "DD-MM-YYYY").format("YYYY-MM-DD");
+      const response = await fetch(`${BASE_URL}/V1/doctor/get-other-test-details/${formData.patient_id}?date=${apiDate}&location=${currentLocation}`, {
         headers: {
           "location": currentLocation,
           "x-hms-location": currentLocation
@@ -901,7 +1003,17 @@ const DoctorPatientDetails = () => {
       });
       const result = await response.json();
       if (result.statusCode === 200 && result.data) {
-        setOtherTestData(result.data);
+        const d = result.data;
+        const toArray = (val) => {
+          if (!val) return [];
+          if (Array.isArray(val)) return val;
+          if (typeof val === 'string') return val.split(',').map(s => s.trim()).filter(Boolean);
+          return [];
+        };
+        setOtherTestData({
+          ...d,
+          test_type: toArray(d.test_type)
+        });
         toast.success(`Loaded other tests for ${selected.date}`);
       } else {
         toast.error("Could not fetch test details");
@@ -943,11 +1055,21 @@ const DoctorPatientDetails = () => {
       });
       const result = await response.json();
       if (result.statusCode === 200) {
-        const formattedList = (result.data || []).map(item => ({
-          ...item,
-          id: item.id.toString(),
-          date: moment(item.date).format("YYYY-MM-DD")
-        }));
+        const formattedList = (result.data || []).map(item => {
+          let displayDate = item.date;
+          if (item.date && item.date.includes('-')) {
+            const parts = item.date.split('-');
+            if (parts[0].length === 4) {
+              const [year, month, day] = parts;
+              displayDate = `${day}-${month}-${year}`;
+            }
+          }
+          return {
+            ...item,
+            id: item.id.toString(),
+            date: displayDate
+          };
+        });
         setPreviousProctoscopyList(formattedList);
       }
     } catch (error) {
@@ -962,7 +1084,8 @@ const DoctorPatientDetails = () => {
 
     try {
       setLoading(true);
-      const response = await fetch(`${BASE_URL}/V1/doctor/get-proctoscopy/${formData.patient_id}?date=${selected.date}&location=${currentLocation}`, {
+      const apiDate = moment(selected.date, "DD-MM-YYYY").format("YYYY-MM-DD");
+      const response = await fetch(`${BASE_URL}/V1/doctor/get-proctoscopy/${formData.patient_id}?date=${apiDate}&location=${currentLocation}`, {
         headers: {
           "location": currentLocation,
           "x-hms-location": currentLocation
@@ -1086,10 +1209,7 @@ const DoctorPatientDetails = () => {
   };
 
   const [prescriptionData, setPrescriptionData] = useState(initialPrescriptionState);
-  const [previousPrescriptionList, setPreviousPrescriptionList] = useState([
-    { id: "PR1", date: "2026-03-12" },
-    { id: "PR2", date: "2026-02-20" }
-  ]);
+  const [previousPrescriptionList, setPreviousPrescriptionList] = useState([]);
   const [selectedPrescriptionId, setSelectedPrescriptionId] = useState(null);
 
   const handleSelectPrescription = async (id) => {
@@ -1098,14 +1218,39 @@ const DoctorPatientDetails = () => {
     if (selected) {
       try {
         const dateStr = moment(selected.date, "DD-MM-YYYY").format("YYYY-MM-DD");
-        const response = await fetch(`${BASE_URL}/V1/doctor/get-opd-prescription/${formData.patient_id}/${dateStr}?location=${currentLocation}`);
+        const patientId = formData.patient_id || initialPatient?.patient_id;
+        const response = await fetch(`${BASE_URL}/V1/doctor/get-opd-prescription/${patientId}/${dateStr}?location=${currentLocation}`);
         const result = await response.json();
-        if (result.statusCode === 200) {
+        if (result.statusCode === 200 && result.data) {
+          const d = result.data;
+          // Slice to YYYY-MM-DD only — avoids moment() timezone shifts on already-formatted strings
+          const safeDate = (val) => (val ? String(val).substring(0, 10) : "");
+          console.log("[DEBUG] Prescription fetch - next-appo-date:", d["next-appo-date"], "patient_type:", d.patient_type);
+          const toArray = (val) => {
+            if (!val) return [];
+            if (Array.isArray(val)) return val;
+            if (typeof val === 'string') return val.split(',').map(s => s.trim()).filter(Boolean);
+            return [];
+          };
+
+          const safeMedicines = (val) => {
+            if (!val) return [];
+            if (Array.isArray(val)) return val;
+            if (typeof val === 'string') {
+              try { return JSON.parse(val); } catch (e) { return []; }
+            }
+            return [];
+          };
+
           setPrescriptionData({
             ...initialPrescriptionState,
-            ...result.data,
-            creation_timestamp: moment(result.data.creation_timestamp).format("YYYY-MM-DD"),
-            "next-appo-date": result.data["next-appo-date"] ? moment(result.data["next-appo-date"]).format("YYYY-MM-DD") : ""
+            ...d,
+            creation_timestamp: safeDate(d.creation_timestamp) || new Date().toISOString().split("T")[0],
+            "next-appo-date": safeDate(d["next-appo-date"]),
+            surgical_advice: toArray(d.surgical_advice),
+            uroadvice: toArray(d.uroadvice),
+            preopinvestigation: toArray(d.preopinvestigation),
+            medicines: safeMedicines(d.medicines)
           });
           toast.success(`Loaded prescription for ${selected.date}`);
         }
@@ -1158,11 +1303,21 @@ const DoctorPatientDetails = () => {
       });
       const result = await response.json();
       if (result.statusCode === 200) {
-        const formattedList = (result.data || []).map(item => ({
-          ...item,
-          id: item.id.toString(),
-          date: moment(item.date).format("YYYY-MM-DD")
-        }));
+        const formattedList = (result.data || []).map(item => {
+          let displayDate = item.date;
+          if (item.date && item.date.includes('-')) {
+            const parts = item.date.split('-');
+            if (parts[0].length === 4) {
+              const [year, month, day] = parts;
+              displayDate = `${day}-${month}-${year}`;
+            }
+          }
+          return {
+            ...item,
+            id: item.id.toString(),
+            date: displayDate
+          };
+        });
         setPreviousSurgeryList(formattedList);
       }
     } catch (error) {
@@ -1183,7 +1338,8 @@ const DoctorPatientDetails = () => {
 
     try {
       setLoading(true);
-      const url = `${BASE_URL}/V1/doctor/get-surgery-details/${formData.patient_id}?date=${selected.date}&location=${currentLocation}`;
+      const apiDate = moment(selected.date, "DD-MM-YYYY").format("YYYY-MM-DD");
+      const url = `${BASE_URL}/V1/doctor/get-surgery-details/${formData.patient_id}?date=${apiDate}&location=${currentLocation}`;
       console.log(`[DEBUG] Fetching Surgery Details from: ${url}`);
 
       const response = await fetch(url, {
@@ -1402,7 +1558,7 @@ const DoctorPatientDetails = () => {
         .map((item) => item.trim());
 
       const rawPrefix = (initialPatient.prefix || initialPatient.Prefix || "").trim();
-      const prefixOptions = ["MR", "MRS", "MASTER", "MISS", "DR", "MS"];
+      const prefixOptions = ["MR", "MRS", "MASTER", "MISS"];
       let finalPrefix = rawPrefix.toUpperCase().replace(/\.$/, "");
       if (finalPrefix === "M/S") finalPrefix = "MISS"; // Common legacy shorthand
 
@@ -1488,10 +1644,20 @@ const DoctorPatientDetails = () => {
       if (!response.ok) return;
       const data = await response.json();
       if (data.statusCode === 200) {
-        setPreviousDischargesList(data.data.map(item => ({
-          id: item.id,
-          date: moment(item.date).format("DD-MM-YYYY")
-        })));
+        setPreviousDischargesList(data.data.map(item => {
+          let displayDate = item.date;
+          if (item.date && item.date.includes('-')) {
+            const parts = item.date.split('-');
+            if (parts[0].length === 4) {
+              const [year, month, day] = parts;
+              displayDate = `${day}-${month}-${year}`;
+            }
+          }
+          return {
+            id: item.id,
+            date: displayDate
+          };
+        }));
       }
     } catch (error) {
       console.error("Error fetching discharge dates:", error);
@@ -1574,13 +1740,51 @@ const DoctorPatientDetails = () => {
       if (!response.ok) return;
       const data = await response.json();
       if (data.statusCode === 200) {
-        setPreviousPrescriptionList(data.data.map(item => ({
-          id: item.id,
-          date: moment(item.date).format("DD-MM-YYYY")
-        })));
+        setPreviousPrescriptionList(data.data.map(item => {
+          let displayDate = item.date;
+          if (item.date && item.date.includes('-')) {
+            const parts = item.date.split('-');
+            if (parts[0].length === 4) {
+              const [year, month, day] = parts;
+              displayDate = `${day}-${month}-${year}`;
+            }
+          }
+          return {
+            id: item.id,
+            date: displayDate
+          };
+        }));
       }
     } catch (error) {
       console.error("Error fetching prescription dates:", error);
+    }
+  };
+
+  const parseDate = (dateString) => {
+    if (!dateString) return null;
+    try {
+      if (dateString instanceof Date) {
+        return isNaN(dateString.getTime()) ? null : dateString;
+      }
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
+        const [day, month, year] = dateString.split("/");
+        const date = new Date(year, month - 1, day);
+        return isNaN(date.getTime()) ? null : date;
+      }
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+        const date = new Date(dateString);
+        return isNaN(date.getTime()) ? null : date;
+      }
+      if (/^\d{2}-\d{2}-\d{4}$/.test(dateString)) {
+        const [day, month, year] = dateString.split("-");
+        const date = new Date(year, month - 1, day);
+        return isNaN(date.getTime()) ? null : date;
+      }
+      const date = new Date(dateString);
+      return isNaN(date.getTime()) ? null : date;
+    } catch (error) {
+      console.error("Error parsing date:", error);
+      return null;
     }
   };
 
@@ -2075,7 +2279,9 @@ const DoctorPatientDetails = () => {
 
   const [assistanceDoctors, setAssistanceDoctors] = useState([]);
   const [doctors, setDoctors] = useState([]);
+  const [anaesthetists, setAnaesthetists] = useState([]);
   const [fistulaCases, setFistulaCases] = useState([]);
+
 
   useEffect(() => {
     const fetchAssistanceDoctors = async () => {
@@ -2114,10 +2320,23 @@ const DoctorPatientDetails = () => {
       }
     };
 
+    const fetchAnaesthetists = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/V1/doctor/anaesthetistDropdown?location=${currentLocation}`);
+        const result = await response.json();
+        if (result.statusCode === 200) {
+          setAnaesthetists(result.data || []);
+        }
+      } catch (error) {
+        console.error("Error fetching anaesthetists:", error);
+      }
+    };
+
     if (currentLocation && currentLocation !== "default") {
       fetchAssistanceDoctors();
       fetchDoctors();
       fetchFistulaCases();
+      fetchAnaesthetists();
     }
   }, [currentLocation]);
 
@@ -2495,7 +2714,7 @@ const DoctorPatientDetails = () => {
           <Row className="g-2">
             <Col md={3}>
               <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>UID No <span className="text-danger">*</span></Form.Label>
-              <Form.Control type="text" name="Uid_no" value={formData.Uid_no} readOnly style={{ backgroundColor: "#f8fafc", border: "2px solid #e2e8f0", borderRadius: "8px", padding: "4px 10px", fontWeight: "bold", color: "#64748b", fontSize: "12px" }} />
+              <Form.Control type="text" name="Uid_no" value={formData.Uid_no} readOnly style={{ cursor: "not-allowed", backgroundColor: "#ebeceeff", border: "2px solid #b2ebf2", borderRadius: "8px", padding: "4px 10px", fontWeight: "bold", fontSize: "12px" }} />
             </Col>
             <Col md={3}>
               <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>Prefix <span className="text-danger">*</span></Form.Label>
@@ -2505,8 +2724,6 @@ const DoctorPatientDetails = () => {
                 <option value="MRS">MRS</option>
                 <option value="MASTER">MASTER</option>
                 <option value="MISS">MISS</option>
-                <option value="MS">MS</option>
-                <option value="DR">DR</option>
               </Form.Select>
             </Col>
             <Col md={4}>
@@ -2615,12 +2832,26 @@ const DoctorPatientDetails = () => {
             <Col md={3}>
               <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>Birth Date <span className="text-danger">*</span></Form.Label>
               <DatePicker
-                selected={formData.birth_date ? moment(formData.birth_date, "DD-MM-YYYY").toDate() : null}
-                onChange={(date) => handleInputChange({ target: { name: "birth_date", value: date } })}
-                className="form-control"
+                required
+                selected={formData?.birth_date ? parseDate(formData.birth_date) : null}
+                onChange={(date) =>
+                  date &&
+                  handleInputChange({
+                    target: { name: "birth_date", value: date },
+                  })
+                }
+                className="form-control custom-datepicker"
                 dateFormat="dd-MM-yyyy"
+                placeholderText="Select Date"
+                showMonthDropdown
+                showYearDropdown
+                dropdownMode="select"
                 maxDate={new Date()}
-                customInput={<Form.Control style={{ border: "2px solid #b2ebf2", borderRadius: "8px", padding: "4px 10px", fontSize: "12px" }} />}
+                style={{
+                  border: "2px solid rgb(77, 208, 225)",
+                  fontSize: "12px",
+                  borderRadius: "10px",
+                }}
               />
             </Col>
             <Col md={2}>
@@ -2692,7 +2923,7 @@ const DoctorPatientDetails = () => {
             </Col>
             <Col md={12} className="text-center mt-3 mb-2">
               <Button type="submit" disabled={loading} style={{ backgroundColor: "#00838f", borderColor: "#00838f", padding: "10px 40px", borderRadius: "50px", fontWeight: "800", fontSize: "13px", boxShadow: "0 8px 25px rgba(0, 131, 143, 0.3)", textTransform: "uppercase", letterSpacing: "1px" }}>
-                {loading ? <Spinner size="sm" /> : <><FeatherIcon icon="save" size="18" className="me-2" /> UPDATE PERSONAL DETAILS</>}
+                {loading ? <Spinner size="sm" /> : <><FeatherIcon icon="save" size="18" className="me-2" /> SAVE PERSONAL DETAILS</>}
               </Button>
             </Col>
           </Row>
@@ -2848,7 +3079,7 @@ const DoctorPatientDetails = () => {
                   onSaveSurgery={handleSaveSurgery}
                   loading={loading}
                   assistanceDoctors={assistanceDoctors}
-                  doctors={doctors}
+                  anaesthetists={anaesthetists}
                 />
 
               )}
@@ -2893,20 +3124,8 @@ const DoctorPatientDetails = () => {
         <DiagnosisPrintView
           ref={diagPrintRef}
           patient={formData}
-          historyList={previousHistoryList.map(h => ({
-            patient_date: h.date,
-            height: "170", // Mock values for printing as in PHP it fetches from DB
-            weight: "70",
-            BP: "120/80",
-            painscale: "2",
-            presentcomplaints: "Sample complaint recorded in history."
-          }))}
-          diagnosisList={previousDiagnosisList.map(d => ({
-            date_diagnosis: d.date,
-            diagnosis: "Clinical Diagnosis",
-            investigationorders: "Blood Test",
-            advice: "Standard Plan"
-          }))}
+          historyList={allHistoryDataForPrint}
+          diagnosisList={allDiagnosisDataForPrint}
         />
       </div>
     </div>

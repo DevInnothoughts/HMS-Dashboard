@@ -134,16 +134,16 @@ const DischargeCard = ({
               variant="outline-info"
               size="sm"
               onClick={onNewDischarge}
-              style={{ borderRadius: "20px", fontSize: "11px", fontWeight: "700" }}
+              style={{ borderRadius: "20px", fontSize: "12px", fontWeight: "700", padding: "7px 10px" }}
             >
               <FeatherIcon icon="plus" size="14" className="me-1" /> NEW RECORD
             </Button>
             <Dropdown onSelect={onSelectDischarge}>
               <Dropdown.Toggle
-                variant="primary"
+                variant="outline-info"
                 id="previous-discharges-dropdown"
                 size="sm"
-                style={{ borderRadius: "20px", fontSize: "11px", fontWeight: "700", color: "white" }}
+                style={{ borderRadius: "20px", fontSize: "12px", fontWeight: "700", color: "white", padding: "7px 10px" }}
               >
                 <FeatherIcon icon="calendar" size="14" className="me-1" /> PREVIOUS DATES
               </Dropdown.Toggle>
@@ -164,7 +164,7 @@ const DischargeCard = ({
 
         <Row className="g-3 mb-4 align-items-end">
           <Col md={3}>
-            <Form.Label className="fw-bold text-muted small mb-1">PATIENT NAME</Form.Label>
+            <Form.Label className="fw-bold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>PATIENT NAME</Form.Label>
             <Form.Control
               type="text"
               value={dischargeData.patient_name}
@@ -173,7 +173,7 @@ const DischargeCard = ({
             />
           </Col>
           <Col md={3}>
-            <Form.Label className="fw-bold text-muted small mb-1">AGE & SEX</Form.Label>
+            <Form.Label className="fw-bold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>AGE & SEX</Form.Label>
             <Form.Control
               type="text"
               value={`${dischargeData.patient_age ? dischargeData.patient_age + 'Y' : ''} / ${dischargeData.patient_sex || ''}`}
@@ -182,7 +182,7 @@ const DischargeCard = ({
             />
           </Col>
           <Col md={3}>
-            <Form.Label className="fw-bold text-muted small mb-1">PRESCRIPTION TYPE <span className="text-danger">*</span></Form.Label>
+            <Form.Label className="fw-bold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>PRESCRIPTION TYPE <span className="text-danger">*</span></Form.Label>
             <Form.Select
               value={dischargeData.discharge_type}
               onChange={(e) => handleDischargeChange("discharge_type", e.target.value)}
@@ -210,8 +210,8 @@ const DischargeCard = ({
         </Row>
 
         <Row className="g-3 mb-4">
-          <Col md={4}>
-            <Form.Label className="fw-bold text-muted small mb-1">ADDRESS</Form.Label>
+          <Col md={3}>
+            <Form.Label className="fw-bold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>ADDRESS</Form.Label>
             <Form.Control
               as="textarea"
               rows={2}
@@ -223,24 +223,24 @@ const DischargeCard = ({
           </Col>
           <Col md={4}>
             <Row className="g-2">
-              <Col md={7}>
-                <Form.Label className="fw-semibold small text-muted mb-1">Date of Admission (DOA)</Form.Label>
+              <Col md={6}>
+                <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>Date of Admission (DOA)</Form.Label>
                 <Form.Control type="date" value={dischargeData.doa} onChange={(e) => handleDischargeChange("doa", e.target.value)} style={{ borderRadius: "6px", fontSize: "12px", border: "2px solid #b2ebf2" }} />
               </Col>
               <Col md={5}>
-                <Form.Label className="fw-semibold small text-muted mb-1">Time</Form.Label>
+                <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>Time</Form.Label>
                 <Form.Control type="time" value={dischargeData.admission_time} onChange={(e) => handleDischargeChange("admission_time", e.target.value)} style={{ borderRadius: "6px", fontSize: "12px", border: "2px solid #b2ebf2" }} />
               </Col>
             </Row>
           </Col>
-          <Col md={4}>
+          <Col md={3}>
             <Row className="g-2">
               <Col md={7}>
-                <Form.Label className="fw-semibold small text-muted mb-1">Date of Discharge (DOD)</Form.Label>
+                <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>Date of Discharge (DOD)</Form.Label>
                 <Form.Control type="date" value={dischargeData.dod} onChange={(e) => handleDischargeChange("dod", e.target.value)} style={{ borderRadius: "6px", fontSize: "12px", border: "2px solid #b2ebf2" }} />
               </Col>
               <Col md={5}>
-                <Form.Label className="fw-semibold small text-muted mb-1">Time</Form.Label>
+                <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>Time</Form.Label>
                 <Form.Control type="time" value={dischargeData.discharge_time} onChange={(e) => handleDischargeChange("discharge_time", e.target.value)} style={{ borderRadius: "6px", fontSize: "12px", border: "2px solid #b2ebf2" }} />
               </Col>
             </Row>
@@ -249,7 +249,7 @@ const DischargeCard = ({
 
         <Row className="g-3 mb-4">
           <Col md={3}>
-            <Form.Label className="fw-bold text-muted small mb-1">CONSULTANT DOCTOR</Form.Label>
+            <Form.Label className="fw-bold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>CONSULTANT DOCTOR</Form.Label>
             <Form.Select
               value={dischargeData.consultant_doctor}
               onChange={(e) => handleDischargeChange("consultant_doctor", e.target.value)}
@@ -307,28 +307,28 @@ const DischargeCard = ({
           <FeatherIcon icon="file-text" size="18" className="me-2" /> CLINICAL SUMMARY & NOTES
         </h6>
         <Row className="g-3">
-          <Col md={6}>
-            <Form.Label className="fw-bold small text-muted">REASON FOR ADMISSION</Form.Label>
+          <Col md={4}>
+            <Form.Label className="fw-bold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>REASON FOR ADMISSION</Form.Label>
             <Form.Control as="textarea" rows={3} value={dischargeData.reason_for_admission} onChange={(e) => handleDischargeChange("reason_for_admission", e.target.value)} style={{ borderRadius: "8px", fontSize: "12px", border: "2px solid #b2ebf2" }} />
           </Col>
-          <Col md={6}>
-            <Form.Label className="fw-bold small text-muted">MEDICAL HISTORY / SH / GH</Form.Label>
+          <Col md={4}>
+            <Form.Label className="fw-bold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>MEDICAL HISTORY / SH / GH</Form.Label>
             <Form.Control as="textarea" rows={3} value={dischargeData.medical_history} onChange={(e) => handleDischargeChange("medical_history", e.target.value)} style={{ borderRadius: "8px", fontSize: "12px", border: "2px solid #b2ebf2" }} />
           </Col>
-          <Col md={6}>
-            <Form.Label className="fw-bold small text-muted">PLAN OF TREATMENT</Form.Label>
+          <Col md={4}>
+            <Form.Label className="fw-bold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>PLAN OF TREATMENT</Form.Label>
             <Form.Control as="textarea" rows={3} value={dischargeData.plan_of_treatment} onChange={(e) => handleDischargeChange("plan_of_treatment", e.target.value)} style={{ borderRadius: "8px", fontSize: "12px", border: "2px solid #b2ebf2" }} />
           </Col>
-          <Col md={6}>
-            <Form.Label className="fw-bold small text-muted">KNOWN ALLERGIES</Form.Label>
+          <Col md={4}>
+            <Form.Label className="fw-bold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>KNOWN ALLERGIES</Form.Label>
             <Form.Control as="textarea" rows={3} value={dischargeData.allergies} onChange={(e) => handleDischargeChange("allergies", e.target.value)} placeholder="Enter details of any drug or other allergies..." style={{ borderRadius: "8px", fontSize: "12px", border: "2px solid #b2ebf2" }} />
           </Col>
-          <Col md={6}>
-            <Form.Label className="fw-bold small text-muted">DIAGNOSIS</Form.Label>
+          <Col md={4}>
+            <Form.Label className="fw-bold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>DIAGNOSIS</Form.Label>
             <Form.Control as="textarea" rows={3} value={dischargeData.diagnosis} onChange={(e) => handleDischargeChange("diagnosis", e.target.value)} style={{ borderRadius: "8px", fontSize: "12px", border: "2px solid #b2ebf2" }} />
           </Col>
-          <Col md={6}>
-            <Form.Label className="fw-bold small text-muted">SURGERY NOTE</Form.Label>
+          <Col md={4}>
+            <Form.Label className="fw-bold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>SURGERY NOTE</Form.Label>
             <Form.Control as="textarea" rows={3} value={dischargeData.surgery_note} onChange={(e) => handleDischargeChange("surgery_note", e.target.value)} placeholder="Intraoperative findings, procedure details..." style={{ borderRadius: "8px", fontSize: "12px", border: "2px solid #b2ebf2" }} />
           </Col>
         </Row>
@@ -375,23 +375,27 @@ const DischargeCard = ({
       <div className="section-card" style={{ borderLeftColor: "#8b5cf6" }}>
         <Row className="g-3">
           <Col md={3}>
-            <Form.Label className="fw-bold small text-muted d-flex align-items-center">
+            <Form.Label className="fw-bold small mb-1" style={{ fontSize: "11px", color: "#006064" }} d-flex align-items-center>
               <FeatherIcon icon="shield" size="14" className="me-1" /> LOCAL CARE
             </Form.Label>
             <Form.Control as="textarea" rows={3} value={dischargeData.local_care} onChange={(e) => handleDischargeChange("local_care", e.target.value)} style={{ borderRadius: "8px", fontSize: "12px", border: "2px solid #b2ebf2" }} />
           </Col>
           <Col md={3}>
-            <Form.Label className="fw-bold small text-muted d-flex align-items-center">
+            <Form.Label className="fw-bold small mb-1" style={{ fontSize: "11px", color: "#006064" }} d-flex align-items-center>
               <FeatherIcon icon="alert-circle" size="14" className="me-1" /> NOTE / ADVICE
             </Form.Label>
             <Form.Control as="textarea" rows={3} value={dischargeData.note_advice} onChange={(e) => handleDischargeChange("note_advice", e.target.value)} placeholder="Dietary restrictions, activity advice..." style={{ borderRadius: "8px", fontSize: "12px", border: "2px solid #b2ebf2" }} />
           </Col>
           <Col md={3}>
-            <Form.Label className="fw-bold small text-muted">BALLOON DRAIN</Form.Label>
+            <Form.Label className="fw-bold small mb-1" style={{ fontSize: "11px", color: "#006064" }} d-flex align-items-center>
+              <FeatherIcon icon="alert-circle" size="14" className="me-1" /> BALLOON DRAIN
+            </Form.Label>
             <Form.Control as="textarea" rows={2} value={dischargeData.balloon_drain} onChange={(e) => handleDischargeChange("balloon_drain", e.target.value)} style={{ borderRadius: "8px", fontSize: "12px", border: "2px solid #b2ebf2" }} />
           </Col>
           <Col md={3}>
-            <Form.Label className="fw-bold small text-muted">FISTULA CASES</Form.Label>
+            <Form.Label className="fw-bold small mb-1" style={{ fontSize: "11px", color: "#006064" }} d-flex align-items-center>
+              <FeatherIcon icon="alert-circle" size="14" className="me-1" /> FISTULA CASES
+            </Form.Label>
             <Dropdown className="w-100">
               <Dropdown.Toggle
                 variant="outline-info"
@@ -479,7 +483,7 @@ const DischargeCard = ({
         </h6>
         <Row className="g-2 mb-3 align-items-end">
           <Col md={3}>
-            <Form.Label className="fw-bold small text-muted">MEDICINE NAME</Form.Label>
+            <Form.Label className="fw-bold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>MEDICINE NAME</Form.Label>
             <Form.Control
               type="text"
               placeholder="Enter Medicine Name"
@@ -489,7 +493,7 @@ const DischargeCard = ({
             />
           </Col>
           <Col md={3}>
-            <Form.Label className="fw-bold small text-muted">TIMES</Form.Label>
+            <Form.Label className="fw-bold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>TIMES</Form.Label>
             <Form.Select
               value={newTreatmentGiven.times}
               onChange={(e) => setNewTreatmentGiven({ ...newTreatmentGiven, times: e.target.value })}
@@ -502,7 +506,7 @@ const DischargeCard = ({
             </Form.Select>
           </Col>
           <Col md={3}>
-            <Form.Label className="fw-bold small text-muted">ROUTE</Form.Label>
+            <Form.Label className="fw-bold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>ROUTE</Form.Label>
             <Form.Select
               value={newTreatmentGiven.route}
               onChange={(e) => setNewTreatmentGiven({ ...newTreatmentGiven, route: e.target.value })}
@@ -572,7 +576,7 @@ const DischargeCard = ({
         </h6>
         <Row className="g-2 mb-3">
           <Col md={3}>
-            <Form.Label className="fw-bold small text-muted">MEDICINE NAME</Form.Label>
+            <Form.Label className="fw-bold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>MEDICINE NAME</Form.Label>
             <Form.Control
               type="text"
               placeholder="Search Medicine"
@@ -582,7 +586,7 @@ const DischargeCard = ({
             />
           </Col>
           <Col md={1}>
-            <Form.Label className="fw-bold small text-muted">QTY</Form.Label>
+            <Form.Label className="fw-bold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>QTY</Form.Label>
             <Form.Select
               value={newTreatmentOnDischarge.qty}
               onChange={(e) => setNewTreatmentOnDischarge({ ...newTreatmentOnDischarge, qty: e.target.value })}
@@ -595,7 +599,7 @@ const DischargeCard = ({
             </Form.Select>
           </Col>
           <Col md={2}>
-            <Form.Label className="fw-bold small text-muted">STRENGTH</Form.Label>
+            <Form.Label className="fw-bold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>STRENGTH</Form.Label>
             <Form.Control
               type="text"
               placeholder="Unit"
@@ -604,8 +608,8 @@ const DischargeCard = ({
               style={{ borderRadius: "8px", fontSize: "12px", border: "2px solid #b2ebf2" }}
             />
           </Col>
-          <Col md={3}>
-            <Form.Label className="fw-bold small text-muted">Medicine time</Form.Label>
+          <Col md={2}>
+            <Form.Label className="fw-bold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>Medicine time</Form.Label>
             <Dropdown className="w-200">
               <Dropdown.Toggle
                 variant="outline-info"
@@ -639,8 +643,8 @@ const DischargeCard = ({
               </Dropdown.Menu>
             </Dropdown>
           </Col>
-          <Col md={2}>
-            <Form.Label className="fw-bold small text-muted text-uppercase">Frequency</Form.Label>
+          <Col md={1}>
+            <Form.Label className="fw-bold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>Frequency</Form.Label>
             <Form.Control
               type="text"
               placeholder="Frequency"
@@ -650,7 +654,7 @@ const DischargeCard = ({
             />
           </Col>
           <Col md={1}>
-            <Form.Label className="fw-bold small text-muted">DAYS</Form.Label>
+            <Form.Label className="fw-bold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>DAYS</Form.Label>
             <Form.Select
               value={newTreatmentOnDischarge.days}
               onChange={(e) => setNewTreatmentOnDischarge({ ...newTreatmentOnDischarge, days: e.target.value })}
@@ -721,11 +725,11 @@ const DischargeCard = ({
         <h6 className="fw-bold mb-3 text-muted" style={{ fontSize: "12px", textTransform: "uppercase" }}>Administrative Details</h6>
         <Row className="g-3">
           <Col md={3}>
-            <Form.Label className="fw-semibold small text-muted">FOLLOWUP DATE</Form.Label>
+            <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>FOLLOWUP DATE</Form.Label>
             <Form.Control type="date" value={dischargeData.follow_date} onChange={(e) => handleDischargeChange("follow_date", e.target.value)} style={{ borderRadius: "6px", fontSize: "12px", border: "2px solid #b2ebf2" }} />
           </Col>
           <Col md={3}>
-            <Form.Label className="fw-semibold small text-muted">TREATING BY</Form.Label>
+            <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>TREATING BY</Form.Label>
             <Form.Select
               value={dischargeData.treating_by}
               onChange={(e) => handleDischargeChange("treating_by", e.target.value)}
@@ -738,7 +742,7 @@ const DischargeCard = ({
             </Form.Select>
           </Col>
           <Col md={3}>
-            <Form.Label className="fw-semibold small text-muted">MADE BY</Form.Label>
+            <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>MADE BY</Form.Label>
             <Form.Select
               value={dischargeData.made_by}
               onChange={(e) => handleDischargeChange("made_by", e.target.value)}
@@ -759,7 +763,7 @@ const DischargeCard = ({
             </Form.Select>
           </Col>
           <Col md={3}>
-            <Form.Label className="fw-semibold small text-muted">CHECKED BY</Form.Label>
+            <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>CHECKED BY</Form.Label>
             <Form.Select
               value={dischargeData.checked_by}
               onChange={(e) => handleDischargeChange("checked_by", e.target.value)}
@@ -780,7 +784,7 @@ const DischargeCard = ({
             </Form.Select>
           </Col>
           <Col md={3}>
-            <Form.Label className="fw-semibold small text-muted">ASSISTANCE DOCTOR</Form.Label>
+            <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>ASSISTANCE DOCTOR</Form.Label>
             <Form.Select
               value={dischargeData.assistance_doctor}
               onChange={(e) => handleDischargeChange("assistance_doctor", e.target.value)}
@@ -793,7 +797,7 @@ const DischargeCard = ({
             </Form.Select>
           </Col>
           <Col md={3}>
-            <Form.Label className="fw-semibold small text-muted">ASSISTANCE SURGEON</Form.Label>
+            <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>ASSISTANCE SURGEON</Form.Label>
             <Form.Select
               value={dischargeData.assistance_surgeon}
               onChange={(e) => handleDischargeChange("assistance_surgeon", e.target.value)}
