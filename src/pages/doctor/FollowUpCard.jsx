@@ -46,27 +46,27 @@ const FollowUpCard = ({ followUpData, formData, handleFollowUpChange, onSaveFoll
         <Row>
           <Col md={4} className="mb-10">
             <Form.Label className="fw-bold mb-3" style={{ fontSize: "11px", color: "#006064" }}>Diagnosis</Form.Label>
-            <Form.Control as="textarea" rows={1} value={followUpData.diagnosis} onChange={(e) => handleFollowUpChange("diagnosis", e.target.value)} placeholder="Duration" style={{ borderRadius: "8px", border: "2px solid #80deea", padding: "8px 12px", fontSize: "13px" }} />
+            <Form.Control as="textarea" readOnly rows={1} value={followUpData.diagnosis} onChange={(e) => handleFollowUpChange("diagnosis", e.target.value)} placeholder="Duration" style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px", cursor: "not-allowed", backgroundColor: "#dcdedfff" }} />
           </Col>
           <Col md={4} className="mb-1">
             <Form.Label className="fw-bold mb-3" style={{ fontSize: "11px", color: "#006064" }}>Advice</Form.Label>
-            <Form.Control as="textarea" rows={2} value={followUpData.advice} onChange={(e) => handleFollowUpChange("advice", e.target.value)} placeholder="Instructions for the patient..." style={{ borderRadius: "8px", border: "2px solid #80deea", padding: "8px 12px", fontSize: "13px" }} />
+            <Form.Control as="textarea" readOnly rows={2} value={followUpData.advice} onChange={(e) => handleFollowUpChange("advice", e.target.value)} placeholder="Instructions for the patient..." style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px", cursor: "not-allowed", backgroundColor: "#dcdedfff" }} />
           </Col>
           <Col md={4} className="mb-1">
             <Form.Label className="fw-bold mb-3" style={{ fontSize: "11px", color: "#006064" }}>Plan</Form.Label>
-            <Form.Control as="textarea" rows={2} value={followUpData.plan} onChange={(e) => handleFollowUpChange("plan", e.target.value)} placeholder="Next steps in treatment..." style={{ borderRadius: "8px", border: "2px solid #80deea", padding: "8px 12px", fontSize: "13px" }} />
+            <Form.Control as="textarea" readOnly rows={2} value={followUpData.plan} onChange={(e) => handleFollowUpChange("plan", e.target.value)} placeholder="Next steps in treatment..." style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px", cursor: "not-allowed", backgroundColor: "#dcdedfff" }} />
           </Col>
           <Col md={4} className="mb-1">
             <Form.Label className="fw-bold mb-3" style={{ fontSize: "11px", color: "#006064" }}>Present Complaints</Form.Label>
-            <Form.Control as="textarea" rows={2} placeholder="Describe the present symptoms..." value={followUpData.present_complaints} onChange={(e) => handleFollowUpChange("present_complaints", e.target.value)} style={{ borderRadius: "8px", border: "2px solid #80deea", fontSize: "13px", padding: "8px 12px" }} />
+            <Form.Control as="textarea" rows={2} placeholder="Describe the present symptoms..." value={followUpData.present_complaints} onChange={(e) => handleFollowUpChange("present_complaints", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", fontSize: "12px", padding: "6px 12px" }} />
           </Col>
           <Col md={4} className="mb-1">
             <Form.Label className="fw-bold mb-3" style={{ fontSize: "11px", color: "#006064" }}>First Visit Date</Form.Label>
-            <Form.Control type="date" value={followUpData.first_visit_date} onChange={(e) => handleFollowUpChange("first_visit_date", e.target.value)} style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "8px 12px", fontSize: "13px" }} />
+            <Form.Control type="date" readOnly value={followUpData.first_visit_date} onChange={(e) => handleFollowUpChange("first_visit_date", e.target.value)} style={{ cursor: "not-allowed", backgroundColor: "#dcdedfff", borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
           </Col>
           <Col md={4} className="mb-1">
             <Form.Label className="fw-bold mb-3" style={{ fontSize: "11px", color: "#006064" }}>Follow Up Visit No</Form.Label>
-            <Form.Control type="number" value={followUpData.visit_count} onChange={(e) => handleFollowUpChange("visit_count", e.target.value)} style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "8px 12px", fontSize: "13px" }} />
+            <Form.Control type="number" value={followUpData.visit_count} onChange={(e) => handleFollowUpChange("visit_count", e.target.value)} readOnly style={{ cursor: "not-allowed", backgroundColor: "#dcdedfff", borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
           </Col>
         </Row>
       </div>

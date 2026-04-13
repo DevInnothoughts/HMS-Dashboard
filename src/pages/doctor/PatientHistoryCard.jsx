@@ -101,7 +101,7 @@ const PatientHistoryCard = ({
             </div>
             <Form.Group>
               <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>Duration / Details</Form.Label>
-              <Form.Control as="textarea" rows={1} value={historyData.piles_duration} onChange={(e) => handleHistoryChange("piles_duration", e.target.value)} style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+              <Form.Control as="textarea" rows={1} value={historyData.piles_duration} onChange={(e) => handleHistoryChange("piles_duration", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
             </Form.Group>
           </div>
         )}
@@ -115,7 +115,7 @@ const PatientHistoryCard = ({
             </div>
             <Form.Group>
               <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>Duration / Details</Form.Label>
-              <Form.Control as="textarea" rows={1} value={historyData.fistula_duration} onChange={(e) => handleHistoryChange("fistula_duration", e.target.value)} style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+              <Form.Control as="textarea" rows={1} value={historyData.fistula_duration} onChange={(e) => handleHistoryChange("fistula_duration", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
             </Form.Group>
           </div>
         )}
@@ -129,7 +129,7 @@ const PatientHistoryCard = ({
             </div>
             <Form.Group>
               <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>Duration / Details</Form.Label>
-              <Form.Control as="textarea" rows={1} value={historyData.hernia_duration} onChange={(e) => handleHistoryChange("hernia_duration", e.target.value)} style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+              <Form.Control as="textarea" rows={1} value={historyData.hernia_duration} onChange={(e) => handleHistoryChange("hernia_duration", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
             </Form.Group>
           </div>
         )}
@@ -143,7 +143,7 @@ const PatientHistoryCard = ({
             </div>
             <Form.Group>
               <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>Duration / Details</Form.Label>
-              <Form.Control as="textarea" rows={1} value={historyData.varicose_duration} onChange={(e) => handleHistoryChange("varicose_duration", e.target.value)} style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+              <Form.Control as="textarea" rows={1} value={historyData.varicose_duration} onChange={(e) => handleHistoryChange("varicose_duration", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
             </Form.Group>
           </div>
         )}
@@ -152,7 +152,7 @@ const PatientHistoryCard = ({
             <Form.Check label="Urinary Incontinence Present" checked={historyData.urinary_incontinence} onChange={(e) => handleHistoryChange("urinary_incontinence", e.target.checked)} className="mb-2 fw-bold" style={{ color: "#00838f", fontSize: "15px", margin: "5px" }} />
             <Form.Group>
               <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>Duration / Frequency</Form.Label>
-              <Form.Control as="textarea" rows={2} value={historyData.urinary_duration} onChange={(e) => handleHistoryChange("urinary_duration", e.target.value)} style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+              <Form.Control as="textarea" rows={2} value={historyData.urinary_duration} onChange={(e) => handleHistoryChange("urinary_duration", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
             </Form.Group>
           </div>
         )}
@@ -161,7 +161,7 @@ const PatientHistoryCard = ({
             <Form.Check label="Fecal Incontinence Present" checked={historyData.fecal_incontinence} onChange={(e) => handleHistoryChange("fecal_incontinence", e.target.checked)} className="mb-2 fw-bold" style={{ color: "#00838f", fontSize: "14px" }} />
             <Form.Group>
               <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>Duration / Frequency</Form.Label>
-              <Form.Control as="textarea" rows={2} value={historyData.fecal_duration} onChange={(e) => handleHistoryChange("fecal_duration", e.target.value)} style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+              <Form.Control as="textarea" rows={2} value={historyData.fecal_duration} onChange={(e) => handleHistoryChange("fecal_duration", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
             </Form.Group>
           </div>
         )}
@@ -175,7 +175,7 @@ const PatientHistoryCard = ({
             </div>
             <Form.Group>
               <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>Duration / Details</Form.Label>
-              <Form.Control as="textarea" rows={1} value={historyData.urology_duration} onChange={(e) => handleHistoryChange("urology_duration", e.target.value)} style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+              <Form.Control as="textarea" rows={1} value={historyData.urology_duration} onChange={(e) => handleHistoryChange("urology_duration", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
             </Form.Group>
           </div>
         )}
@@ -188,8 +188,8 @@ const PatientHistoryCard = ({
               ))}
             </div>
             <Row className="g-2">
-              <Col md={6}><Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>Bowel Habits</Form.Label><Form.Control as="textarea" rows={1} value={historyData.ods_bowel_habits} onChange={(e) => handleHistoryChange("ods_bowel_habits", e.target.value)} style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} /></Col>
-              <Col md={6}><Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>Duration</Form.Label><Form.Control as="textarea" rows={1} value={historyData.ods_duration} onChange={(e) => handleHistoryChange("ods_duration", e.target.value)} style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} /></Col>
+              <Col md={6}><Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>Bowel Habits</Form.Label><Form.Control as="textarea" rows={1} value={historyData.ods_bowel_habits} onChange={(e) => handleHistoryChange("ods_bowel_habits", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} /></Col>
+              <Col md={6}><Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>Duration</Form.Label><Form.Control as="textarea" rows={1} value={historyData.ods_duration} onChange={(e) => handleHistoryChange("ods_duration", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} /></Col>
             </Row>
           </div>
         )}
@@ -203,14 +203,14 @@ const PatientHistoryCard = ({
             </div>
             <Form.Group>
               <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>Additional Comments</Form.Label>
-              <Form.Control as="textarea" rows={1} value={historyData.pilonidal_comment} onChange={(e) => handleHistoryChange("pilonidal_comment", e.target.value)} style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+              <Form.Control as="textarea" rows={1} value={historyData.pilonidal_comment} onChange={(e) => handleHistoryChange("pilonidal_comment", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
             </Form.Group>
           </div>
         )}
         {historyActiveSubTab === "circumcision" && (
           <div className="animate__animated animate__fadeIn">
             <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "14px", padding: "5px" }}>Circumcision Details</h6>
-            <Form.Control as="textarea" rows={3} placeholder="Enter details..." value={historyData.circumcision_comment} onChange={(e) => handleHistoryChange("circumcision_comment", e.target.value)} style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+            <Form.Control as="textarea" rows={3} placeholder="Enter details..." value={historyData.circumcision_comment} onChange={(e) => handleHistoryChange("circumcision_comment", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
           </div>
         )}
       </Card.Body>
@@ -258,15 +258,15 @@ const PatientHistoryCard = ({
         <Row className="g-2 px-1">
           <Col md={4}>
             <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px", color: "#006064" }}>Consultation Date</Form.Label>
-            <Form.Control type="date" size="sm" value={historyData.patient_date} onChange={(e) => handleHistoryChange("patient_date", e.target.value)} style={{ borderRadius: "8px", fontSize: "11px", border: "1px solid #b2ebf2", padding: "4px 8px" }} />
+            <Form.Control type="date" size="sm" value={historyData.patient_date} onChange={(e) => handleHistoryChange("patient_date", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
           </Col>
           <Col md={4}>
             <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px", color: "#006064" }}>Height (Feet/Inches)</Form.Label>
-            <Form.Control type="text" size="sm" value={historyData.height_feet} onChange={(e) => handleHistoryChange("height_feet", e.target.value)} placeholder="e.g. 5.11" style={{ borderRadius: "8px", fontSize: "11px", border: "1px solid #b2ebf2", padding: "4px 8px" }} />
+            <Form.Control type="text" size="sm" value={historyData.height_feet} onChange={(e) => handleHistoryChange("height_feet", e.target.value)} placeholder="e.g. 5.11" style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
           </Col>
           <Col md={4}>
             <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px", color: "#006064" }}>Weight (kg)</Form.Label>
-            <Form.Control type="text" size="sm" value={historyData.weight_kg} onChange={(e) => handleHistoryChange("weight_kg", e.target.value)} placeholder="e.g. 70" style={{ borderRadius: "8px", fontSize: "11px", border: "1px solid #b2ebf2", padding: "4px 8px" }} />
+            <Form.Control type="text" size="sm" value={historyData.weight_kg} onChange={(e) => handleHistoryChange("weight_kg", e.target.value)} placeholder="e.g. 70" style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
           </Col>
         </Row>
       </div>
@@ -289,21 +289,21 @@ const PatientHistoryCard = ({
           <Row className="g-2 px-1">
             <Col md={3}>
               <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px", color: "#006064" }}>Pain Score (1-10)</Form.Label>
-              <Form.Select size="sm" value={historyData.painscale} onChange={(e) => handleHistoryChange("painscale", e.target.value)} style={{ borderRadius: "8px", border: "1px solid #80deea", padding: "4px 8px", fontSize: "11px" }}>
+              <Form.Select size="sm" value={historyData.painscale} onChange={(e) => handleHistoryChange("painscale", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }}>
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => <option key={n} value={n}>{n}</option>)}
               </Form.Select>
             </Col>
             <Col md={3}>
               <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px", color: "#006064" }}>BP (mm Hg)</Form.Label>
-              <Form.Control size="sm" value={historyData.vital_bp} onChange={(e) => handleHistoryChange("vital_bp", e.target.value)} style={{ borderRadius: "8px", border: "1px solid #80deea", padding: "4px 8px", fontSize: "11px" }} />
+              <Form.Control size="sm" value={historyData.vital_bp} onChange={(e) => handleHistoryChange("vital_bp", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
             </Col>
             <Col md={3}>
               <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px", color: "#006064" }}>Pulse (/min)</Form.Label>
-              <Form.Control size="sm" value={historyData.vital_pulse} onChange={(e) => handleHistoryChange("vital_pulse", e.target.value)} style={{ borderRadius: "8px", border: "1px solid #80deea", padding: "4px 8px", fontSize: "11px" }} />
+              <Form.Control size="sm" value={historyData.vital_pulse} onChange={(e) => handleHistoryChange("vital_pulse", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
             </Col>
             <Col md={3}>
               <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px", color: "#006064" }}>RR (/min)</Form.Label>
-              <Form.Control size="sm" value={historyData.vital_rr} onChange={(e) => handleHistoryChange("vital_rr", e.target.value)} style={{ borderRadius: "8px", border: "1px solid #80deea", padding: "4px 8px", fontSize: "11px" }} />
+              <Form.Control size="sm" value={historyData.vital_rr} onChange={(e) => handleHistoryChange("vital_rr", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
             </Col>
             {['rs', 'cvs', 'cns', 'p/a'].map(field => (
               <Col md={3} key={field}>
@@ -376,9 +376,9 @@ const PatientHistoryCard = ({
               {historyData.medication_history.map((row, idx) => (
                 <tr key={idx}>
                   <td className="text-center p-2 fw-bold" style={{ backgroundColor: "#f8fbfc", color: "#00838f", fontSize: "12px", verticalAlign: "middle" }}>{idx + 1}</td>
-                  <td className="p-1"><Form.Control value={row.medicine} onChange={(e) => handleMedicationChange(idx, "medicine", e.target.value)} placeholder="Medicine name" style={{ border: "2px solid #b2ebf2", borderRadius: "6px", padding: "8px", fontSize: "12px" }} /></td>
-                  <td className="p-1"><Form.Control value={row.indication} onChange={(e) => handleMedicationChange(idx, "indication", e.target.value)} placeholder="e.g. HTN" style={{ border: "2px solid #b2ebf2", borderRadius: "6px", padding: "8px", fontSize: "12px" }} /></td>
-                  <td className="p-1"><Form.Control value={row.since} onChange={(e) => handleMedicationChange(idx, "since", e.target.value)} placeholder="e.g. 1 year" style={{ border: "2px solid #b2ebf2", borderRadius: "6px", padding: "8px", fontSize: "12px" }} /></td>
+                  <td className="p-1"><Form.Control value={row.medicine} onChange={(e) => handleMedicationChange(idx, "medicine", e.target.value)} placeholder="Medicine name" style={{ border: "2px solid #b2ebf2", borderRadius: "10px", padding: "6px 12px", fontSize: "12px" }} /></td>
+                  <td className="p-1"><Form.Control value={row.indication} onChange={(e) => handleMedicationChange(idx, "indication", e.target.value)} placeholder="e.g. HTN" style={{ border: "2px solid #b2ebf2", borderRadius: "10px", padding: "6px 12px", fontSize: "12px" }} /></td>
+                  <td className="p-1"><Form.Control value={row.since} onChange={(e) => handleMedicationChange(idx, "since", e.target.value)} placeholder="e.g. 1 year" style={{ border: "2px solid #b2ebf2", borderRadius: "10px", padding: "6px 12px", fontSize: "12px" }} /></td>
                 </tr>
               ))}
             </tbody>
@@ -390,14 +390,14 @@ const PatientHistoryCard = ({
           <Col md={3}>
             <div className="h-200 p-3 border rounded shadow-sm" style={{ backgroundColor: "#fefdfa", borderLeft: "8px solid #ffe0b2" }}>
               <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "13px" }}>Surgical History & Other Notes</h6>
-              <Form.Control as="textarea" rows={9} placeholder="Past surgical history..." className="mb-3" value={historyData.past_surgical_history} onChange={(e) => handleHistoryChange("past_surgical_history", e.target.value)} style={{ borderRadius: "10px", border: "1px solid #b2ebf2", padding: "8px", fontSize: "12px" }} />
+              <Form.Control as="textarea" rows={9} placeholder="Past surgical history..." className="mb-3" value={historyData.past_surgical_history} onChange={(e) => handleHistoryChange("past_surgical_history", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
             </div>
           </Col>
 
           <Col md={3}>
             <div className="h-200 p-3 border rounded shadow-sm" style={{ backgroundColor: "#fefdfa", borderLeft: "8px solid #ffe0b2" }}>
               <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "13px" }}>Any Other Complaints</h6>
-              <Form.Control as="textarea" rows={9} placeholder="Describe other complaints..." value={historyData.any_other_complaints} onChange={(e) => handleHistoryChange("any_other_complaints", e.target.value)} style={{ borderRadius: "10px", border: "1px solid #b2ebf2", padding: "8px", fontSize: "12px" }} />
+              <Form.Control as="textarea" rows={9} placeholder="Describe other complaints..." value={historyData.any_other_complaints} onChange={(e) => handleHistoryChange("any_other_complaints", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
             </div>
           </Col>
 
@@ -418,7 +418,7 @@ const PatientHistoryCard = ({
                   <Form.Check key={m} label={m} checked={historyData.ongoing_medicines.includes(m)} onChange={() => handleHistoryCheckboxChange("ongoing_medicines", m)} style={{ fontSize: "12px", fontWeight: "700" }} />
                 ))}
               </div>
-              <Form.Control as="textarea" rows={3} placeholder="Mention any other daily medications..." value={historyData.ongoing_medicines_other} onChange={(e) => handleHistoryChange("ongoing_medicines_other", e.target.value)} style={{ borderRadius: "10px", border: "1px solid #0097a7", fontSize: "12px", padding: "6px" }} />
+              <Form.Control as="textarea" rows={3} placeholder="Mention any other daily medications..." value={historyData.ongoing_medicines_other} onChange={(e) => handleHistoryChange("ongoing_medicines_other", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
             </div>
           </Col>
         </Row>
@@ -439,7 +439,7 @@ const PatientHistoryCard = ({
               <Col md={4} key={inv.id} className="mb-2">
                 <Form.Check label={inv.label} checked={historyData.investigations.includes(inv.id)} onChange={() => handleHistoryCheckboxChange("investigations", inv.id)} className="mb-1" style={{ fontWeight: "700", color: "#006064", fontSize: "11px" }} />
                 {historyData.investigations.includes(inv.id) && (
-                  <Form.Control size="sm" placeholder="Findings / Value" value={historyData.investigation_notes[inv.id] || ""} onChange={(e) => handleInvestigationCommentChange(inv.id, e.target.value)} className="animate__animated animate__fadeIn" style={{ borderRadius: "8px", border: "1px solid #00acc1", fontSize: "11px" }} />
+                  <Form.Control size="sm" placeholder="Findings / Value" value={historyData.investigation_notes[inv.id] || ""} onChange={(e) => handleInvestigationCommentChange(inv.id, e.target.value)} className="animate__animated animate__fadeIn" style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
                 )}
               </Col>
             ))}
@@ -476,12 +476,12 @@ const PatientHistoryCard = ({
         <Row className="mt-3 g-2">
           <Col md={6}>
             <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>Known Case Of</Form.Label>
-            <Form.Control as="textarea" rows={1} placeholder="Chronic conditions..." value={historyData.known_case_of} onChange={(e) => handleHistoryChange("known_case_of", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px", fontSize: "12px" }} />
+            <Form.Control as="textarea" rows={1} placeholder="Chronic conditions..." value={historyData.known_case_of} onChange={(e) => handleHistoryChange("known_case_of", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
           </Col>
           <Col md={6}>
-            <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>Assistance Doctor</Form.Label>
-            <Form.Select value={historyData.assistance_doctor} onChange={(e) => handleHistoryChange("assistance_doctor", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px", fontSize: "12px" }}>
-              <option value="">Select Assistance Doctor</option>
+            <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>Assistant Doctor</Form.Label>
+            <Form.Select value={historyData.assistance_doctor} onChange={(e) => handleHistoryChange("assistance_doctor", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }}>
+              <option value="">Select Assistant Doctor</option>
               {assistanceDoctors.map((doc) => (
                 <option key={doc.doctor_id} value={doc.doctor_id}>
                   {doc.name}

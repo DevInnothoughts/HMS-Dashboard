@@ -19,10 +19,10 @@ import PatientHistoryCard from "./PatientHistoryCard";
 import DiagnosisCard from "./DiagnosisCard";
 import DiagnosisPrintView from "./DiagnosisPrintView";
 import FollowUpCard from "./FollowUpCard";
-import OtherTestsCard from "./OtherTestsCard";
+// import OtherTestsCard from "./OtherTestsCard";
 import ProctoscopyCard from "./ProctoscopyCard";
 import OpdPrescriptionCard from "./OpdPrescriptionCard";
-import SurgeryDetailsCard from "./SurgeryDetailsCard";
+// import SurgeryDetailsCard from "./SurgeryDetailsCard";
 import DischargeCard from "./DischargeCard";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import DatePicker from "react-datepicker";
@@ -1472,6 +1472,7 @@ const DoctorPatientDetails = () => {
     allergies: "",
     diagnosis: "",
     surgery_note: "",
+    surgery_type: [],
     investigations: {
       HB: "", WBC: "", PLT: "", BSL: "", CREATININE: "", BILLIRUBIN: "", PSA: "", BT: "", CT: "", PT: "", INR: "", HIV: "Negative", HCV: "", HBSAG: "Negative"
     },
@@ -1489,20 +1490,9 @@ const DoctorPatientDetails = () => {
     consultant_doctor: "",
     assistance_doctor: "",
     assistance_surgeon: "",
-    patient_name: "",
-    patient_age: "",
-    patient_sex: "",
     address: "",
     treatment_given: [],
     treatment_on_discharge: [],
-    doa: "",
-    dod: "",
-    admission_time: "",
-    discharge_time: "",
-    ipd_no: "",
-    spo2: "",
-    bp: "",
-    pulse: ""
   };
 
   const [dischargeData, setDischargeData] = useState(initialDischargeState);
@@ -2292,7 +2282,7 @@ const DoctorPatientDetails = () => {
           setAssistanceDoctors(result.data || []);
         }
       } catch (error) {
-        console.error("Error fetching assistance doctors:", error);
+        console.error("Error fetching assistant doctors:", error);
       }
     };
 
@@ -2659,6 +2649,32 @@ const DoctorPatientDetails = () => {
 
   const handleDischargeChange = (field, value) => {
     setDischargeData(prev => ({ ...prev, [field]: value }));
+
+    // Auto-populate local care and note/advice when surgery type is selected
+    if (field === "surgery_type" && Array.isArray(value) && value.length > 0) {
+      // Find what was just added (compared to previous state)
+      const prevSurgeryTypes = dischargeData.surgery_type || [];
+      const newlyAdded = value.find(v => !prevSurgeryTypes.includes(v));
+
+      if (newlyAdded) {
+        fetch(`${BASE_URL}/V1/doctor/get-surgery-discharge-details?surgeryType=${encodeURIComponent(newlyAdded)}&location=${currentLocation}`)
+          .then(res => res.json())
+          .then(result => {
+            if (result.statusCode === 200 && result.data) {
+              const { local_care, note } = result.data;
+              setDischargeData(prev => ({
+                ...prev,
+                local_care: local_care || prev.local_care,
+                note_advice: note || prev.note_advice
+              }));
+              toast.success(`Loaded defaults for ${newlyAdded}`);
+            }
+          })
+          .catch(err => {
+            console.error("Error fetching surgery discharge details:", err);
+          });
+      }
+    }
   };
 
   const handleDischargeInvestigationChange = (field, value) => {
@@ -2696,11 +2712,11 @@ const DoctorPatientDetails = () => {
     { id: "patient-history", label: "Patient History", icon: "activity" },
     { id: "diagnosis", label: "Diagnosis", icon: "clipboard" },
     { id: "follow-up", label: "Follow Up", icon: "calendar" },
-    { id: "other-tests", label: "Other Tests", icon: "file-text" },
+    // { id: "other-tests", label: "Other Tests", icon: "file-text" },
     { id: "proctoscopy", label: "Proctoscopy", icon: "search" },
     { id: "opd-prescription", label: "OPD Prescription", icon: "edit-3" },
-    { id: "surgery-details", label: "Surgery Details", icon: "scissors" },
-    { id: "discharge-card", label: "Discharge Card", icon: "external-link" },
+    // { id: "surgery-details", label: "Surgery Details", icon: "scissors" },
+    { id: "discharge-card", label: "Discharge Card", icon: "log-out" },
   ];
 
   const renderPersonalInfo = () => (
@@ -3021,7 +3037,7 @@ const DoctorPatientDetails = () => {
                   loading={loading}
                 />
               )}
-              {activeTab === "other-tests" && (
+              {/* {activeTab === "other-tests" && (
                 <OtherTestsCard
                   otherTestData={otherTestData}
                   handleOtherTestChange={handleOtherTestChange}
@@ -3034,7 +3050,7 @@ const DoctorPatientDetails = () => {
                   loading={loading}
                   assistanceDoctors={assistanceDoctors}
                 />
-              )}
+              )} */}
               {activeTab === "proctoscopy" && (
                 <ProctoscopyCard
                   proctoscopyData={proctoscopyData}
@@ -3067,7 +3083,7 @@ const DoctorPatientDetails = () => {
                   location={currentLocation}
                 />
               )}
-              {activeTab === "surgery-details" && (
+              {/* {activeTab === "surgery-details" && (
                 <SurgeryDetailsCard
                   surgeryData={surgeryData}
                   handleSurgeryChange={handleSurgeryChange}
@@ -3082,7 +3098,7 @@ const DoctorPatientDetails = () => {
                   anaesthetists={anaesthetists}
                 />
 
-              )}
+              )} */}
               {activeTab === "discharge-card" && (
                 <DischargeCard
                   dischargeData={dischargeData}

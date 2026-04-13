@@ -66,10 +66,10 @@ const ProctoscopyCard = ({
               { label: "Age / Sex", value: `${formData.age} / ${formData.sex}`, isReadonly: true },
             ].map((item, idx) => (
               <Col md={4} key={idx}>
-                <div className="mb-1" style={{ fontSize: "11px", color: "#006064", textTransform: "uppercase", fontWeight: "700", letterSpacing: "0.5px" }}>
+                <div className="mb-1" style={{ fontSize: "11px", color: "#006064", textTransform: "uppercase", fontWeight: "700", letterSpacing: "0.5px", }}>
                   {item.label}
                 </div>
-                <div className="fw-bold text-dark p-2 rounded" style={{ fontSize: "13px", backgroundColor: "#d9dee0ff", border: "1px solid #80deea", cursor: "not-allowed" }}>
+                <div className="fw-bold text-dark p-5 rounded" style={{ fontSize: "12px", backgroundColor: "#d9dee0ff", border: "1px solid #80deea", cursor: "not-allowed", padding: "6px 8px" }}>
                   {item.value || "-"}
                 </div>
               </Col>
@@ -86,12 +86,12 @@ const ProctoscopyCard = ({
               type="date"
               value={proctoscopyData.procto_date}
               onChange={(e) => handleProctoscopyChange("procto_date", e.target.value)}
-              style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "8px 10px", fontSize: "12px", background: "white", minHeight: "38px" }}
+              style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px", background: "white" }}
             />
           </Col>
 
           {/* Column 2: Interpretations */}
-          <Col md={3}>
+          {/* <Col md={3}>
             <h6 className="fw-bold mb-5" style={{ color: "#006064", fontSize: "12px" }}>Interpretations</h6>
             <Form.Control
               as="textarea"
@@ -101,23 +101,23 @@ const ProctoscopyCard = ({
               placeholder="Findings..."
               style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "8px 12px", fontSize: "12px", minHeight: "110px" }}
             />
-          </Col>
+          </Col> */}
 
           {/* Column 3: Uploads */}
-          <Col md={3}>
+          {/* <Col md={3}>
             <h6 className="fw-bold mb-5" style={{ color: "#006064", fontSize: "12px" }}>
               <FeatherIcon icon="upload-cloud" size="14" className="me-2" />Upload Images
             </h6>
             <div className="p-2 rounded border bg-white shadow-sm" style={{ border: "2px dashed #80deea", backgroundColor: "#f8fbfc", minHeight: "110px" }}>
 
-              {/* Previews Summary */}
+             
               {(proctoscopyData.upload_img || (proctoscopyData.images && proctoscopyData.images.length > 0)) && (
                 <div className="d-flex flex-wrap gap-1 mb-2">
-                  {/* Saved Imgs */}
+                 
                   {proctoscopyData.upload_img && proctoscopyData.upload_img.split(",").filter(Boolean).map((img, index) => (
                     <img key={`s-${index}`} src={`${uploadBaseUrl}/${img}`} alt="saved" style={{ width: "35px", height: "35px", borderRadius: "4px", objectFit: "cover", border: "1px solid #00838f" }} />
                   ))}
-                  {/* Selected Imgs */}
+                 
                   {proctoscopyData.images && proctoscopyData.images.map((file, index) => (
                     <img key={`n-${index}`} src={URL.createObjectURL(file)} alt="new" style={{ width: "35px", height: "35px", borderRadius: "4px", objectFit: "cover", border: "1px dashed #4caf50" }} />
                   ))}
@@ -132,7 +132,7 @@ const ProctoscopyCard = ({
                 style={{ borderRadius: "6px", border: "1px solid #80deea", fontSize: "11px", padding: "4px" }}
               />
             </div>
-          </Col>
+          </Col> */}
 
           {/* Column 4: AI Tool */}
           <Col md={3}>
@@ -167,12 +167,12 @@ const ProctoscopyCard = ({
         <Button
           onClick={onSaveProctoscopy}
           disabled={loading}
-          style={{ backgroundColor: "#00838f", borderColor: "#00838f", padding: "10px 60px", borderRadius: "40px", fontWeight: "800", fontSize: "14px", boxShadow: "0 8px 25px rgba(0, 131, 143, 0.4)", textTransform: "uppercase", letterSpacing: "1px" }}
+          style={{ backgroundColor: "#00838f", borderColor: "#00838f", padding: "10px 60px", borderRadius: "40px", fontWeight: "800", fontSize: "13px", boxShadow: "0 8px 25px rgba(0, 131, 143, 0.4)", textTransform: "uppercase", letterSpacing: "1px" }}
         >
           {loading ? (
             <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
           ) : (
-            <FeatherIcon icon="save" size="20" className="me-2" />
+            <FeatherIcon icon="save" size="18" className="me-2" />
           )}
           {loading ? "SAVING..." : "SAVE PROCTOSCOPY DATA"}
         </Button>

@@ -1,3 +1,4 @@
+/*
 import React from "react";
 import { Row, Col, Form, Button, Dropdown } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
@@ -119,7 +120,7 @@ const OtherTestsCard = ({
         <Row className="g-2">
           <Col md={2}>
             <Form.Label className="fw-bold" style={{ fontSize: "11px", color: "#006064" }}>Select Lab Name <span className="text-danger">*</span></Form.Label>
-            <Form.Select value={otherTestData.lab_type} onChange={(e) => handleOtherTestChange("lab_type", e.target.value)} required style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px", height: "33px" }}>
+            <Form.Select value={otherTestData.lab_type} onChange={(e) => handleOtherTestChange("lab_type", e.target.value)} required style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }}>
               <option value="">Select Lab Name</option>
               <option value="AG Diagnostics">A.G Diagnostics</option>
               <option value="Mega Vision">Mega Vision</option>
@@ -127,7 +128,7 @@ const OtherTestsCard = ({
           </Col>
           <Col md={2}>
             <Form.Label className="fw-bold" style={{ fontSize: "11px", color: "#006064" }}>Date <span className="text-danger">*</span></Form.Label>
-            <Form.Control type="date" value={otherTestData.test_date} onChange={(e) => handleOtherTestChange("test_date", e.target.value)} required style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px", height: "33px" }} />
+            <Form.Control type="date" value={otherTestData.test_date} onChange={(e) => handleOtherTestChange("test_date", e.target.value)} required style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
           </Col>
           <Col md={3}>
             <Form.Label className="fw-bold" style={{ fontSize: "11px", color: "#006064" }}>Test Type <span className="text-danger">*</span></Form.Label>
@@ -145,8 +146,8 @@ const OtherTestsCard = ({
           </Col>
           <Col md={3}>
             <Form.Label className="fw-bold" style={{ fontSize: "11px", color: "#006064" }}>Ref. Doctor Name <span className="text-danger">*</span></Form.Label>
-            <Form.Select value={otherTestData.refDoctor} onChange={(e) => handleOtherTestChange("refDoctor", e.target.value)} required style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px", height: "33px" }}>
-              <option value="">Select Assistance Doctor</option>
+            <Form.Select value={otherTestData.refDoctor} onChange={(e) => handleOtherTestChange("refDoctor", e.target.value)} required style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }}>
+              <option value="">Select Doctor</option>
               {assistanceDoctors.length > 0 ? (
                 assistanceDoctors.map((doc) => (
                   <option key={doc.doctor_id} value={doc.doctor_id}>
@@ -154,13 +155,13 @@ const OtherTestsCard = ({
                   </option>
                 ))
               ) : (
-                <option value="">No Assistance Doctors Available</option>
+                <option value="">No Doctor Available</option>
               )}
             </Form.Select>
           </Col>
           <Col md={2}>
             <Form.Label className="fw-bold" style={{ fontSize: "11px", color: "#006064" }}>Test Fee <span className="text-danger">*</span></Form.Label>
-            <Form.Select value={otherTestData.testFeeStatus} onChange={(e) => handleOtherTestChange("testFeeStatus", e.target.value)} required style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px", height: "33px" }}>
+            <Form.Select value={otherTestData.testFeeStatus} onChange={(e) => handleOtherTestChange("testFeeStatus", e.target.value)} required style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }}>
               <option value="">Select Fee Status</option>
               <option value="true">Yes</option>
               <option value="NO">No</option>
@@ -174,7 +175,7 @@ const OtherTestsCard = ({
         <Row className="g-2">
           <Col md={3}>
             <Form.Label className="fw-bold" style={{ fontSize: "11px", color: "#006064" }}>Visit Type <span className="text-danger">*</span></Form.Label>
-            <Form.Select value={otherTestData.visitType} onChange={(e) => handleOtherTestChange("visitType", e.target.value)} required style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px", height: "33px" }}>
+            <Form.Select value={otherTestData.visitType} onChange={(e) => handleOtherTestChange("visitType", e.target.value)} required style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }}>
               <option value="">Select Visit Type</option>
               <option value="OPD">OPD</option>
               <option value="IPD">IPD</option>
@@ -208,3 +209,4 @@ const OtherTestsCard = ({
 };
 
 export default OtherTestsCard;
+*/

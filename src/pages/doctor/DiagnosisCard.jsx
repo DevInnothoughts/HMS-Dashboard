@@ -1,6 +1,9 @@
 import React from "react";
 import { Row, Col, Card, Nav, Form, Button, Spinner, Dropdown } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
+import { generateDiagnosisStream } from "../../utils/aiDiagnosisHelper";
+import { toast } from "react-hot-toast";
+
 
 const DiagnosisCard = ({
   diagnosisData,
@@ -19,6 +22,44 @@ const DiagnosisCard = ({
   doctors = [],
   assistanceDoctors = []
 }) => {
+  const [aiLoading, setAiLoading] = React.useState(false);
+
+  const handleAIGenerateDiagnosis = async () => {
+    // Collect all specialties that have data
+    const allFindings = {};
+
+    Object.entries(diagnosisData.speciality_data || {}).forEach(([spec, data]) => {
+      if (Array.isArray(data)) {
+        if (data.length > 0) allFindings[spec] = data.join(", ");
+      } else if (typeof data === "string" && data.trim() !== "") {
+        allFindings[spec] = data.trim();
+      }
+    });
+
+    if (Object.keys(allFindings).length === 0) {
+      toast.error("Please select at least one specialty sub-type or enter findings.");
+      return;
+    }
+
+    setAiLoading(true);
+    handleDiagnosisChange("diagnosis_text", "");
+
+    await generateDiagnosisStream({
+      allFindings, // Pass all findings instead of just one
+      onChunk: (text) => {
+        handleDiagnosisChange("diagnosis_text", text);
+      },
+      onComplete: () => {
+        setAiLoading(false);
+        toast.success("Unified diagnosis generated successfully!");
+      },
+      onError: (err) => {
+        setAiLoading(false);
+        toast.error(`Error: ${err}`);
+      }
+    });
+  };
+
   return (
     <div className="animate__animated animate__fadeIn">
       <style>{`
@@ -74,15 +115,15 @@ const DiagnosisCard = ({
         <Row>
           <Col md={2} className="mb-3">
             <Form.Label className="fw-bold" style={{ fontSize: "11px", color: "#006064" }}>Diagnosis Date</Form.Label>
-            <Form.Control type="date" value={diagnosisData.date_diagnosis} onChange={(e) => handleDiagnosisChange("date_diagnosis", e.target.value)} style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "13px" }} />
+            <Form.Control type="date" value={diagnosisData.date_diagnosis} onChange={(e) => handleDiagnosisChange("date_diagnosis", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
           </Col>
-          <Col md={5} className="mb-3">
+          {/* <Col md={5} className="mb-3">
             <Form.Label className="fw-bold" style={{ fontSize: "11px", color: "#006064" }}>Investigation Orders</Form.Label>
             <Form.Control as="textarea" rows={2} value={diagnosisData.investigation_orders} onChange={(e) => handleDiagnosisChange("investigation_orders", e.target.value)} placeholder="e.g. USG, CBC, Chest X-Ray..." style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "13px" }} />
-          </Col>
-          <Col md={5} className="mb-2">
+          </Col> */}
+          <Col md={10} className="mb-2">
             <Form.Label className="fw-bold" style={{ fontSize: "11px", color: "#006064" }}>Diagnosis <span className="text-danger">*</span></Form.Label>
-            <Form.Control as="textarea" rows={2} placeholder="Provide a clinical conclusion..." value={diagnosisData.diagnosis_text} onChange={(e) => handleDiagnosisChange("diagnosis_text", e.target.value)} required style={{ borderRadius: "8px", border: "2px solid #b2ebf2", fontSize: "13px", padding: "8px 12px" }} />
+            <Form.Control as="textarea" rows={7} placeholder="Provide a clinical conclusion..." value={diagnosisData.diagnosis_text} onChange={(e) => handleDiagnosisChange("diagnosis_text", e.target.value)} required style={{ borderRadius: "10px", border: "2px solid #b2ebf2", fontSize: "12px", padding: "6px 12px" }} />
           </Col>
         </Row>
       </div>
@@ -91,7 +132,7 @@ const DiagnosisCard = ({
       <div className="p-3 bg-white rounded shadow-sm border mb-3 d-flex flex-wrap align-items-center gap-3" style={{ borderLeft: "5px solid #00838f" }}>
         <h5 className="fw-bold mb-0" style={{ color: "#00838f", textTransform: "uppercase", fontSize: "14px", minWidth: "100px", padding: "10px" }}>Advice Type</h5>
         <div className="d-flex flex-wrap gap-3 align-items-center px-3" style={{ borderLeft: "2px solid #b2ebf2" }}>
-          {["Medication", "Surgery", "Test"].map(type => (
+          {["Medication", "Surgery", "Test", "NCDPA", "Referred to another doctor"].map(type => (
             <Form.Check
               key={type}
               label={type}
@@ -114,7 +155,7 @@ const DiagnosisCard = ({
               placeholder="Other / Test Comment"
               value={diagnosisData.diagnosis_comment}
               onChange={(e) => handleDiagnosisChange("diagnosis_comment", e.target.value)}
-              style={{ borderRadius: "8px", border: "1px solid #80deea", padding: "6px 12px", fontSize: "11px", height: "80px" }}
+              style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px", minHeight: "80px" }}
             />
           </div>
         )}
@@ -200,9 +241,39 @@ const DiagnosisCard = ({
                   ...prev,
                   speciality_data: { ...prev.speciality_data, [diagnosisData.active_speciality]: val }
                 }));
-              }} style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "11px" }} />
+              }} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+            )}
+
+            {diagnosisData.active_speciality && (
+              <div className="mt-4 text-end">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleAIGenerateDiagnosis}
+                  disabled={aiLoading}
+                  style={{
+                    backgroundColor: "#00838f",
+                    borderColor: "#00838f",
+                    borderRadius: "30px",
+                    fontWeight: "700",
+                    padding: "8px 20px",
+                    fontSize: "12px",
+                    boxShadow: "0 4px 10px rgba(0, 131, 143, 0.2)",
+                    transition: "all 0.2s"
+                  }}
+                  onMouseOver={(e) => e.target.style.transform = "scale(1.05)"}
+                  onMouseOut={(e) => e.target.style.transform = "scale(1)"}
+                >
+                  {aiLoading ? (
+                    <><Spinner size="sm" className="me-2" /> ANALYZING...</>
+                  ) : (
+                    <><FeatherIcon icon="cpu" size="14" className="me-2" /> GENERATE AI DIAGNOSIS</>
+                  )}
+                </Button>
+              </div>
             )}
           </div>
+
         </Card.Body>
       </Card>
 
@@ -210,7 +281,7 @@ const DiagnosisCard = ({
       <div className="p-3 bg-white rounded shadow-sm border mb-3" style={{ borderLeft: "5px solid #0097a7" }}>
         <h5 className="fw-bold mb-3" style={{ color: "#00838f", textTransform: "uppercase", fontSize: "14px", padding: "5px" }}>Medicines & Procedures</h5>
         <div className="p-3 rounded mb-3" style={{ backgroundColor: "#f8fbfc", border: "2px solid #e0f2f1" }}>
-          <div className="d-flex flex-wrap align-items-center gap-3 mb-3">
+          {/* <div className="d-flex flex-wrap align-items-center gap-3 mb-3">
             <h6 className="fw-bold mb-0" style={{ color: "#006064", fontSize: "13px", minWidth: "150px" }}>Medicines Prescribed</h6>
             <div className="d-flex flex-wrap gap-3 align-items-center px-3" style={{ borderLeft: "2px solid #b2ebf2" }}>
               {["AAC", "PROBIOTICS", "NSAIDS", "ANTIBIOTICS", "ANTACID"].map(m => (
@@ -227,24 +298,24 @@ const DiagnosisCard = ({
               />
             </div>
           </div>
-          <hr className="my-3" style={{ borderColor: "#b2ebf2" }} />
+          <hr className="my-3" style={{ borderColor: "#b2ebf2" }} /> */}
           <Row>
             <Col md={4} className="mb-2">
               <Form.Label className="fw-bold" style={{ fontSize: "13px", color: "#006064" }}>Surgical Advice</Form.Label>
-              <Form.Control as="textarea" rows={2} placeholder="Describe recommended surgery..." value={diagnosisData.surgical_advice} onChange={(e) => handleDiagnosisChange("surgical_advice", e.target.value)} style={{ borderRadius: "8px", border: "1px solid #b2ebf2", padding: "6px 12px", fontSize: "13px" }} />
+              <Form.Control as="textarea" rows={2} placeholder="Describe recommended surgery..." value={diagnosisData.surgical_advice} onChange={(e) => handleDiagnosisChange("surgical_advice", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
             </Col>
             <Col md={4} className="mb-10">
               <Form.Label className="fw-bold" style={{ fontSize: "13px", color: "#006064" }}>Comment</Form.Label>
-              <Form.Control as="textarea" rows={2} placeholder="Additional advice or comments..." value={diagnosisData.general_comment} onChange={(e) => handleDiagnosisChange("general_comment", e.target.value)} style={{ borderRadius: "8px", border: "1px solid #b2ebf2", padding: "6px 12px", fontSize: "13px" }} />
+              <Form.Control as="textarea" rows={2} placeholder="Additional advice or comments..." value={diagnosisData.general_comment} onChange={(e) => handleDiagnosisChange("general_comment", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
             </Col>
-            <Col md={4} style={{ marginTop: "50px" }}>
+            {/* <Col md={4} style={{ marginTop: "50px" }}>
               <div className="d-flex align-items-center gap-3 p-10 rounded" style={{ backgroundColor: "#63ebe8ff" }}>
                 <Form.Check type="checkbox" label="Check Surgical Date" checked={diagnosisData.has_surgical_date} onChange={(e) => handleDiagnosisChange("has_surgical_date", e.target.checked)} style={{ fontSize: "14px", fontWeight: "700", color: "#000000ff" }} />
                 {diagnosisData.has_surgical_date && (
                   <Form.Control type="date" value={diagnosisData.surgical_date} onChange={(e) => handleDiagnosisChange("surgical_date", e.target.value)} className="animate__animated animate__fadeInLeft" style={{ width: "125px", borderRadius: "8px", border: "2px solid #00acc1", padding: "4px 8px", fontSize: "13px" }} />
                 )}
               </div>
-            </Col>
+            </Col> */}
           </Row>
         </div>
       </div>
@@ -258,7 +329,7 @@ const DiagnosisCard = ({
           ))}
         </div>
         <div className="ms-auto flex-grow-1" style={{ minWidth: "250px" }}>
-          <Form.Control as="textarea" rows={1} placeholder="Policy or payment details..." value={diagnosisData.category_comment} onChange={(e) => handleDiagnosisChange("category_comment", e.target.value)} style={{ borderRadius: "8px", border: "1px solid #80deea", padding: "6px 12px", fontSize: "13px" }} />
+          <Form.Control as="textarea" rows={1} placeholder="Estimate Package..." value={diagnosisData.category_comment} onChange={(e) => handleDiagnosisChange("category_comment", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
         </div>
       </div>
 
@@ -273,7 +344,7 @@ const DiagnosisCard = ({
               <Col md={3} key={advice} className="mb-3">
                 <Form.Check label={advice.toUpperCase()} checked={diagnosisData.medical_advice.includes(advice)} onChange={() => handleDiagnosisCheckboxChange("medical_advice", advice)} className="mb-1" style={{ fontSize: "13px", fontWeight: "700", color: "#006064" }} />
                 {diagnosisData.medical_advice.includes(advice) && (
-                  <Form.Control size="sm" placeholder={`Notes for ${advice}`} value={diagnosisData.medical_advice_notes[advice] || ""} onChange={(e) => handleMedicalAdviceNoteChange(advice, e.target.value)} className="animate__animated animate__fadeIn" style={{ borderRadius: "8px", border: "1px solid #80deea", padding: "6px 8px", fontSize: "13px" }} />
+                  <Form.Control size="sm" placeholder={`Notes for ${advice}`} value={diagnosisData.medical_advice_notes[advice] || ""} onChange={(e) => handleMedicalAdviceNoteChange(advice, e.target.value)} className="animate__animated animate__fadeIn" style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
                 )}
               </Col>
             ))}
@@ -287,7 +358,7 @@ const DiagnosisCard = ({
         <Row className="g-2">
           <Col md={6}>
             <Form.Label className="fw-bold" style={{ fontSize: "12px" }}>Consultant Doctor</Form.Label>
-            <Form.Select value={diagnosisData.consultant_doctor} onChange={(e) => handleDiagnosisChange("consultant_doctor", e.target.value)} style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "13px" }}>
+            <Form.Select value={diagnosisData.consultant_doctor} onChange={(e) => handleDiagnosisChange("consultant_doctor", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }}>
               <option value="">Select Consultant Doctor</option>
               {doctors.map((doc) => (
                 <option key={doc.doctor_id} value={doc.doctor_id}>
@@ -297,9 +368,9 @@ const DiagnosisCard = ({
             </Form.Select>
           </Col>
           <Col md={6}>
-            <Form.Label className="fw-bold" style={{ fontSize: "12px" }}>Assistance Doctor</Form.Label>
-            <Form.Select value={diagnosisData.assistance_doctor} onChange={(e) => handleDiagnosisChange("assistance_doctor", e.target.value)} style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "13px" }}>
-              <option value="">Select Assistance Doctor</option>
+            <Form.Label className="fw-bold" style={{ fontSize: "12px" }}>Assistant Doctor</Form.Label>
+            <Form.Select value={diagnosisData.assistance_doctor} onChange={(e) => handleDiagnosisChange("assistance_doctor", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }}>
+              <option value="">Select Assistant Doctor</option>
               {assistanceDoctors.map((doc) => (
                 <option key={doc.doctor_id} value={doc.doctor_id}>
                   {doc.name}

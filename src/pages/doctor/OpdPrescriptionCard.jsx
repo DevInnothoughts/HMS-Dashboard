@@ -75,7 +75,7 @@ const OpdPrescriptionCard = ({
         setPreopInvestOptions([]);
       }
 
-      // Fetch filtered Assistance Doctors
+      // Fetch filtered Assistant Doctors
       if (deptId) {
         try {
           const res = await fetch(`${BASE_URL}/V1/doctor/assistanceDoctorDropdown?location=${location}&departmentId=${deptId}`);
@@ -84,7 +84,7 @@ const OpdPrescriptionCard = ({
             setFilteredAssistanceDoctors(result.data || []);
           }
         } catch (error) {
-          console.error("Error fetching filtered assistance doctors:", error);
+          console.error("Error fetching filtered assistant doctors:", error);
         }
       } else {
         setFilteredAssistanceDoctors(assistanceDoctors);
@@ -167,13 +167,13 @@ const OpdPrescriptionCard = ({
             <Form.Control type="date" value={prescriptionData.creation_timestamp} onChange={(e) => handlePrescriptionChange("creation_timestamp", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
           </Col>
           <Col md={3} className="mb-3">
-            <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Assistance Doctor</Form.Label>
+            <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Assistant Doctor</Form.Label>
             <Form.Select
               value={prescriptionData.prescription_type === "Urology" ? prescriptionData.udoctor_id : prescriptionData.doctor_id}
               onChange={(e) => handlePrescriptionChange(prescriptionData.prescription_type === "Urology" ? "udoctor_id" : "doctor_id", e.target.value)}
               style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }}
             >
-              <option value="">Select Doctor</option>
+              <option value="">Select Assistant Doctor</option>
               {filteredAssistanceDoctors.map((doc) => (
                 <option key={doc.doctor_id} value={doc.doctor_id}>
                   {doc.name}
@@ -187,7 +187,7 @@ const OpdPrescriptionCard = ({
               <Dropdown.Toggle
                 variant="outline-info"
                 id="test-advice-dropdown"
-                className="w-100 text-start d-flex justify-content-between align-items-center"
+                className="w-200 text-start d-flex justify-content-between align-items-center"
                 style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px", backgroundColor: "white", color: "#333" }}
               >
                 Select Tests...
@@ -232,6 +232,7 @@ const OpdPrescriptionCard = ({
               ))}
             </div>
           </Col>
+
           {prescriptionData.prescription_type === "Urology" && (
             <Col md={3} className="mb-3">
               <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>PREOP Investigation</Form.Label>
@@ -285,57 +286,43 @@ const OpdPrescriptionCard = ({
               </div>
             </Col>
           )}
+
           <Col md={3} className="mb-3">
             <Form.Label className="fw-bold" style={{ fontSize: "12px" }}>Allergy</Form.Label>
-            <Form.Control as="textarea" rows={2} value={prescriptionData.allergy} onChange={(e) => handlePrescriptionChange("allergy", e.target.value)} placeholder="e.g. Penicillin, Sulfa..." style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+            <Form.Control as="textarea" rows={2} value={prescriptionData.allergy} onChange={(e) => handlePrescriptionChange("allergy", e.target.value)} placeholder="e.g. Penicillin, Sulfa..." style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
           </Col>
+
           <Col md={3} className="mb-3">
-            <Form.Label className="fw-bold" style={{ fontSize: "12px" }}>Diagnosis</Form.Label>
+            <Form.Label className="fw-bold" style={{ fontSize: "12px" }}>Provisional Diagnosis</Form.Label>
             {prescriptionData.prescription_type === "Urology" ? (
-              <Form.Control as="textarea" rows={2} value={prescriptionData.urodiagnosis} onChange={(e) => handlePrescriptionChange("urodiagnosis", e.target.value)} placeholder="Urology diagnosis..." style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+              <Form.Control as="textarea" rows={2} value={prescriptionData.urodiagnosis} onChange={(e) => handlePrescriptionChange("urodiagnosis", e.target.value)} placeholder="Urology diagnosis..." style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
             ) : (
-              <Form.Control as="textarea" rows={2} value={prescriptionData.diagnosis} onChange={(e) => handlePrescriptionChange("diagnosis", e.target.value)} placeholder="Core diagnosis for this visit..." style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+              <Form.Control as="textarea" rows={2} value={prescriptionData.diagnosis} onChange={(e) => handlePrescriptionChange("diagnosis", e.target.value)} placeholder="Core diagnosis for this visit..." style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
             )}
           </Col>
-          {prescriptionData.prescription_type !== "Urology" && (
-            <Col md={3} className="mb-3">
-              <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Advice sx</Form.Label>
-              <Form.Control as="textarea" rows={2} value={prescriptionData.advicesx} onChange={(e) => handlePrescriptionChange("advicesx", e.target.value)} style={{ borderRadius: "8px", border: "2px solid #b2ebf2", fontSize: "12px" }} />
-            </Col>
-          )}
-          <Col md={3} className="mb-3">
-            <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Admission Note</Form.Label>
-            <Form.Control as="textarea" rows={2} value={prescriptionData.admmisionnote} onChange={(e) => handlePrescriptionChange("admmisionnote", e.target.value)} style={{ borderRadius: "8px", border: "2px solid #b2ebf2", fontSize: "12px" }} />
-          </Col>
-        </Row>
 
-        {/* Urology Specific Fields */}
-        {prescriptionData.prescription_type === "Urology" && (
-          <>
-            <Row>
-              <Col md={6} className="mb-3">
+          {prescriptionData.prescription_type === "Urology" && (
+            <>
+              <Col md={3} className="mb-3">
                 <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Chief Complaints (C/O)</Form.Label>
-                <Form.Control as="textarea" rows={2} value={prescriptionData.medicalchiefcomplaints} onChange={(e) => handlePrescriptionChange("medicalchiefcomplaints", e.target.value)} placeholder="Enter chief complaints..." style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+                <Form.Control as="textarea" rows={2} value={prescriptionData.medicalchiefcomplaints} onChange={(e) => handlePrescriptionChange("medicalchiefcomplaints", e.target.value)} placeholder="Enter chief complaints..." style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
               </Col>
-              <Col md={6} className="mb-3">
+              <Col md={3} className="mb-3">
                 <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Known Case Of</Form.Label>
-                <Form.Control as="textarea" rows={2} value={prescriptionData.medicalhistory} onChange={(e) => handlePrescriptionChange("medicalhistory", e.target.value)} placeholder="Medical history..." style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+                <Form.Control as="textarea" rows={2} value={prescriptionData.medicalhistory} onChange={(e) => handlePrescriptionChange("medicalhistory", e.target.value)} placeholder="Medical history..." style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
               </Col>
-            </Row>
-            <Row>
-              <Col md={6} className="mb-3">
+              <Col md={3} className="mb-3">
                 <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Past Surgical History (S/P)</Form.Label>
-                <Form.Control as="textarea" rows={2} value={prescriptionData.medicalpasthistory} onChange={(e) => handlePrescriptionChange("medicalpasthistory", e.target.value)} placeholder="Past surgeries..." style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+                <Form.Control as="textarea" rows={2} value={prescriptionData.medicalpasthistory} onChange={(e) => handlePrescriptionChange("medicalpasthistory", e.target.value)} placeholder="Past surgeries..." style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
               </Col>
-              <Col md={6} className="mb-3">
+              <Col md={3} className="mb-3">
                 <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Investigation</Form.Label>
-                <Form.Control as="textarea" rows={2} value={prescriptionData.investigation} onChange={(e) => handlePrescriptionChange("investigation", e.target.value)} placeholder="Previous investigations..." style={{ borderRadius: "8px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+                <Form.Control as="textarea" rows={2} value={prescriptionData.investigation} onChange={(e) => handlePrescriptionChange("investigation", e.target.value)} placeholder="Previous investigations..." style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
               </Col>
-            </Row>
-          </>
-        )}
-        <Row>
-          <Col md={6} className="mb-3">
+            </>
+          )}
+
+          <Col md={3} className="mb-3">
             <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Next Appointment <span className="text-danger">*</span></Form.Label>
             <Form.Select value={prescriptionData.patient_type} onChange={(e) => handlePrescriptionChange("patient_type", e.target.value)} style={{ borderRadius: "10px", border: "1px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }}>
               <option value="">Select Appointment Type</option>
@@ -345,9 +332,16 @@ const OpdPrescriptionCard = ({
               <option value="nofollowupappointment">No Followup Appointment</option>
             </Form.Select>
           </Col>
-          <Col md={6} className="mb-3">
-            <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Next Appointment Date</Form.Label>
-            <Form.Control type="date" value={prescriptionData["next-appo-date"]} onChange={(e) => handlePrescriptionChange("next-appo-date", e.target.value)} style={{ borderRadius: "10px", border: "1px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+          <Col md={3} className="mb-3">
+            <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>Next Appointment Date <span className="text-danger">*</span></Form.Label>
+            <Form.Control
+              required
+              type="date"
+              value={prescriptionData["next-appo-date"]}
+              onChange={(e) => handlePrescriptionChange("next-appo-date", e.target.value)}
+              disabled={prescriptionData.patient_type === "surgery_patient" || prescriptionData.patient_type === "nofollowupappointment"}
+              style={{ borderRadius: "10px", border: "1px solid #b2ebf2", padding: "6px 12px", fontSize: "12px", backgroundColor: (prescriptionData.patient_type === "surgery_patient" || prescriptionData.patient_type === "nofollowupappointment") ? "#e9ecef" : "white" }}
+            />
           </Col>
         </Row>
 
@@ -361,11 +355,11 @@ const OpdPrescriptionCard = ({
         <Row className="align-items-end g-2">
           <Col md={3}>
             <Form.Label className="fw-bold text-muted" style={{ fontSize: "11px" }}>Advice Medicine</Form.Label>
-            <Form.Control type="text" value={currentMedicine.name} onChange={(e) => setCurrentMedicine(prev => ({ ...prev, name: e.target.value }))} placeholder="Start typing name..." style={{ borderRadius: "8px", border: "2px solid #e0f2f1", padding: "6px", fontSize: "12px" }} />
+            <Form.Control type="text" value={currentMedicine.name} onChange={(e) => setCurrentMedicine(prev => ({ ...prev, name: e.target.value }))} placeholder="Start typing name..." style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
           </Col>
           <Col md={1}>
             <Form.Label className="fw-bold text-muted" style={{ fontSize: "11px" }}>Qty</Form.Label>
-            <Form.Select value={currentMedicine.qty} onChange={(e) => setCurrentMedicine(prev => ({ ...prev, qty: e.target.value }))} style={{ borderRadius: "8px", border: "2px solid #e0f2f1", padding: "6px", fontSize: "12px" }}>
+            <Form.Select value={currentMedicine.qty} onChange={(e) => setCurrentMedicine(prev => ({ ...prev, qty: e.target.value }))} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }}>
               <option value="">Qty</option>
               {[...Array(60)].map((_, i) => (
                 <option key={i + 1} value={i + 1}>{i + 1}</option>
@@ -397,7 +391,7 @@ const OpdPrescriptionCard = ({
           </Col>
           <Col md={1}>
             <Form.Label className="fw-bold text-muted" style={{ fontSize: "11px" }}>Days</Form.Label>
-            <Form.Select value={currentMedicine.days} onChange={(e) => setCurrentMedicine(prev => ({ ...prev, days: e.target.value }))} style={{ borderRadius: "8px", border: "2px solid #e0f2f1", padding: "6px", fontSize: "12px" }}>
+            <Form.Select value={currentMedicine.days} onChange={(e) => setCurrentMedicine(prev => ({ ...prev, days: e.target.value }))} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }}>
               <option value="">Day</option>
               {["1", "2", "3", "5", "7", "10", "15", "30", "45", "60", "90", "120", "SOS"].map(d => <option key={d} value={d}>{d}</option>)}
             </Form.Select>
