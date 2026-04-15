@@ -2,13 +2,23 @@ import React from "react";
 import { Row, Col, Form, Button } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 
-const FollowUpCard = ({ followUpData, formData, handleFollowUpChange, onSaveFollowUp, loading }) => {
+const FollowUpCard = ({ followUpData, formData, handleFollowUpChange, onSaveFollowUp, onPrintFollowUp, loading }) => {
   return (
     <div className="animate__animated animate__fadeIn">
       <div className="p-3 bg-white rounded shadow-sm border mb-3" style={{ borderLeft: "5px solid #00acc1" }}>
-        <h5 className="fw-bold mb-3" style={{ color: "#00838f", padding: "5px", textTransform: "uppercase", letterSpacing: "1px", fontSize: "14px" }}>
-          <FeatherIcon icon="calendar" size="18" className="me-2 text-info" />Patient Follow Up Tracking
-        </h5>
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h5 className="fw-bold mb-0" style={{ color: "#00838f", padding: "5px", textTransform: "uppercase", letterSpacing: "1px", fontSize: "14px" }}>
+            <FeatherIcon icon="calendar" size="18" className="me-2 text-info" />Patient Follow Up Tracking
+          </h5>
+          <Button
+            variant="outline-secondary"
+            size="sm"
+            onClick={onPrintFollowUp}
+            style={{ borderRadius: "20px", fontSize: "12px", fontWeight: "700", padding: "7px 15px" }}
+          >
+            <FeatherIcon icon="printer" size="13" className="me-1" /> PRINT
+          </Button>
+        </div>
 
         {/* Patient Reference Summary */}
         <div className="p-3 mb-4 rounded border" style={{ backgroundColor: "#f1fcfd", border: "2px solid #b2ebf2" }}>
@@ -46,15 +56,15 @@ const FollowUpCard = ({ followUpData, formData, handleFollowUpChange, onSaveFoll
         <Row>
           <Col md={4} className="mb-10">
             <Form.Label className="fw-bold mb-3" style={{ fontSize: "11px", color: "#006064" }}>Diagnosis</Form.Label>
-            <Form.Control as="textarea" readOnly rows={1} value={followUpData.diagnosis} onChange={(e) => handleFollowUpChange("diagnosis", e.target.value)} placeholder="Duration" style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px", cursor: "not-allowed", backgroundColor: "#dcdedfff" }} />
+            <Form.Control as="textarea" readOnly rows={1} value={followUpData.diagnosis} onChange={(e) => handleFollowUpChange("diagnosis", e.target.value)} placeholder="Duration" style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px", cursor: "not-allowed", backgroundColor: "#ebeceeff" }} />
           </Col>
           <Col md={4} className="mb-1">
             <Form.Label className="fw-bold mb-3" style={{ fontSize: "11px", color: "#006064" }}>Advice</Form.Label>
-            <Form.Control as="textarea" readOnly rows={2} value={followUpData.advice} onChange={(e) => handleFollowUpChange("advice", e.target.value)} placeholder="Instructions for the patient..." style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px", cursor: "not-allowed", backgroundColor: "#dcdedfff" }} />
+            <Form.Control as="textarea" readOnly rows={2} value={followUpData.advice} onChange={(e) => handleFollowUpChange("advice", e.target.value)} placeholder="Instructions for the patient..." style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px", cursor: "not-allowed", backgroundColor: "#ebeceeff" }} />
           </Col>
           <Col md={4} className="mb-1">
             <Form.Label className="fw-bold mb-3" style={{ fontSize: "11px", color: "#006064" }}>Plan</Form.Label>
-            <Form.Control as="textarea" readOnly rows={2} value={followUpData.plan} onChange={(e) => handleFollowUpChange("plan", e.target.value)} placeholder="Next steps in treatment..." style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px", cursor: "not-allowed", backgroundColor: "#dcdedfff" }} />
+            <Form.Control as="textarea" readOnly rows={2} value={followUpData.plan} onChange={(e) => handleFollowUpChange("plan", e.target.value)} placeholder="Next steps in treatment..." style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px", cursor: "not-allowed", backgroundColor: "#ebeceeff" }} />
           </Col>
           <Col md={4} className="mb-1">
             <Form.Label className="fw-bold mb-3" style={{ fontSize: "11px", color: "#006064" }}>Present Complaints</Form.Label>
@@ -62,11 +72,11 @@ const FollowUpCard = ({ followUpData, formData, handleFollowUpChange, onSaveFoll
           </Col>
           <Col md={4} className="mb-1">
             <Form.Label className="fw-bold mb-3" style={{ fontSize: "11px", color: "#006064" }}>First Visit Date</Form.Label>
-            <Form.Control type="date" readOnly value={followUpData.first_visit_date} onChange={(e) => handleFollowUpChange("first_visit_date", e.target.value)} style={{ cursor: "not-allowed", backgroundColor: "#dcdedfff", borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+            <Form.Control type="date" readOnly value={followUpData.first_visit_date} onChange={(e) => handleFollowUpChange("first_visit_date", e.target.value)} style={{ cursor: "not-allowed", backgroundColor: "#ebeceeff", borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
           </Col>
           <Col md={4} className="mb-1">
             <Form.Label className="fw-bold mb-3" style={{ fontSize: "11px", color: "#006064" }}>Follow Up Visit No</Form.Label>
-            <Form.Control type="number" value={followUpData.visit_count} onChange={(e) => handleFollowUpChange("visit_count", e.target.value)} readOnly style={{ cursor: "not-allowed", backgroundColor: "#dcdedfff", borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+            <Form.Control type="number" value={followUpData.visit_count} onChange={(e) => handleFollowUpChange("visit_count", e.target.value)} readOnly style={{ cursor: "not-allowed", backgroundColor: "#ebeceeff", borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
           </Col>
         </Row>
       </div>

@@ -18,6 +18,7 @@ import FeatherIcon from "feather-icons-react";
 import PatientHistoryCard from "./PatientHistoryCard";
 import DiagnosisCard from "./DiagnosisCard";
 import DiagnosisPrintView from "./DiagnosisPrintView";
+import FollowUpPrintView from "./FollowUpPrintView";
 import FollowUpCard from "./FollowUpCard";
 // import OtherTestsCard from "./OtherTestsCard";
 import ProctoscopyCard from "./ProctoscopyCard";
@@ -829,6 +830,13 @@ const DoctorPatientDetails = () => {
     contentRef: diagPrintRef,
   });
 
+  const fupPrintRef = useRef();
+  const triggerPrintFollowUp = useReactToPrint({
+    contentRef: fupPrintRef,
+  });
+
+  const [isFupPrintReady, setIsFupPrintReady] = useState(false);
+
   // Trigger print only after async data has loaded into state
   useEffect(() => {
     if (isPrintReady) {
@@ -836,6 +844,59 @@ const DoctorPatientDetails = () => {
       setIsPrintReady(false);
     }
   }, [isPrintReady]);
+
+  useEffect(() => {
+    if (isFupPrintReady) {
+      triggerPrintFollowUp();
+      setIsFupPrintReady(false);
+    }
+  }, [isFupPrintReady]);
+
+  const handlePrintFollowUp = async () => {
+    setLoading(true);
+    try {
+      const historyResults = await Promise.all(
+        previousHistoryList.map(async (h) => {
+          const response = await fetch(
+            `${BASE_URL}/V1/doctor/get-patient-history/${formData.patient_id}?historyId=${h.id}&location=${currentLocation}`,
+            { headers: { "location": currentLocation, "x-hms-location": currentLocation } }
+          );
+          const result = await response.json();
+          return result.statusCode === 200 ? result.data : null;
+        })
+      );
+
+      const diagnosisResults = await Promise.all(
+        previousDiagnosisList.map(async (d) => {
+          const response = await fetch(
+            `${BASE_URL}/V1/doctor/get-diagnosis/${formData.patient_id}?date=${d.date}&location=${currentLocation}`,
+            { headers: { "location": currentLocation, "x-hms-location": currentLocation } }
+          );
+          const result = await response.json();
+          if (result.statusCode === 200 && result.data) {
+            const diag = result.data;
+            const assistDoc = assistanceDoctors.find(doc => doc.doctor_id == diag.assistance_doctor);
+            const consultDoc = doctors.find(doc => doc.doctor_id == diag.consultant_doctor);
+            return {
+              ...diag,
+              assistanceDoctorName: assistDoc ? assistDoc.name : diag.assistance_doctor,
+              consultantDoctorName: consultDoc ? consultDoc.name : diag.consultant_doctor
+            };
+          }
+          return null;
+        })
+      );
+
+      setAllHistoryDataForPrint(historyResults.filter(Boolean));
+      setAllDiagnosisDataForPrint(diagnosisResults.filter(Boolean));
+      setIsFupPrintReady(true);
+    } catch (error) {
+      console.error("Error loading data for follow-up print:", error);
+      toast.error("Could not load history for printing.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handlePrintDiagnosis = async () => {
     setLoading(true);
@@ -3034,6 +3095,7 @@ const DoctorPatientDetails = () => {
                   formData={formData}
                   handleFollowUpChange={handleFollowUpChange}
                   onSaveFollowUp={handleSaveFollowUp}
+                  onPrintFollowUp={handlePrintFollowUp}
                   loading={loading}
                 />
               )}
@@ -3063,6 +3125,7 @@ const DoctorPatientDetails = () => {
                   onSaveProctoscopy={handleSaveProctoscopy}
                   loading={loading}
                   uploadBaseUrl={UPLOAD_BASE_URL}
+                  location={currentLocation}
                 />
               )}
               {activeTab === "opd-prescription" && (
@@ -3140,6 +3203,13 @@ const DoctorPatientDetails = () => {
         <DiagnosisPrintView
           ref={diagPrintRef}
           patient={formData}
+          historyList={allHistoryDataForPrint}
+          diagnosisList={allDiagnosisDataForPrint}
+        />
+        <FollowUpPrintView
+          ref={fupPrintRef}
+          patient={formData}
+          followUpData={followUpData}
           historyList={allHistoryDataForPrint}
           diagnosisList={allDiagnosisDataForPrint}
         />

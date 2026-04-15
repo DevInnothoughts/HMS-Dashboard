@@ -175,16 +175,16 @@ const DischargeCard = ({
               type="text"
               value={dischargeData.patient_name}
               readOnly
-              style={{ cursor: "not-allowed", borderRadius: "10px", border: "2px solid #b2ebf2", backgroundColor: "#d9dee0ff", padding: "6px 12px", fontSize: "12px", fontWeight: "600" }}
+              style={{ cursor: "not-allowed", borderRadius: "10px", border: "2px solid #b2ebf2", backgroundColor: "#ebeceeff", padding: "6px 12px", fontSize: "12px", fontWeight: "600" }}
             />
           </Col>
           <Col md={3}>
             <Form.Label className="fw-bold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>AGE & SEX</Form.Label>
             <Form.Control
               type="text"
-              value={`${dischargeData.patient_age ? dischargeData.patient_age + 'Y' : ''} / ${dischargeData.patient_sex || ''}`}
+              value={`${dischargeData.patient_age ? dischargeData.patient_age + ' yrs' : ''} / ${dischargeData.patient_sex || ''}`}
               readOnly
-              style={{ cursor: "not-allowed", borderRadius: "10px", border: "2px solid #b2ebf2", backgroundColor: "#d9dee0ff", padding: "6px 12px", fontSize: "12px", fontWeight: "600" }}
+              style={{ cursor: "not-allowed", borderRadius: "10px", border: "2px solid #b2ebf2", backgroundColor: "#ebeceeff", padding: "6px 12px", fontSize: "12px", fontWeight: "600" }}
             />
           </Col>
           <Col md={3}>
@@ -224,7 +224,7 @@ const DischargeCard = ({
               rows={1}
               value={dischargeData.address}
               onChange={(e) => handleDischargeChange("address", e.target.value)}
-              style={{ cursor: "not-allowed", borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px", backgroundColor: "#d9dee0ff" }}
+              style={{ cursor: "not-allowed", borderRadius: "10px", border: "2px solid #b2ebf2", backgroundColor: "#ebeceeff", padding: "6px 12px", fontSize: "12px", fontWeight: "600" }}
             />
           </Col>
           <Col md={3}>

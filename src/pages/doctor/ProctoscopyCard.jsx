@@ -15,7 +15,8 @@ const ProctoscopyCard = ({
   onNewProctoscopy,
   onSaveProctoscopy,
   loading = false,
-  uploadBaseUrl = ""
+  uploadBaseUrl = "",
+  location = ""
 }) => {
   return (
     <div className="animate__animated animate__fadeIn">
@@ -63,13 +64,13 @@ const ProctoscopyCard = ({
             {[
               { label: "UID NO", value: formData.Uid_no, isReadonly: true },
               { label: "Patient Name", value: formData.name, isReadonly: true },
-              { label: "Age / Sex", value: `${formData.age} / ${formData.sex}`, isReadonly: true },
+              { label: "Age / Sex", value: `${formData.age} yrs / ${formData.sex}`, isReadonly: true },
             ].map((item, idx) => (
               <Col md={4} key={idx}>
                 <div className="mb-1" style={{ fontSize: "11px", color: "#006064", textTransform: "uppercase", fontWeight: "700", letterSpacing: "0.5px", }}>
                   {item.label}
                 </div>
-                <div className="fw-bold text-dark p-5 rounded" style={{ fontSize: "12px", backgroundColor: "#d9dee0ff", border: "1px solid #80deea", cursor: "not-allowed", padding: "6px 8px" }}>
+                <div className="fw-bold text-dark p-5" style={{ fontSize: "13px", cursor: "not-allowed" }}>
                   {item.value || "-"}
                 </div>
               </Col>
@@ -143,7 +144,7 @@ const ProctoscopyCard = ({
               <Button
                 variant="primary"
                 size="sm"
-                onClick={() => window.open('https://hdfstransformersjshmsintegration.vercel.app/', '_blank')}
+                onClick={() => window.open(`https://hdfstransformersjshmsintegration.vercel.app/?location=${location}&uhid=${formData.patient_id}`, '_blank')}
                 style={{
                   borderRadius: "8px",
                   fontSize: "14px",

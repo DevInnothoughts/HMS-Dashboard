@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import moment from "moment";
 import { FilterMatchMode } from "primereact/api";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
+import { useReactToPrint } from "react-to-print";
 import FeatherIcon from "feather-icons-react";
+import FollowUpPrintView from "./FollowUpPrintView";
 import { Link, useNavigate } from "react-router-dom";
 import { decodeJwt } from "../../utils/decode-jwt";
 import Swal from "sweetalert2";
@@ -308,6 +310,27 @@ export default function DoctorPatientList() {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [currentLocation, setCurrentLocation] = useState("default");
   const [isManualEntry, setIsManualEntry] = useState(false);
+
+  // Print related state
+  const fupPrintRef = useRef();
+  const [printData, setPrintData] = useState({
+    patient: null,
+    history: [],
+    diagnosis: [],
+    followup: {}
+  });
+  const [isPrintReady, setIsPrintReady] = useState(false);
+
+  const triggerPrint = useReactToPrint({
+    contentRef: fupPrintRef,
+  });
+
+  useEffect(() => {
+    if (isPrintReady) {
+      triggerPrint();
+      setIsPrintReady(false);
+    }
+  }, [isPrintReady]);
 
   const formatToApiDate = (date) => {
     const validDate = date instanceof Date ? date : new Date(date);
@@ -720,10 +743,10 @@ export default function DoctorPatientList() {
     const prefixOptions = ["MR", "MRS", "MASTER", "MISS", "DR", "MS"];
     let finalPrefix = rawPrefix.toUpperCase().replace(/\.$/, "");
     if (finalPrefix === "M/S") finalPrefix = "MISS"; // Common legacy shorthand
-    
+
     // Ensure it's one of our standard options or empty
     if (!prefixOptions.includes(finalPrefix)) {
-      finalPrefix = ""; 
+      finalPrefix = "";
     }
 
     console.log("Setting formData for prefix:", finalPrefix);
@@ -1252,6 +1275,55 @@ export default function DoctorPatientList() {
     printWindow.document.close();
   };
 
+  const handlePrintFollowUp = async (patient) => {
+    setLoading(true);
+    const headers = { 
+      "Content-Type": "application/json",
+      "location": currentLocation, 
+      "x-hms-location": currentLocation 
+    };
+    try {
+      const historyDatesRes = await fetch(`${BASE_URL}/V1/doctor/list-history-dates/${patient.patient_id}?location=${currentLocation}`, { headers });
+      const historyDates = await historyDatesRes.json();
+      const historyFull = await Promise.all((historyDates.data || []).map(async (h) => {
+        const res = await fetch(`${BASE_URL}/V1/doctor/get-patient-history/${patient.patient_id}?historyId=${h.id}&location=${currentLocation}`, { headers });
+        const data = await res.json();
+        return data.statusCode === 200 ? data.data : null;
+      }));
+      const diagDatesRes = await fetch(`${BASE_URL}/V1/doctor/list-diagnosis-dates/${patient.patient_id}?location=${currentLocation}`, { headers });
+      const diagDates = await diagDatesRes.json();
+      const diagFull = await Promise.all((diagDates.data || []).map(async (d) => {
+        const res = await fetch(`${BASE_URL}/V1/doctor/get-diagnosis/${patient.patient_id}?date=${d.date}&location=${currentLocation}`, { headers });
+        const data = await res.json();
+        if (data.statusCode === 200 && data.data) {
+          const diag = data.data;
+          const assistDoc = doctors.find(doc => doc.doctor_id == diag.assistance_doctor);
+          const consultDoc = doctors.find(doc => doc.doctor_id == diag.consultant_doctor);
+          return {
+            ...diag,
+            assistanceDoctorName: assistDoc ? assistDoc.name : diag.assistance_doctor,
+            consultantDoctorName: consultDoc ? consultDoc.name : diag.consultant_doctor
+          };
+        }
+        return null;
+      }));
+      const followupRes = await fetch(`${BASE_URL}/V1/doctor/get-followup-details/${patient.patient_id}?location=${currentLocation}`, { headers });
+      const followupData = await followupRes.json();
+      setPrintData({
+        patient: patient,
+        history: historyFull.filter(Boolean),
+        diagnosis: diagFull.filter(Boolean),
+        followup: followupData.statusCode === 200 ? followupData.data : {}
+      });
+      setIsPrintReady(true);
+    } catch (error) {
+      console.error("Print FollowUp Error:", error);
+      toast.error("Failed to load patient data for printing.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const actionBodyTemplate = (patient) => (
     <div className="d-flex align-items-center justify-content-center">
       <Button
@@ -1272,10 +1344,10 @@ export default function DoctorPatientList() {
       <Button
         variant="primary"
         className="btn-primary btn-extra-small btn-icon"
-        title="Followup"
-        onClick={() => { }} // Content to be added later
+        title="Follow-Up Print"
+        onClick={() => handlePrintFollowUp(patient)}
       >
-        <FeatherIcon icon="user-plus" size="16" />
+        <FeatherIcon icon="printer" size="16" />
       </Button>
     </div>
   );
@@ -4073,6 +4145,15 @@ export default function DoctorPatientList() {
             </Col>
           </Row>
         </Container>
+      </div>
+      <div style={{ display: "none" }}>
+        <FollowUpPrintView
+          ref={fupPrintRef}
+          patient={printData.patient}
+          followUpData={printData.followup}
+          historyList={printData.history}
+          diagnosisList={printData.diagnosis}
+        />
       </div>
     </div>
   );

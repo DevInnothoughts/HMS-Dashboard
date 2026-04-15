@@ -252,6 +252,7 @@ export default function Appointment_list() {
   const [doctors, setDoctors] = useState([]);
   const [fdeList, setFdeList] = useState([]);
   const [consultationList, setConsultationList] = useState([]);
+  const [consultationTypesList, setConsultationTypesList] = useState([]);
   const [timeSlots, setTimeSlots] = useState([]);
   const [billingItems, setBillingItems] = useState([{ label: "", amount: "" }]);
   const [rows, setRows] = useState(10);
@@ -609,15 +610,17 @@ export default function Appointment_list() {
         `${BASE_URL}/V1/doctor/consultationDropdown?location=${currentLocation}`,
         `${BASE_URL}/V1/doctor/doctorDropdown?location=${currentLocation}`,
         `${BASE_URL}/V1/appointment/fdeDropdown?location=${currentLocation}`,
+        `${BASE_URL}/V1/doctor/consultationDetailsDropdown?location=${currentLocation}`,
       ];
 
-      const [consultationResponse, doctorResponse, fdeResponse] =
+      const [consultationResponse, doctorResponse, fdeResponse, consultationDetailsResponse] =
         await Promise.all(
           endpoints.map((url) => fetch(url).then((res) => res.json())),
         );
 
       console.log("Current Location:", currentLocation);
       console.log("FDE API Full Response:", fdeResponse);
+      console.log("Consultation Details API Response:", consultationDetailsResponse);
 
       setConsultationList(
         Array.isArray(consultationResponse.data)
@@ -626,6 +629,11 @@ export default function Appointment_list() {
       );
       setDoctors(Array.isArray(doctorResponse.data) ? doctorResponse.data : []);
       setFdeList(Array.isArray(fdeResponse.data) ? fdeResponse.data : []);
+      setConsultationTypesList(
+        Array.isArray(consultationDetailsResponse.data)
+          ? consultationDetailsResponse.data
+          : [],
+      );
     } catch (error) {
       console.error("Error fetching dropdown data:", error.message);
     }
@@ -2025,44 +2033,12 @@ export default function Appointment_list() {
                       }}
                     >
                       <option value="">Select Type</option>
-                      {[
-                        "CONSULTATION",
-                        "Follow-UP",
-                        "PROCTOSCOPY",
-                        "MCDPA",
-                        "COLON HYDROTHERAPY",
-                        "COLONOSCOPY",
-                        "USG",
-                        "USG ABDOMEN AND PELVIS",
-                        "MANOMETRY",
-                        "BIOFEEDBACK",
-                        "ECHODEFECOGRAPHY",
-                        "USG SCROTUM",
-                        "UNILATERAL DOPPLER",
-                        "BILATERAL DOPPLER",
-                        "PROCEDURE",
-                        "GASTROSCOPY",
-                        "3D ENDO ANAL IMAGING",
-                        "OTHERS",
-                        "MRI FISTULOGRAM",
-                        "2D SCAN",
-                        "LAB",
-                        "Postoperative",
-                        "BLOOD TESTS + ECG",
-                        "DIET",
-                        "UROFLOWMETRY",
-                        "DIET PLAN - 1 MONTH",
-                        "DIET PLAN - 3 MONTH",
-                        "DIET PLAN - 6 MONTH",
-                        "ENEMA",
-                        "MEDICINES",
-                        "DRESSING",
-                        "CYSTOSCOPY",
-                        "POST OPERATIVE FOLLOW UP",
-                        "POST OPERATIVE DRESSING + CONSULTATION",
-                      ].map((opt) => (
-                        <option key={opt} value={opt}>
-                          {opt}
+                      {consultationTypesList.map((item) => (
+                        <option
+                          key={item.consultation_id}
+                          value={item.consultation_name}
+                        >
+                          {item.consultation_name}
                         </option>
                       ))}
                     </Form.Select>
