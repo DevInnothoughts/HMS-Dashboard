@@ -13,7 +13,7 @@ import autoTable from "jspdf-autotable";
 import { decodeJwt } from "../../../utils/decode-jwt";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api"
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const EnquiryData = () => {
   const [fromDate, setFromDate] = useState("");
@@ -58,18 +58,21 @@ const EnquiryData = () => {
     try {
       console.log(fromDate, toDate);
       // Your controller expects Fromdate and Todate in the body via POST
-      const response = await fetch(`${BASE_URL}/V1/managereports/getEnquiryReport`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`
+      const response = await fetch(
+        `${BASE_URL}/V1/managereports/getEnquiryReport`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            location: currentLocation,
+            Fromdate: fromDate, // Standard HTML date input is already YYYY-MM-DD
+            Todate: toDate,
+          }),
         },
-        body: JSON.stringify({
-          location: currentLocation,
-          Fromdate: fromDate, // Standard HTML date input is already YYYY-MM-DD
-          Todate: toDate
-        }),
-      });
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -85,8 +88,8 @@ const EnquiryData = () => {
           const d = new Date(item.date);
           // Ensure it's a valid date object and handle the ISO string correctly
           if (!isNaN(d.getTime())) {
-            const day = String(d.getDate()).padStart(2, '0');
-            const month = String(d.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+            const day = String(d.getDate()).padStart(2, "0");
+            const month = String(d.getMonth() + 1).padStart(2, "0"); // Months are 0-indexed
             const year = d.getFullYear();
             displayDate = `${day}-${month}-${year}`;
           }
@@ -114,14 +117,15 @@ const EnquiryData = () => {
   };
 
   const exportToExcel = () => {
-    const fileType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
+    const fileType =
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
     const fileExtension = ".xlsx";
 
     const excelData = tableData.map((item, index) => ({
       "Sr No": index + 1,
-      "Date": item.displayDate,
+      Date: item.displayDate,
       "Patient Contact No": item.patient_phone || "",
-      "Address": item.patient_location || "",
+      Address: item.patient_location || "",
       "Enquiry Reason": item.enquirytype || "",
       "FDE Name": item.FDE_Name || "",
     }));
@@ -133,12 +137,18 @@ const EnquiryData = () => {
     saveAs(data, "enquiry_data_report" + fileExtension);
   };
 
-
   const downloadPDF = () => {
     const doc = new jsPDF();
     doc.text("Enquiry Data Report", 14, 15);
 
-    const tableColumn = ["Sr No", "Date", "Patient Contact No", "Address", "Enquiry Reason", "FDE Name"];
+    const tableColumn = [
+      "Sr No",
+      "Date",
+      "Patient Contact No",
+      "Address",
+      "Enquiry Reason",
+      "FDE Name",
+    ];
     const tableRows = tableData.map((item, index) => [
       index + 1,
       item.displayDate,
@@ -152,9 +162,9 @@ const EnquiryData = () => {
       head: [tableColumn],
       body: tableRows,
       startY: 20,
-      theme: 'grid',
+      theme: "grid",
       styles: { fontSize: 8 },
-      headStyles: { fillColor: [0, 172, 193] }
+      headStyles: { fillColor: [0, 172, 193] },
     });
 
     doc.save("Enquiry_Data_Report.pdf");
@@ -165,10 +175,20 @@ const EnquiryData = () => {
       <div className="d-flex justify-content-between align-items-center mb-1">
         <div className="d-flex align-items-center" style={{ gap: "20px" }}>
           <div className="d-flex align-items-center">
-            <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Show</span>
+            <span
+              className="me-1"
+              style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}
+            >
+              Show
+            </span>
             <Form.Select
               size="sm"
-              style={{ width: "70px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
+              style={{
+                width: "70px",
+                borderRadius: "8px",
+                border: "1px solid #4dd0e1",
+                fontSize: "12px",
+              }}
               value={rows}
               onChange={(e) => setRows(Number(e.target.value))}
             >
@@ -179,14 +199,24 @@ const EnquiryData = () => {
             </Form.Select>
           </div>
           <div className="d-flex align-items-center">
-            <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Search</span>
+            <span
+              className="me-1"
+              style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}
+            >
+              Search
+            </span>
             <span className="p-input-icon-left">
               <InputText
                 value={searchText}
                 onChange={onGlobalFilterChange}
                 placeholder="Global Search..."
                 className="p-inputtext-sm"
-                style={{ width: "200px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
+                style={{
+                  width: "200px",
+                  borderRadius: "8px",
+                  border: "1px solid #4dd0e1",
+                  fontSize: "12px",
+                }}
               />
             </span>
           </div>
@@ -195,14 +225,24 @@ const EnquiryData = () => {
           <button
             className="btn btn-success btn-sm"
             onClick={exportToExcel}
-            style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px" }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "5px",
+              borderRadius: "8px",
+            }}
           >
             <i className="fa fa-file-excel-o"></i> Download Excel
           </button>
           <button
             className="btn btn-danger btn-sm"
             onClick={downloadPDF}
-            style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px" }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "5px",
+              borderRadius: "8px",
+            }}
           >
             <i className="fa fa-file-pdf-o"></i> Download PDF
           </button>
@@ -253,26 +293,59 @@ const EnquiryData = () => {
                 </Card.Header>
                 <Card.Body style={{ padding: "5px" }}>
                   <Form onSubmit={handleFind} className="mb-4">
-                    <Row className="align-items-end flex-nowrap" style={{ margin: "0 -5px" }}>
+                    <Row
+                      className="align-items-end flex-nowrap"
+                      style={{ margin: "0 -5px" }}
+                    >
                       <Col style={{ padding: "0 5px", flex: "1" }}>
                         <Form.Group className="mb-2">
-                          <Form.Label style={{ fontWeight: "bold", color: "#006064", whiteSpace: "nowrap", fontSize: "12px" }}>From Date</Form.Label>
+                          <Form.Label
+                            style={{
+                              fontWeight: "bold",
+                              color: "#006064",
+                              whiteSpace: "nowrap",
+                              fontSize: "12px",
+                            }}
+                          >
+                            From Date
+                          </Form.Label>
                           <Form.Control
                             type="date"
                             value={fromDate}
                             onChange={(e) => setFromDate(e.target.value)}
-                            style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }}
+                            style={{
+                              border: "2px solid #4dd0e1",
+                              borderRadius: "8px",
+                              padding: "6px",
+                              backgroundColor: "#e0f7fa",
+                              fontSize: "12px",
+                            }}
                           />
                         </Form.Group>
                       </Col>
                       <Col style={{ padding: "0 5px", flex: "1" }}>
                         <Form.Group className="mb-2">
-                          <Form.Label style={{ fontWeight: "bold", color: "#006064", whiteSpace: "nowrap", fontSize: "12px" }}>To Date</Form.Label>
+                          <Form.Label
+                            style={{
+                              fontWeight: "bold",
+                              color: "#006064",
+                              whiteSpace: "nowrap",
+                              fontSize: "12px",
+                            }}
+                          >
+                            To Date
+                          </Form.Label>
                           <Form.Control
                             type="date"
                             value={toDate}
                             onChange={(e) => setToDate(e.target.value)}
-                            style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }}
+                            style={{
+                              border: "2px solid #4dd0e1",
+                              borderRadius: "8px",
+                              padding: "6px",
+                              backgroundColor: "#e0f7fa",
+                              fontSize: "12px",
+                            }}
                           />
                         </Form.Group>
                       </Col>
@@ -289,7 +362,7 @@ const EnquiryData = () => {
                               color: "white",
                               borderRadius: "8px",
                               fontWeight: "bold",
-                              fontSize: "13px"
+                              fontSize: "13px",
                             }}
                           >
                             {loading ? "Loading..." : "Search"}
@@ -319,11 +392,31 @@ const EnquiryData = () => {
                       body={(rowData, { rowIndex }) => rowIndex + 1}
                       style={{ width: "60px", textAlign: "center" }}
                     />
-                    <Column style={{ width: "70px", textAlign: "center" }} field="displayDate" header="Date" />
-                    <Column style={{ width: "100px", textAlign: "center" }} field="patient_phone" header="Patient Contact No" />
-                    <Column style={{ width: "100px", textAlign: "center" }} field="patient_location" header="Address" />
-                    <Column style={{ width: "170px", textAlign: "center" }} field="enquirytype" header="Enquiry Reason" />
-                    <Column style={{ width: "100px", textAlign: "center" }} field="FDE_Name" header="FDE Name" />
+                    <Column
+                      style={{ width: "70px", textAlign: "center" }}
+                      field="displayDate"
+                      header="Date"
+                    />
+                    <Column
+                      style={{ width: "100px", textAlign: "center" }}
+                      field="patient_phone"
+                      header="Patient Contact No"
+                    />
+                    <Column
+                      style={{ width: "100px", textAlign: "center" }}
+                      field="patient_location"
+                      header="Address"
+                    />
+                    <Column
+                      style={{ width: "170px", textAlign: "center" }}
+                      field="enquirytype"
+                      header="Enquiry Reason"
+                    />
+                    <Column
+                      style={{ width: "100px", textAlign: "center" }}
+                      field="FDE_Name"
+                      header="FDE Name"
+                    />
                   </DataTable>
                 </Card.Body>
               </Card>

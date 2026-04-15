@@ -6,10 +6,8 @@ import { Row, Col, Form, Container, Card, Button } from "react-bootstrap";
 import { decodeJwt } from "../../utils/decode-jwt";
 import Swal from "sweetalert2";
 
-
-
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api"
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const Toast = Swal.mixin({
   toast: true,
@@ -89,8 +87,6 @@ const AddInvoice = () => {
   };
 
   const timeOptions = generateTimeOptions();
-
-
 
   useEffect(() => {
     if (!currentLocation || !formData.invoice_id) {
@@ -544,7 +540,14 @@ const AddInvoice = () => {
                     }}
                   />
                   {invoiceWarning && (
-                    <div className="text-danger" style={{ fontSize: "10px", marginTop: "4px", fontWeight: "600" }}>
+                    <div
+                      className="text-danger"
+                      style={{
+                        fontSize: "10px",
+                        marginTop: "4px",
+                        fontWeight: "600",
+                      }}
+                    >
                       {invoiceWarning}
                     </div>
                   )}

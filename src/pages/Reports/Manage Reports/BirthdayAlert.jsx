@@ -1,6 +1,14 @@
 import React, { useState, useEffect, useCallback } from "react";
 import PageBreadcrumb from "../../../components/PageBreadcrumb";
-import { Row, Col, Card, Container, Spinner, Form, Button } from "react-bootstrap";
+import {
+  Row,
+  Col,
+  Card,
+  Container,
+  Spinner,
+  Form,
+  Button,
+} from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 import { InputText } from "primereact/inputtext";
 import SimpleBar from "simplebar-react";
@@ -13,7 +21,7 @@ import autoTable from "jspdf-autotable";
 import { decodeJwt } from "../../../utils/decode-jwt";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api"
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const BirthdayAlert = () => {
   const currentDate = moment().format("DD-MM-YYYY");
@@ -50,7 +58,7 @@ const BirthdayAlert = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
 
       if (response.ok) {
@@ -70,7 +78,6 @@ const BirthdayAlert = () => {
   useEffect(() => {
     fetchBirthdays();
   }, [fetchBirthdays]);
-
 
   const onGlobalFilterChange = (e) => {
     const value = e.target.value;
@@ -96,12 +103,24 @@ const BirthdayAlert = () => {
     doc.setTextColor(100);
     doc.text(`Date: ${currentDate}`, 14, 22);
 
-    const tableColumn = ["Sr No", "Birth Date", "Patient Name", "Contact Number", "Address"];
+    const tableColumn = [
+      "Sr No",
+      "Birth Date",
+      "Patient Name",
+      "Contact Number",
+      "Address",
+    ];
     const tableRows = [...patients]
-      .sort((a, b) => moment(a.birth_date, "DD-MM-YYYY").diff(moment(b.birth_date, "DD-MM-YYYY")))
+      .sort((a, b) =>
+        moment(a.birth_date, "DD-MM-YYYY").diff(
+          moment(b.birth_date, "DD-MM-YYYY"),
+        ),
+      )
       .map((item, index) => [
         index + 1,
-        moment(item.birth_date).isValid() ? moment(item.birth_date).format("DD-MM-YYYY") : item.birth_date, //
+        moment(item.birth_date).isValid()
+          ? moment(item.birth_date).format("DD-MM-YYYY")
+          : item.birth_date, //
         item.name,
         item.phone,
         item.address,
@@ -111,9 +130,9 @@ const BirthdayAlert = () => {
       head: [tableColumn],
       body: tableRows,
       startY: 30,
-      theme: 'grid',
+      theme: "grid",
       styles: { fontSize: 8 },
-      headStyles: { fillColor: [0, 172, 193] }
+      headStyles: { fillColor: [0, 172, 193] },
     });
 
     doc.save(`Birthday_Alert_${currentDate}.pdf`);
@@ -128,12 +147,21 @@ const BirthdayAlert = () => {
           padding: "6px 12px",
           borderRadius: "8px",
           border: "1.5px solid #4dd0e1",
-          marginBottom: "6px"
+          marginBottom: "6px",
         }}
       >
         <div className="d-flex align-items-center gap-3">
           <div className="d-flex align-items-center">
-            <span style={{ marginRight: "10px", fontSize: "13px", fontWeight: "600", color: "#00838f" }}>Show</span>
+            <span
+              style={{
+                marginRight: "10px",
+                fontSize: "13px",
+                fontWeight: "600",
+                color: "#00838f",
+              }}
+            >
+              Show
+            </span>
             <Form.Select
               size="sm"
               value={rows}
@@ -146,7 +174,7 @@ const BirthdayAlert = () => {
                 height: "35px",
                 borderRadius: "8px",
                 border: "1.5px solid #4dd0e1",
-                fontSize: "13px"
+                fontSize: "13px",
               }}
             >
               <option value={10}>10</option>
@@ -156,7 +184,16 @@ const BirthdayAlert = () => {
           </div>
 
           <div className="d-flex align-items-center">
-            <span style={{ marginRight: "10px", fontSize: "13px", fontWeight: "600", color: "#00838f" }}>Search</span>
+            <span
+              style={{
+                marginRight: "10px",
+                fontSize: "13px",
+                fontWeight: "600",
+                color: "#00838f",
+              }}
+            >
+              Search
+            </span>
             <span className="p-input-icon-left">
               <InputText
                 value={globalFilterValue}
@@ -168,7 +205,7 @@ const BirthdayAlert = () => {
                   fontSize: "12px",
                   border: "1.5px solid #4dd0e1",
                   width: "200px",
-                  height: "35px"
+                  height: "35px",
                 }}
               />
             </span>
@@ -189,7 +226,7 @@ const BirthdayAlert = () => {
               display: "flex",
               alignItems: "center",
               gap: "8px",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
             }}
           >
             <FeatherIcon icon="refresh-ccw" size={15} />
@@ -209,7 +246,7 @@ const BirthdayAlert = () => {
               display: "flex",
               alignItems: "center",
               gap: "8px",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
             }}
           >
             <i className="fa fa-file-pdf-o"></i>
@@ -245,7 +282,7 @@ const BirthdayAlert = () => {
                   borderColor: "#00bcd4",
                   background: "white",
                   border: "1.5px solid #00bcd4",
-                  overflow: "hidden"
+                  overflow: "hidden",
                 }}
               >
                 <Card.Header
@@ -258,8 +295,12 @@ const BirthdayAlert = () => {
                     color: "white",
                   }}
                 >
-                  <h4 style={{ margin: 0, letterSpacing: "0.5px" }}>Today's Birthday Alert</h4>
-                  <div style={{ fontSize: "16px", marginTop: "5px", opacity: 0.9 }}>
+                  <h4 style={{ margin: 0, letterSpacing: "0.5px" }}>
+                    Today's Birthday Alert
+                  </h4>
+                  <div
+                    style={{ fontSize: "16px", marginTop: "5px", opacity: 0.9 }}
+                  >
                     {currentDate}
                   </div>
                 </Card.Header>
@@ -267,7 +308,9 @@ const BirthdayAlert = () => {
                   {renderHeader()}
                   <DataTable
                     value={[...patients].sort((a, b) =>
-                      moment(a.birth_date, "DD-MM-YYYY").diff(moment(b.birth_date, "DD-MM-YYYY"))
+                      moment(a.birth_date, "DD-MM-YYYY").diff(
+                        moment(b.birth_date, "DD-MM-YYYY"),
+                      ),
                     )}
                     paginator
                     rows={rows}
@@ -294,7 +337,11 @@ const BirthdayAlert = () => {
                     <Column
                       field="birth_date"
                       header="Birth Date"
-                      body={(rowData) => rowData.birth_date ? moment(rowData.birth_date).format("DD-MM-YYYY") : "-"}
+                      body={(rowData) =>
+                        rowData.birth_date
+                          ? moment(rowData.birth_date).format("DD-MM-YYYY")
+                          : "-"
+                      }
                     />
                     <Column field="name" header="Patient Name" />
                     <Column field="phone" header="Contact Number" />

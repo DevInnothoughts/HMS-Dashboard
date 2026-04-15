@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Row, Col, Card, Container, Form, Spinner, Button } from "react-bootstrap";
+import {
+  Row,
+  Col,
+  Card,
+  Container,
+  Form,
+  Spinner,
+  Button,
+} from "react-bootstrap";
 import SimpleBar from "simplebar-react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
@@ -36,17 +44,33 @@ const ConditionWiseReport = () => {
   }, []);
 
   const processReportData = (response, type) => {
-    const uniqueDoctors = [...new Set(response.map((item) => item.consultantDoctor))];
+    const uniqueDoctors = [
+      ...new Set(response.map((item) => item.consultantDoctor)),
+    ];
     const processed = uniqueDoctors.map((docId) => {
       const docRecords = response.filter((r) => r.consultantDoctor === docId);
       const doctorName = docRecords[0]?.DoctorName || "Unknown";
 
       const stats = {
         doctorName,
-        piles: 0, fistula: 0, hernia: 0, varicoseVeins: 0,
-        prolapse: 0, circumcision: 0, abscess: 0, fissure: 0, ibs: 0,
-        totalPiles: 0, totalFistula: 0, totalHernia: 0, totalVaricose: 0,
-        totalProlapse: 0, totalCircumcision: 0, totalAbscess: 0, totalFissure: 0, totalIbs: 0,
+        piles: 0,
+        fistula: 0,
+        hernia: 0,
+        varicoseVeins: 0,
+        prolapse: 0,
+        circumcision: 0,
+        abscess: 0,
+        fissure: 0,
+        ibs: 0,
+        totalPiles: 0,
+        totalFistula: 0,
+        totalHernia: 0,
+        totalVaricose: 0,
+        totalProlapse: 0,
+        totalCircumcision: 0,
+        totalAbscess: 0,
+        totalFissure: 0,
+        totalIbs: 0,
       };
 
       docRecords.forEach((rec) => {
@@ -59,13 +83,20 @@ const ConditionWiseReport = () => {
         };
 
         if (spec?.includes("piles")) mapSpeciality("piles", "totalPiles");
-        else if (spec?.includes("fistula")) mapSpeciality("fistula", "totalFistula");
-        else if (spec?.includes("hernia")) mapSpeciality("hernia", "totalHernia");
-        else if (spec?.includes("varicose")) mapSpeciality("varicoseVeins", "totalVaricose");
-        else if (spec?.includes("prolapse")) mapSpeciality("prolapse", "totalProlapse");
-        else if (spec?.includes("circumcision")) mapSpeciality("circumcision", "totalCircumcision");
-        else if (spec?.includes("abscess")) mapSpeciality("abscess", "totalAbscess");
-        else if (spec?.includes("fissure")) mapSpeciality("fissure", "totalFissure");
+        else if (spec?.includes("fistula"))
+          mapSpeciality("fistula", "totalFistula");
+        else if (spec?.includes("hernia"))
+          mapSpeciality("hernia", "totalHernia");
+        else if (spec?.includes("varicose"))
+          mapSpeciality("varicoseVeins", "totalVaricose");
+        else if (spec?.includes("prolapse"))
+          mapSpeciality("prolapse", "totalProlapse");
+        else if (spec?.includes("circumcision"))
+          mapSpeciality("circumcision", "totalCircumcision");
+        else if (spec?.includes("abscess"))
+          mapSpeciality("abscess", "totalAbscess");
+        else if (spec?.includes("fissure"))
+          mapSpeciality("fissure", "totalFissure");
         else if (spec?.includes("ibs")) mapSpeciality("ibs", "totalIbs");
       });
       return stats;
@@ -86,19 +117,35 @@ const ConditionWiseReport = () => {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       };
 
-      const resAssisted = await fetch(`${BASE_URL}/V1/managereports/getConditionReports`, {
-        method: "POST",
-        headers: authHeader,
-        body: JSON.stringify({ location: currentLocation, Fromdate: fromDate, Todate: toDate, isDetailed: false }),
-      });
+      const resAssisted = await fetch(
+        `${BASE_URL}/V1/managereports/getConditionReports`,
+        {
+          method: "POST",
+          headers: authHeader,
+          body: JSON.stringify({
+            location: currentLocation,
+            Fromdate: fromDate,
+            Todate: toDate,
+            isDetailed: false,
+          }),
+        },
+      );
       const dataAssisted = await resAssisted.json();
       setAssistedData(processReportData(dataAssisted, "assisted"));
 
-      const resDetailed = await fetch(`${BASE_URL}/V1/managereports/getConditionReports`, {
-        method: "POST",
-        headers: authHeader,
-        body: JSON.stringify({ location: currentLocation, Fromdate: fromDate, Todate: toDate, isDetailed: true }),
-      });
+      const resDetailed = await fetch(
+        `${BASE_URL}/V1/managereports/getConditionReports`,
+        {
+          method: "POST",
+          headers: authHeader,
+          body: JSON.stringify({
+            location: currentLocation,
+            Fromdate: fromDate,
+            Todate: toDate,
+            isDetailed: true,
+          }),
+        },
+      );
       const dataDetailed = await resDetailed.json();
       const detailedProcessed = processReportData(dataDetailed, "detailed");
 
@@ -107,11 +154,16 @@ const ConditionWiseReport = () => {
       setTotalPackageData(
         detailedProcessed.map((d) => ({
           doctorName: d.doctorName,
-          piles: d.totalPiles, fistula: d.totalFistula, hernia: d.totalHernia,
-          varicoseVeins: d.totalVaricose, prolapse: d.totalProlapse,
-          circumcision: d.totalCircumcision, abscess: d.totalAbscess,
-          fissure: d.totalFissure, ibs: d.totalIbs,
-        }))
+          piles: d.totalPiles,
+          fistula: d.totalFistula,
+          hernia: d.totalHernia,
+          varicoseVeins: d.totalVaricose,
+          prolapse: d.totalProlapse,
+          circumcision: d.totalCircumcision,
+          abscess: d.totalAbscess,
+          fissure: d.totalFissure,
+          ibs: d.totalIbs,
+        })),
       );
 
       setAveragePackageData(
@@ -126,7 +178,7 @@ const ConditionWiseReport = () => {
           abscess: Math.round(d.totalAbscess / (d.abscess || 1)),
           fissure: Math.round(d.totalFissure / (d.fissure || 1)),
           ibs: Math.round(d.totalIbs / (d.ibs || 1)),
-        }))
+        })),
       );
     } catch (error) {
       console.error("Error fetching condition reports:", error);
@@ -142,9 +194,31 @@ const ConditionWiseReport = () => {
 
     const generateTable = (title, data) => {
       doc.text(title, 14, finalY);
-      const tableColumn = ["Sr No", "Doctor Name", "Piles", "Fistula", "Hernia", "Varicose Veins", "Prolapse", "Circumcision", "Abscess", "Fissure", "IBS"];
+      const tableColumn = [
+        "Sr No",
+        "Doctor Name",
+        "Piles",
+        "Fistula",
+        "Hernia",
+        "Varicose Veins",
+        "Prolapse",
+        "Circumcision",
+        "Abscess",
+        "Fissure",
+        "IBS",
+      ];
       const tableRows = data.map((item, index) => [
-        index + 1, item.doctorName, item.piles, item.fistula, item.hernia, item.varicoseVeins, item.prolapse, item.circumcision, item.abscess, item.fissure, item.ibs
+        index + 1,
+        item.doctorName,
+        item.piles,
+        item.fistula,
+        item.hernia,
+        item.varicoseVeins,
+        item.prolapse,
+        item.circumcision,
+        item.abscess,
+        item.fissure,
+        item.ibs,
       ]);
 
       autoTable(doc, {
@@ -167,7 +241,10 @@ const ConditionWiseReport = () => {
 
   const onGlobalFilterChange = (e) => {
     const value = e.target.value;
-    setFilters({ ...filters, global: { value, matchMode: FilterMatchMode.CONTAINS } });
+    setFilters({
+      ...filters,
+      global: { value, matchMode: FilterMatchMode.CONTAINS },
+    });
     setSearchText(value);
   };
 
@@ -178,10 +255,24 @@ const ConditionWiseReport = () => {
         <Col style={{ padding: "0 5px" }} className="d-flex align-items-center">
           <div className="d-flex align-items-center" style={{ gap: "20px" }}>
             <div className="d-flex align-items-center">
-              <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Show</span>
+              <span
+                className="me-1"
+                style={{
+                  fontWeight: "bold",
+                  color: "#006064",
+                  fontSize: "12px",
+                }}
+              >
+                Show
+              </span>
               <Form.Select
                 size="sm"
-                style={{ width: "70px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
+                style={{
+                  width: "70px",
+                  borderRadius: "8px",
+                  border: "1px solid #4dd0e1",
+                  fontSize: "12px",
+                }}
                 value={rows}
                 onChange={(e) => setRows(Number(e.target.value))}
               >
@@ -192,24 +283,48 @@ const ConditionWiseReport = () => {
               </Form.Select>
             </div>
             <div className="d-flex align-items-center">
-              <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Search</span>
+              <span
+                className="me-1"
+                style={{
+                  fontWeight: "bold",
+                  color: "#006064",
+                  fontSize: "12px",
+                }}
+              >
+                Search
+              </span>
               <span className="p-input-icon-left">
                 <InputText
                   value={searchText}
                   onChange={onGlobalFilterChange}
                   placeholder="Global Search..."
                   className="p-inputtext-sm"
-                  style={{ width: "200px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
+                  style={{
+                    width: "200px",
+                    borderRadius: "8px",
+                    border: "1px solid #4dd0e1",
+                    fontSize: "12px",
+                  }}
                 />
               </span>
             </div>
           </div>
         </Col>
-        <Col style={{ padding: "0 5px" }} className="d-flex justify-content-end">
+        <Col
+          style={{ padding: "0 5px" }}
+          className="d-flex justify-content-end"
+        >
           <button
             className="btn btn-danger btn-sm"
             onClick={downloadPDF}
-            style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px", fontWeight: "600", height: "35px" }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "5px",
+              borderRadius: "8px",
+              fontWeight: "600",
+              height: "35px",
+            }}
           >
             <i className="fa fa-file-pdf-o"></i> Download PDF
           </button>
@@ -220,7 +335,17 @@ const ConditionWiseReport = () => {
 
   const ReportSection = ({ title, data }) => (
     <div className="mb-5 pb-3 mt-10">
-      <div className="p-5 mb-2" style={{ background: "linear-gradient(to right, #fafafa, #e9e9e9)", border: "1px solid #d5d5d5", borderBottom: "none", borderRadius: "4px 4px 0 0", color: "#555", fontWeight: "600" }}>
+      <div
+        className="p-5 mb-2"
+        style={{
+          background: "linear-gradient(to right, #fafafa, #e9e9e9)",
+          border: "1px solid #d5d5d5",
+          borderBottom: "none",
+          borderRadius: "4px 4px 0 0",
+          color: "#555",
+          fontWeight: "600",
+        }}
+      >
         {title}
       </div>
       <DataTable
@@ -237,7 +362,11 @@ const ConditionWiseReport = () => {
         responsiveLayout="scroll"
         emptyMessage="No data available."
       >
-        <Column header="Sr No" body={(rowData, { rowIndex }) => rowIndex + 1} style={{ width: "60px", textAlign: "center" }} />
+        <Column
+          header="Sr No"
+          body={(rowData, { rowIndex }) => rowIndex + 1}
+          style={{ width: "60px", textAlign: "center" }}
+        />
         <Column field="doctorName" header="Doctor Name" />
         <Column field="piles" header="Piles" />
         <Column field="fistula" header="Fistula" />
@@ -291,26 +420,59 @@ const ConditionWiseReport = () => {
                 </Card.Header>
                 <Card.Body style={{ padding: "5px" }}>
                   <Form>
-                    <Row className="align-items-end mb-4 flex-nowrap" style={{ margin: "0 -5px" }}>
+                    <Row
+                      className="align-items-end mb-4 flex-nowrap"
+                      style={{ margin: "0 -5px" }}
+                    >
                       <Col style={{ padding: "0 5px", flex: "1" }}>
                         <Form.Group className="mb-2">
-                          <Form.Label style={{ fontWeight: "bold", color: "#006064", whiteSpace: "nowrap", fontSize: "12px" }}>From Date</Form.Label>
+                          <Form.Label
+                            style={{
+                              fontWeight: "bold",
+                              color: "#006064",
+                              whiteSpace: "nowrap",
+                              fontSize: "12px",
+                            }}
+                          >
+                            From Date
+                          </Form.Label>
                           <Form.Control
                             type="date"
                             value={fromDate}
                             onChange={(e) => setFromDate(e.target.value)}
-                            style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }}
+                            style={{
+                              border: "2px solid #4dd0e1",
+                              borderRadius: "8px",
+                              padding: "6px",
+                              backgroundColor: "#e0f7fa",
+                              fontSize: "12px",
+                            }}
                           />
                         </Form.Group>
                       </Col>
                       <Col style={{ padding: "0 5px", flex: "1" }}>
                         <Form.Group className="mb-2">
-                          <Form.Label style={{ fontWeight: "bold", color: "#006064", whiteSpace: "nowrap", fontSize: "12px" }}>To Date</Form.Label>
+                          <Form.Label
+                            style={{
+                              fontWeight: "bold",
+                              color: "#006064",
+                              whiteSpace: "nowrap",
+                              fontSize: "12px",
+                            }}
+                          >
+                            To Date
+                          </Form.Label>
                           <Form.Control
                             type="date"
                             value={toDate}
                             onChange={(e) => setToDate(e.target.value)}
-                            style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }}
+                            style={{
+                              border: "2px solid #4dd0e1",
+                              borderRadius: "8px",
+                              padding: "6px",
+                              backgroundColor: "#e0f7fa",
+                              fontSize: "12px",
+                            }}
                           />
                         </Form.Group>
                       </Col>
@@ -329,7 +491,7 @@ const ConditionWiseReport = () => {
                               color: "white",
                               borderRadius: "8px",
                               fontWeight: "bold",
-                              fontSize: "13px"
+                              fontSize: "13px",
                             }}
                           >
                             {loading ? <Spinner size="sm" /> : "Search"}
@@ -342,10 +504,22 @@ const ConditionWiseReport = () => {
                   {renderHeader()}
 
                   <div className="mt-3">
-                    <ReportSection title="Assisted - Condition Wise Performance" data={assistedData} />
-                    <ReportSection title="Converted - Condition Wise Performance" data={convertedData} />
-                    <ReportSection title="Total Package - Condition Wise" data={totalPackageData} />
-                    <ReportSection title="Average Package - Condition Wise" data={averagePackageData} />
+                    <ReportSection
+                      title="Assisted - Condition Wise Performance"
+                      data={assistedData}
+                    />
+                    <ReportSection
+                      title="Converted - Condition Wise Performance"
+                      data={convertedData}
+                    />
+                    <ReportSection
+                      title="Total Package - Condition Wise"
+                      data={totalPackageData}
+                    />
+                    <ReportSection
+                      title="Average Package - Condition Wise"
+                      data={averagePackageData}
+                    />
                   </div>
                 </Card.Body>
               </Card>

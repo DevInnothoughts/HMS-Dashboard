@@ -4,7 +4,7 @@ import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { FilterMatchMode } from "primereact/api";
 import { InputText } from "primereact/inputtext";
-import { ColumnGroup } from 'primereact/columngroup';
+import { ColumnGroup } from "primereact/columngroup";
 import { saveAs } from "file-saver";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
@@ -28,8 +28,14 @@ const OPDIPDCollection = () => {
   });
 
   const [totals, setTotals] = useState({
-    opdCash: 0, ipdCash: 0, opdCard: 0, ipdCard: 0,
-    opdCheque: 0, ipdCheque: 0, opdOnline: 0, ipdOnline: 0,
+    opdCash: 0,
+    ipdCash: 0,
+    opdCard: 0,
+    ipdCard: 0,
+    opdCheque: 0,
+    ipdCheque: 0,
+    opdOnline: 0,
+    ipdOnline: 0,
   });
 
   useEffect(() => {
@@ -50,24 +56,30 @@ const OPDIPDCollection = () => {
 
   const mergeCollectionData = (opdData, ipdData) => {
     const mergedMap = {};
-    opdData.forEach(item => {
-      const dateKey = item.date.split('T')[0];
+    opdData.forEach((item) => {
+      const dateKey = item.date.split("T")[0];
       mergedMap[dateKey] = {
         receiptDate: dateKey,
         opdCash: parseFloat(item.opdCash) || 0,
         opdCard: parseFloat(item.opdCard) || 0,
         opdCheque: parseFloat(item.opdCheque) || 0,
         opdOnline: parseFloat(item.opdOnline) || 0,
-        ipdCash: 0, ipdCard: 0, ipdCheque: 0, ipdOnline: 0
+        ipdCash: 0,
+        ipdCard: 0,
+        ipdCheque: 0,
+        ipdOnline: 0,
       };
     });
 
-    ipdData.forEach(item => {
-      const dateKey = item.date.split('T')[0];
+    ipdData.forEach((item) => {
+      const dateKey = item.date.split("T")[0];
       if (!mergedMap[dateKey]) {
         mergedMap[dateKey] = {
           receiptDate: dateKey,
-          opdCash: 0, opdCard: 0, opdCheque: 0, opdOnline: 0,
+          opdCash: 0,
+          opdCard: 0,
+          opdCheque: 0,
+          opdOnline: 0,
           ipdCash: parseFloat(item.ipdCash) || 0,
           ipdCard: parseFloat(item.ipdCard) || 0,
           ipdCheque: parseFloat(item.ipdCheque) || 0,
@@ -81,7 +93,9 @@ const OPDIPDCollection = () => {
       }
     });
 
-    return Object.values(mergedMap).sort((a, b) => new Date(b.receiptDate) - new Date(a.receiptDate));
+    return Object.values(mergedMap).sort(
+      (a, b) => new Date(b.receiptDate) - new Date(a.receiptDate),
+    );
   };
 
   const handleSearch = async (e) => {
@@ -93,33 +107,51 @@ const OPDIPDCollection = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/V1/managereports/getConsolidatedReport`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`
+      const response = await fetch(
+        `${BASE_URL}/V1/managereports/getConsolidatedReport`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            location: currentLocation,
+            Fromdate: fromDate,
+            Todate: toDate,
+          }),
         },
-        body: JSON.stringify({
-          location: currentLocation,
-          Fromdate: fromDate,
-          Todate: toDate
-        }),
-      });
+      );
 
       if (!response.ok) throw new Error("Failed to fetch consolidated data");
       const result = await response.json();
-      const mergedData = mergeCollectionData(result.opdData || [], result.ipdData || []);
+      const mergedData = mergeCollectionData(
+        result.opdData || [],
+        result.ipdData || [],
+      );
 
-      const newTotals = mergedData.reduce((acc, curr) => ({
-        opdCash: acc.opdCash + curr.opdCash,
-        ipdCash: acc.ipdCash + curr.ipdCash,
-        opdCard: acc.opdCard + curr.opdCard,
-        ipdCard: acc.ipdCard + curr.ipdCard,
-        opdCheque: acc.opdCheque + curr.opdCheque,
-        ipdCheque: acc.ipdCheque + curr.ipdCheque,
-        opdOnline: acc.opdOnline + curr.opdOnline,
-        ipdOnline: acc.ipdOnline + curr.ipdOnline,
-      }), { opdCash: 0, ipdCash: 0, opdCard: 0, ipdCard: 0, opdCheque: 0, ipdCheque: 0, opdOnline: 0, ipdOnline: 0 });
+      const newTotals = mergedData.reduce(
+        (acc, curr) => ({
+          opdCash: acc.opdCash + curr.opdCash,
+          ipdCash: acc.ipdCash + curr.ipdCash,
+          opdCard: acc.opdCard + curr.opdCard,
+          ipdCard: acc.ipdCard + curr.ipdCard,
+          opdCheque: acc.opdCheque + curr.opdCheque,
+          ipdCheque: acc.ipdCheque + curr.ipdCheque,
+          opdOnline: acc.opdOnline + curr.opdOnline,
+          ipdOnline: acc.ipdOnline + curr.ipdOnline,
+        }),
+        {
+          opdCash: 0,
+          ipdCash: 0,
+          opdCard: 0,
+          ipdCard: 0,
+          opdCheque: 0,
+          ipdCheque: 0,
+          opdOnline: 0,
+          ipdOnline: 0,
+        },
+      );
 
       setTotals(newTotals);
       setTableData(mergedData);
@@ -137,38 +169,82 @@ const OPDIPDCollection = () => {
   };
 
   const exportToExcel = () => {
-    const fileType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
+    const fileType =
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
     const excelData = tableData.map((item, index) => ({
       "Sr No": index + 1,
-      "Date": formatDateDisplay(item.receiptDate),
-      "OPD Cash": item.opdCash, "IPD Cash": item.ipdCash,
-      "OPD Card": item.opdCard, "IPD Card": item.ipdCard,
-      "OPD Cheque": item.opdCheque, "IPD Cheque": item.ipdCheque,
-      "OPD Online": item.opdOnline, "IPD Online": item.ipdOnline,
+      Date: formatDateDisplay(item.receiptDate),
+      "OPD Cash": item.opdCash,
+      "IPD Cash": item.ipdCash,
+      "OPD Card": item.opdCard,
+      "IPD Card": item.ipdCard,
+      "OPD Cheque": item.opdCheque,
+      "IPD Cheque": item.ipdCheque,
+      "OPD Online": item.opdOnline,
+      "IPD Online": item.ipdOnline,
     }));
-    excelData.push({ "Sr No": "TOTAL", "Date": "", ...totals });
+    excelData.push({ "Sr No": "TOTAL", Date: "", ...totals });
 
     const ws = XLSX.utils.json_to_sheet(excelData);
     const wb = { Sheets: { data: ws }, SheetNames: ["Consolidated"] };
     const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-    saveAs(new Blob([excelBuffer], { type: fileType }), `Consolidated_Report.xlsx`);
+    saveAs(
+      new Blob([excelBuffer], { type: fileType }),
+      `Consolidated_Report.xlsx`,
+    );
   };
 
   const downloadPDF = () => {
     const doc = new jsPDF("l", "mm", "a4");
     doc.text("Consolidated OPD + IPD Collection Report", 14, 15);
-    const tableColumn = ["Sr No", "Date", "OPD Cash", "IPD Cash", "OPD Card", "IPD Card", "OPD Chq", "IPD Chq", "OPD Onl", "IPD Onl"];
+    const tableColumn = [
+      "Sr No",
+      "Date",
+      "OPD Cash",
+      "IPD Cash",
+      "OPD Card",
+      "IPD Card",
+      "OPD Chq",
+      "IPD Chq",
+      "OPD Onl",
+      "IPD Onl",
+    ];
     const tableRows = tableData.map((item, index) => [
-      index + 1, formatDateDisplay(item.receiptDate),
-      item.opdCash, item.ipdCash, item.opdCard, item.ipdCard,
-      item.opdCheque, item.ipdCheque, item.opdOnline, item.ipdOnline,
+      index + 1,
+      formatDateDisplay(item.receiptDate),
+      item.opdCash,
+      item.ipdCash,
+      item.opdCard,
+      item.ipdCard,
+      item.opdCheque,
+      item.ipdCheque,
+      item.opdOnline,
+      item.ipdOnline,
     ]);
-    tableRows.push(["Total", "", totals.opdCash, totals.ipdCash, totals.opdCard, totals.ipdCard, totals.opdCheque, totals.ipdCheque, totals.opdOnline, totals.ipdOnline]);
+    tableRows.push([
+      "Total",
+      "",
+      totals.opdCash,
+      totals.ipdCash,
+      totals.opdCard,
+      totals.ipdCard,
+      totals.opdCheque,
+      totals.ipdCheque,
+      totals.opdOnline,
+      totals.ipdOnline,
+    ]);
 
     autoTable(doc, {
-      head: [tableColumn], body: tableRows, startY: 20, theme: 'grid', styles: { fontSize: 8 },
-      headStyles: { fillColor: [0, 172, 193], halign: 'center' },
-      didParseCell: (data) => { if (data.row.index === tableRows.length - 1) data.cell.styles.fontStyle = 'bold'; }
+      head: [tableColumn],
+      body: tableRows,
+      startY: 20,
+      theme: "grid",
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [0, 172, 193], halign: "center" },
+      didParseCell: (data) => {
+        if (data.row.index === tableRows.length - 1)
+          data.cell.styles.fontStyle = "bold";
+      },
     });
     doc.save("Consolidated_Report.pdf");
   };
@@ -176,15 +252,43 @@ const OPDIPDCollection = () => {
   const footerGroup = (
     <ColumnGroup>
       <Row>
-        <Column footer="Total" colSpan={2} footerStyle={{ textAlign: 'center', fontWeight: 'bold' }} />
-        <Column footer={totals.opdCash} footerStyle={{ textAlign: 'center', fontWeight: 'bold' }} />
-        <Column footer={totals.ipdCash} footerStyle={{ textAlign: 'center', fontWeight: 'bold' }} />
-        <Column footer={totals.opdCard} footerStyle={{ textAlign: 'center', fontWeight: 'bold' }} />
-        <Column footer={totals.ipdCard} footerStyle={{ textAlign: 'center', fontWeight: 'bold' }} />
-        <Column footer={totals.opdCheque} footerStyle={{ textAlign: 'center', fontWeight: 'bold' }} />
-        <Column footer={totals.ipdCheque} footerStyle={{ textAlign: 'center', fontWeight: 'bold' }} />
-        <Column footer={totals.opdOnline} footerStyle={{ textAlign: 'center', fontWeight: 'bold' }} />
-        <Column footer={totals.ipdOnline} footerStyle={{ textAlign: 'center', fontWeight: 'bold' }} />
+        <Column
+          footer="Total"
+          colSpan={2}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={totals.opdCash}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={totals.ipdCash}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={totals.opdCard}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={totals.ipdCard}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={totals.opdCheque}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={totals.ipdCheque}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={totals.opdOnline}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={totals.ipdOnline}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
       </Row>
     </ColumnGroup>
   );
@@ -193,25 +297,74 @@ const OPDIPDCollection = () => {
     <div className="d-flex justify-content-between align-items-center mb-1">
       <div className="d-flex align-items-center" style={{ gap: "20px" }}>
         <div className="d-flex align-items-center">
-          <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Show</span>
-          <Form.Select size="sm" style={{ width: "70px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }} value={rows} onChange={(e) => setRows(Number(e.target.value))}>
+          <span
+            className="me-1"
+            style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}
+          >
+            Show
+          </span>
+          <Form.Select
+            size="sm"
+            style={{
+              width: "70px",
+              borderRadius: "8px",
+              border: "1px solid #4dd0e1",
+              fontSize: "12px",
+            }}
+            value={rows}
+            onChange={(e) => setRows(Number(e.target.value))}
+          >
             <option value={10}>10</option>
             <option value={25}>25</option>
             <option value={50}>50</option>
           </Form.Select>
         </div>
         <div className="d-flex align-items-center">
-          <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Search</span>
+          <span
+            className="me-1"
+            style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}
+          >
+            Search
+          </span>
           <span className="p-input-icon-left">
-            <InputText value={searchText} onChange={onGlobalFilterChange} placeholder="Global Search..." className="p-inputtext-sm" style={{ width: "200px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }} />
+            <InputText
+              value={searchText}
+              onChange={onGlobalFilterChange}
+              placeholder="Global Search..."
+              className="p-inputtext-sm"
+              style={{
+                width: "200px",
+                borderRadius: "8px",
+                border: "1px solid #4dd0e1",
+                fontSize: "12px",
+              }}
+            />
           </span>
         </div>
       </div>
       <div className="d-flex" style={{ gap: "10px" }}>
-        <button className="btn btn-success btn-sm" onClick={exportToExcel} style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px" }}>
+        <button
+          className="btn btn-success btn-sm"
+          onClick={exportToExcel}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "5px",
+            borderRadius: "8px",
+          }}
+        >
           <i className="fa fa-file-excel-o"></i> Download Excel
         </button>
-        <button className="btn btn-danger btn-sm" onClick={downloadPDF} style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px" }}>
+        <button
+          className="btn btn-danger btn-sm"
+          onClick={downloadPDF}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "5px",
+            borderRadius: "8px",
+          }}
+        >
           <i className="fa fa-file-pdf-o"></i> Download PDF
         </button>
       </div>
@@ -219,34 +372,110 @@ const OPDIPDCollection = () => {
   );
 
   return (
-    <div className="themebody-wrap" style={{ padding: "10px", background: "linear-gradient(to right, #e0f7fa, #80deea)", fontFamily: "'Poppins', Arial, sans-serif", minHeight: "100vh" }}>
+    <div
+      className="themebody-wrap"
+      style={{
+        padding: "10px",
+        background: "linear-gradient(to right, #e0f7fa, #80deea)",
+        fontFamily: "'Poppins', Arial, sans-serif",
+        minHeight: "100vh",
+      }}
+    >
       <PageBreadcrumb pagename="OPD + IPD Collection" />
       <SimpleBar className="theme-body common-dash">
         <Container fluid>
           <Row>
             <Col md={12}>
-              <Card style={{ borderRadius: "12px", boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)", border: "1px solid #00bcd4", background: "white" }}>
-                <Card.Header className="text-center" style={{ background: "linear-gradient(to right, #00acc1, #007c91)", color: "white", padding: "0.8rem" }}>
+              <Card
+                style={{
+                  borderRadius: "12px",
+                  boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
+                  border: "1px solid #00bcd4",
+                  background: "white",
+                }}
+              >
+                <Card.Header
+                  className="text-center"
+                  style={{
+                    background: "linear-gradient(to right, #00acc1, #007c91)",
+                    color: "white",
+                    padding: "0.8rem",
+                  }}
+                >
                   <h4 style={{ margin: 0 }}>OPD + IPD Collection Report</h4>
                 </Card.Header>
                 <Card.Body style={{ padding: "5px" }}>
                   <Form onSubmit={handleSearch}>
-                    <Row className="align-items-end mb-4 flex-nowrap" style={{ margin: "0 -5px" }}>
+                    <Row
+                      className="align-items-end mb-4 flex-nowrap"
+                      style={{ margin: "0 -5px" }}
+                    >
                       <Col style={{ padding: "0 5px", flex: "1" }}>
                         <Form.Group className="mb-2">
-                          <Form.Label style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>From Date</Form.Label>
-                          <Form.Control type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }} />
+                          <Form.Label
+                            style={{
+                              fontWeight: "bold",
+                              color: "#006064",
+                              fontSize: "12px",
+                            }}
+                          >
+                            From Date
+                          </Form.Label>
+                          <Form.Control
+                            type="date"
+                            value={fromDate}
+                            onChange={(e) => setFromDate(e.target.value)}
+                            style={{
+                              border: "2px solid #4dd0e1",
+                              borderRadius: "8px",
+                              padding: "6px",
+                              backgroundColor: "#e0f7fa",
+                              fontSize: "12px",
+                            }}
+                          />
                         </Form.Group>
                       </Col>
                       <Col style={{ padding: "0 5px", flex: "1" }}>
                         <Form.Group className="mb-2">
-                          <Form.Label style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>To Date</Form.Label>
-                          <Form.Control type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }} />
+                          <Form.Label
+                            style={{
+                              fontWeight: "bold",
+                              color: "#006064",
+                              fontSize: "12px",
+                            }}
+                          >
+                            To Date
+                          </Form.Label>
+                          <Form.Control
+                            type="date"
+                            value={toDate}
+                            onChange={(e) => setToDate(e.target.value)}
+                            style={{
+                              border: "2px solid #4dd0e1",
+                              borderRadius: "8px",
+                              padding: "6px",
+                              backgroundColor: "#e0f7fa",
+                              fontSize: "12px",
+                            }}
+                          />
                         </Form.Group>
                       </Col>
                       <Col style={{ padding: "0 5px", flex: "1" }}>
                         <Form.Group className="mb-2">
-                          <button className="btn btn-primary" type="submit" style={{ height: "35px", width: "100%", backgroundColor: "#00acc1", borderColor: "#00bcd4", color: "white", borderRadius: "8px", fontWeight: "bold", fontSize: "13px" }}>
+                          <button
+                            className="btn btn-primary"
+                            type="submit"
+                            style={{
+                              height: "35px",
+                              width: "100%",
+                              backgroundColor: "#00acc1",
+                              borderColor: "#00bcd4",
+                              color: "white",
+                              borderRadius: "8px",
+                              fontWeight: "bold",
+                              fontSize: "13px",
+                            }}
+                          >
                             {loading ? "Loading..." : "Search"}
                           </button>
                         </Form.Group>
@@ -256,7 +485,8 @@ const OPDIPDCollection = () => {
 
                   <DataTable
                     value={tableData}
-                    paginator rows={rows}
+                    paginator
+                    rows={rows}
                     filters={filters}
                     header={header}
                     footerColumnGroup={footerGroup}
@@ -265,10 +495,20 @@ const OPDIPDCollection = () => {
                     emptyMessage={loading ? "Loading..." : "No records found."}
                     className="p-datatable-sm custom-datatable"
                     style={{ fontSize: "12px" }}
-                    rowHover stripedRows responsiveLayout="scroll"
+                    rowHover
+                    stripedRows
+                    responsiveLayout="scroll"
                   >
-                    <Column header="Sr No" body={(rowData, { rowIndex }) => rowIndex + 1} style={{ width: "60px", textAlign: "center" }} />
-                    <Column field="receiptDate" header="Date" body={(rowData) => formatDateDisplay(rowData.receiptDate)} />
+                    <Column
+                      header="Sr No"
+                      body={(rowData, { rowIndex }) => rowIndex + 1}
+                      style={{ width: "60px", textAlign: "center" }}
+                    />
+                    <Column
+                      field="receiptDate"
+                      header="Date"
+                      body={(rowData) => formatDateDisplay(rowData.receiptDate)}
+                    />
                     <Column field="opdCash" header="OPD Cash" />
                     <Column field="ipdCash" header="IPD Cash" />
                     <Column field="opdCard" header="OPD Card" />

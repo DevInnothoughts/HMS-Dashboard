@@ -56,12 +56,12 @@
 //         <head>
 //           <title>${title}</title>
 //           <style>
-//             body { 
-//               margin: 0; 
-//               padding: 40px; 
-//               display: flex; 
-//               flex-direction: column; 
-//               align-items: center; 
+//             body {
+//               margin: 0;
+//               padding: 40px;
+//               display: flex;
+//               flex-direction: column;
+//               align-items: center;
 //               font-family: 'Poppins', sans-serif;
 //             }
 //             h1 { color: #006064; margin-bottom: 20px; }
@@ -343,7 +343,7 @@ import SimpleBar from "simplebar-react";
 import { decodeJwt } from "../../../utils/decode-jwt";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api"
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const OPDIPDCollGraph = () => {
   const [fromDate, setFromDate] = useState("");
@@ -352,8 +352,16 @@ const OPDIPDCollGraph = () => {
   const [currentLocation, setCurrentLocation] = useState("default");
 
   // State for Chart Data
-  const [dailyData, setDailyData] = useState({ categories: [], opd: [], ipd: [] });
-  const [monthlyData, setMonthlyData] = useState({ categories: [], opd: [], ipd: [] });
+  const [dailyData, setDailyData] = useState({
+    categories: [],
+    opd: [],
+    ipd: [],
+  });
+  const [monthlyData, setMonthlyData] = useState({
+    categories: [],
+    opd: [],
+    ipd: [],
+  });
 
   const dailyChartRef = useRef(null);
   const monthlyChartRef = useRef(null);
@@ -366,7 +374,20 @@ const OPDIPDCollGraph = () => {
     }
   }, []);
 
-  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const monthNames = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
 
   const handleSearch = async (e) => {
     if (e) e.preventDefault();
@@ -375,35 +396,99 @@ const OPDIPDCollGraph = () => {
     setLoading(true);
     const authHeaders = {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${localStorage.getItem("token")}`
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
     };
 
     try {
-      const [resDailyOPD, resDailyIPD, resMonthlyOPD, resMonthlyIPD] = await Promise.all([
-        fetch(`${BASE_URL}/V1/managereports/getOPDDetails`, { method: "POST", headers: authHeaders, body: JSON.stringify({ location: currentLocation, Fromdate: fromDate, Todate: toDate }) }),
-        fetch(`${BASE_URL}/V1/managereports/getIPDDetails`, { method: "POST", headers: authHeaders, body: JSON.stringify({ location: currentLocation, Fromdate: fromDate, Todate: toDate }) }),
-        fetch(`${BASE_URL}/V1/managereports/getOPDMonthlyDetails`, { method: "POST", headers: authHeaders, body: JSON.stringify({ location: currentLocation, Fromdate: fromDate, Todate: toDate }) }),
-        fetch(`${BASE_URL}/V1/managereports/getIPDMonthlyDetails`, { method: "POST", headers: authHeaders, body: JSON.stringify({ location: currentLocation, Fromdate: fromDate, Todate: toDate }) })
-      ]);
+      const [resDailyOPD, resDailyIPD, resMonthlyOPD, resMonthlyIPD] =
+        await Promise.all([
+          fetch(`${BASE_URL}/V1/managereports/getOPDDetails`, {
+            method: "POST",
+            headers: authHeaders,
+            body: JSON.stringify({
+              location: currentLocation,
+              Fromdate: fromDate,
+              Todate: toDate,
+            }),
+          }),
+          fetch(`${BASE_URL}/V1/managereports/getIPDDetails`, {
+            method: "POST",
+            headers: authHeaders,
+            body: JSON.stringify({
+              location: currentLocation,
+              Fromdate: fromDate,
+              Todate: toDate,
+            }),
+          }),
+          fetch(`${BASE_URL}/V1/managereports/getOPDMonthlyDetails`, {
+            method: "POST",
+            headers: authHeaders,
+            body: JSON.stringify({
+              location: currentLocation,
+              Fromdate: fromDate,
+              Todate: toDate,
+            }),
+          }),
+          fetch(`${BASE_URL}/V1/managereports/getIPDMonthlyDetails`, {
+            method: "POST",
+            headers: authHeaders,
+            body: JSON.stringify({
+              location: currentLocation,
+              Fromdate: fromDate,
+              Todate: toDate,
+            }),
+          }),
+        ]);
 
       const [dailyOPD, dailyIPD, monthlyOPD, monthlyIPD] = await Promise.all([
-        resDailyOPD.json(), resDailyIPD.json(), resMonthlyOPD.json(), resMonthlyIPD.json()
+        resDailyOPD.json(),
+        resDailyIPD.json(),
+        resMonthlyOPD.json(),
+        resMonthlyIPD.json(),
       ]);
 
-      const dailyDates = [...new Set([...dailyOPD.map(d => d.receipt_date.split('T')[0]), ...dailyIPD.map(d => d.receipt_date.split('T')[0])])].sort();
+      const dailyDates = [
+        ...new Set([
+          ...dailyOPD.map((d) => d.receipt_date.split("T")[0]),
+          ...dailyIPD.map((d) => d.receipt_date.split("T")[0]),
+        ]),
+      ].sort();
       setDailyData({
-        categories: dailyDates.map(d => d.split('-').reverse().join('-')),
-        opd: dailyDates.map(date => dailyOPD.find(d => d.receipt_date.split('T')[0] === date)?.total || 0),
-        ipd: dailyDates.map(date => dailyIPD.find(d => d.receipt_date.split('T')[0] === date)?.total || 0)
+        categories: dailyDates.map((d) => d.split("-").reverse().join("-")),
+        opd: dailyDates.map(
+          (date) =>
+            dailyOPD.find((d) => d.receipt_date.split("T")[0] === date)
+              ?.total || 0,
+        ),
+        ipd: dailyDates.map(
+          (date) =>
+            dailyIPD.find((d) => d.receipt_date.split("T")[0] === date)
+              ?.total || 0,
+        ),
       });
 
-      const monthlyKeys = [...new Set([...monthlyOPD.map(m => `${m.cyear}-${m.cmonth}`), ...monthlyIPD.map(m => `${m.cyear}-${m.cmonth}`)])].sort();
+      const monthlyKeys = [
+        ...new Set([
+          ...monthlyOPD.map((m) => `${m.cyear}-${m.cmonth}`),
+          ...monthlyIPD.map((m) => `${m.cyear}-${m.cmonth}`),
+        ]),
+      ].sort();
       setMonthlyData({
-        categories: monthlyKeys.map(k => `${monthNames[parseInt(k.split('-')[1]) - 1]} ${k.split('-')[0]}`),
-        opd: monthlyKeys.map(key => monthlyOPD.find(m => `${m.cyear}-${m.cmonth}` === key)?.total || 0),
-        ipd: monthlyKeys.map(key => monthlyIPD.find(m => `${m.cyear}-${m.cmonth}` === key)?.total || 0)
+        categories: monthlyKeys.map(
+          (k) =>
+            `${monthNames[parseInt(k.split("-")[1]) - 1]} ${k.split("-")[0]}`,
+        ),
+        opd: monthlyKeys.map(
+          (key) =>
+            monthlyOPD.find((m) => `${m.cyear}-${m.cmonth}` === key)?.total ||
+            0,
+        ),
+        ipd: monthlyKeys.map(
+          (key) =>
+            monthlyIPD.find((m) => `${m.cyear}-${m.cmonth}` === key)?.total ||
+            0,
+        ),
       });
-
     } catch (error) {
       console.error("Graph Error:", error);
       alert("Failed to load collection data");
@@ -416,8 +501,8 @@ const OPDIPDCollGraph = () => {
     if (!chartRef.current || !chartRef.current.chart) return;
     const { imgURI } = await chartRef.current.chart.dataURI();
 
-    if (format === 'print') {
-      const printWindow = window.open('', '_blank');
+    if (format === "print") {
+      const printWindow = window.open("", "_blank");
       printWindow.document.write(`
         <html>
           <head><title>${title}</title><style>
@@ -430,42 +515,76 @@ const OPDIPDCollGraph = () => {
       `);
       printWindow.document.close();
     } else {
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = imgURI;
-      link.download = `${title.replace(/\s+/g, '_')}.${format}`;
+      link.download = `${title.replace(/\s+/g, "_")}.${format}`;
       link.click();
     }
   };
 
   const getBaseOptions = (categories, isDaily) => ({
-    chart: { type: 'bar', toolbar: { show: false }, stacked: false },
-    plotOptions: { bar: { horizontal: false, columnWidth: '55%', borderRadius: 4 } },
+    chart: { type: "bar", toolbar: { show: false }, stacked: false },
+    plotOptions: {
+      bar: { horizontal: false, columnWidth: "55%", borderRadius: 4 },
+    },
     xaxis: {
       categories,
-      labels: { rotate: -45, style: { fontSize: '10px', fontWeight: 600, colors: '#006064' } },
-      title: { text: isDaily ? "Daily Receipt Dates" : "Month and Year", style: { color: '#006064', fontWeight: 'bold' } }
+      labels: {
+        rotate: -45,
+        style: { fontSize: "10px", fontWeight: 600, colors: "#006064" },
+      },
+      title: {
+        text: isDaily ? "Daily Receipt Dates" : "Month and Year",
+        style: { color: "#006064", fontWeight: "bold" },
+      },
     },
     yaxis: {
-      title: { text: 'Amount (₹)', style: { color: '#006064', fontWeight: 'bold' } },
-      labels: { style: { colors: '#006064' } }
+      title: {
+        text: "Amount (₹)",
+        style: { color: "#006064", fontWeight: "bold" },
+      },
+      labels: { style: { colors: "#006064" } },
     },
-    colors: ['#00acc1', '#007c91'],
-    legend: { position: 'top', fontWeight: 'bold' },
-    tooltip: { theme: 'dark', y: { formatter: (val) => `₹ ${val.toLocaleString()}` } }
+    colors: ["#00acc1", "#007c91"],
+    legend: { position: "top", fontWeight: "bold" },
+    tooltip: {
+      theme: "dark",
+      y: { formatter: (val) => `₹ ${val.toLocaleString()}` },
+    },
   });
 
   const DownloadButton = ({ chartRef, title }) => {
     const [show, setShow] = useState(false);
     return (
-      <div className="custom-download-btn" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)} style={{ position: 'relative' }}>
+      <div
+        className="custom-download-btn"
+        onMouseEnter={() => setShow(true)}
+        onMouseLeave={() => setShow(false)}
+        style={{ position: "relative" }}
+      >
         <button className="btn-download-main">
           <i className="fa fa-download"></i>
         </button>
         {show && (
           <div className="download-menu-popup">
-            <div className="download-item" onClick={() => exportChart(chartRef, 'print', title)}>Print</div>
-            <div className="download-item" onClick={() => exportChart(chartRef, 'jpeg', title)}>Save as JPEG</div>
-            <div className="download-item" onClick={() => exportChart(chartRef, 'png', title)}>Save as PNG</div>
+            <div
+              className="download-item"
+              onClick={() => exportChart(chartRef, "print", title)}
+            >
+              Print
+            </div>
+            <div
+              className="download-item"
+              onClick={() => exportChart(chartRef, "jpeg", title)}
+            >
+              Save as JPEG
+            </div>
+            <div
+              className="download-item"
+              onClick={() => exportChart(chartRef, "png", title)}
+            >
+              Save as PNG
+            </div>
           </div>
         )}
       </div>
@@ -473,34 +592,112 @@ const OPDIPDCollGraph = () => {
   };
 
   return (
-    <div className="themebody-wrap" style={{ padding: "10px", background: "linear-gradient(to right, #e0f7fa, #80deea)", minHeight: "100vh", fontFamily: "'Poppins', sans-serif" }}>
+    <div
+      className="themebody-wrap"
+      style={{
+        padding: "10px",
+        background: "linear-gradient(to right, #e0f7fa, #80deea)",
+        minHeight: "100vh",
+        fontFamily: "'Poppins', sans-serif",
+      }}
+    >
       <PageBreadcrumb pagename="OPD + IPD Collection Graph" />
       <SimpleBar className="theme-body common-dash">
         <Container fluid>
           <Row>
             <Col md={12}>
-              <Card style={{ borderRadius: "12px", border: "1px solid #00bcd4", boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)" }}>
-                <Card.Header className="text-center" style={{ padding: "0.8rem", background: "linear-gradient(to right, #00acc1, #007c91)", color: "white", borderBottom: "2px solid #0288d1" }}>
-                  <h4 className="mb-0">Consolidated Collection Graph (OPD + IPD)</h4>
+              <Card
+                style={{
+                  borderRadius: "12px",
+                  border: "1px solid #00bcd4",
+                  boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
+                }}
+              >
+                <Card.Header
+                  className="text-center"
+                  style={{
+                    padding: "0.8rem",
+                    background: "linear-gradient(to right, #00acc1, #007c91)",
+                    color: "white",
+                    borderBottom: "2px solid #0288d1",
+                  }}
+                >
+                  <h4 className="mb-0">
+                    Consolidated Collection Graph (OPD + IPD)
+                  </h4>
                 </Card.Header>
                 <Card.Body className="p-4">
                   <Form onSubmit={handleSearch} className="mb-5">
-                    <Row className="align-items-end mb-4 flex-nowrap" style={{ margin: "0 -5px" }}>
+                    <Row
+                      className="align-items-end mb-4 flex-nowrap"
+                      style={{ margin: "0 -5px" }}
+                    >
                       <Col style={{ padding: "0 5px", flex: "1" }}>
                         <Form.Group className="mb-2">
-                          <Form.Label style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>From Date</Form.Label>
-                          <Form.Control type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }} />
+                          <Form.Label
+                            style={{
+                              fontWeight: "bold",
+                              color: "#006064",
+                              fontSize: "12px",
+                            }}
+                          >
+                            From Date
+                          </Form.Label>
+                          <Form.Control
+                            type="date"
+                            value={fromDate}
+                            onChange={(e) => setFromDate(e.target.value)}
+                            style={{
+                              border: "2px solid #4dd0e1",
+                              borderRadius: "8px",
+                              padding: "6px",
+                              backgroundColor: "#e0f7fa",
+                              fontSize: "12px",
+                            }}
+                          />
                         </Form.Group>
                       </Col>
                       <Col style={{ padding: "0 5px", flex: "1" }}>
                         <Form.Group className="mb-2">
-                          <Form.Label style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>To Date</Form.Label>
-                          <Form.Control type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }} />
+                          <Form.Label
+                            style={{
+                              fontWeight: "bold",
+                              color: "#006064",
+                              fontSize: "12px",
+                            }}
+                          >
+                            To Date
+                          </Form.Label>
+                          <Form.Control
+                            type="date"
+                            value={toDate}
+                            onChange={(e) => setToDate(e.target.value)}
+                            style={{
+                              border: "2px solid #4dd0e1",
+                              borderRadius: "8px",
+                              padding: "6px",
+                              backgroundColor: "#e0f7fa",
+                              fontSize: "12px",
+                            }}
+                          />
                         </Form.Group>
                       </Col>
                       <Col style={{ padding: "0 5px", flex: "1" }}>
                         <Form.Group className="mb-2">
-                          <button className="btn btn-primary" type="submit" style={{ height: "35px", width: "100%", backgroundColor: "#00acc1", borderColor: "#00bcd4", color: "white", borderRadius: "8px", fontWeight: "bold", fontSize: "13px" }}>
+                          <button
+                            className="btn btn-primary"
+                            type="submit"
+                            style={{
+                              height: "35px",
+                              width: "100%",
+                              backgroundColor: "#00acc1",
+                              borderColor: "#00bcd4",
+                              color: "white",
+                              borderRadius: "8px",
+                              fontWeight: "bold",
+                              fontSize: "13px",
+                            }}
+                          >
                             {loading ? "Loading..." : "Search"}
                           </button>
                         </Form.Group>
@@ -510,18 +707,52 @@ const OPDIPDCollGraph = () => {
 
                   <div className="chart-container-box mb-5">
                     <div className="d-flex justify-content-between align-items-center mb-3">
-                      <h5 className="fw-bold" style={{ color: "#006064", margin: 0 }}>Daily Consolidated Reports</h5>
-                      <DownloadButton chartRef={dailyChartRef} title="Daily Consolidated Reports" />
+                      <h5
+                        className="fw-bold"
+                        style={{ color: "#006064", margin: 0 }}
+                      >
+                        Daily Consolidated Reports
+                      </h5>
+                      <DownloadButton
+                        chartRef={dailyChartRef}
+                        title="Daily Consolidated Reports"
+                      />
                     </div>
-                    <ReactApexChart ref={dailyChartRef} options={getBaseOptions(dailyData.categories, true)} series={[{ name: 'OPD Collection', data: dailyData.opd }, { name: 'IPD Collection', data: dailyData.ipd }]} type="bar" height={350} />
+                    <ReactApexChart
+                      ref={dailyChartRef}
+                      options={getBaseOptions(dailyData.categories, true)}
+                      series={[
+                        { name: "OPD Collection", data: dailyData.opd },
+                        { name: "IPD Collection", data: dailyData.ipd },
+                      ]}
+                      type="bar"
+                      height={350}
+                    />
                   </div>
 
                   <div className="chart-container-box">
                     <div className="d-flex justify-content-between align-items-center mb-3">
-                      <h5 className="fw-bold" style={{ color: "#006064", margin: 0 }}>Monthly Consolidated Reports</h5>
-                      <DownloadButton chartRef={monthlyChartRef} title="Monthly Consolidated Reports" />
+                      <h5
+                        className="fw-bold"
+                        style={{ color: "#006064", margin: 0 }}
+                      >
+                        Monthly Consolidated Reports
+                      </h5>
+                      <DownloadButton
+                        chartRef={monthlyChartRef}
+                        title="Monthly Consolidated Reports"
+                      />
                     </div>
-                    <ReactApexChart ref={monthlyChartRef} options={getBaseOptions(monthlyData.categories, false)} series={[{ name: 'OPD Collection', data: monthlyData.opd }, { name: 'IPD Collection', data: monthlyData.ipd }]} type="bar" height={350} />
+                    <ReactApexChart
+                      ref={monthlyChartRef}
+                      options={getBaseOptions(monthlyData.categories, false)}
+                      series={[
+                        { name: "OPD Collection", data: monthlyData.opd },
+                        { name: "IPD Collection", data: monthlyData.ipd },
+                      ]}
+                      type="bar"
+                      height={350}
+                    />
                   </div>
                 </Card.Body>
               </Card>

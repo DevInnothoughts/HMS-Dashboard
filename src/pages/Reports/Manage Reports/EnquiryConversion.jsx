@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from "react";
 import PageBreadcrumb from "../../../components/PageBreadcrumb";
-import {
-  Row,
-  Col,
-  Card,
-  Container,
-  Form,
-} from "react-bootstrap";
+import { Row, Col, Card, Container, Form } from "react-bootstrap";
 import SimpleBar from "simplebar-react";
 import { saveAs } from "file-saver";
 import * as XLSX from "xlsx";
@@ -18,9 +12,8 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { decodeJwt } from "../../../utils/decode-jwt";
 
-
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api" // Update your API base URL here
+const BASE_URL = "http://194.195.117.79:5100/api"; // Update your API base URL here
 
 const EnquiryConversion = () => {
   const [fromDate, setFromDate] = useState("");
@@ -73,14 +66,26 @@ const EnquiryConversion = () => {
       console.log(fromDate, toDate);
       // 2. Fetch both datasets concurrently using Promise.all
       const [appointmentResponse, callBackResponse] = await Promise.all([
-        fetch(`${BASE_URL}/V1/managereports/listEnqConv?location=${currentLocation}&from=${fromDate}&to=${toDate}`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json", Accept: "application/json" },
-        }),
-        fetch(`${BASE_URL}/V1/managereports/listEnqConvCallBack?location=${currentLocation}&from=${fromDate}&to=${toDate}`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json", Accept: "application/json" },
-        })
+        fetch(
+          `${BASE_URL}/V1/managereports/listEnqConv?location=${currentLocation}&from=${fromDate}&to=${toDate}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+          },
+        ),
+        fetch(
+          `${BASE_URL}/V1/managereports/listEnqConvCallBack?location=${currentLocation}&from=${fromDate}&to=${toDate}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+          },
+        ),
       ]);
 
       if (!appointmentResponse.ok || !callBackResponse.ok) {
@@ -112,7 +117,10 @@ const EnquiryConversion = () => {
           dntPatients++;
         }
         // Collect unique total enquiries
-        if (item.totalenquiry && !uniqueEnquiryList.includes(item.totalenquiry)) {
+        if (
+          item.totalenquiry &&
+          !uniqueEnquiryList.includes(item.totalenquiry)
+        ) {
           uniqueEnquiryList.push(item.totalenquiry);
         }
       });
@@ -126,7 +134,6 @@ const EnquiryConversion = () => {
         totalEnquiries: uniqueEnquiryList.length > 0 ? uniqueEnquiryList[0] : 0,
         callBack: callBackData?.data?.length || 0,
       });
-
     } catch (error) {
       console.error("Error fetching conversion data:", error);
       alert(`Error: ${error.message}`);
@@ -142,17 +149,20 @@ const EnquiryConversion = () => {
   };
 
   const exportToExcel = () => {
-    const fileType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
+    const fileType =
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
     const fileExtension = ".xlsx";
 
-    const excelData = [{
-      "Booked Appointment": reportData.bookedAppointments,
-      "Visited": reportData.visited,
-      "DNW": reportData.dnw,
-      "DNT": reportData.dnt,
-      "Total Enquiries": reportData.totalEnquiries,
-      "Call Back": reportData.callBack
-    }];
+    const excelData = [
+      {
+        "Booked Appointment": reportData.bookedAppointments,
+        Visited: reportData.visited,
+        DNW: reportData.dnw,
+        DNT: reportData.dnt,
+        "Total Enquiries": reportData.totalEnquiries,
+        "Call Back": reportData.callBack,
+      },
+    ];
 
     const ws = XLSX.utils.json_to_sheet(excelData);
     const wb = { Sheets: { data: ws }, SheetNames: ["data"] };
@@ -161,12 +171,18 @@ const EnquiryConversion = () => {
     saveAs(data, "Enquiry_Conversion_Report" + fileExtension);
   };
 
-
   const downloadPDF = () => {
     const doc = new jsPDF();
     doc.text("Enquiry Conversion Report", 14, 15);
 
-    const tableColumn = ["Booked Appointment", "Visited", "DNW", "DNT", "Total Enquiries", "Call Back"];
+    const tableColumn = [
+      "Booked Appointment",
+      "Visited",
+      "DNW",
+      "DNT",
+      "Total Enquiries",
+      "Call Back",
+    ];
     const tableRows = [
       [
         reportData.bookedAppointments,
@@ -174,17 +190,17 @@ const EnquiryConversion = () => {
         reportData.dnw,
         reportData.dnt,
         reportData.totalEnquiries,
-        reportData.callBack
-      ]
+        reportData.callBack,
+      ],
     ];
 
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       startY: 20,
-      theme: 'grid',
+      theme: "grid",
       styles: { fontSize: 8 },
-      headStyles: { fillColor: [0, 172, 193] }
+      headStyles: { fillColor: [0, 172, 193] },
     });
 
     doc.save("Enquiry_Conversion_Report.pdf");
@@ -195,10 +211,20 @@ const EnquiryConversion = () => {
       <div className="d-flex justify-content-between align-items-center mb-1">
         <div className="d-flex align-items-center" style={{ gap: "20px" }}>
           <div className="d-flex align-items-center">
-            <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Show</span>
+            <span
+              className="me-1"
+              style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}
+            >
+              Show
+            </span>
             <Form.Select
               size="sm"
-              style={{ width: "70px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
+              style={{
+                width: "70px",
+                borderRadius: "8px",
+                border: "1px solid #4dd0e1",
+                fontSize: "12px",
+              }}
               value={rows}
               onChange={(e) => setRows(Number(e.target.value))}
             >
@@ -209,14 +235,24 @@ const EnquiryConversion = () => {
             </Form.Select>
           </div>
           <div className="d-flex align-items-center">
-            <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Search</span>
+            <span
+              className="me-1"
+              style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}
+            >
+              Search
+            </span>
             <span className="p-input-icon-left">
               <InputText
                 value={searchText}
                 onChange={onGlobalFilterChange}
                 placeholder="Global Search..."
                 className="p-inputtext-sm"
-                style={{ width: "200px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
+                style={{
+                  width: "200px",
+                  borderRadius: "8px",
+                  border: "1px solid #4dd0e1",
+                  fontSize: "12px",
+                }}
               />
             </span>
           </div>
@@ -225,14 +261,24 @@ const EnquiryConversion = () => {
           <button
             className="btn btn-success btn-sm"
             onClick={exportToExcel}
-            style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px" }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "5px",
+              borderRadius: "8px",
+            }}
           >
             <i className="fa fa-file-excel-o"></i> Download Excel
           </button>
           <button
             className="btn btn-danger btn-sm"
             onClick={downloadPDF}
-            style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px" }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "5px",
+              borderRadius: "8px",
+            }}
           >
             <i className="fa fa-file-pdf-o"></i> Download PDF
           </button>
@@ -284,30 +330,59 @@ const EnquiryConversion = () => {
                 </Card.Header>
                 <Card.Body style={{ padding: "5px" }}>
                   <Form onSubmit={handleFind}>
-                    <Row className="align-items-end mb-4 flex-nowrap" style={{ margin: "0 -5px" }}>
+                    <Row
+                      className="align-items-end mb-4 flex-nowrap"
+                      style={{ margin: "0 -5px" }}
+                    >
                       <Col style={{ padding: "0 5px", flex: "1" }}>
                         <Form.Group className="mb-2">
-                          <Form.Label style={{ fontWeight: "bold", color: "#006064", whiteSpace: "nowrap", fontSize: "12px" }}>
+                          <Form.Label
+                            style={{
+                              fontWeight: "bold",
+                              color: "#006064",
+                              whiteSpace: "nowrap",
+                              fontSize: "12px",
+                            }}
+                          >
                             From Date
                           </Form.Label>
                           <Form.Control
                             type="date"
                             value={fromDate}
                             onChange={(e) => setFromDate(e.target.value)}
-                            style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }}
+                            style={{
+                              border: "2px solid #4dd0e1",
+                              borderRadius: "8px",
+                              padding: "6px",
+                              backgroundColor: "#e0f7fa",
+                              fontSize: "12px",
+                            }}
                           />
                         </Form.Group>
                       </Col>
                       <Col style={{ padding: "0 5px", flex: "1" }}>
                         <Form.Group className="mb-2">
-                          <Form.Label style={{ fontWeight: "bold", color: "#006064", whiteSpace: "nowrap", fontSize: "12px" }}>
+                          <Form.Label
+                            style={{
+                              fontWeight: "bold",
+                              color: "#006064",
+                              whiteSpace: "nowrap",
+                              fontSize: "12px",
+                            }}
+                          >
                             To Date
                           </Form.Label>
                           <Form.Control
                             type="date"
                             value={toDate}
                             onChange={(e) => setToDate(e.target.value)}
-                            style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }}
+                            style={{
+                              border: "2px solid #4dd0e1",
+                              borderRadius: "8px",
+                              padding: "6px",
+                              backgroundColor: "#e0f7fa",
+                              fontSize: "12px",
+                            }}
                           />
                         </Form.Group>
                       </Col>
@@ -324,7 +399,7 @@ const EnquiryConversion = () => {
                               color: "white",
                               borderRadius: "8px",
                               fontWeight: "bold",
-                              fontSize: "13px"
+                              fontSize: "13px",
                             }}
                           >
                             Search
@@ -349,7 +424,10 @@ const EnquiryConversion = () => {
                     stripedRows
                     responsiveLayout="scroll"
                   >
-                    <Column field="bookedAppointments" header="Booked Appointment" />
+                    <Column
+                      field="bookedAppointments"
+                      header="Booked Appointment"
+                    />
                     <Column field="visited" header="Visited" />
                     <Column field="dnw" header="DNW" />
                     <Column field="dnt" header="DNT" />

@@ -11,10 +11,8 @@ import { toast } from "react-hot-toast";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import { decodeJwt } from "../../utils/decode-jwt";
 
-
-
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api"
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const Toast = Swal.mixin({
   toast: true,
@@ -81,7 +79,6 @@ const countryNumberLimits = {
   "+34": { min: 9, max: 9 },
   default: { min: 7, max: 15 },
 };
-
 
 export default function Add_appointment() {
   const [loading, setLoading] = useState(false);
@@ -373,7 +370,10 @@ export default function Add_appointment() {
       setLoading(true);
       const payload = {
         doctor_id: formData.doctor_id,
-        patient_type: formData.patient_type === "Post Operative" ? "Postoperative" : formData.patient_type,
+        patient_type:
+          formData.patient_type === "Post Operative"
+            ? "Postoperative"
+            : formData.patient_type,
         patient_phone: formData.patient_phone,
         appointment_timestamp: formData.date,
         appointment_time: to24HourFormat(formData.appointmentTime),
@@ -622,29 +622,29 @@ export default function Add_appointment() {
                     </Col>
                     {(formData.patient_type === "OTHER" ||
                       formData.treatment) && (
-                        <Col md={4}>
-                          <Form.Label style={labelStyle}>
-                            Treatment <span className="text-danger">*</span>
-                          </Form.Label>
-                          <Form.Select
-                            required
-                            style={inputStyle}
-                            name="treatment"
-                            value={formData.treatment}
-                            onChange={handleInputChange}
-                          >
-                            <option value="">Select Treatment</option>
-                            {treatmentList?.map((t) => (
-                              <option
-                                key={t.treatment_name}
-                                value={t.treatment_name}
-                              >
-                                {t.treatment_name}
-                              </option>
-                            ))}
-                          </Form.Select>
-                        </Col>
-                      )}
+                      <Col md={4}>
+                        <Form.Label style={labelStyle}>
+                          Treatment <span className="text-danger">*</span>
+                        </Form.Label>
+                        <Form.Select
+                          required
+                          style={inputStyle}
+                          name="treatment"
+                          value={formData.treatment}
+                          onChange={handleInputChange}
+                        >
+                          <option value="">Select Treatment</option>
+                          {treatmentList?.map((t) => (
+                            <option
+                              key={t.treatment_name}
+                              value={t.treatment_name}
+                            >
+                              {t.treatment_name}
+                            </option>
+                          ))}
+                        </Form.Select>
+                      </Col>
+                    )}
 
                     {formData.patient_type === "New" && (
                       <Col md={4}>

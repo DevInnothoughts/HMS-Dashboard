@@ -13,7 +13,7 @@ import autoTable from "jspdf-autotable";
 import { decodeJwt } from "../../../utils/decode-jwt";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api"
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const BillingReport = () => {
   const [fromDate, setFromDate] = useState("");
@@ -56,18 +56,21 @@ const BillingReport = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/V1/managereports/getBillingReport`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`
+      const response = await fetch(
+        `${BASE_URL}/V1/managereports/getBillingReport`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            location: currentLocation,
+            Fromdate: fromDate,
+            Todate: toDate,
+          }),
         },
-        body: JSON.stringify({
-          location: currentLocation,
-          Fromdate: fromDate,
-          Todate: toDate
-        }),
-      });
+      );
 
       if (!response.ok) throw new Error("Failed to fetch billing data");
 
@@ -79,8 +82,8 @@ const BillingReport = () => {
         let displayDate = "N/A";
         if (item.creation_date) {
           const dateObj = new Date(item.creation_date);
-          const day = String(dateObj.getDate()).padStart(2, '0');
-          const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+          const day = String(dateObj.getDate()).padStart(2, "0");
+          const month = String(dateObj.getMonth() + 1).padStart(2, "0");
           const year = dateObj.getFullYear();
           displayDate = `${day}-${month}-${year}`;
         }
@@ -93,7 +96,7 @@ const BillingReport = () => {
           invoiceType: item.status,
           packageAmount: item.totalamt,
           approvedAmount: item.receivedamt,
-          payableAmount: item.payable_amt
+          payableAmount: item.payable_amt,
         };
       });
 
@@ -107,12 +110,13 @@ const BillingReport = () => {
   };
 
   const exportToExcel = () => {
-    const fileType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
+    const fileType =
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
     const fileExtension = ".xlsx";
 
     const excelData = billingData.map((item, index) => ({
       "Sr No": index + 1,
-      "Date": item.date,
+      Date: item.date,
       "Invoice ID": item.invoiceId,
       "Patient Name": item.patientName,
       "Invoice Type": item.invoiceType,
@@ -128,12 +132,20 @@ const BillingReport = () => {
     saveAs(data, "Billing_Report" + fileExtension);
   };
 
-
   const downloadPDF = () => {
     const doc = new jsPDF();
     doc.text("Billing Report", 14, 15);
 
-    const tableColumn = ["Sr No", "Date", "Invoice ID", "Patient Name", "Invoice Type", "Package Amount", "Approved Amount", "Payable Amount"];
+    const tableColumn = [
+      "Sr No",
+      "Date",
+      "Invoice ID",
+      "Patient Name",
+      "Invoice Type",
+      "Package Amount",
+      "Approved Amount",
+      "Payable Amount",
+    ];
     const tableRows = billingData.map((item, index) => [
       index + 1,
       item.date,
@@ -149,9 +161,9 @@ const BillingReport = () => {
       head: [tableColumn],
       body: tableRows,
       startY: 20,
-      theme: 'grid',
+      theme: "grid",
       styles: { fontSize: 8 },
-      headStyles: { fillColor: [0, 172, 193] }
+      headStyles: { fillColor: [0, 172, 193] },
     });
 
     doc.save("Billing_Report.pdf");
@@ -162,10 +174,20 @@ const BillingReport = () => {
       <div className="d-flex justify-content-between align-items-center mb-1">
         <div className="d-flex align-items-center" style={{ gap: "20px" }}>
           <div className="d-flex align-items-center">
-            <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Show</span>
+            <span
+              className="me-1"
+              style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}
+            >
+              Show
+            </span>
             <Form.Select
               size="sm"
-              style={{ width: "70px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
+              style={{
+                width: "70px",
+                borderRadius: "8px",
+                border: "1px solid #4dd0e1",
+                fontSize: "12px",
+              }}
               value={rows}
               onChange={(e) => setRows(Number(e.target.value))}
             >
@@ -176,14 +198,24 @@ const BillingReport = () => {
             </Form.Select>
           </div>
           <div className="d-flex align-items-center">
-            <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Search</span>
+            <span
+              className="me-1"
+              style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}
+            >
+              Search
+            </span>
             <span className="p-input-icon-left">
               <InputText
                 value={searchText}
                 onChange={onGlobalFilterChange}
                 placeholder="Global Search..."
                 className="p-inputtext-sm"
-                style={{ width: "200px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
+                style={{
+                  width: "200px",
+                  borderRadius: "8px",
+                  border: "1px solid #4dd0e1",
+                  fontSize: "12px",
+                }}
               />
             </span>
           </div>
@@ -192,14 +224,24 @@ const BillingReport = () => {
           <button
             className="btn btn-success btn-sm"
             onClick={exportToExcel}
-            style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px" }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "5px",
+              borderRadius: "8px",
+            }}
           >
             <i className="fa fa-file-excel-o"></i> Download Excel
           </button>
           <button
             className="btn btn-danger btn-sm"
             onClick={downloadPDF}
-            style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px" }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "5px",
+              borderRadius: "8px",
+            }}
           >
             <i className="fa fa-file-pdf-o"></i> Download PDF
           </button>
@@ -251,26 +293,59 @@ const BillingReport = () => {
                 </Card.Header>
                 <Card.Body style={{ padding: "5px" }}>
                   <Form onSubmit={handleFindClick}>
-                    <Row className="align-items-end mb-4 flex-nowrap" style={{ margin: "0 -5px" }}>
+                    <Row
+                      className="align-items-end mb-4 flex-nowrap"
+                      style={{ margin: "0 -5px" }}
+                    >
                       <Col style={{ padding: "0 5px", flex: "1" }}>
                         <Form.Group className="mb-2">
-                          <Form.Label style={{ fontWeight: "bold", color: "#006064", whiteSpace: "nowrap", fontSize: "12px" }}>From Date</Form.Label>
+                          <Form.Label
+                            style={{
+                              fontWeight: "bold",
+                              color: "#006064",
+                              whiteSpace: "nowrap",
+                              fontSize: "12px",
+                            }}
+                          >
+                            From Date
+                          </Form.Label>
                           <Form.Control
                             type="date"
                             value={fromDate}
                             onChange={(e) => setFromDate(e.target.value)}
-                            style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }}
+                            style={{
+                              border: "2px solid #4dd0e1",
+                              borderRadius: "8px",
+                              padding: "6px",
+                              backgroundColor: "#e0f7fa",
+                              fontSize: "12px",
+                            }}
                           />
                         </Form.Group>
                       </Col>
                       <Col style={{ padding: "0 5px", flex: "1" }}>
                         <Form.Group className="mb-2">
-                          <Form.Label style={{ fontWeight: "bold", color: "#006064", whiteSpace: "nowrap", fontSize: "12px" }}>To Date</Form.Label>
+                          <Form.Label
+                            style={{
+                              fontWeight: "bold",
+                              color: "#006064",
+                              whiteSpace: "nowrap",
+                              fontSize: "12px",
+                            }}
+                          >
+                            To Date
+                          </Form.Label>
                           <Form.Control
                             type="date"
                             value={toDate}
                             onChange={(e) => setToDate(e.target.value)}
-                            style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }}
+                            style={{
+                              border: "2px solid #4dd0e1",
+                              borderRadius: "8px",
+                              padding: "6px",
+                              backgroundColor: "#e0f7fa",
+                              fontSize: "12px",
+                            }}
                           />
                         </Form.Group>
                       </Col>
@@ -287,7 +362,7 @@ const BillingReport = () => {
                               color: "white",
                               borderRadius: "8px",
                               fontWeight: "bold",
-                              fontSize: "13px"
+                              fontSize: "13px",
                             }}
                           >
                             {loading ? "Loading..." : "Search"}

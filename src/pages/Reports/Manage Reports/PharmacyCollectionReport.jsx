@@ -4,7 +4,7 @@ import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { FilterMatchMode } from "primereact/api";
 import { InputText } from "primereact/inputtext";
-import { ColumnGroup } from 'primereact/columngroup';
+import { ColumnGroup } from "primereact/columngroup";
 import { saveAs } from "file-saver";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
@@ -26,7 +26,12 @@ const PharmacyCollectionReport = () => {
   const [filters, setFilters] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
-  const [totals, setTotals] = useState({ cash: 0, onlineUpi: 0, card: 0, discount: 0 });
+  const [totals, setTotals] = useState({
+    cash: 0,
+    onlineUpi: 0,
+    card: 0,
+    discount: 0,
+  });
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -52,7 +57,7 @@ const PharmacyCollectionReport = () => {
         card: acc.card + (parseFloat(curr.cardamt) || 0),
         discount: acc.discount + (parseFloat(curr.discount) || 0),
       }),
-      { cash: 0, onlineUpi: 0, card: 0, discount: 0 }
+      { cash: 0, onlineUpi: 0, card: 0, discount: 0 },
     );
   };
 
@@ -65,18 +70,21 @@ const PharmacyCollectionReport = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/V1/managereports/getPharmacyReport`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`
+      const response = await fetch(
+        `${BASE_URL}/V1/managereports/getPharmacyReport`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            location: currentLocation,
+            Fromdate: fromDate,
+            Todate: toDate,
+          }),
         },
-        body: JSON.stringify({
-          location: currentLocation,
-          Fromdate: fromDate,
-          Todate: toDate,
-        }),
-      });
+      );
 
       if (!response.ok) throw new Error("Failed to fetch data");
       const data = await response.json();
@@ -86,13 +94,14 @@ const PharmacyCollectionReport = () => {
         const total = parseFloat(item.final_total) || 0;
         return {
           ...item,
-          date: item.created_at ? item.created_at.split('T')[0] : "",
+          date: item.created_at ? item.created_at.split("T")[0] : "",
           billNo: item.bill_no || `PH-${item.id}`,
           patientName: item.patient_name || item.patient || "N/A",
           prescriptionType: item.prescription_type,
-          cashamt: paymentMode === 'Cash' ? total : 0,
-          cardamt: paymentMode === 'Card' ? total : 0,
-          onlineUpiAmt: (paymentMode === 'Online' || paymentMode === 'UPI') ? total : 0,
+          cashamt: paymentMode === "Cash" ? total : 0,
+          cardamt: paymentMode === "Card" ? total : 0,
+          onlineUpiAmt:
+            paymentMode === "Online" || paymentMode === "UPI" ? total : 0,
           discount: parseFloat(item.discountamt) || 0,
         };
       });
@@ -114,18 +123,34 @@ const PharmacyCollectionReport = () => {
 
   const formatDateDisplay = (dateStr) => {
     if (!dateStr) return "";
-    const datePart = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
-    return datePart.split('-').reverse().join('-');
+    const datePart = dateStr.includes("T") ? dateStr.split("T")[0] : dateStr;
+    return datePart.split("-").reverse().join("-");
   };
 
   const footerGroup = (
     <ColumnGroup>
       <Row>
-        <Column footer="Total" colSpan={5} footerStyle={{ textAlign: 'center', fontWeight: 'bold' }} />
-        <Column footer={totals.cash.toFixed(2)} footerStyle={{ textAlign: 'center', fontWeight: 'bold' }} />
-        <Column footer={totals.onlineUpi.toFixed(2)} footerStyle={{ textAlign: 'center', fontWeight: 'bold' }} />
-        <Column footer={totals.card.toFixed(2)} footerStyle={{ textAlign: 'center', fontWeight: 'bold' }} />
-        <Column footer={totals.discount.toFixed(2)} footerStyle={{ textAlign: 'center', fontWeight: 'bold' }} />
+        <Column
+          footer="Total"
+          colSpan={5}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={totals.cash.toFixed(2)}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={totals.onlineUpi.toFixed(2)}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={totals.card.toFixed(2)}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={totals.discount.toFixed(2)}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
       </Row>
     </ColumnGroup>
   );
@@ -134,10 +159,20 @@ const PharmacyCollectionReport = () => {
     <div className="d-flex justify-content-between align-items-center mb-1">
       <div className="d-flex align-items-center" style={{ gap: "20px" }}>
         <div className="d-flex align-items-center">
-          <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Show</span>
+          <span
+            className="me-1"
+            style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}
+          >
+            Show
+          </span>
           <Form.Select
             size="sm"
-            style={{ width: "70px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
+            style={{
+              width: "70px",
+              borderRadius: "8px",
+              border: "1px solid #4dd0e1",
+              fontSize: "12px",
+            }}
             value={rows}
             onChange={(e) => setRows(Number(e.target.value))}
           >
@@ -147,23 +182,49 @@ const PharmacyCollectionReport = () => {
           </Form.Select>
         </div>
         <div className="d-flex align-items-center">
-          <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Search</span>
+          <span
+            className="me-1"
+            style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}
+          >
+            Search
+          </span>
           <span className="p-input-icon-left">
             <InputText
               value={searchText}
               onChange={onGlobalFilterChange}
               placeholder="Global Search..."
               className="p-inputtext-sm"
-              style={{ width: "200px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
+              style={{
+                width: "200px",
+                borderRadius: "8px",
+                border: "1px solid #4dd0e1",
+                fontSize: "12px",
+              }}
             />
           </span>
         </div>
       </div>
       <div className="d-flex" style={{ gap: "10px" }}>
-        <button className="btn btn-success btn-sm" style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px" }}>
+        <button
+          className="btn btn-success btn-sm"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "5px",
+            borderRadius: "8px",
+          }}
+        >
           <i className="fa fa-file-excel-o"></i> Download Excel
         </button>
-        <button className="btn btn-danger btn-sm" style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px" }}>
+        <button
+          className="btn btn-danger btn-sm"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "5px",
+            borderRadius: "8px",
+          }}
+        >
           <i className="fa fa-file-pdf-o"></i> Download PDF
         </button>
       </div>
@@ -171,41 +232,118 @@ const PharmacyCollectionReport = () => {
   );
 
   return (
-    <div className="themebody-wrap" style={{ padding: "10px", background: "linear-gradient(to right, #e0f7fa, #80deea)", fontFamily: "'Poppins', Arial, sans-serif", minHeight: "100vh" }}>
+    <div
+      className="themebody-wrap"
+      style={{
+        padding: "10px",
+        background: "linear-gradient(to right, #e0f7fa, #80deea)",
+        fontFamily: "'Poppins', Arial, sans-serif",
+        minHeight: "100vh",
+      }}
+    >
       <PageBreadcrumb pagename="Pharmacy Collection Report" />
       <SimpleBar className="theme-body common-dash">
         <Container fluid>
           <Row>
             <Col md={12}>
-              <Card style={{ borderRadius: "12px", boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)", border: "1px solid #00bcd4", background: "white" }}>
-                <Card.Header className="text-center" style={{ background: "linear-gradient(to right, #00acc1, #007c91)", color: "white", padding: "0.8rem" }}>
+              <Card
+                style={{
+                  borderRadius: "12px",
+                  boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
+                  border: "1px solid #00bcd4",
+                  background: "white",
+                }}
+              >
+                <Card.Header
+                  className="text-center"
+                  style={{
+                    background: "linear-gradient(to right, #00acc1, #007c91)",
+                    color: "white",
+                    padding: "0.8rem",
+                  }}
+                >
                   <h4 style={{ margin: 0 }}>Pharmacy Collection Report</h4>
                 </Card.Header>
-                <Card.Body style={{ padding: "5px" }}> {/* Matches IPD 5px padding */}
+                <Card.Body style={{ padding: "5px" }}>
+                  {" "}
+                  {/* Matches IPD 5px padding */}
                   <Form onSubmit={handleFind}>
-                    <Row className="align-items-end mb-4 flex-nowrap" style={{ margin: "0 -5px" }}>
+                    <Row
+                      className="align-items-end mb-4 flex-nowrap"
+                      style={{ margin: "0 -5px" }}
+                    >
                       <Col style={{ padding: "0 5px", flex: "1" }}>
                         <Form.Group className="mb-2">
-                          <Form.Label style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>From Date</Form.Label>
-                          <Form.Control type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }} />
+                          <Form.Label
+                            style={{
+                              fontWeight: "bold",
+                              color: "#006064",
+                              fontSize: "12px",
+                            }}
+                          >
+                            From Date
+                          </Form.Label>
+                          <Form.Control
+                            type="date"
+                            value={fromDate}
+                            onChange={(e) => setFromDate(e.target.value)}
+                            style={{
+                              border: "2px solid #4dd0e1",
+                              borderRadius: "8px",
+                              padding: "6px",
+                              backgroundColor: "#e0f7fa",
+                              fontSize: "12px",
+                            }}
+                          />
                         </Form.Group>
                       </Col>
                       <Col style={{ padding: "0 5px", flex: "1" }}>
                         <Form.Group className="mb-2">
-                          <Form.Label style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>To Date</Form.Label>
-                          <Form.Control type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }} />
+                          <Form.Label
+                            style={{
+                              fontWeight: "bold",
+                              color: "#006064",
+                              fontSize: "12px",
+                            }}
+                          >
+                            To Date
+                          </Form.Label>
+                          <Form.Control
+                            type="date"
+                            value={toDate}
+                            onChange={(e) => setToDate(e.target.value)}
+                            style={{
+                              border: "2px solid #4dd0e1",
+                              borderRadius: "8px",
+                              padding: "6px",
+                              backgroundColor: "#e0f7fa",
+                              fontSize: "12px",
+                            }}
+                          />
                         </Form.Group>
                       </Col>
                       <Col style={{ padding: "0 5px", flex: "1" }}>
                         <Form.Group className="mb-2">
-                          <button className="btn btn-primary" type="submit" style={{ height: "35px", width: "100%", backgroundColor: "#00acc1", borderColor: "#00bcd4", color: "white", borderRadius: "8px", fontWeight: "bold", fontSize: "13px" }}>
+                          <button
+                            className="btn btn-primary"
+                            type="submit"
+                            style={{
+                              height: "35px",
+                              width: "100%",
+                              backgroundColor: "#00acc1",
+                              borderColor: "#00bcd4",
+                              color: "white",
+                              borderRadius: "8px",
+                              fontWeight: "bold",
+                              fontSize: "13px",
+                            }}
+                          >
                             {loading ? "Loading..." : "Search"}
                           </button>
                         </Form.Group>
                       </Col>
                     </Row>
                   </Form>
-
                   <DataTable
                     value={tableData}
                     paginator
@@ -222,15 +360,39 @@ const PharmacyCollectionReport = () => {
                     stripedRows
                     responsiveLayout="scroll"
                   >
-                    <Column header="Sr No" body={(rowData, { rowIndex }) => rowIndex + 1} style={{ width: "60px", textAlign: "center" }} />
-                    <Column field="date" header="Date" body={(rowData) => formatDateDisplay(rowData.date)} />
+                    <Column
+                      header="Sr No"
+                      body={(rowData, { rowIndex }) => rowIndex + 1}
+                      style={{ width: "60px", textAlign: "center" }}
+                    />
+                    <Column
+                      field="date"
+                      header="Date"
+                      body={(rowData) => formatDateDisplay(rowData.date)}
+                    />
                     <Column field="billNo" header="Bill No" />
                     <Column field="patientName" header="Patient Name" />
                     <Column field="prescriptionType" header="Type" />
-                    <Column field="cashamt" header="Cash" body={(r) => r.cashamt.toFixed(2)} />
-                    <Column field="onlineUpiAmt" header="Online/UPI" body={(r) => r.onlineUpiAmt.toFixed(2)} />
-                    <Column field="cardamt" header="Card" body={(r) => r.cardamt.toFixed(2)} />
-                    <Column field="discount" header="Discount" body={(r) => r.discount.toFixed(2)} />
+                    <Column
+                      field="cashamt"
+                      header="Cash"
+                      body={(r) => r.cashamt.toFixed(2)}
+                    />
+                    <Column
+                      field="onlineUpiAmt"
+                      header="Online/UPI"
+                      body={(r) => r.onlineUpiAmt.toFixed(2)}
+                    />
+                    <Column
+                      field="cardamt"
+                      header="Card"
+                      body={(r) => r.cardamt.toFixed(2)}
+                    />
+                    <Column
+                      field="discount"
+                      header="Discount"
+                      body={(r) => r.discount.toFixed(2)}
+                    />
                   </DataTable>
                 </Card.Body>
               </Card>

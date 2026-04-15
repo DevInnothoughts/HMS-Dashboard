@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Row, Col, Card, Container, Form, Button, Spinner } from "react-bootstrap";
+import {
+  Row,
+  Col,
+  Card,
+  Container,
+  Form,
+  Button,
+  Spinner,
+} from "react-bootstrap";
 import SimpleBar from "simplebar-react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
@@ -42,7 +50,10 @@ const SxConversionReport = () => {
 
   const onGlobalFilterChange = (e) => {
     const value = e.target.value;
-    setFilters({ ...filters, global: { value, matchMode: FilterMatchMode.CONTAINS } });
+    setFilters({
+      ...filters,
+      global: { value, matchMode: FilterMatchMode.CONTAINS },
+    });
     setSearchText(value);
   };
 
@@ -107,10 +118,17 @@ const SxConversionReport = () => {
       rawMsg.forEach((msg) => {
         if ((msg.consultantDoctor || msg.assistanceDoctor) === id) {
           switch (msg.patient_type) {
-            case "New": stats.new++; break;
-            case "Follow": stats.follow++; break;
-            case "Postoperative": stats.postop++; break;
-            default: break;
+            case "New":
+              stats.new++;
+              break;
+            case "Follow":
+              stats.follow++;
+              break;
+            case "Postoperative":
+              stats.postop++;
+              break;
+            default:
+              break;
           }
           const advice = msg.diagnosisAdvice || "";
           if (advice.includes("Medication")) stats.med++;
@@ -123,7 +141,7 @@ const SxConversionReport = () => {
         sr: index + 1,
         DoctorName: doctorNames[index], // Capitalized to match conversion tables
         count: stats.sur, // Used for the "Conversion" view
-        ...stats
+        ...stats,
       };
     });
   };
@@ -144,8 +162,8 @@ const SxConversionReport = () => {
   //   try {
   //     // Concurrent fetches for all 6 AJAX endpoints in your PHP snippet
   //     const [
-  //       resMainPerf, resAsstPerf, 
-  //       resMainConv, resAsstConv, 
+  //       resMainPerf, resAsstPerf,
+  //       resMainConv, resAsstConv,
   //       resMainOverall, resAsstOverall
   //     ] = await Promise.all([
   //       fetch(`${BASE_URL}/V1/managereports/MainDoctorPerformaceData`, { method: "POST", headers: authHeaders, body: JSON.stringify({ Fromdate: fromDate, Todate: toDate, location: currentLocation }) }),
@@ -223,24 +241,27 @@ const SxConversionReport = () => {
 
   const handleSearch = async () => {
     if (!fromDate || !toDate) {
-      alert('Please select a date range.');
+      alert("Please select a date range.");
       return;
     }
 
     setLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/V1/managereports/getDoctorPerformanceAnalytics`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("token")}`
+      const response = await fetch(
+        `${BASE_URL}/V1/managereports/getDoctorPerformanceAnalytics`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            location: currentLocation,
+            Fromdate: fromDate,
+            Todate: toDate,
+          }),
         },
-        body: JSON.stringify({
-          location: currentLocation,
-          Fromdate: fromDate,
-          Todate: toDate
-        })
-      });
+      );
 
       const result = await response.json();
       console.log(result);
@@ -252,11 +273,12 @@ const SxConversionReport = () => {
         setAssistantData(processPerformanceData(data.asstPerformance));
 
         // Helper to map pcount -> count and handle capital DoctorName
-        const mapData = (list) => list.map(item => ({
-          ...item,
-          count: item.pcount || 0,
-          DoctorName: item.DoctorName || item.doctorName // Handles both case variants
-        }));
+        const mapData = (list) =>
+          list.map((item) => ({
+            ...item,
+            count: item.pcount || 0,
+            DoctorName: item.DoctorName || item.doctorName, // Handles both case variants
+          }));
 
         setMainConversionData(mapData(data.mainConversion));
         setAssistantConversionData(mapData(data.asstConversion));
@@ -277,20 +299,30 @@ const SxConversionReport = () => {
     // Title
     doc.setFontSize(18);
     doc.setTextColor(0, 96, 100);
-    doc.text("Surgery Conversion Report", pageWidth / 2, 15, { align: "center" });
+    doc.text("Surgery Conversion Report", pageWidth / 2, 15, {
+      align: "center",
+    });
 
     // Date Range
     doc.setFontSize(12);
     doc.setTextColor(100);
-    doc.text(`Report Period: ${fromDate || "N/A"} to ${toDate || "N/A"}`, pageWidth / 2, 22, { align: "center" });
+    doc.text(
+      `Report Period: ${fromDate || "N/A"} to ${toDate || "N/A"}`,
+      pageWidth / 2,
+      22,
+      { align: "center" },
+    );
 
     let currentY = 30;
 
     const tables = [
       { title: "Main Doctor Conversion", data: consultantData },
       { title: "Assistance Doctor Conversion", data: assistantData },
-      { title: "Assistance Doctor Overall Conversion", data: assistantOverallData },
-      { title: "Main Doctor Overall Conversion", data: mainOverallData }
+      {
+        title: "Assistance Doctor Overall Conversion",
+        data: assistantOverallData,
+      },
+      { title: "Main Doctor Overall Conversion", data: mainOverallData },
     ];
 
     tables.forEach((table, index) => {
@@ -309,10 +341,10 @@ const SxConversionReport = () => {
         head: [["Sr No", "Doctor Name", "Count"]],
         body: table.data.map((item, i) => [i + 1, item.DoctorName, item.count]),
         startY: currentY + 5,
-        theme: 'striped',
+        theme: "striped",
         headStyles: { fillColor: [0, 172, 193], textColor: 255 },
         styles: { fontSize: 10 },
-        margin: { top: 10 }
+        margin: { top: 10 },
       });
 
       currentY = doc.lastAutoTable.finalY + 15;
@@ -321,16 +353,25 @@ const SxConversionReport = () => {
     doc.save(`SX_Conversion_Report_${fromDate}_to_${toDate}.pdf`);
   };
 
-
   const renderHeader = () => (
     <Row className="align-items-center" style={{ margin: "0 -5px" }}>
       <Col style={{ padding: "0 5px" }} className="d-flex align-items-center">
         <div className="d-flex align-items-center" style={{ gap: "20px" }}>
           <div className="d-flex align-items-center">
-            <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Show</span>
+            <span
+              className="me-1"
+              style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}
+            >
+              Show
+            </span>
             <Form.Select
               size="sm"
-              style={{ width: "70px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
+              style={{
+                width: "70px",
+                borderRadius: "8px",
+                border: "1px solid #4dd0e1",
+                fontSize: "12px",
+              }}
               value={rows}
               onChange={(e) => setRows(Number(e.target.value))}
             >
@@ -340,14 +381,24 @@ const SxConversionReport = () => {
             </Form.Select>
           </div>
           <div className="d-flex align-items-center">
-            <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Search</span>
+            <span
+              className="me-1"
+              style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}
+            >
+              Search
+            </span>
             <span className="p-input-icon-left">
               <InputText
                 value={searchText}
                 onChange={onGlobalFilterChange}
                 placeholder="Global Search..."
                 className="p-inputtext-sm"
-                style={{ width: "200px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
+                style={{
+                  width: "200px",
+                  borderRadius: "8px",
+                  border: "1px solid #4dd0e1",
+                  fontSize: "12px",
+                }}
               />
             </span>
           </div>
@@ -357,7 +408,14 @@ const SxConversionReport = () => {
         <button
           className="btn btn-danger btn-sm"
           onClick={downloadPDF}
-          style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px", fontWeight: "600", height: "35px" }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "5px",
+            borderRadius: "8px",
+            fontWeight: "600",
+            height: "35px",
+          }}
         >
           <i className="fa fa-file-pdf-o"></i> Download PDF
         </button>
@@ -366,34 +424,115 @@ const SxConversionReport = () => {
   );
 
   return (
-    <div className="themebody-wrap" style={{ padding: "10px", background: "linear-gradient(to right, #e0f7fa, #80deea)", fontFamily: "'Poppins', Arial, sans-serif", minHeight: "100vh" }}>
+    <div
+      className="themebody-wrap"
+      style={{
+        padding: "10px",
+        background: "linear-gradient(to right, #e0f7fa, #80deea)",
+        fontFamily: "'Poppins', Arial, sans-serif",
+        minHeight: "100vh",
+      }}
+    >
       <PageBreadcrumb pagename="SX Conversion Report" />
       <SimpleBar className="theme-body common-dash">
         <Container fluid>
           <Row>
             <Col md={12}>
-              <Card style={{ borderRadius: "12px", boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)", border: "1px solid #00bcd4" }}>
-                <Card.Header className="text-center" style={{ background: "linear-gradient(to right, #00acc1, #007c91)", color: "white", padding: "0.8rem" }}>
+              <Card
+                style={{
+                  borderRadius: "12px",
+                  boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
+                  border: "1px solid #00bcd4",
+                }}
+              >
+                <Card.Header
+                  className="text-center"
+                  style={{
+                    background: "linear-gradient(to right, #00acc1, #007c91)",
+                    color: "white",
+                    padding: "0.8rem",
+                  }}
+                >
                   <h4 style={{ margin: 0 }}>SX Conversion Report</h4>
                 </Card.Header>
                 <Card.Body className="p-3">
-                  <Form onSubmit={(e) => { e.preventDefault(); handleSearch(); }}>
-                    <Row className="align-items-end mb-4 flex-nowrap" style={{ margin: "0 -5px" }}>
+                  <Form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleSearch();
+                    }}
+                  >
+                    <Row
+                      className="align-items-end mb-4 flex-nowrap"
+                      style={{ margin: "0 -5px" }}
+                    >
                       <Col style={{ padding: "0 5px", flex: "1" }}>
                         <Form.Group className="mb-2">
-                          <Form.Label style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>From Date</Form.Label>
-                          <Form.Control type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }} />
+                          <Form.Label
+                            style={{
+                              fontWeight: "bold",
+                              color: "#006064",
+                              fontSize: "12px",
+                            }}
+                          >
+                            From Date
+                          </Form.Label>
+                          <Form.Control
+                            type="date"
+                            value={fromDate}
+                            onChange={(e) => setFromDate(e.target.value)}
+                            style={{
+                              border: "2px solid #4dd0e1",
+                              borderRadius: "8px",
+                              padding: "6px",
+                              backgroundColor: "#e0f7fa",
+                              fontSize: "12px",
+                            }}
+                          />
                         </Form.Group>
                       </Col>
                       <Col style={{ padding: "0 5px", flex: "1" }}>
                         <Form.Group className="mb-2">
-                          <Form.Label style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>To Date</Form.Label>
-                          <Form.Control type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }} />
+                          <Form.Label
+                            style={{
+                              fontWeight: "bold",
+                              color: "#006064",
+                              fontSize: "12px",
+                            }}
+                          >
+                            To Date
+                          </Form.Label>
+                          <Form.Control
+                            type="date"
+                            value={toDate}
+                            onChange={(e) => setToDate(e.target.value)}
+                            style={{
+                              border: "2px solid #4dd0e1",
+                              borderRadius: "8px",
+                              padding: "6px",
+                              backgroundColor: "#e0f7fa",
+                              fontSize: "12px",
+                            }}
+                          />
                         </Form.Group>
                       </Col>
                       <Col style={{ padding: "0 5px", flex: "1" }}>
                         <Form.Group className="mb-2">
-                          <button className="btn btn-primary" type="submit" style={{ height: "35px", width: "100%", backgroundColor: "#00acc1", borderColor: "#00bcd4", color: "white", borderRadius: "8px", fontWeight: "bold", fontSize: "13px" }} disabled={loading}>
+                          <button
+                            className="btn btn-primary"
+                            type="submit"
+                            style={{
+                              height: "35px",
+                              width: "100%",
+                              backgroundColor: "#00acc1",
+                              borderColor: "#00bcd4",
+                              color: "white",
+                              borderRadius: "8px",
+                              fontWeight: "bold",
+                              fontSize: "13px",
+                            }}
+                            disabled={loading}
+                          >
                             {loading ? <Spinner size="sm" /> : "Search"}
                           </button>
                         </Form.Group>
@@ -401,19 +540,34 @@ const SxConversionReport = () => {
                     </Row>
                   </Form>
 
-
                   {/* Global Controls */}
-                  <div className="mb-3">
-                    {renderHeader()}
-                  </div>
+                  <div className="mb-3">{renderHeader()}</div>
 
                   <Row className="g-4">
                     {/* 1. Main Doctor Conversion */}
                     <Col lg={6}>
-                      <Card className="h-100 border-0" style={{ borderRadius: "10px", overflow: "hidden", boxShadow: "0px 6px 15px rgba(0, 80, 80, 0.12)" }}>
-                        <Card.Header className="py-10" style={{ background: "linear-gradient(to right, #f1f8f9, #e0f2f1)", borderBottom: "1px solid #b2ebf2" }}>
-                          <h6 className="m-0 fw-bold" style={{ color: "#006064", fontSize: "14px" }}>
-                            <i className="fa fa-user-md me-2"></i> Main Doctor Conversion
+                      <Card
+                        className="h-100 border-0"
+                        style={{
+                          borderRadius: "10px",
+                          overflow: "hidden",
+                          boxShadow: "0px 6px 15px rgba(0, 80, 80, 0.12)",
+                        }}
+                      >
+                        <Card.Header
+                          className="py-10"
+                          style={{
+                            background:
+                              "linear-gradient(to right, #f1f8f9, #e0f2f1)",
+                            borderBottom: "1px solid #b2ebf2",
+                          }}
+                        >
+                          <h6
+                            className="m-0 fw-bold"
+                            style={{ color: "#006064", fontSize: "14px" }}
+                          >
+                            <i className="fa fa-user-md me-2"></i> Main Doctor
+                            Conversion
                           </h6>
                         </Card.Header>
                         <Card.Body className="p-3">
@@ -427,9 +581,22 @@ const SxConversionReport = () => {
                             responsiveLayout="scroll"
                             style={{ fontSize: "12px" }}
                           >
-                            <Column header="Sr No" body={(r, { rowIndex }) => rowIndex + 1} style={{ width: "80px", textAlign: "center" }} />
-                            <Column field="DoctorName" header="Doctor Name" sortable />
-                            <Column field="count" header="Count" sortable style={{ fontWeight: 'bold', color: '#007c91' }} />
+                            <Column
+                              header="Sr No"
+                              body={(r, { rowIndex }) => rowIndex + 1}
+                              style={{ width: "80px", textAlign: "center" }}
+                            />
+                            <Column
+                              field="DoctorName"
+                              header="Doctor Name"
+                              sortable
+                            />
+                            <Column
+                              field="count"
+                              header="Count"
+                              sortable
+                              style={{ fontWeight: "bold", color: "#007c91" }}
+                            />
                           </DataTable>
                         </Card.Body>
                       </Card>
@@ -437,10 +604,28 @@ const SxConversionReport = () => {
 
                     {/* 2. Assistance Doctor Conversion */}
                     <Col lg={6}>
-                      <Card className="h-100 border-0" style={{ borderRadius: "10px", overflow: "hidden", boxShadow: "0px 6px 15px rgba(0, 80, 80, 0.12)" }}>
-                        <Card.Header className="py-10" style={{ background: "linear-gradient(to right, #f1f8f9, #e0f2f1)", borderBottom: "1px solid #b2ebf2" }}>
-                          <h6 className="m-0 fw-bold" style={{ color: "#006064", fontSize: "14px" }}>
-                            <i className="fa fa-user-plus me-2"></i> Assistance Doctor Conversion
+                      <Card
+                        className="h-100 border-0"
+                        style={{
+                          borderRadius: "10px",
+                          overflow: "hidden",
+                          boxShadow: "0px 6px 15px rgba(0, 80, 80, 0.12)",
+                        }}
+                      >
+                        <Card.Header
+                          className="py-10"
+                          style={{
+                            background:
+                              "linear-gradient(to right, #f1f8f9, #e0f2f1)",
+                            borderBottom: "1px solid #b2ebf2",
+                          }}
+                        >
+                          <h6
+                            className="m-0 fw-bold"
+                            style={{ color: "#006064", fontSize: "14px" }}
+                          >
+                            <i className="fa fa-user-plus me-2"></i> Assistance
+                            Doctor Conversion
                           </h6>
                         </Card.Header>
                         <Card.Body className="p-3">
@@ -454,9 +639,22 @@ const SxConversionReport = () => {
                             responsiveLayout="scroll"
                             style={{ fontSize: "12px" }}
                           >
-                            <Column header="Sr No" body={(r, { rowIndex }) => rowIndex + 1} style={{ width: "80px", textAlign: "center" }} />
-                            <Column field="DoctorName" header="Doctor Name" sortable />
-                            <Column field="count" header="Count" sortable style={{ fontWeight: 'bold', color: '#007c91' }} />
+                            <Column
+                              header="Sr No"
+                              body={(r, { rowIndex }) => rowIndex + 1}
+                              style={{ width: "80px", textAlign: "center" }}
+                            />
+                            <Column
+                              field="DoctorName"
+                              header="Doctor Name"
+                              sortable
+                            />
+                            <Column
+                              field="count"
+                              header="Count"
+                              sortable
+                              style={{ fontWeight: "bold", color: "#007c91" }}
+                            />
                           </DataTable>
                         </Card.Body>
                       </Card>
@@ -464,10 +662,28 @@ const SxConversionReport = () => {
 
                     {/* 3. Assistance Doctor Overall Conversion */}
                     <Col lg={6}>
-                      <Card className="h-100 border-0" style={{ borderRadius: "10px", overflow: "hidden", boxShadow: "0px 6px 15px rgba(0, 80, 80, 0.12)" }}>
-                        <Card.Header className="py-10" style={{ background: "linear-gradient(to right, #f1f8f9, #e0f2f1)", borderBottom: "1px solid #b2ebf2" }}>
-                          <h6 className="m-0 fw-bold" style={{ color: "#006064", fontSize: "14px" }}>
-                            <i className="fa fa-pie-chart me-2"></i> Assistance Doctor Overall Conversion
+                      <Card
+                        className="h-100 border-0"
+                        style={{
+                          borderRadius: "10px",
+                          overflow: "hidden",
+                          boxShadow: "0px 6px 15px rgba(0, 80, 80, 0.12)",
+                        }}
+                      >
+                        <Card.Header
+                          className="py-10"
+                          style={{
+                            background:
+                              "linear-gradient(to right, #f1f8f9, #e0f2f1)",
+                            borderBottom: "1px solid #b2ebf2",
+                          }}
+                        >
+                          <h6
+                            className="m-0 fw-bold"
+                            style={{ color: "#006064", fontSize: "14px" }}
+                          >
+                            <i className="fa fa-pie-chart me-2"></i> Assistance
+                            Doctor Overall Conversion
                           </h6>
                         </Card.Header>
                         <Card.Body className="p-3">
@@ -481,9 +697,22 @@ const SxConversionReport = () => {
                             responsiveLayout="scroll"
                             style={{ fontSize: "12px" }}
                           >
-                            <Column header="Sr No" body={(r, { rowIndex }) => rowIndex + 1} style={{ width: "80px", textAlign: "center" }} />
-                            <Column field="DoctorName" header="Doctor Name" sortable />
-                            <Column field="count" header="Count" sortable style={{ fontWeight: 'bold', color: '#007c91' }} />
+                            <Column
+                              header="Sr No"
+                              body={(r, { rowIndex }) => rowIndex + 1}
+                              style={{ width: "80px", textAlign: "center" }}
+                            />
+                            <Column
+                              field="DoctorName"
+                              header="Doctor Name"
+                              sortable
+                            />
+                            <Column
+                              field="count"
+                              header="Count"
+                              sortable
+                              style={{ fontWeight: "bold", color: "#007c91" }}
+                            />
                           </DataTable>
                         </Card.Body>
                       </Card>
@@ -491,10 +720,28 @@ const SxConversionReport = () => {
 
                     {/* 4. Main Doctor Overall Conversion */}
                     <Col lg={6}>
-                      <Card className="h-100 border-0" style={{ borderRadius: "10px", overflow: "hidden", boxShadow: "0px 6px 15px rgba(0, 80, 80, 0.12)" }}>
-                        <Card.Header className="py-10" style={{ background: "linear-gradient(to right, #f1f8f9, #e0f2f1)", borderBottom: "1px solid #b2ebf2" }}>
-                          <h6 className="m-0 fw-bold" style={{ color: "#006064", fontSize: "14px" }}>
-                            <i className="fa fa-line-chart me-2"></i> Main Doctor Overall Conversion
+                      <Card
+                        className="h-100 border-0"
+                        style={{
+                          borderRadius: "10px",
+                          overflow: "hidden",
+                          boxShadow: "0px 6px 15px rgba(0, 80, 80, 0.12)",
+                        }}
+                      >
+                        <Card.Header
+                          className="py-10"
+                          style={{
+                            background:
+                              "linear-gradient(to right, #f1f8f9, #e0f2f1)",
+                            borderBottom: "1px solid #b2ebf2",
+                          }}
+                        >
+                          <h6
+                            className="m-0 fw-bold"
+                            style={{ color: "#006064", fontSize: "14px" }}
+                          >
+                            <i className="fa fa-line-chart me-2"></i> Main
+                            Doctor Overall Conversion
                           </h6>
                         </Card.Header>
                         <Card.Body className="p-3">
@@ -508,9 +755,22 @@ const SxConversionReport = () => {
                             responsiveLayout="scroll"
                             style={{ fontSize: "12px" }}
                           >
-                            <Column header="Sr No" body={(r, { rowIndex }) => rowIndex + 1} style={{ width: "80px", textAlign: "center" }} />
-                            <Column field="DoctorName" header="Doctor Name" sortable />
-                            <Column field="count" header="Count" sortable style={{ fontWeight: 'bold', color: '#007c91' }} />
+                            <Column
+                              header="Sr No"
+                              body={(r, { rowIndex }) => rowIndex + 1}
+                              style={{ width: "80px", textAlign: "center" }}
+                            />
+                            <Column
+                              field="DoctorName"
+                              header="Doctor Name"
+                              sortable
+                            />
+                            <Column
+                              field="count"
+                              header="Count"
+                              sortable
+                              style={{ fontWeight: "bold", color: "#007c91" }}
+                            />
                           </DataTable>
                         </Card.Body>
                       </Card>
@@ -529,7 +789,7 @@ const SxConversionReport = () => {
         .custom-datatable .p-datatable-tbody > tr > td { font-size: 12px; padding: 8px; border: 1px solid #90caf9; text-align: center !important; }
         .custom-datatable .p-paginator { background: #f8fdfe; border: 1px solid #4dd0e1; border-radius: 0 0 8px 8px; }
       `}</style>
-    </div >
+    </div>
   );
 };
 

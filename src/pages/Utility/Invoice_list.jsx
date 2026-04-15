@@ -31,7 +31,7 @@ import FeatherIcon from "feather-icons-react";
 import "../../styles/styles.css";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api"
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const Toast = Swal.mixin({
   toast: true,
@@ -44,7 +44,6 @@ const Toast = Swal.mixin({
     toast.addEventListener("mouseleave", Swal.resumeTimer);
   },
 });
-
 
 // const getDynamicRowsFromInvoice = (invoice) => {
 //   const dynamicRows = [];
@@ -106,7 +105,9 @@ const getDynamicRowsFromInvoice = (invoice) => {
   let titleCalculatedTotal = 0;
 
   const rowSource =
-    invoice.package && typeof invoice.package === "string" && invoice.package !== ""
+    invoice.package &&
+    typeof invoice.package === "string" &&
+    invoice.package !== ""
       ? invoice.package
       : invoice.title && typeof invoice.title === "string"
         ? invoice.title
@@ -125,7 +126,11 @@ const getDynamicRowsFromInvoice = (invoice) => {
       const label = entries[i];
       const value = parseFloat(entries[i + 1]) || 0;
       if (label) {
-        dynamicRows.push({ label, value: Math.round(value).toString(), field: "title_parsed" });
+        dynamicRows.push({
+          label,
+          value: Math.round(value).toString(),
+          field: "title_parsed",
+        });
         titleCalculatedTotal += value;
       }
     }
@@ -137,11 +142,19 @@ const getDynamicRowsFromInvoice = (invoice) => {
         const label = parts[0].trim();
         const value = parseFloat(parts[1].trim()) || 0;
         if (label) {
-          dynamicRows.push({ label, value: Math.round(value).toString(), field: "title_parsed" });
+          dynamicRows.push({
+            label,
+            value: Math.round(value).toString(),
+            field: "title_parsed",
+          });
           titleCalculatedTotal += value;
         }
       } else if (parts[0].trim()) {
-        dynamicRows.push({ label: parts[0].trim(), value: "0.00", field: "title_parsed" });
+        dynamicRows.push({
+          label: parts[0].trim(),
+          value: "0.00",
+          field: "title_parsed",
+        });
       }
     });
   }
@@ -152,13 +165,23 @@ const getDynamicRowsFromInvoice = (invoice) => {
       : parseFloat(invoice.totalamt || invoice.totalAmt || 0);
 
   return {
-    dynamicRows: dynamicRows.length > 0 ? dynamicRows : [{ label: "", value: "0.00", field: "" }],
+    dynamicRows:
+      dynamicRows.length > 0
+        ? dynamicRows
+        : [{ label: "", value: "0.00", field: "" }],
     Sub_Total: Sub_Total.toFixed(2),
     totalamt: Sub_Total.toFixed(2),
   };
 };
 
-const calculateActivePayableAmt = (invoice, subtotal, discount, pdc, billType, billMethod) => {
+const calculateActivePayableAmt = (
+  invoice,
+  subtotal,
+  discount,
+  pdc,
+  billType,
+  billMethod,
+) => {
   const totalAmt = parseFloat(subtotal) || 0;
   const disc = parseFloat(discount) || 0;
   const p = parseFloat(pdc) || 0;
@@ -173,9 +196,17 @@ const calculatePayableAmt = (invoice) => {
   const totalAmt = parseFloat(invoice.totalamt || invoice.total_amt || 0);
   const discount = parseFloat(invoice.discount || 0);
   const pdc = parseFloat(invoice.pdc || invoice.advance_amt || 0);
-  const billMethod = (invoice.bill_method || invoice.status || "").toLowerCase();
+  const billMethod = (
+    invoice.bill_method ||
+    invoice.status ||
+    ""
+  ).toLowerCase();
 
-  if (billMethod === "pdc" || billMethod === "PDC" || (invoice.status && invoice.status.toLowerCase() === "pdc")) {
+  if (
+    billMethod === "pdc" ||
+    billMethod === "PDC" ||
+    (invoice.status && invoice.status.toLowerCase() === "pdc")
+  ) {
     return Math.max(0, totalAmt - pdc).toFixed(0);
   }
   return Math.max(0, totalAmt - discount).toFixed(0);
@@ -201,7 +232,8 @@ const rowClassName = (rowData) => {
   const creationDate = (rowData.creation_date || "").split("T")[0];
   const currentDate = new Date().toISOString().split("T")[0];
   // Use backend totaldue if available, otherwise fallback to calculated due_amt
-  const dueAmt = rowData.totaldue !== undefined ? rowData.totaldue : (rowData.due_amt || 0);
+  const dueAmt =
+    rowData.totaldue !== undefined ? rowData.totaldue : rowData.due_amt || 0;
 
   // Normalize status for comparisons (handle case-insensitivity just in case, but prioritize PHP exact strings)
   const isTargetMode =
@@ -211,11 +243,7 @@ const rowClassName = (rowData) => {
     status.toLowerCase() === "noninsurance" ||
     status.toLowerCase() === "non_insurance";
 
-  if (
-    isTargetMode &&
-    creationDate !== currentDate &&
-    dueAmt > 0
-  ) {
+  if (isTargetMode && creationDate !== currentDate && dueAmt > 0) {
     return "red-row";
   }
   return "";
@@ -282,7 +310,11 @@ const InvoiceList = () => {
 
   useEffect(() => {
     // Only check if it's different from the record we are currently editing
-    if (!currentLocation || !selectedInvoice?.invoice_id || selectedInvoice.invoice_id === originalInvoiceId) {
+    if (
+      !currentLocation ||
+      !selectedInvoice?.invoice_id ||
+      selectedInvoice.invoice_id === originalInvoiceId
+    ) {
       setInvoiceWarning("");
       return;
     }
@@ -352,13 +384,20 @@ const InvoiceList = () => {
 
         const processedInvoices = rawData.map((invoice) => {
           // Normalize values with fallbacks for different backend naming conventions
-          const totalamt = parseFloat(invoice.totalamt || invoice.total_amt || 0) || 0;
-          const receivedamt = parseFloat(invoice.receivedamt || invoice.received_amt || 0) || 0;
+          const totalamt =
+            parseFloat(invoice.totalamt || invoice.total_amt || 0) || 0;
+          const receivedamt =
+            parseFloat(invoice.receivedamt || invoice.received_amt || 0) || 0;
           const discount = parseFloat(invoice.discount || 0) || 0;
           const pdc = parseFloat(invoice.pdc || invoice.advance_amt || 0) || 0;
 
-          const payable_amt = parseFloat(invoice.payable_amt) || calculatePayableAmt({ ...invoice, totalamt, discount, pdc });
-          const due_amt = invoice.totaldue !== undefined ? parseFloat(invoice.totaldue) : (payable_amt - receivedamt);
+          const payable_amt =
+            parseFloat(invoice.payable_amt) ||
+            calculatePayableAmt({ ...invoice, totalamt, discount, pdc });
+          const due_amt =
+            invoice.totaldue !== undefined
+              ? parseFloat(invoice.totaldue)
+              : payable_amt - receivedamt;
 
           return {
             ...invoice,
@@ -369,18 +408,24 @@ const InvoiceList = () => {
             due_amt,
             payable_amt,
             pay_mode:
-              (invoice.status === "PDC" || invoice.bill_method === "PDC" || (invoice.chequeno && invoice.chequeno !== "NULL"))
+              invoice.status === "PDC" ||
+              invoice.bill_method === "PDC" ||
+              (invoice.chequeno && invoice.chequeno !== "NULL")
                 ? "PDC"
-                : (invoice.status === "Cashless" || invoice.bill_method === "Cashless")
+                : invoice.status === "Cashless" ||
+                    invoice.bill_method === "Cashless"
                   ? "Cashless"
-                  : (invoice.status === "Reimbursement" || invoice.bill_method === "Reimbursement")
+                  : invoice.status === "Reimbursement" ||
+                      invoice.bill_method === "Reimbursement"
                     ? "Reimbursement"
-                    : (invoice.bill_Type === "charity" || invoice.status === "Charity")
+                    : invoice.bill_Type === "charity" ||
+                        invoice.status === "Charity"
                       ? "Charity"
                       : "NonInsurance",
             patient_name: invoice.patient_name || invoice.name || "N/A",
             patient_phone: invoice.patient_phone || invoice.phone || "N/A",
-            patient_uid: invoice.patient_uid || invoice.Uid_no || invoice.uid || "N/A",
+            patient_uid:
+              invoice.patient_uid || invoice.Uid_no || invoice.uid || "N/A",
             status: invoice.status || "",
           };
         });
@@ -485,11 +530,18 @@ const InvoiceList = () => {
     setSelectedInvoice((prev) => ({ ...prev, [name]: value }));
 
     if (
-      ["bill_method", "bill_Type", "pdc", "discount", "discountAmount"].includes(name)
+      [
+        "bill_method",
+        "bill_Type",
+        "pdc",
+        "discount",
+        "discountAmount",
+      ].includes(name)
     ) {
       setModalInvoiceData((prevModalData) => {
         const updatedModalData = { ...prevModalData, [name]: value };
-        updatedModalData.payableAmount = calculatePayableAmount(updatedModalData);
+        updatedModalData.payableAmount =
+          calculatePayableAmount(updatedModalData);
 
         setSelectedInvoice((prevInvoice) => ({
           ...prevInvoice,
@@ -695,16 +747,17 @@ const InvoiceList = () => {
         ? "Cashless"
         : statusVal === "reimbursement"
           ? "Reimbursement"
-          : statusVal === "pdc" || (invoice.chequeno && invoice.chequeno !== "NULL")
+          : statusVal === "pdc" ||
+              (invoice.chequeno && invoice.chequeno !== "NULL")
             ? "PDC"
             : "NonInsurance");
 
     const bill_Type =
       invoice.bill_Type ||
       (statusVal === "cashless" ||
-        statusVal === "reimbursement" ||
-        statusVal === "pdc" ||
-        invoice.insurancecompany
+      statusVal === "reimbursement" ||
+      statusVal === "pdc" ||
+      invoice.insurancecompany
         ? "insurance"
         : statusVal === "charity"
           ? "charity"
@@ -712,7 +765,8 @@ const InvoiceList = () => {
 
     const chequeno =
       invoice.chequeno === "NULL" || !invoice.chequeno ? "" : invoice.chequeno;
-    const pdc = invoice.pdc || (bill_method === "PDC" ? invoice.advance_amt : "0.00");
+    const pdc =
+      invoice.pdc || (bill_method === "PDC" ? invoice.advance_amt : "0.00");
 
     setSelectedInvoice({
       ...invoice,
@@ -898,10 +952,11 @@ const InvoiceList = () => {
     }
     console.log("printing invoice:", invoice);
     const trimmedLocation = currentLocation ? currentLocation.trim() : "";
-    const clinicAddr = clinincLoc[trimmedLocation] || clinincLoc[currentLocation] || {
-      invoiceAddress: "<b>Healing Hands Clinic</b>",
-      invoiceHelplineNo: "8888288884",
-    };
+    const clinicAddr = clinincLoc[trimmedLocation] ||
+      clinincLoc[currentLocation] || {
+        invoiceAddress: "<b>Healing Hands Clinic</b>",
+        invoiceHelplineNo: "8888288884",
+      };
 
     const { dynamicRows, Sub_Total } = getDynamicRowsFromInvoice(invoice);
     const printWindow = window.open("", "_blank", "width=900,height=900");
@@ -1029,12 +1084,12 @@ const InvoiceList = () => {
         </tr>
         <tr>
           <td>Insurance Name:</td>
-          <td>${((invoice.status || "").toLowerCase() === "cashless" || (invoice.status || "").toLowerCase() === "reimbursement" || (invoice.status || "").toLowerCase() === "pdc" || invoice.bill_Type === "insurance") ? invoice.insurance_company_name || "" : ""}</td>
+          <td>${(invoice.status || "").toLowerCase() === "cashless" || (invoice.status || "").toLowerCase() === "reimbursement" || (invoice.status || "").toLowerCase() === "pdc" || invoice.bill_Type === "insurance" ? invoice.insurance_company_name || "" : ""}</td>
           <td>Bed Category:</td><td>${invoice.bed_desc || invoice.bed_no || "N/A"}</td>
         </tr>
         <tr>
           <td>TPA Name:</td>
-          <td>${((invoice.status || "").toLowerCase() === "cashless" || (invoice.status || "").toLowerCase() === "reimbursement" || (invoice.status || "").toLowerCase() === "pdc" || invoice.bill_Type === "insurance") ? invoice.tpa_name || "" : ""}</td>
+          <td>${(invoice.status || "").toLowerCase() === "cashless" || (invoice.status || "").toLowerCase() === "reimbursement" || (invoice.status || "").toLowerCase() === "pdc" || invoice.bill_Type === "insurance" ? invoice.tpa_name || "" : ""}</td>
           <td>Admission Date & Time:</td><td>${formatDateForDisplay(invoice.creation_date)} &nbsp; ${invoice.admissiontime}</td>
         </tr>
         <tr>
@@ -1066,15 +1121,15 @@ const InvoiceList = () => {
                 <td>Amount (INR)</td>
               </tr>
               ${dynamicRows
-          .map(
-            (row) => `
+                .map(
+                  (row) => `
                 <tr>
                   <td>${row.label}</td>
                   <td>${Math.round(parseFloat(row.value))}</td>
                 </tr>
               `,
-          )
-          .join("")}
+                )
+                .join("")}
             </table>
           </td>
       <td style="width: 50%; vertical-align: top; padding-left: 10px;">
@@ -1087,15 +1142,16 @@ const InvoiceList = () => {
       <td>Total</td>
       <td>${(Math.round(parseFloat(invoice.totalamt || Sub_Total)) || 0).toLocaleString()}</td>
     </tr>
-    ${(Math.round(parseFloat(invoice.discount)) || 0) > 0
-          ? `
+    ${
+      (Math.round(parseFloat(invoice.discount)) || 0) > 0
+        ? `
     <tr>
       <td>Discount</td>
       <td>${(Math.round(parseFloat(invoice.discount)) || 0).toLocaleString()}</td>
     </tr>
     `
-          : ""
-        }
+        : ""
+    }
   </table>
 </td>
         </tr>
@@ -1156,7 +1212,7 @@ const InvoiceList = () => {
   `;
       printWindow.document.write(printContent);
       printWindow.document.close();
-      setTimeout(() => { }, 1000);
+      setTimeout(() => {}, 1000);
     });
   };
 
@@ -1477,9 +1533,16 @@ const InvoiceList = () => {
                       header="Payable Amount"
                       body={(rowData) => {
                         const val = parseFloat(rowData.payable_amt) || 0;
-                        return val.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                        return val.toLocaleString(undefined, {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 0,
+                        });
                       }}
-                      style={{ width: "110px", border: "1px solid #4dd0e1", textAlign: "right" }}
+                      style={{
+                        width: "110px",
+                        border: "1px solid #4dd0e1",
+                        textAlign: "right",
+                      }}
                     />
                     <Column
                       headerClassName="datatable-header-center"
@@ -1487,9 +1550,16 @@ const InvoiceList = () => {
                       header="Due Amount"
                       body={(rowData) => {
                         const val = parseFloat(rowData.due_amt) || 0;
-                        return val.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                        return val.toLocaleString(undefined, {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 0,
+                        });
                       }}
-                      style={{ width: "110px", border: "1px solid #4dd0e1", textAlign: "right" }}
+                      style={{
+                        width: "110px",
+                        border: "1px solid #4dd0e1",
+                        textAlign: "right",
+                      }}
                     />
                     <Column
                       headerClassName="datatable-header-center"
@@ -1634,7 +1704,14 @@ const InvoiceList = () => {
                         }}
                       />
                       {invoiceWarning && (
-                        <div className="text-danger" style={{ fontSize: "10px", marginTop: "4px", fontWeight: "600" }}>
+                        <div
+                          className="text-danger"
+                          style={{
+                            fontSize: "10px",
+                            marginTop: "4px",
+                            fontWeight: "600",
+                          }}
+                        >
                           {invoiceWarning}
                         </div>
                       )}
@@ -1964,7 +2041,8 @@ const InvoiceList = () => {
                             (c) => c.doctor_id == selectedInvoice.consultant,
                           ) && (
                             <option value={selectedInvoice.consultant}>
-                              {selectedInvoice.consultant_name || selectedInvoice.consultant}
+                              {selectedInvoice.consultant_name ||
+                                selectedInvoice.consultant}
                             </option>
                           )}
                       </Form.Select>
@@ -2003,10 +2081,12 @@ const InvoiceList = () => {
                         ))}
                         {selectedInvoice.prepared_doctor &&
                           !surgeons.some(
-                            (s) => s.doctor_id == selectedInvoice.prepared_doctor,
+                            (s) =>
+                              s.doctor_id == selectedInvoice.prepared_doctor,
                           ) && (
                             <option value={selectedInvoice.prepared_doctor}>
-                              {selectedInvoice.surgeon_name || selectedInvoice.prepared_doctor}
+                              {selectedInvoice.surgeon_name ||
+                                selectedInvoice.prepared_doctor}
                             </option>
                           )}
                       </Form.Select>
@@ -2161,18 +2241,49 @@ const InvoiceList = () => {
               </Card>
 
               <Col md={12}>
-                <Card style={{ border: "none", borderRadius: "10px", borderTop: "3px solid #00bcd4", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
+                <Card
+                  style={{
+                    border: "none",
+                    borderRadius: "10px",
+                    borderTop: "3px solid #00bcd4",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+                  }}
+                >
                   <Card.Body style={{ padding: "10px" }}>
-                    <h6 style={{ fontSize: "0.95rem", fontWeight: "600", color: "#00838f" }}>Billing Settings</h6>
+                    <h6
+                      style={{
+                        fontSize: "0.95rem",
+                        fontWeight: "600",
+                        color: "#00838f",
+                      }}
+                    >
+                      Billing Settings
+                    </h6>
                     <Row className="g-2">
                       <Col md={4}>
-                        <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
+                        <Form.Label
+                          style={{
+                            fontSize: "12px",
+                            fontWeight: "600",
+                            marginBottom: "2px",
+                          }}
+                          className="text-muted"
+                        >
                           Bill Type <span className="text-danger">*</span>
                         </Form.Label>
                         <Form.Select
                           size="sm"
-                          style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
-                          value={selectedInvoice.bill_Type || (selectedInvoice.insurancecompany ? "insurance" : "non_insurance")}
+                          style={{
+                            borderRadius: "10px",
+                            fontSize: "12px",
+                            border: "1px solid #4dd0e1",
+                          }}
+                          value={
+                            selectedInvoice.bill_Type ||
+                            (selectedInvoice.insurancecompany
+                              ? "insurance"
+                              : "non_insurance")
+                          }
                           onChange={(e) => {
                             const type = e.target.value;
                             setSelectedInvoice((prev) => ({
@@ -2195,14 +2306,21 @@ const InvoiceList = () => {
                                   bill_method: "non_insurance",
                                 }),
                               };
-                              const subTotal = parseFloat(updated.Sub_Total) || 0;
-                              const discount = parseFloat(updated.discount) || 0;
+                              const subTotal =
+                                parseFloat(updated.Sub_Total) || 0;
+                              const discount =
+                                parseFloat(updated.discount) || 0;
                               const pdc = parseFloat(updated.pdc) || 0;
                               const payable =
                                 subTotal -
-                                (updated.bill_method === "PDC" ? pdc : discount);
-                              updated.payableAmount = Math.max(0, payable).toFixed(0);
-                              
+                                (updated.bill_method === "PDC"
+                                  ? pdc
+                                  : discount);
+                              updated.payableAmount = Math.max(
+                                0,
+                                payable,
+                              ).toFixed(0);
+
                               setSelectedInvoice((prevInvoice) => ({
                                 ...prevInvoice,
                                 payable_amt: updated.payableAmount,
@@ -2218,28 +2336,52 @@ const InvoiceList = () => {
                       </Col>
 
                       {/* 1. Show Insurance Company Dropdown */}
-                      {(selectedInvoice.bill_Type === "insurance" || selectedInvoice.insurancecompany) && (
+                      {(selectedInvoice.bill_Type === "insurance" ||
+                        selectedInvoice.insurancecompany) && (
                         <Col md={4}>
-                          <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
+                          <Form.Label
+                            style={{
+                              fontSize: "12px",
+                              fontWeight: "600",
+                              marginBottom: "2px",
+                            }}
+                            className="text-muted"
+                          >
                             Insurance Company
                           </Form.Label>
                           <Form.Select
                             required
                             size="sm"
-                            style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                            style={{
+                              borderRadius: "10px",
+                              fontSize: "12px",
+                              border: "1px solid #4dd0e1",
+                            }}
                             value={selectedInvoice.insurancecompany || ""}
-                            onChange={(e) => setSelectedInvoice({ ...selectedInvoice, insurancecompany: e.target.value })}
+                            onChange={(e) =>
+                              setSelectedInvoice({
+                                ...selectedInvoice,
+                                insurancecompany: e.target.value,
+                              })
+                            }
                           >
                             <option value="">Select Company</option>
                             {insurance.map((co, idx) => (
-                              <option key={idx} value={co.comapny_id}>{co.companyname}</option>
+                              <option key={idx} value={co.comapny_id}>
+                                {co.companyname}
+                              </option>
                             ))}
                             {selectedInvoice.insurancecompany &&
                               !insurance.some(
-                                (co) => co.comapny_id == selectedInvoice.insurancecompany,
+                                (co) =>
+                                  co.comapny_id ==
+                                  selectedInvoice.insurancecompany,
                               ) && (
-                                <option value={selectedInvoice.insurancecompany}>
-                                  {selectedInvoice.insurance_company_name || selectedInvoice.insurancecompany}
+                                <option
+                                  value={selectedInvoice.insurancecompany}
+                                >
+                                  {selectedInvoice.insurance_company_name ||
+                                    selectedInvoice.insurancecompany}
                                 </option>
                               )}
                           </Form.Select>
@@ -2247,27 +2389,47 @@ const InvoiceList = () => {
                       )}
 
                       {/* 2. Show TPA Dropdown */}
-                      {(selectedInvoice.bill_Type === "insurance" || selectedInvoice.tpa) && (
+                      {(selectedInvoice.bill_Type === "insurance" ||
+                        selectedInvoice.tpa) && (
                         <Col md={4}>
-                          <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
+                          <Form.Label
+                            style={{
+                              fontSize: "12px",
+                              fontWeight: "600",
+                              marginBottom: "2px",
+                            }}
+                            className="text-muted"
+                          >
                             TPA
                           </Form.Label>
                           <Form.Select
                             size="sm"
-                            style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                            style={{
+                              borderRadius: "10px",
+                              fontSize: "12px",
+                              border: "1px solid #4dd0e1",
+                            }}
                             value={selectedInvoice.tpa || ""}
-                            onChange={(e) => setSelectedInvoice({ ...selectedInvoice, tpa: e.target.value })}
+                            onChange={(e) =>
+                              setSelectedInvoice({
+                                ...selectedInvoice,
+                                tpa: e.target.value,
+                              })
+                            }
                           >
                             <option value="">Select TPA</option>
                             {tpa.map((t, idx) => (
-                              <option key={idx} value={t.comapny_id}>{t.companyname}</option>
+                              <option key={idx} value={t.comapny_id}>
+                                {t.companyname}
+                              </option>
                             ))}
                             {selectedInvoice.tpa &&
                               !tpa.some(
                                 (t) => t.comapny_id == selectedInvoice.tpa,
                               ) && (
                                 <option value={selectedInvoice.tpa}>
-                                  {selectedInvoice.tpa_name || selectedInvoice.tpa}
+                                  {selectedInvoice.tpa_name ||
+                                    selectedInvoice.tpa}
                                 </option>
                               )}
                           </Form.Select>
@@ -2277,21 +2439,42 @@ const InvoiceList = () => {
                       {/* 3. Bill Method - Only shown if type is insurance */}
                       {selectedInvoice.bill_Type === "insurance" && (
                         <Col md={4}>
-                          <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
+                          <Form.Label
+                            style={{
+                              fontSize: "12px",
+                              fontWeight: "600",
+                              marginBottom: "2px",
+                            }}
+                            className="text-muted"
+                          >
                             Bill Method
                           </Form.Label>
                           <Form.Select
                             size="sm"
                             name="bill_method"
-                            style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                            style={{
+                              borderRadius: "10px",
+                              fontSize: "12px",
+                              border: "1px solid #4dd0e1",
+                            }}
                             value={selectedInvoice.bill_method || ""}
                             onChange={(e) => {
                               const method = e.target.value;
-                              setSelectedInvoice(prev => ({ ...prev, bill_method: method }));
-                              setModalInvoiceData(prev => ({
+                              setSelectedInvoice((prev) => ({
                                 ...prev,
                                 bill_method: method,
-                                payableAmount: calculateActivePayableAmt(selectedInvoice, prev.Sub_Total, prev.discount, prev.pdc, prev.bill_Type, method)
+                              }));
+                              setModalInvoiceData((prev) => ({
+                                ...prev,
+                                bill_method: method,
+                                payableAmount: calculateActivePayableAmt(
+                                  selectedInvoice,
+                                  prev.Sub_Total,
+                                  prev.discount,
+                                  prev.pdc,
+                                  prev.bill_Type,
+                                  method,
+                                ),
                               }));
                             }}
                           >
@@ -2304,9 +2487,17 @@ const InvoiceList = () => {
                       )}
 
                       {/* 4. Deduction Fields (Discount/PDC) based on type/method */}
-                      {(selectedInvoice.bill_Type === "non_insurance" || selectedInvoice.bill_Type === "charity") && (
+                      {(selectedInvoice.bill_Type === "non_insurance" ||
+                        selectedInvoice.bill_Type === "charity") && (
                         <Col md={4}>
-                          <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
+                          <Form.Label
+                            style={{
+                              fontSize: "12px",
+                              fontWeight: "600",
+                              marginBottom: "2px",
+                            }}
+                            className="text-muted"
+                          >
                             Discount Amount (₹)
                           </Form.Label>
                           <Form.Control
@@ -2314,72 +2505,131 @@ const InvoiceList = () => {
                             type="number"
                             min="0"
                             onWheel={(e) => e.target.blur()}
-                            style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                            style={{
+                              borderRadius: "10px",
+                              fontSize: "12px",
+                              border: "1px solid #4dd0e1",
+                            }}
                             value={modalInvoiceData.discount || ""}
                             onChange={(e) => {
                               const val = e.target.value;
-                              setModalInvoiceData(prev => ({
+                              setModalInvoiceData((prev) => ({
                                 ...prev,
                                 discount: val,
-                                payableAmount: calculateActivePayableAmt(selectedInvoice, prev.Sub_Total, val, prev.pdc, prev.bill_Type, prev.bill_method)
+                                payableAmount: calculateActivePayableAmt(
+                                  selectedInvoice,
+                                  prev.Sub_Total,
+                                  val,
+                                  prev.pdc,
+                                  prev.bill_Type,
+                                  prev.bill_method,
+                                ),
                               }));
                             }}
                           />
                         </Col>
                       )}
 
-                      {selectedInvoice.bill_Type === "insurance" && selectedInvoice.bill_method === "PDC" && (
-                        <Col md={4}>
-                          <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
-                            PDC Amount (₹)
-                          </Form.Label>
-                          <Form.Control
-                            size="sm"
-                            type="number"
-                            min="0"
-                            onWheel={(e) => e.target.blur()}
-                            style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
-                            value={modalInvoiceData.pdc || ""}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setModalInvoiceData(prev => ({
-                                ...prev,
-                                pdc: val,
-                                payableAmount: calculateActivePayableAmt(selectedInvoice, prev.Sub_Total, prev.discount, val, prev.bill_Type, prev.bill_method)
-                              }));
-                            }}
-                          />
-                        </Col>
-                      )}
+                      {selectedInvoice.bill_Type === "insurance" &&
+                        selectedInvoice.bill_method === "PDC" && (
+                          <Col md={4}>
+                            <Form.Label
+                              style={{
+                                fontSize: "12px",
+                                fontWeight: "600",
+                                marginBottom: "2px",
+                              }}
+                              className="text-muted"
+                            >
+                              PDC Amount (₹)
+                            </Form.Label>
+                            <Form.Control
+                              size="sm"
+                              type="number"
+                              min="0"
+                              onWheel={(e) => e.target.blur()}
+                              style={{
+                                borderRadius: "10px",
+                                fontSize: "12px",
+                                border: "1px solid #4dd0e1",
+                              }}
+                              value={modalInvoiceData.pdc || ""}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                setModalInvoiceData((prev) => ({
+                                  ...prev,
+                                  pdc: val,
+                                  payableAmount: calculateActivePayableAmt(
+                                    selectedInvoice,
+                                    prev.Sub_Total,
+                                    prev.discount,
+                                    val,
+                                    prev.bill_Type,
+                                    prev.bill_method,
+                                  ),
+                                }));
+                              }}
+                            />
+                          </Col>
+                        )}
 
-                      {selectedInvoice.bill_Type === "insurance" && selectedInvoice.bill_method === "PDC" && (
-                        <Col md={4}>
-                          <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">
-                            Cheque No
-                          </Form.Label>
-                          <Form.Control
-                            size="sm"
-                            name="chequeno"
-                            style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
-                            placeholder="Enter cheque No"
-                            type="number"
-                            value={selectedInvoice.chequeno || ""}
-                            onChange={handleInputChange}
-                          />
-                        </Col>
-                      )}
-
+                      {selectedInvoice.bill_Type === "insurance" &&
+                        selectedInvoice.bill_method === "PDC" && (
+                          <Col md={4}>
+                            <Form.Label
+                              style={{
+                                fontSize: "12px",
+                                fontWeight: "600",
+                                marginBottom: "2px",
+                              }}
+                              className="text-muted"
+                            >
+                              Cheque No
+                            </Form.Label>
+                            <Form.Control
+                              size="sm"
+                              name="chequeno"
+                              style={{
+                                borderRadius: "10px",
+                                fontSize: "12px",
+                                border: "1px solid #4dd0e1",
+                              }}
+                              placeholder="Enter cheque No"
+                              type="number"
+                              value={selectedInvoice.chequeno || ""}
+                              onChange={handleInputChange}
+                            />
+                          </Col>
+                        )}
 
                       {/* Note Area */}
                       <Col md={12}>
-                        <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "2px" }} className="text-muted">Note</Form.Label>
+                        <Form.Label
+                          style={{
+                            fontSize: "12px",
+                            fontWeight: "600",
+                            marginBottom: "2px",
+                          }}
+                          className="text-muted"
+                        >
+                          Note
+                        </Form.Label>
                         <Form.Control
                           size="sm"
                           as="textarea"
                           rows={1}
-                          style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1" }}
+                          style={{
+                            borderRadius: "10px",
+                            fontSize: "12px",
+                            border: "1px solid #4dd0e1",
+                          }}
                           value={selectedInvoice.note || ""}
-                          onChange={(e) => setSelectedInvoice({ ...selectedInvoice, note: e.target.value })}
+                          onChange={(e) =>
+                            setSelectedInvoice({
+                              ...selectedInvoice,
+                              note: e.target.value,
+                            })
+                          }
                         />
                       </Col>
                     </Row>
@@ -2482,11 +2732,18 @@ const InvoiceList = () => {
                           fontSize: "13px",
                         }}
                       >
-                        <span>{selectedInvoice.bill_method === "PDC" ? "PDC Amount" : "Discount"} (₹):</span>
+                        <span>
+                          {selectedInvoice.bill_method === "PDC"
+                            ? "PDC Amount"
+                            : "Discount"}{" "}
+                          (₹):
+                        </span>
                         <span style={{ fontWeight: "600" }}>
                           - ₹{" "}
                           {parseFloat(
-                            (selectedInvoice.bill_method === "PDC" ? modalInvoiceData.pdc : modalInvoiceData.discount) || 0,
+                            (selectedInvoice.bill_method === "PDC"
+                              ? modalInvoiceData.pdc
+                              : modalInvoiceData.discount) || 0,
                           ).toLocaleString()}
                         </span>
                       </div>

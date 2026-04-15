@@ -18,9 +18,8 @@ import Swal from "sweetalert2";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { decodeJwt } from "../../utils/decode-jwt";
 
-
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api"
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const localizer = momentLocalizer(moment);
 
@@ -50,7 +49,6 @@ const Toast = Swal.mixin({
     toast.addEventListener("mouseleave", Swal.resumeTimer);
   },
 });
-
 
 export default function IpdDashboard() {
   const [surgeries, setSurgeries] = useState([]);
@@ -398,41 +396,39 @@ export default function IpdDashboard() {
         ></div>
 
         <div className="clinical-actions pt-2">
-            <div className="d-grid gap-1">
-              <Button
-                variant={selectedEvent.isConfirmed ? "success" : "primary"}
-                className="confirm-btn"
-                style={{ borderRadius: "10px" }}
-                // Pass as arrow function AND disable if already confirmed
-                onClick={() =>
-                  handleConfirmSurgery(selectedEvent.phone, selectedEvent.uhid)
-                }
-                disabled={selectedEvent.isConfirmed}
-              >
-                <FeatherIcon
-                  icon={
-                    selectedEvent.isConfirmed ? "user-check" : "check-circle"
-                  }
-                  size={16}
-                  className="me-1"
-                />{" "}
-                {selectedEvent.isConfirmed
-                  ? `Admitted (${selectedEvent.admissionNo})`
-                  : "Confirm Admission"}
-              </Button>
+          <div className="d-grid gap-1">
+            <Button
+              variant={selectedEvent.isConfirmed ? "success" : "primary"}
+              className="confirm-btn"
+              style={{ borderRadius: "10px" }}
+              // Pass as arrow function AND disable if already confirmed
+              onClick={() =>
+                handleConfirmSurgery(selectedEvent.phone, selectedEvent.uhid)
+              }
+              disabled={selectedEvent.isConfirmed}
+            >
+              <FeatherIcon
+                icon={selectedEvent.isConfirmed ? "user-check" : "check-circle"}
+                size={16}
+                className="me-1"
+              />{" "}
+              {selectedEvent.isConfirmed
+                ? `Admitted (${selectedEvent.admissionNo})`
+                : "Confirm Admission"}
+            </Button>
 
-              {!selectedEvent.isConfirmed && (
-                <Button
-                  variant="danger"
-                  className="btn-sm border-0 mt-1"
-                  style={{ borderRadius: "10px" }}
-                  onClick={handleCancelSurgery}
-                >
-                  <FeatherIcon icon="x-circle" size={14} className="me-1" />{" "}
-                  Cancel Admission
-                </Button>
-              )}
-            </div>
+            {!selectedEvent.isConfirmed && (
+              <Button
+                variant="danger"
+                className="btn-sm border-0 mt-1"
+                style={{ borderRadius: "10px" }}
+                onClick={handleCancelSurgery}
+              >
+                <FeatherIcon icon="x-circle" size={14} className="me-1" />{" "}
+                Cancel Admission
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     );

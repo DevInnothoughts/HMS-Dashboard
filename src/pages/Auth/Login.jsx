@@ -8,7 +8,7 @@ import eyeSlashIcon from "../../assets/images/Eye/invisible.png";
 import logo from "../../assets/images/logo/hhclogo.webp";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api"
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const MySwal = withReactContent(Swal);
 
@@ -39,7 +39,7 @@ const LOCATIONS_LIST = [
   "Latur",
   "Indore",
   "Mysore",
-  "Undri",  
+  "Undri",
   "Vashi",
   "Hinjewadi",
   "Lucknow",
@@ -52,7 +52,6 @@ const LOCATIONS_LIST = [
   "Demo Server",
   "demo",
 ].sort();
-
 
 export default function Login() {
   const navigate = useNavigate();
@@ -225,9 +224,18 @@ export default function Login() {
                 onChange={handleChange}
                 style={{
                   ...inputStyle,
-                  borderColor: shakingField === "department" ? "#e53e3e" : inputStyle.borderColor,
-                  animation: shakingField === "department" ? "shake 0.5s ease-in-out" : "none",
-                  backgroundColor: shakingField === "department" ? "#fff5f5" : inputStyle.backgroundColor,
+                  borderColor:
+                    shakingField === "department"
+                      ? "#e53e3e"
+                      : inputStyle.borderColor,
+                  animation:
+                    shakingField === "department"
+                      ? "shake 0.5s ease-in-out"
+                      : "none",
+                  backgroundColor:
+                    shakingField === "department"
+                      ? "#fff5f5"
+                      : inputStyle.backgroundColor,
                 }}
               >
                 <option value="">Select Department</option>
@@ -248,9 +256,18 @@ export default function Login() {
                 onChange={handleChange}
                 style={{
                   ...inputStyle,
-                  borderColor: shakingField === "accountType" ? "#e53e3e" : inputStyle.borderColor,
-                  animation: shakingField === "accountType" ? "shake 0.5s ease-in-out" : "none",
-                  backgroundColor: shakingField === "accountType" ? "#fff5f5" : inputStyle.backgroundColor,
+                  borderColor:
+                    shakingField === "accountType"
+                      ? "#e53e3e"
+                      : inputStyle.borderColor,
+                  animation:
+                    shakingField === "accountType"
+                      ? "shake 0.5s ease-in-out"
+                      : "none",
+                  backgroundColor:
+                    shakingField === "accountType"
+                      ? "#fff5f5"
+                      : inputStyle.backgroundColor,
                   pointerEvents: !formData.department ? "none" : "auto",
                 }}
                 disabled={!formData.department}
@@ -266,7 +283,9 @@ export default function Login() {
 
             <Form.Group
               className="mb-15"
-              onClick={() => !formData.accountType && triggerShake("accountType")}
+              onClick={() =>
+                !formData.accountType && triggerShake("accountType")
+              }
               style={{ cursor: !formData.accountType ? "pointer" : "default" }}
             >
               <Form.Label style={labelStyle}>Clinic Location</Form.Label>
@@ -276,9 +295,18 @@ export default function Login() {
                 onChange={handleChange}
                 style={{
                   ...inputStyle,
-                  borderColor: shakingField === "jobLocation" ? "#e53e3e" : inputStyle.borderColor,
-                  animation: shakingField === "jobLocation" ? "shake 0.5s ease-in-out" : "none",
-                  backgroundColor: shakingField === "jobLocation" ? "#fff5f5" : inputStyle.backgroundColor,
+                  borderColor:
+                    shakingField === "jobLocation"
+                      ? "#e53e3e"
+                      : inputStyle.borderColor,
+                  animation:
+                    shakingField === "jobLocation"
+                      ? "shake 0.5s ease-in-out"
+                      : "none",
+                  backgroundColor:
+                    shakingField === "jobLocation"
+                      ? "#fff5f5"
+                      : inputStyle.backgroundColor,
                   pointerEvents: !formData.accountType ? "none" : "auto",
                 }}
                 disabled={!formData.accountType}

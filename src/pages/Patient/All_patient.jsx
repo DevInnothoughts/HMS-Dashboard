@@ -26,7 +26,7 @@ import DatePicker from "react-datepicker";
 import logo from "../../assets/images/3.png";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api"
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const countries = [
   "Afghanistan",
@@ -219,7 +219,6 @@ const countries = [
   "Zambia",
   "Zimbabwe",
 ];
-
 
 const formatDateToLocal = (dateString) => {
   if (!dateString) return "";
@@ -534,7 +533,9 @@ export default function All_patient() {
       }
 
       // Handle identity composition
-      let [identityType, identityNumber] = (nextState.identity || "").split(",");
+      let [identityType, identityNumber] = (nextState.identity || "").split(
+        ",",
+      );
       if (name === "identity") {
         identityType = value;
       } else if (name === "identityNumber") {
@@ -544,9 +545,8 @@ export default function All_patient() {
 
       // Handle birth_date and age
       if (name === "birth_date") {
-        const formattedDate = value instanceof Date
-          ? moment(value).format("DD-MM-YYYY")
-          : value;
+        const formattedDate =
+          value instanceof Date ? moment(value).format("DD-MM-YYYY") : value;
         const age = calculateAge(formattedDate);
         nextState.birth_date = formattedDate;
         nextState.age = age || nextState.age;
@@ -606,7 +606,6 @@ export default function All_patient() {
   //     setLoading(false);
   //   }
   // };
-
 
   const fetchPatientsData = async () => {
     if (!currentLocation || currentLocation === "default") {
@@ -712,14 +711,24 @@ export default function All_patient() {
       setReferenceDetails((prev) => ({
         ...prev,
         dr_name: patient.ref_doctor_name || patient.ref || "",
-        dr_id: (patient.ref_doctor_name) ? (patient.ref || "") : ""
+        dr_id: patient.ref_doctor_name ? patient.ref || "" : "",
       }));
     } else {
-      const standardNewspapers = ["Sakal", "TOI", "MT", "Lokmat", "Pune Mirror"];
+      const standardNewspapers = [
+        "Sakal",
+        "TOI",
+        "MT",
+        "Lokmat",
+        "Pune Mirror",
+      ];
       setReferenceDetails((prev) => ({
         ...prev,
         [patient.reference_type]: patient.ref || "",
-        Other_Newspaper: (patient.reference_type === "newspaper" && !standardNewspapers.includes(patient.ref)) ? patient.ref : ""
+        Other_Newspaper:
+          patient.reference_type === "newspaper" &&
+          !standardNewspapers.includes(patient.ref)
+            ? patient.ref
+            : "",
       }));
     }
 
@@ -802,14 +811,17 @@ export default function All_patient() {
         break;
       case "old_ref":
         reference_type = "old_ref";
-        ref = `${oldPatientDetails.patient_ref_no || ""},${oldPatientDetails.old_patient_name || ""
-          },${oldPatientDetails.old_patient_id_value || ""},${oldPatientDetails.old_patient_pincode || ""
-          }`;
+        ref = `${oldPatientDetails.patient_ref_no || ""},${
+          oldPatientDetails.old_patient_name || ""
+        },${oldPatientDetails.old_patient_id_value || ""},${
+          oldPatientDetails.old_patient_pincode || ""
+        }`;
         break;
       case "family_friends":
         reference_type = "family_friends";
-        ref = `${referenceDetails.friendname || ""},${referenceDetails.friendno || ""
-          }`;
+        ref = `${referenceDetails.friendname || ""},${
+          referenceDetails.friendno || ""
+        }`;
         break;
       case "hhc_board":
         reference_type = "hhc_board";
@@ -926,10 +938,11 @@ export default function All_patient() {
 
   const statusBodyTemplate = (formData) => (
     <span
-      className={`badge ${formData.status
-        ? ` status- ${formData.status.toLowerCase()}`
-        : "status-unknown"
-        }`}
+      className={`badge ${
+        formData.status
+          ? ` status- ${formData.status.toLowerCase()}`
+          : "status-unknown"
+      }`}
     >
       {formData.status || "Unknown"}
     </span>
@@ -986,7 +999,10 @@ export default function All_patient() {
       patient_phone: formData.phone,
       patient_id: formData.patient_id,
       // patient_type: "Follow",
-      patient_type: formData.patient_type === "Post Operative" ? "Postoperative" : formData.patient_type,
+      patient_type:
+        formData.patient_type === "Post Operative"
+          ? "Postoperative"
+          : formData.patient_type,
       appointment_time: formData.appointmentTime,
       FDE_Name: formData.FDE_Name,
       note: formData.note,
@@ -1103,8 +1119,7 @@ export default function All_patient() {
       regionalPatientSignature = `<p><b>Patients Signature:<br>(ರೋಗಿಯ ಸಹಿ)</b></p>`;
       regionalWitnessSignature = `<p><b>Witness Signature:<br>(ಸಾಕ್ಷಿದಾರರ ಸಹಿ)</b></p>`;
       regionalTimeDate = `Time & Date:<br>(ಸಮಯ ಮತ್ತು ದಿನಾಂಕ)`;
-    }
-    else if (["Ludhiana", "Mohali"].includes(location)) {
+    } else if (["Ludhiana", "Mohali"].includes(location)) {
       regionalConsent = `<p>ਮੈਂ, ਹੇਠਾਂ ਹਸਤਾਖਰ ਕਰਨ ਵਾਲਾ ਮਰੀਜ਼ ਜਾਂ ਜ਼ਿੰਮੇਵਾਰ ਰਿਸ਼ਤੇਦਾਰ ..........................................................................................................<br> ਇਸ ਦੁਆਰਾ ਹੀਲਿੰਗ ਹੈਂਡਸ ਕਲੀਨਿਕ ਦੇ ਡਾਕਟਰਾਂ, ਸਰਜਨਾਂ ਅਤੇ ਮੈਡੀਕਲ ਕਰਮਚਾਰੀਆਂ ਨੂੰ ਡਾਕਟਰੀ ਜਾਂਚ, ਤਫਤੀਸ਼, ਡਾਕਟਰੀ ਇਲਾਜ ਅਤੇ ਆਊਟ-ਪੇਸ਼ੈਂਟ ਪ੍ਰਕਿਰਿਆ ਕਰਨ ਦੀ ਸਹਿਮਤੀ ਅਤੇ ਅਧਿਕਾਰ ਦਿੰਦਾ ਹਾਂ, ਜੋ ਕਿ ਡਾਕਟਰੀ ਦੇਖਭਾਲ ਦੇ ਦੌਰਾਨ ਇੱਕ ਆਊਟ-ਪੇਸ਼ੈਂਟ ਵਜੋਂ ਉਚਿਤ ਜਾਂ ਜ਼ਰੂਰੀ ਸਮਝਿਆ ਜਾਂਦਾ ਹੈ।<br>ਮੈਂ ਹੀਲਿੰਗ ਹੈਂਡਸ ਕਲੀਨਿਕ ਦੀਆਂ ਨੀਤੀਆਂ ਨੂੰ ਸਮਝਦਾ ਅਤੇ ਸਵੀਕਾਰ ਕਰਦਾ ਹਾਂ ਅਤੇ ਉਹਨਾਂ ਦੀ ਪਾਲਣਾ ਕਰਨ ਲਈ ਸਹਿਮਤ ਹਾਂ। ਮੈਂ ਕਲੀਨਿਕ ਨੂੰ ਨਿਯੁਕਤੀਆਂ ਅਤੇ ਫਾਲੋ-ਅਪਸ ਦੇ ਸਬੰਧ ਵਿੱਚ ਲੋੜ ਪੈਣ 'ਤੇ ਟੈਲੀਫੋਨ ਰਾਹੀਂ ਮੇਰੇ ਨਾਲ ਸੰਪਰਕ ਕਰਨ ਦੀ ਸਹਿਮਤੀ ਵੀ ਦਿੰਦਾ ਹਾਂ। ਮੈਂ ਕਲੀਨਿਕ ਅਤੇ ਡਾਕਟਰਾਂ ਨੂੰ ਮੇਰੇ ਮੈਡੀਕਲ ਮੁੱਦਿਆਂ ਬਾਰੇ ਆਪਸ ਵਿੱਚ ਚਰਚਾ ਕਰਨ ਦੀ ਇਜਾਜ਼ਤ ਦਿੰਦਾ ਹਾਂ, ਇਹ ਜਾਣਦੇ ਹੋਏ ਕਿ ਗੋਪਨੀਯਤਾ ਬਣਾਈ ਰੱਖੀ ਜਾਵੇਗੀ।<br>ਮੈਂ, ਹੇਠਾਂ ਹਸਤਾਖਰ ਕਰਕੇ, ਮੇਰੀ ਸਲਾਹ/ਇਲਾਜ ਦੌਰਾਨ ਮਿਲੀ ਕਿਸੇ ਵੀ ਨਵੀਂ ਜਾਣਕਾਰੀ ਨੂੰ ਭਵਿੱਖ ਵਿੱਚ ਅਧਿਐਨ ਦੇ ਉਦੇਸ਼ਾਂ/ਖੋਜ ਲਈ ਵਰਤਣ ਦੀ ਇਜਾਜ਼ਤ ਦਿੰਦਾ ਹਾਂ।</p>`;
       regionalPatientNameLabel = `<p><b>Patients Name (ਮਰੀਜ਼ ਦਾ ਨਾਮ):</b></p>`;
       regionalPatientSignature = `<p><b>Patients Signature:<br>(ਮਰੀਜ਼ ਦੇ ਦਸਤਖਤ)</b></p>`;
@@ -1685,7 +1700,10 @@ export default function All_patient() {
                         }));
                       }}
                       // checked={referenceDetails.internet === source}
-                      checked={formData.ref === source || referenceDetails.internet === source}
+                      checked={
+                        formData.ref === source ||
+                        referenceDetails.internet === source
+                      }
                       style={{ marginRight: "5px" }}
                     />
                     {source}

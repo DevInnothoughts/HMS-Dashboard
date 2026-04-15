@@ -311,8 +311,8 @@ export default function DoctorManageAdmission() {
             padding: "5px 8px",
           }}
           onClick={() => {
-              // Add print logic here if needed, for now it's just a button as requested
-              console.log("Printing forms for patient:", patient.name);
+            // Add print logic here if needed, for now it's just a button as requested
+            console.log("Printing forms for patient:", patient.name);
           }}
           disabled={!patient.admissionNo}
         >

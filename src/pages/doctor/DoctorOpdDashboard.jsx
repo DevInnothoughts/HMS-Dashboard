@@ -19,7 +19,7 @@ import Swal from "sweetalert2";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api"
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const localizer = momentLocalizer(moment);
 
@@ -372,7 +372,7 @@ export default function DoctorOpdDashboard() {
         </div>
 
         <div className="clinical-actions pt-5">
-            {/* Clinical actions for doctors can be added here */}
+          {/* Clinical actions for doctors can be added here */}
         </div>
       </div>
     );

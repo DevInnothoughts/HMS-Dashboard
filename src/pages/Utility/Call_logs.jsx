@@ -24,7 +24,7 @@ import "../../styles/styles.css";
 import { toast } from "react-hot-toast";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api"
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const NoteCell = ({ note }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -254,7 +254,9 @@ export default function Call_logs() {
         const processedData = data.data.map((log) => ({
           ...log,
           // Strip leading zeros from caller_no
-          caller_no: log.caller_no ? String(log.caller_no).replace(/^0+/, "") : log.caller_no,
+          caller_no: log.caller_no
+            ? String(log.caller_no).replace(/^0+/, "")
+            : log.caller_no,
         }));
         setCallLogs(processedData);
       } else {
@@ -629,7 +631,9 @@ export default function Call_logs() {
               selected={toDate ? new Date(toDate) : null}
               onChange={(date) => {
                 // FIX: Use moment to format local date instead of toISOString()
-                const formattedDate = date ? moment(date).format("YYYY-MM-DD") : "";
+                const formattedDate = date
+                  ? moment(date).format("YYYY-MM-DD")
+                  : "";
                 setToDate(formattedDate);
               }}
               dateFormat="dd-MM-yyyy"
@@ -721,7 +725,10 @@ export default function Call_logs() {
         ? moment(formData.appointmentTime, ["hh:mm A", "HH:mm"]).format("HH:mm")
         : "",
       patient_phone: formData.caller_no,
-      patient_type: formData.patient_type === "Post Operative" ? "Postoperative" : formData.patient_type,
+      patient_type:
+        formData.patient_type === "Post Operative"
+          ? "Postoperative"
+          : formData.patient_type,
       appointment_timestamp: moment(formData.date).format("YYYY-MM-DD"),
       doctorName: doctorName,
       doctor_id: formData.doctor_id,
@@ -872,7 +879,10 @@ export default function Call_logs() {
                   }}
                 >
                   <Card.Body>
-                    <Row className="Product_list" style={{ marginTop: "-18px" }}>
+                    <Row
+                      className="Product_list"
+                      style={{ marginTop: "-18px" }}
+                    >
                       {loading ? (
                         <div
                           className="d-flex justify-content-center py-5"
@@ -1224,7 +1234,7 @@ export default function Call_logs() {
                     <option value="">Select Type</option>
 
                     {formData.patient_type === "New" ||
-                      formData.patient_id === undefined ? (
+                    formData.patient_id === undefined ? (
                       <option value="New">NEW</option>
                     ) : (
                       <>

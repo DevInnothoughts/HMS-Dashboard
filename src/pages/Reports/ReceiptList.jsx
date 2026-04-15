@@ -28,9 +28,8 @@ import logo from "../../assets/images/3.png";
 // import pharmacyLogo from "../../assets/images/2.png";
 import receiptLogo from "../../assets/images/4.png";
 
-
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api"
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const LOCATION = "demo";
 
@@ -242,11 +241,12 @@ export default function ReceiptList() {
     console.log(" printing  RECEPT: ", selectedReceipt);
 
     const trimmedLocation = currentLocation ? currentLocation.trim() : "";
-    const clinicAddr = receiptlocations[trimmedLocation] || receiptlocations[currentLocation] || {
-      address:
-        "Healing Hands Clinic Pvt Ltd, DP Road, Ground Floor, Millenium Star Extension, Adjacent to Ruby Hall Clinic, Pune 411001",
-      phone: "8888288884 | 020-26164488/99",
-    };
+    const clinicAddr = receiptlocations[trimmedLocation] ||
+      receiptlocations[currentLocation] || {
+        address:
+          "Healing Hands Clinic Pvt Ltd, DP Road, Ground Floor, Millenium Star Extension, Adjacent to Ruby Hall Clinic, Pune 411001",
+        phone: "8888288884 | 020-26164488/99",
+      };
     console.log(clinicAddr);
     const getBase64Image = (imgUrl) => {
       return new Promise((resolve) => {
@@ -441,27 +441,28 @@ export default function ReceiptList() {
                     </tr>
                   </thead>
                   <tbody>
-                    ${selectedReceipt.item_details
-            ? selectedReceipt.item_details
-              .split(",")
-              .map((itemGroup, index) => {
-                const parts = itemGroup.split(":");
-                const label = parts[0] ? parts[0].trim() : "-";
-                const amount = parts[1]
-                  ? parseFloat(parts[1].trim())
-                  : 0;
+                    ${
+                      selectedReceipt.item_details
+                        ? selectedReceipt.item_details
+                            .split(",")
+                            .map((itemGroup, index) => {
+                              const parts = itemGroup.split(":");
+                              const label = parts[0] ? parts[0].trim() : "-";
+                              const amount = parts[1]
+                                ? parseFloat(parts[1].trim())
+                                : 0;
 
-                return `
+                              return `
                         <tr>
                               <td class="col-sr">${index + 1}</td>
                               <td class="col-desc">${label}</td>
                               <td class="col-amt">${amount.toFixed(2)}</td>
                             </tr>
                           `;
-              })
-              .join("")
-            : `<tr><td class="col-sr">1</td><td class="col-desc">-</td><td class="col-amt">0.00</td></tr>`
-          }
+                            })
+                            .join("")
+                        : `<tr><td class="col-sr">1</td><td class="col-desc">-</td><td class="col-amt">0.00</td></tr>`
+                    }
                   </tbody>
                 </table>
                 <div class="summary-section">

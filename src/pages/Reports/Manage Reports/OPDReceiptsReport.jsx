@@ -11,10 +11,8 @@ import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-
-
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api" // Updated to local API based on previous files
+const BASE_URL = "http://194.195.117.79:5100/api"; // Updated to local API based on previous files
 
 const consultationOptions = [
   "CONSULTATION",
@@ -84,7 +82,7 @@ const OPDReceiptsReport = () => {
       const formatToDDMMYYYY = (date) => {
         let d = new Date(date);
         return `${String(d.getDate()).padStart(2, "0")}/${String(
-          d.getMonth() + 1
+          d.getMonth() + 1,
         ).padStart(2, "0")}/${d.getFullYear()}`;
       };
 
@@ -118,7 +116,10 @@ const OPDReceiptsReport = () => {
       if (response.ok) {
         setReceipts(Array.isArray(data.data) ? data.data : []);
       } else {
-        console.error("Error fetching receipts:", data.message || "Unknown error");
+        console.error(
+          "Error fetching receipts:",
+          data.message || "Unknown error",
+        );
       }
     } catch (error) {
       console.error("Error fetching receipts:", error);
@@ -128,18 +129,19 @@ const OPDReceiptsReport = () => {
   };
 
   const exportToExcel = () => {
-    const fileType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
+    const fileType =
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
     const fileExtension = ".xlsx";
 
     const excelData = receipts.map((receipt, index) => ({
       "Sr No": index + 1,
-      "Date": receipt.date,
+      Date: receipt.date,
       "Patient Name": receipt.patientName,
-      "Consultation": receipt.consultation,
+      Consultation: receipt.consultation,
       "Patient Status": receipt.patientStatus,
       "Spray Qty": receipt.sprayQty,
       "Payment Mode": receipt.paymentMode,
-      "Amount": receipt.amount,
+      Amount: receipt.amount,
     }));
 
     const ws = XLSX.utils.json_to_sheet(excelData);
@@ -149,12 +151,20 @@ const OPDReceiptsReport = () => {
     saveAs(data, "OPD_Receipts_Report" + fileExtension);
   };
 
-
   const downloadPDF = () => {
     const doc = new jsPDF();
     doc.text("OPD Receipts Report", 14, 15);
 
-    const tableColumn = ["Sr No", "Date", "Patient Name", "Consultation", "Patient Status", "Spray Qty", "Payment Mode", "Amount"];
+    const tableColumn = [
+      "Sr No",
+      "Date",
+      "Patient Name",
+      "Consultation",
+      "Patient Status",
+      "Spray Qty",
+      "Payment Mode",
+      "Amount",
+    ];
     const tableRows = receipts.map((receipt, index) => [
       index + 1,
       receipt.date,
@@ -170,9 +180,9 @@ const OPDReceiptsReport = () => {
       head: [tableColumn],
       body: tableRows,
       startY: 20,
-      theme: 'grid',
+      theme: "grid",
       styles: { fontSize: 8 },
-      headStyles: { fillColor: [0, 172, 193] }
+      headStyles: { fillColor: [0, 172, 193] },
     });
 
     doc.save("OPD_Receipts_Report.pdf");
@@ -183,10 +193,20 @@ const OPDReceiptsReport = () => {
       <div className="d-flex justify-content-between align-items-center mb-1">
         <div className="d-flex align-items-center" style={{ gap: "20px" }}>
           <div className="d-flex align-items-center">
-            <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Show</span>
+            <span
+              className="me-1"
+              style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}
+            >
+              Show
+            </span>
             <Form.Select
               size="sm"
-              style={{ width: "70px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
+              style={{
+                width: "70px",
+                borderRadius: "8px",
+                border: "1px solid #4dd0e1",
+                fontSize: "12px",
+              }}
               value={rows}
               onChange={(e) => setRows(Number(e.target.value))}
             >
@@ -197,14 +217,24 @@ const OPDReceiptsReport = () => {
             </Form.Select>
           </div>
           <div className="d-flex align-items-center">
-            <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Search</span>
+            <span
+              className="me-1"
+              style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}
+            >
+              Search
+            </span>
             <span className="p-input-icon-left">
               <InputText
                 value={searchText}
                 onChange={onGlobalFilterChange}
                 placeholder="Global Search..."
                 className="p-inputtext-sm"
-                style={{ width: "200px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
+                style={{
+                  width: "200px",
+                  borderRadius: "8px",
+                  border: "1px solid #4dd0e1",
+                  fontSize: "12px",
+                }}
               />
             </span>
           </div>
@@ -213,14 +243,24 @@ const OPDReceiptsReport = () => {
           <button
             className="btn btn-success btn-sm"
             onClick={exportToExcel}
-            style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px" }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "5px",
+              borderRadius: "8px",
+            }}
           >
             <i className="fa fa-file-excel-o"></i> Download Excel
           </button>
           <button
             className="btn btn-danger btn-sm"
             onClick={downloadPDF}
-            style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px" }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "5px",
+              borderRadius: "8px",
+            }}
           >
             <i className="fa fa-file-pdf-o"></i> Download PDF
           </button>
@@ -271,37 +311,84 @@ const OPDReceiptsReport = () => {
                   <h4>OPD Receipts Report</h4>
                 </Card.Header>
                 <Card.Body style={{ padding: "5px" }}>
-                  <Row className="align-items-end mb-4 flex-nowrap" style={{ margin: "0 -5px" }}>
+                  <Row
+                    className="align-items-end mb-4 flex-nowrap"
+                    style={{ margin: "0 -5px" }}
+                  >
                     <Col style={{ padding: "0 5px", flex: "1" }}>
                       <Form.Group className="mb-2">
-                        <Form.Label style={{ fontWeight: "bold", color: "#006064", whiteSpace: "nowrap", fontSize: "12px" }}>From Date</Form.Label>
+                        <Form.Label
+                          style={{
+                            fontWeight: "bold",
+                            color: "#006064",
+                            whiteSpace: "nowrap",
+                            fontSize: "12px",
+                          }}
+                        >
+                          From Date
+                        </Form.Label>
                         <Form.Control
                           type="date"
                           value={fromDate}
                           onChange={(e) => setFromDate(e.target.value)}
-                          style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }}
+                          style={{
+                            border: "2px solid #4dd0e1",
+                            borderRadius: "8px",
+                            padding: "6px",
+                            backgroundColor: "#e0f7fa",
+                            fontSize: "12px",
+                          }}
                         />
                       </Form.Group>
                     </Col>
                     <Col style={{ padding: "0 5px", flex: "1" }}>
                       <Form.Group className="mb-2">
-                        <Form.Label style={{ fontWeight: "bold", color: "#006064", whiteSpace: "nowrap", fontSize: "12px" }}>To Date</Form.Label>
+                        <Form.Label
+                          style={{
+                            fontWeight: "bold",
+                            color: "#006064",
+                            whiteSpace: "nowrap",
+                            fontSize: "12px",
+                          }}
+                        >
+                          To Date
+                        </Form.Label>
                         <Form.Control
                           type="date"
                           value={toDate}
                           onChange={(e) => setToDate(e.target.value)}
-                          style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }}
+                          style={{
+                            border: "2px solid #4dd0e1",
+                            borderRadius: "8px",
+                            padding: "6px",
+                            backgroundColor: "#e0f7fa",
+                            fontSize: "12px",
+                          }}
                         />
                       </Form.Group>
                     </Col>
                     <Col style={{ padding: "0 5px", flex: "1" }}>
                       <Form.Group className="mb-2">
-                        <Form.Label style={{ fontWeight: "bold", color: "#006064", whiteSpace: "nowrap", fontSize: "12px" }}>Consultation</Form.Label>
+                        <Form.Label
+                          style={{
+                            fontWeight: "bold",
+                            color: "#006064",
+                            whiteSpace: "nowrap",
+                            fontSize: "12px",
+                          }}
+                        >
+                          Consultation
+                        </Form.Label>
                         <Form.Select
                           size="sm"
                           value={consultation}
                           onChange={(e) => setConsultation(e.target.value)}
-                          style={{ border: "2px solid #4dd0e1", borderRadius: "8px", backgroundColor: "#e0f7fa", fontSize: "12px" }}
+                          style={{
+                            border: "2px solid #4dd0e1",
+                            borderRadius: "8px",
+                            backgroundColor: "#e0f7fa",
+                            fontSize: "12px",
+                          }}
                         >
                           <option value="">Select</option>
                           {consultationOptions.map((opt) => (
@@ -314,12 +401,26 @@ const OPDReceiptsReport = () => {
                     </Col>
                     <Col style={{ padding: "0 5px", flex: "1" }}>
                       <Form.Group className="mb-2">
-                        <Form.Label style={{ fontWeight: "bold", color: "#006064", whiteSpace: "nowrap", fontSize: "12px" }}>Patient Status</Form.Label>
+                        <Form.Label
+                          style={{
+                            fontWeight: "bold",
+                            color: "#006064",
+                            whiteSpace: "nowrap",
+                            fontSize: "12px",
+                          }}
+                        >
+                          Patient Status
+                        </Form.Label>
                         <Form.Select
                           size="sm"
                           value={patientStatus}
                           onChange={(e) => setPatientStatus(e.target.value)}
-                          style={{ border: "2px solid #4dd0e1", borderRadius: "8px", backgroundColor: "#e0f7fa", fontSize: "12px" }}
+                          style={{
+                            border: "2px solid #4dd0e1",
+                            borderRadius: "8px",
+                            backgroundColor: "#e0f7fa",
+                            fontSize: "12px",
+                          }}
                         >
                           <option value="">All</option>
                           <option value="DNC">DNC ( Do not Charge )</option>
@@ -330,12 +431,26 @@ const OPDReceiptsReport = () => {
                     </Col>
                     <Col style={{ padding: "0 5px", flex: "1" }}>
                       <Form.Group className="mb-2">
-                        <Form.Label style={{ fontWeight: "bold", color: "#006064", whiteSpace: "nowrap", fontSize: "12px" }}>Payment Mode</Form.Label>
+                        <Form.Label
+                          style={{
+                            fontWeight: "bold",
+                            color: "#006064",
+                            whiteSpace: "nowrap",
+                            fontSize: "12px",
+                          }}
+                        >
+                          Payment Mode
+                        </Form.Label>
                         <Form.Select
                           size="sm"
                           value={paymentMode}
                           onChange={(e) => setPaymentMode(e.target.value)}
-                          style={{ border: "2px solid #4dd0e1", borderRadius: "8px", backgroundColor: "#e0f7fa", fontSize: "12px" }}
+                          style={{
+                            border: "2px solid #4dd0e1",
+                            borderRadius: "8px",
+                            backgroundColor: "#e0f7fa",
+                            fontSize: "12px",
+                          }}
                         >
                           <option value="">All</option>
                           <option value="Cash">Cash</option>
@@ -360,10 +475,14 @@ const OPDReceiptsReport = () => {
                             color: "white",
                             borderRadius: "8px",
                             fontWeight: "bold",
-                            fontSize: "13px"
+                            fontSize: "13px",
                           }}
                         >
-                          {loading ? <Spinner animation="border" size="sm" /> : "Search"}
+                          {loading ? (
+                            <Spinner animation="border" size="sm" />
+                          ) : (
+                            "Search"
+                          )}
                         </button>
                       </Form.Group>
                     </Col>

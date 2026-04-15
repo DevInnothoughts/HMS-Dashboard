@@ -59,7 +59,7 @@ export default function DoctorSearchBy() {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
       if (response.ok) {
         const data = await response.json();
@@ -72,7 +72,7 @@ export default function DoctorSearchBy() {
           Swal.fire("Not Found", "No matches found.", "info");
         }
       } else {
-          Swal.fire("Not Found", "No matches found.", "info");
+        Swal.fire("Not Found", "No matches found.", "info");
       }
     } catch (error) {
       console.error("Search error:", error);
@@ -393,9 +393,22 @@ export default function DoctorSearchBy() {
                       ))}
 
                       <Col md={12} className="mb-2 mt-2">
-                        <hr style={{ borderTop: "1px solid #67c5cfff", opacity: 0.3 }} />
-                        <p style={{ fontSize: "0.90rem", color: "#ff1500ff", fontWeight: "600", marginBottom: "5px" }}>
-                          Fill the below details to book the patient for admission
+                        <hr
+                          style={{
+                            borderTop: "1px solid #67c5cfff",
+                            opacity: 0.3,
+                          }}
+                        />
+                        <p
+                          style={{
+                            fontSize: "0.90rem",
+                            color: "#ff1500ff",
+                            fontWeight: "600",
+                            marginBottom: "5px",
+                          }}
+                        >
+                          Fill the below details to book the patient for
+                          admission
                         </p>
                       </Col>
 
@@ -469,7 +482,10 @@ export default function DoctorSearchBy() {
 
                       <Col md={4} className="mb-2">
                         <Form.Group>
-                          <Form.Label className={labelStyle} style={{ fontSize: "0.75rem" }}>
+                          <Form.Label
+                            className={labelStyle}
+                            style={{ fontSize: "0.75rem" }}
+                          >
                             Room Number
                           </Form.Label>
                           <Form.Control
@@ -490,7 +506,10 @@ export default function DoctorSearchBy() {
 
                       <Col md={4} className="mb-2">
                         <Form.Group>
-                          <Form.Label className={labelStyle} style={{ fontSize: "0.75rem" }}>
+                          <Form.Label
+                            className={labelStyle}
+                            style={{ fontSize: "0.75rem" }}
+                          >
                             SX Plan
                           </Form.Label>
                           <Form.Control
@@ -513,7 +532,12 @@ export default function DoctorSearchBy() {
                         <MuiDateTimePicker
                           label="NBM Time"
                           value={patientData.nmbTime}
-                          onChange={(e) => setPatientData((prev) => ({ ...prev, nmbTime: e.target.value }))}
+                          onChange={(e) =>
+                            setPatientData((prev) => ({
+                              ...prev,
+                              nmbTime: e.target.value,
+                            }))
+                          }
                           name="nmbTime"
                           type="time"
                           minutesStep={15}
@@ -570,7 +594,11 @@ export default function DoctorSearchBy() {
                           fontSize: "0.85rem",
                         }}
                       >
-                        <FeatherIcon icon="check-circle" size={14} className="me-2" />
+                        <FeatherIcon
+                          icon="check-circle"
+                          size={14}
+                          className="me-2"
+                        />
                         Book For Admission
                       </Button>
                     </div>
@@ -582,9 +610,16 @@ export default function DoctorSearchBy() {
         </Container>
       </div>
 
-      <Modal show={showSelectionModal} onHide={() => setShowSelectionModal(false)} size="lg" centered>
+      <Modal
+        show={showSelectionModal}
+        onHide={() => setShowSelectionModal(false)}
+        size="lg"
+        centered
+      >
         <Modal.Header closeButton style={{ backgroundColor: "#67c5cfff" }}>
-          <Modal.Title style={{ color: "#1a5b61ff", fontSize: "1.1rem" }}>Multiple Patients Found</Modal.Title>
+          <Modal.Title style={{ color: "#1a5b61ff", fontSize: "1.1rem" }}>
+            Multiple Patients Found
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-0">
           <Table responsive hover className="mb-0">
@@ -603,7 +638,9 @@ export default function DoctorSearchBy() {
                   <td>{p.name}</td>
                   <td>{p.phone}</td>
                   <td>
-                    <Button size="sm" onClick={() => selectPatient(p)}>Select</Button>
+                    <Button size="sm" onClick={() => selectPatient(p)}>
+                      Select
+                    </Button>
                   </td>
                 </tr>
               ))}
@@ -612,9 +649,15 @@ export default function DoctorSearchBy() {
         </Modal.Body>
       </Modal>
 
-      <Modal show={showEditModal} onHide={() => setShowEditModal(false)} centered>
+      <Modal
+        show={showEditModal}
+        onHide={() => setShowEditModal(false)}
+        centered
+      >
         <Modal.Header closeButton style={{ backgroundColor: "#67c5cfff" }}>
-          <Modal.Title style={{ color: "#1a5b61ff", fontSize: "1.1rem" }}>Edit Patient Details</Modal.Title>
+          <Modal.Title style={{ color: "#1a5b61ff", fontSize: "1.1rem" }}>
+            Edit Patient Details
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form onSubmit={handleEditSubmit}>
@@ -637,8 +680,16 @@ export default function DoctorSearchBy() {
               />
             </Form.Group>
             <div className="text-end">
-              <Button variant="secondary" className="me-2" onClick={() => setShowEditModal(false)}>Cancel</Button>
-              <Button variant="primary" type="submit">Save Changes</Button>
+              <Button
+                variant="secondary"
+                className="me-2"
+                onClick={() => setShowEditModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button variant="primary" type="submit">
+                Save Changes
+              </Button>
             </div>
           </Form>
         </Modal.Body>

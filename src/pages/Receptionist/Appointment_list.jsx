@@ -23,10 +23,8 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import moment from "moment";
 
-
-
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api"
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const NoteCell = ({ note }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -105,18 +103,19 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
     padding: "1px 3px",
     minWidth: "33px",
     borderRadius: "4px",
-    border: `1px solid ${disabled
-      ? "#ddd"
-      : isDanger
-        ? "#dc3545"
-        : isEdit
-          ? "#007bff"
-          : isConfirm
-            ? "#28a745"
-            : isBlueAction
-              ? "#0babb9ff"
-              : defaultBorder
-      }`,
+    border: `1px solid ${
+      disabled
+        ? "#ddd"
+        : isDanger
+          ? "#dc3545"
+          : isEdit
+            ? "#007bff"
+            : isConfirm
+              ? "#28a745"
+              : isBlueAction
+                ? "#0babb9ff"
+                : defaultBorder
+    }`,
     backgroundColor: disabled ? "#f8f9fa" : defaultBg,
     color: disabled
       ? "#aaa"
@@ -170,16 +169,17 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
               ? "#15cbd8ff"
               : "#e0e0e0";
 
-      e.currentTarget.style.border = `1px solid ${isDanger
-        ? "#c82333"
-        : isEdit
-          ? "#007bff"
-          : isConfirm
-            ? "#218838"
-            : isBlueAction
-              ? "#007bff"
-              : "#b0b0b0"
-        }`;
+      e.currentTarget.style.border = `1px solid ${
+        isDanger
+          ? "#c82333"
+          : isEdit
+            ? "#007bff"
+            : isConfirm
+              ? "#218838"
+              : isBlueAction
+                ? "#007bff"
+                : "#b0b0b0"
+      }`;
 
       e.currentTarget.style.color = "white";
       if (e.currentTarget.children[0]) {
@@ -201,16 +201,17 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
               ? "#23adb2ff"
               : defaultColor;
 
-      e.currentTarget.style.border = `1px solid ${isDanger
-        ? "#dc3545"
-        : isEdit
-          ? "#007bff"
-          : isConfirm
-            ? "#28a745"
-            : isBlueAction
-              ? "#007bff"
-              : defaultBorder
-        }`;
+      e.currentTarget.style.border = `1px solid ${
+        isDanger
+          ? "#dc3545"
+          : isEdit
+            ? "#007bff"
+            : isConfirm
+              ? "#28a745"
+              : isBlueAction
+                ? "#007bff"
+                : defaultBorder
+      }`;
 
       if (e.currentTarget.children[0]) {
         e.currentTarget.children[0].style.stroke = iconColor;
@@ -473,7 +474,7 @@ export default function Appointment_list() {
               Swal.fire(
                 "Error",
                 cancelResult?.message ||
-                "Remote cancel failed. Please cancel manually on machine.",
+                  "Remote cancel failed. Please cancel manually on machine.",
                 "error",
               );
             }
@@ -554,55 +555,61 @@ export default function Appointment_list() {
     return slots;
   };
 
+  const fetchAppointmentData = useCallback(
+    async (manualShowPending = null) => {
+      setLoading(true);
+      try {
+        if (!fromDate || !toDate || currentLocation === "default") return;
 
-  const fetchAppointmentData = useCallback(async (manualShowPending = null) => {
-    setLoading(true);
-    try {
-      if (!fromDate || !toDate || currentLocation === "default") return;
+        const formattedFromDate = formatDateToDDMMYYYY(fromDate);
+        const formattedToDate = formatDateToDDMMYYYY(toDate);
 
-      const formattedFromDate = formatDateToDDMMYYYY(fromDate);
-      const formattedToDate = formatDateToDDMMYYYY(toDate);
+        const isToday =
+          moment(fromDate).isSame(moment(), "day") &&
+          moment(toDate).isSame(moment(), "day");
 
-      const isToday =
-        moment(fromDate).isSame(moment(), "day") &&
-        moment(toDate).isSame(moment(), "day");
+        // Logic:
+        // 1. If manualShowPending is provided (e.g. from Refresh button), use it.
+        // 2. Otherwise, if it's the 'Today' view, we want to show pending records from the past (as previously requested).
+        // 3. If it's a specific date range (not today), we want strict filtering (showPending = false).
+        const showPending =
+          manualShowPending !== null ? manualShowPending : isToday;
 
-      // Logic:
-      // 1. If manualShowPending is provided (e.g. from Refresh button), use it.
-      // 2. Otherwise, if it's the 'Today' view, we want to show pending records from the past (as previously requested).
-      // 3. If it's a specific date range (not today), we want strict filtering (showPending = false).
-      const showPending =
-        manualShowPending !== null ? manualShowPending : isToday;
+        const url = `${BASE_URL}/V1/appointment/listAppointments?from=${formattedFromDate}&to=${formattedToDate}&location=${currentLocation}&showPending=${showPending}`;
 
-      const url = `${BASE_URL}/V1/appointment/listAppointments?from=${formattedFromDate}&to=${formattedToDate}&location=${currentLocation}&showPending=${showPending}`;
+        console.log("Fetching appointments with URL:", url);
 
-      console.log("Fetching appointments with URL:", url);
+        const response = await fetch(url, { method: "GET" });
+        const data = await response.json();
 
-      const response = await fetch(url, { method: "GET" });
-      const data = await response.json();
-
-      if (response.ok && data.data) {
-        console.log("Data fetched successfully:", data.data.length, "records");
-        const mappedData = data.data.map((app) => ({
-          ...app,
-          patient_type:
-            app.patient_type === "Postoperative"
-              ? "Post Operative"
-              : app.patient_type,
-        }));
-        setAppointmentData(mappedData);
-      } else {
-        console.error(
-          "Error fetching appointments:",
-          data.message || "Unknown error",
-        );
+        if (response.ok && data.data) {
+          console.log(
+            "Data fetched successfully:",
+            data.data.length,
+            "records",
+          );
+          const mappedData = data.data.map((app) => ({
+            ...app,
+            patient_type:
+              app.patient_type === "Postoperative"
+                ? "Post Operative"
+                : app.patient_type,
+          }));
+          setAppointmentData(mappedData);
+        } else {
+          console.error(
+            "Error fetching appointments:",
+            data.message || "Unknown error",
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching appointments:", error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Error fetching appointments:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [fromDate, toDate, currentLocation]);
+    },
+    [fromDate, toDate, currentLocation],
+  );
 
   const fetchDropdownData = useCallback(async () => {
     try {
@@ -613,14 +620,21 @@ export default function Appointment_list() {
         `${BASE_URL}/V1/doctor/consultationDetailsDropdown?location=${currentLocation}`,
       ];
 
-      const [consultationResponse, doctorResponse, fdeResponse, consultationDetailsResponse] =
-        await Promise.all(
-          endpoints.map((url) => fetch(url).then((res) => res.json())),
-        );
+      const [
+        consultationResponse,
+        doctorResponse,
+        fdeResponse,
+        consultationDetailsResponse,
+      ] = await Promise.all(
+        endpoints.map((url) => fetch(url).then((res) => res.json())),
+      );
 
       console.log("Current Location:", currentLocation);
       console.log("FDE API Full Response:", fdeResponse);
-      console.log("Consultation Details API Response:", consultationDetailsResponse);
+      console.log(
+        "Consultation Details API Response:",
+        consultationDetailsResponse,
+      );
 
       setConsultationList(
         Array.isArray(consultationResponse.data)
@@ -645,7 +659,13 @@ export default function Appointment_list() {
       fetchDropdownData();
     }
     // We want to fetch data whenever any of these values change
-  }, [fromDate, toDate, currentLocation, fetchAppointmentData, fetchDropdownData]);
+  }, [
+    fromDate,
+    toDate,
+    currentLocation,
+    fetchAppointmentData,
+    fetchDropdownData,
+  ]);
 
   useEffect(() => {
     if (selectedAppointment) {
@@ -1638,7 +1658,6 @@ export default function Appointment_list() {
                   border: "1px solid #00bcd4",
                   marginTop: "-5px",
                 }}
-
               >
                 <Card.Body style={{ marginTop: "-6px" }}>
                   {loading ? (
@@ -1696,8 +1715,8 @@ export default function Appointment_list() {
                         body={(rowData) =>
                           rowData.appointment_timestamp
                             ? moment(rowData.appointment_timestamp).format(
-                              "DD-MM-YYYY",
-                            )
+                                "DD-MM-YYYY",
+                              )
                             : "-"
                         }
                         headerClassName="datatable-header-center"
@@ -1713,9 +1732,9 @@ export default function Appointment_list() {
                         body={(rowData) =>
                           rowData.appointment_time
                             ? moment(rowData.appointment_time, [
-                              "hh:mm A",
-                              "HH:mm",
-                            ]).format("HH:mm")
+                                "hh:mm A",
+                                "HH:mm",
+                              ]).format("HH:mm")
                             : "-"
                         }
                         headerClassName="datatable-header-center"

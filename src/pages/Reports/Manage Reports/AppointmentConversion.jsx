@@ -214,7 +214,6 @@
 //     saveAs(data, "Appointment_Conversion_Report" + fileExtension);
 //   };
 
-
 //   const downloadPDF = () => {
 //     const doc = new jsPDF();
 //     doc.text("Appointment Conversion Report", 14, 15);
@@ -564,7 +563,6 @@
 
 // export default AppointmentConversion;
 
-
 import React, { useState, useEffect } from "react";
 import PageBreadcrumb from "../../../components/PageBreadcrumb";
 import { Row, Col, Card, Container, Form } from "react-bootstrap";
@@ -616,8 +614,14 @@ const AppointmentConversion = () => {
   }, []);
 
   // New State for Analytics (Matches PHP Logic)
-  const [dailyChartData, setDailyChartData] = useState({ categories: [], series: [] });
-  const [monthlyChartData, setMonthlyChartData] = useState({ categories: [], series: [] });
+  const [dailyChartData, setDailyChartData] = useState({
+    categories: [],
+    series: [],
+  });
+  const [monthlyChartData, setMonthlyChartData] = useState({
+    categories: [],
+    series: [],
+  });
 
   const [filters, setFilters] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -641,12 +645,20 @@ const AppointmentConversion = () => {
     setLoading(true);
     const authHeaders = {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${localStorage.getItem("token")}`
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
     };
 
     try {
       // 1. Fetch Table Data & Analytics Data Concurrently (Mimicking PHP's multiple AJAX calls)
-      const [resList, resNew, resFO, resPO, resMonthNew, resMonthFO, resMonthPO] = await Promise.all([
+      const [
+        resList,
+        resNew,
+        resFO,
+        resPO,
+        resMonthNew,
+        resMonthFO,
+        resMonthPO,
+      ] = await Promise.all([
         fetch(`${BASE_URL}/V1/managereports/listConvAppointments`, {
           method: "POST",
           headers: authHeaders,
@@ -655,15 +667,63 @@ const AppointmentConversion = () => {
             Fromdate: fromDate,
             Todate: toDate,
             AppointmentType: appointmentType, // Added missing filters
-            AppointmentStatus: appointmentStatus
-          })
+            AppointmentStatus: appointmentStatus,
+          }),
         }),
-        fetch(`${BASE_URL}/V1/managereports/NewAppointmentDetails`, { method: "POST", headers: authHeaders, body: JSON.stringify({ location: currentLocation, Fromdate: fromDate, Todate: toDate }) }),
-        fetch(`${BASE_URL}/V1/managereports/FollowAppointmentDetails`, { method: "POST", headers: authHeaders, body: JSON.stringify({ location: currentLocation, Fromdate: fromDate, Todate: toDate }) }),
-        fetch(`${BASE_URL}/V1/managereports/POAppointmentDetails`, { method: "POST", headers: authHeaders, body: JSON.stringify({ location: currentLocation, Fromdate: fromDate, Todate: toDate }) }),
-        fetch(`${BASE_URL}/V1/managereports/MonthwiseNewAppointment`, { method: "POST", headers: authHeaders, body: JSON.stringify({ location: currentLocation, Fromdate: fromDate, Todate: toDate }) }),
-        fetch(`${BASE_URL}/V1/managereports/MonthwiseFOAppointment`, { method: "POST", headers: authHeaders, body: JSON.stringify({ location: currentLocation, Fromdate: fromDate, Todate: toDate }) }),
-        fetch(`${BASE_URL}/V1/managereports/MonthwisePOAppointment`, { method: "POST", headers: authHeaders, body: JSON.stringify({ location: currentLocation, Fromdate: fromDate, Todate: toDate }) })
+        fetch(`${BASE_URL}/V1/managereports/NewAppointmentDetails`, {
+          method: "POST",
+          headers: authHeaders,
+          body: JSON.stringify({
+            location: currentLocation,
+            Fromdate: fromDate,
+            Todate: toDate,
+          }),
+        }),
+        fetch(`${BASE_URL}/V1/managereports/FollowAppointmentDetails`, {
+          method: "POST",
+          headers: authHeaders,
+          body: JSON.stringify({
+            location: currentLocation,
+            Fromdate: fromDate,
+            Todate: toDate,
+          }),
+        }),
+        fetch(`${BASE_URL}/V1/managereports/POAppointmentDetails`, {
+          method: "POST",
+          headers: authHeaders,
+          body: JSON.stringify({
+            location: currentLocation,
+            Fromdate: fromDate,
+            Todate: toDate,
+          }),
+        }),
+        fetch(`${BASE_URL}/V1/managereports/MonthwiseNewAppointment`, {
+          method: "POST",
+          headers: authHeaders,
+          body: JSON.stringify({
+            location: currentLocation,
+            Fromdate: fromDate,
+            Todate: toDate,
+          }),
+        }),
+        fetch(`${BASE_URL}/V1/managereports/MonthwiseFOAppointment`, {
+          method: "POST",
+          headers: authHeaders,
+          body: JSON.stringify({
+            location: currentLocation,
+            Fromdate: fromDate,
+            Todate: toDate,
+          }),
+        }),
+        fetch(`${BASE_URL}/V1/managereports/MonthwisePOAppointment`, {
+          method: "POST",
+          headers: authHeaders,
+          body: JSON.stringify({
+            location: currentLocation,
+            Fromdate: fromDate,
+            Todate: toDate,
+          }),
+        }),
       ]);
 
       const listData = await resList.json();
@@ -678,13 +738,17 @@ const AppointmentConversion = () => {
       // Update Main Table with filtering
       let filtered = listData || [];
       if (appointmentType) {
-        filtered = filtered.filter(app =>
-          (app.patient_type || app.appointmentType || "").toLowerCase() === appointmentType.toLowerCase()
+        filtered = filtered.filter(
+          (app) =>
+            (app.patient_type || app.appointmentType || "").toLowerCase() ===
+            appointmentType.toLowerCase(),
         );
       }
       if (appointmentStatus) {
-        filtered = filtered.filter(app =>
-          (app.status || "").toLowerCase() === appointmentStatus.toLowerCase()
+        filtered = filtered.filter(
+          (app) =>
+            (app.status || "").toLowerCase() ===
+            appointmentStatus.toLowerCase(),
         );
       }
       const mappedList = filtered.map((app) => ({
@@ -697,28 +761,91 @@ const AppointmentConversion = () => {
       setAppointments(mappedList);
 
       // 2. Process Daily Data (Stacked Column Logic)
-      const dailyDates = [...new Set([...dailyNew.map(d => d.appointment_timestamp), ...dailyFO.map(d => d.appointment_timestamp)])].sort();
+      const dailyDates = [
+        ...new Set([
+          ...dailyNew.map((d) => d.appointment_timestamp),
+          ...dailyFO.map((d) => d.appointment_timestamp),
+        ]),
+      ].sort();
       setDailyChartData({
-        categories: dailyDates.map(d => d.split('T')[0]),
+        categories: dailyDates.map((d) => d.split("T")[0]),
         series: [
-          { name: 'New', data: dailyDates.map(date => dailyNew.find(d => d.appointment_timestamp === date)?.NEWcount || 0) },
-          { name: 'Follow Up', data: dailyDates.map(date => dailyFO.find(d => d.appointment_timestamp === date)?.FOcount || 0) },
-          { name: 'Post Operative', data: dailyDates.map(date => dailyPO.find(d => d.appointment_timestamp === date)?.POcount || 0) }
-        ]
+          {
+            name: "New",
+            data: dailyDates.map(
+              (date) =>
+                dailyNew.find((d) => d.appointment_timestamp === date)
+                  ?.NEWcount || 0,
+            ),
+          },
+          {
+            name: "Follow Up",
+            data: dailyDates.map(
+              (date) =>
+                dailyFO.find((d) => d.appointment_timestamp === date)
+                  ?.FOcount || 0,
+            ),
+          },
+          {
+            name: "Post Operative",
+            data: dailyDates.map(
+              (date) =>
+                dailyPO.find((d) => d.appointment_timestamp === date)
+                  ?.POcount || 0,
+            ),
+          },
+        ],
       });
 
       // 3. Process Monthly Data
-      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-      const monthlyKeys = [...new Set([...mNew.map(m => `${m.cyear}-${m.cmonth}`)])].sort();
+      const monthNames = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
+      const monthlyKeys = [
+        ...new Set([...mNew.map((m) => `${m.cyear}-${m.cmonth}`)]),
+      ].sort();
       setMonthlyChartData({
-        categories: monthlyKeys.map(k => `${monthNames[k.split('-')[1] - 1]} ${k.split('-')[0]}`),
+        categories: monthlyKeys.map(
+          (k) => `${monthNames[k.split("-")[1] - 1]} ${k.split("-")[0]}`,
+        ),
         series: [
-          { name: 'New', data: monthlyKeys.map(k => mNew.find(m => `${m.cyear}-${m.cmonth}` === k)?.PatientType || 0) },
-          { name: 'Follow Up', data: monthlyKeys.map(k => mFO.find(m => `${m.cyear}-${m.cmonth}` === k)?.PatientType || 0) },
-          { name: 'Post Operative', data: monthlyKeys.map(k => mPO.find(m => `${m.cyear}-${m.cmonth}` === k)?.PatientType || 0) }
-        ]
+          {
+            name: "New",
+            data: monthlyKeys.map(
+              (k) =>
+                mNew.find((m) => `${m.cyear}-${m.cmonth}` === k)?.PatientType ||
+                0,
+            ),
+          },
+          {
+            name: "Follow Up",
+            data: monthlyKeys.map(
+              (k) =>
+                mFO.find((m) => `${m.cyear}-${m.cmonth}` === k)?.PatientType ||
+                0,
+            ),
+          },
+          {
+            name: "Post Operative",
+            data: monthlyKeys.map(
+              (k) =>
+                mPO.find((m) => `${m.cyear}-${m.cmonth}` === k)?.PatientType ||
+                0,
+            ),
+          },
+        ],
       });
-
     } catch (error) {
       console.error("Fetch error:", error);
     } finally {
@@ -727,23 +854,24 @@ const AppointmentConversion = () => {
   };
 
   const chartOptions = (categories, title) => ({
-    chart: { type: 'bar', stacked: true, toolbar: { show: true } },
-    plotOptions: { bar: { horizontal: false, columnWidth: '55%' } },
+    chart: { type: "bar", stacked: true, toolbar: { show: true } },
+    plotOptions: { bar: { horizontal: false, columnWidth: "55%" } },
     xaxis: { categories },
-    title: { text: title, align: 'center', style: { color: '#006064' } },
-    colors: ['#369EAD', '#C24642', '#5A55A3'],
-    legend: { position: 'top' },
-    fill: { opacity: 1 }
+    title: { text: title, align: "center", style: { color: "#006064" } },
+    colors: ["#369EAD", "#C24642", "#5A55A3"],
+    legend: { position: "top" },
+    fill: { opacity: 1 },
   });
 
   // ... (keep exportToExcel and downloadPDF functions exactly the same)
   const exportToExcel = () => {
-    const fileType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
+    const fileType =
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
     const fileExtension = ".xlsx";
 
     const excelData = appointments.map((app, index) => ({
       "Sr No": index + 1,
-      "Date": app.appointment_timestamp || app.date || app.appointment_date,
+      Date: app.appointment_timestamp || app.date || app.appointment_date,
       "UID no": app.UidNo || app.appointment_uid || app._id,
       "Patient Name": app.patient || app.patientName,
       "Patient Type": app.patient_type || app.appointmentType,
@@ -751,7 +879,7 @@ const AppointmentConversion = () => {
       "Doctor Name": app.doctor || app.doctorName,
       "Doctor Type": app.doctor_type || "-",
       "FDE Name": app.FDE_Name || app.fde_name || "-",
-      "Cancellation": app.cancellation_reason || "-",
+      Cancellation: app.cancellation_reason || "-",
     }));
 
     const ws = XLSX.utils.json_to_sheet(excelData);
@@ -765,7 +893,18 @@ const AppointmentConversion = () => {
     const doc = new jsPDF();
     doc.text("Appointment Conversion Report", 14, 15);
 
-    const tableColumn = ["Sr No", "Date", "UID no", "Patient Name", "Patient Type", "Appointment Type", "Doctor Name", "Doctor Type", "FDE Name", "Cancellation"];
+    const tableColumn = [
+      "Sr No",
+      "Date",
+      "UID no",
+      "Patient Name",
+      "Patient Type",
+      "Appointment Type",
+      "Doctor Name",
+      "Doctor Type",
+      "FDE Name",
+      "Cancellation",
+    ];
     const tableRows = appointments.map((app, index) => [
       index + 1,
       app.appointment_timestamp || app.date || app.appointment_date,
@@ -783,9 +922,9 @@ const AppointmentConversion = () => {
       head: [tableColumn],
       body: tableRows,
       startY: 20,
-      theme: 'grid',
+      theme: "grid",
       styles: { fontSize: 8 },
-      headStyles: { fillColor: [0, 172, 193] }
+      headStyles: { fillColor: [0, 172, 193] },
     });
 
     doc.save("Appointment_Conversion_Report.pdf");
@@ -796,10 +935,20 @@ const AppointmentConversion = () => {
       <div className="d-flex justify-content-between align-items-center mb-1">
         <div className="d-flex align-items-center" style={{ gap: "20px" }}>
           <div className="d-flex align-items-center">
-            <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Show</span>
+            <span
+              className="me-1"
+              style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}
+            >
+              Show
+            </span>
             <Form.Select
               size="sm"
-              style={{ width: "70px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
+              style={{
+                width: "70px",
+                borderRadius: "8px",
+                border: "1px solid #4dd0e1",
+                fontSize: "12px",
+              }}
               value={rows}
               onChange={(e) => setRows(Number(e.target.value))}
             >
@@ -810,14 +959,24 @@ const AppointmentConversion = () => {
             </Form.Select>
           </div>
           <div className="d-flex align-items-center">
-            <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Search</span>
+            <span
+              className="me-1"
+              style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}
+            >
+              Search
+            </span>
             <span className="p-input-icon-left">
               <InputText
                 value={searchText}
                 onChange={onGlobalFilterChange}
                 placeholder="Global Search..."
                 className="p-inputtext-sm"
-                style={{ width: "200px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
+                style={{
+                  width: "200px",
+                  borderRadius: "8px",
+                  border: "1px solid #4dd0e1",
+                  fontSize: "12px",
+                }}
               />
             </span>
           </div>
@@ -826,14 +985,24 @@ const AppointmentConversion = () => {
           <button
             className="btn btn-success btn-sm"
             onClick={exportToExcel}
-            style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px" }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "5px",
+              borderRadius: "8px",
+            }}
           >
             <i className="fa fa-file-excel-o"></i> Download Excel
           </button>
           <button
             className="btn btn-danger btn-sm"
             onClick={downloadPDF}
-            style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px" }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "5px",
+              borderRadius: "8px",
+            }}
           >
             <i className="fa fa-file-pdf-o"></i> Download PDF
           </button>
@@ -880,59 +1049,130 @@ const AppointmentConversion = () => {
                     fontSize: "16px",
                   }}
                 >
-                  <h4 style={{ margin: 0, fontSize: "18px" }}>Manage Appointment Report</h4>
+                  <h4 style={{ margin: 0, fontSize: "18px" }}>
+                    Manage Appointment Report
+                  </h4>
                 </Card.Header>
                 <Card.Body style={{ padding: "5px" }}>
                   <Form onSubmit={handleFindClick}>
-                    <Row className="align-items-end mb-4 flex-nowrap" style={{ margin: "0 -5px" }}>
+                    <Row
+                      className="align-items-end mb-4 flex-nowrap"
+                      style={{ margin: "0 -5px" }}
+                    >
                       <Col style={{ padding: "0 5px", flex: "1" }}>
                         <Form.Group className="mb-2">
-                          <Form.Label style={{ fontWeight: "bold", color: "#006064", whiteSpace: "nowrap", fontSize: "12px" }}>From Date</Form.Label>
+                          <Form.Label
+                            style={{
+                              fontWeight: "bold",
+                              color: "#006064",
+                              whiteSpace: "nowrap",
+                              fontSize: "12px",
+                            }}
+                          >
+                            From Date
+                          </Form.Label>
                           <Form.Control
                             type="date"
                             value={fromDate}
                             onChange={(e) => setFromDate(e.target.value)}
-                            style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }}
+                            style={{
+                              border: "2px solid #4dd0e1",
+                              borderRadius: "8px",
+                              padding: "6px",
+                              backgroundColor: "#e0f7fa",
+                              fontSize: "12px",
+                            }}
                           />
                         </Form.Group>
                       </Col>
                       <Col style={{ padding: "0 5px", flex: "1" }}>
                         <Form.Group className="mb-2">
-                          <Form.Label style={{ fontWeight: "bold", color: "#006064", whiteSpace: "nowrap", fontSize: "12px" }}>To Date</Form.Label>
+                          <Form.Label
+                            style={{
+                              fontWeight: "bold",
+                              color: "#006064",
+                              whiteSpace: "nowrap",
+                              fontSize: "12px",
+                            }}
+                          >
+                            To Date
+                          </Form.Label>
                           <Form.Control
                             type="date"
                             value={toDate}
                             onChange={(e) => setToDate(e.target.value)}
-                            style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }}
+                            style={{
+                              border: "2px solid #4dd0e1",
+                              borderRadius: "8px",
+                              padding: "6px",
+                              backgroundColor: "#e0f7fa",
+                              fontSize: "12px",
+                            }}
                           />
                         </Form.Group>
                       </Col>
                       <Col style={{ padding: "0 5px", flex: "1" }}>
                         <Form.Group className="mb-2">
-                          <Form.Label style={{ fontWeight: "bold", color: "#006064", whiteSpace: "nowrap", fontSize: "12px" }}>Appointment Type</Form.Label>
+                          <Form.Label
+                            style={{
+                              fontWeight: "bold",
+                              color: "#006064",
+                              whiteSpace: "nowrap",
+                              fontSize: "12px",
+                            }}
+                          >
+                            Appointment Type
+                          </Form.Label>
                           <Form.Select
                             value={appointmentType}
                             onChange={(e) => setAppointmentType(e.target.value)}
-                            style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }}
+                            style={{
+                              border: "2px solid #4dd0e1",
+                              borderRadius: "8px",
+                              padding: "6px",
+                              backgroundColor: "#e0f7fa",
+                              fontSize: "12px",
+                            }}
                           >
                             <option value="">Select Type</option>
                             {appointmentTypes.map((type) => (
-                              <option key={type.value} value={type.value}>{type.label}</option>
+                              <option key={type.value} value={type.value}>
+                                {type.label}
+                              </option>
                             ))}
                           </Form.Select>
                         </Form.Group>
                       </Col>
                       <Col style={{ padding: "0 5px", flex: "1" }}>
                         <Form.Group className="mb-2">
-                          <Form.Label style={{ fontWeight: "bold", color: "#006064", whiteSpace: "nowrap", fontSize: "12px" }}>Appointment Status</Form.Label>
+                          <Form.Label
+                            style={{
+                              fontWeight: "bold",
+                              color: "#006064",
+                              whiteSpace: "nowrap",
+                              fontSize: "12px",
+                            }}
+                          >
+                            Appointment Status
+                          </Form.Label>
                           <Form.Select
                             value={appointmentStatus}
-                            onChange={(e) => setAppointmentStatus(e.target.value)}
-                            style={{ border: "2px solid #4dd0e1", borderRadius: "8px", padding: "6px", backgroundColor: "#e0f7fa", fontSize: "12px" }}
+                            onChange={(e) =>
+                              setAppointmentStatus(e.target.value)
+                            }
+                            style={{
+                              border: "2px solid #4dd0e1",
+                              borderRadius: "8px",
+                              padding: "6px",
+                              backgroundColor: "#e0f7fa",
+                              fontSize: "12px",
+                            }}
                           >
                             <option value="">Select Status</option>
                             {appointmentStatusOptions.map((opt) => (
-                              <option key={opt.value} value={opt.value}>{opt.label}</option>
+                              <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </option>
                             ))}
                           </Form.Select>
                         </Form.Group>
@@ -951,7 +1191,7 @@ const AppointmentConversion = () => {
                               color: "white",
                               borderRadius: "8px",
                               fontWeight: "bold",
-                              fontSize: "13px"
+                              fontSize: "13px",
                             }}
                           >
                             {loading ? "Loading..." : "Search"}
@@ -962,14 +1202,37 @@ const AppointmentConversion = () => {
                   </Form>
 
                   {/* Move controls above graphs */}
-                  <Row className="align-items-center mb-4" style={{ margin: "0 -5px" }}>
-                    <Col style={{ padding: "0 5px" }} className="d-flex align-items-center">
-                      <div className="d-flex align-items-center" style={{ gap: "20px" }}>
+                  <Row
+                    className="align-items-center mb-4"
+                    style={{ margin: "0 -5px" }}
+                  >
+                    <Col
+                      style={{ padding: "0 5px" }}
+                      className="d-flex align-items-center"
+                    >
+                      <div
+                        className="d-flex align-items-center"
+                        style={{ gap: "20px" }}
+                      >
                         <div className="d-flex align-items-center">
-                          <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Show</span>
+                          <span
+                            className="me-1"
+                            style={{
+                              fontWeight: "bold",
+                              color: "#006064",
+                              fontSize: "12px",
+                            }}
+                          >
+                            Show
+                          </span>
                           <Form.Select
                             size="sm"
-                            style={{ width: "70px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
+                            style={{
+                              width: "70px",
+                              borderRadius: "8px",
+                              border: "1px solid #4dd0e1",
+                              fontSize: "12px",
+                            }}
                             value={rows}
                             onChange={(e) => setRows(Number(e.target.value))}
                           >
@@ -980,31 +1243,62 @@ const AppointmentConversion = () => {
                           </Form.Select>
                         </div>
                         <div className="d-flex align-items-center">
-                          <span className="me-1" style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}>Search</span>
+                          <span
+                            className="me-1"
+                            style={{
+                              fontWeight: "bold",
+                              color: "#006064",
+                              fontSize: "12px",
+                            }}
+                          >
+                            Search
+                          </span>
                           <span className="p-input-icon-left">
                             <InputText
                               value={searchText}
                               onChange={onGlobalFilterChange}
                               placeholder="Global Search..."
                               className="p-inputtext-sm"
-                              style={{ width: "200px", borderRadius: "8px", border: "1px solid #4dd0e1", fontSize: "12px" }}
+                              style={{
+                                width: "200px",
+                                borderRadius: "8px",
+                                border: "1px solid #4dd0e1",
+                                fontSize: "12px",
+                              }}
                             />
                           </span>
                         </div>
                       </div>
                     </Col>
-                    <Col style={{ padding: "0 5px" }} className="d-flex justify-content-end align-items-center gap-2">
+                    <Col
+                      style={{ padding: "0 5px" }}
+                      className="d-flex justify-content-end align-items-center gap-2"
+                    >
                       <button
                         className="btn btn-success btn-sm"
                         onClick={exportToExcel}
-                        style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px", fontWeight: "600", height: "35px" }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "5px",
+                          borderRadius: "8px",
+                          fontWeight: "600",
+                          height: "35px",
+                        }}
                       >
                         <i className="fa fa-file-excel-o"></i> Download Excel
                       </button>
                       <button
                         className="btn btn-danger btn-sm"
                         onClick={downloadPDF}
-                        style={{ display: "flex", alignItems: "center", gap: "5px", borderRadius: "8px", fontWeight: "600", height: "35px" }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "5px",
+                          borderRadius: "8px",
+                          fontWeight: "600",
+                          height: "35px",
+                        }}
                       >
                         <i className="fa fa-file-pdf-o"></i> Download PDF
                       </button>
@@ -1030,24 +1324,82 @@ const AppointmentConversion = () => {
                       body={(rowData, { rowIndex }) => rowIndex + 1}
                       style={{ width: "60px", textAlign: "center" }}
                     />
-                    <Column field="date" header="Date" body={(row) => row.appointment_timestamp || row.date || row.appointment_date} />
-                    <Column field="appointment_uid" header="UID no" body={(row) => row.UidNo || row.appointment_uid || row._id} />
-                    <Column field="patientName" header="Patient Name" body={(row) => row.patient || row.patientName} />
-                    <Column field="patient_type" header="Patient Type" body={(row) => row.patient_type || row.appointmentType} />
-                    <Column field="appointmentType" header="Appointment Type" body={(row) => row.patient_type || row.appointmentType} />
-                    <Column field="doctorName" header="Doctor Name" body={(row) => row.doctor || row.doctorName} />
-                    <Column field="doctor_type" header="Doctor Type" body={(row) => row.doctor_type || "-"} />
-                    <Column field="fde_name" header="FDE Name" body={(row) => row.FDE_Name || row.fde_name || "-"} />
-                    <Column field="cancellation_reason" header="Cancellation" body={(row) => row.cancellation_reason || "-"} />
+                    <Column
+                      field="date"
+                      header="Date"
+                      body={(row) =>
+                        row.appointment_timestamp ||
+                        row.date ||
+                        row.appointment_date
+                      }
+                    />
+                    <Column
+                      field="appointment_uid"
+                      header="UID no"
+                      body={(row) =>
+                        row.UidNo || row.appointment_uid || row._id
+                      }
+                    />
+                    <Column
+                      field="patientName"
+                      header="Patient Name"
+                      body={(row) => row.patient || row.patientName}
+                    />
+                    <Column
+                      field="patient_type"
+                      header="Patient Type"
+                      body={(row) => row.patient_type || row.appointmentType}
+                    />
+                    <Column
+                      field="appointmentType"
+                      header="Appointment Type"
+                      body={(row) => row.patient_type || row.appointmentType}
+                    />
+                    <Column
+                      field="doctorName"
+                      header="Doctor Name"
+                      body={(row) => row.doctor || row.doctorName}
+                    />
+                    <Column
+                      field="doctor_type"
+                      header="Doctor Type"
+                      body={(row) => row.doctor_type || "-"}
+                    />
+                    <Column
+                      field="fde_name"
+                      header="FDE Name"
+                      body={(row) => row.FDE_Name || row.fde_name || "-"}
+                    />
+                    <Column
+                      field="cancellation_reason"
+                      header="Cancellation"
+                      body={(row) => row.cancellation_reason || "-"}
+                    />
                   </DataTable>
 
                   {/* Analytics Section - Replicating PHP Chart Containers */}
                   <Row className="mt-4 mb-4">
                     <Col md={6}>
-                      <ReactApexChart options={chartOptions(dailyChartData.categories, "Daily Comparative Reports")} series={dailyChartData.series} type="bar" height={300} />
+                      <ReactApexChart
+                        options={chartOptions(
+                          dailyChartData.categories,
+                          "Daily Comparative Reports",
+                        )}
+                        series={dailyChartData.series}
+                        type="bar"
+                        height={300}
+                      />
                     </Col>
                     <Col md={6}>
-                      <ReactApexChart options={chartOptions(monthlyChartData.categories, "Monthly Comparative Reports")} series={monthlyChartData.series} type="bar" height={300} />
+                      <ReactApexChart
+                        options={chartOptions(
+                          monthlyChartData.categories,
+                          "Monthly Comparative Reports",
+                        )}
+                        series={monthlyChartData.series}
+                        type="bar"
+                        height={300}
+                      />
                     </Col>
                   </Row>
                 </Card.Body>
