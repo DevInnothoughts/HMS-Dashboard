@@ -95,7 +95,7 @@ export default function Login() {
     if (formData.department === "OPD")
       return [
         { value: "reception", label: "Reception" },
-        { value: "doctor", label: "Doctor" },
+        // { value: "doctor", label: "Doctor" },
       ];
     if (formData.department === "IPD") {
       return [
