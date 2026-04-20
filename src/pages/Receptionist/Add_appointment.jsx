@@ -363,7 +363,9 @@ export default function Add_appointment() {
     return newErrors;
   };
 
-  const handleSubmit = async (saveType) => {
+  const handleSubmit = async (e, saveType) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!saveType) saveType = "save";
     const validationErrors = validate();
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length === 0) {
@@ -529,7 +531,7 @@ export default function Add_appointment() {
               </div>
 
               <Card.Body style={{ padding: "10px" }}>
-                <Form>
+                 <Form onSubmit={(e) => handleSubmit(e, "save")}>
                   <Row className="g-3">
                     <Col md={3}>
                       <Form.Label style={labelStyle}>
@@ -553,7 +555,8 @@ export default function Add_appointment() {
                       <Form.Label style={labelStyle}>
                         Patient Type <span className="text-danger">*</span>
                       </Form.Label>
-                      <Form.Select
+                       <Form.Select
+                        required
                         style={inputStyle}
                         name="patient_type"
                         value={formData.patient_type}
@@ -715,6 +718,7 @@ export default function Add_appointment() {
                           Reference <span className="text-danger">*</span>
                         </Form.Label>
                         <Form.Select
+                          required
                           style={inputStyle}
                           name="reference"
                           value={formData.reference}
@@ -778,15 +782,15 @@ export default function Add_appointment() {
                     >
                       Reset Form
                     </Button>
-                    <Button
+                     <Button
                       variant="primary"
+                      type="submit"
                       style={{
                         fontSize: "13px",
                         borderRadius: "10px",
                         padding: "10px 25px",
                         border: "none",
                       }}
-                      onClick={() => handleSubmit("save")}
                       disabled={loading || !noPendingAppt}
                     >
                       {loading ? "Adding..." : "Add Appointment"}

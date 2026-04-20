@@ -341,7 +341,7 @@ export default function All_patient() {
 
     try {
       const doctorResponse = await fetch(
-        `${BASE_URL}/V1/appointment/doctorDropdown?location=${currentLocation}`,
+        `${BASE_URL}/V1/doctor/doctorDropdown?location=${currentLocation}`,
         {
           method: "GET",
           headers: {
@@ -726,7 +726,7 @@ export default function All_patient() {
         [patient.reference_type]: patient.ref || "",
         Other_Newspaper:
           patient.reference_type === "newspaper" &&
-          !standardNewspapers.includes(patient.ref)
+            !standardNewspapers.includes(patient.ref)
             ? patient.ref
             : "",
       }));
@@ -811,17 +811,14 @@ export default function All_patient() {
         break;
       case "old_ref":
         reference_type = "old_ref";
-        ref = `${oldPatientDetails.patient_ref_no || ""},${
-          oldPatientDetails.old_patient_name || ""
-        },${oldPatientDetails.old_patient_id_value || ""},${
-          oldPatientDetails.old_patient_pincode || ""
-        }`;
+        ref = `${oldPatientDetails.patient_ref_no || ""},${oldPatientDetails.old_patient_name || ""
+          },${oldPatientDetails.old_patient_id_value || ""},${oldPatientDetails.old_patient_pincode || ""
+          }`;
         break;
       case "family_friends":
         reference_type = "family_friends";
-        ref = `${referenceDetails.friendname || ""},${
-          referenceDetails.friendno || ""
-        }`;
+        ref = `${referenceDetails.friendname || ""},${referenceDetails.friendno || ""
+          }`;
         break;
       case "hhc_board":
         reference_type = "hhc_board";
@@ -938,11 +935,10 @@ export default function All_patient() {
 
   const statusBodyTemplate = (formData) => (
     <span
-      className={`badge ${
-        formData.status
-          ? ` status- ${formData.status.toLowerCase()}`
-          : "status-unknown"
-      }`}
+      className={`badge ${formData.status
+        ? ` status- ${formData.status.toLowerCase()}`
+        : "status-unknown"
+        }`}
     >
       {formData.status || "Unknown"}
     </span>
@@ -983,7 +979,8 @@ export default function All_patient() {
     }
   };
 
-  const handleSubmit = async (saveType) => {
+  const handleSubmit = async (e, saveType) => {
+    if (e) e.preventDefault();
     const selectedFDE = fdeList.find((fde) => fde.FDEID === formData.FDE_Name);
     const fdeName = selectedFDE ? selectedFDE.FDEName : "";
     const formattedDate = moment(formData.date).format("YYYY-MM-DD");
@@ -2822,7 +2819,7 @@ export default function All_patient() {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body style={{ fontSize: "13px", padding: "10px" }}>
-          <Form>
+          <Form onSubmit={(e) => handleSubmit(e, "save")}>
             <Row>
               <Col md={6}>
                 <Form.Group>
@@ -2976,6 +2973,7 @@ export default function All_patient() {
                     name="phone"
                     value={formData.phone}
                     readOnly
+                    required
                     style={{
                       border: "2px solid rgb(77, 208, 225)",
                       backgroundColor: "#e7ebebff",
@@ -3101,6 +3099,7 @@ export default function All_patient() {
               <Button
                 size="sm"
                 variant="primary"
+                type="submit"
                 className="px-3"
                 style={{
                   borderRadius: "10px",
@@ -3109,7 +3108,6 @@ export default function All_patient() {
                   borderColor: "#00bcd4",
                   padding: "10px",
                 }}
-                onClick={() => handleSubmit("save")}
               >
                 Add Appointment
               </Button>
@@ -3148,7 +3146,7 @@ export default function All_patient() {
             padding: "5px",
           }}
         >
-          <Form>
+          <Form id="edit-patient-form" onSubmit={handleSaveChanges}>
             <div
               className="p-3 mb-4 bg-white rounded shadow-sm border"
               style={{ borderLeft: "5px solid rgb(77, 208, 225)" }}
@@ -3178,6 +3176,7 @@ export default function All_patient() {
                       name="Uid_no"
                       value={formData.Uid_no}
                       readOnly
+                      required
                       style={{
                         backgroundColor: "#e7ebebff",
                         cursor: "not-allowed",
@@ -3884,6 +3883,8 @@ export default function All_patient() {
           <Button
             variant="primary"
             className="px-4"
+            type="submit"
+            form="edit-patient-form"
             style={{
               borderColor: "rgb(77, 208, 225)",
               color: "white",
@@ -3891,7 +3892,6 @@ export default function All_patient() {
               fontSize: "12px",
               padding: "10px",
             }}
-            onClick={handleSaveChanges}
           >
             Save Changes
           </Button>

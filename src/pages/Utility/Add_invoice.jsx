@@ -529,6 +529,7 @@ const AddInvoice = () => {
                     Invoice Number <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
+                    required
                     name="invoice_id"
                     value={formData.invoice_id}
                     onChange={handleInputChange}

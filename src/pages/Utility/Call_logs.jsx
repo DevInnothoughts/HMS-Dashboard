@@ -281,7 +281,7 @@ export default function Call_logs() {
     try {
       const endpoints = [
         `${BASE_URL}/V1/appointment/fdeDropdown?location=${currentLocation}`,
-        `${BASE_URL}/V1/appointment/doctorDropdown?location=${currentLocation}`,
+        `${BASE_URL}/V1/doctor/doctorDropdown?location=${currentLocation}`,
       ];
 
       const [fdeResponse, doctorResponse] = await Promise.all(
@@ -393,7 +393,8 @@ export default function Call_logs() {
     setShowNoteModal(true);
   };
 
-  const handleSaveNote = async () => {
+  const handleSaveNote = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
     if (!selectedCallLog || !selectedCallLog.ivr_id) {
       toast.error("Error: IVR ID is missing.");
       return;
@@ -706,7 +707,8 @@ export default function Call_logs() {
     setTimeSlots(generateTimeSlots());
   }, [formData.date]);
 
-  const handleSubmit = async (saveType) => {
+  const handleSubmit = async (e, saveType) => {
+    if (e && e.preventDefault) e.preventDefault();
     const selectedFDE = fdeList.find(
       (fde) => String(fde.FDEID) === formData.FDE_Name,
     );
@@ -774,7 +776,8 @@ export default function Call_logs() {
     }
   };
 
-  const handleAddEnquirySubmit = async () => {
+  const handleAddEnquirySubmit = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
     if (
       !enquiryForm.date ||
       !enquiryForm.patient_name ||
@@ -1107,7 +1110,7 @@ export default function Call_logs() {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body style={{ fontSize: "13px", padding: "5px" }}>
-          <Form onSubmit={handleAddAppointment}>
+          <Form onSubmit={(e) => handleSubmit(e, "save")}>
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-10">
@@ -1151,9 +1154,10 @@ export default function Call_logs() {
                       marginBottom: "4px",
                     }}
                   >
-                    Appointment Time
+                    Appointment Time <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Select
+                    required
                     name="appointmentTime"
                     value={formData.appointmentTime}
                     onChange={handleInputChange}
@@ -1234,7 +1238,7 @@ export default function Call_logs() {
                     <option value="">Select Type</option>
 
                     {formData.patient_type === "New" ||
-                    formData.patient_id === undefined ? (
+                      formData.patient_id === undefined ? (
                       <option value="New">NEW</option>
                     ) : (
                       <>
@@ -1290,6 +1294,7 @@ export default function Call_logs() {
                     type="text"
                     name="caller_no"
                     readOnly
+                    required
                     value={formData.caller_no}
                     style={{
                       border: "2px solid rgb(77, 208, 225)",
@@ -1379,6 +1384,7 @@ export default function Call_logs() {
               <Button
                 variant="primary"
                 size="sm"
+                type="submit"
                 className="px-3"
                 style={{
                   borderRadius: "10px",
@@ -1387,7 +1393,6 @@ export default function Call_logs() {
                   border: "none",
                   padding: "10px",
                 }}
-                onClick={() => handleSubmit("save")}
               >
                 Add Appointment
               </Button>
@@ -1418,58 +1423,60 @@ export default function Call_logs() {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body style={{ padding: "10px" }}>
-          <Form.Group>
-            <Form.Label
-              style={{
-                fontSize: "12px",
-                fontWeight: "600",
-                marginBottom: "4px",
-              }}
-            >
-              Note <span className="text-danger">*</span>
-            </Form.Label>
-            <Form.Control
-              required
-              style={{
-                border: "2px solid rgb(77, 208, 225)",
-                fontSize: "12px",
-                borderRadius: "10px",
-              }}
-              as="textarea"
-              rows={4}
-              name="note"
-              value={formData.note || ""}
-              onChange={handleInputChange}
-              placeholder="Enter note here..."
-            />
-          </Form.Group>
+          <Form onSubmit={handleSaveNote}>
+            <Form.Group>
+              <Form.Label
+                style={{
+                  fontSize: "12px",
+                  fontWeight: "600",
+                  marginBottom: "4px",
+                }}
+              >
+                Note <span className="text-danger">*</span>
+              </Form.Label>
+              <Form.Control
+                required
+                style={{
+                  border: "2px solid rgb(77, 208, 225)",
+                  fontSize: "12px",
+                  borderRadius: "10px",
+                }}
+                as="textarea"
+                rows={4}
+                name="note"
+                value={formData.note || ""}
+                onChange={handleInputChange}
+                placeholder="Enter note here..."
+              />
+            </Form.Group>
+            <Modal.Footer style={{ borderTop: "none", padding: "10px 0 0 0" }}>
+              <Button
+                size="sm"
+                className="px-3"
+                style={{ borderRadius: "10px", fontSize: "12px", padding: "10px" }}
+                variant="secondary"
+                onClick={() => setShowNoteModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                className="px-4"
+                type="submit"
+                style={{
+                  borderRadius: "10px",
+                  fontSize: "12px",
+                  backgroundColor: "#00bcd4",
+                  border: "none",
+                  padding: "10px",
+                }}
+                variant="primary"
+              >
+                Add Note
+              </Button>
+            </Modal.Footer>
+          </Form>
         </Modal.Body>
-        <Modal.Footer style={{ borderTop: "none", padding: "0px 5px" }}>
-          <Button
-            size="sm"
-            className="px-3"
-            style={{ borderRadius: "10px", fontSize: "12px", padding: "10px" }}
-            variant="secondary"
-            onClick={() => setShowNoteModal(false)}
-          >
-            Cancel
-          </Button>
-          <Button
-            size="sm"
-            className="px-4"
-            style={{
-              borderRadius: "10px",
-              fontSize: "12px",
-              backgroundColor: "#00bcd4",
-              border: "none",
-              padding: "10px",
-            }}
-            variant="primary"
-            onClick={handleSaveNote}
-          >
-            Add Note
-          </Button>
-        </Modal.Footer>
       </Modal>
 
       <Modal
@@ -1495,7 +1502,7 @@ export default function Call_logs() {
         </Modal.Header>
         <Modal.Body style={{ fontSize: "13px", padding: "5px" }}>
           <div>
-            <Form>
+            <Form onSubmit={handleAddEnquirySubmit}>
               <Row>
                 <Col md={6}>
                   <Form.Group>
@@ -1650,6 +1657,7 @@ export default function Call_logs() {
                       }}
                       type="text"
                       readOnly
+                      required
                       name="caller_no"
                       placeholder="Enter Contact Number"
                       value={selectedCallLog?.caller_no}
@@ -1748,7 +1756,7 @@ export default function Call_logs() {
                 >
                   Cancel
                 </button>
-                <button
+                 <button
                   style={{
                     borderRadius: "10px",
                     fontSize: "12px",
@@ -1756,9 +1764,8 @@ export default function Call_logs() {
                     borderColor: "#00bcd4",
                     padding: "10px",
                   }}
-                  type="button"
+                  type="submit"
                   className="btn btn-primary btn-sm px-3"
-                  onClick={handleAddEnquirySubmit}
                 >
                   Add Enquiry
                 </button>

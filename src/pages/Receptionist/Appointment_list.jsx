@@ -103,19 +103,18 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
     padding: "1px 3px",
     minWidth: "33px",
     borderRadius: "4px",
-    border: `1px solid ${
-      disabled
-        ? "#ddd"
-        : isDanger
-          ? "#dc3545"
-          : isEdit
-            ? "#007bff"
-            : isConfirm
-              ? "#28a745"
-              : isBlueAction
-                ? "#0babb9ff"
-                : defaultBorder
-    }`,
+    border: `1px solid ${disabled
+      ? "#ddd"
+      : isDanger
+        ? "#dc3545"
+        : isEdit
+          ? "#007bff"
+          : isConfirm
+            ? "#28a745"
+            : isBlueAction
+              ? "#0babb9ff"
+              : defaultBorder
+      }`,
     backgroundColor: disabled ? "#f8f9fa" : defaultBg,
     color: disabled
       ? "#aaa"
@@ -169,17 +168,16 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
               ? "#15cbd8ff"
               : "#e0e0e0";
 
-      e.currentTarget.style.border = `1px solid ${
-        isDanger
-          ? "#c82333"
-          : isEdit
-            ? "#007bff"
-            : isConfirm
-              ? "#218838"
-              : isBlueAction
-                ? "#007bff"
-                : "#b0b0b0"
-      }`;
+      e.currentTarget.style.border = `1px solid ${isDanger
+        ? "#c82333"
+        : isEdit
+          ? "#007bff"
+          : isConfirm
+            ? "#218838"
+            : isBlueAction
+              ? "#007bff"
+              : "#b0b0b0"
+        }`;
 
       e.currentTarget.style.color = "white";
       if (e.currentTarget.children[0]) {
@@ -201,17 +199,16 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
               ? "#23adb2ff"
               : defaultColor;
 
-      e.currentTarget.style.border = `1px solid ${
-        isDanger
-          ? "#dc3545"
-          : isEdit
-            ? "#007bff"
-            : isConfirm
-              ? "#28a745"
-              : isBlueAction
-                ? "#007bff"
-                : defaultBorder
-      }`;
+      e.currentTarget.style.border = `1px solid ${isDanger
+        ? "#dc3545"
+        : isEdit
+          ? "#007bff"
+          : isConfirm
+            ? "#28a745"
+            : isBlueAction
+              ? "#007bff"
+              : defaultBorder
+        }`;
 
       if (e.currentTarget.children[0]) {
         e.currentTarget.children[0].style.stroke = iconColor;
@@ -286,36 +283,45 @@ export default function Appointment_list() {
     setBillingItems(list);
   };
 
-  const handleGenerateReceipt = async () => {
-    const { subtotal, payable } = calculateTotals();
+  const handleGenerateReceipt = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    console.log("handleGenerateReceipt called");
 
-    const consultationData = billingItems
-      .filter((item) => item.label)
-      .map((item) => [item.label, parseFloat(item.amount) || 0]);
-
-    const payload = {
-      appointment_id: selectedAppointment.appointment_id,
-      doctor_id: receiptForm.doctor_id,
-      appointment_date: moment(new Date()).format("DD-MM-YYYY"),
-      consultations: consultationData,
-      paymentmode:
-        receiptForm.paymentMode === "card"
-          ? "Card"
-          : receiptForm.paymentMode === "cash"
-            ? "Cash"
-            : receiptForm.paymentMode === "upi"
-              ? "UPI"
-              : receiptForm.paymentMode,
-      regtype: receiptForm.registrationType,
-      expectedamt: parseFloat(payable) || 0,
-      discountamt: parseFloat(receiptForm.discountAmt) || 0,
-      discountnote: receiptForm.discountNote || "",
-      comment: receiptForm.regComment || "",
-      PosMachine: receiptForm.posTerminal,
-      MachineType: "OPD",
-    };
-    console.log("check reg type:", payload);
     try {
+      if (!selectedAppointment) {
+        throw new Error("No appointment selected");
+      }
+
+      const { subtotal, payable } = calculateTotals();
+
+      const consultationData = billingItems
+        .filter((item) => item.label)
+        .map((item) => [item.label, parseFloat(item.amount) || 0]);
+
+      const payload = {
+        appointment_id: selectedAppointment.appointment_id,
+        doctor_id: receiptForm.doctor_id,
+        appointment_date: moment(new Date()).format("DD-MM-YYYY"),
+        consultations: consultationData,
+        paymentmode:
+          receiptForm.paymentMode === "card"
+            ? "Card"
+            : receiptForm.paymentMode === "cash"
+              ? "Cash"
+              : receiptForm.paymentMode === "upi"
+                ? "UPI"
+                : receiptForm.paymentMode,
+        regtype: receiptForm.registrationType,
+        expectedamt: parseFloat(payable) || 0,
+        discountamt: parseFloat(receiptForm.discountAmt) || 0,
+        discountnote: receiptForm.discountNote || "",
+        comment: receiptForm.regComment || "",
+        PosMachine: receiptForm.posTerminal,
+        MachineType: "OPD",
+      };
+
+      console.log("Submitting payload:", payload);
+
       const response = await fetch(
         `${BASE_URL}/V1/appointment/saveReceipt?location=${currentLocation}`,
         {
@@ -474,7 +480,7 @@ export default function Appointment_list() {
               Swal.fire(
                 "Error",
                 cancelResult?.message ||
-                  "Remote cancel failed. Please cancel manually on machine.",
+                "Remote cancel failed. Please cancel manually on machine.",
                 "error",
               );
             }
@@ -750,7 +756,8 @@ export default function Appointment_list() {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
     if (!appointmentIdToDelete) return;
 
     if (!cancellationReason.trim()) {
@@ -1278,33 +1285,36 @@ export default function Appointment_list() {
             Reason of Cancellation <span className="text-danger">*</span>
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body>
-          <textarea
-            style={{
-              fontSize: "12px",
-              borderRadius: "10px",
-              border: "2px solid rgb(77, 208, 225)",
-              padding: "6px",
-            }}
-            className="form-control"
-            placeholder="Enter the cancellation reason..."
-            rows="4"
-            value={cancellationReason}
-            onChange={(e) => setCancellationReason(e.target.value)}
-          ></textarea>
-        </Modal.Body>
+        <Form onSubmit={handleDelete}>
+          <Modal.Body>
+            <textarea
+              required
+              style={{
+                fontSize: "12px",
+                borderRadius: "10px",
+                border: "2px solid rgb(77, 208, 225)",
+                padding: "6px",
+              }}
+              className="form-control"
+              placeholder="Enter the cancellation reason..."
+              rows="4"
+              value={cancellationReason}
+              onChange={(e) => setCancellationReason(e.target.value)}
+            ></textarea>
+          </Modal.Body>
 
-        <div className="d-flex justify-content-end">
-          <Button
-            variant="danger"
-            size="sm"
-            className="me-2 px-3 mb-5"
-            style={{ borderRadius: "10px", fontSize: "12px", padding: "10px" }}
-            onClick={handleDelete}
-          >
-            Submit & Cancel
-          </Button>
-        </div>
+          <div className="d-flex justify-content-end">
+            <Button
+              variant="danger"
+              size="sm"
+              type="submit"
+              className="me-2 px-3 mb-5"
+              style={{ borderRadius: "10px", fontSize: "12px", padding: "10px" }}
+            >
+              Submit & Cancel
+            </Button>
+          </div>
+        </Form>
       </Modal>
 
       <Modal
@@ -1715,8 +1725,8 @@ export default function Appointment_list() {
                         body={(rowData) =>
                           rowData.appointment_timestamp
                             ? moment(rowData.appointment_timestamp).format(
-                                "DD-MM-YYYY",
-                              )
+                              "DD-MM-YYYY",
+                            )
                             : "-"
                         }
                         headerClassName="datatable-header-center"
@@ -1732,9 +1742,9 @@ export default function Appointment_list() {
                         body={(rowData) =>
                           rowData.appointment_time
                             ? moment(rowData.appointment_time, [
-                                "hh:mm A",
-                                "HH:mm",
-                              ]).format("HH:mm")
+                              "hh:mm A",
+                              "HH:mm",
+                            ]).format("HH:mm")
                             : "-"
                         }
                         headerClassName="datatable-header-center"
@@ -1879,7 +1889,7 @@ export default function Appointment_list() {
         </Modal.Header>
 
         <Modal.Body style={{ backgroundColor: "#f5fcfd", padding: "12px" }}>
-          <Form>
+          <Form id="opd-receipt-form" onSubmit={handleGenerateReceipt}>
             <div className="mb-4">
               <h6
                 style={{
@@ -1899,6 +1909,7 @@ export default function Appointment_list() {
                   </Form.Label>
                   <Form.Control
                     readOnly
+                    required
                     value={selectedAppointment?.patient_name || ""}
                     style={{
                       cursor: "not-allowed",
@@ -1913,7 +1924,7 @@ export default function Appointment_list() {
                 <Col>
                   <Form.Group>
                     <Form.Label style={{ fontSize: "12px", fontWeight: "500" }}>
-                      Doctor Name <span className="text-danger">*</span>
+                      Consultant Doctor <span className="text-danger">*</span>
                     </Form.Label>
                     <Form.Select
                       required
@@ -1925,7 +1936,7 @@ export default function Appointment_list() {
                       value={receiptForm.doctorName || ""}
                       onChange={handleReceiptFormChange}
                     >
-                      <option value="">Select Doctor</option>
+                      <option value="">Select Consultant Doctor</option>
                       {doctors.map((doctor) => (
                         <option key={doctor.doctor_id} value={doctor.name}>
                           {doctor.name}
@@ -2323,7 +2334,8 @@ export default function Appointment_list() {
             Cancel
           </Button>
           <Button
-            onClick={handleGenerateReceipt}
+            type="submit"
+            form="opd-receipt-form"
             style={{
               backgroundColor: "#00bcd4",
               border: "none",

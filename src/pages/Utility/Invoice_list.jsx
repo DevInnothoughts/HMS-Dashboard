@@ -815,7 +815,8 @@ const InvoiceList = () => {
     setSelectedInvoice(null);
   };
 
-  const handleSaveChanges = async () => {
+  const handleSaveChanges = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
     if (!selectedInvoice) return;
 
     if (invoiceWarning) {
@@ -1657,7 +1658,7 @@ const InvoiceList = () => {
           }}
         >
           {selectedInvoice && (
-            <Form>
+            <Form id="edit-invoice-form" onSubmit={handleSaveChanges}>
               <Card
                 style={{
                   border: "none",
@@ -2272,6 +2273,7 @@ const InvoiceList = () => {
                           Bill Type <span className="text-danger">*</span>
                         </Form.Label>
                         <Form.Select
+                          required
                           size="sm"
                           style={{
                             borderRadius: "10px",
@@ -2790,7 +2792,8 @@ const InvoiceList = () => {
           <Button
             size="sm"
             variant="primary"
-            onClick={handleSaveChanges}
+            type="submit"
+            form="edit-invoice-form"
             style={{ borderRadius: "10px", fontSize: "13px", padding: "10px" }}
           >
             Save Changes

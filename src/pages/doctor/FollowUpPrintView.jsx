@@ -129,7 +129,7 @@ const FollowUpPrintView = React.forwardRef(({ patient, followUpData = {}, histor
               </div>
               <div className="row">
                 <div className="col-md-4-50">
-                  <p><b>Age / Sex :</b>&nbsp;{patient?.age || "-"} / {patient?.sex || "-"}</p>
+                  <p><b>Age / Sex :</b>&nbsp;{patient?.age || "-"} yrs / {patient?.sex || "-"}</p>
                 </div>
                 <div className="col-md-4-50">
                   <p><b>Contact No :</b>&nbsp;{patient?.phone || "-"}</p>
