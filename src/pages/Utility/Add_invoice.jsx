@@ -619,7 +619,7 @@ const AddInvoice = () => {
                     readOnly
                     style={{
                       ...inputStyle,
-                      backgroundColor: "#f5f5f5",
+                      backgroundColor: "#e7ebebff",
                       cursor: "not-allowed",
                     }}
                     value={formData.phone_number}
@@ -632,7 +632,7 @@ const AddInvoice = () => {
                     readOnly
                     style={{
                       ...inputStyle,
-                      backgroundColor: "#f5f5f5",
+                      backgroundColor: "#e7ebebff",
                       cursor: "not-allowed",
                     }}
                     value={formData.uid_no}
