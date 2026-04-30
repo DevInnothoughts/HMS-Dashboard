@@ -54,7 +54,7 @@ export default function DoctorSearchBy() {
 
     try {
       const response = await fetch(
-        `${BASE_URL}/V1/doctor/admission/check-patient?location=${currentLocation}&uidNo=${uhid}`,
+        `${BASE_URL}/V1/doctor/search/search-patient?location=${currentLocation}&query=${uhid}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -92,13 +92,14 @@ export default function DoctorSearchBy() {
       reference: patient.reference || "",
       admissionDatetime: null,
       datetime: null,
+      roomType: "",
       roomNumber: "",
       sxPlan: "",
       nmbTime: null,
     };
     setPatientData(patData);
     setShowSelectionModal(false);
-    Toast.fire({ icon: "success", title: "Patient Selected" });
+    Toast.fire({ icon: "success", title: "Patient Found" });
   };
 
   const openEditModal = () => {
@@ -146,6 +147,7 @@ export default function DoctorSearchBy() {
       pre_planning: {
         admission_datetime: patientData.admissionDatetime,
         surgery_datetime: patientData.datetime,
+        room_type: patientData.roomType,
         room_no: patientData.roomNumber,
         sx_plan: patientData.sxPlan,
         nmb_time: patientData.nmbTime,
@@ -162,7 +164,7 @@ export default function DoctorSearchBy() {
 
     try {
       const response = await fetch(
-        `${BASE_URL}/V1/doctor/admission/register-patient?location=${currentLocation}`,
+        `${BASE_URL}/V1/doctor/search/register-admission?location=${currentLocation}`,
         {
           method: "POST",
           headers: {
@@ -178,7 +180,7 @@ export default function DoctorSearchBy() {
         Swal.fire({
           icon: "success",
           title: "Verified!",
-          text: "Patient data has been verified and synced with the server.",
+          text: "Patient data has been verified and booked for admission.",
           timer: 1500,
           showConfirmButton: false,
         }).then(() => {
@@ -187,7 +189,7 @@ export default function DoctorSearchBy() {
       } else {
         Swal.fire(
           "Error",
-          result.message || result.data || "Failed to verify patient on server",
+          result.message || result.data || "Failed to book patient admission",
           "error",
         );
       }
@@ -195,7 +197,7 @@ export default function DoctorSearchBy() {
       console.error("Verification Error:", error);
       Swal.fire(
         "Error",
-        "Server connection failed during verification",
+        "Server connection failed during admission booking",
         "error",
       );
     }
@@ -386,6 +388,7 @@ export default function DoctorSearchBy() {
                                 cursor: "not-allowed",
                                 padding: "3px 10px",
                                 fontSize: "0.8rem",
+                                marginBottom: "10px",
                               }}
                             />
                           </Form.Group>
@@ -401,9 +404,9 @@ export default function DoctorSearchBy() {
                         />
                         <p
                           style={{
-                            fontSize: "0.90rem",
+                            fontSize: "0.95rem",
                             color: "#ff1500ff",
-                            fontWeight: "600",
+                            fontWeight: "700",
                             marginBottom: "5px",
                           }}
                         >
@@ -478,6 +481,35 @@ export default function DoctorSearchBy() {
                             },
                           }}
                         />
+                      </Col>
+
+                      <Col md={4} className="mb-2">
+                        <Form.Group>
+                          <Form.Label
+                            className={labelStyle}
+                            style={{ fontSize: "0.75rem" }}
+                          >
+                            Room Type
+                          </Form.Label>
+                          <Form.Select
+                            name="roomType"
+                            value={patientData.roomType}
+                            onChange={handleBookingChange}
+                            style={{
+                              border: "1.5px solid rgb(77, 208, 225)",
+                              borderRadius: "8px",
+                              padding: "3px 10px",
+                              fontSize: "0.8rem",
+                              height: "31px",
+                            }}
+                          >
+                            <option value="">Select Room Type</option>
+                            <option value="General ward">General ward</option>
+                            <option value="Semi Private">Semi Private</option>
+                            <option value="Private">Private</option>
+                            <option value="Deluxe">Deluxe</option>
+                          </Form.Select>
+                        </Form.Group>
                       </Col>
 
                       <Col md={4} className="mb-2">
@@ -567,7 +599,7 @@ export default function DoctorSearchBy() {
                     </Row>
 
                     <div className="d-flex justify-content-center gap-2 mt-2 mb-3">
-                      <Button
+                      {/* <Button
                         onClick={openEditModal}
                         variant="info"
                         className="px-3"
@@ -581,7 +613,7 @@ export default function DoctorSearchBy() {
                       >
                         <FeatherIcon icon="edit-2" size={14} className="me-2" />
                         Edit
-                      </Button>
+                      </Button> */}
                       <Button
                         onClick={handleVerifyAndSubmit}
                         variant="success"

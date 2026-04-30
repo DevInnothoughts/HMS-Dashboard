@@ -3296,10 +3296,11 @@ export default function All_patient() {
                       className="small fw-bold mb-3"
                       style={{ fontSize: "12px" }}
                     >
-                      Email ID <span className="text-danger">*</span>
+                      Email ID
+                      {/* <span className="text-danger">*</span> */}
                     </Form.Label>
                     <Form.Control
-                      required
+                      // required
                       type="email"
                       name="email"
                       value={formData.email || ""}
@@ -3542,10 +3543,11 @@ export default function All_patient() {
                       className="small fw-bold mb-3"
                       style={{ fontSize: "12px" }}
                     >
-                      Blood Group <span className="text-danger">*</span>
+                      Blood Group
+                      {/* <span className="text-danger">*</span> */}
                     </Form.Label>
                     <Form.Select
-                      required
+                      // required
                       name="blood_group"
                       value={formData.blood_group || ""}
                       onChange={handleInputChange}

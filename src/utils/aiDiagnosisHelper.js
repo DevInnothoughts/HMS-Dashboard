@@ -1,5 +1,6 @@
 export const generateDiagnosisStream = async ({
   allFindings,
+  detailedFindings,
   onChunk,
   onComplete,
   onError,
@@ -12,7 +13,7 @@ export const generateDiagnosisStream = async ({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ allFindings }),
+        body: JSON.stringify({ allFindings, detailedFindings }),
       },
     );
 

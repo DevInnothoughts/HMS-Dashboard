@@ -3,6 +3,8 @@ import { Row, Col, Form, Button, Modal, Dropdown } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 import Select from "react-select";
 
+const BASE_URL = "http://194.195.117.79:5100/api";
+
 const surgeryOptions = [
   "LHP", "FILAC", "MIPH", "EUA", "SPHINCTEROTOMY", "GYNAECOMASTIA", "PROCTITIS",
   "VARICOSE VEINS", "CIRCUMCISION", "HERNIA", "UROLOGY", "LAP CHOLECYSTECTOMY",
@@ -18,14 +20,18 @@ const DischargeCard = ({
   onSelectDischarge,
   onNewDischarge,
   onSaveDischarge,
+  onPrintDischarge,
   loading,
   doctors = [],
   assistanceDoctors = [],
-  fistulaCases = []
+  fistulaCases = [],
+  location = "default"
 }) => {
-  const [newTreatmentGiven, setNewTreatmentGiven] = useState({ medicine_name: "", times: "", route: "" });
+  const [newTreatmentGiven, setNewTreatmentGiven] = useState({ medicine_name: "", medicine_id: "", mrp: "", times: "", route: "" });
   const [newTreatmentOnDischarge, setNewTreatmentOnDischarge] = useState({
     medicine_name: "",
+    medicine_id: "",
+    mrp: "",
     qty: "",
     strength_unit: "",
     medicine_time: [],
@@ -34,6 +40,10 @@ const DischargeCard = ({
   });
 
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [medicineSearchResultsGiven, setMedicineSearchResultsGiven] = useState([]);
+  const [showMedicineDropdownGiven, setShowMedicineDropdownGiven] = useState(false);
+  const [medicineSearchResultsOnDischarge, setMedicineSearchResultsOnDischarge] = useState([]);
+  const [showMedicineDropdownOnDischarge, setShowMedicineDropdownOnDischarge] = useState(false);
   const [uploadMedicineData, setUploadMedicineData] = useState({
     name: "",
     gender: "",
@@ -60,7 +70,7 @@ const DischargeCard = ({
     if (!newTreatmentGiven.medicine_name) return;
     const currentList = dischargeData.treatment_given || [];
     handleDischargeChange("treatment_given", [...currentList, { ...newTreatmentGiven, id: Date.now() }]);
-    setNewTreatmentGiven({ medicine_name: "", times: "", route: "" });
+    setNewTreatmentGiven({ medicine_name: "", medicine_id: "", mrp: "", times: "", route: "" });
   };
 
   const removeTreatmentGiven = (id) => {
@@ -74,6 +84,8 @@ const DischargeCard = ({
     handleDischargeChange("treatment_on_discharge", [...currentList, { ...newTreatmentOnDischarge, id: Date.now() }]);
     setNewTreatmentOnDischarge({
       medicine_name: "",
+      medicine_id: "",
+      mrp: "",
       qty: "",
       strength_unit: "",
       medicine_time: [],
@@ -127,15 +139,32 @@ const DischargeCard = ({
           gap: 10px;
           
         }
+        .hover-bg-light:hover {
+          background-color: #f1fcfd;
+          transition: background-color 0.2s;
+        }
+        .cursor-pointer {
+          cursor: pointer;
+        }
       `}</style>
 
       {/* Main Header Card */}
       <div className="section-card">
         <div className="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
-          <h5 className="fw-bold mb-0" style={{ color: "#00838f", textTransform: "uppercase", letterSpacing: "1px", fontSize: "16px" }}>
-            <FeatherIcon icon="log-out" size="20" className="me-2 text-info" />Inpatient Discharge Summary
-          </h5>
+          <h6 className="fw-bold mb-0" style={{ color: "#00838f", textTransform: "uppercase" }}>
+            <FeatherIcon icon="log-out" size="18" className="me-2 text-info" />Inpatient Discharge Summary
+          </h6>
           <div className="d-flex gap-2">
+            {selectedDischargeId && (
+              <Button
+                variant="outline-secondary"
+                size="sm"
+                onClick={onPrintDischarge}
+                style={{ borderRadius: "20px", fontSize: "12px", fontWeight: "700", padding: "7px 15px" }}
+              >
+                <FeatherIcon icon="printer" size="13" className="me-1" /> PRINT
+              </Button>
+            )}
             <Button
               variant="outline-info"
               size="sm"
@@ -229,11 +258,11 @@ const DischargeCard = ({
           </Col>
           <Col md={3}>
             <Row className="g-2">
-              <Col md={7}>
+              <Col md={6}>
                 <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>Date Of Admission</Form.Label>
                 <Form.Control type="date" value={dischargeData.doa} onChange={(e) => handleDischargeChange("doa", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
               </Col>
-              <Col md={5}>
+              <Col md={6}>
                 <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>Admission Time</Form.Label>
                 <Form.Control type="time" value={dischargeData.admission_time} onChange={(e) => handleDischargeChange("admission_time", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
               </Col>
@@ -565,15 +594,82 @@ const DischargeCard = ({
           <FeatherIcon icon="plus-square" size="18" className="me-2" /> TREATMENT GIVEN
         </h6>
         <Row className="g-2 mb-3 align-items-end">
-          <Col md={3}>
+          <Col md={3} className="position-relative" style={{ zIndex: showMedicineDropdownGiven ? 1050 : 1 }}>
             <Form.Label className="fw-bold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>MEDICINE NAME</Form.Label>
             <Form.Control
               type="text"
               placeholder="Enter Medicine Name"
               value={newTreatmentGiven.medicine_name}
-              onChange={(e) => setNewTreatmentGiven({ ...newTreatmentGiven, medicine_name: e.target.value })}
+              onChange={(e) => {
+                const val = e.target.value;
+                setNewTreatmentGiven({ ...newTreatmentGiven, medicine_name: val });
+                if (val.length >= 2) {
+                  fetch(`${BASE_URL}/V1/doctor/search-medicine?location=${location}&keyword=${encodeURIComponent(val)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                      if (data.statusCode === 200) {
+                        setMedicineSearchResultsGiven(data.data);
+                        setShowMedicineDropdownGiven(true);
+                      }
+                    })
+                    .catch(console.error);
+                } else {
+                  setShowMedicineDropdownGiven(false);
+                }
+              }}
+              onFocus={() => {
+                if (newTreatmentGiven.medicine_name && newTreatmentGiven.medicine_name.length >= 2 && medicineSearchResultsGiven.length > 0) {
+                  setShowMedicineDropdownGiven(true);
+                }
+              }}
+              onBlur={() => {
+                setTimeout(() => setShowMedicineDropdownGiven(false), 200);
+              }}
               style={{ borderRadius: "10px", fontSize: "12px", border: "2px solid #b2ebf2", padding: "6px 12px" }}
             />
+            {showMedicineDropdownGiven && medicineSearchResultsGiven.length > 0 && (
+              <div
+                className="bg-white border rounded shadow-sm mt-1 position-absolute w-100"
+                style={{ maxHeight: "200px", overflowY: "auto", zIndex: 1060 }}
+              >
+                {medicineSearchResultsGiven.map((med) => {
+                  const medType = med.medicine_type ? `(${med.medicine_type})` : "";
+                  const strength = med.medicine_strength || "";
+                  const unit = med.medicine_unit || "";
+                  const topText = `${med.name} ${med.qty ? `(${med.qty} qty)` : ""}`.replace(/\s+/g, ' ').trim();
+
+                  let bottomText = med.content ? med.content : `${medType} ${strength} ${unit}`.replace(/\s+/g, ' ').trim() || "Local Medicine";
+
+                  const fullSearchValue = med.content
+                    ? `${med.name}`
+                    : `${med.name} ${medType} ${strength} ${unit}`.replace(/\s+/g, ' ').trim();
+
+                  return (
+                    <div
+                      key={med.medicine_id}
+                      className="px-3 py-2 cursor-pointer hover-bg-light border-bottom"
+                      onClick={() => {
+                        setNewTreatmentGiven({ ...newTreatmentGiven, medicine_name: fullSearchValue, medicine_id: med.medicine_id, mrp: med.mrp });
+                        setShowMedicineDropdownGiven(false);
+                      }}
+                    >
+                      <div style={{ fontSize: "12px", color: "#333", lineHeight: "1.2" }}>
+                        <strong>{topText}</strong><br />
+                        <small>{bottomText}</small>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            {/* <div className="d-flex gap-2 mt-2">
+              <div className="p-1 border rounded flex-fill text-center" style={{ cursor: "not-allowed", fontSize: "10px", color: "#666", border: "2px solid #b2ebf2" }}>
+                <strong>ID:</strong> {newTreatmentGiven.medicine_id || "N/A"}
+              </div>
+              <div className="p-1 border rounded flex-fill text-center" style={{ cursor: "not-allowed", fontSize: "10px", color: "#666", border: "2px solid #b2ebf2" }}>
+                <strong>MRP:</strong> ₹{newTreatmentGiven.mrp || "0"}
+              </div>
+            </div> */}
           </Col>
           <Col md={3}>
             <Form.Label className="fw-bold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>TIMES</Form.Label>
@@ -658,15 +754,89 @@ const DischargeCard = ({
           <FeatherIcon icon="clipboard" size="18" className="me-2" /> TREATMENT ON DISCHARGE
         </h6>
         <Row className="g-2 mb-3 align-items-end">
-          <Col md={5}>
+          <Col md={5} className="position-relative" style={{ zIndex: showMedicineDropdownOnDischarge ? 1050 : 1 }}>
             <Form.Label className="fw-bold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>MEDICINE NAME</Form.Label>
             <Form.Control
               type="text"
               placeholder="Search Medicine"
               value={newTreatmentOnDischarge.medicine_name}
-              onChange={(e) => setNewTreatmentOnDischarge({ ...newTreatmentOnDischarge, medicine_name: e.target.value })}
+              onChange={(e) => {
+                const val = e.target.value;
+                setNewTreatmentOnDischarge({ ...newTreatmentOnDischarge, medicine_name: val });
+                if (val.length >= 2) {
+                  fetch(`${BASE_URL}/V1/doctor/search-medicine?location=${location}&keyword=${encodeURIComponent(val)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                      if (data.statusCode === 200) {
+                        setMedicineSearchResultsOnDischarge(data.data);
+                        setShowMedicineDropdownOnDischarge(true);
+                      }
+                    })
+                    .catch(console.error);
+                } else {
+                  setShowMedicineDropdownOnDischarge(false);
+                }
+              }}
+              onFocus={() => {
+                if (newTreatmentOnDischarge.medicine_name && newTreatmentOnDischarge.medicine_name.length >= 2 && medicineSearchResultsOnDischarge.length > 0) {
+                  setShowMedicineDropdownOnDischarge(true);
+                }
+              }}
+              onBlur={() => {
+                setTimeout(() => setShowMedicineDropdownOnDischarge(false), 200);
+              }}
               style={{ borderRadius: "10px", fontSize: "12px", border: "2px solid #b2ebf2", padding: "6px 12px" }}
             />
+            {showMedicineDropdownOnDischarge && medicineSearchResultsOnDischarge.length > 0 && (
+              <div
+                className="bg-white border rounded shadow-sm mt-1 position-absolute w-100"
+                style={{ maxHeight: "200px", overflowY: "auto", zIndex: 1060 }}
+              >
+                {medicineSearchResultsOnDischarge.map((med) => {
+                  const medType = med.medicine_type ? `(${med.medicine_type})` : "";
+                  const strength = med.medicine_strength || "";
+                  const unit = med.medicine_unit || "";
+                  const topText = `${med.name} ${med.qty ? `(${med.qty} qty)` : ""}`.replace(/\s+/g, ' ').trim();
+
+                  let bottomText = med.content ? med.content : `${medType} ${strength} ${unit}`.replace(/\s+/g, ' ').trim() || "Local Medicine";
+
+                  const fullSearchValue = med.content
+                    ? `${med.name}`
+                    : `${med.name} ${medType} ${strength} ${unit}`.replace(/\s+/g, ' ').trim();
+
+                  return (
+                    <div
+                      key={med.medicine_id}
+                      className="px-3 py-2 cursor-pointer hover-bg-light border-bottom"
+                      onClick={() => {
+                        setNewTreatmentOnDischarge((prev) => ({
+                          ...prev,
+                          medicine_name: fullSearchValue,
+                          medicine_id: med.medicine_id,
+                          mrp: med.mrp,
+                          qty: med.qty || prev.qty,
+                          strength_unit: `${strength} ${unit}`.trim() || prev.strength_unit
+                        }));
+                        setShowMedicineDropdownOnDischarge(false);
+                      }}
+                    >
+                      <div style={{ fontSize: "12px", color: "#333", lineHeight: "1.2" }}>
+                        <strong>{topText}</strong><br />
+                        <small>{bottomText}</small>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            {/* <div className="d-flex gap-2 mt-2">
+              <div className="p-1 border rounded flex-fill text-center" style={{ cursor: "not-allowed", fontSize: "10px", color: "#666", border: "2px solid #b2ebf2" }}>
+                <strong>ID:</strong> {newTreatmentOnDischarge.medicine_id || "N/A"}
+              </div>
+              <div className="p-1 border rounded flex-fill text-center" style={{ cursor: "not-allowed", fontSize: "10px", color: "#666", border: "2px solid #b2ebf2" }}>
+                <strong>MRP:</strong> ₹{newTreatmentOnDischarge.mrp || "0"}
+              </div>
+            </div> */}
           </Col>
           <Col md={1}>
             <Form.Label className="fw-bold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>QTY</Form.Label>
@@ -1022,24 +1192,26 @@ const DischargeCard = ({
         </Modal.Footer>
       </Modal>
 
-      <div className="text-center mb-5 pb-5 mt-4">
-        <Button
-          disabled={loading}
-          onClick={handleFinalize}
-          style={{ backgroundColor: "#00838f", borderColor: "#00838f", padding: "12px 60px", borderRadius: "50px", fontWeight: "800", fontSize: "13px", boxShadow: "0 10px 30px rgba(0, 131, 143, 0.3)", textTransform: "uppercase", letterSpacing: "1.5px" }}
-        >
-          {loading ? (
-            <>
-              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-              SAVING...
-            </>
-          ) : (
-            <>
-              <FeatherIcon icon="save" size="18" className="me-2" />SAVE DISCHARGE DATA
-            </>
-          )}
-        </Button>
-      </div>
+      {!selectedDischargeId && (
+        <div className="text-center mb-5 pb-5 mt-4">
+          <Button
+            disabled={loading}
+            onClick={handleFinalize}
+            style={{ backgroundColor: "#00838f", borderColor: "#00838f", padding: "12px 60px", borderRadius: "50px", fontWeight: "800", fontSize: "13px", boxShadow: "0 10px 30px rgba(0, 131, 143, 0.3)", textTransform: "uppercase", letterSpacing: "1.5px" }}
+          >
+            {loading ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                SAVING...
+              </>
+            ) : (
+              <>
+                <FeatherIcon icon="save" size="18" className="me-2" />SAVE DISCHARGE DATA
+              </>
+            )}
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

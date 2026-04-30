@@ -25,6 +25,8 @@ const OpdPrescriptionCard = ({
   const [filteredAssistanceDoctors, setFilteredAssistanceDoctors] = useState(
     [],
   );
+  const [medicineSearchResults, setMedicineSearchResults] = useState([]);
+  const [showMedicineDropdown, setShowMedicineDropdown] = useState(false);
 
   useEffect(() => {
     const fetchDynamicData = async () => {
@@ -295,7 +297,7 @@ const OpdPrescriptionCard = ({
               <Dropdown.Toggle
                 variant="outline-info"
                 id="test-advice-dropdown"
-                className="w-200 text-start d-flex justify-content-between align-items-center"
+                className="w-300 text-start d-flex justify-content-between align-items-center"
                 style={{
                   borderRadius: "10px",
                   border: "2px solid #b2ebf2",
@@ -308,7 +310,7 @@ const OpdPrescriptionCard = ({
                 Select Tests...
               </Dropdown.Toggle>
               <Dropdown.Menu
-                className="w-200 shadow-sm border-0"
+                className="w-300 shadow-sm border-0"
                 style={{
                   maxHeight: "300px",
                   overflowY: "auto",
@@ -406,7 +408,7 @@ const OpdPrescriptionCard = ({
                 <Dropdown.Toggle
                   variant="outline-secondary"
                   id="preop-invest-dropdown"
-                  className="w-100 text-start d-flex justify-content-between align-items-center"
+                  className="w-200 text-start d-flex justify-content-between align-items-center"
                   style={{
                     borderRadius: "10px",
                     border: "2px solid #b2ebf2",
@@ -419,7 +421,7 @@ const OpdPrescriptionCard = ({
                   Select PREOP...
                 </Dropdown.Toggle>
                 <Dropdown.Menu
-                  className="w-100 shadow-sm border-0"
+                  className="w-200 shadow-sm border-0"
                   style={{
                     maxHeight: "300px",
                     overflowY: "auto",
@@ -501,7 +503,7 @@ const OpdPrescriptionCard = ({
             </Col>
           )}
 
-          <Col md={3} className="mb-3">
+          <Col md={3} className="mb-15">
             <Form.Label className="fw-bold" style={{ fontSize: "12px" }}>
               Allergy
             </Form.Label>
@@ -586,7 +588,7 @@ const OpdPrescriptionCard = ({
                   }}
                 />
               </Col>
-              <Col md={3} className="mb-3">
+              <Col md={3} className="mb-15">
                 <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>
                   Known Case Of
                 </Form.Label>
@@ -663,7 +665,7 @@ const OpdPrescriptionCard = ({
               }
               style={{
                 borderRadius: "10px",
-                border: "1px solid #b2ebf2",
+                border: "2px solid #b2ebf2",
                 padding: "6px 12px",
                 fontSize: "12px",
               }}
@@ -694,12 +696,12 @@ const OpdPrescriptionCard = ({
               }
               style={{
                 borderRadius: "10px",
-                border: "1px solid #b2ebf2",
+                border: "2px solid #b2ebf2",
                 padding: "6px 12px",
                 fontSize: "12px",
                 backgroundColor:
                   prescriptionData.patient_type === "surgery_patient" ||
-                  prescriptionData.patient_type === "nofollowupappointment"
+                    prescriptionData.patient_type === "nofollowupappointment"
                     ? "#e9ecef"
                     : "white",
               }}
@@ -722,7 +724,7 @@ const OpdPrescriptionCard = ({
         </h6>
 
         <Row className="align-items-end g-2">
-          <Col md={3}>
+          <Col md={3} className="position-relative" style={{ zIndex: showMedicineDropdown ? 1050 : 1 }}>
             <Form.Label
               className="fw-bold text-muted"
               style={{ fontSize: "11px" }}
@@ -731,13 +733,35 @@ const OpdPrescriptionCard = ({
             </Form.Label>
             <Form.Control
               type="text"
-              value={currentMedicine.name}
-              onChange={(e) =>
+              value={currentMedicine.name || ""}
+              onChange={(e) => {
+                const val = e.target.value;
                 setCurrentMedicine((prev) => ({
                   ...prev,
-                  name: e.target.value,
-                }))
-              }
+                  name: val,
+                }));
+                if (val.length >= 2) {
+                  fetch(`${BASE_URL}/V1/doctor/search-medicine?location=${location}&keyword=${encodeURIComponent(val)}`)
+                    .then(res => res.json())
+                    .then(data => {
+                      if (data.statusCode === 200) {
+                        setMedicineSearchResults(data.data);
+                        setShowMedicineDropdown(true);
+                      }
+                    })
+                    .catch(console.error);
+                } else {
+                  setShowMedicineDropdown(false);
+                }
+              }}
+              onFocus={() => {
+                if (currentMedicine.name && currentMedicine.name.length >= 2 && medicineSearchResults.length > 0) {
+                  setShowMedicineDropdown(true);
+                }
+              }}
+              onBlur={() => {
+                setTimeout(() => setShowMedicineDropdown(false), 200);
+              }}
               placeholder="Start typing name..."
               style={{
                 borderRadius: "10px",
@@ -746,6 +770,58 @@ const OpdPrescriptionCard = ({
                 fontSize: "12px",
               }}
             />
+            {showMedicineDropdown && medicineSearchResults.length > 0 && (
+              <div
+                className="bg-white border rounded shadow-sm mt-1"
+                style={{ maxHeight: "200px", overflowY: "auto", width: "100%" }}
+              >
+                {medicineSearchResults.map((med) => {
+                  const medType = med.medicine_type ? `(${med.medicine_type})` : "";
+                  const strength = med.medicine_strength || "";
+                  const unit = med.medicine_unit || "";
+                  const topText = `${med.name} ${med.qty ? `(${med.qty} qty)` : ""}`.replace(/\s+/g, ' ').trim();
+
+                  let bottomText = "";
+                  if (med.content) {
+                    bottomText = med.content;
+                  } else {
+                    bottomText = `${medType} ${strength} ${unit}`.replace(/\s+/g, ' ').trim() || "Local Medicine";
+                  }
+
+                  const fullSearchValue = med.content
+                    ? `${med.name}`
+                    : `${med.name} ${medType} ${strength} ${unit}`.replace(/\s+/g, ' ').trim();
+                  return (
+                    <div
+                      key={med.medicine_id}
+                      className="px-3 py-2 cursor-pointer hover-bg-light border-bottom"
+                      onClick={() => {
+                        setCurrentMedicine((prev) => ({
+                          ...prev,
+                          name: fullSearchValue,
+                          medicine_id: med.medicine_id,
+                          mrp: med.mrp
+                        }));
+                        setShowMedicineDropdown(false);
+                      }}
+                    >
+                      <div style={{ fontSize: "12px", color: "#333" }}>
+                        <strong>{topText}</strong><br />
+                        <small>{bottomText}</small>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            {/* <div className="d-flex gap-2 mt-2">
+              <div className="p-1 border rounded  flex-fill text-center" readOnly style={{ cursor: "not-allowed", fontSize: "10px", color: "#666", border: "2px solid #b2ebf2" }}>
+                <strong>ID:</strong> {currentMedicine.medicine_id || "N/A"}
+              </div>
+              <div className="p-1 border rounded  flex-fill text-center" readOnly style={{ cursor: "not-allowed", fontSize: "10px", color: "#666", border: "2px solid #b2ebf2" }}>
+                <strong>MRP:</strong> ₹{currentMedicine.mrp || "0"}
+              </div>
+            </div> */}
           </Col>
           <Col md={1}>
             <Form.Label
@@ -790,8 +866,8 @@ const OpdPrescriptionCard = ({
                       const updated = e.target.checked
                         ? [...(currentMedicine.times || []), slot]
                         : (currentMedicine.times || []).filter(
-                            (t) => t !== slot,
-                          );
+                          (t) => t !== slot,
+                        );
                       setCurrentMedicine((prev) => ({
                         ...prev,
                         times: updated,
@@ -884,31 +960,31 @@ const OpdPrescriptionCard = ({
                 <tr>
                   <th
                     className="py-2 px-3 border-0"
-                    style={{ fontSize: "12px" }}
+                    style={{ fontSize: "12px", width: "15%" }}
                   >
                     Medicine Name
                   </th>
                   <th
-                    className="py-2 px-3 border-0"
-                    style={{ fontSize: "12px" }}
+                    className="py-2 px-3 border-0 text-center"
+                    style={{ fontSize: "12px", width: "25%" }}
                   >
                     Qty
                   </th>
                   <th
                     className="py-2 px-3 border-0"
-                    style={{ fontSize: "12px" }}
+                    style={{ fontSize: "12px", width: "30%" }}
                   >
                     Dosage Intervals
                   </th>
                   <th
-                    className="py-2 px-3 border-0"
-                    style={{ fontSize: "12px" }}
+                    className="py-2 px-3 border-0 text-center"
+                    style={{ fontSize: "12px", width: "20%" }}
                   >
                     Duration
                   </th>
                   <th
                     className="py-2 px-3 border-0 text-center"
-                    style={{ fontSize: "12px" }}
+                    style={{ fontSize: "12px", width: "10%" }}
                   >
                     Action
                   </th>
@@ -923,18 +999,18 @@ const OpdPrescriptionCard = ({
                     >
                       {m.name}
                     </td>
-                    <td className="py-2 px-3 fw-bold">
+                    <td className="py-2 px-3 fw-bold text-center">
                       <span className="px-2 py-1" style={{ fontSize: "11px" }}>
                         {m.qty} Units
                       </span>
                     </td>
                     <td className="py-2 px-3 fw-bold">
-                      <div className="d-flex flex-wrap gap-1 ">
+                      <div className="d-flex flex-wrap gap-1">
                         {m.times?.map((t) => (
                           <span
                             key={t}
                             className="py-1 px-2"
-                            style={{ fontSize: "11px" }}
+                            style={{ fontSize: "11px", backgroundColor: "#e0f7fa", borderRadius: "4px" }}
                           >
                             {t}
                           </span>
@@ -942,16 +1018,16 @@ const OpdPrescriptionCard = ({
                       </div>
                     </td>
                     <td
-                      className="py-2 px-3 fw-semibold fw-bold"
+                      className="py-2 px-3 fw-semibold fw-bold text-center"
                       style={{ fontSize: "11px" }}
                     >
                       {m.days} Days
                     </td>
                     <td className="py-2 px-3 text-center">
                       <Button
-                        variant="outline-danger"
-                        size="lg"
-                        className="p-5"
+                        variant="danger"
+                        size="sm"
+                        className="p-5 px-5"
                         onClick={() => handleRemoveMedicine(idx)}
                       >
                         <FeatherIcon icon="trash" size="14" />

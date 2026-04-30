@@ -801,6 +801,26 @@ export default function DoctorPatientList() {
       return;
     }
 
+    const requiredFields = [
+      { field: "Uid_no", name: "UID No" },
+      { field: "prefix", name: "Prefix" },
+      { field: "name", name: "Patient Name" },
+      { field: "sex", name: "Gender" },
+      { field: "phone", name: "Contact Number" },
+      { field: "nationality", name: "Nationality" },
+      { field: "address", name: "Address" },
+      { field: "pincode", name: "Pincode" },
+      { field: "birth_date", name: "Birth Date" },
+    ];
+
+    for (let req of requiredFields) {
+      if (!formData[req.field]) {
+        toast.error(`Please fill the required field: ${req.name}`);
+        return;
+      }
+    }
+
+
     let reference_type = selectedReference;
     let ref = "";
 
@@ -825,16 +845,13 @@ export default function DoctorPatientList() {
         ref = referenceDetails.TVShow || formData.ref || "";
         break;
       case "old_ref":
-        ref = `${oldPatientDetails.patient_ref_no || ""},${
-          oldPatientDetails.old_patient_name || ""
-        },${oldPatientDetails.old_patient_id_value || ""},${
-          oldPatientDetails.old_patient_pincode || ""
-        }`;
+        ref = `${oldPatientDetails.patient_ref_no || ""},${oldPatientDetails.old_patient_name || ""
+          },${oldPatientDetails.old_patient_id_value || ""},${oldPatientDetails.old_patient_pincode || ""
+          }`;
         break;
       case "family_friends":
-        ref = `${referenceDetails.friendname || ""},${
-          referenceDetails.friendno || ""
-        }`;
+        ref = `${referenceDetails.friendname || ""},${referenceDetails.friendno || ""
+          }`;
         break;
       case "hhc_board":
         ref = referenceDetails.HHC_board || "";
@@ -942,11 +959,10 @@ export default function DoctorPatientList() {
 
   const statusBodyTemplate = (formData) => (
     <span
-      className={`badge ${
-        formData.status
-          ? ` status- ${formData.status.toLowerCase()}`
-          : "status-unknown"
-      }`}
+      className={`badge ${formData.status
+        ? ` status- ${formData.status.toLowerCase()}`
+        : "status-unknown"
+        }`}
     >
       {formData.status || "Unknown"}
     </span>
@@ -3381,7 +3397,8 @@ export default function DoctorPatientList() {
                       className="small fw-bold mb-3"
                       style={{ fontSize: "12px" }}
                     >
-                      Email ID <span className="text-danger">*</span>
+                      Email ID
+                      {/* <span className="text-danger">*</span> */}
                     </Form.Label>
                     <Form.Control
                       required
@@ -3627,7 +3644,8 @@ export default function DoctorPatientList() {
                       className="small fw-bold mb-3"
                       style={{ fontSize: "12px" }}
                     >
-                      Blood Group <span className="text-danger">*</span>
+                      Blood Group
+                      {/* <span className="text-danger">*</span> */}
                     </Form.Label>
                     <Form.Select
                       required

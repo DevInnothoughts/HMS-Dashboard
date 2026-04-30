@@ -149,7 +149,7 @@ export default function DoctorIpdDashboard() {
       const toDate = moment(selectedDate).endOf("month").format("YYYY-MM-DD");
 
       const response = await fetch(
-        `${BASE_URL}/V1/ipd/admin/listVerifiedPatients?location=${currentLocation}&from=${fromDate}&to=${toDate}`,
+        `${BASE_URL}/V1/doctor/manage-admission/list?location=${currentLocation}&from=${fromDate}&to=${toDate}`,
         {
           method: "GET",
           headers: {
@@ -186,10 +186,133 @@ export default function DoctorIpdDashboard() {
   };
 
   // Removed administrative actions for Doctor panel
-  const handleConfirmSurgery = () => {};
+  const handleConfirmSurgery = (contact, uhid) => {
+    Swal.fire({
+      title: "Confirm Admission?",
+      text: "This will move the patient to the surgery list.",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Confirm",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#15ab56ff",
+      cancelButtonColor: "#dc1818ff",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const response = await fetch(
+            `${BASE_URL}/V1/doctor/manage-admission/confirm`,
+            {
+              method: "POST",
+              headers: { 
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`
+              },
+              body: JSON.stringify({
+                contact,
+                uhid,
+                location: currentLocation,
+              }),
+            },
+          );
 
-  const handleCancelSurgery = () => {};
-  const handleCancelSubmit = async () => {};
+          if (response.ok) {
+            const data = await response.json();
+            Swal.fire(
+              "Confirmed!",
+              `Admission No: ${data.data.admissionNo} generated.`,
+              "success",
+            );
+            fetchSurgeries();
+          } else {
+            const errorData = await response.json();
+            throw new Error(errorData.message || "Failed to confirm admission");
+          }
+        } catch (error) {
+          Swal.fire("Error", error.message || "Could not confirm admission", "error");
+        }
+      }
+    });
+  };
+
+  const handleCancelSurgery = () => {
+    if (!selectedEvent) return;
+    setCancelComment("");
+    setShowCancelModal(true);
+  };
+
+  const handleCancelSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!cancelComment.trim()) {
+      Swal.fire(
+        "Required",
+        "Please provide a reason for cancellation",
+        "warning",
+      );
+      return;
+    }
+
+    Swal.fire({
+      title: "Cancel Surgery?",
+      text: `Are you sure you want to cancel the surgery for ${selectedEvent.patientName}?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, Cancel",
+      cancelButtonText: "No",
+      confirmButtonColor: "#dc3545",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          Swal.fire({
+            title: "Processing Cancellation...",
+            didOpen: () => Swal.showLoading(),
+            allowOutsideClick: false,
+          });
+
+          const response = await fetch(
+            `${BASE_URL}/V1/doctor/manage-admission/cancel`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+              body: JSON.stringify({
+                location: currentLocation,
+                uhid: selectedEvent.uhid,
+                contact: selectedEvent.phone,
+                reason: cancelComment,
+              }),
+            },
+          );
+
+          const data = await response.json();
+          if (response.ok) {
+            setShowCancelModal(false);
+            setCancelComment("");
+            setSelectedEvent(null);
+
+            Swal.fire(
+              "Cancelled!",
+              "The surgery entry has been removed.",
+              "success",
+            );
+
+            fetchSurgeries();
+          } else {
+            throw new Error(data.message || "Failed to cancel entry");
+          }
+        } catch (error) {
+          console.error("Cancellation error:", error);
+          Swal.fire(
+            "Error",
+            error.message || "Server connection failed",
+            "error",
+          );
+        }
+      }
+    });
+  };
 
   const eventStyleGetter = useCallback((event) => {
     return {
@@ -271,7 +394,38 @@ export default function DoctorIpdDashboard() {
         </div>
 
         <div className="clinical-actions pt-2">
-          {/* Clinical actions for doctors can be added here */}
+          <div className="d-grid gap-1">
+            {/* <Button
+              variant={selectedEvent.isConfirmed ? "success" : "primary"}
+              className="confirm-btn"
+              style={{ borderRadius: "10px" }}
+              onClick={() =>
+                handleConfirmSurgery(selectedEvent.phone, selectedEvent.uhid)
+              }
+              disabled={selectedEvent.isConfirmed}
+            >
+              <FeatherIcon
+                icon={selectedEvent.isConfirmed ? "user-check" : "check-circle"}
+                size={16}
+                className="me-1"
+              />{" "}
+              {selectedEvent.isConfirmed
+                ? `Admitted (${selectedEvent.admissionNo})`
+                : "Confirm Admission"}
+            </Button>
+
+            {!selectedEvent.isConfirmed && (
+              <Button
+                variant="danger"
+                className="btn-sm border-0 mt-1"
+                style={{ borderRadius: "10px" }}
+                onClick={handleCancelSurgery}
+              >
+                <FeatherIcon icon="x-circle" size={14} className="me-1" />{" "}
+                Cancel Admission
+              </Button>
+            )} */}
+          </div>
         </div>
       </div>
     );

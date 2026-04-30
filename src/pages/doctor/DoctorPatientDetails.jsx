@@ -13,6 +13,7 @@ import {
   Button,
   Form,
   Spinner,
+  Modal,
 } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 import PatientHistoryCard from "./PatientHistoryCard";
@@ -25,11 +26,15 @@ import ProctoscopyCard from "./ProctoscopyCard";
 import OpdPrescriptionCard from "./OpdPrescriptionCard";
 // import SurgeryDetailsCard from "./SurgeryDetailsCard";
 import DischargeCard from "./DischargeCard";
+import DischargePrintView from "./DischargePrintView";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import DatePicker from "react-datepicker";
 import Swal from "sweetalert2";
 import { toast } from "react-hot-toast";
 import { decodeJwt } from "../../utils/decode-jwt";
+import nabhLogo from "../../assets/images/nabh-logo.png";
+import painScoreChart from "../../assets/images/pain-score-chart.jpg";
+import fistulaPlaceholder from "../../assets/images/fistula.jpg";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
 const UPLOAD_BASE_URL = "http://194.195.117.79:5100/uploads";
@@ -311,6 +316,8 @@ const DoctorPatientDetails = () => {
     location: "",
     specialty: "",
   });
+
+  const [showDischargePrintModal, setShowDischargePrintModal] = useState(false);
 
   const [historyData, setHistoryData] = useState({
     patient_date: new Date().toISOString().split("T")[0],
@@ -661,9 +668,9 @@ const DoctorPatientDetails = () => {
         const toArray = (str) =>
           str
             ? str
-                .split(",")
-                .map((s) => s.trim())
-                .filter(Boolean)
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean)
             : [];
         const symptomsArr = toArray(d.symptoms);
 
@@ -741,7 +748,7 @@ const DoctorPatientDetails = () => {
               parsedOdsBowelHabits = arr[0] || "";
               parsedOdsDuration = arr[1] || "";
             }
-          } catch (e) {}
+          } catch (e) { }
         }
 
         const investigationTypes = [
@@ -989,12 +996,29 @@ const DoctorPatientDetails = () => {
     speciality_data: {
       piles: [],
       fistula: [],
+      fistula_detailed_findings: [],
+      fistula_other: "",
       hernia: [],
+      hernia_other: "",
       varicosevein: [],
+      varicosevein_other: "",
       prolapse: [],
+      prolapse_other: "",
+      cyst: [],
+      cyst_other: "",
+      hydrocele: [],
+      hydrocele_other: "",
+      lipoma: [],
+      lipoma_other: "",
+      gynecomastia: [],
+      gynecomastia_other: "",
+      pilonidalsinus: [],
+      pilonidalsinus_other: "",
       circumcision: "",
-      abscess: "",
-      fissure: "",
+      abscess: [],
+      abscess_other: "",
+      fissure: [],
+      fissure_other: "",
       ibs: "",
       urology: "",
     },
@@ -1056,12 +1080,29 @@ const DoctorPatientDetails = () => {
             ...d.speciality_data,
             piles: toArray(d.speciality_data?.piles),
             fistula: toArray(d.speciality_data?.fistula),
+            fistula_detailed_findings: toArray(d.speciality_data?.fistula_detailed_findings),
+            fistula_other: d.speciality_data?.fistula_other || "",
             hernia: toArray(d.speciality_data?.hernia),
+            hernia_other: d.speciality_data?.hernia_other || "",
             varicosevein: toArray(d.speciality_data?.varicosevein),
+            varicosevein_other: d.speciality_data?.varicosevein_other || "",
             prolapse: toArray(d.speciality_data?.prolapse),
+            prolapse_other: d.speciality_data?.prolapse_other || "",
+            cyst: toArray(d.speciality_data?.cyst),
+            cyst_other: d.speciality_data?.cyst_other || "",
+            hydrocele: toArray(d.speciality_data?.hydrocele),
+            hydrocele_other: d.speciality_data?.hydrocele_other || "",
+            lipoma: toArray(d.speciality_data?.lipoma),
+            lipoma_other: d.speciality_data?.lipoma_other || "",
+            gynecomastia: toArray(d.speciality_data?.gynecomastia),
+            gynecomastia_other: d.speciality_data?.gynecomastia_other || "",
+            pilonidalsinus: toArray(d.speciality_data?.pilonidalsinus),
+            pilonidalsinus_other: d.speciality_data?.pilonidalsinus_other || "",
             circumcision: d.speciality_data?.circumcision || "",
-            abscess: d.speciality_data?.abscess || "",
-            fissure: d.speciality_data?.fissure || "",
+            abscess: toArray(d.speciality_data?.abscess),
+            abscess_other: d.speciality_data?.abscess_other || "",
+            fissure: toArray(d.speciality_data?.fissure),
+            fissure_other: d.speciality_data?.fissure_other || "",
             ibs: d.speciality_data?.ibs || "",
             urology: d.speciality_data?.urology || "",
           },
@@ -1155,6 +1196,11 @@ const DoctorPatientDetails = () => {
   const fupPrintRef = useRef();
   const triggerPrintFollowUp = useReactToPrint({
     contentRef: fupPrintRef,
+  });
+
+  const dischargePrintRef = useRef();
+  const triggerPrintDischarge = useReactToPrint({
+    contentRef: dischargePrintRef,
   });
 
   const [isFupPrintReady, setIsFupPrintReady] = useState(false);
@@ -2265,6 +2311,10 @@ const DoctorPatientDetails = () => {
     }
   };
 
+  const handlePrintDischarge = () => {
+    setShowDischargePrintModal(true);
+  };
+
   const fetchPrescriptionDates = async () => {
     const patientId = formData.patient_id || initialPatient?.patient_id;
     if (!patientId) return;
@@ -3192,6 +3242,26 @@ const DoctorPatientDetails = () => {
 
   const handleSaveChanges = async (e) => {
     e.preventDefault();
+
+    const requiredFields = [
+      { field: "Uid_no", name: "UID No" },
+      { field: "prefix", name: "Prefix" },
+      { field: "name", name: "Patient Name" },
+      { field: "sex", name: "Gender" },
+      { field: "phone", name: "Contact Number" },
+      { field: "nationality", name: "Nationality" },
+      { field: "address", name: "Address" },
+      { field: "pincode", name: "Pincode" },
+      { field: "birth_date", name: "Birth Date" },
+    ];
+
+    for (let req of requiredFields) {
+      if (!formData[req.field]) {
+        toast.error(`Please fill the required field: ${req.name}`);
+        return;
+      }
+    }
+
     setLoading(true);
 
     const specificWork = Object.entries(workPatterns)
@@ -3738,7 +3808,8 @@ const DoctorPatientDetails = () => {
           <Row className="g-2">
             <Col md={4}>
               <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>
-                Email ID <span className="text-danger">*</span>
+                Email ID
+                {/* <span className="text-danger">*</span> */}
               </Form.Label>
               <Form.Control
                 type="email"
@@ -3944,7 +4015,8 @@ const DoctorPatientDetails = () => {
             </Col>
             <Col md={3}>
               <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>
-                Blood Group <span className="text-danger">*</span>
+                Blood Group
+                {/* <span className="text-danger">*</span> */}
               </Form.Label>
               <Form.Select
                 name="blood_group"
@@ -4005,12 +4077,13 @@ const DoctorPatientDetails = () => {
                 value={formData.age}
                 readOnly
                 style={{
-                  backgroundColor: "#f8fafc",
-                  border: "2px solid #e2e8f0",
+                  backgroundColor: "#ebeceeff",
+                  border: "2px solid #b2ebf2",
                   borderRadius: "8px",
                   padding: "4px 10px",
                   fontWeight: "bold",
                   fontSize: "12px",
+                  cursor: "not-allowed",
                 }}
               />
             </Col>
@@ -4402,7 +4475,9 @@ const DoctorPatientDetails = () => {
                   onSelectDischarge={handleSelectDischarge}
                   onNewDischarge={handleNewDischarge}
                   onSaveDischarge={handleSaveDischarge}
+                  onPrintDischarge={handlePrintDischarge}
                   loading={loading}
+                  location={currentLocation}
                 />
               )}
               {![
@@ -4416,24 +4491,24 @@ const DoctorPatientDetails = () => {
                 "surgery-details",
                 "discharge-card",
               ].includes(activeTab) && (
-                <div className="text-center py-5 animate__animated animate__fadeIn">
-                  <div
-                    className="d-inline-flex p-4 rounded-circle mb-4"
-                    style={{ backgroundColor: "#f0f4f8" }}
-                  >
-                    <FeatherIcon
-                      icon="clock"
-                      size="48"
-                      className="text-muted"
-                    />
+                  <div className="text-center py-5 animate__animated animate__fadeIn">
+                    <div
+                      className="d-inline-flex p-4 rounded-circle mb-4"
+                      style={{ backgroundColor: "#f0f4f8" }}
+                    >
+                      <FeatherIcon
+                        icon="clock"
+                        size="48"
+                        className="text-muted"
+                      />
+                    </div>
+                    <h4 className="text-muted fw-bold">Coming Soon</h4>
+                    <p className="text-muted">
+                      The {tabs.find((t) => t.id === activeTab).label} section is
+                      under development.
+                    </p>
                   </div>
-                  <h4 className="text-muted fw-bold">Coming Soon</h4>
-                  <p className="text-muted">
-                    The {tabs.find((t) => t.id === activeTab).label} section is
-                    under development.
-                  </p>
-                </div>
-              )}
+                )}
             </Card.Body>
           </Card>
         </Container>
@@ -4460,7 +4535,60 @@ const DoctorPatientDetails = () => {
           historyList={allHistoryDataForPrint}
           diagnosisList={allDiagnosisDataForPrint}
         />
+        <div ref={dischargePrintRef}>
+          <DischargePrintView
+            dischargeData={dischargeData}
+            formData={formData}
+            doctors={doctors}
+            location={currentLocation}
+          />
+        </div>
       </div>
+
+      <Modal
+        show={showDischargePrintModal}
+        onHide={() => setShowDischargePrintModal(false)}
+        size="xl"
+        centered
+      >
+        <Modal.Header closeButton className="bg-info text-white">
+          <Modal.Title className="fw-bold">
+            <FeatherIcon icon="printer" className="me-2" />
+            Discharge Card Preview
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-0 bg-light" style={{ maxHeight: "80vh", overflowY: "auto" }}>
+          <div className="p-4 bg-white shadow-sm mx-auto" style={{ width: "210mm", minHeight: "297mm" }}>
+            <DischargePrintView
+              dischargeData={dischargeData}
+              formData={formData}
+              doctors={doctors}
+              location={currentLocation}
+            />
+          </div>
+        </Modal.Body>
+        <Modal.Footer className="bg-white border-top shadow-sm justify-content-center">
+          <Button
+            variant="secondary"
+            onClick={() => setShowDischargePrintModal(false)}
+            style={{ borderRadius: "20px", padding: "8px 30px", fontWeight: "bold" }}
+          >
+            CANCEL
+          </Button>
+          <Button
+            variant="info"
+            className="text-white"
+            onClick={() => {
+              triggerPrintDischarge();
+              // setShowDischargePrintModal(false);
+            }}
+            style={{ borderRadius: "20px", padding: "8px 50px", fontWeight: "bold" }}
+          >
+            <FeatherIcon icon="printer" size="18" className="me-2" />
+            PRINT DISCHARGE CARD
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

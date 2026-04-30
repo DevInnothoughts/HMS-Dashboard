@@ -8,6 +8,7 @@ import {
   Form,
   InputGroup,
   Spinner,
+  Modal
 } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
@@ -30,7 +31,11 @@ export default function DoctorManageAdmission() {
   const [filters1, setFilters1] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
-  const [fromDate, setFromDate] = useState(new Date());
+  const [fromDate, setFromDate] = useState(() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 1);
+    return d;
+  });
   const [toDate, setToDate] = useState(new Date());
 
   // Initialize Location from JWT
@@ -53,6 +58,14 @@ export default function DoctorManageAdmission() {
     return `${year}-${month}-${day}`;
   };
 
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+  const [rescheduleDate, setRescheduleDate] = useState(null);
+  const [reschedulePatient, setReschedulePatient] = useState(null);
+
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelPatient, setCancelPatient] = useState(null);
+
   const fetchVerifiedPatients = useCallback(async () => {
     if (currentLocation === "default") return;
 
@@ -61,7 +74,7 @@ export default function DoctorManageAdmission() {
       const from = formatToApiDate(fromDate);
       const to = formatToApiDate(toDate);
       const response = await fetch(
-        `${BASE_URL}/V1/doctor/admission/list-admissions?location=${currentLocation}&from=${from}&to=${to}`,
+        `${BASE_URL}/V1/doctor/manage-admission/list?location=${currentLocation}&from=${from}&to=${to}`,
         {
           method: "GET",
           headers: {
@@ -73,6 +86,13 @@ export default function DoctorManageAdmission() {
 
       if (response.ok) {
         const result = await response.json();
+        console.log("Doctor Manage Admission Result:", result);
+
+        if (!Array.isArray(result)) {
+          console.error("Expected array but got:", typeof result);
+          return;
+        }
+
         const sortedData = result.sort((a, b) => {
           return new Date(b.created_at) - new Date(a.created_at);
         });
@@ -85,6 +105,8 @@ export default function DoctorManageAdmission() {
           gender: p.sex,
           verifiedDate: p.admission_datetime || "NOT ADMITTED",
           surgeryDate: p.surgery_datetime || "Not Scheduled",
+          roomType: p.room_type || "N/A",
+          roomNo: p.room_no || "N/A",
           admissionNo:
             p.admission_no === 0 || p.admission_no === "0"
               ? null
@@ -107,6 +129,133 @@ export default function DoctorManageAdmission() {
   useEffect(() => {
     fetchVerifiedPatients();
   }, [fetchVerifiedPatients]);
+
+  const handleRescheduleClick = (patient) => {
+    setReschedulePatient(patient);
+    setRescheduleDate(null);
+    setShowRescheduleModal(true);
+  };
+
+  const handleRescheduleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      Swal.fire({ title: "Updating...", didOpen: () => Swal.showLoading() });
+      const response = await fetch(
+        `${BASE_URL}/V1/doctor/manage-admission/reschedule`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            location: currentLocation,
+            uidNo: reschedulePatient.uhid,
+            rescheduleDate: rescheduleDate,
+          }),
+        },
+      );
+
+      if (response.ok) {
+        Swal.fire("Success", "Surgery date rescheduled!", "success");
+        setShowRescheduleModal(false);
+        fetchVerifiedPatients();
+      } else {
+        const err = await response.json();
+        throw new Error(err.message || "Failed to reschedule");
+      }
+    } catch (error) {
+      Swal.fire("Error", error.message, "error");
+    }
+  };
+
+  const handleCancelClick = (patient) => {
+    setCancelPatient(patient);
+    setCancelReason("");
+    setShowCancelModal(true);
+  };
+
+  const handleCancelSubmit = async (e) => {
+    e.preventDefault();
+    if (!cancelReason.trim()) {
+      Swal.fire("Required", "Please provide a reason", "warning");
+      return;
+    }
+    try {
+      Swal.fire({ title: "Cancelling...", didOpen: () => Swal.showLoading() });
+      const response = await fetch(
+        `${BASE_URL}/V1/doctor/manage-admission/cancel`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            location: currentLocation,
+            uhid: cancelPatient.uhid,
+            contact: cancelPatient.contact,
+            reason: cancelReason,
+          }),
+        },
+      );
+
+      if (response.ok) {
+        Swal.fire("Cancelled!", "Admission entry has been removed.", "success");
+        setShowCancelModal(false);
+        fetchVerifiedPatients();
+      } else {
+        const err = await response.json();
+        throw new Error(err.message || "Failed to cancel");
+      }
+    } catch (error) {
+      Swal.fire("Error", error.message, "error");
+    }
+  };
+
+  const handleConfirm = (contact, uhid) => {
+    Swal.fire({
+      title: "Confirm Admission?",
+      text: "This will generate an official Admission Number.",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Confirm",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#15ab56ff",
+      cancelButtonColor: "#dc1818ff",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const response = await fetch(
+            `${BASE_URL}/V1/doctor/manage-admission/confirm`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+              body: JSON.stringify({ contact, uhid, location: currentLocation }),
+            },
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            Swal.fire(
+              "Confirmed!",
+              `Admission No: ${data.data.admissionNo} generated.`,
+              "success",
+            );
+            fetchVerifiedPatients();
+          } else {
+            const err = await response.json();
+            throw new Error(err.message || "Failed to confirm");
+          }
+        } catch (error) {
+          Swal.fire("Error", error.message, "error");
+        }
+      }
+    });
+  };
 
   const renderHeader = () => (
     <div
@@ -300,24 +449,54 @@ export default function DoctorManageAdmission() {
   const actionBodyTemplate = (patient) => {
     return (
       <div className="d-flex justify-content-center gap-1">
-        <Button
-          variant="primary"
-          size="sm"
-          title="Print All Forms"
-          style={{
-            borderRadius: "6px",
-            backgroundColor: "#178aaeff",
-            border: "none",
-            padding: "5px 8px",
-          }}
-          onClick={() => {
-            // Add print logic here if needed, for now it's just a button as requested
-            console.log("Printing forms for patient:", patient.name);
-          }}
-          disabled={!patient.admissionNo}
-        >
-          <FeatherIcon icon="printer" size={16} />
-        </Button>
+        {!patient.admissionNo ? (
+          <>
+            <Button
+              variant="outline-primary"
+              size="sm"
+              title="Reschedule Surgery"
+              onClick={() => handleRescheduleClick(patient)}
+              style={{ borderRadius: "6px", padding: "5px 8px" }}
+            >
+              <FeatherIcon icon="calendar" size={16} />
+            </Button>
+            <Button
+              variant="outline-danger"
+              size="sm"
+              title="Cancel Surgery"
+              onClick={() => handleCancelClick(patient)}
+              style={{ borderRadius: "6px", padding: "5px 8px" }}
+            >
+              <FeatherIcon icon="trash-2" size={16} />
+            </Button>
+            <Button
+              variant="outline-success"
+              size="sm"
+              title="Confirm Admission"
+              onClick={() => handleConfirm(patient.contact, patient.uhid)}
+              style={{ borderRadius: "6px", padding: "5px 8px" }}
+            >
+              <FeatherIcon icon="check" size={16} />
+            </Button>
+          </>
+        ) : (
+          <Button
+            variant="primary"
+            size="sm"
+            title="Print All Forms"
+            style={{
+              borderRadius: "6px",
+              backgroundColor: "#178aaeff",
+              border: "none",
+              padding: "5px 8px",
+            }}
+            onClick={() => {
+              console.log("Printing forms for patient:", patient.name);
+            }}
+          >
+            <FeatherIcon icon="printer" size={16} />
+          </Button>
+        )}
       </div>
     );
   };
@@ -385,7 +564,7 @@ export default function DoctorManageAdmission() {
                           border: "1px solid #90caf9",
                           textAlign: "center",
                           padding: "0.75rem",
-                          width: "140px",
+                          width: "170px",
                         }}
                       />
 
@@ -403,6 +582,30 @@ export default function DoctorManageAdmission() {
                           textAlign: "center",
                           padding: "0.75rem",
                           width: "160px",
+                        }}
+                      />
+
+                      <Column
+                        field="roomType"
+                        header="Room Type"
+                        headerClassName="datatable-header-center"
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "120px",
+                        }}
+                      />
+
+                      <Column
+                        field="roomNo"
+                        header="Room No"
+                        headerClassName="datatable-header-center"
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "100px",
                         }}
                       />
 
@@ -478,7 +681,7 @@ export default function DoctorManageAdmission() {
                       <Column
                         header="Age/Gender"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => `${rowData.age} / ${rowData.gender}`}
+                        body={(rowData) => `${rowData.age} yrs / ${rowData.gender}`}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -505,6 +708,66 @@ export default function DoctorManageAdmission() {
           </Row>
         </Container>
       </div>
+
+      {/* Reschedule Modal */}
+      <Modal
+        show={showRescheduleModal}
+        onHide={() => setShowRescheduleModal(false)}
+        centered
+      >
+        <Modal.Header closeButton style={{ backgroundColor: "#67c5cfff" }}>
+          <Modal.Title style={{ color: "#1a5b61ff", fontSize: "1rem" }}>
+            Reschedule Surgery
+          </Modal.Title>
+        </Modal.Header>
+        <Form onSubmit={handleRescheduleSubmit}>
+          <Modal.Body>
+            <Form.Group>
+              <Form.Label style={{ color: "#1a5b61ff", fontSize: "13px" }}>New Surgery Date & Time</Form.Label>
+              <Form.Control
+                type="datetime-local"
+                required
+                onChange={(e) => setRescheduleDate(e.target.value)}
+              />
+            </Form.Group>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowRescheduleModal(false)}>Cancel</Button>
+            <Button variant="primary" type="submit">Reschedule</Button>
+          </Modal.Footer>
+        </Form>
+      </Modal>
+
+      {/* Cancel Modal */}
+      <Modal
+        show={showCancelModal}
+        onHide={() => setShowCancelModal(false)}
+        centered
+      >
+        <Modal.Header closeButton style={{ backgroundColor: "#67c5cfff" }}>
+          <Modal.Title style={{ color: "#1a5b61ff", fontSize: "1rem" }}>
+            Cancel Admission
+          </Modal.Title>
+        </Modal.Header>
+        <Form onSubmit={handleCancelSubmit}>
+          <Modal.Body>
+            <Form.Group>
+              <Form.Label>Reason for Cancellation</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                required
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+              />
+            </Form.Group>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="primary" onClick={() => setShowCancelModal(false)}>Back</Button>
+            <Button variant="danger" type="submit">Cancel Admission</Button>
+          </Modal.Footer>
+        </Form>
+      </Modal>
     </div>
   );
 }
