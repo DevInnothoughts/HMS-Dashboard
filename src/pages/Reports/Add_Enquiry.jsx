@@ -63,7 +63,7 @@ const formatDate = (date) => {
   return `${year}-${month}-${day}`;
 };
 
-export default function Add_Enquiry() {
+export default function Add_Enquiry({ isTab = false }) {
   const [currentLocation, setCurrentLocation] = useState(null);
   const [formData, setFormData] = useState({
     date: formatDate(new Date()),
@@ -84,6 +84,8 @@ export default function Add_Enquiry() {
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [isPatientRegistered, setIsPatientRegistered] = useState(false);
+  const [isCheckingPhone, setIsCheckingPhone] = useState(false);
   const [doctors, setDoctors] = useState([]);
   const [fdeList, setFdeList] = useState([]);
   const phoneRegex = /^[0-9]{7,15}$/;
@@ -97,6 +99,44 @@ export default function Add_Enquiry() {
       }
     }
   }, []);
+
+  useEffect(() => {
+    const checkPatientPhone = async () => {
+      const phone = formData.patient_phone;
+      if (!phone || phone.length < 7 || !currentLocation) {
+        setIsPatientRegistered(false);
+        return;
+      }
+
+      setIsCheckingPhone(true);
+      try {
+        const response = await fetch(`${BASE_URL}/V1/patient/searchPatient?query=${encodeURIComponent(phone)}&location=${encodeURIComponent(currentLocation)}`);
+        if (response.ok) {
+          const data = await response.json();
+          // Check if any returned patient has this phone as primary and has a Uid_no generated
+          const isRegistered = data.data && data.data.some(p => p.phone === phone && p.Uid_no);
+          if (isRegistered) {
+            setIsPatientRegistered(true);
+            Swal.fire({
+              icon: "warning",
+              title: "Already Registered",
+              text: "This contact number is already registered as a patient.",
+              confirmButtonColor: "#00bcd4",
+            });
+          } else {
+            setIsPatientRegistered(false);
+          }
+        }
+      } catch (error) {
+        console.error("Error checking patient phone:", error);
+      } finally {
+        setIsCheckingPhone(false);
+      }
+    };
+
+    const debounceTimer = setTimeout(checkPatientPhone, 800);
+    return () => clearTimeout(debounceTimer);
+  }, [formData.patient_phone, currentLocation]);
 
   const validate = () => {
     const newErrors = {};
@@ -162,6 +202,7 @@ export default function Add_Enquiry() {
       }),
     });
     setErrors({});
+    setIsPatientRegistered(false);
   };
 
   const handleSubmit = async (e) => {
@@ -230,8 +271,8 @@ export default function Add_Enquiry() {
   const fetchDropdownData = useCallback(async () => {
     if (!currentLocation) return;
     try {
-      const fetchApi = async (endpoint) => {
-        const url = `${BASE_URL}/V1/appointment/${endpoint}?location=${currentLocation}`;
+      const fetchApi = async (endpoint, module = "appointment") => {
+        const url = `${BASE_URL}/V1/${module}/${endpoint}?location=${currentLocation}`;
         const response = await fetch(url, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
@@ -240,8 +281,8 @@ export default function Add_Enquiry() {
       };
 
       const [doctorData, fdeData] = await Promise.all([
-        fetchApi("doctorDropdown").then((res) => res.data),
-        fetchApi("fdeDropdown").then((res) => res.data),
+        fetchApi("doctorDropdown", "doctor").then((res) => res.data),
+        fetchApi("fdeDropdown", "appointment").then((res) => res.data),
       ]);
 
       setDoctors(Array.isArray(doctorData) ? doctorData : []);
@@ -273,18 +314,18 @@ export default function Add_Enquiry() {
 
   return (
     <div
-      className="themebody-wrap"
-      style={{
+      className={isTab ? "" : "themebody-wrap"}
+      style={isTab ? { fontFamily: "'Poppins', Arial, sans-serif" } : {
         background: "linear-gradient(to right, #e0f7fa, #80deea)",
         minHeight: "100vh",
         padding: "10px",
         fontFamily: "'Poppins', Arial, sans-serif",
       }}
     >
-      <PageBreadcrumb pagename="Add Enquiry Form" />
-      <NavBarA pagename="Add Enquiry" />
+      {!isTab && <PageBreadcrumb pagename="Add Enquiry Form" />}
+      {!isTab && <NavBarA pagename="Add Enquiry" />}
 
-      <Container fluid>
+      <Container fluid style={isTab ? { padding: 0 } : {}}>
         <Row>
           <Col>
             <Card
@@ -430,7 +471,7 @@ export default function Add_Enquiry() {
                               key={doctor.doctor_id}
                               value={doctor.doctor_id}
                             >
-                              {doctor.doctor_id} - {doctor.name}
+                              {doctor.name}
                             </option>
                           ))}
                         </Form.Select>
@@ -499,6 +540,14 @@ export default function Add_Enquiry() {
                             style={{ fontSize: "11px" }}
                           >
                             {errors.patient_phone}
+                          </p>
+                        )}
+                        {isPatientRegistered && (
+                          <p
+                            className="text-danger mt-1"
+                            style={{ fontSize: "11px", fontWeight: "600" }}
+                          >
+                            *Contact Number already registered as a patient.
                           </p>
                         )}
                       </Form.Group>
@@ -664,9 +713,9 @@ export default function Add_Enquiry() {
                         fontSize: "13px",
                         padding: "9px 35px",
                       }}
-                      disabled={loading || !currentLocation}
+                      disabled={loading || !currentLocation || isPatientRegistered || isCheckingPhone}
                     >
-                      {loading ? "Adding..." : "Add Enquiry"}
+                      {loading || isCheckingPhone ? "Please wait..." : "Add Enquiry"}
                     </Button>
                   </div>
                 </Form>

@@ -30,7 +30,18 @@ import DischargePrintView from "./DischargePrintView";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import DatePicker from "react-datepicker";
 import Swal from "sweetalert2";
-import { toast } from "react-hot-toast";
+import { toast as hotToast } from "react-hot-toast";
+const toast = new Proxy(hotToast, {
+  get(target, prop) {
+    if (prop === "warning") {
+      return (msg, options) => hotToast(msg, { ...options, icon: "⚠️" });
+    }
+    if (prop === "info") {
+      return (msg, options) => hotToast(msg, { ...options, icon: "ℹ️" });
+    }
+    return target[prop];
+  }
+});
 import { decodeJwt } from "../../utils/decode-jwt";
 import nabhLogo from "../../assets/images/nabh-logo.png";
 import painScoreChart from "../../assets/images/pain-score-chart.jpg";
@@ -239,12 +250,12 @@ const Toast = Swal.mixin({
   timerProgressBar: true,
 });
 
-const DoctorPatientDetails = () => {
+const PersonalDetailsCard = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
   const initialPatient = state?.patient;
 
-  const [activeTab, setActiveTab] = useState("personal");
+  const [activeTab, setActiveTab] = useState("menu");
   const [loading, setLoading] = useState(false);
   const [currentLocation, setCurrentLocation] = useState("default");
 
@@ -318,6 +329,7 @@ const DoctorPatientDetails = () => {
   });
 
   const [showDischargePrintModal, setShowDischargePrintModal] = useState(false);
+  const [showDiagnosisPrintModal, setShowDiagnosisPrintModal] = useState(false);
 
   const [historyData, setHistoryData] = useState({
     patient_date: new Date().toISOString().split("T")[0],
@@ -341,8 +353,6 @@ const DoctorPatientDetails = () => {
     habits: [],
     drug_allergy: "",
     medication_history: [
-      { medicine: "", indication: "", since: "" },
-      { medicine: "", indication: "", since: "" },
       { medicine: "", indication: "", since: "" },
       { medicine: "", indication: "", since: "" },
       { medicine: "", indication: "", since: "" },
@@ -520,6 +530,22 @@ const DoctorPatientDetails = () => {
       return;
     }
 
+    const missingFields = [];
+    if (!historyData.height_feet || String(historyData.height_feet).trim() === "") {
+      missingFields.push("Height");
+    }
+    if (!historyData.weight_kg || String(historyData.weight_kg).trim() === "") {
+      missingFields.push("Weight");
+    }
+    if (!historyData.assistance_doctor || String(historyData.assistance_doctor).trim() === "") {
+      missingFields.push("Assistant Doctor");
+    }
+
+    if (missingFields.length > 0) {
+      toast.warning(`Required fields are not filled: ${missingFields.join(", ")}`);
+      return;
+    }
+
     setLoading(true);
     try {
       const formDataObj = new FormData();
@@ -606,8 +632,6 @@ const DoctorPatientDetails = () => {
       { medicine: "", indication: "", since: "" },
       { medicine: "", indication: "", since: "" },
       { medicine: "", indication: "", since: "" },
-      { medicine: "", indication: "", since: "" },
-      { medicine: "", indication: "", since: "" },
     ],
     past_surgical_history: "",
     any_other_complaints: "",
@@ -676,8 +700,8 @@ const DoctorPatientDetails = () => {
 
         // Define symptom groups to filter category-specific data
         const pilesOpts = [
-          "PR Bleeding:Painless",
-          "PR Bleeding:Painful",
+          "PR Bleeding: Painless",
+          "PR Bleeding: Painful",
           "Burning",
           "Pricking",
           "Itching",
@@ -694,10 +718,10 @@ const DoctorPatientDetails = () => {
           "Swelling near anal region",
         ];
         const herniaOpts = [
-          "Swelling:Umbilical",
+          "Swelling: Umbilical",
           "Right Inguinal",
           "Left Inguinal",
-          "Swelling:Abdominal",
+          "Swelling: Abdominal",
           "Reducible",
           "Nonreducible",
           "Past Sx",
@@ -733,9 +757,9 @@ const DoctorPatientDetails = () => {
           "Frequency",
         ];
         const pilonidalOpts = [
-          "Pain:Tailbone",
-          "Boil:Tailbone",
-          "Swelling:Tailbone",
+          "Pain: Tailbone",
+          "Boil: Tailbone",
+          "Swelling: Tailbone",
           "Pus / Watery Discharge",
         ];
 
@@ -960,9 +984,9 @@ const DoctorPatientDetails = () => {
               indication: m.indication || "",
               since: m.since || "",
             }));
-            while (mappedMeds.length < 5)
+            while (mappedMeds.length < 3)
               mappedMeds.push({ medicine: "", indication: "", since: "" });
-            loadedState.medication_history = mappedMeds.slice(0, 5);
+            loadedState.medication_history = mappedMeds;
           }
         }
 
@@ -1144,6 +1168,25 @@ const DoctorPatientDetails = () => {
       return;
     }
 
+    const missingFields = [];
+    if (!diagnosisData.diagnosis_text || String(diagnosisData.diagnosis_text).trim() === "") {
+      missingFields.push("Diagnosis");
+    }
+    if (!diagnosisData.advice_types || diagnosisData.advice_types.length === 0) {
+      missingFields.push("Advice Type");
+    }
+    if (!diagnosisData.consultant_doctor || String(diagnosisData.consultant_doctor).trim() === "") {
+      missingFields.push("Consultant Doctor");
+    }
+    if (!diagnosisData.assistance_doctor || String(diagnosisData.assistance_doctor).trim() === "") {
+      missingFields.push("Assistant Doctor");
+    }
+
+    if (missingFields.length > 0) {
+      toast.warning(`Required fields are not filled: ${missingFields.join(", ")}`);
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await fetch(
@@ -1189,7 +1232,7 @@ const DoctorPatientDetails = () => {
   };
 
   const diagPrintRef = useRef();
-  const triggerPrint = useReactToPrint({
+  const triggerPrintDiagnosis = useReactToPrint({
     contentRef: diagPrintRef,
   });
 
@@ -1205,13 +1248,6 @@ const DoctorPatientDetails = () => {
 
   const [isFupPrintReady, setIsFupPrintReady] = useState(false);
 
-  // Trigger print only after async data has loaded into state
-  useEffect(() => {
-    if (isPrintReady) {
-      triggerPrint();
-      setIsPrintReady(false);
-    }
-  }, [isPrintReady]);
 
   useEffect(() => {
     if (isFupPrintReady) {
@@ -1321,7 +1357,7 @@ const DoctorPatientDetails = () => {
 
       setAllHistoryDataForPrint(historyResults.filter(Boolean));
       setAllDiagnosisDataForPrint(diagnosisResults.filter(Boolean));
-      setIsPrintReady(true);
+      setShowDiagnosisPrintModal(true);
     } catch (error) {
       console.error("Error loading data for print:", error);
       toast.error("Could not load data for printing.");
@@ -2199,6 +2235,8 @@ const DoctorPatientDetails = () => {
       fetchPrescriptionDates();
       fetchSurgeryDates();
       fetchDischargeDates();
+      fetchProctoscopyDates();
+      fetchFollowUpDetails();
     }
   }, [initialPatient, formData.patient_id]);
 
@@ -3393,6 +3431,23 @@ const DoctorPatientDetails = () => {
     setHistoryData((prev) => ({ ...prev, medication_history: updatedHistory }));
   };
 
+  const handleAddMedicationRow = () => {
+    setHistoryData((prev) => ({
+      ...prev,
+      medication_history: [
+        ...prev.medication_history,
+        { medicine: "", indication: "", since: "" }
+      ]
+    }));
+  };
+
+  const handleRemoveMedicationRow = (index) => {
+    setHistoryData((prev) => ({
+      ...prev,
+      medication_history: prev.medication_history.filter((_, i) => i !== index)
+    }));
+  };
+
   const handleFollowUpChange = (field, value) => {
     setFollowUpData((prev) => ({ ...prev, [field]: value }));
   };
@@ -3472,7 +3527,13 @@ const DoctorPatientDetails = () => {
   };
 
   const handlePrescriptionChange = (field, value) => {
-    setPrescriptionData((prev) => ({ ...prev, [field]: value }));
+    setPrescriptionData((prev) => {
+      const updated = { ...prev, [field]: value };
+      if (field === "patient_type" && ["surgery_patient", "nofollowupappointment"].includes(value)) {
+        updated["next-appo-date"] = null;
+      }
+      return updated;
+    });
   };
 
   const handlePrescriptionCheckboxChange = (field, value) => {
@@ -3511,11 +3572,32 @@ const DoctorPatientDetails = () => {
       return;
     }
 
-    if (
-      !prescriptionData.diagnosis?.trim() &&
-      (!prescriptionData.medicines || prescriptionData.medicines.length === 0)
-    ) {
-      toast.warning("Please enter a diagnosis or add medicines before saving.");
+    const missingFields = [];
+    if (!prescriptionData.prescription_type || String(prescriptionData.prescription_type).trim() === "") {
+      missingFields.push("Prescription Type");
+    }
+
+    const isUrology = prescriptionData.prescription_type === "Urology";
+    const assistantDoctor = isUrology ? prescriptionData.udoctor_id : prescriptionData.doctor_id;
+    if (!assistantDoctor || String(assistantDoctor).trim() === "") {
+      missingFields.push("Assistant Doctor");
+    }
+
+    if (!prescriptionData.patient_type || String(prescriptionData.patient_type).trim() === "") {
+      missingFields.push("Next Appointment");
+    } else {
+      const needsDate = !["surgery_patient", "nofollowupappointment"].includes(prescriptionData.patient_type);
+      if (needsDate && (!prescriptionData["next-appo-date"] || String(prescriptionData["next-appo-date"]).trim() === "")) {
+        missingFields.push("Next Appointment Date");
+      }
+    }
+
+    if (!prescriptionData.medicines || prescriptionData.medicines.length === 0) {
+      missingFields.push("Meditative Advice & Pharmacy Orders");
+    }
+
+    if (missingFields.length > 0) {
+      toast.warning(`Required fields are not filled: ${missingFields.join(", ")}`);
       return;
     }
 
@@ -3665,12 +3747,12 @@ const DoctorPatientDetails = () => {
 
   const tabs = [
     { id: "personal", label: "Personal", icon: "user" },
-    { id: "patient-history", label: "Patient History", icon: "activity" },
+    { id: "patient-history", label: "History", icon: "activity" },
     { id: "diagnosis", label: "Diagnosis", icon: "clipboard" },
     { id: "follow-up", label: "Follow Up", icon: "calendar" },
     // { id: "other-tests", label: "Other Tests", icon: "file-text" },
     { id: "proctoscopy", label: "Proctoscopy", icon: "search" },
-    { id: "opd-prescription", label: "OPD Prescription", icon: "edit-3" },
+    { id: "opd-prescription", label: "Prescription", icon: "edit-3" },
     // { id: "surgery-details", label: "Surgery Details", icon: "scissors" },
     { id: "discharge-card", label: "Discharge Card", icon: "log-out" },
   ];
@@ -3767,7 +3849,7 @@ const DoctorPatientDetails = () => {
               >
                 <Form.Label
                   className="fw-bold mb-0 d-block"
-                  style={{ fontSize: "10px" }}
+                  style={{ fontSize: "11px" }}
                 >
                   VIP Patient
                 </Form.Label>
@@ -4062,7 +4144,7 @@ const DoctorPatientDetails = () => {
                 dropdownMode="select"
                 maxDate={new Date()}
                 style={{
-                  border: "2px solid rgb(77, 208, 225)",
+                  border: "2px solid #b2ebf2",
                   fontSize: "12px",
                   borderRadius: "10px",
                 }}
@@ -4283,6 +4365,21 @@ const DoctorPatientDetails = () => {
     </div>
   );
 
+  const isTabCompleted = (tabId) => {
+    switch (tabId) {
+      case "personal": return true;
+      case "patient-history": return previousHistoryList && previousHistoryList.length > 0;
+      case "diagnosis": return previousDiagnosisList && previousDiagnosisList.length > 0;
+      case "follow-up": return followUpData && followUpData.visit_count && followUpData.visit_count !== "0";
+      case "other-tests": return previousTestsList && previousTestsList.length > 0;
+      case "proctoscopy": return previousProctoscopyList && previousProctoscopyList.length > 0;
+      case "opd-prescription": return previousPrescriptionList && previousPrescriptionList.length > 0;
+      case "surgery-details": return previousSurgeryList && previousSurgeryList.length > 0;
+      case "discharge-card": return previousDischargesList && previousDischargesList.length > 0;
+      default: return false;
+    }
+  };
+
   return (
     <div
       className="themebody-wrap"
@@ -4292,110 +4389,156 @@ const DoctorPatientDetails = () => {
         padding: "10px",
       }}
     >
-      <PageBreadcrumb pagename="Patient Details" />
+      <PageBreadcrumb pagename="Patient Personal Details" />
       <div className="theme-body">
         <Container fluid>
-          <Card
-            className="shadow-lg border-0 mb-4 overflow-hidden"
-            style={{ borderRadius: "15px" }}
-          >
-            <Card.Header className="bg-white border-0 p-0">
-              <Nav
-                className="flex-nowrap overflow-auto custom-navbar px-2 py-3"
-                style={{ backgroundColor: "#f1fcfd", gap: "8px" }}
-              >
-                {tabs.map((tab) => (
-                  <Nav.Item key={tab.id}>
-                    <Nav.Link
-                      active={activeTab === tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className="text-center"
-                      style={{
-                        whiteSpace: "nowrap",
-                        borderRadius: "8px",
-                        padding: "6px 10px",
-                        fontWeight: "700",
-                        fontSize: "12px",
-                        backgroundColor:
-                          activeTab === tab.id ? "#00bcd4" : "white",
-                        color: activeTab === tab.id ? "white" : "#00838f",
-                        border:
-                          activeTab === tab.id
-                            ? "2px solid #00bcd4"
-                            : "2px solid #b2ebf2",
-                        boxShadow:
-                          activeTab === tab.id
-                            ? "0 4px 12px rgba(0, 188, 212, 0.4)"
-                            : "0 1px 3px rgba(0,0,0,0.05)",
-                        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                        display: "inline-flex",
-                        alignItems: "center",
-                      }}
-                    >
-                      <FeatherIcon
-                        icon={tab.icon}
-                        size="14"
-                        style={{ marginRight: "6px" }}
-                      />{" "}
-                      {tab.label}
-                    </Nav.Link>
-                  </Nav.Item>
-                ))}
-              </Nav>
-            </Card.Header>
-            <Card.Body className="p-4" style={{ backgroundColor: "#f8fbfc" }}>
-              {activeTab === "personal" && renderPersonalInfo()}
-              {activeTab === "patient-history" && (
-                <PatientHistoryCard
-                  historyData={historyData}
-                  handleHistoryChange={handleHistoryChange}
-                  handleHistoryCheckboxChange={handleHistoryCheckboxChange}
-                  handleInvestigationCommentChange={
-                    handleInvestigationCommentChange
-                  }
-                  handleMedicationChange={handleMedicationChange}
-                  loading={loading}
-                  previousHistoryList={previousHistoryList}
-                  selectedHistoryId={selectedHistoryId}
-                  onSelectHistory={handleSelectHistory}
-                  onNewRecord={handleNewRecord}
-                  onSaveHistory={handleSaveHistory}
-                  assistanceDoctors={assistanceDoctors}
-                  uploadBaseUrl={UPLOAD_BASE_URL}
-                />
-              )}
-              {activeTab === "diagnosis" && (
-                <DiagnosisCard
-                  diagnosisData={diagnosisData}
-                  handleDiagnosisChange={handleDiagnosisChange}
-                  handleDiagnosisCheckboxChange={handleDiagnosisCheckboxChange}
-                  handleSpecialityCheckboxChange={
-                    handleSpecialityCheckboxChange
-                  }
-                  setDiagnosisData={setDiagnosisData}
-                  handleMedicalAdviceNoteChange={handleMedicalAdviceNoteChange}
-                  loading={loading}
-                  previousDiagnosisList={previousDiagnosisList}
-                  selectedDiagnosisId={selectedDiagnosisId}
-                  onSelectDiagnosis={handleSelectDiagnosis}
-                  onNewDiagnosis={handleNewDiagnosis}
-                  onSaveDiagnosis={handleSaveDiagnosis}
-                  onPrintDiagnosis={handlePrintDiagnosis}
-                  doctors={doctors}
-                  assistanceDoctors={assistanceDoctors}
-                />
-              )}
-              {activeTab === "follow-up" && (
-                <FollowUpCard
-                  followUpData={followUpData}
-                  formData={formData}
-                  handleFollowUpChange={handleFollowUpChange}
-                  onSaveFollowUp={handleSaveFollowUp}
-                  onPrintFollowUp={handlePrintFollowUp}
-                  loading={loading}
-                />
-              )}
-              {/* {activeTab === "other-tests" && (
+          {activeTab === "menu" ? (
+            <div className="py-4 px-lg-7 animate__animated animate__fadeIn">
+              <Card className="border-0 shadow-sm mb-20" style={{ borderRadius: "12px", background: "#fff", overflow: "hidden" }}>
+                <div className="p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center" style={{ borderLeft: "5px solid #00bcd4" }}>
+                  <div>
+                    <h4 className="fw-bold mb-1" style={{ color: "#2c3e50" }}>Patient Medical Records</h4>
+                    <p className="text-muted m-0" style={{ fontSize: "14px" }}>Manage and review clinical documentation across all categories.</p>
+                  </div>
+                  <div className="mt-3 mt-md-0">
+                    <span className="badge" style={{ backgroundColor: "#e0f7fa", color: "#00838f", padding: "20px 15px", borderRadius: "8px", fontSize: "13px", fontWeight: "600" }}>
+                      {tabs.filter(t => isTabCompleted(t.id)).length} of {tabs.length} Sections Completed
+                    </span>
+                  </div>
+                </div>
+              </Card>
+
+              <Row className="g-10">
+                {tabs.map((tab) => {
+                  const completed = isTabCompleted(tab.id);
+                  return (
+                    <Col sm={6} lg={3} key={tab.id} className="d-flex">
+                      <Card
+                        className="border-0 shadow-sm transition-all"
+                        style={{
+                          width: "300px",
+                          padding: "5px",
+                          borderRadius: "12px", cursor: "pointer",
+                          border: completed ? "1px solid #10b981" : "1px solid #f1f5f9"
+                        }}
+                        onClick={() => setActiveTab(tab.id)}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = "translateY(-4px)";
+                          e.currentTarget.style.boxShadow = "0 8px 16px rgba(0, 0, 0, 0.08)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = "translateY(0)";
+                          e.currentTarget.style.boxShadow = "0 2px 6px rgba(0, 0, 0, 0.04)";
+                        }}
+                      >
+                        <Card.Body className="p-3 d-flex align-items-center">
+                          <div
+                            className="d-flex align-items-center justify-content-center rounded me-3"
+                            style={{
+                              width: "48px", height: "48px",
+                              backgroundColor: completed ? "#f0fdf4" : "#f8fafc",
+                              color: completed ? "#10b981" : "#64748b"
+                            }}
+                          >
+                            <FeatherIcon icon={tab.icon} size="22" />
+                          </div>
+                          <div className="flex-grow-1">
+                            <h6 className="fw-bold m-0 mb-1" style={{ color: "#334155", fontSize: "14px" }}>{tab.label}</h6>
+                            {completed ? (
+                              <span style={{ fontSize: "12px", color: "#10b981", fontWeight: "600" }}>Filled & Saved</span>
+                            ) : (
+                              <span style={{ fontSize: "12px", color: "#94a3b8" }}>No Record</span>
+                            )}
+                          </div>
+                          <div className="ms-2">
+                            {completed ? (
+                              <FeatherIcon icon="check-circle" size="20" style={{ color: "#10b981" }} />
+                            ) : (
+                              <FeatherIcon icon="chevron-right" size="20" style={{ color: "#cbd5e1" }} />
+                            )}
+                          </div>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  );
+                })}
+              </Row>
+            </div>
+          ) : (
+            <Card className="shadow-lg border-0 mb-4 animate__animated animate__fadeIn" style={{ borderRadius: "20px", overflow: "hidden", backgroundColor: "#fff" }}>
+              <div className="p-4 border-bottom d-flex align-items-center" style={{ backgroundColor: "#f8fafd" }}>
+                <Button
+                  className="d-flex align-items-center me-4 shadow-sm"
+                  style={{ borderRadius: "50px", padding: "10px 20px", fontWeight: "700", color: "#ffffffff", backgroundColor: "#fff", border: "1px solid #e0e6ed" }}
+                  onClick={() => setActiveTab("menu")}
+                >
+                  <FeatherIcon icon="arrow-left" size="18" className="me-2" /> Back to Menu
+                </Button>
+                <div className="d-flex align-items-center">
+                  <div className="rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm" style={{ width: "50px", height: "50px", backgroundColor: "#00bcd4", color: "#fff" }}>
+                    <FeatherIcon icon={tabs.find(t => t.id === activeTab)?.icon} size="24" />
+                  </div>
+                  <div>
+                    <h4 className="fw-bold m-0" style={{ color: "#2c3e50" }}>{tabs.find(t => t.id === activeTab)?.label}</h4>
+                    <p className="text-muted m-0" style={{ fontSize: "13px" }}>Manage patient records</p>
+                  </div>
+                </div>
+              </div>
+              <Card.Body className="p-5" style={{ backgroundColor: "#ffffff" }}>
+                {activeTab === "personal" && renderPersonalInfo()}
+                {activeTab === "patient-history" && (
+                  <PatientHistoryCard
+                    historyData={historyData}
+                    handleHistoryChange={handleHistoryChange}
+                    handleHistoryCheckboxChange={handleHistoryCheckboxChange}
+                    handleInvestigationCommentChange={
+                      handleInvestigationCommentChange
+                    }
+                    handleMedicationChange={handleMedicationChange}
+                    handleAddMedicationRow={handleAddMedicationRow}
+                    handleRemoveMedicationRow={handleRemoveMedicationRow}
+                    loading={loading}
+                    previousHistoryList={previousHistoryList}
+                    selectedHistoryId={selectedHistoryId}
+                    onSelectHistory={handleSelectHistory}
+                    onNewRecord={handleNewRecord}
+                    onSaveHistory={handleSaveHistory}
+                    assistanceDoctors={assistanceDoctors}
+                    uploadBaseUrl={UPLOAD_BASE_URL}
+                  />
+                )}
+                {activeTab === "diagnosis" && (
+                  <DiagnosisCard
+                    diagnosisData={diagnosisData}
+                    handleDiagnosisChange={handleDiagnosisChange}
+                    handleDiagnosisCheckboxChange={handleDiagnosisCheckboxChange}
+                    handleSpecialityCheckboxChange={
+                      handleSpecialityCheckboxChange
+                    }
+                    setDiagnosisData={setDiagnosisData}
+                    handleMedicalAdviceNoteChange={handleMedicalAdviceNoteChange}
+                    loading={loading}
+                    previousDiagnosisList={previousDiagnosisList}
+                    selectedDiagnosisId={selectedDiagnosisId}
+                    onSelectDiagnosis={handleSelectDiagnosis}
+                    onNewDiagnosis={handleNewDiagnosis}
+                    onSaveDiagnosis={handleSaveDiagnosis}
+                    onPrintDiagnosis={handlePrintDiagnosis}
+                    doctors={doctors}
+                    assistanceDoctors={assistanceDoctors}
+                  />
+                )}
+                {activeTab === "follow-up" && (
+                  <FollowUpCard
+                    followUpData={followUpData}
+                    formData={formData}
+                    handleFollowUpChange={handleFollowUpChange}
+                    onSaveFollowUp={handleSaveFollowUp}
+                    onPrintFollowUp={handlePrintFollowUp}
+                    loading={loading}
+                  />
+                )}
+                {/* {activeTab === "other-tests" && (
                 <OtherTestsCard
                   otherTestData={otherTestData}
                   handleOtherTestChange={handleOtherTestChange}
@@ -4409,42 +4552,42 @@ const DoctorPatientDetails = () => {
                   assistanceDoctors={assistanceDoctors}
                 />
               )} */}
-              {activeTab === "proctoscopy" && (
-                <ProctoscopyCard
-                  proctoscopyData={proctoscopyData}
-                  formData={formData}
-                  handleProctoscopyChange={handleProctoscopyChange}
-                  previousProctoscopyList={previousProctoscopyList}
-                  selectedProctoscopyId={selectedProctoscopyId}
-                  onSelectProctoscopy={handleSelectProctoscopy}
-                  onNewProctoscopy={handleNewProctoscopy}
-                  onSaveProctoscopy={handleSaveProctoscopy}
-                  loading={loading}
-                  uploadBaseUrl={UPLOAD_BASE_URL}
-                  location={currentLocation}
-                />
-              )}
-              {activeTab === "opd-prescription" && (
-                <OpdPrescriptionCard
-                  prescriptionData={prescriptionData}
-                  currentMedicine={currentMedicine}
-                  setCurrentMedicine={setCurrentMedicine}
-                  handleAddMedicine={handleAddMedicine}
-                  handleRemoveMedicine={handleRemoveMedicine}
-                  handlePrescriptionChange={handlePrescriptionChange}
-                  handlePrescriptionCheckboxChange={
-                    handlePrescriptionCheckboxChange
-                  }
-                  previousPrescriptionList={previousPrescriptionList}
-                  selectedPrescriptionId={selectedPrescriptionId}
-                  onSelectPrescription={handleSelectPrescription}
-                  onNewPrescription={handleNewPrescription}
-                  onSavePrescription={handleSaveOpdPrescription}
-                  assistanceDoctors={assistanceDoctors}
-                  location={currentLocation}
-                />
-              )}
-              {/* {activeTab === "surgery-details" && (
+                {activeTab === "proctoscopy" && (
+                  <ProctoscopyCard
+                    proctoscopyData={proctoscopyData}
+                    formData={formData}
+                    handleProctoscopyChange={handleProctoscopyChange}
+                    previousProctoscopyList={previousProctoscopyList}
+                    selectedProctoscopyId={selectedProctoscopyId}
+                    onSelectProctoscopy={handleSelectProctoscopy}
+                    onNewProctoscopy={handleNewProctoscopy}
+                    onSaveProctoscopy={handleSaveProctoscopy}
+                    loading={loading}
+                    uploadBaseUrl={UPLOAD_BASE_URL}
+                    location={currentLocation}
+                  />
+                )}
+                {activeTab === "opd-prescription" && (
+                  <OpdPrescriptionCard
+                    prescriptionData={prescriptionData}
+                    currentMedicine={currentMedicine}
+                    setCurrentMedicine={setCurrentMedicine}
+                    handleAddMedicine={handleAddMedicine}
+                    handleRemoveMedicine={handleRemoveMedicine}
+                    handlePrescriptionChange={handlePrescriptionChange}
+                    handlePrescriptionCheckboxChange={
+                      handlePrescriptionCheckboxChange
+                    }
+                    previousPrescriptionList={previousPrescriptionList}
+                    selectedPrescriptionId={selectedPrescriptionId}
+                    onSelectPrescription={handleSelectPrescription}
+                    onNewPrescription={handleNewPrescription}
+                    onSavePrescription={handleSaveOpdPrescription}
+                    assistanceDoctors={assistanceDoctors}
+                    location={currentLocation}
+                  />
+                )}
+                {/* {activeTab === "surgery-details" && (
                 <SurgeryDetailsCard
                   surgeryData={surgeryData}
                   handleSurgeryChange={handleSurgeryChange}
@@ -4460,57 +4603,58 @@ const DoctorPatientDetails = () => {
                 />
 
               )} */}
-              {activeTab === "discharge-card" && (
-                <DischargeCard
-                  dischargeData={dischargeData}
-                  doctors={doctors}
-                  assistanceDoctors={assistanceDoctors}
-                  fistulaCases={fistulaCases}
-                  handleDischargeChange={handleDischargeChange}
-                  handleDischargeInvestigationChange={
-                    handleDischargeInvestigationChange
-                  }
-                  previousDischargesList={previousDischargesList}
-                  selectedDischargeId={selectedDischargeId}
-                  onSelectDischarge={handleSelectDischarge}
-                  onNewDischarge={handleNewDischarge}
-                  onSaveDischarge={handleSaveDischarge}
-                  onPrintDischarge={handlePrintDischarge}
-                  loading={loading}
-                  location={currentLocation}
-                />
-              )}
-              {![
-                "personal",
-                "patient-history",
-                "diagnosis",
-                "follow-up",
-                "other-tests",
-                "proctoscopy",
-                "opd-prescription",
-                "surgery-details",
-                "discharge-card",
-              ].includes(activeTab) && (
-                  <div className="text-center py-5 animate__animated animate__fadeIn">
-                    <div
-                      className="d-inline-flex p-4 rounded-circle mb-4"
-                      style={{ backgroundColor: "#f0f4f8" }}
-                    >
-                      <FeatherIcon
-                        icon="clock"
-                        size="48"
-                        className="text-muted"
-                      />
-                    </div>
-                    <h4 className="text-muted fw-bold">Coming Soon</h4>
-                    <p className="text-muted">
-                      The {tabs.find((t) => t.id === activeTab).label} section is
-                      under development.
-                    </p>
-                  </div>
+                {activeTab === "discharge-card" && (
+                  <DischargeCard
+                    dischargeData={dischargeData}
+                    doctors={doctors}
+                    assistanceDoctors={assistanceDoctors}
+                    fistulaCases={fistulaCases}
+                    handleDischargeChange={handleDischargeChange}
+                    handleDischargeInvestigationChange={
+                      handleDischargeInvestigationChange
+                    }
+                    previousDischargesList={previousDischargesList}
+                    selectedDischargeId={selectedDischargeId}
+                    onSelectDischarge={handleSelectDischarge}
+                    onNewDischarge={handleNewDischarge}
+                    onSaveDischarge={handleSaveDischarge}
+                    onPrintDischarge={handlePrintDischarge}
+                    loading={loading}
+                    location={currentLocation}
+                  />
                 )}
-            </Card.Body>
-          </Card>
+                {![
+                  "personal",
+                  "patient-history",
+                  "diagnosis",
+                  "follow-up",
+                  "other-tests",
+                  "proctoscopy",
+                  "opd-prescription",
+                  "surgery-details",
+                  "discharge-card",
+                ].includes(activeTab) && (
+                    <div className="text-center py-5 animate__animated animate__fadeIn">
+                      <div
+                        className="d-inline-flex p-4 rounded-circle mb-4"
+                        style={{ backgroundColor: "#f0f4f8" }}
+                      >
+                        <FeatherIcon
+                          icon="clock"
+                          size="48"
+                          className="text-muted"
+                        />
+                      </div>
+                      <h4 className="text-muted fw-bold">Coming Soon</h4>
+                      <p className="text-muted">
+                        The {tabs.find((t) => t.id === activeTab).label} section is
+                        under development.
+                      </p>
+                    </div>
+                  )}
+              </Card.Body>
+            </Card>
+          )}
         </Container>
       </div>
 
@@ -4522,12 +4666,6 @@ const DoctorPatientDetails = () => {
         .animate__fadeIn { animation-name: fadeIn; }
       `}</style>
       <div style={{ display: "none" }}>
-        <DiagnosisPrintView
-          ref={diagPrintRef}
-          patient={formData}
-          historyList={allHistoryDataForPrint}
-          diagnosisList={allDiagnosisDataForPrint}
-        />
         <FollowUpPrintView
           ref={fupPrintRef}
           patient={formData}
@@ -4544,6 +4682,51 @@ const DoctorPatientDetails = () => {
           />
         </div>
       </div>
+
+      <Modal
+        show={showDiagnosisPrintModal}
+        onHide={() => setShowDiagnosisPrintModal(false)}
+        size="xl"
+        centered
+      >
+        <Modal.Header closeButton className="bg-info text-white">
+          <Modal.Title className="fw-bold">
+            <FeatherIcon icon="printer" className="me-2" />
+            Diagnosis Card Preview
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-0 bg-light" style={{ maxHeight: "80vh", overflowY: "auto" }}>
+          <div className="p-4 bg-white shadow-sm mx-auto" style={{ width: "210mm", minHeight: "297mm" }}>
+            <DiagnosisPrintView
+              ref={diagPrintRef}
+              patient={formData}
+              historyList={allHistoryDataForPrint}
+              diagnosisList={allDiagnosisDataForPrint}
+              onPrint={triggerPrintDiagnosis}
+            />
+          </div>
+        </Modal.Body>
+        <Modal.Footer className="bg-white border-top shadow-sm justify-content-center">
+          <Button
+            variant="secondary"
+            onClick={() => setShowDiagnosisPrintModal(false)}
+            style={{ borderRadius: "20px", padding: "8px 30px", fontWeight: "bold" }}
+          >
+            CANCEL
+          </Button>
+          <Button
+            variant="info"
+            className="text-white"
+            onClick={() => {
+              triggerPrintDiagnosis();
+            }}
+            style={{ borderRadius: "20px", padding: "8px 50px", fontWeight: "bold" }}
+          >
+            <FeatherIcon icon="printer" size="18" className="me-2" />
+            PRINT DIAGNOSIS CARD
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       <Modal
         show={showDischargePrintModal}
@@ -4593,4 +4776,4 @@ const DoctorPatientDetails = () => {
   );
 };
 
-export default DoctorPatientDetails;
+export default PersonalDetailsCard;

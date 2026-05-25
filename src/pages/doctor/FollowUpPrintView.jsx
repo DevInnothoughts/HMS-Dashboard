@@ -132,7 +132,7 @@ const FollowUpPrintView = React.forwardRef(({ patient, followUpData = {}, histor
                   <p><b>Age / Sex :</b>&nbsp;{patient?.age || "-"} yrs / {patient?.sex || "-"}</p>
                 </div>
                 <div className="col-md-4-50">
-                  <p><b>Contact No :</b>&nbsp;{patient?.phone || "-"}</p>
+                  <p><b>Contact No :</b>&nbsp;{patient?.phone || "-"}{patient?.mobile_2 ? ` / ${patient?.mobile_2}` : ""}</p>
                 </div>
               </div>
               <div className="row">
@@ -148,7 +148,7 @@ const FollowUpPrintView = React.forwardRef(({ patient, followUpData = {}, histor
                   <p><b>Email Id :</b>&nbsp;{patient?.email || "-"}</p>
                 </div>
                 <div className="col-md-4-50">
-                  <p><b>Referred By :</b>&nbsp;{patient?.ref || "-"}</p>
+                  <p><b>Referred By :</b>&nbsp;{patient?.reference_type === 'dr_ref' ? (patient?.ref_doctor_name || patient?.ref || "-") : (patient?.ref || "-")}</p>
                 </div>
               </div>
             </div>
@@ -263,6 +263,13 @@ const FollowUpPrintView = React.forwardRef(({ patient, followUpData = {}, histor
                     </div>
                   )}
 
+                  {row2.complaints && (
+                    <div className="row">
+                      <div className="col-md-3" style={{ width: "15%" }}><b>Any Other Complaints : </b></div>
+                      <div className="col-md-9" style={{ width: "85%" }}><p>{row2.complaints}</p></div>
+                    </div>
+                  )}
+
                   {/* Medication History Table */}
                   {row2.medication_history && row2.medication_history.length > 0 && (
                     <div className="row" style={{ marginTop: "10px" }}>
@@ -289,6 +296,49 @@ const FollowUpPrintView = React.forwardRef(({ patient, followUpData = {}, histor
                           </tbody>
                         </table>
                       </div>
+                    </div>
+                  )}
+
+                  {/* Previous Investigation */}
+                  {(() => {
+                    const invList = (row2.newInvestigation || "").split(",");
+                    const invComments = (row2.newInvestigation_comment || "").split(",");
+                    const knownInv = ["HB", "BSL-R", "Bleding Time-BT", "Clotting Time-BT", "PT INR", "HIV", "Hbsag", "SR.Creatinine", "Vit B12"];
+                    const filtered = knownInv.filter(k => invList.includes(k));
+                    
+                    if (filtered.length > 0) {
+                      return (
+                        <div className="row">
+                          <div className="col-md-3" style={{ width: "15%" }}><b>Previous Investigation: </b></div>
+                          <div className="col-md-9" style={{ width: "85%" }}>
+                            {filtered.map((inv, i) => {
+                              const idx = knownInv.indexOf(inv);
+                              const comment = invComments[idx];
+                              return (
+                                <span key={i}>
+                                  {inv} {comment ? `- ${comment}` : ""}
+                                  {i < filtered.length - 1 ? " , " : ""}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+
+                  {row2.investigation && (
+                    <div className="row">
+                      <div className="col-md-3" style={{ width: "15%" }}><b>Investigation Details: </b></div>
+                      <div className="col-md-9" style={{ width: "85%" }}>{row2.investigation}</div>
+                    </div>
+                  )}
+
+                  {row2.knowncaseof && (
+                    <div className="row">
+                      <div className="col-md-3" style={{ width: "15%" }}><b>Known Case Of: </b></div>
+                      <div className="col-md-9" style={{ width: "85%" }}>{row2.knowncaseof}</div>
                     </div>
                   )}
                 </div>

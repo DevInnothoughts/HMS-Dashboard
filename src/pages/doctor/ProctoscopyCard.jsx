@@ -138,9 +138,9 @@ const ProctoscopyCard = ({
           {/* Column 4: AI Tool */}
           <Col md={3}>
             <div className="mb-1">
-              <h6 className="fw-bold mb-0" style={{ color: "#006064", fontSize: "12px" }}>
+              <h7 className="fw-bold mb-0" style={{ color: "#006064", fontSize: "12px" }}>
                 <FeatherIcon icon="cpu" size="14" className="me-2" />AI Proctoscopy
-              </h6>
+              </h7>
               <Button
                 variant="primary"
                 size="sm"

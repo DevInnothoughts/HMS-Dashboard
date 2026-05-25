@@ -1,6 +1,6 @@
 import React from "react";
 
-const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagnosisList = [] }, ref) => {
+const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagnosisList = [], onPrint }, ref) => {
   const currentDate = new Date().toISOString().split('T')[0];
 
   // Helper to format referral name based on legacy logic
@@ -81,7 +81,38 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
             float: left;
           }
         }
+        .print-btn-float {
+          position: fixed;
+          bottom: 30px;
+          right: 30px;
+          z-index: 9999;
+          border-radius: 50px;
+          padding: 12px 30px;
+          font-weight: bold;
+          text-transform: uppercase;
+          box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+          transition: all 0.3s ease;
+          background-color: #00838f;
+          color: white;
+          border: none;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .print-btn-float:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+          background-color: #006064;
+        }
       `}</style>
+
+      <button 
+        className="print-btn-float d-print-none" 
+        onClick={onPrint}
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+        Print Diagnosis
+      </button>
 
       <div className="padded">
         {/* PATIENT INFORMATION */}
@@ -552,28 +583,34 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
                 <p className="text-right"><b>Date : </b>{row3.date_diagnosis}</p>
               </div>
             </div>
-            {row3.diagnosis && (
+            {row3.diagnosis_text && (
               <div className="row">
                 <div className="symptom-label"><b>Diagnosis: </b></div>
-                <div className="symptom-values"><p>{row3.diagnosis}</p></div>
+                <div className="symptom-values"><p>{row3.diagnosis_text}</p></div>
               </div>
             )}
-            {row3.investigationorders && (
+            {row3.investigation_orders && (
               <div className="row">
                 <div className="symptom-label"><b>Investigation Orders: </b></div>
-                <div className="symptom-values"><p>{row3.investigationorders}</p></div>
+                <div className="symptom-values"><p>{row3.investigation_orders}</p></div>
               </div>
             )}
-            {row3.diagnosisAdvice && (
+            {(row3.advice_types?.length > 0 || row3.diagnosis_comment) && (
               <div className="row">
                 <div className="symptom-label"><b>Advice Type: </b></div>
-                <div className="symptom-values"><p>{row3.diagnosisAdvice}</p></div>
+                <div className="symptom-values">
+                  <p>
+                    {row3.advice_types?.join(' , ')}
+                    {row3.advice_types?.length > 0 && row3.diagnosis_comment ? ' , ' : ''}
+                    {row3.diagnosis_comment ? `Comment: ${row3.diagnosis_comment}` : ''}
+                  </p>
+                </div>
               </div>
             )}
 
             {/* Medicines Prescribed */}
             {(() => {
-              const checksub = (row3.medicines || "").split(',').map(s => s.trim());
+              const checksub = row3.medicines_prescribed || [];
               const fixed = ['AAC', 'IBS', 'NSAIDS', 'ANTIBIOTICS', 'ANTACID'];
               const filteredFixed = fixed.filter(m => checksub.includes(m));
               const other = checksub.filter(m => m && !fixed.includes(m)).join(', ');
@@ -582,7 +619,9 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
                   <div className="row">
                     <div className="symptom-label"><b>Medicines Prescribed :</b></div>
                     <div className="symptom-values">
-                      {filteredFixed.map(m => m + " , ")}
+                      {filteredFixed.map((m, i, arr) => (
+                        <span key={m}>{m}{i < arr.length - 1 || other ? " , " : ""}</span>
+                      ))}
                       {other && <span style={{ width: "100%", float: "left", paddingTop: "5px" }}><b>Any other : </b>{other}</span>}
                     </div>
                   </div>
@@ -597,28 +636,28 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
                 <div className="symptom-values"><p>{row3.advice}</p></div>
               </div>
             )}
-            {row3.adviceComment && (
+            {row3.surgical_advice && (
               <div className="row">
                 <div className="symptom-label"><b> Advice Comment: </b></div>
-                <div className="symptom-values"><p>{row3.adviceComment}</p></div>
+                <div className="symptom-values"><p>{row3.surgical_advice}</p></div>
               </div>
             )}
-            {row3.comment && (
+            {row3.general_comment && (
               <div className="row">
                 <div className="symptom-label"><b> Comment: </b></div>
-                <div className="symptom-values"><p>{row3.comment}</p></div>
+                <div className="symptom-values"><p>{row3.general_comment}</p></div>
               </div>
             )}
-            {row3.categoryComment && (
+            {row3.category_comment && (
               <div className="row">
                 <div className="symptom-label"><b>Category Comment: </b></div>
-                <div className="symptom-values"><p>{row3.categoryComment}</p></div>
+                <div className="symptom-values"><p>{row3.category_comment}</p></div>
               </div>
             )}
 
             {/* Advice */}
             {(() => {
-              const checksub = (row3.medical_mx || "").split(',').map(s => s.trim());
+              const checksub = row3.medical_advice || [];
               const advice = ['MCDPA', 'UROFLOWMETRY', 'CHT', 'BIOFEEDBACK', 'MANOMETRY', 'COLO', 'GASTRO', 'LAB INVESTIGATION', 'DIET', 'X-RAY', 'CT', 'ULTRASONOGRAPHY', 'ECHO', 'MRI', 'DOPPLER', '3D ENDO ANAL IMAGING', 'BUGSPEAKS'];
               const filteredAdvice = advice.filter(a => checksub.includes(a));
               if (filteredAdvice.length > 0) {
@@ -634,7 +673,7 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
 
             {/* Other */}
             {(() => {
-              const checksub = (row3.other || "").split(',').map(s => s.trim());
+              const checksub = row3.categories || [];
               const options = ['Insurance', 'Reimbursement', 'Workshop', 'MCDPA', 'PDC'];
               const filteredOther = options.filter(o => checksub.includes(o));
               if (filteredOther.length > 0) {

@@ -53,41 +53,36 @@
 
 .p-datatable .p-datatable-tbody>tr.row-status-unconfirmed>td {
   background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+.p-datatable .p-datatable-tbody>tr.row-status-confirmed>td {
+  background-color: #0ea5e9 !important;
+  color: #ffffff !important;
 }
 
 .p-datatable .p-datatable-tbody>tr.row-status-history>td {
-  background-color: #FFA500 !important;
+  background-color: #f43f5e !important;
+  color: #ffffff !important;
 }
 
 .p-datatable .p-datatable-tbody>tr.row-status-execution>td {
-  background-color: #FFFF00 !important;
+  background-color: #f59e0b !important;
+  color: #ffffff !important;
 }
 
 .p-datatable .p-datatable-tbody>tr.row-status-consultation>td {
-  background-color: #800080 !important;
+  background-color: #8b5cf6 !important;
+  color: #ffffff !important;
 }
 
 .p-datatable .p-datatable-tbody>tr.row-status-receipt>td {
-  background-color: #008000 !important;
+  background-color: #10b981 !important;
+  color: #ffffff !important;
 }
 
 .p-datatable .p-datatable-tbody>tr>td {
   color: #000000 !important;
-}
-
-.p-datatable .p-datatable-tbody>tr.row-status-history>td {
-  background-color: #FFA500 !important;
-  color: #000000 !important;
-}
-
-.p-datatable .p-datatable-tbody>tr.row-status-consultation>td {
-  background-color: #800080 !important;
-  color: #ffffff !important;
-}
-
-.p-datatable .p-datatable-tbody>tr.row-status-receipt>td {
-  background-color: #008000 !important;
-  color: #ffffff !important;
 }
 
 .datatable-compact-style .p-datatable-header,
@@ -197,4 +192,41 @@
 .datatable-medium-small .p-datatable-tbody>tr>td {
   font-size: 0.730rem !important;
   padding: 0.5rem 0.5rem !important;
+}
+
+.color-legend-pill {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 12px;
+  margin-bottom: 8px;
+  padding: 5px 12px;
+  border-radius: 30px;
+  cursor: pointer;
+  border: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+
+  p {
+    display: inline;
+    margin: 0;
+    font-size: 11px;
+    font-weight: 600;
+    color: #334155;
+  }
+
+  .status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+  }
+
+  &:hover {
+    transform: translateY(-1.5px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    border-color: var(--status-hover-color, #0ea5e9) !important;
+    background-color: var(--status-hover-bg, rgba(14, 165, 233, 0.08)) !important;
+  }
 }

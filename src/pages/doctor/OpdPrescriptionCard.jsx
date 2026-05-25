@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Row, Col, Form, Button, Table, Dropdown } from "react-bootstrap";
+import { Row, Col, Form, Button, Table, Dropdown, OverlayTrigger, Tooltip } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
@@ -218,7 +218,8 @@ const OpdPrescriptionCard = ({
               Prescription Type <span className="text-danger">*</span>
             </Form.Label>
             <Form.Select
-              value={prescriptionData.prescription_type}
+              required
+              value={prescriptionData.prescription_type || ""}
               onChange={(e) =>
                 handlePrescriptionChange("prescription_type", e.target.value)
               }
@@ -255,13 +256,14 @@ const OpdPrescriptionCard = ({
           </Col>
           <Col md={3} className="mb-3">
             <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>
-              Assistant Doctor
+              Assistant Doctor <span className="text-danger">*</span>
             </Form.Label>
             <Form.Select
+              required
               value={
-                prescriptionData.prescription_type === "Urology"
+                (prescriptionData.prescription_type === "Urology"
                   ? prescriptionData.udoctor_id
-                  : prescriptionData.doctor_id
+                  : prescriptionData.doctor_id) || ""
               }
               onChange={(e) =>
                 handlePrescriptionChange(
@@ -659,7 +661,8 @@ const OpdPrescriptionCard = ({
               Next Appointment <span className="text-danger">*</span>
             </Form.Label>
             <Form.Select
-              value={prescriptionData.patient_type}
+              required
+              value={prescriptionData.patient_type || ""}
               onChange={(e) =>
                 handlePrescriptionChange("patient_type", e.target.value)
               }
@@ -686,7 +689,7 @@ const OpdPrescriptionCard = ({
             <Form.Control
               required
               type="date"
-              value={prescriptionData["next-appo-date"]}
+              value={prescriptionData["next-appo-date"] || ""}
               onChange={(e) =>
                 handlePrescriptionChange("next-appo-date", e.target.value)
               }
@@ -711,17 +714,48 @@ const OpdPrescriptionCard = ({
 
         <hr className="my-4" style={{ opacity: "0.1" }} />
 
-        <h6
-          className="fw-bold mb-3 d-flex align-items-center"
-          style={{ color: "#005979ff", fontSize: "14px", padding: "5px" }}
-        >
-          <FeatherIcon
-            icon="plus-circle"
-            size="16"
-            className="me-2 text-success"
-          />{" "}
-          Meditative Advice & Pharmacy Orders
-        </h6>
+        <div className="d-flex justify-content-between align-items-center mb-3">
+          <h6
+            className="fw-bold m-0 d-flex align-items-center"
+            style={{ color: "#005979ff", fontSize: "14px", padding: "5px" }}
+          >
+            <FeatherIcon
+              icon="plus-circle"
+              size="16"
+              className="me-2 text-success"
+            />{" "}
+            Meditative Advice & Pharmacy Orders <span className="text-danger">*</span>
+          </h6>
+          <Form.Check
+            type="checkbox"
+            label="AAC"
+            id="aac-checkbox"
+            checked={
+              prescriptionData.medicines?.some(m => m.name === "Anoac H tablet") &&
+              prescriptionData.medicines?.some(m => m.name === "Anoac Cream") &&
+              prescriptionData.medicines?.some(m => m.name === "Constac Powder")
+            }
+            onChange={(e) => {
+              const medsList = prescriptionData.medicines || [];
+              if (e.target.checked) {
+                const aacMeds = [
+                  { medicine_id: null, name: "Anoac H tablet", qty: "1", times: [], days: "", mrp: "0" },
+                  { medicine_id: null, name: "Anoac Cream", qty: "1", times: [], days: "", mrp: "0" },
+                  { medicine_id: null, name: "Constac Powder", qty: "1", times: [], days: "", mrp: "0" }
+                ];
+                const medsToAdd = aacMeds.filter(newMed => !medsList.some(m => m.name === newMed.name));
+                handlePrescriptionChange("medicines", [...medsList, ...medsToAdd]);
+              } else {
+                const updatedMeds = medsList.filter(
+                  med => !["Anoac H tablet", "Anoac Cream", "Constac Powder"].includes(med.name)
+                );
+                handlePrescriptionChange("medicines", updatedMeds);
+              }
+            }}
+            className="fw-bold"
+            style={{ color: "#00838f", fontSize: "14px" }}
+          />
+        </div>
 
         <Row className="align-items-end g-2">
           <Col md={3} className="position-relative" style={{ zIndex: showMedicineDropdown ? 1050 : 1 }}>
@@ -729,7 +763,7 @@ const OpdPrescriptionCard = ({
               className="fw-bold text-muted"
               style={{ fontSize: "11px" }}
             >
-              Advice Medicine
+              Prescribed Medicines
             </Form.Label>
             <Form.Control
               type="text"
@@ -875,20 +909,40 @@ const OpdPrescriptionCard = ({
                     }}
                     className="m-0 p-0"
                   />
-                  <label
-                    htmlFor={`inline-slot-${slot}`}
-                    className="text-center m-0 mt-1"
-                    style={{
-                      fontSize: "9px",
-                      lineHeight: "1",
-                      cursor: "pointer",
-                      fontWeight: "600",
-                      color: "#555",
-                      whiteSpace: "pre-wrap",
-                    }}
-                  >
-                    {slot.split(" ").join("\n")}
-                  </label>
+                  {slot === "LA" ? (
+                    <OverlayTrigger placement="top" overlay={<Tooltip id="tooltip-la">Local Application</Tooltip>}>
+                      <label
+                        htmlFor={`inline-slot-${slot}`}
+                        className="text-center m-0 mt-1"
+                        style={{
+                          fontSize: "9px",
+                          lineHeight: "1",
+                          cursor: "help",
+                          fontWeight: "600",
+                          color: "#555",
+                          whiteSpace: "pre-wrap",
+                          borderBottom: "1px dashed #555"
+                        }}
+                      >
+                        {slot.split(" ").join("\n")}
+                      </label>
+                    </OverlayTrigger>
+                  ) : (
+                    <label
+                      htmlFor={`inline-slot-${slot}`}
+                      className="text-center m-0 mt-1"
+                      style={{
+                        fontSize: "9px",
+                        lineHeight: "1",
+                        cursor: "pointer",
+                        fontWeight: "600",
+                        color: "#555",
+                        whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      {slot.split(" ").join("\n")}
+                    </label>
+                  )}
                 </div>
               ))}
             </div>

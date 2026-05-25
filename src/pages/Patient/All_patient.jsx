@@ -4,7 +4,7 @@ import { FilterMatchMode } from "primereact/api";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import FeatherIcon from "feather-icons-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { decodeJwt } from "../../utils/decode-jwt";
 import Swal from "sweetalert2";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
@@ -251,7 +251,7 @@ const formatDate = (dateString) => {
 };
 
 export default function All_patient() {
-  const location = "demo";
+  const location = useLocation();
   const [first, setFirst] = useState(0);
   const [rows, setRows] = useState(10);
   const [patients, setPatients] = useState([]);
@@ -302,6 +302,7 @@ export default function All_patient() {
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isDbSearching, setIsDbSearching] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditPatientModal, setShowEditPatientModal] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
@@ -562,6 +563,61 @@ export default function All_patient() {
     setShowAddModal(false);
   };
 
+  const searchFromDatabase = async (query) => {
+    if (!currentLocation || currentLocation === "default" || isDbSearching) return;
+
+    setIsDbSearching(true);
+    try {
+      const response = await fetch(
+        `${BASE_URL}/V1/patient/searchPatient?query=${encodeURIComponent(
+          query
+        )}&location=${currentLocation}`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.data && data.data.length > 0) {
+          setPatients((prev) => {
+            // Filter out patients that are already in the list to avoid duplicates
+            const existingIds = new Set(prev.map((p) => p.patient_id));
+            const newUniquePatients = data.data.filter(
+              (p) => !existingIds.has(p.patient_id)
+            );
+            return [...prev, ...newUniquePatients];
+          });
+          // toast.success(`Found ${data.data.length} matching patients in database.`);
+        }
+      }
+    } catch (error) {
+      console.error("Error searching from database:", error);
+    } finally {
+      setIsDbSearching(false);
+    }
+  };
+
+  useEffect(() => {
+    const searchValue = filters1.global.value;
+    if (!searchValue || searchValue.length < 3) return;
+
+    // Check if any patient in the current list matches the search criteria
+    const hasLocalMatches = patients.some((p) => {
+      const lowerSearch = searchValue.toLowerCase();
+      return (
+        (p.name && p.name.toLowerCase().includes(lowerSearch)) ||
+        (p.phone && p.phone.includes(searchValue)) ||
+        (p.Uid_no && p.Uid_no.toLowerCase().includes(lowerSearch))
+      );
+    });
+
+    if (!hasLocalMatches) {
+      const delayDebounceFn = setTimeout(() => {
+        searchFromDatabase(searchValue);
+      }, 800); // 800ms debounce
+
+      return () => clearTimeout(delayDebounceFn);
+    }
+  }, [filters1.global.value, patients]);
+
   // const fetchPatientsData = async () => {
   //   if (!currentLocation || currentLocation === "default") {
   //     console.warn("Location not set yet, skipping patient fetch.");
@@ -657,6 +713,18 @@ export default function All_patient() {
       fetchDropdownData();
     }
   }, [currentLocation, fromDate, toDate]);
+
+  useEffect(() => {
+    if (location.state?.openEditForPhone && patients.length > 0) {
+      const patientToEdit = patients.find(p => String(p.phone) === String(location.state.openEditForPhone));
+      if (patientToEdit) {
+         handleEditPatient(patientToEdit);
+         const newState = { ...location.state };
+         delete newState.openEditForPhone;
+         navigate(location.pathname, { replace: true, state: newState });
+      }
+    }
+  }, [location.state?.openEditForPhone, patients, navigate, location.pathname, location.state]);
 
   const formatDateToDisplay = (dateString) => {
     if (!dateString) return "";
@@ -878,6 +946,7 @@ export default function All_patient() {
       // ref: formData.ref
       reference_type: reference_type,
       ref: ref,
+      ConfirmPatient: 1,
       additional_info: {
         nationality: formData.nationality,
         language: formData.language,
@@ -917,6 +986,14 @@ export default function All_patient() {
         setShowEditPatientModal(false);
         setSelectedPatient(null);
         setFormData({});
+        
+        handlePrint(updatedPatientData);
+
+        if (location.state?.returnToAppointment) {
+           navigate("/appointments", { 
+               state: { registered_appointment_id: location.state.appointment_id } 
+           });
+        }
       } else {
         Swal.fire({
           icon: "error",
@@ -2179,7 +2256,7 @@ export default function All_patient() {
                 marginBottom: "5px",
               }}
             >
-              Other Detail
+              Reference Detail
             </label>
             <div className="controls">
               <input
@@ -2561,7 +2638,7 @@ export default function All_patient() {
             >
               Search
             </span>
-            <InputGroup>
+            <InputGroup style={{ position: 'relative' }}>
               <Form.Control
                 type="search"
                 value={filters1.global.value || ""}
@@ -2584,6 +2661,18 @@ export default function All_patient() {
                   transition: "all 0.3s ease",
                 }}
               />
+              {isDbSearching && (
+                <div style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  zIndex: 5,
+                  pointerEvents: 'none'
+                }}>
+                  <Spinner animation="border" size="sm" variant="info" style={{ width: '12px', height: '12px' }} />
+                </div>
+              )}
             </InputGroup>
           </Form.Group>
         </div>
@@ -2673,6 +2762,32 @@ export default function All_patient() {
           >
             <FeatherIcon icon="refresh-ccw" size={12} className="me-1" />
             Refresh
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setFromDate(null);
+              setToDate(null);
+              setFilters1({
+                global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+              });
+            }}
+            style={{
+              backgroundColor: "#ff9800",
+              border: "none",
+              borderRadius: "8px",
+              padding: "5px 5px",
+              fontSize: "12px",
+              fontWeight: "500",
+              color: "white",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              marginTop: "13px",
+            }}
+          >
+            <FeatherIcon icon="filter" size={12} className="me-1" />
+            Clear Filter
           </Button>
         </div>
       </div>
@@ -3370,7 +3485,7 @@ export default function All_patient() {
                       className="small fw-bold mb-3"
                       style={{ fontSize: "12px" }}
                     >
-                      Alternate Contact Number
+                      Alt. Contact Number
                     </Form.Label>
                     <Form.Control
                       type="number"
@@ -3485,7 +3600,7 @@ export default function All_patient() {
                       className="small fw-bold mb-3"
                       style={{ fontSize: "12px" }}
                     >
-                      Identity Document
+                      Identity Proof Type
                     </Form.Label>
                     <Form.Select
                       name="identity"
@@ -3516,7 +3631,7 @@ export default function All_patient() {
                       className="small fw-bold mb-3"
                       style={{ fontSize: "12px" }}
                     >
-                      Identity Number
+                      Identity Proof Details
                     </Form.Label>
                     <Form.Control
                       type="text"
@@ -3737,7 +3852,7 @@ export default function All_patient() {
                     className="small fw-bold mb-3"
                     style={{ fontSize: "12px" }}
                   >
-                    Add Specific Work Pattern
+                    Work Type
                   </Form.Label>
                   <div
                     className="p-3 border rounded d-flex flex-wrap gap-4"
@@ -3830,21 +3945,7 @@ export default function All_patient() {
         </Modal.Body>
 
         <Modal.Footer style={{ backgroundColor: "#f1f4f6", padding: "5px" }}>
-          <Button
-            variant="info"
-            className="px-3"
-            style={{
-              borderRadius: "10px",
-              backgroundColor: "#00bcd4",
-              borderColor: "#00bcd4",
-              fontSize: "12px",
-              padding: "10px",
-            }}
-            onClick={() => handlePrint(selectedPatient)}
-          >
-            <FeatherIcon icon="printer" size="14" className="me-1" />{" "}
-            Registration Form
-          </Button>
+
           <Button
             variant="secondary"
             className="px-3"
@@ -3993,7 +4094,21 @@ export default function All_patient() {
                         field="name"
                         header="Patient Name"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => rowData.name || "-"}
+                        body={(rowData) => (
+                          <span>
+                            {(rowData.patient_type === 1 ||
+                              rowData.patient_type === true) && (
+                                <span className="me-1" title="VIP Patient">
+                                  <FeatherIcon
+                                    icon="star"
+                                    size="16"
+                                    style={{ color: "#ffc107", fill: "#ffc107" }}
+                                  />
+                                </span>
+                              )}
+                            {rowData.name || "-"}
+                          </span>
+                        )}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",

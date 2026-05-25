@@ -63,7 +63,7 @@ const FollowUpCard = ({ followUpData, formData, handleFollowUpChange, onSaveFoll
             <Form.Control as="textarea" readOnly rows={2} value={followUpData.advice} onChange={(e) => handleFollowUpChange("advice", e.target.value)} placeholder="Instructions for the patient..." style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px", cursor: "not-allowed", backgroundColor: "#ebeceeff" }} />
           </Col>
           <Col md={4} className="mb-1">
-            <Form.Label className="fw-bold mb-3" style={{ fontSize: "11px", color: "#006064" }}>Plan</Form.Label>
+            <Form.Label className="fw-bold mb-3" style={{ fontSize: "11px", color: "#006064" }}>Treatment Plan</Form.Label>
             <Form.Control as="textarea" readOnly rows={2} value={followUpData.plan} onChange={(e) => handleFollowUpChange("plan", e.target.value)} placeholder="Next steps in treatment..." style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px", cursor: "not-allowed", backgroundColor: "#ebeceeff" }} />
           </Col>
           <Col md={4} className="mb-1">
@@ -75,7 +75,7 @@ const FollowUpCard = ({ followUpData, formData, handleFollowUpChange, onSaveFoll
             <Form.Control type="date" readOnly value={followUpData.first_visit_date} onChange={(e) => handleFollowUpChange("first_visit_date", e.target.value)} style={{ cursor: "not-allowed", backgroundColor: "#ebeceeff", borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
           </Col>
           <Col md={4} className="mb-1">
-            <Form.Label className="fw-bold mb-3" style={{ fontSize: "11px", color: "#006064" }}>Follow Up Visit No</Form.Label>
+            <Form.Label className="fw-bold mb-3" style={{ fontSize: "11px", color: "#006064" }}>Visit Number</Form.Label>
             <Form.Control type="number" value={followUpData.visit_count} onChange={(e) => handleFollowUpChange("visit_count", e.target.value)} readOnly style={{ cursor: "not-allowed", backgroundColor: "#ebeceeff", borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
           </Col>
         </Row>

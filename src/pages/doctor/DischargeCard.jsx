@@ -321,9 +321,9 @@ const DischargeCard = ({
               </Dropdown.Toggle>
 
               <Dropdown.Menu
-                className="w-100 p-3 shadow-lg border-0 animate__animated animate__fadeIn animate__faster"
+                className="w-200 p-7 shadow-lg border-0 animate__animated animate__fadeIn animate__faster"
                 style={{
-                  maxHeight: "350px",
+                  maxHeight: "250px",
                   overflowY: "auto",
                   borderRadius: "15px",
                   zIndex: 1050

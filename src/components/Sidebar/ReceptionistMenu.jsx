@@ -3,11 +3,11 @@ import { Link } from "react-router-dom";
 import FeatherIcon from "feather-icons-react";
 import { FaFileInvoiceDollar } from "react-icons/fa";
 
-const ReceptionistMenu = ({ 
-    activeIndex, 
-    handleMenuClick, 
-    isCollapsed, 
-    location 
+const ReceptionistMenu = ({
+    activeIndex,
+    handleMenuClick,
+    isCollapsed,
+    location
 }) => {
     const reportRoutes = [
         "/appointmentConversion", "/BillingReport", "/BirthdayAlert", "/cashDepositReport", "/conditionWiseReport",
@@ -20,6 +20,31 @@ const ReceptionistMenu = ({
 
     return (
         <ul>
+            {!isCollapsed && (
+                <li style={{ textAlign: 'center', marginBottom: '15px' }}>
+                    <span
+                        style={{
+                            fontSize: "13px",
+                            fontWeight: "700",
+                            color: "#2a96d0ff",
+                            background: "rgba(26, 110, 124, 0.14)",
+                            padding: "5px 12px",
+                            borderRadius: "10px",
+                            border: "1px solid #2a96d087",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.5px",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: "85%",
+                            gap: "8px",
+                        }}
+                    >
+                        <i className="fa fa-user-circle-o" style={{ fontSize: "14px", color: "#2a96d0ff" }}></i>
+                        {localStorage.getItem("accountType") || "Receptionist"}
+                    </span>
+                </li>
+            )}
             <li className={`menu-item ${activeIndex === "/reception-dashboard" ? "active" : ""}`}>
                 <Link to="/reception-dashboard">
                     <div className="icon-item">
@@ -32,18 +57,27 @@ const ReceptionistMenu = ({
             <li className={`menu-item ${activeIndex === "/patients" ? "active" : ""}`}>
                 <Link to="/patients">
                     <div className="icon-item">
-                        <i className="fa fa-wheelchair"></i>
+                        <i className="fa fa-user"></i>
                     </div>
                     {!isCollapsed && <span>Patients</span>}
                 </Link>
             </li>
 
-            <li className={`menu-item ${activeIndex === "/call-logs" ? "active" : ""}`}>
-                <Link to="/call-logs">
+            <li className={`menu-item ${activeIndex === "/leads" || location.pathname === "/leads" ? "active" : ""}`}>
+                <Link to="/leads">
                     <div className="icon-item">
-                        <i className="fa fa-phone"></i>
+                        <i className="fa fa-bar-chart"></i>
                     </div>
-                    {!isCollapsed && <span>Call Logs</span>}
+                    {!isCollapsed && <span>Enquiries</span>}
+                </Link>
+            </li>
+
+            <li className={`menu-item ${activeIndex === "/calling-calendar" ? "active" : ""}`}>
+                <Link to="/calling-calendar">
+                    <div className="icon-item">
+                        <i className="fa fa-phone-square"></i>
+                    </div>
+                    {!isCollapsed && <span>Calling Calendar</span>}
                 </Link>
             </li>
 
@@ -52,7 +86,7 @@ const ReceptionistMenu = ({
                     <div className="icon-item">
                         <i className="fa fa-calendar"></i>
                     </div>
-                    {!isCollapsed && <span>Manage Appointments</span>}
+                    {!isCollapsed && <span>Appointments</span>}
                 </Link>
             </li>
 
@@ -79,9 +113,10 @@ const ReceptionistMenu = ({
                     <div className="icon-item">
                         <FeatherIcon icon="file-text" />
                     </div>
-                    {!isCollapsed && <span>OPD Receipt</span>}
+                    {!isCollapsed && <span>OPD Receipts</span>}
                 </Link>
             </li>
+
 
             <li className={`menu-item ${activeIndex === "/daily-closing" ? "active" : ""}`}>
                 <Link to="/daily-closing">
@@ -106,7 +141,7 @@ const ReceptionistMenu = ({
                     <div className="icon-item">
                         <i className="fa fa-list-alt"></i>
                     </div>
-                    {!isCollapsed && <span>Manage Reports</span>}
+                    {!isCollapsed && <span>Reports</span>}
                     {!isCollapsed && (
                         <i className={`fa ${isReportActive ? "fa-angle-down" : "fa-angle-right"}`}></i>
                     )}

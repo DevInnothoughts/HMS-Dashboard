@@ -8,6 +8,8 @@ import AddBedAllotment from "../pages/AddBedAllotment";
 // import Faq from "../pages/Utility/Faq";
 import ErrorPage from "../pages/Utility/Errorpage";
 import Call_logs from "../pages/Utility/Call_logs";
+import Leads from "../pages/Utility/Leads";
+import CallingCalendar from "../pages/Utility/CallingCalendar";
 import IpdPaymentData from "../pages/Utility/IpdPaymentData";
 import DailyClosing from "../pages/DailyClosing";
 
@@ -24,6 +26,8 @@ export const UtilityRoutes = (
     {/* <Route path="/faq" element={<Faq />} /> */}
     {/* <Route path="/events" element={<Event_management />} /> */}
     <Route path="/call-logs" element={<Call_logs />} />
+    <Route path="/leads" element={<Leads />} />
+    <Route path="/calling-calendar" element={<CallingCalendar />} />
     <Route path="*" element={<ErrorPage />} />
   </>
 );

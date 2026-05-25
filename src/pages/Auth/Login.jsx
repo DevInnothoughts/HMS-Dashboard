@@ -59,7 +59,6 @@ export default function Login() {
   const [errorMessage, setErrorMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    department: "",
     accountType: "",
     jobLocation: "",
     email: "",
@@ -80,31 +79,11 @@ export default function Login() {
 
     setFormData((prev) => {
       const nextData = { ...prev, [name]: value };
-      if (name === "department") {
-        nextData.accountType = "";
-        nextData.jobLocation = "";
-      }
       if (name === "accountType") {
         nextData.jobLocation = "";
       }
       return nextData;
     });
-  };
-
-  const getAccountOptions = () => {
-    if (formData.department === "OPD")
-      return [
-        { value: "reception", label: "Reception" },
-        // { value: "doctor", label: "Doctor" },
-      ];
-    if (formData.department === "IPD") {
-      return [
-        { value: "reception", label: "Reception" },
-        { value: "doctor", label: "Doctor" },
-        { value: "nurse", label: "Nurse" },
-      ];
-    }
-    return [];
   };
 
   const handleSubmit = async (e) => {
@@ -117,13 +96,27 @@ export default function Login() {
       return;
     }
 
+    let backendAccountType = "";
+    let departmentVal = "";
+
+    if (accountType === "Reception") {
+      backendAccountType = "reception";
+      departmentVal = "OPD";
+    } else if (accountType === "Doctor") {
+      backendAccountType = "doctor";
+      departmentVal = "OPD";
+    } else if (accountType === "IPD") {
+      backendAccountType = "reception";
+      departmentVal = "IPD";
+    }
+
     setIsLoading(true);
 
     try {
       const response = await fetch(`${BASE_URL}/V1/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, accountType, jobLocation }),
+        body: JSON.stringify({ email, password, accountType: backendAccountType, jobLocation }),
       });
 
       const data = await response.json();
@@ -132,17 +125,13 @@ export default function Login() {
         localStorage.setItem("isAuthenticated", "true");
         localStorage.setItem("accountType", data.data.role);
         localStorage.setItem("token", data.data.token);
-        localStorage.setItem("department", formData.department);
+        localStorage.setItem("department", departmentVal);
         localStorage.setItem("jobLocation", formData.jobLocation);
 
         if (data.data.role === "doctor") {
-          if (formData.department === "IPD") {
-            navigate("/doctor-ipd-dashboard", { replace: true });
-          } else {
-            navigate("/doctor-opd-dashboard", { replace: true });
-          }
+          navigate("/doctor-dashboard", { replace: true });
         } else {
-          if (formData.department === "IPD") {
+          if (departmentVal === "IPD") {
             navigate("/ipd-dashboard", { replace: true });
           } else {
             navigate("/reception-dashboard", { replace: true });
@@ -187,20 +176,17 @@ export default function Login() {
             </span>
             ”
           </p>
+
+          <div style={dividerStyle}></div>
+
           <div style={focusedTaglineStyle}>
             India’s Most Trusted Proctology Clinic
           </div>
-          <div style={dividerStyle}></div>
-          <p style={brandDescStyle}>
-            Specialized care for Proctology, Laparoscopy, and Vascular surgery
-            including Piles, Fistula, Hernia, Varicose Veins, and Urology.
-          </p>
         </div>
 
         <div style={formSectionStyle}>
           <div style={{ textAlign: "center", marginBottom: "20px" }}>
             <p style={welcomeTitleStyle}>Hospital Management System</p>
-            <h2 style={brandTaglineStyle}>Staff Login</h2>
 
             {errorMessage ? (
               <div style={errorBannerStyle}>
@@ -208,7 +194,7 @@ export default function Login() {
               </div>
             ) : (
               <p
-                style={{ color: "#718096", fontSize: "13px", marginTop: "5px" }}
+                style={{ color: "#718096", fontSize: "13px" }}
               >
                 Enter your credentials to continue
               </p>
@@ -217,38 +203,6 @@ export default function Login() {
 
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-15">
-              <Form.Label style={labelStyle}>Department Type</Form.Label>
-              <Form.Select
-                name="department"
-                value={formData.department}
-                onChange={handleChange}
-                style={{
-                  ...inputStyle,
-                  borderColor:
-                    shakingField === "department"
-                      ? "#e53e3e"
-                      : inputStyle.borderColor,
-                  animation:
-                    shakingField === "department"
-                      ? "shake 0.5s ease-in-out"
-                      : "none",
-                  backgroundColor:
-                    shakingField === "department"
-                      ? "#fff5f5"
-                      : inputStyle.backgroundColor,
-                }}
-              >
-                <option value="">Select Department</option>
-                <option value="IPD">IPD</option>
-                <option value="OPD">OPD</option>
-              </Form.Select>
-            </Form.Group>
-
-            <Form.Group
-              className="mb-15"
-              onClick={() => !formData.department && triggerShake("department")}
-              style={{ cursor: !formData.department ? "pointer" : "default" }}
-            >
               <Form.Label style={labelStyle}>Account Type</Form.Label>
               <Form.Select
                 name="accountType"
@@ -268,16 +222,12 @@ export default function Login() {
                     shakingField === "accountType"
                       ? "#fff5f5"
                       : inputStyle.backgroundColor,
-                  pointerEvents: !formData.department ? "none" : "auto",
                 }}
-                disabled={!formData.department}
               >
                 <option value="">Select Account Type</option>
-                {getAccountOptions().map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
+                <option value="Reception">Reception</option>
+                <option value="Doctor">Doctor</option>
+                <option value="IPD">IPD</option>
               </Form.Select>
             </Form.Group>
 
@@ -490,27 +440,16 @@ const logoStyle = {
   filter: "brightness(0) invert(1)",
 };
 
-const brandTaglineStyle = {
-  fontSize: "15px",
-  fontWeight: "500",
-  marginTop: "1px",
-};
-
 const dividerStyle = {
   width: "50px",
   height: "3px",
   background: "rgba(255, 255, 255, 0.5)",
   margin: "10px 0",
   borderRadius: "2px",
+  marginTop: "42px",
 };
 
-const brandDescStyle = {
-  fontSize: "15px",
-  marginTop: "15px",
-  lineHeight: "1.6",
-  color: "rgba(255, 255, 255, 0.85)",
-  maxWidth: "320px",
-};
+
 
 const welcomeTitleStyle = {
   fontSize: "22px",

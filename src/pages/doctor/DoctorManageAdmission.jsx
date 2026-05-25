@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Container,
   Row,
@@ -18,25 +19,27 @@ import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import Swal from "sweetalert2";
+import MuiDateTimePicker from "../IPD Forms/inputs/MuiDateTimePicker";
+import moment from "moment";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
 
 export default function DoctorManageAdmission() {
+  const navigate = useNavigate();
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isDbSearching, setIsDbSearching] = useState(false);
   const [currentLocation, setCurrentLocation] = useState("default");
 
   const [rows, setRows] = useState(10);
   const [first, setFirst] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
   const [filters1, setFilters1] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
-  const [fromDate, setFromDate] = useState(() => {
-    const d = new Date();
-    d.setMonth(d.getMonth() - 1);
-    return d;
-  });
-  const [toDate, setToDate] = useState(new Date());
+  const [fromDate, setFromDate] = useState(null);
+  const [toDate, setToDate] = useState(null);
 
   // Initialize Location from JWT
   useEffect(() => {
@@ -66,15 +69,32 @@ export default function DoctorManageAdmission() {
   const [cancelReason, setCancelReason] = useState("");
   const [cancelPatient, setCancelPatient] = useState(null);
 
+  const [showDocModal, setShowDocModal] = useState(false);
+  const [docPatient, setDocPatient] = useState(null);
+  const [documents, setDocuments] = useState({
+    aadharCard: null,
+    panCard: null,
+    cancelledCheque: null,
+    pdcCheque: null
+  });
+  const [previews, setPreviews] = useState({
+    aadharCard: null,
+    panCard: null,
+    cancelledCheque: null,
+    pdcCheque: null
+  });
+  const [fullScreenImage, setFullScreenImage] = useState(null);
+
   const fetchVerifiedPatients = useCallback(async () => {
     if (currentLocation === "default") return;
 
     setLoading(true);
     try {
-      const from = formatToApiDate(fromDate);
-      const to = formatToApiDate(toDate);
+      const from = fromDate ? formatToApiDate(fromDate) : "";
+      const to = toDate ? formatToApiDate(toDate) : "";
+      const search = searchTerm || "";
       const response = await fetch(
-        `${BASE_URL}/V1/doctor/manage-admission/list?location=${currentLocation}&from=${from}&to=${to}`,
+        `${BASE_URL}/V1/doctor/manage-admission/list?location=${currentLocation}&from=${from}&to=${to}&search=${search}`,
         {
           method: "GET",
           headers: {
@@ -98,6 +118,7 @@ export default function DoctorManageAdmission() {
         });
 
         const formattedData = sortedData.map((p) => ({
+          ...p,
           uhid: p.uid,
           name: p.name,
           contact: p.patient_phone,
@@ -107,6 +128,7 @@ export default function DoctorManageAdmission() {
           surgeryDate: p.surgery_datetime || "Not Scheduled",
           roomType: p.room_type || "N/A",
           roomNo: p.room_no || "N/A",
+          surgeonName: p.surgeon_name || "N/A",
           admissionNo:
             p.admission_no === 0 || p.admission_no === "0"
               ? null
@@ -124,15 +146,106 @@ export default function DoctorManageAdmission() {
     } finally {
       setLoading(false);
     }
-  }, [currentLocation, fromDate, toDate]);
+  }, [currentLocation, fromDate, toDate, searchTerm]);
+
+  const searchFromDatabase = async (query) => {
+    if (!currentLocation || isDbSearching) return;
+
+    setIsDbSearching(true);
+    try {
+      const response = await fetch(
+        `${BASE_URL}/V1/doctor/manage-admission/search?query=${encodeURIComponent(
+          query
+        )}&location=${currentLocation}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result && result.length > 0) {
+          const formattedNew = result.map((p) => ({
+            ...p,
+            uhid: p.uid,
+            name: p.name,
+            contact: p.patient_phone,
+            age: p.age,
+            gender: p.sex,
+            verifiedDate: p.admission_datetime || "NOT ADMITTED",
+            surgeryDate: p.surgery_datetime || "Not Scheduled",
+            roomType: p.room_type || "N/A",
+            roomNo: p.room_no || "N/A",
+            surgeonName: p.surgeon_name || "N/A",
+            admissionNo:
+              p.admission_no === 0 || p.admission_no === "0"
+                ? null
+                : p.admission_no,
+            patient_id: p.patient_id,
+            global_id: p.global_id,
+          }));
+
+          setPatients((prev) => {
+            const existingIds = new Set(prev.map((p) => String(p.uhid)));
+            const uniqueNew = formattedNew.filter((p) => !existingIds.has(String(p.uhid)));
+            return [...prev, ...uniqueNew];
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error searching from database:", error);
+    } finally {
+      setIsDbSearching(false);
+    }
+  };
+
+  useEffect(() => {
+    const searchValue = searchTerm;
+    if (!searchValue || searchValue.length < 3) return;
+
+    const hasLocalMatches = patients.some((p) => {
+      const lowerSearch = searchValue.toLowerCase();
+      return (
+        (p.uhid && p.uhid.toLowerCase().includes(lowerSearch)) ||
+        (p.name && p.name.toLowerCase().includes(lowerSearch)) ||
+        (p.contact && p.contact.includes(searchValue)) ||
+        (p.admissionNo && String(p.admissionNo).toLowerCase().includes(lowerSearch))
+      );
+    });
+
+    if (!hasLocalMatches) {
+      const delayDebounceFn = setTimeout(() => {
+        searchFromDatabase(searchValue);
+      }, 800);
+
+      return () => clearTimeout(delayDebounceFn);
+    }
+  }, [searchTerm, patients]);
 
   useEffect(() => {
     fetchVerifiedPatients();
   }, [fetchVerifiedPatients]);
 
+  useEffect(() => {
+    const autoSelectUhid = localStorage.getItem("autoSelectUhid");
+    if (autoSelectUhid && patients.length > 0) {
+      setSearchTerm(autoSelectUhid);
+      setFilters1({
+        global: {
+          value: autoSelectUhid,
+          matchMode: FilterMatchMode.CONTAINS,
+        },
+      });
+      localStorage.removeItem("autoSelectUhid");
+    }
+  }, [patients]);
+
   const handleRescheduleClick = (patient) => {
     setReschedulePatient(patient);
-    setRescheduleDate(null);
+    // Initialize with current date if available, otherwise null
+    setRescheduleDate(patient.surgeryDate !== "Not Scheduled" ? patient.surgeryDate : null);
     setShowRescheduleModal(true);
   };
 
@@ -257,6 +370,50 @@ export default function DoctorManageAdmission() {
     });
   };
 
+  const handleViewDocumentsClick = (patient) => {
+    setDocPatient(patient);
+    setShowDocModal(true);
+    setDocuments({
+      aadharCard: null,
+      panCard: null,
+      cancelledCheque: null,
+      pdcCheque: null
+    });
+    setPreviews({
+      aadharCard: null,
+      panCard: null,
+      cancelledCheque: null,
+      pdcCheque: null
+    });
+  };
+
+  const handleFileChange = (e, docType) => {
+    const file = e.target.files[0];
+    if (file) {
+      setDocuments(prev => ({
+        ...prev,
+        [docType]: file
+      }));
+      // Generate preview
+      const previewUrl = URL.createObjectURL(file);
+      setPreviews(prev => ({
+        ...prev,
+        [docType]: previewUrl
+      }));
+    }
+  };
+
+  const handleDocSubmit = async (e) => {
+    e.preventDefault();
+    Swal.fire({
+      title: "Success",
+      text: "Documents saved successfully!",
+      icon: "success",
+      confirmButtonColor: "#178aaeff",
+    });
+    setShowDocModal(false);
+  };
+
   const renderHeader = () => (
     <div
       style={{
@@ -331,19 +488,25 @@ export default function DoctorManageAdmission() {
             >
               Search
             </span>
-            <InputGroup>
+            <InputGroup style={{ position: 'relative' }}>
               <Form.Control
                 type="search"
-                value={filters1.global.value || ""}
-                onChange={(e) =>
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
                   setFilters1({
                     global: {
                       value: e.target.value,
                       matchMode: FilterMatchMode.CONTAINS,
                     },
-                  })
-                }
-                placeholder="Global Search"
+                  });
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    fetchVerifiedPatients();
+                  }
+                }}
+                placeholder="Search Name/UHID/Phone"
                 style={{
                   borderRadius: "6px",
                   border: "1px solid #4dd0e1",
@@ -354,6 +517,18 @@ export default function DoctorManageAdmission() {
                   transition: "all 0.3s ease",
                 }}
               />
+              {isDbSearching && (
+                <div style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  zIndex: 5,
+                  pointerEvents: 'none'
+                }}>
+                  <Spinner animation="border" size="sm" variant="info" style={{ width: '12px', height: '12px' }} />
+                </div>
+              )}
             </InputGroup>
           </Form.Group>
         </div>
@@ -439,12 +614,52 @@ export default function DoctorManageAdmission() {
             <FeatherIcon icon="refresh-ccw" size={12} className="me-1" />
             Refresh
           </Button>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setFromDate(null);
+              setToDate(null);
+              setSearchTerm("");
+              setFilters1({
+                global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+              });
+            }}
+            style={{
+              backgroundColor: "#ff9800",
+              border: "none",
+              borderRadius: "8px",
+              padding: "5px 5px",
+              fontSize: "12px",
+              fontWeight: "500",
+              color: "white",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              marginTop: "13px",
+            }}
+          >
+            <FeatherIcon icon="filter" size={12} className="me-1" />
+            Clear Filter
+          </Button>
         </div>
       </div>
     </div>
   );
 
   const header = renderHeader();
+
+  const formatDisplayDateTime = (dateTimeStr) => {
+    if (!dateTimeStr || dateTimeStr === "Not Scheduled" || dateTimeStr === "NOT ADMITTED") return dateTimeStr;
+    try {
+      const parsed = moment(dateTimeStr, ["DD-MM-YYYY HH:mm", "DD-MM-YYYY hh:mm A", "YYYY-MM-DD HH:mm", "YYYY-MM-DD hh:mm A", "YYYY-MM-DDTHH:mm:ss.SSSZ"]);
+      if (parsed.isValid()) {
+        return parsed.format("DD-MM-YYYY HH:mm");
+      }
+      return dateTimeStr;
+    } catch (e) {
+      return dateTimeStr;
+    }
+  };
 
   const actionBodyTemplate = (patient) => {
     return (
@@ -480,22 +695,22 @@ export default function DoctorManageAdmission() {
             </Button>
           </>
         ) : (
-          <Button
-            variant="primary"
-            size="sm"
-            title="Print All Forms"
-            style={{
-              borderRadius: "6px",
-              backgroundColor: "#178aaeff",
-              border: "none",
-              padding: "5px 8px",
-            }}
-            onClick={() => {
-              console.log("Printing forms for patient:", patient.name);
-            }}
-          >
-            <FeatherIcon icon="printer" size={16} />
-          </Button>
+          <>
+            <Button
+              variant="info"
+              className="btn-info btn-extra-small btn-icon me-1"
+              title="View Documents"
+              onClick={() => handleViewDocumentsClick(patient)}
+              style={{
+                borderRadius: "6px",
+                padding: "5px 8px",
+                color: "white"
+              }}
+            >
+              <FeatherIcon icon="file-text" size={16} />
+            </Button>
+
+          </>
         )}
       </div>
     );
@@ -560,6 +775,11 @@ export default function DoctorManageAdmission() {
                         field="verifiedDate"
                         header="Admission Date & Time"
                         headerClassName="datatable-header-center"
+                        body={(rowData) => (
+                          <span style={{ fontSize: "11px" }}>
+                            {formatDisplayDateTime(rowData.verifiedDate)}
+                          </span>
+                        )}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -573,8 +793,8 @@ export default function DoctorManageAdmission() {
                         header="Surgery Date & Time"
                         headerClassName="datatable-header-center"
                         body={(rowData) => (
-                          <span style={{ fontSize: "10px" }}>
-                            {rowData.surgeryDate}
+                          <span style={{ fontSize: "11px" }}>
+                            {formatDisplayDateTime(rowData.surgeryDate)}
                           </span>
                         )}
                         style={{
@@ -668,6 +888,18 @@ export default function DoctorManageAdmission() {
                       />
 
                       <Column
+                        field="surgeonName"
+                        header="Surgeon Name"
+                        headerClassName="datatable-header-center"
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "150px",
+                        }}
+                      />
+
+                      <Column
                         field="contact"
                         header="Contact No"
                         headerClassName="datatable-header-center"
@@ -723,11 +955,14 @@ export default function DoctorManageAdmission() {
         <Form onSubmit={handleRescheduleSubmit}>
           <Modal.Body>
             <Form.Group>
-              <Form.Label style={{ color: "#1a5b61ff", fontSize: "13px" }}>New Surgery Date & Time</Form.Label>
-              <Form.Control
-                type="datetime-local"
-                required
+              <MuiDateTimePicker
+                label="New Surgery Date & Time"
+                value={rescheduleDate}
                 onChange={(e) => setRescheduleDate(e.target.value)}
+                required={true}
+                type="datetime"
+                ampm={false}
+                labelStyle={{ color: "#1a5b61ff", fontSize: "13px" }}
               />
             </Form.Group>
           </Modal.Body>
@@ -767,6 +1002,275 @@ export default function DoctorManageAdmission() {
             <Button variant="danger" type="submit">Cancel Admission</Button>
           </Modal.Footer>
         </Form>
+      </Modal>
+
+      {/* Patients Documents Modal */}
+      <Modal
+        show={showDocModal}
+        onHide={() => setShowDocModal(false)}
+        centered
+        size="lg"
+      >
+        <Modal.Header
+          closeButton
+          style={{
+            backgroundColor: "#e0f7fa",
+            borderBottom: "2px solid #00bcd4",
+            padding: "10px 15px",
+          }}
+        >
+          <Modal.Title
+            style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}
+          >
+            <FeatherIcon icon="file-text" className="me-2" size="18" />
+            Patients Documents
+          </Modal.Title>
+        </Modal.Header>
+        <Form onSubmit={handleDocSubmit}>
+          <Modal.Body style={{ fontSize: "13px", padding: "10px" }}>
+            <Row>
+              <Col md={6} className="mb-20">
+                <Form.Group controlId="aadharCard">
+                  <Form.Label
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      marginBottom: "4px",
+                    }}
+                  >
+                    <FeatherIcon icon="credit-card" size={14} className="me-1" />
+                    Aadharcard <span className="text-danger">*</span>
+                  </Form.Label>
+                  <Form.Control
+                    type="file"
+                    required
+                    size="sm"
+                    onChange={(e) => handleFileChange(e, "aadharCard")}
+                    style={{
+                      border: "2px solid rgb(77, 208, 225)",
+                      fontSize: "12px",
+                      borderRadius: "10px",
+                    }}
+                  />
+                  {previews.aadharCard && (
+                    <div className="d-flex align-items-center gap-2">
+                      <div
+                        className="mt-2"
+                        style={{
+                          border: "1px solid #4dd0e1",
+                          borderRadius: "8px",
+                          overflow: "hidden",
+                          cursor: "pointer",
+                          width: "60px",
+                          height: "45px"
+                        }}
+                        onClick={() => setFullScreenImage(previews.aadharCard)}
+                        title="Click to view full image"
+                      >
+                        <img src={previews.aadharCard} alt="Aadhar Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      </div>
+                      <span style={{ fontSize: "10px", color: "red", marginTop: "10px" }}>
+                        click to preview the image
+                      </span>
+                    </div>
+                  )}
+                </Form.Group>
+              </Col>
+              <Col md={6} className="mb-2">
+                <Form.Group controlId="panCard">
+                  <Form.Label
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      marginBottom: "4px",
+                    }}
+                  >
+                    <FeatherIcon icon="credit-card" size={14} className="me-1" />
+                    Pan Card <span className="text-danger">*</span>
+                  </Form.Label>
+                  <Form.Control
+                    type="file"
+                    required
+                    size="sm"
+                    onChange={(e) => handleFileChange(e, "panCard")}
+                    style={{
+                      border: "2px solid rgb(77, 208, 225)",
+                      fontSize: "12px",
+                      borderRadius: "10px",
+                    }}
+                  />
+                  {previews.panCard && (
+                    <div className="d-flex align-items-center gap-2">
+                      <div
+                        className="mt-2"
+                        style={{
+                          border: "1px solid #4dd0e1",
+                          borderRadius: "8px",
+                          overflow: "hidden",
+                          cursor: "pointer",
+                          width: "60px",
+                          height: "45px"
+                        }}
+                        onClick={() => setFullScreenImage(previews.panCard)}
+                        title="Click to view full image"
+                      >
+                        <img src={previews.panCard} alt="PAN Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      </div>
+                      <span style={{ fontSize: "10px", color: "red", marginTop: "10px" }}>
+                        click to preview the image
+                      </span>
+                    </div>
+                  )}
+                </Form.Group>
+              </Col>
+              <Col md={6} className="mb-2">
+                <Form.Group controlId="cancelledCheque">
+                  <Form.Label
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      marginBottom: "4px",
+                    }}
+                  >
+                    <FeatherIcon icon="file-text" size={14} className="me-1" />
+                    Cancelled Cheque <span className="text-danger">*</span>
+                  </Form.Label>
+                  <Form.Control
+                    type="file"
+                    required
+                    size="sm"
+                    onChange={(e) => handleFileChange(e, "cancelledCheque")}
+                    style={{
+                      border: "2px solid rgb(77, 208, 225)",
+                      fontSize: "12px",
+                      borderRadius: "10px",
+                    }}
+                  />
+                  {previews.cancelledCheque && (
+                    <div className="d-flex align-items-center gap-2">
+                      <div
+                        className="mt-2"
+                        style={{
+                          border: "1px solid #4dd0e1",
+                          borderRadius: "8px",
+                          overflow: "hidden",
+                          cursor: "pointer",
+                          width: "60px",
+                          height: "45px"
+                        }}
+                        onClick={() => setFullScreenImage(previews.cancelledCheque)}
+                        title="Click to view full image"
+                      >
+                        <img src={previews.cancelledCheque} alt="Cheque Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      </div>
+                      <span style={{ fontSize: "10px", color: "red", marginTop: "10px" }}>
+                        click to preview the image
+                      </span>
+                    </div>
+                  )}
+                </Form.Group>
+              </Col>
+              <Col md={6} className="mb-2">
+                <Form.Group controlId="pdcCheque">
+                  <Form.Label
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      marginBottom: "4px",
+                    }}
+                  >
+                    <FeatherIcon icon="calendar" size={14} className="me-1" />
+                    PDC Cheque (Optional)
+                  </Form.Label>
+                  <Form.Control
+                    type="file"
+                    size="sm"
+                    onChange={(e) => handleFileChange(e, "pdcCheque")}
+                    style={{
+                      border: "2px solid rgb(77, 208, 225)",
+                      fontSize: "12px",
+                      borderRadius: "10px",
+                    }}
+                  />
+                  {previews.pdcCheque && (
+                    <div className="d-flex align-items-center gap-2">
+                      <div
+                        className="mt-2"
+                        style={{
+                          border: "1px solid #4dd0e1",
+                          borderRadius: "8px",
+                          overflow: "hidden",
+                          cursor: "pointer",
+                          width: "60px",
+                          height: "45px"
+                        }}
+                        onClick={() => setFullScreenImage(previews.pdcCheque)}
+                        title="Click to view full image"
+                      >
+                        <img src={previews.pdcCheque} alt="PDC Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      </div>
+                      <span style={{ fontSize: "10px", color: "red", marginTop: "10px" }}>
+                        click to preview the image
+                      </span>
+                    </div>
+                  )}
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <div className="d-flex justify-content-end pt-2">
+              <Button
+                variant="danger"
+                size="sm"
+                className="me-2 px-3"
+                style={{
+                  borderRadius: "10px",
+                  fontSize: "12px",
+                  padding: "10px",
+                }}
+                onClick={() => setShowDocModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                type="submit"
+                className="px-3"
+                style={{
+                  borderRadius: "10px",
+                  fontSize: "12px",
+                  backgroundColor: "#00bcd4",
+                  border: "none",
+                  padding: "10px",
+                }}
+              >
+                Save Documents
+              </Button>
+            </div>
+          </Modal.Body>
+        </Form>
+      </Modal>
+
+      {/* Full Screen Image Preview Modal */}
+      <Modal
+        show={!!fullScreenImage}
+        onHide={() => setFullScreenImage(null)}
+        centered
+        size="lg"
+      >
+        <Modal.Header closeButton style={{ border: "none", backgroundColor: "#f8f9fa" }}>
+          <Modal.Title style={{ fontSize: "14px", fontWeight: "bold", color: "#333" }}>Document Preview</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="text-center p-3" style={{ backgroundColor: "#fff" }}>
+          {fullScreenImage && (
+            <img
+              src={fullScreenImage}
+              alt="Full Preview"
+              style={{ maxWidth: "100%", maxHeight: "80vh", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
+            />
+          )}
+        </Modal.Body>
       </Modal>
     </div>
   );

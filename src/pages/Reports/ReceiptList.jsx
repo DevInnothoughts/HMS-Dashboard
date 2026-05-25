@@ -15,7 +15,7 @@ import {
   Spinner,
 } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import NavBarA from "../../components/NavbarA";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -49,6 +49,7 @@ export default function ReceiptList() {
   const [currentLocation, setCurrentLocation] = useState("default");
   const [receipts, setReceipts] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isDbSearching, setIsDbSearching] = useState(false);
   const [fromDate, setFromDate] = useState(moment().startOf("day").toDate());
   const [toDate, setToDate] = useState(moment().endOf("day").toDate());
   const [rows, setRows] = useState(10);
@@ -57,6 +58,8 @@ export default function ReceiptList() {
     // global: { value: null, matchMode: FilterMatchMode.CONTAINS },
     global: { value: null, matchMode: FilterMatchMode.EQUALS },
   });
+
+  const location = useLocation();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -74,6 +77,58 @@ export default function ReceiptList() {
   const formatToYYYYMMDD = (date) => {
     return moment(date).format("YYYY-MM-DD");
   };
+
+  const searchFromDatabase = async (query) => {
+    if (!currentLocation || currentLocation === "default" || isDbSearching) return;
+
+    setIsDbSearching(true);
+    try {
+      const response = await fetch(
+        `${BASE_URL}/V1/appointment/searchReceipts?query=${encodeURIComponent(
+          query
+        )}&location=${currentLocation}`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.data && data.data.length > 0) {
+          setReceipts((prev) => {
+            const existingIds = new Set(prev.map((r) => r.receipt_id));
+            const newUniqueReceipts = data.data.filter(
+              (r) => !existingIds.has(r.receipt_id)
+            );
+            return [...prev, ...newUniqueReceipts];
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error searching receipts from database:", error);
+    } finally {
+      setIsDbSearching(false);
+    }
+  };
+
+  useEffect(() => {
+    const searchValue = filters.global.value;
+    if (!searchValue || searchValue.length < 3) return;
+
+    const hasLocalMatches = receipts.some((r) => {
+      const lowerSearch = searchValue.toLowerCase();
+      return (
+        (r.receipt_id && String(r.receipt_id).includes(searchValue)) ||
+        (r.patientName && r.patientName.toLowerCase().includes(lowerSearch)) ||
+        (r.patient_phone && r.patient_phone.includes(searchValue))
+      );
+    });
+
+    if (!hasLocalMatches) {
+      const delayDebounceFn = setTimeout(() => {
+        searchFromDatabase(searchValue);
+      }, 800);
+
+      return () => clearTimeout(delayDebounceFn);
+    }
+  }, [filters.global.value, receipts]);
 
   const fetchReceiptsData = useCallback(async () => {
     setLoading(true);
@@ -243,10 +298,10 @@ export default function ReceiptList() {
     const trimmedLocation = currentLocation ? currentLocation.trim() : "";
     const clinicAddr = receiptlocations[trimmedLocation] ||
       receiptlocations[currentLocation] || {
-        address:
-          "Healing Hands Clinic Pvt Ltd, DP Road, Ground Floor, Millenium Star Extension, Adjacent to Ruby Hall Clinic, Pune 411001",
-        phone: "8888288884 | 020-26164488/99",
-      };
+      address:
+        "Healing Hands Clinic Pvt Ltd, DP Road, Ground Floor, Millenium Star Extension, Adjacent to Ruby Hall Clinic, Pune 411001",
+      phone: "8888288884 | 020-26164488/99",
+    };
     console.log(clinicAddr);
     const getBase64Image = (imgUrl) => {
       return new Promise((resolve) => {
@@ -441,28 +496,27 @@ export default function ReceiptList() {
                     </tr>
                   </thead>
                   <tbody>
-                    ${
-                      selectedReceipt.item_details
-                        ? selectedReceipt.item_details
-                            .split(",")
-                            .map((itemGroup, index) => {
-                              const parts = itemGroup.split(":");
-                              const label = parts[0] ? parts[0].trim() : "-";
-                              const amount = parts[1]
-                                ? parseFloat(parts[1].trim())
-                                : 0;
+                    ${selectedReceipt.item_details
+            ? selectedReceipt.item_details
+              .split(",")
+              .map((itemGroup, index) => {
+                const parts = itemGroup.split(":");
+                const label = parts[0] ? parts[0].trim() : "-";
+                const amount = parts[1]
+                  ? parseFloat(parts[1].trim())
+                  : 0;
 
-                              return `
+                return `
                         <tr>
                               <td class="col-sr">${index + 1}</td>
                               <td class="col-desc">${label}</td>
                               <td class="col-amt">${amount.toFixed(2)}</td>
                             </tr>
                           `;
-                            })
-                            .join("")
-                        : `<tr><td class="col-sr">1</td><td class="col-desc">-</td><td class="col-amt">0.00</td></tr>`
-                    }
+              })
+              .join("")
+            : `<tr><td class="col-sr">1</td><td class="col-desc">-</td><td class="col-amt">0.00</td></tr>`
+          }
                   </tbody>
                 </table>
                 <div class="summary-section">
@@ -499,6 +553,19 @@ export default function ReceiptList() {
       },
     );
   };
+
+  useEffect(() => {
+    if (location.state?.printReceiptId && receipts.length > 0) {
+      const receiptToPrint = receipts.find(
+        (r) => r.receipt_id === location.state.printReceiptId
+      );
+      if (receiptToPrint) {
+        handlePrintReceipt(receiptToPrint);
+        // Clear state so it doesn't print again on refresh
+        window.history.replaceState({}, document.title);
+      }
+    }
+  }, [receipts, location.state]);
 
   const actionBodyTemplate = (receipt) => (
     <div className="d-flex align-items-center justify-content-center">
@@ -588,7 +655,7 @@ export default function ReceiptList() {
             >
               Search
             </span>
-            <InputGroup>
+            <InputGroup style={{ position: 'relative' }}>
               <Form.Control
                 type="search"
                 value={filters.global.value || ""}
@@ -611,6 +678,18 @@ export default function ReceiptList() {
                   transition: "all 0.3s ease",
                 }}
               />
+              {isDbSearching && (
+                <div style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  zIndex: 5,
+                  pointerEvents: 'none'
+                }}>
+                  <Spinner animation="border" size="sm" variant="info" style={{ width: '12px', height: '12px' }} />
+                </div>
+              )}
             </InputGroup>
           </Form.Group>
         </div>
@@ -694,6 +773,32 @@ export default function ReceiptList() {
             <FeatherIcon icon="refresh-ccw" size={13} className="me-2" />
             Refresh
           </Button>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setFromDate(null);
+              setToDate(null);
+              setFilters({
+                global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+              });
+            }}
+            style={{
+              backgroundColor: "#ff9800",
+              border: "none",
+              borderRadius: "8px",
+              padding: "5px 5px",
+              fontSize: "12px",
+              fontWeight: "500",
+              color: "white",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              marginTop: "13px",
+            }}
+          >
+            <FeatherIcon icon="filter" size={12} className="me-1" />
+            Clear Filter
+          </Button>
         </div>
       </div>
     </div>
@@ -753,6 +858,7 @@ export default function ReceiptList() {
                         "patientName",
                         "consultation",
                         "doctorName",
+                        "paymentmode",
                       ]}
                       responsiveLayout="scroll"
                       paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
@@ -850,6 +956,19 @@ export default function ReceiptList() {
                           padding: "0.75rem",
                           wordBreak: "break-word",
                           width: "180px",
+                        }}
+                      />
+                      <Column
+                        field="paymentmode"
+                        header="Payment Mode"
+                        body={(rowData) => rowData.paymentmode || "-"}
+                        headerClassName="datatable-header-center"
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          wordBreak: "break-word",
+                          width: "120px",
                         }}
                       />
                       <Column

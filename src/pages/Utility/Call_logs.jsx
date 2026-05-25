@@ -65,7 +65,7 @@ const Toast = Swal.mixin({
   },
 });
 
-export default function Call_logs() {
+export default function Call_logs({ isTab = false }) {
   const [CallLogs, setCallLogs] = useState([]);
   const [formData, setFormData] = useState({
     doctor_id: "",
@@ -79,7 +79,9 @@ export default function Call_logs() {
   const [filters1, setFilters1] = useState({
     global: { value: null, matchMode: FilterMatchMode.EQUALS },
   });
+  const [statusFilter, setStatusFilter] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isDbSearching, setIsDbSearching] = useState(false);
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [selectedNote, setSelectedNote] = useState("");
   const [showEnquiryModal, setShowEnquiryModal] = useState(false);
@@ -223,6 +225,64 @@ export default function Call_logs() {
     // Use moment to ensure we get the correct Day-Month-Year regardless of UTC offset
     return moment(date).format("DD-MM-YYYY");
   };
+
+  const searchFromDatabase = async (query) => {
+    if (!currentLocation || currentLocation === "default" || isDbSearching) return;
+
+    setIsDbSearching(true);
+    try {
+      const response = await fetch(
+        `${BASE_URL}/V1/ivrdata/searchIvrdata?query=${encodeURIComponent(
+          query
+        )}&location=${currentLocation}`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.data && data.data.length > 0) {
+          setCallLogs((prev) => {
+            const existingIds = new Set(prev.map((log) => log.ivr_id));
+            const newUniqueLogs = data.data
+              .map((log) => ({
+                ...log,
+                caller_no: log.caller_no
+                  ? String(log.caller_no).replace(/^0+/, "")
+                  : log.caller_no,
+              }))
+              .filter((log) => !existingIds.has(log.ivr_id));
+            return [...prev, ...newUniqueLogs];
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error searching call logs from database:", error);
+    } finally {
+      setIsDbSearching(false);
+    }
+  };
+
+  useEffect(() => {
+    const searchValue = filters1.global.value;
+    if (!searchValue || searchValue.length < 3) return;
+
+    const hasLocalMatches = CallLogs.some((log) => {
+      const lowerSearch = searchValue.toLowerCase();
+      return (
+        (log.caller_no && log.caller_no.includes(searchValue)) ||
+        (log.patient_name && log.patient_name.toLowerCase().includes(lowerSearch)) ||
+        (log.note && log.note.toLowerCase().includes(lowerSearch)) ||
+        (log.destination_no && log.destination_no.includes(searchValue))
+      );
+    });
+
+    if (!hasLocalMatches) {
+      const delayDebounceFn = setTimeout(() => {
+        searchFromDatabase(searchValue);
+      }, 800);
+
+      return () => clearTimeout(delayDebounceFn);
+    }
+  }, [filters1.global.value, CallLogs]);
 
   const fetchCallLogsData = async () => {
     console.log(currentLocation, fromDate, toDate);
@@ -451,6 +511,79 @@ export default function Call_logs() {
       Toast.fire({ icon: "error", title: "An error occurred while updating" });
     }
   };
+  const handleStatusFilterChange = (e) => {
+    const value = e.target.value;
+    const updatedFilters = { ...filters1 };
+
+    if (value) {
+      updatedFilters.dynamic_status = {
+        value,
+        matchMode: FilterMatchMode.EQUALS,
+      };
+    } else {
+      delete updatedFilters.dynamic_status;
+    }
+
+    setStatusFilter(value);
+    setFilters1(updatedFilters);
+  };
+
+  const renderStatusHeader = () => (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <span style={{ fontSize: "12px", fontWeight: 600, marginBottom: "4px" }}>
+        Enquiry Status
+      </span>
+      <Form.Select
+        size="sm"
+        value={statusFilter}
+        onChange={handleStatusFilterChange}
+        style={{
+          width: "120px",
+          fontSize: "12px",
+          padding: "4px 6px",
+          borderRadius: "6px",
+          border: "1px solid #90caf9",
+        }}
+      >
+        <option value="">All</option>
+        <option value="Visited">Visited</option>
+        <option value="Not Visited">Not Visited</option>
+        <option value="Surgery Done">Surgery Done</option>
+        <option value="No FU Done">No FU Done</option>
+      </Form.Select>
+    </div>
+  );
+
+  const statusBodyTemplate = (rowData) => {
+    const status = rowData.dynamic_status || "Not Visited";
+    let badgeBg = "#ffe0b2";
+    let badgeColor = "#e65100";
+    if (status === "Visited") {
+      badgeBg = "#e0f2f1";
+      badgeColor = "#004d40";
+    } else if (status === "Not Visited") {
+      badgeBg = "#efebe9";
+      badgeColor = "#4e342e";
+    }
+
+    return (
+      <span
+        style={{
+          backgroundColor: badgeBg,
+          color: badgeColor,
+          padding: "4px 8px",
+          borderRadius: "12px",
+          fontSize: "11px",
+          fontWeight: "600",
+          display: "inline-block",
+        }}
+      >
+        {status}
+      </span>
+    );
+  };
+
+
 
   const actionBodyTemplate = (rowData) => (
     <div className="d-flex align-items-center justify-content-center">
@@ -549,7 +682,7 @@ export default function Call_logs() {
             >
               Search
             </span>
-            <InputGroup>
+            <InputGroup style={{ position: 'relative' }}>
               <Form.Control
                 type="search"
                 value={filters1.global.value || ""}
@@ -572,6 +705,18 @@ export default function Call_logs() {
                   transition: "all 0.3s ease",
                 }}
               />
+              {isDbSearching && (
+                <div style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  zIndex: 5,
+                  pointerEvents: 'none'
+                }}>
+                  <Spinner animation="border" size="sm" variant="info" style={{ width: '12px', height: '12px' }} />
+                </div>
+              )}
             </InputGroup>
           </Form.Group>
         </div>
@@ -673,6 +818,33 @@ export default function Call_logs() {
           >
             <FeatherIcon icon="refresh-ccw" size={12} className="me-1" />
             Refresh
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setFromDate(null);
+              setToDate(null);
+              setStatusFilter("");
+              setFilters1({
+                global: { value: null, matchMode: FilterMatchMode.EQUALS },
+              });
+            }}
+            style={{
+              backgroundColor: "#ff9800",
+              border: "none",
+              borderRadius: "8px",
+              padding: "5px 5px",
+              fontSize: "12px",
+              fontWeight: "500",
+              color: "white",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              marginTop: "13px",
+            }}
+          >
+            <FeatherIcon icon="filter" size={12} className="me-1" />
+            Clear Filter
           </Button>
         </div>
       </div>
@@ -854,240 +1026,275 @@ export default function Call_logs() {
     }
   };
 
+  const pageContent = (
+    <div className="theme-body" style={isTab ? { padding: "0px", marginTop: "0px" } : {}}>
+      <Container fluid>
+        <Row>
+          <Col>
+            <Card
+              style={{
+                borderRadius: "10px",
+                boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
+                borderColor: "#00bcd4",
+                background: "white",
+                border: "1.5px solid #00bcd4",
+                padding: "5px",
+                margin: "10px -10px 12px -10px",
+              }}
+            >
+              <Card.Body>
+                <Row
+                  className="Product_list"
+                  style={{ marginTop: "-18px" }}
+                >
+                  {loading ? (
+                    <div
+                      className="d-flex justify-content-center py-5"
+                      style={{ color: "#00bcd4" }}
+                    >
+                      <Spinner animation="border" role="status">
+                        <span className="visually-hidden">Loading...</span>
+                      </Spinner>
+                    </div>
+                  ) : (
+                    <DataTable
+                      value={CallLogs}
+                      paginator
+                      rows={rows}
+                      first={first}
+                      onPage={(e) => {
+                        setFirst(e.first);
+                        setRows(e.rows);
+                      }}
+                      filters={filters1}
+                      header={renderHeader}
+                      loading={loading}
+                      globalFilterFields={[
+                        "call_date",
+                        "caller_no",
+                        "patient_name",
+                        "destination_no",
+                        "circle_name",
+                      ]}
+                      paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
+                      currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
+                      responsiveLayout="scroll"
+                      className="datatable-compact-style datatable-medium-small"
+                    >
+                      <Column
+                        field="ivr_id"
+                        header="Sr No"
+                        body={(rowData) => rowData.ivr_id || "-"}
+                        headerClassName="datatable-header-center"
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "90px",
+                        }}
+                      />
+                      <Column
+                        field="call_date"
+                        header="Date"
+                        body={(rowData) => {
+                          const rawDate = rowData.call_date;
+                          if (!rawDate) return "-";
+
+                          const dateObj = moment(rawDate, "YYYY-MM-DD");
+
+                          return dateObj.isValid()
+                            ? dateObj.format("DD-MM-YYYY")
+                            : rawDate;
+                        }}
+                        headerClassName="datatable-header-center"
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "110px",
+                        }}
+                      />
+
+                      <Column
+                        field="call_time"
+                        header="Time"
+                        body={(rowData) => rowData.call_time || "-"}
+                        headerClassName="datatable-header-center"
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "80px",
+                        }}
+                      />
+
+                      <Column
+                        field="caller_no"
+                        header="Patient Contact No"
+                        body={(rowData) => rowData.caller_no || "-"}
+                        headerClassName="datatable-header-center"
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "110px",
+                        }}
+                      />
+
+                      <Column
+                        field="patient_name"
+                        header="Patient Name"
+                        body={(rowData) => rowData.patient_name || "-"}
+                        headerClassName="datatable-header-center"
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "140px",
+                        }}
+                      />
+
+                      <Column
+                        field="destination_no"
+                        header="HHC Contact No"
+                        body={(rowData) => rowData.destination_no || "-"}
+                        headerClassName="datatable-header-center"
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "110px",
+                        }}
+                      />
+
+                      <Column
+                        field="call_type"
+                        header="Call Type"
+                        body={(rowData) => rowData.call_type || "-"}
+                        headerClassName="datatable-header-center"
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "100px",
+                        }}
+                      />
+                      <Column
+                        field="call_status"
+                        header="Call Status"
+                        body={(rowData) => rowData.call_status || "-"}
+                        headerClassName="datatable-header-center"
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "100px",
+                        }}
+                      />
+                      <Column
+                        field="call_duration"
+                        header="Call Duration"
+                        body={(rowData) => rowData.call_duration || "-"}
+                        headerClassName="datatable-header-center"
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "100px",
+                        }}
+                      />
+                      <Column
+                        field="circle_name"
+                        header="Region"
+                        body={(rowData) => rowData.circle_name || "-"}
+                        headerClassName="datatable-header-center"
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "130px",
+                        }}
+                      />
+                      {/* <Column
+                        field="note"
+                        header="Note"
+                        body={(rowData) => rowData.note || "-"}
+                        headerClassName="datatable-header-center"
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "180px",
+                        }}
+                      /> */}
+                      <Column
+                        field="note"
+                        header="Note"
+                        style={{
+                          minWidth: "150px",
+                          maxWidth: "150px",
+                          textAlign: "center",
+                          border: "1px solid #90caf9",
+                        }}
+                        // This uses the component we just created
+                        body={(rowData) => <NoteCell note={rowData.note} />}
+                        headerClassName="datatable-header-center"
+                      />
+                      <Column
+                        field="dynamic_status"
+                        header={renderStatusHeader}
+                        body={statusBodyTemplate}
+                        headerClassName="datatable-header-center"
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "120px",
+                        }}
+                      />
+
+
+                      <Column
+                        header="Actions"
+                        body={actionBodyTemplate}
+                        exportable={false}
+                        headerClassName="datatable-header-center"
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "110px",
+                        }}
+                      />
+                    </DataTable>
+                  )}
+                </Row>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
+    </div>
+  );
+
   return (
     <>
-      <div
-        className="themebody-wrap"
-        style={{
-          background: "linear-gradient(to right, #e0f7fa, #80deea)",
-          fontFamily: "'Poppins', Arial, sans-serif",
-          minHeight: "100vh",
-          padding: "10px",
-        }}
-      >
-        <PageBreadcrumb pagename="Call Logs" />
-        <div className="theme-body">
-          <Container fluid>
-            <Row>
-              <Col>
-                <Card
-                  style={{
-                    borderRadius: "10px",
-                    boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
-                    borderColor: "#00bcd4",
-                    background: "white",
-                    border: "1.5px solid #00bcd4",
-                    padding: "5px",
-                    margin: "10px -10px 12px -10px",
-                  }}
-                >
-                  <Card.Body>
-                    <Row
-                      className="Product_list"
-                      style={{ marginTop: "-18px" }}
-                    >
-                      {loading ? (
-                        <div
-                          className="d-flex justify-content-center py-5"
-                          style={{ color: "#00bcd4" }}
-                        >
-                          <Spinner animation="border" role="status">
-                            <span className="visually-hidden">Loading...</span>
-                          </Spinner>
-                        </div>
-                      ) : (
-                        <DataTable
-                          value={CallLogs}
-                          paginator
-                          rows={rows}
-                          first={first}
-                          onPage={(e) => {
-                            setFirst(e.first);
-                            setRows(e.rows);
-                          }}
-                          filters={filters1}
-                          header={renderHeader}
-                          loading={loading}
-                          globalFilterFields={[
-                            "call_date",
-                            "caller_no",
-                            "destination_no",
-                            "circle_name",
-                          ]}
-                          paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
-                          currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
-                          responsiveLayout="scroll"
-                          className="datatable-compact-style datatable-medium-small"
-                        >
-                          <Column
-                            field="ivr_id"
-                            header="Sr No"
-                            body={(rowData) => rowData.ivr_id || "-"}
-                            headerClassName="datatable-header-center"
-                            style={{
-                              border: "1px solid #90caf9",
-                              textAlign: "center",
-                              padding: "0.75rem",
-                              width: "90px",
-                            }}
-                          />
-                          <Column
-                            field="call_date"
-                            header="Date"
-                            body={(rowData) => {
-                              const rawDate = rowData.call_date;
-                              if (!rawDate) return "-";
-
-                              const dateObj = moment(rawDate, "YYYY-MM-DD");
-
-                              return dateObj.isValid()
-                                ? dateObj.format("DD-MM-YYYY")
-                                : rawDate;
-                            }}
-                            headerClassName="datatable-header-center"
-                            style={{
-                              border: "1px solid #90caf9",
-                              textAlign: "center",
-                              padding: "0.75rem",
-                              width: "110px",
-                            }}
-                          />
-
-                          <Column
-                            field="call_time"
-                            header="Time"
-                            body={(rowData) => rowData.call_time || "-"}
-                            headerClassName="datatable-header-center"
-                            style={{
-                              border: "1px solid #90caf9",
-                              textAlign: "center",
-                              padding: "0.75rem",
-                              width: "80px",
-                            }}
-                          />
-
-                          <Column
-                            field="caller_no"
-                            header="Caller No"
-                            body={(rowData) => rowData.caller_no || "-"}
-                            headerClassName="datatable-header-center"
-                            style={{
-                              border: "1px solid #90caf9",
-                              textAlign: "center",
-                              padding: "0.75rem",
-                              width: "11  0px",
-                            }}
-                          />
-
-                          <Column
-                            field="destination_no"
-                            header="Destination No"
-                            body={(rowData) => rowData.destination_no || "-"}
-                            headerClassName="datatable-header-center"
-                            style={{
-                              border: "1px solid #90caf9",
-                              textAlign: "center",
-                              padding: "0.75rem",
-                              width: "110px",
-                            }}
-                          />
-
-                          <Column
-                            field="call_type"
-                            header="Call Type"
-                            body={(rowData) => rowData.call_type || "-"}
-                            headerClassName="datatable-header-center"
-                            style={{
-                              border: "1px solid #90caf9",
-                              textAlign: "center",
-                              padding: "0.75rem",
-                              width: "100px",
-                            }}
-                          />
-                          <Column
-                            field="call_status"
-                            header="Call Status"
-                            body={(rowData) => rowData.call_status || "-"}
-                            headerClassName="datatable-header-center"
-                            style={{
-                              border: "1px solid #90caf9",
-                              textAlign: "center",
-                              padding: "0.75rem",
-                              width: "100px",
-                            }}
-                          />
-                          <Column
-                            field="call_duration"
-                            header="Call Duration"
-                            body={(rowData) => rowData.call_duration || "-"}
-                            headerClassName="datatable-header-center"
-                            style={{
-                              border: "1px solid #90caf9",
-                              textAlign: "center",
-                              padding: "0.75rem",
-                              width: "100px",
-                            }}
-                          />
-                          <Column
-                            field="circle_name"
-                            header="Region"
-                            body={(rowData) => rowData.circle_name || "-"}
-                            headerClassName="datatable-header-center"
-                            style={{
-                              border: "1px solid #90caf9",
-                              textAlign: "center",
-                              padding: "0.75rem",
-                              width: "130px",
-                            }}
-                          />
-                          {/* <Column
-                            field="note"
-                            header="Note"
-                            body={(rowData) => rowData.note || "-"}
-                            headerClassName="datatable-header-center"
-                            style={{
-                              border: "1px solid #90caf9",
-                              textAlign: "center",
-                              padding: "0.75rem",
-                              width: "180px",
-                            }}
-                          /> */}
-                          <Column
-                            field="note"
-                            header="Note"
-                            style={{
-                              minWidth: "150px",
-                              maxWidth: "150px",
-                              textAlign: "center",
-                              border: "1px solid #90caf9",
-                            }}
-                            // This uses the component we just created
-                            body={(rowData) => <NoteCell note={rowData.note} />}
-                            headerClassName="datatable-header-center"
-                          />
-
-                          <Column
-                            header="Actions"
-                            body={actionBodyTemplate}
-                            exportable={false}
-                            headerClassName="datatable-header-center"
-                            style={{
-                              border: "1px solid #90caf9",
-                              textAlign: "center",
-                              padding: "0.75rem",
-                              width: "110px",
-                            }}
-                          />
-                        </DataTable>
-                      )}
-                    </Row>
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
-          </Container>
+      {isTab ? (
+        pageContent
+      ) : (
+        <div
+          className="themebody-wrap"
+          style={{
+            background: "linear-gradient(to right, #e0f7fa, #80deea)",
+            fontFamily: "'Poppins', Arial, sans-serif",
+            minHeight: "100vh",
+            padding: "10px",
+          }}
+        >
+          <PageBreadcrumb pagename="Call Logs" />
+          {pageContent}
         </div>
-      </div>
+      )}
       <Modal
         show={showAddModal}
         onHide={() => setShowAddModal(false)}

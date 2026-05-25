@@ -46,9 +46,9 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
   const qrData = {
     timeStamp: d.doa ? Math.floor(new Date(d.doa).getTime() / 1000) : 0,
     branchName: sitelocation || "",
-    mobileno: formData.phone || "",
-    uidNo: formData.Uid_no || "",
-    name: formData.name || "",
+    mobileno: d.phone || formData.phone || "",
+    uidNo: d.Uid_no || formData.Uid_no || "",
+    name: d.patient_name || formData.name || "",
     medicalHistory: d.past_history || d.medical_history || "",
     surgicalHistory: d.surgical_history || "",
     investigation: d.investigation || (d.investigations ? Object.entries(d.investigations).filter(([_,v]) => v).map(([k,v]) => `${k}:${v}`).join(", ") : ""),
@@ -534,15 +534,15 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
           <table className="bordered FontAdjustment">
             <tbody>
               <tr>
-                <td style={{ width: "50%", borderRight: "0px" }}><b>PATIENT'S NAME : </b>{formData.prefix ? formData.prefix + ". " : ""}{formData.name || d.patient_name || ""}</td>
-                <td style={{ width: "50%" }}><b>UHID. NO : </b>{formData.Uid_no || ""}</td>
+                <td style={{ width: "50%", borderRight: "0px" }}><b>PATIENT'S NAME : </b>{d.prefix || formData.prefix ? (d.prefix || formData.prefix) + ". " : ""}{d.patient_name || formData.name || ""}</td>
+                <td style={{ width: "50%" }}><b>UHID. NO : </b>{d.Uid_no || formData.Uid_no || ""}</td>
               </tr>
               <tr>
-                <td style={{ width: "50%", borderRight: "0px" }}><b>SEX : </b>{formData.sex || d.patient_sex || ""}&nbsp;&nbsp;<b>Age : </b>{formData.age || d.patient_age || ""}&nbsp;&nbsp;<b>Height : </b>{d.height || ""}cm&nbsp;&nbsp;<b> Weight : </b>{d.weight || ""}kg</td>
+                <td style={{ width: "50%", borderRight: "0px" }}><b>SEX : </b>{d.patient_sex || formData.sex || ""}&nbsp;&nbsp;<b>Age : </b>{d.patient_age || formData.age || ""}&nbsp;&nbsp;<b>Height : </b>{d.height || ""}cm&nbsp;&nbsp;<b> Weight : </b>{d.weight || ""}kg</td>
                 <td style={{ width: "50%" }}><b>PATIENT'S IPD NO. : </b>{d.ipd_no || d.IPDNo || ""}</td>
               </tr>
               <tr>
-                <td colSpan="2"><b>PATIENT ADDRESS : </b>{formData.address || d.address || ""}</td>
+                <td colSpan="2"><b>PATIENT ADDRESS : </b>{d.address || formData.address || ""}</td>
               </tr>
               <tr>
                 <td style={{ width: "50%", borderRight: "0px" }}><b>DATE OF ADMISSION : </b>{formatDate(d.doa || d.DOA)}</td>
@@ -554,7 +554,7 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
               </tr>
               <tr>
                 <td style={{ width: "50%", borderRight: "0px" }}><b>ADMITTED UNDER </b>{formatDoctorName(consultantName)}</td>
-                <td style={{ width: "50%" }}><b>REF.BY</b> {formData.reference_type === "dr_ref" ? (formData.ref || "NA") : "NA"}</td>
+                <td style={{ width: "50%" }}><b>REF.BY</b> {(d.reference_type === "dr_ref" || formData.reference_type === "dr_ref") ? `${d.ref_doctor_name || formData.ref || "NA"} ${d.ref_doctor_phone ? "(" + d.ref_doctor_phone + ")" : ""}` : "NA"}</td>
               </tr>
             </tbody>
           </table>

@@ -6,7 +6,7 @@ const SidebarContext = createContext();
 export const useSidebarContext = () => useContext(SidebarContext);
 
 export const SidebarProvider = ({ children }) => {
-  const [isCompact, setIsCompact] = useState(false);
+  const [isCompact, setIsCompact] = useState(true);
 
   const toggleSidebar = () => {
     setIsCompact(prev => !prev);

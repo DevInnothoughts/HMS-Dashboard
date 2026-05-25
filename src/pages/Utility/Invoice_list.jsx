@@ -260,6 +260,7 @@ const InvoiceList = () => {
   const [insurance, setInsurance] = useState([]);
   const [tpa, setTpa] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isDbSearching, setIsDbSearching] = useState(false);
   const [error, setError] = useState("");
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
@@ -442,9 +443,82 @@ const InvoiceList = () => {
     }
   }, [currentLocation, fromDate, toDate]);
 
+  const searchFromDatabase = async (query) => {
+    if (!currentLocation || isDbSearching) return;
+
+    setIsDbSearching(true);
+    try {
+      const response = await fetch(
+        `${BASE_URL}/V1/invoice/searchInvoices?query=${encodeURIComponent(
+          query
+        )}&location=${currentLocation}`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.data && data.data.length > 0) {
+          setInvoices((prev) => {
+            const existingIds = new Set(prev.map((inv) => String(inv.invoice_id)));
+            const newUniqueInvoices = data.data
+              .filter((inv) => !existingIds.has(String(inv.invoice_id)))
+              .map((invoice) => {
+                const totalamt = parseFloat(invoice.totalamt || invoice.total_amt || 0) || 0;
+                const receivedamt = parseFloat(invoice.receivedamt || invoice.received_amt || 0) || 0;
+                const discount = parseFloat(invoice.discount || 0) || 0;
+                const pdc = parseFloat(invoice.pdc || invoice.advance_amt || 0) || 0;
+                const payable_amt = parseFloat(invoice.payable_amt) || calculatePayableAmt({ ...invoice, totalamt, discount, pdc });
+                const due_amt = invoice.totaldue !== undefined ? parseFloat(invoice.totaldue) : payable_amt - receivedamt;
+
+                return {
+                  ...invoice,
+                  totalamt,
+                  receivedamt,
+                  discount,
+                  pdc,
+                  due_amt,
+                  payable_amt,
+                  patient_name: invoice.patient_name || invoice.name || "N/A",
+                  patient_phone: invoice.patient_phone || invoice.phone || "N/A",
+                  patient_uid: invoice.patient_uid || invoice.Uid_no || invoice.uid || "N/A",
+                  status: invoice.status || "",
+                };
+              });
+            return [...prev, ...newUniqueInvoices];
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error searching invoices from database:", error);
+    } finally {
+      setIsDbSearching(false);
+    }
+  };
+
+  useEffect(() => {
+    const searchValue = filters1.global.value;
+    if (!searchValue || searchValue.length < 3) return;
+
+    const hasLocalMatches = invoices.some((inv) => {
+      const lowerSearch = searchValue.toLowerCase();
+      return (
+        (inv.invoice_id && String(inv.invoice_id).includes(searchValue)) ||
+        (inv.patient_name && inv.patient_name.toLowerCase().includes(lowerSearch)) ||
+        (inv.patient_phone && inv.patient_phone.includes(searchValue))
+      );
+    });
+
+    if (!hasLocalMatches) {
+      const delayDebounceFn = setTimeout(() => {
+        searchFromDatabase(searchValue);
+      }, 800);
+
+      return () => clearTimeout(delayDebounceFn);
+    }
+  }, [filters1.global.value, invoices]);
+
   useEffect(() => {
     fetchInvoices();
-  }, [currentLocation, fromDate, toDate]); // Added fromDate and toDate so it refreshes when dates change
+  }, [currentLocation, fromDate, toDate]);
 
   useEffect(() => {
     const fetchDropdowns = async () => {
@@ -1291,7 +1365,7 @@ const InvoiceList = () => {
             >
               Search
             </span>
-            <InputGroup>
+            <InputGroup style={{ position: 'relative' }}>
               <Form.Control
                 type="search"
                 value={filters1.global.value || ""}
@@ -1313,6 +1387,18 @@ const InvoiceList = () => {
                   fontSize: "12px",
                 }}
               />
+              {isDbSearching && (
+                <div style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  zIndex: 5,
+                  pointerEvents: 'none'
+                }}>
+                  <Spinner animation="border" size="sm" variant="info" style={{ width: '12px', height: '12px' }} />
+                </div>
+              )}
             </InputGroup>
           </Form.Group>
         </div>
@@ -1387,6 +1473,32 @@ const InvoiceList = () => {
           >
             <FeatherIcon icon="refresh-ccw" size={12} className="me-1" />
             Refresh
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setFromDate(null);
+              setToDate(null);
+              setFilters1({
+                global: { value: null, matchMode: FilterMatchMode.EQUALS },
+              });
+            }}
+            style={{
+              backgroundColor: "#ff9800",
+              border: "none",
+              borderRadius: "8px",
+              padding: "5px 5px",
+              fontSize: "12px",
+              fontWeight: "500",
+              color: "white",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              marginTop: "13px",
+            }}
+          >
+            <FeatherIcon icon="filter" size={12} className="me-1" />
+            Clear Filter
           </Button>
         </div>
       </div>
@@ -1533,10 +1645,10 @@ const InvoiceList = () => {
                       header="Payable Amount"
                       body={(rowData) => {
                         const val = parseFloat(rowData.payable_amt) || 0;
-                        return val.toLocaleString(undefined, {
+                        return `₹ ${val.toLocaleString(undefined, {
                           minimumFractionDigits: 0,
                           maximumFractionDigits: 0,
-                        });
+                        })}`;
                       }}
                       style={{
                         width: "110px",
@@ -1550,10 +1662,10 @@ const InvoiceList = () => {
                       header="Due Amount"
                       body={(rowData) => {
                         const val = parseFloat(rowData.due_amt) || 0;
-                        return val.toLocaleString(undefined, {
+                        return `₹ ${val.toLocaleString(undefined, {
                           minimumFractionDigits: 0,
                           maximumFractionDigits: 0,
-                        });
+                        })}`;
                       }}
                       style={{
                         width: "110px",
@@ -2194,25 +2306,32 @@ const InvoiceList = () => {
                         >
                           Amount (₹)
                         </Form.Label>
-                        <Form.Control
-                          size="sm"
-                          onWheel={(e) => e.target.blur()}
-                          placeholder="0.00"
-                          style={{
-                            borderRadius: "10px",
-                            fontSize: "12px",
-                            border: "1px solid #4dd0e1",
-                          }}
-                          type="number"
-                          value={row.value || ""}
-                          onChange={(e) =>
-                            handleDynamicRowChange(
-                              index,
-                              "value",
-                              e.target.value,
-                            )
-                          }
-                        />
+                        <InputGroup size="sm" style={{ flexWrap: "nowrap" }}>
+                          <InputGroup.Text style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1", borderRight: "none", backgroundColor: "#f8f9fa", borderTopRightRadius: 0, borderBottomRightRadius: 0, paddingRight: "5px" }}>₹</InputGroup.Text>
+                          <Form.Control
+                            size="sm"
+                            onWheel={(e) => e.target.blur()}
+                            placeholder="0.00"
+                            style={{
+                              borderRadius: "10px",
+                              fontSize: "12px",
+                              border: "1px solid #4dd0e1",
+                              borderLeft: "none",
+                              borderTopLeftRadius: 0,
+                              borderBottomLeftRadius: 0,
+                              paddingLeft: "5px"
+                            }}
+                            type="number"
+                            value={row.value || ""}
+                            onChange={(e) =>
+                              handleDynamicRowChange(
+                                index,
+                                "value",
+                                e.target.value,
+                              )
+                            }
+                          />
+                        </InputGroup>
                       </Col>
                       <Col md={4} className="d-flex gap-2">
                         <Button
@@ -2501,33 +2620,40 @@ const InvoiceList = () => {
                             >
                               Discount Amount (₹)
                             </Form.Label>
-                            <Form.Control
-                              size="sm"
-                              type="number"
-                              min="0"
-                              onWheel={(e) => e.target.blur()}
-                              style={{
-                                borderRadius: "10px",
-                                fontSize: "12px",
-                                border: "1px solid #4dd0e1",
-                              }}
-                              value={modalInvoiceData.discount || ""}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                setModalInvoiceData((prev) => ({
-                                  ...prev,
-                                  discount: val,
-                                  payableAmount: calculateActivePayableAmt(
-                                    selectedInvoice,
-                                    prev.Sub_Total,
-                                    val,
-                                    prev.pdc,
-                                    prev.bill_Type,
-                                    prev.bill_method,
-                                  ),
-                                }));
-                              }}
-                            />
+                            <InputGroup size="sm" style={{ flexWrap: "nowrap" }}>
+                              <InputGroup.Text style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1", borderRight: "none", backgroundColor: "#f8f9fa", borderTopRightRadius: 0, borderBottomRightRadius: 0, paddingRight: "5px" }}>₹</InputGroup.Text>
+                              <Form.Control
+                                size="sm"
+                                type="number"
+                                min="0"
+                                onWheel={(e) => e.target.blur()}
+                                style={{
+                                  borderRadius: "10px",
+                                  fontSize: "12px",
+                                  border: "1px solid #4dd0e1",
+                                  borderLeft: "none",
+                                  borderTopLeftRadius: 0,
+                                  borderBottomLeftRadius: 0,
+                                  paddingLeft: "5px"
+                                }}
+                                value={modalInvoiceData.discount || ""}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setModalInvoiceData((prev) => ({
+                                    ...prev,
+                                    discount: val,
+                                    payableAmount: calculateActivePayableAmt(
+                                      selectedInvoice,
+                                      prev.Sub_Total,
+                                      val,
+                                      prev.pdc,
+                                      prev.bill_Type,
+                                      prev.bill_method,
+                                    ),
+                                  }));
+                                }}
+                              />
+                            </InputGroup>
                           </Col>
                         )}
 
@@ -2544,33 +2670,40 @@ const InvoiceList = () => {
                             >
                               PDC Amount (₹)
                             </Form.Label>
-                            <Form.Control
-                              size="sm"
-                              type="number"
-                              min="0"
-                              onWheel={(e) => e.target.blur()}
-                              style={{
-                                borderRadius: "10px",
-                                fontSize: "12px",
-                                border: "1px solid #4dd0e1",
-                              }}
-                              value={modalInvoiceData.pdc || ""}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                setModalInvoiceData((prev) => ({
-                                  ...prev,
-                                  pdc: val,
-                                  payableAmount: calculateActivePayableAmt(
-                                    selectedInvoice,
-                                    prev.Sub_Total,
-                                    prev.discount,
-                                    val,
-                                    prev.bill_Type,
-                                    prev.bill_method,
-                                  ),
-                                }));
-                              }}
-                            />
+                            <InputGroup size="sm" style={{ flexWrap: "nowrap" }}>
+                              <InputGroup.Text style={{ borderRadius: "10px", fontSize: "12px", border: "1px solid #4dd0e1", borderRight: "none", backgroundColor: "#f8f9fa", borderTopRightRadius: 0, borderBottomRightRadius: 0, paddingRight: "5px" }}>₹</InputGroup.Text>
+                              <Form.Control
+                                size="sm"
+                                type="number"
+                                min="0"
+                                onWheel={(e) => e.target.blur()}
+                                style={{
+                                  borderRadius: "10px",
+                                  fontSize: "12px",
+                                  border: "1px solid #4dd0e1",
+                                  borderLeft: "none",
+                                  borderTopLeftRadius: 0,
+                                  borderBottomLeftRadius: 0,
+                                  paddingLeft: "5px"
+                                }}
+                                value={modalInvoiceData.pdc || ""}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setModalInvoiceData((prev) => ({
+                                    ...prev,
+                                    pdc: val,
+                                    payableAmount: calculateActivePayableAmt(
+                                      selectedInvoice,
+                                      prev.Sub_Total,
+                                      prev.discount,
+                                      val,
+                                      prev.bill_Type,
+                                      prev.bill_method,
+                                    ),
+                                  }));
+                                }}
+                              />
+                            </InputGroup>
                           </Col>
                         )}
 

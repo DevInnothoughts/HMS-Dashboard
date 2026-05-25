@@ -4,7 +4,7 @@ import { FilterMatchMode } from "primereact/api";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import Swal from "sweetalert2";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import FeatherIcon from "feather-icons-react";
 import {
@@ -93,10 +93,11 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
   const isConfirm = title === "Confirm";
   const isEdit = title === "Edit";
   const isBlueAction = [
+    "Edit Patient",
     "Receipts",
     "History",
-    "Executive",
-    "Consultation",
+    "Diagnosis",
+    "Prescription",
   ].includes(title);
 
   const baseStyle = {
@@ -232,17 +233,45 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
 
 export default function Appointment_list() {
   const navigate = useNavigate();
+  const location = useLocation();
+
   const [appointmentData, setAppointmentData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isDbSearching, setIsDbSearching] = useState(false);
   const [filters, setFilters] = useState({
-    // global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-    global: { value: null, matchMode: FilterMatchMode.EQUALS },
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    patient_type: { value: null, matchMode: FilterMatchMode.EQUALS },
+    computedStatus: { value: null, matchMode: FilterMatchMode.EQUALS },
   });
   const [currentLocation, setCurrentLocation] = useState("default");
   const [fromDate, setFromDate] = useState(new Date());
   const [toDate, setToDate] = useState(new Date());
+
+  useEffect(() => {
+    if (location.state?.searchPhone) {
+      setFilters((prev) => ({
+        ...prev,
+        global: { value: location.state.searchPhone, matchMode: FilterMatchMode.CONTAINS }
+      }));
+      if (location.state.appointmentDate) {
+        const parsedDate = moment(location.state.appointmentDate, "DD-MM-YYYY").toDate();
+        if (moment(parsedDate).isValid()) {
+          setFromDate(parsedDate);
+          setToDate(parsedDate);
+        }
+      }
+    }
+    if (location.state?.registered_appointment_id) {
+      setRegisteredAppointments(prev => {
+        const newSet = new Set(prev);
+        newSet.add(location.state.registered_appointment_id);
+        return newSet;
+      });
+    }
+  }, [location.state]);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [registeredAppointments, setRegisteredAppointments] = useState(new Set());
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [appointmentIdToDelete, setAppointmentIdToDelete] = useState(null);
   const [cancellationReason, setCancellationReason] = useState("");
@@ -336,7 +365,7 @@ export default function Appointment_list() {
       if (result.statusCode === 201 || result.statusCode === 200) {
         Swal.fire("Success", "Receipt Generated Successfully", "success");
         setShowReceiptModal(false);
-        navigate("/reports/receipts");
+        navigate("/reports/receipts", { state: { printReceiptId: result.data?.receipt_id } });
       } else if (
         result.statusCode === 202 &&
         (result.data?.result === "success" || result.data?.stat === "success")
@@ -536,30 +565,74 @@ export default function Appointment_list() {
 
   const generateTimeSlots = () => {
     const slots = [];
-    const startTime = moment().startOf("day").add(7, "hours");
-    const endTime = moment().startOf("day").add(23, "hours").add(45, "minutes");
-
-    const isToday = moment(selectedAppointment?.appointment_timestamp).isSame(
-      moment(),
-      "day",
-    );
-    if (isToday) {
-      let now = moment();
-      let currentMinutes = now.minute();
-      let nextInterval = Math.ceil(currentMinutes / 15) * 15;
-      startTime
-        .set({ hour: now.hour(), minute: 0, second: 0 })
-        .add(nextInterval, "minutes");
-    }
-
-    let currentTime = startTime.clone();
-
-    while (currentTime.isSameOrBefore(endTime)) {
-      slots.push(currentTime.format("hh:mm A"));
-      currentTime.add(15, "minutes");
+    const startTime = new Date();
+    const endTime = new Date();
+    endTime.setHours(23, 45, 0);
+    startTime.setHours(7, 0, 0);
+    while (startTime <= endTime) {
+      slots.push(
+        startTime.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        }),
+      );
+      startTime.setMinutes(startTime.getMinutes() + 15);
     }
     return slots;
   };
+
+  const searchFromDatabase = async (query) => {
+    if (!currentLocation || currentLocation === "default" || isDbSearching) return;
+
+    setIsDbSearching(true);
+    try {
+      const response = await fetch(
+        `${BASE_URL}/V1/appointment/searchAppointments?query=${encodeURIComponent(
+          query
+        )}&location=${currentLocation}`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.data && data.data.length > 0) {
+          setAppointmentData((prev) => {
+            const existingIds = new Set(prev.map((app) => app.appointment_id));
+            const newUniqueApps = data.data.filter(
+              (app) => !existingIds.has(app.appointment_id)
+            );
+            return [...prev, ...newUniqueApps];
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error searching appointments from database:", error);
+    } finally {
+      setIsDbSearching(false);
+    }
+  };
+
+  useEffect(() => {
+    const searchValue = filters.global.value;
+    if (!searchValue || searchValue.length < 3) return;
+
+    const hasLocalMatches = appointmentData.some((app) => {
+      const lowerSearch = searchValue.toLowerCase();
+      return (
+        (app.patient_phone && app.patient_phone.includes(searchValue)) ||
+        (app.patient_name && app.patient_name.toLowerCase().includes(lowerSearch)) ||
+        (app.Uid_no && app.Uid_no.toLowerCase().includes(lowerSearch))
+      );
+    });
+
+    if (!hasLocalMatches) {
+      const delayDebounceFn = setTimeout(() => {
+        searchFromDatabase(searchValue);
+      }, 800);
+
+      return () => clearTimeout(delayDebounceFn);
+    }
+  }, [filters.global.value, appointmentData]);
 
   const fetchAppointmentData = useCallback(
     async (manualShowPending = null) => {
@@ -594,13 +667,35 @@ export default function Appointment_list() {
             data.data.length,
             "records",
           );
-          const mappedData = data.data.map((app) => ({
-            ...app,
-            patient_type:
-              app.patient_type === "Postoperative"
-                ? "Post Operative"
-                : app.patient_type,
-          }));
+          const sortedData = data.data.sort((a, b) => {
+            const timeA = a.appointment_time ? moment(a.appointment_time, ["HH:mm:ss", "hh:mm A"]).valueOf() : Number.MAX_SAFE_INTEGER;
+            const timeB = b.appointment_time ? moment(b.appointment_time, ["HH:mm:ss", "hh:mm A"]).valueOf() : Number.MAX_SAFE_INTEGER;
+            return timeA - timeB;
+          });
+          const mappedData = sortedData.map((app) => {
+            const isConfirmed = app.confirm_time != 0;
+            const hasHistory = Number(app.historychk) === 3;
+            const hasExecution = Number(app.executivechk) === 1;
+            const hasConsultation = Number(app.consultationchk) === 4;
+            const hasReceipt = Number(app.executivechk) === 2;
+
+            let computedStatus = "Appointment Confirmed";
+            if (!isConfirmed) computedStatus = "Pending Appointment";
+            else if (hasReceipt) computedStatus = "Receipt Generated";
+            else if (hasConsultation) computedStatus = "Prescription Checked";
+            else if (hasExecution) computedStatus = "Diagnosis Checked";
+            else if (hasHistory) computedStatus = "History Checked";
+
+            return {
+              ...app,
+              patient_phone: app.patient_phone ? String(app.patient_phone) : "",
+              patient_type:
+                app.patient_type === "Postoperative"
+                  ? "Post Operative"
+                  : app.patient_type,
+              computedStatus,
+            };
+          });
           setAppointmentData(mappedData);
         } else {
           console.error(
@@ -709,6 +804,10 @@ export default function Appointment_list() {
       "YYYY-MM-DD",
     );
     console.log(dateOnly);
+    const finalAppointmentTime = selectedAppointment.appointment_time
+      ? moment(selectedAppointment.appointment_time, ["HH:mm:ss", "hh:mm A"]).format("HH:mm:ss")
+      : null;
+
     const updatePayload = {
       ...selectedAppointment,
       patient_type:
@@ -716,6 +815,7 @@ export default function Appointment_list() {
           ? "Postoperative"
           : selectedAppointment.patient_type,
       appointment_timestamp: dateOnly,
+      appointment_time: finalAppointmentTime,
       patient_location: currentLocation,
     };
     console.log(updatePayload);
@@ -738,6 +838,7 @@ export default function Appointment_list() {
         });
         fetchAppointmentData();
         setShowEditModal(false);
+        window.dispatchEvent(new CustomEvent("refreshApptCounts"));
       } else {
         console.error("Failed to update appointment:", result.message);
         Swal.fire({
@@ -790,6 +891,7 @@ export default function Appointment_list() {
         fetchAppointmentData();
         setShowDeleteModal(false);
         setCancellationReason("");
+        window.dispatchEvent(new CustomEvent("refreshApptCounts"));
       } else {
         const errorData = await response.json();
         Swal.fire({
@@ -841,6 +943,7 @@ export default function Appointment_list() {
           title: successMessage,
         });
         fetchAppointmentData();
+        window.dispatchEvent(new CustomEvent("refreshApptCounts"));
       } else {
         Swal.fire({
           icon: "error",
@@ -877,7 +980,7 @@ export default function Appointment_list() {
     if (hasExecution) return "row-status-execution";
     if (hasHistory) return "row-status-history";
 
-    return "";
+    return "row-status-confirmed";
   };
 
   const renderActionBody = (rowData) => {
@@ -889,6 +992,7 @@ export default function Appointment_list() {
       consultationchk,
       patient_phone,
       patient_type,
+      ConfirmPatient,
     } = rowData;
     // console.log("ROW DATA:", rowData);
     const isConfirmed = confirm_time != 0;
@@ -896,6 +1000,14 @@ export default function Appointment_list() {
     const isExecutionDone = Number(executivechk) === 1;
     const isConsultationDone = Number(consultationchk) === 4;
     const isReceiptDone = Number(executivechk) === 2;
+
+    const showFourButtons =
+      registeredAppointments.has(appointment_id) ||
+      ConfirmPatient === 1 ||
+      isHistoryDone ||
+      isExecutionDone ||
+      isConsultationDone ||
+      isReceiptDone;
 
     return (
       <div
@@ -946,7 +1058,23 @@ export default function Appointment_list() {
           </>
         )}
 
-        {isConfirmed && (
+        {isConfirmed && !showFourButtons && (
+          <ActionButton
+            title="Edit Patient"
+            onClick={() => {
+              navigate('/patients', {
+                state: {
+                  openEditForPhone: patient_phone,
+                  returnToAppointment: true,
+                  appointment_id: appointment_id
+                }
+              });
+            }}
+            icon="user-check"
+          />
+        )}
+
+        {isConfirmed && showFourButtons && (
           <>
             <ActionButton
               title="History"
@@ -964,33 +1092,33 @@ export default function Appointment_list() {
             />
 
             <ActionButton
-              title="Executive"
+              title="Diagnosis"
               onClick={() =>
                 handleProcessUpdate(
                   appointment_id,
                   "updateExecutionChk",
                   null,
                   null,
-                  "Execution process completed!",
+                  "Diagnosis process completed!",
                 )
               }
               disabled={!isHistoryDone || isExecutionDone || isReceiptDone}
-              icon="list"
+              icon="activity"
             />
 
             <ActionButton
-              title="Consultation"
+              title="Prescription"
               onClick={() =>
                 handleProcessUpdate(
                   appointment_id,
                   "updateConsultationChk",
                   null,
                   null,
-                  "Consultation process completed!",
+                  "Prescription process completed!",
                 )
               }
               disabled={!isExecutionDone || isConsultationDone}
-              icon="user"
+              icon="clipboard"
             />
 
             <ActionButton
@@ -1008,36 +1136,43 @@ export default function Appointment_list() {
     );
   };
 
-  const ColorLegend = ({ name, count, bgColor }) => (
-    <div
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        marginRight: "20px",
-      }}
-    >
+  const ColorLegend = ({ name, count, bgColor }) => {
+    const isSelected = filters.computedStatus?.value === name;
+    return (
       <div
-        style={{
-          width: "11px",
-          height: "11px",
-          borderRadius: "3px",
-          backgroundColor: bgColor,
-          border: "1px solid #ccc",
-          marginRight: "5px",
+        onClick={() => {
+          setFilters((prev) => {
+            const currentVal = prev.computedStatus?.value;
+            const newVal = currentVal === name ? null : name;
+            return {
+              ...prev,
+              computedStatus: { value: newVal, matchMode: FilterMatchMode.EQUALS }
+            };
+          });
         }}
-      ></div>
-      <p
+        className={`color-legend-pill ${isSelected ? "selected" : ""}`}
         style={{
-          display: "inline",
-          margin: 0,
-          fontSize: "12px",
-          color: "#000",
+          "--status-hover-color": bgColor === "#ffffff" ? "#0ea5e9" : bgColor,
+          "--status-hover-bg": `${bgColor === "#ffffff" ? "#0ea5e9" : bgColor}15`,
+          ...(isSelected ? {
+            borderColor: bgColor === "#ffffff" ? "#0ea5e9" : bgColor,
+            backgroundColor: `${bgColor === "#ffffff" ? "#0ea5e9" : bgColor}25`,
+            transform: "translateY(-1.5px)",
+            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)"
+          } : {})
         }}
       >
-        {name}
-      </p>
-    </div>
-  );
+        <div
+          className="status-dot"
+          style={{
+            backgroundColor: bgColor,
+            ...(isSelected ? { transform: "scale(1.25)", boxShadow: `0 0 8px ${bgColor}` } : {})
+          }}
+        ></div>
+        <p style={{ fontWeight: isSelected ? "700" : "600" }}>{name}</p>
+      </div>
+    );
+  };
 
   const renderHeader = () => (
     <div
@@ -1105,17 +1240,18 @@ export default function Appointment_list() {
             >
               Search
             </span>
-            <InputGroup>
+            <InputGroup style={{ position: 'relative' }}>
               <Form.Control
                 type="search"
                 value={filters.global.value || ""}
                 onChange={(e) =>
-                  setFilters({
+                  setFilters((prev) => ({
+                    ...prev,
                     global: {
                       value: e.target.value,
                       matchMode: FilterMatchMode.CONTAINS,
                     },
-                  })
+                  }))
                 }
                 placeholder="Global Search"
                 style={{
@@ -1128,6 +1264,18 @@ export default function Appointment_list() {
                   transition: "all 0.3s ease",
                 }}
               />
+              {isDbSearching && (
+                <div style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  zIndex: 5,
+                  pointerEvents: 'none'
+                }}>
+                  <Spinner animation="border" size="sm" variant="info" style={{ width: '12px', height: '12px' }} />
+                </div>
+              )}
             </InputGroup>
           </Form.Group>
         </div>
@@ -1215,16 +1363,46 @@ export default function Appointment_list() {
             <FeatherIcon icon="refresh-ccw" size={12} className="me-1" />
             Refresh
           </Button>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setFromDate(null);
+              setToDate(null);
+              setFilters((prev) => ({
+                ...prev,
+                global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+                patient_type: { value: null, matchMode: FilterMatchMode.EQUALS },
+                computedStatus: { value: null, matchMode: FilterMatchMode.EQUALS },
+              }));
+            }}
+            style={{
+              backgroundColor: "#ff9800",
+              border: "none",
+              borderRadius: "8px",
+              padding: "5px 5px",
+              fontSize: "12px",
+              fontWeight: "500",
+              color: "white",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              marginTop: "13px",
+            }}
+          >
+            <FeatherIcon icon="filter" size={12} className="me-1" />
+            Clear Filter
+          </Button>
         </div>
       </div>
       <div style={{ marginTop: "15px" }}>
         <Col xs={12} style={{ padding: "2px" }}>
           <div className="d-flex flex-wrap justify-content-start align-items-center">
-            <ColorLegend name="Appointment Confirm" bgColor="#ffffff" />
-            <ColorLegend name="History Checked" bgColor="#FFA500" />
-            <ColorLegend name="Executive Checked" bgColor="#FFFF00" />
-            <ColorLegend name="Consultation Checked" bgColor="#800080" />
-            <ColorLegend name="Receipt Generated" bgColor="#008000" />
+            <ColorLegend name="Pending Appointment" bgColor="#ffffff" />
+            <ColorLegend name="Appointment Confirmed" bgColor="#0ea5e9" />
+            <ColorLegend name="History Checked" bgColor="#f43f5e" />
+            <ColorLegend name="Diagnosis Checked" bgColor="#f59e0b" />
+            <ColorLegend name="Prescription Checked" bgColor="#8b5cf6" />
+            <ColorLegend name="Receipt Generated" bgColor="#10b981" />
           </div>
         </Col>
       </div>
@@ -1389,7 +1567,14 @@ export default function Appointment_list() {
                     </Form.Label>
                     <Form.Select
                       name="appointment_time"
-                      value={selectedAppointment.appointment_time || ""}
+                      value={
+                        selectedAppointment.appointment_time
+                          ? moment(
+                            selectedAppointment.appointment_time,
+                            ["HH:mm:ss", "hh:mm A"]
+                          ).format("hh:mm A")
+                          : ""
+                      }
                       onChange={handleEditModalInputChange}
                       style={{
                         border: "2px solid rgb(77, 208, 225)",
@@ -1699,6 +1884,7 @@ export default function Appointment_list() {
                         "doctor_name",
                         "FDE_Name",
                         "patient_address",
+                        "patient_location",
                       ]}
                       paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
                       currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
@@ -1763,14 +1949,47 @@ export default function Appointment_list() {
 
                       <Column
                         field="patient_type"
-                        header="Patient Type"
+                        header={
+                          <select
+                            value={filters?.patient_type?.value || ""}
+                            onChange={(e) => {
+                              setFilters((prev) => ({
+                                ...prev,
+                                patient_type: {
+                                  value: e.target.value || null,
+                                  matchMode: FilterMatchMode.EQUALS,
+                                },
+                              }));
+                            }}
+                            style={{
+                              fontSize: "12px",
+                              fontWeight: "bold",
+                              border: "none",
+                              background: "transparent",
+                              cursor: "pointer",
+                              outline: "none",
+                              color: "inherit",
+                              textAlign: "center"
+                            }}
+                          >
+                            <option value="">Patient Type</option>
+                            {TYPE_LIST.map((type, idx) => (
+                              <option key={idx} value={type}>
+                                {type}
+                              </option>
+                            ))}
+                          </select>
+                        }
                         style={{
-                          ...getColumnStyle("90px"),
+                          ...getColumnStyle("110px"),
                           border: "1px solid #90caf9",
+                          padding: "0"
                         }}
                         body={(rowData) => rowData.patient_type || "-"}
                         headerClassName="datatable-header-center"
                       />
+
+                      <Column field="computedStatus" style={{ display: 'none' }} />
 
                       <Column
                         field="patient_name"
@@ -1815,27 +2034,6 @@ export default function Appointment_list() {
                         body={(rowData) => rowData.FDE_Name || "-"}
                         headerClassName="datatable-header-center"
                       />
-
-                      {/* <Column
-                        field="note"
-                        header="Note"
-                        style={{
-                          ...getColumnStyle("125px"),
-                          border: "1px solid #90caf9",
-                        }}
-                        body={(rowData) => (
-                          <div
-                            style={{
-                              whiteSpace: "normal",
-                              textAlign: "center",
-                            }}
-                          >
-                            {rowData.note || "-"}
-                          </div>
-                        )}
-                        headerClassName="datatable-header-center"
-                      /> */}
-
                       <Column
                         field="note"
                         header="Note"
@@ -1967,7 +2165,7 @@ export default function Appointment_list() {
                       borderRadius: "10px",
                     }}
                   >
-                    {["DNC", "DNW", "DNP", "Only Registration"].map((opt) => (
+                    {["DNC", "DNW", "Only Registration"].map((opt) => (
                       <Form.Check
                         inline
                         key={opt}
@@ -2075,25 +2273,48 @@ export default function Appointment_list() {
                   </Col>
                   <Col md={2}>
                     <Form.Label style={{ fontSize: "11px" }}>
-                      Amount (₹)
+                      Amount
                     </Form.Label>
-                    <Form.Control
-                      type="number"
-                      placeholder="E.g. 1000"
-                      style={{
-                        fontSize: "11px",
-                        border: "2px solid rgb(77, 208, 225)",
-                        borderRadius: "10px",
-                      }}
-                      value={receiptForm.registrationType ? 0 : item.amount}
-                      disabled={!!receiptForm.registrationType}
-                      onWheel={(e) => e.target.blur()}
-                      onChange={(e) => {
-                        const newItems = [...billingItems];
-                        newItems[index].amount = e.target.value;
-                        setBillingItems(newItems);
-                      }}
-                    />
+                    <InputGroup>
+                      <InputGroup.Text
+                        style={{
+                          fontSize: "11px",
+                          border: "2px solid rgb(77, 208, 225)",
+                          borderRight: "none",
+                          backgroundColor: "#f8f9fa",
+                          borderRadius: "10px 0 0 10px",
+                          padding: "0.375rem 0.5rem"
+                        }}
+                      >
+                        ₹
+                      </InputGroup.Text>
+                      <Form.Control
+                        type="number"
+                        placeholder="E.g. 1000"
+                        style={{
+                          fontSize: "11px",
+                          border: "2px solid rgb(77, 208, 225)",
+                          borderLeft: "none",
+                          borderRadius: "0 10px 10px 0",
+                        }}
+                        value={
+                          receiptForm.registrationType &&
+                            receiptForm.registrationType !== "Only Registration"
+                            ? 0
+                            : item.amount
+                        }
+                        disabled={
+                          !!receiptForm.registrationType &&
+                          receiptForm.registrationType !== "Only Registration"
+                        }
+                        onWheel={(e) => e.target.blur()}
+                        onChange={(e) => {
+                          const newItems = [...billingItems];
+                          newItems[index].amount = e.target.value;
+                          setBillingItems(newItems);
+                        }}
+                      />
+                    </InputGroup>
                   </Col>
                   <Col md={4} className="d-flex">
                     <Button
@@ -2134,24 +2355,45 @@ export default function Appointment_list() {
               <Row>
                 <Col md={4}>
                   <Form.Label style={{ fontSize: "12px", fontWeight: "500" }}>
-                    Discount Amount (₹)
+                    Discount Amount
                   </Form.Label>
-                  <Form.Control
-                    type="number"
-                    name="discountAmt"
-                    placeholder="E.g. 1000"
-                    style={{
-                      fontSize: "12px",
-                      border: "2px solid rgb(77, 208, 225)",
-                      borderRadius: "10px",
-                    }}
-                    value={
-                      receiptForm.registrationType ? 0 : receiptForm.discountAmt
-                    }
-                    disabled={!!receiptForm.registrationType}
-                    onWheel={(e) => e.target.blur()}
-                    onChange={handleReceiptFormChange}
-                  />
+                  <InputGroup>
+                    <InputGroup.Text
+                      style={{
+                        fontSize: "12px",
+                        border: "2px solid rgb(77, 208, 225)",
+                        borderRight: "none",
+                        backgroundColor: "#f8f9fa",
+                        borderRadius: "10px 0 0 10px",
+                        padding: "0.375rem 0.5rem"
+                      }}
+                    >
+                      ₹
+                    </InputGroup.Text>
+                    <Form.Control
+                      type="number"
+                      name="discountAmt"
+                      placeholder="E.g. 1000"
+                      style={{
+                        fontSize: "12px",
+                        border: "2px solid rgb(77, 208, 225)",
+                        borderLeft: "none",
+                        borderRadius: "0 10px 10px 0",
+                      }}
+                      value={
+                        receiptForm.registrationType &&
+                          receiptForm.registrationType !== "Only Registration"
+                          ? 0
+                          : receiptForm.discountAmt
+                      }
+                      disabled={
+                        !!receiptForm.registrationType &&
+                        receiptForm.registrationType !== "Only Registration"
+                      }
+                      onWheel={(e) => e.target.blur()}
+                      onChange={handleReceiptFormChange}
+                    />
+                  </InputGroup>
                 </Col>
                 <Col md={8}>
                   <Form.Label style={{ fontSize: "12px", fontWeight: "500" }}>
@@ -2173,15 +2415,17 @@ export default function Appointment_list() {
               <Row>
                 <Col md={4}>
                   <Form.Label style={{ fontSize: "12px", fontWeight: "500" }}>
-                    Mode of Payment
+                    Mode of Payment <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Select
+                    required
                     style={{
                       fontSize: "12px",
                       border: "2px solid rgb(77, 208, 225)",
                       borderRadius: "10px",
                     }}
                     name="paymentMode"
+                    value={receiptForm.paymentMode || ""}
                     onChange={handleReceiptFormChange}
                   >
                     <option value="">Select Mode</option>
@@ -2200,10 +2444,10 @@ export default function Appointment_list() {
                       display: "block",
                     }}
                   >
-                    PoS Terminal
+                    PoS Terminal <span className="text-danger">*</span>
                   </Form.Label>
                   <div
-                    className="d-flex flex-wrap gap-2 p-2"
+                    className="d-flex flex-wrap gap-4 p-2"
                     style={{
                       border: "2px solid rgb(77, 208, 225)",
                       borderRadius: "6px",
@@ -2212,14 +2456,13 @@ export default function Appointment_list() {
                     }}
                   >
                     {[
-                      "KOTAK",
                       "HDFC",
-                      "BharatPe1",
                       "BharatPe2",
                       "PINE LABS",
                       "OFFLINE",
                     ].map((opt) => (
                       <Form.Check
+                        required
                         inline
                         key={opt}
                         label={opt}
@@ -2326,6 +2569,12 @@ export default function Appointment_list() {
             padding: "5px",
           }}
         >
+          {calculateTotals().subtotal > 10000 && (
+            <span className="text-danger fw-bold me-auto d-flex align-items-center" style={{ fontSize: "14px", marginRight: "10px" }}>
+              <FeatherIcon icon="alert-triangle" size="16" style={{ marginRight: "5px" }} />
+              Warning: The subtotal exceeds the permissible limit of ₹10,000.
+            </span>
+          )}
           <Button
             variant="secondary"
             onClick={() => setShowReceiptModal(false)}
@@ -2333,11 +2582,13 @@ export default function Appointment_list() {
           >
             Cancel
           </Button>
+
           <Button
             type="submit"
             form="opd-receipt-form"
+            disabled={calculateTotals().subtotal > 10000}
             style={{
-              backgroundColor: "#00bcd4",
+              backgroundColor: calculateTotals().subtotal > 10000 ? "#cccccc" : "#00bcd4",
               border: "none",
               fontSize: "12px",
               borderRadius: "10px",

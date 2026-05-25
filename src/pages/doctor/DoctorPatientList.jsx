@@ -304,6 +304,8 @@ export default function DoctorPatientList() {
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isDbSearching, setIsDbSearching] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditPatientModal, setShowEditPatientModal] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
@@ -537,6 +539,48 @@ export default function DoctorPatientList() {
     return age < 0 ? 0 : age;
   };
 
+  const getConditionLabel = (rowData) => {
+    const diagnosisText = String(rowData?.diagnosis || "").toLowerCase();
+    if (!diagnosisText.trim()) return "-";
+
+    const labels = [];
+    const addLabel = (label) => {
+      if (!labels.includes(label)) labels.push(label);
+    };
+
+    if (/haemorrhoid|hemorrhoid|hemorrhoids?/.test(diagnosisText)) addLabel("piles");
+    if (diagnosisText.includes("fistula")) addLabel("fistula");
+    if (diagnosisText.includes("hernia")) addLabel("hernia");
+    if (diagnosisText.includes("varicose")) addLabel("varicose veins");
+    if (diagnosisText.includes("prolapse")) addLabel("prolapse");
+    if (
+      diagnosisText.includes("circumcision") ||
+      diagnosisText.includes("phimosis") ||
+      diagnosisText.includes("balanoposthitis") ||
+      diagnosisText.includes("frenulum")
+    ) {
+      addLabel("circumcision");
+    }
+    if (diagnosisText.includes("abscess")) addLabel("abscess");
+    if (diagnosisText.includes("fissure")) addLabel("fissure");
+    if (diagnosisText.includes("hydrocele")) addLabel("hydrocele");
+    if (diagnosisText.includes("lipoma")) addLabel("lipoma");
+    if (diagnosisText.includes("gynecomastia")) addLabel("gynecomastia");
+    if (diagnosisText.includes("pilonidal")) addLabel("pilonidal sinus");
+    if (diagnosisText.includes("cyst")) addLabel("cyst");
+    if (
+      diagnosisText.includes("prostate") ||
+      diagnosisText.includes("urethra") ||
+      diagnosisText.includes("kidney stone") ||
+      diagnosisText.includes("urology")
+    ) {
+      addLabel("urology");
+    }
+    if (diagnosisText.includes("other")) addLabel("other");
+
+    return labels.length ? labels.join(" + ") : rowData.diagnosis || "-";
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     console.log("Input Change:", name, value);
@@ -673,6 +717,60 @@ export default function DoctorPatientList() {
       setLoading(false);
     }
   };
+
+  const searchFromDatabase = async (query) => {
+    if (!currentLocation || isDbSearching) return;
+
+    setIsDbSearching(true);
+    try {
+      const response = await fetch(
+        `${BASE_URL}/V1/patient/searchPatient?query=${encodeURIComponent(
+          query
+        )}&location=${currentLocation}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result && result.data && result.data.length > 0) {
+          setPatients((prev) => {
+            const existingIds = new Set(prev.map((p) => String(p.patient_id)));
+            const uniqueNew = result.data.filter((p) => !existingIds.has(String(p.patient_id)));
+            return [...prev, ...uniqueNew];
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error searching from database:", error);
+    } finally {
+      setIsDbSearching(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!searchTerm || searchTerm.length < 3) return;
+
+    const hasLocalMatches = patients.some((p) => {
+      const lowerSearch = searchTerm.toLowerCase();
+      return (
+        (p.Uid_no && p.Uid_no.toLowerCase().includes(lowerSearch)) ||
+        (p.name && p.name.toLowerCase().includes(lowerSearch)) ||
+        (p.phone && String(p.phone).includes(searchTerm))
+      );
+    });
+
+    if (!hasLocalMatches) {
+      const delayDebounceFn = setTimeout(() => {
+        searchFromDatabase(searchTerm);
+      }, 800);
+
+      return () => clearTimeout(delayDebounceFn);
+    }
+  }, [searchTerm, patients]);
 
   useEffect(() => {
     if (currentLocation && currentLocation !== "default") {
@@ -1392,6 +1490,10 @@ export default function DoctorPatientList() {
         onClick={() =>
           navigate("/doctor-patient-details", { state: { patient } })
         }
+        style={{
+          borderRadius: "6px",
+          padding: "5px 8px",
+        }}
       >
         <FeatherIcon icon="eye" size="16" />
       </Button>
@@ -2500,7 +2602,6 @@ export default function DoctorPatientList() {
                   display: "flex",
                   padding: 5,
                   marginBottom: "5px",
-                  fontSize: "10px",
                   flexWrap: "wrap",
                   gap: "25px",
                   fontSize: "12px",
@@ -2659,18 +2760,20 @@ export default function DoctorPatientList() {
             >
               Search
             </span>
-            <InputGroup>
+            <InputGroup style={{ position: 'relative' }}>
               <Form.Control
                 type="search"
-                value={filters1.global.value || ""}
-                onChange={(e) =>
+                value={searchTerm}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSearchTerm(val);
                   setFilters1({
                     global: {
-                      value: e.target.value,
+                      value: val,
                       matchMode: FilterMatchMode.CONTAINS,
                     },
-                  })
-                }
+                  });
+                }}
                 placeholder="Global Search"
                 style={{
                   borderRadius: "6px",
@@ -2682,8 +2785,45 @@ export default function DoctorPatientList() {
                   transition: "all 0.3s ease",
                 }}
               />
+              {isDbSearching && (
+                <div style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  zIndex: 5,
+                  pointerEvents: 'none'
+                }}>
+                  <Spinner animation="border" size="sm" variant="info" style={{ width: '12px', height: '12px' }} />
+                </div>
+              )}
             </InputGroup>
           </Form.Group>
+
+          <Button
+            variant="info"
+            onClick={() => {
+              const today = new Date();
+              setFromDate(today);
+              setToDate(today);
+            }}
+            style={{
+              backgroundColor: "#29b6f6",
+              border: "none",
+              borderRadius: "6px",
+              padding: "5px 10px",
+              fontSize: "12px",
+              fontWeight: "500",
+              color: "white",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              marginLeft: "15px"
+            }}
+          >
+            <FeatherIcon icon="calendar" size={12} className="me-1" />
+            Today's Patients
+          </Button>
         </div>
 
         <div
@@ -2771,6 +2911,33 @@ export default function DoctorPatientList() {
           >
             <FeatherIcon icon="refresh-ccw" size={12} className="me-1" />
             Refresh
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setFromDate(null);
+              setToDate(null);
+              setSearchTerm("");
+              setFilters1({
+                global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+              });
+            }}
+            style={{
+              backgroundColor: "#ff9800",
+              border: "none",
+              borderRadius: "8px",
+              padding: "5px 5px",
+              fontSize: "12px",
+              fontWeight: "500",
+              color: "white",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              marginTop: "13px",
+            }}
+          >
+            <FeatherIcon icon="filter" size={12} className="me-1" />
+            Clear Filter
           </Button>
         </div>
       </div>
@@ -4131,18 +4298,6 @@ export default function DoctorPatientList() {
                         }}
                       />
 
-                      <Column
-                        field="address"
-                        header="Patient Address"
-                        headerClassName="datatable-header-center"
-                        body={(rowData) => rowData.address || "-"}
-                        style={{
-                          border: "1px solid #90caf9",
-                          padding: "0.75rem",
-                          width: "200px",
-                          textAlign: "center",
-                        }}
-                      />
 
                       <Column
                         field="sex"
@@ -4154,19 +4309,6 @@ export default function DoctorPatientList() {
                           textAlign: "center",
                           padding: "0.75rem",
                           width: "60px",
-                        }}
-                      />
-
-                      <Column
-                        field="birth_date"
-                        header="DOB"
-                        headerClassName="datatable-header-center"
-                        body={(rowData) => rowData.birth_date || "-"}
-                        style={{
-                          border: "1px solid #90caf9",
-                          textAlign: "center",
-                          padding: "0.75rem",
-                          width: "110px",
                         }}
                       />
 
@@ -4194,6 +4336,32 @@ export default function DoctorPatientList() {
                           textAlign: "center",
                           padding: "0.75rem",
                           width: "70px",
+                        }}
+                      />
+
+                      <Column
+                        field="diagnosis"
+                        header="Condition"
+                        headerClassName="datatable-header-center"
+                        body={(rowData) => getConditionLabel(rowData)}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "150px",
+                        }}
+                      />
+
+                      <Column
+                        field="diagnosisAdvice"
+                        header="Advice Treatment"
+                        headerClassName="datatable-header-center"
+                        body={(rowData) => rowData.diagnosisAdvice || "-"}
+                        style={{
+                          border: "1px solid #90caf9",
+                          padding: "0.75rem",
+                          width: "200px",
+                          textAlign: "center",
                         }}
                       />
 

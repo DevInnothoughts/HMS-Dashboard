@@ -65,24 +65,6 @@ export default function NavBarA() {
               <span className="nav-icon">🧾</span>
               OPD Receipt List
             </Link>
-            <span className="separator">•</span>
-            <Link
-              to="/reports/enquiry"
-              className={`nav-link ${location.pathname === "/reports/enquiry" ? "active" : ""
-                }`}
-            >
-              <span className="nav-icon">📋</span>
-              Enquiry List
-            </Link>
-            <span className="separator">•</span>
-            <Link
-              to="/reports/enquiry/add"
-              className={`nav-link ${location.pathname === "/reports/enquiry/add" ? "active" : ""
-                }`}
-            >
-              <span className="nav-icon">➕</span>
-              Add Enquiry
-            </Link>
           </nav>
         </div>
       </Container>

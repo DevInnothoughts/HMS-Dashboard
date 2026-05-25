@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import NavbarIpdBills from "../../components/NavbarIpdBills";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
-import { Row, Col, Form, Container, Card, Button } from "react-bootstrap";
+import { Row, Col, Form, Container, Card, Button, InputGroup } from "react-bootstrap";
 import { decodeJwt } from "../../utils/decode-jwt";
 import Swal from "sweetalert2";
 
@@ -822,16 +822,19 @@ const AddInvoice = () => {
                     >
                       Amount (₹)
                     </Form.Label>
-                    <Form.Control
-                      style={inputStyle}
-                      type="number"
-                      placeholder="e.g. 500"
-                      value={row.value}
-                      onChange={(e) =>
-                        handleDynamicRowChange(index, "value", e.target.value)
-                      }
-                      onWheel={(e) => e.target.blur()}
-                    />
+                    <InputGroup size="sm" style={{ flexWrap: "nowrap" }}>
+                      <InputGroup.Text style={{ ...inputStyle, borderRight: "none", backgroundColor: "#f8f9fa", borderTopRightRadius: 0, borderBottomRightRadius: 0, paddingRight: "5px" }}>₹</InputGroup.Text>
+                      <Form.Control
+                        style={{ ...inputStyle, borderLeft: "none", borderTopLeftRadius: 0, borderBottomLeftRadius: 0, paddingLeft: "5px" }}
+                        type="number"
+                        placeholder="e.g. 500"
+                        value={row.value}
+                        onChange={(e) =>
+                          handleDynamicRowChange(index, "value", e.target.value)
+                        }
+                        onWheel={(e) => e.target.blur()}
+                      />
+                    </InputGroup>
                   </Col>
                   <Col md={3}>
                     <div className="d-flex gap-2">
@@ -995,15 +998,18 @@ const AddInvoice = () => {
                       >
                         PDC Amount (₹)
                       </Form.Label>
-                      <Form.Control
-                        style={inputStyle}
-                        onWheel={(e) => e.target.blur()}
-                        placeholder="Enter PDC Amount"
-                        type="number"
-                        name="pdc"
-                        value={formData.pdc}
-                        onChange={handleInputChange}
-                      />
+                      <InputGroup size="sm" style={{ flexWrap: "nowrap" }}>
+                        <InputGroup.Text style={{ ...inputStyle, borderRight: "none", backgroundColor: "#f8f9fa", borderTopRightRadius: 0, borderBottomRightRadius: 0, paddingRight: "5px" }}>₹</InputGroup.Text>
+                        <Form.Control
+                          style={{ ...inputStyle, borderLeft: "none", borderTopLeftRadius: 0, borderBottomLeftRadius: 0, paddingLeft: "5px" }}
+                          onWheel={(e) => e.target.blur()}
+                          placeholder="Enter PDC Amount"
+                          type="number"
+                          name="pdc"
+                          value={formData.pdc}
+                          onChange={handleInputChange}
+                        />
+                      </InputGroup>
                     </Col>
                   </>
                 )}
@@ -1019,15 +1025,18 @@ const AddInvoice = () => {
                     >
                       Discount Amount (₹)
                     </Form.Label>
-                    <Form.Control
-                      style={inputStyle}
-                      onWheel={(e) => e.target.blur()}
-                      placeholder="e.g. 1000"
-                      type="number"
-                      name="discount"
-                      value={formData.discount}
-                      onChange={handleInputChange}
-                    />
+                    <InputGroup size="sm" style={{ flexWrap: "nowrap" }}>
+                      <InputGroup.Text style={{ ...inputStyle, borderRight: "none", backgroundColor: "#f8f9fa", borderTopRightRadius: 0, borderBottomRightRadius: 0, paddingRight: "5px" }}>₹</InputGroup.Text>
+                      <Form.Control
+                        style={{ ...inputStyle, borderLeft: "none", borderTopLeftRadius: 0, borderBottomLeftRadius: 0, paddingLeft: "5px" }}
+                        onWheel={(e) => e.target.blur()}
+                        placeholder="e.g. 1000"
+                        type="number"
+                        name="discount"
+                        value={formData.discount}
+                        onChange={handleInputChange}
+                      />
+                    </InputGroup>
                   </Col>
                 )}
 
@@ -1042,15 +1051,18 @@ const AddInvoice = () => {
                     >
                       Discount Amount (₹)
                     </Form.Label>
-                    <Form.Control
-                      style={inputStyle}
-                      onWheel={(e) => e.target.blur()}
-                      placeholder="e.g. 100"
-                      type="number"
-                      name="discountAmount"
-                      value={formData.discountAmount}
-                      onChange={handleInputChange}
-                    />
+                    <InputGroup size="sm" style={{ flexWrap: "nowrap" }}>
+                      <InputGroup.Text style={{ ...inputStyle, borderRight: "none", backgroundColor: "#f8f9fa", borderTopRightRadius: 0, borderBottomRightRadius: 0, paddingRight: "5px" }}>₹</InputGroup.Text>
+                      <Form.Control
+                        style={{ ...inputStyle, borderLeft: "none", borderTopLeftRadius: 0, borderBottomLeftRadius: 0, paddingLeft: "5px" }}
+                        onWheel={(e) => e.target.blur()}
+                        placeholder="e.g. 100"
+                        type="number"
+                        name="discountAmount"
+                        value={formData.discountAmount}
+                        onChange={handleInputChange}
+                      />
+                    </InputGroup>
                   </Col>
                 )}
 

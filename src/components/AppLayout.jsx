@@ -2,11 +2,13 @@
 
 import React from "react";
 import { useLocation } from "react-router-dom";
-import Header from "./Header"; // Adjust path if needed
+import RecpHeader from "./RecpHeader";
+import DoctorHeader from "./DoctorHeader";
 import Sidebar from "./Sidebar"; // Adjust path if needed
 // import Customizer from "./Customizer"; // Adjust path if needed
 import Taptotop from "./Taptotop"; // Adjust path if needed
 import { SidebarProvider } from "../pages/api/useSidebarContext"; // Adjust path if needed
+
 
 // Routes that should *not* have the header/sidebar/customizer
 const routesWithoutExtras = [
@@ -35,12 +37,18 @@ const AppLayout = ({ children }) => {
   return (
     <SidebarProvider>
       {/* Conditionally render Header */}
-      {shouldRenderExtras && headerEnabled && <Header />}
+      {shouldRenderExtras && headerEnabled && (
+        localStorage.getItem("accountType") === "doctor" ? <DoctorHeader /> : <RecpHeader />
+      )}
       {/* Conditionally render Sidebar */}
       {shouldRenderExtras && sidebarEnabled && <Sidebar />}
 
       {/* The main content/Routes will be rendered here */}
       {children}
+
+      {/* Floating Action Button Start */}
+
+      {/* Floating Action Button End */}
 
       {/* Scroll To Top Start */}
       <Taptotop />

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import FeatherIcon from "feather-icons-react";
 import {
   Row,
@@ -68,17 +68,56 @@ function decodeJwt(token) {
 }
 
 export default function ReceptionistDashboard() {
+  const navigate = useNavigate();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [doctors, setDoctors] = useState([]);
   const [selectedDoctorId, setSelectedDoctorId] = useState("");
   const [currentLocation, setCurrentLocation] = useState("default");
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [currentView, setCurrentView] = useState("month");
+  const [currentView, setCurrentView] = useState("day");
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelComment, setCancelComment] = useState("");
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [viewMode, setViewMode] = useState("list"); // "calendar" or "list"
+  const [daySearchTerm, setDaySearchTerm] = useState("");
+  const [activePatientTypeFilter, setActivePatientTypeFilter] = useState(null);
   const calendarRef = React.useRef(null);
+
+  const togglePatientTypeFilter = (type) => {
+    setActivePatientTypeFilter(prev => prev === type ? null : type);
+  };
+
+  const filteredAppointments = appointments.filter(a => {
+    if (!activePatientTypeFilter) return true;
+    return a.patientType === activePatientTypeFilter;
+  });
+  useEffect(() => {
+    const handleSelectEvent = (e) => {
+      const { appointmentId } = e.detail;
+      const appt = appointments.find(a => a.appointmentid === appointmentId);
+      if (appt) {
+        setSelectedEvent(appt);
+        setViewMode("list");
+      }
+    };
+
+    window.addEventListener("selectAppointment", handleSelectEvent);
+
+    // Also check localStorage on mount/refresh
+    const autoSelectId = localStorage.getItem("autoSelectAppointmentId");
+    if (autoSelectId && appointments.length > 0) {
+      const appt = appointments.find(a => a.appointmentid === parseInt(autoSelectId));
+      if (appt) {
+        setSelectedEvent(appt);
+        setViewMode("list");
+        localStorage.removeItem("autoSelectAppointmentId");
+      }
+    }
+
+    return () => window.removeEventListener("selectAppointment", handleSelectEvent);
+  }, [appointments]);
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -129,19 +168,28 @@ export default function ReceptionistDashboard() {
         standardizedType = "POSTOPERATIVE";
       // ------------------------------
 
+      const appointmentTime24 = startTime.isValid() ? startTime.format("HH:mm") : app.appointment_time;
+
       return {
-        title: `${app.appointment_time || "N/A"} — ${app.patient_name || "Patient"}`,
+        title: `${appointmentTime24 || "N/A"} — ${app.patient_name || "Patient"}`,
         start: startTime.toDate(),
         end: endTime.toDate(),
         phone: app.patient_phone,
         date: moment(app.appointment_timestamp).format("DD-MM-YYYY"),
-        time: app.appointment_time,
+        time: appointmentTime24,
         patientName: app.patient_name,
         doctorName: app.doctor_name,
         patientType: standardizedType, // Now always NEW, FOLLOW, POSTOPERATIVE, or OTHER
         status: app.status,
         note: app.note,
         confirmTime: app.confirm_time,
+        historyTime: app.history_time,
+        executionTime: app.execution_time,
+        consultationTime: app.consultation_time,
+        receiptTime: app.receipt_time,
+        historychk: app.historychk,
+        executivechk: app.executivechk,
+        consultationchk: app.consultationchk,
         patientid: app.patient_id,
         appointmentid: app.appointment_id,
         isConfirmed: app.confirm_time !== "0" && app.confirm_time !== 0,
@@ -234,7 +282,7 @@ export default function ReceptionistDashboard() {
   const handleDateChange = (e) =>
     setSelectedDate(moment(e.target.value, "YYYY-MM-DD").toDate());
   const handleDoctorChange = (e) => setSelectedDoctorId(e.target.value);
-  const handleRefreshClick = () => setSelectedDate(new Date());
+
 
   const handleEventClick = (event) => {
     setSelectedEvent(event);
@@ -270,6 +318,7 @@ export default function ReceptionistDashboard() {
           confirmTime: moment().format("HH:mm"),
         }));
         await fetchAppointmentsForRange(selectedDate, selectedDoctorId);
+        window.dispatchEvent(new CustomEvent("refreshApptCounts"));
       }
     } catch (error) {
       console.error(error);
@@ -292,6 +341,7 @@ export default function ReceptionistDashboard() {
         setSelectedEvent(null);
         setShowCancelModal(false);
         setCancelComment("");
+        window.dispatchEvent(new CustomEvent("refreshApptCounts"));
       }
     } catch (error) {
       console.error(error);
@@ -300,10 +350,10 @@ export default function ReceptionistDashboard() {
 
   const eventStyleGetter = useCallback((event) => {
     const colorMap = {
-      NEW: "#000000",
-      FOLLOW: "#ff8000",
-      POSTOPERATIVE: "#8000ff",
-      OTHER: "#ff0080",
+      NEW: "#0284c7",          // Premium Sky Blue
+      FOLLOW: "#10b981",       // Clinical Emerald Green
+      POSTOPERATIVE: "#8b5cf6", // Soft Violet
+      OTHER: "#f59e0b",        // Warm Amber
     };
 
     return {
@@ -341,15 +391,64 @@ export default function ReceptionistDashboard() {
       patientType: selectedEvent.patientType,
     }).style.backgroundColor;
 
-    const statusTemplate = (rowData) => {
-      const isConfirmed =
-        rowData.confirm_time !== "0" && rowData.confirm_time !== 0;
-      return (
-        <span className={isConfirmed ? "text-success fw-bold" : "text-muted"}>
-          {isConfirmed ? "Patient Arrived" : "Pending"}
-        </span>
-      );
+    const getDetailedStatus = () => {
+      if (!isConfirmed) return null;
+      const hasHistory = Number(selectedEvent.historychk) === 3;
+      const hasExecution = Number(selectedEvent.executivechk) === 1;
+      const hasConsultation = Number(selectedEvent.consultationchk) === 4;
+      const hasReceipt = Number(selectedEvent.executivechk) === 2;
+
+      if (hasReceipt) {
+        return {
+          text: "Receipt Generated",
+          icon: "file-text",
+          color: "#10b981",
+          bg: "#ecfdf5",
+          time: selectedEvent.receiptTime || selectedEvent.confirmTime,
+          label: "Completed at:"
+        };
+      }
+      if (hasConsultation) {
+        return {
+          text: "Prescription Checked",
+          icon: "clipboard",
+          color: "#8b5cf6",
+          bg: "#f5f3ff",
+          time: selectedEvent.consultationTime || selectedEvent.confirmTime,
+          label: "Completed at:"
+        };
+      }
+      if (hasExecution) {
+        return {
+          text: "Diagnosis Checked",
+          icon: "activity",
+          color: "#f59e0b",
+          bg: "#fffbeb",
+          time: selectedEvent.executionTime || selectedEvent.confirmTime,
+          label: "Completed at:"
+        };
+      }
+      if (hasHistory) {
+        return {
+          text: "History Checked",
+          icon: "book-open",
+          color: "#f43f5e",
+          bg: "#fff1f2",
+          time: selectedEvent.historyTime || selectedEvent.confirmTime,
+          label: "Completed at:"
+        };
+      }
+      return {
+        text: "Patient Arrived",
+        icon: "check-circle",
+        color: "#0ea5e9",
+        bg: "#f0f9ff",
+        time: selectedEvent.confirmTime,
+        label: "Checked in at:"
+      };
     };
+
+    const detailedStatus = getDetailedStatus();
 
     return (
       <div className="clinical-card" style={{ margin: "10px" }}>
@@ -372,14 +471,14 @@ export default function ReceptionistDashboard() {
           <div className="data-item-inline">
             <label>
               <FeatherIcon icon="calendar" size={14} />
-              Apt Date:
+              Appt Date:
             </label>
             <span className="data-value fw-bold">{selectedEvent.date}</span>
           </div>
 
           <div className="data-item-inline">
             <label>
-              <FeatherIcon icon="clock" size={14} /> Apt Time:
+              <FeatherIcon icon="clock" size={14} /> Appt Time:
             </label>
             <span className="data-value fw-bold">{selectedEvent.time}</span>
           </div>
@@ -388,16 +487,16 @@ export default function ReceptionistDashboard() {
               <FeatherIcon icon="tag" size={14} /> Type:
             </label>
             <span className="data-value">
-              <Badge
+              <span
                 pill
                 style={{
-                  backgroundColor: typeColor,
-                  fontSize: "10px",
-                  padding: "8px 12px",
+                  backgroundColor: typeColor, color: 'white', fontSize: '11px', padding: '4px 12px', borderRadius: '50px', minWidth: '90px', display: 'inline-block', textAlign: 'center', fontWeight: '700', textTransform: 'uppercase', boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                  fontSize: "11px",
+                  padding: "5px 5px",
                 }}
               >
                 {selectedEvent.patientType.toUpperCase()}
-              </Badge>
+              </span>
             </span>
           </div>
 
@@ -427,25 +526,82 @@ export default function ReceptionistDashboard() {
           style={{ borderTop: "1px solid #a3b1b4ff" }}
         ></div>
         <div className="clinical-actions pt-5">
-          {isConfirmed ? (
-            <div
-              className="alert alert-success d-flex align-items-center"
-              style={{ borderRadius: "8px" }}
-            >
-              <FeatherIcon icon="check-circle" size={20} className="me-2" />
-              <div>
-                <strong>Patient Arrived</strong>
-                <div style={{ fontSize: "12px", lineHeight: "14px" }}>
-                  Checked in at: {selectedEvent.confirmTime}
+          {isConfirmed && detailedStatus ? (
+            <>
+              <div
+                className="d-flex align-items-center p-3 mb-2"
+                style={{ borderRadius: "8px", backgroundColor: detailedStatus.bg, color: detailedStatus.color, border: `1px solid ${detailedStatus.color}40` }}
+              >
+                <FeatherIcon icon={detailedStatus.icon} size={20} className="me-2" />
+                <div className="d-flex align-items-center py-4 justify-content-between flex-grow-1">
+                  <strong>{detailedStatus.text}</strong>
+                  <div style={{ fontSize: "13px", opacity: 1.0, marginLeft: "10px", textAlign: "right" }}>
+                    {detailedStatus.label} {detailedStatus.time}
+                  </div>
                 </div>
               </div>
-            </div>
+              <Button
+                variant="outline-info"
+                className="mt-10 d-flex align-items-center justify-content-center"
+                onClick={() => {
+                  navigate("/appointments", {
+                    state: {
+                      searchPhone: selectedEvent.phone,
+                      appointmentDate: selectedEvent.date
+                    }
+                  });
+                }}
+                style={{
+                  backgroundColor: "transparent",
+                  color: detailedStatus.color,
+                  borderColor: `${detailedStatus.color}60`,
+                  borderRadius: "8px",
+                  fontWeight: "600",
+                  fontSize: "13px",
+                  padding: "8px",
+                  transition: "all 0.2s ease-in-out",
+                  width: "100%"
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.backgroundColor = detailedStatus.color;
+                  e.currentTarget.style.color = "#ffffff";
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.backgroundColor = "transparent";
+                  e.currentTarget.style.color = detailedStatus.color;
+                }}
+              >
+                <FeatherIcon icon="arrow-right" size={14} className="me-2" />
+                Go to appointment
+              </Button>
+            </>
           ) : (
-            <div className="d-grid gap-1">
+            <div className="d-flex gap-2">
+              <Button
+                variant="danger"
+                className="flex-grow-1"
+                style={{
+                  borderRadius: "10px",
+                  fontSize: "13px",
+                  padding: "10px 5px",
+                  width: "50%",
+                  fontWeight: "600"
+                }}
+                onClick={() => setShowCancelModal(true)}
+              >
+                <FeatherIcon icon="slash" size={14} className="me-1" />{" "}
+                Cancel Appointment
+              </Button>
               <Button
                 variant="primary"
-                className="confirm-btn"
-                style={{ borderRadius: "10px" }}
+                className="confirm-btn flex-grow-1"
+                style={{
+                  borderRadius: "10px",
+                  fontSize: "13px",
+                  padding: "10px 5px",
+                  width: "50%",
+                  fontWeight: "600"
+                }}
                 onClick={() =>
                   handleConfirm(
                     selectedEvent.appointmentid,
@@ -454,21 +610,47 @@ export default function ReceptionistDashboard() {
                   )
                 }
               >
-                <FeatherIcon icon="user-plus" size={16} className="me-1" />{" "}
+                <FeatherIcon icon="user-plus" size={15} className="me-1" />{" "}
                 Confirm Appointment
-              </Button>
-              <Button
-                variant="danger"
-                className="btn-sm border-0 mt-1"
-                style={{ borderRadius: "10px" }}
-                onClick={() => setShowCancelModal(true)}
-              >
-                <FeatherIcon icon="slash" size={14} className="me-1" /> Cancel
-                Appointment
               </Button>
             </div>
           )}
         </div>
+      </div>
+    );
+  };
+
+  const ColorLegend = ({ name, type, count, bgColor }) => {
+    const isSelected = activePatientTypeFilter === type;
+    return (
+      <div
+        onClick={() => togglePatientTypeFilter(type)}
+        className={`color-legend-pill ${isSelected ? "selected" : ""}`}
+        style={{
+          padding: "4px 8px",
+          minWidth: "fit-content",
+          "--status-hover-color": bgColor,
+          "--status-hover-bg": `${bgColor}15`,
+          ...(isSelected ? {
+            borderColor: bgColor,
+            backgroundColor: `${bgColor}25`,
+            transform: "translateY(-1.5px)",
+            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)"
+          } : {})
+        }}
+      >
+        <div
+          className="status-dot"
+          style={{
+            width: "8px",
+            height: "8px",
+            backgroundColor: bgColor,
+            ...(isSelected ? { transform: "scale(1.25)", boxShadow: `0 0 8px ${bgColor}` } : {})
+          }}
+        ></div>
+        <p style={{ fontWeight: isSelected ? "700" : "600", margin: 0, fontSize: "11px", display: "flex", alignItems: "center", gap: "3px", whiteSpace: "nowrap" }}>
+          {name} <span className="cnt" style={{ fontSize: "10px", color: "#64748b" }}>({count || 0})</span>
+        </p>
       </div>
     );
   };
@@ -645,6 +827,99 @@ font-size: 13px;
 font-weight: 800;
 margin-left: 1px;
 }
+
+.day-list-container {
+    background: #fff;
+    border-radius: 12px;
+    padding: 10px;
+}
+
+.appointment-list-scroll {
+    max-height: 400px; /* Fits approximately 4-5 items */
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.appointment-list-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+.appointment-list-scroll::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+
+.appointment-list-scroll::-webkit-scrollbar-thumb {
+    background: #009bad;
+    border-radius: 10px;
+}
+
+
+.appointment-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border: 1px solid #cbd5e1;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.appointment-item:hover {
+    background-color: #f8fafc;
+    transform: translateX(5px);
+}
+
+.appointment-item.active {
+    background-color: #f0f9ff;
+    border: 1px solid #0284c7;
+    box-shadow: 0 4px 6px -1px rgba(2, 132, 199, 0.1);
+}
+
+.time-slot {
+    min-width: 65px;
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 13px;
+}
+
+.patient-info {
+    flex-grow: 1;
+    margin-left: 10px;
+}
+
+.patient-name-text {
+    font-weight: 600;
+    color: #0f172a;
+    font-size: 15px;
+    margin-bottom: 2px;
+}
+
+.doctor-info-text {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.status-badge-container {
+    margin-left: 15px;
+}
+
+.view-toggle-btn {
+    border-radius: 8px;
+    padding: 5px 12px;
+    font-weight: 600;
+    font-size: 12px;
+    transition: all 0.3s ease;
+}
+
+.view-toggle-btn.active {
+    background-color: #009bad;
+    color: white;
+    border-color: #009bad;
+}
                 `}</style>
       <PageBreadcrumb pagename="Receptionist Dashboard" />
       <div className="theme-body">
@@ -654,42 +929,21 @@ margin-left: 1px;
               <Col lg={7}>
                 <div className="legend-title">
                   <h4 className="fw-bold mb-10">
-                    Patient Appointment Calendar for{" "}
-                    {moment(selectedDate).format("MMMM YYYY")}
+                    {viewMode === "list" ? (
+                      "Today's Overview"
+                    ) : (
+                      <>
+                        Patient Appointment Calendar for{" "}
+                        {moment(selectedDate).format("MMMM YYYY")}
+                      </>
+                    )}
                   </h4>
                 </div>
-                <div className="d-flex align-items-center flex-wrap">
-                  <div className="legend-item">
-                    <span
-                      className="dot"
-                      style={{ background: "#000000" }}
-                    ></span>
-                    New Patient <span className="cnt">({counts.NEW || 0})</span>
-                  </div>
-                  <div className="legend-item">
-                    <span
-                      className="dot"
-                      style={{ background: "#ff8000" }}
-                    ></span>
-                    Follow Patient{" "}
-                    <span className="cnt">({counts.FOLLOW || 0})</span>
-                  </div>
-                  <div className="legend-item">
-                    <span
-                      className="dot"
-                      style={{ background: "#8000ff" }}
-                    ></span>
-                    Postoperative Patient{" "}
-                    <span className="cnt">({counts.POSTOPERATIVE || 0})</span>
-                  </div>
-                  <div className="legend-item">
-                    <span
-                      className="dot"
-                      style={{ background: "#ff0080" }}
-                    ></span>
-                    Other Patient{" "}
-                    <span className="cnt">({counts.OTHER || 0})</span>
-                  </div>
+                <div className="d-flex align-items-center flex-nowrap" style={{ gap: '6px', position: 'relative', zIndex: 2 }}>
+                  <ColorLegend name="New Patient" type="NEW" count={counts.NEW} bgColor="#0284c7" />
+                  <ColorLegend name="Follow Patient" type="FOLLOW" count={counts.FOLLOW} bgColor="#10b981" />
+                  <ColorLegend name="Postoperative Patient" type="POSTOPERATIVE" count={counts.POSTOPERATIVE} bgColor="#8b5cf6" />
+                  <ColorLegend name="Other Patient" type="OTHER" count={counts.OTHER} bgColor="#f59e0b" />
                 </div>
               </Col>
               <Col lg={5}>
@@ -737,23 +991,28 @@ margin-left: 1px;
                     </Form.Select>
                   </div>
 
+
                   <Button
-                    variant="primary"
-                    onClick={handleRefreshClick}
+                    variant="secondary"
+                    onClick={() => setSelectedDoctorId("")}
                     style={{
-                      height: "22px",
-                      width: "80px",
+                      backgroundColor: "#ff9800",
+                      color: "white",
+                      border: "none",
+                      height: "27px",
+                      width: "90px",
                       display: "flex",
                       justifyContent: "center",
                       alignItems: "center",
                       fontSize: "12px",
                       padding: 0,
-                      alignSelf: "flex-end",
-                      marginBottom: "5.5px",
+                      borderRadius: '10px',
+                      alignSelf: 'flex-end',
+                      marginBottom: '3px'
                     }}
                   >
-                    <FeatherIcon icon="refresh-cw" size={10} className="me-1" />
-                    Refresh
+                    <FeatherIcon icon="filter" size={10} className="me-1" />
+                    Clear Filter
                   </Button>
                 </div>
               </Col>
@@ -766,34 +1025,190 @@ margin-left: 1px;
                 className="border-0 shadow-sm"
                 style={{ borderRadius: "10px" }}
               >
+                <Card.Header
+                  className="bg-white py-2 px-3 d-flex justify-content-between align-items-center"
+                  style={{
+                    borderTopLeftRadius: '10px',
+                    borderTopRightRadius: '10px',
+                    border: '2px solid rgb(77, 208, 225)',
+                    borderBottom: '1px solid #f1f5f9'
+                  }}
+                >
+                  <div className="d-flex align-items-center">
+                    <FeatherIcon icon={viewMode === 'calendar' ? 'calendar' : 'list'} size={18} className="text-primary me-2" />
+                    <h6 className="mb-0 fw-bold text-dark">
+                      {viewMode === 'calendar' ? 'Calendar View' : 'Day Schedule'}
+                    </h6>
+                  </div>
+                  <div className="btn-group bg-light p-1 rounded-3">
+                    <Button
+                      variant={viewMode === "calendar" ? "primary" : "light"}
+                      className={`view-toggle-btn py-1 px-3 ${viewMode === "calendar" ? "active shadow-sm" : ""}`}
+                      onClick={() => { setViewMode("calendar"); setCurrentView("month"); }}
+                      size="sm"
+                      style={{ height: '28px', border: 'none', fontSize: '11px' }}
+                    >
+                      Calendar
+                    </Button>
+                    <Button
+                      variant={viewMode === "list" ? "primary" : "light"}
+                      className={`view-toggle-btn py-1 px-3 ${viewMode === "list" ? "active shadow-sm" : ""}`}
+                      onClick={() => {
+                        setViewMode("list");
+                        setCurrentView("day");
+                      }}
+                      size="sm"
+                      style={{ height: '28px', border: 'none', fontSize: '11px' }}
+                    >
+                      Day Schedule
+                    </Button>
+                  </div>
+                </Card.Header>
                 <Card.Body
                   className="p-3"
                   style={{
                     border: "2px solid rgb(77, 208, 225)",
-                    borderRadius: "10px",
+                    borderTop: 'none',
+                    borderBottomLeftRadius: "10px",
+                    borderBottomRightRadius: "10px",
                   }}
                 >
-                  <Calendar
-                    ref={calendarRef}
-                    localizer={localizer}
-                    events={appointments}
-                    date={selectedDate}
-                    view={currentView}
-                    onNavigate={handleCalendarNavigate}
-                    onSelectEvent={handleEventClick}
-                    onView={handleCalendarView}
-                    eventPropGetter={eventStyleGetter}
-                    components={{ event: CustomEvent }}
-                    style={{ height: 770 }}
-                    popup={true}
-                    views={{
-                      month: true,
-                      week: true,
-                      day: true,
-                    }}
-                    length={3}
-                    maxEvents={3}
-                  />
+                  {viewMode === "calendar" ? (
+                    <Calendar
+                      ref={calendarRef}
+                      localizer={localizer}
+                      events={filteredAppointments}
+                      date={selectedDate}
+                      view={currentView}
+                      onNavigate={handleCalendarNavigate}
+                      onSelectEvent={handleEventClick}
+                      onView={handleCalendarView}
+                      eventPropGetter={eventStyleGetter}
+                      components={{ event: CustomEvent }}
+                      style={{ height: 770 }}
+                      popup={true}
+                      views={{
+                        month: true,
+                        week: true,
+                        day: true,
+                      }}
+                      length={3}
+                      maxEvents={3}
+                    />
+                  ) : (
+                    <div className="day-list-container" >
+                      <div className="mb-4" >
+                        <div className="d-flex justify-content-between align-items-center">
+                          <div className="search-box-day" style={{ position: 'relative', marginBottom: "5px" }}>
+                            <FeatherIcon
+                              icon="search"
+                              size={14}
+                              style={{
+                                position: 'absolute',
+                                left: '10px',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                color: '#94a3b8',
+                              }}
+                            />
+                            <Form.Control
+                              type="text"
+                              placeholder="Search name or contact..."
+                              value={daySearchTerm}
+                              onChange={(e) => setDaySearchTerm(e.target.value)}
+                              style={{
+                                paddingLeft: '32px',
+                                height: '32px',
+                                fontSize: '12px',
+                                borderRadius: '8px',
+                                border: '1.5px solid #009bad', backgroundColor: '#fdfdfd',
+                                width: '220px',
+                              }}
+                            />
+                          </div>
+                          <Badge bg="info" className="p-6">
+                            {filteredAppointments.filter(a => moment(a.start).isSame(selectedDate, 'day')).length} Appointments
+                          </Badge>
+                        </div>
+                      </div>
+
+                      <div className="appointment-list-scroll">
+                        {filteredAppointments
+                          .filter(app => {
+                            const isSameDay = moment(app.start).isSame(selectedDate, 'day');
+                            if (!isSameDay) return false;
+
+                            const term = daySearchTerm.toLowerCase();
+                            const nameMatch = app.patientName?.toLowerCase().includes(term);
+                            const phoneMatch = app.phone?.toLowerCase().includes(term);
+
+                            return nameMatch || phoneMatch;
+                          })
+                          .sort((a, b) => moment(a.start).diff(moment(b.start)))
+                          .map((app, index) => {
+                            const typeColor = eventStyleGetter({ patientType: app.patientType }).style.backgroundColor;
+                            const isActive = selectedEvent?.appointmentid === app.appointmentid;
+
+                            return (
+                              <div
+                                key={app.appointmentid || index}
+                                className={`appointment-item ${isActive ? 'active' : ''}`}
+                                onClick={() => handleEventClick(app)}
+                              >
+                                <div className="time-slot">
+                                  {app.time}
+                                </div>
+                                <div
+                                  className="type-indicator mx-1"
+                                  style={{ width: '4px', height: '24px', backgroundColor: typeColor, borderRadius: '2px' }}
+                                ></div>
+                                <div className="patient-info">
+                                  <div className="patient-name-text">
+                                    {app.patientName}
+                                    {app.isConfirmed && (
+                                      <FeatherIcon icon="check-circle" size={14} className="ms-2 text-success" />
+                                    )}
+                                  </div>
+                                  <div className="doctor-info-text">
+                                    <FeatherIcon icon="activity" size={12} className="me-1" />
+                                    {app.doctorName}
+                                  </div>
+                                </div>
+                                <div className="status-badge-container">
+                                  <span
+                                    style={{
+                                      backgroundColor: typeColor,
+                                      color: 'white',
+                                      fontSize: '9px',
+                                      padding: '2px 8px',
+                                      borderRadius: '4px',
+                                      minWidth: '70px',
+                                      display: 'inline-block',
+                                      textAlign: 'center',
+                                      fontWeight: '700',
+                                      textTransform: 'uppercase'
+                                    }}
+                                  >
+                                    {app.patientType}
+                                  </span>
+                                </div>
+                                <div className="ms-3">
+                                  <FeatherIcon icon="chevron-right" size={16} className="text-muted" />
+                                </div>
+                              </div>
+                            );
+                          })
+                        }
+                      </div>
+
+                      {filteredAppointments.filter(a => moment(a.start).isSame(selectedDate, 'day')).length === 0 && (
+                        <div className="text-center py-5">
+                          <FeatherIcon icon="calendar" size={50} className="text-muted mb-3 opacity-25" />
+                          <p className="text-muted">No appointments scheduled for this day.</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </Card.Body>
               </Card>
             </Col>
@@ -869,7 +1284,7 @@ margin-left: 1px;
               fontSize: "1.1rem",
             }}
           >
-            REASON OF CANCELLATION
+            REASON OF CANCELLATION <span className="text-danger">*</span>
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-1 pt-0">

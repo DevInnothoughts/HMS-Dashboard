@@ -411,6 +411,7 @@ export default function Add_appointment() {
             text: "Appointment booked successfully.",
           }).then(() => {
             handleReset();
+            window.dispatchEvent(new CustomEvent("refreshApptCounts"));
             navigate("/appointments");
           });
         } else {
