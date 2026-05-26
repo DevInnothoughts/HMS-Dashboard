@@ -129,6 +129,10 @@ export default function DoctorManageAdmission() {
           roomType: p.room_type || "N/A",
           roomNo: p.room_no || "N/A",
           surgeonName: p.surgeon_name || "N/A",
+          aadharcard: p.aadharcard || null,
+          pancard: p.pancard || null,
+          cancelled_cheque: p.cancelled_cheque || null,
+          pdc_cheque: p.pdc_cheque || null,
           admissionNo:
             p.admission_no === 0 || p.admission_no === "0"
               ? null
@@ -179,6 +183,10 @@ export default function DoctorManageAdmission() {
             roomType: p.room_type || "N/A",
             roomNo: p.room_no || "N/A",
             surgeonName: p.surgeon_name || "N/A",
+            aadharcard: p.aadharcard || null,
+            pancard: p.pancard || null,
+            cancelled_cheque: p.cancelled_cheque || null,
+            pdc_cheque: p.pdc_cheque || null,
             admissionNo:
               p.admission_no === 0 || p.admission_no === "0"
                 ? null
@@ -370,6 +378,13 @@ export default function DoctorManageAdmission() {
     });
   };
 
+  const buildDocPreviewMap = (patient = {}) => ({
+    aadharCard: patient.aadharcard || null,
+    panCard: patient.pancard || null,
+    cancelledCheque: patient.cancelled_cheque || null,
+    pdcCheque: patient.pdc_cheque || null,
+  });
+
   const handleViewDocumentsClick = (patient) => {
     setDocPatient(patient);
     setShowDocModal(true);
@@ -379,12 +394,7 @@ export default function DoctorManageAdmission() {
       cancelledCheque: null,
       pdcCheque: null
     });
-    setPreviews({
-      aadharCard: null,
-      panCard: null,
-      cancelledCheque: null,
-      pdcCheque: null
-    });
+    setPreviews(buildDocPreviewMap(patient));
   };
 
   const handleFileChange = (e, docType) => {
@@ -405,13 +415,97 @@ export default function DoctorManageAdmission() {
 
   const handleDocSubmit = async (e) => {
     e.preventDefault();
-    Swal.fire({
-      title: "Success",
-      text: "Documents saved successfully!",
-      icon: "success",
-      confirmButtonColor: "#178aaeff",
-    });
-    setShowDocModal(false);
+
+    if (!docPatient) {
+      Swal.fire("Error", "No patient selected for document upload.", "error");
+      return;
+    }
+
+    const requiredDocs = ["aadharCard", "panCard", "cancelledCheque"];
+    const hasExistingDocs = requiredDocs.some((docType) => Boolean(previews[docType]));
+    const hasNewFiles = requiredDocs.some((docType) => Boolean(documents[docType]));
+
+    if (!hasExistingDocs && !hasNewFiles) {
+      Swal.fire("Required", "Please upload Aadhar, PAN, and Cancelled Cheque documents.", "warning");
+      return;
+    }
+
+    try {
+      Swal.fire({ title: "Saving documents...", didOpen: () => Swal.showLoading() });
+
+      const formData = new FormData();
+      formData.append("location", currentLocation);
+      formData.append("admissionId", String(docPatient.id));
+      formData.append("uid", String(docPatient.uhid));
+      formData.append("contact", String(docPatient.contact));
+
+      requiredDocs.forEach((docType) => {
+        if (documents[docType]) {
+          formData.append(docType, documents[docType]);
+        }
+      });
+
+      if (documents.pdcCheque) {
+        formData.append("pdcCheque", documents.pdcCheque);
+      }
+
+      const response = await fetch(
+        `${BASE_URL}/V1/doctor/manage-admission/documents`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: formData,
+        },
+      );
+
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.message || "Failed to save documents");
+      }
+
+      const savedResponse = await response.json();
+      const savedDocuments = savedResponse?.data || {};
+
+      setPatients((prev) =>
+        prev.map((patient) =>
+          patient.id === docPatient.id
+            ? {
+                ...patient,
+                aadharcard: savedDocuments.aadharcard || patient.aadharcard,
+                pancard: savedDocuments.pancard || patient.pancard,
+                cancelled_cheque: savedDocuments.cancelled_cheque || patient.cancelled_cheque,
+                pdc_cheque: savedDocuments.pdc_cheque || patient.pdc_cheque,
+              }
+            : patient,
+        ),
+      );
+
+      setDocPatient((prev) =>
+        prev
+          ? {
+              ...prev,
+              aadharcard: savedDocuments.aadharcard || prev.aadharcard,
+              pancard: savedDocuments.pancard || prev.pancard,
+              cancelled_cheque: savedDocuments.cancelled_cheque || prev.cancelled_cheque,
+              pdc_cheque: savedDocuments.pdc_cheque || prev.pdc_cheque,
+            }
+          : prev,
+      );
+      setPreviews(buildDocPreviewMap({
+        ...docPatient,
+        aadharcard: savedDocuments.aadharcard || docPatient.aadharcard,
+        pancard: savedDocuments.pancard || docPatient.pancard,
+        cancelled_cheque: savedDocuments.cancelled_cheque || docPatient.cancelled_cheque,
+        pdc_cheque: savedDocuments.pdc_cheque || docPatient.pdc_cheque,
+      }));
+
+      Swal.fire("Saved!", "Documents were saved successfully.", "success");
+      setShowDocModal(false);
+    } catch (error) {
+      Swal.fire("Error", error.message, "error");
+    }
   };
 
   const renderHeader = () => (
@@ -771,6 +865,7 @@ export default function DoctorManageAdmission() {
                       className="datatable-compact-style datatable-medium-small"
                       style={{ padding: "5px" }}
                     >
+                      
                       <Column
                         field="verifiedDate"
                         header="Admission Date & Time"
@@ -802,30 +897,6 @@ export default function DoctorManageAdmission() {
                           textAlign: "center",
                           padding: "0.75rem",
                           width: "160px",
-                        }}
-                      />
-
-                      <Column
-                        field="roomType"
-                        header="Room Type"
-                        headerClassName="datatable-header-center"
-                        style={{
-                          border: "1px solid #90caf9",
-                          textAlign: "center",
-                          padding: "0.75rem",
-                          width: "120px",
-                        }}
-                      />
-
-                      <Column
-                        field="roomNo"
-                        header="Room No"
-                        headerClassName="datatable-header-center"
-                        style={{
-                          border: "1px solid #90caf9",
-                          textAlign: "center",
-                          padding: "0.75rem",
-                          width: "100px",
                         }}
                       />
 
@@ -888,18 +959,6 @@ export default function DoctorManageAdmission() {
                       />
 
                       <Column
-                        field="surgeonName"
-                        header="Surgeon Name"
-                        headerClassName="datatable-header-center"
-                        style={{
-                          border: "1px solid #90caf9",
-                          textAlign: "center",
-                          padding: "0.75rem",
-                          width: "150px",
-                        }}
-                      />
-
-                      <Column
                         field="contact"
                         header="Contact No"
                         headerClassName="datatable-header-center"
@@ -910,6 +969,7 @@ export default function DoctorManageAdmission() {
                           width: "120px",
                         }}
                       />
+
                       <Column
                         header="Age/Gender"
                         headerClassName="datatable-header-center"
@@ -921,6 +981,43 @@ export default function DoctorManageAdmission() {
                           width: "100px",
                         }}
                       />
+
+                      <Column
+                        field="roomType"
+                        header="Room Type"
+                        headerClassName="datatable-header-center"
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "120px",
+                        }}
+                      />
+
+                      <Column
+                        field="roomNo"
+                        header="Room No"
+                        headerClassName="datatable-header-center"
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "100px",
+                        }}
+                      />
+
+                      <Column
+                        field="surgeonName"
+                        header="Surgeon Name"
+                        headerClassName="datatable-header-center"
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "150px",
+                        }}
+                      />
+
                       <Column
                         header="Actions"
                         headerClassName="datatable-header-center"
@@ -1028,6 +1125,47 @@ export default function DoctorManageAdmission() {
         </Modal.Header>
         <Form onSubmit={handleDocSubmit}>
           <Modal.Body style={{ fontSize: "13px", padding: "10px" }}>
+            {Object.values(previews).some(Boolean) && (
+              <div className="mb-3">
+                <div style={{ fontSize: "12px", fontWeight: "700", color: "#00838f", marginBottom: "8px" }}>
+                  Saved Documents
+                </div>
+                <Row>
+                  {[
+                    { key: "aadharCard", label: "Aadharcard" },
+                    { key: "panCard", label: "Pan Card" },
+                    { key: "cancelledCheque", label: "Cancelled Cheque" },
+                    { key: "pdcCheque", label: "PDC Cheque" },
+                  ].map((doc) =>
+                    previews[doc.key] ? (
+                      <Col md={3} key={doc.key} className="mb-2">
+                        <div
+                          style={{
+                            border: "1px solid #4dd0e1",
+                            borderRadius: "8px",
+                            overflow: "hidden",
+                            cursor: "pointer",
+                            height: "90px",
+                            backgroundColor: "#f8fdff",
+                          }}
+                          onClick={() => setFullScreenImage(previews[doc.key])}
+                          title={`Click to preview ${doc.label}`}
+                        >
+                          <img
+                            src={previews[doc.key]}
+                            alt={`${doc.label} Preview`}
+                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                          />
+                        </div>
+                        <div style={{ fontSize: "10px", textAlign: "center", marginTop: "4px", color: "#006064" }}>
+                          {doc.label}
+                        </div>
+                      </Col>
+                    ) : null,
+                  )}
+                </Row>
+              </div>
+            )}
             <Row>
               <Col md={6} className="mb-20">
                 <Form.Group controlId="aadharCard">
@@ -1043,7 +1181,6 @@ export default function DoctorManageAdmission() {
                   </Form.Label>
                   <Form.Control
                     type="file"
-                    required
                     size="sm"
                     onChange={(e) => handleFileChange(e, "aadharCard")}
                     style={{
@@ -1090,7 +1227,6 @@ export default function DoctorManageAdmission() {
                   </Form.Label>
                   <Form.Control
                     type="file"
-                    required
                     size="sm"
                     onChange={(e) => handleFileChange(e, "panCard")}
                     style={{
@@ -1137,7 +1273,6 @@ export default function DoctorManageAdmission() {
                   </Form.Label>
                   <Form.Control
                     type="file"
-                    required
                     size="sm"
                     onChange={(e) => handleFileChange(e, "cancelledCheque")}
                     style={{

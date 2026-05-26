@@ -1568,9 +1568,7 @@ const PersonalDetailsCard = () => {
   const [proctoscopyData, setProctoscopyData] = useState(
     initialProctoscopyState,
   );
-  const [previousProctoscopyList, setPreviousProctoscopyList] = useState([
-    { id: "P1", date: "2026-03-10" },
-  ]);
+  const [previousProctoscopyList, setPreviousProctoscopyList] = useState([]);
   const [selectedProctoscopyId, setSelectedProctoscopyId] = useState(null);
 
   const fetchProctoscopyDates = async () => {
@@ -2087,9 +2085,7 @@ const PersonalDetailsCard = () => {
   };
 
   const [dischargeData, setDischargeData] = useState(initialDischargeState);
-  const [previousDischargesList, setPreviousDischargesList] = useState([
-    { id: "D1", date: "2026-01-10" },
-  ]);
+  const [previousDischargesList, setPreviousDischargesList] = useState([]);
   const [selectedDischargeId, setSelectedDischargeId] = useState(null);
 
   const handleSelectDischarge = async (id) => {

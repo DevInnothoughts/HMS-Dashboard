@@ -268,7 +268,7 @@ export default function DoctorSearchBy() {
                       fontSize: "0.95rem",
                     }}
                   >
-                    Search Patient (Doctor View)
+                    Search Patient
                   </h4>
                 </div>
                 <Card.Body className="p-3" style={{ margin: "5px" }}>

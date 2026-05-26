@@ -252,7 +252,7 @@ const formatDate = (dateString) => {
   return `${day}-${month}-${year}`;
 };
 
-export default function DoctorPatientList() {
+export default function DoctorOpdPatientList() {
   const location = "demo";
   const [first, setFirst] = useState(0);
   const [rows, setRows] = useState(10);
@@ -1476,13 +1476,13 @@ export default function DoctorPatientList() {
 
   const actionBodyTemplate = (patient) => (
     <div className="d-flex align-items-center justify-content-center">
-      <Button
+      {/* <Button
         onClick={() => handleEditPatient(patient)}
         className="edit-btn btn-primary btn-extra-small btn-icon me-2"
         title="Edit Patient"
       >
-        <FeatherIcon icon="edit" size="16" />
-      </Button>
+        <FeatherIcon icons="edit" size="16" />
+      </Button> */}
       <Button
         variant="primary"
         className="btn-primary btn-extra-small btn-icon me-2"
@@ -3060,7 +3060,7 @@ export default function DoctorPatientList() {
         padding: "10px",
       }}
     >
-      <PageBreadcrumb pagename="Patient List" />
+      <PageBreadcrumb pagename="OPD Patients" />
       {/* <NavBarP pagename="All Registered Patients" /> */}
       <Modal
         show={showAddModal}
