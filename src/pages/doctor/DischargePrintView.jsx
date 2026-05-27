@@ -4,7 +4,7 @@ import nabhLogo from "../../assets/images/nabh-logo.png";
 import painScoreChart from "../../assets/images/pain-score-chart.jpg";
 import fistulaImg from "../../assets/images/fistula.jpg";
 
-const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors, location: sitelocation }, ref) => {
+const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors, location: sitelocation, historyData = {} }, ref) => {
   const d = dischargeData || {};
   const consultantDoc = doctors.find(doc => String(doc.doctor_id) === String(d.consultant_doctor));
   const consultantName = consultantDoc ? consultantDoc.name : (d.consultant_doctor || '');
@@ -584,7 +584,7 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
                 <td style={{ width: "50%" }}><b>UHID. NO : </b>{d.Uid_no || formData.Uid_no || ""}</td>
               </tr>
               <tr>
-                <td style={{ width: "50%", borderRight: "0px" }}><b>SEX : </b>{d.patient_sex || formData.sex || ""}&nbsp;&nbsp;<b>Age : </b>{d.patient_age || formData.age || ""}&nbsp;&nbsp;<b>Height : </b>{d.height || ""}cm&nbsp;&nbsp;<b> Weight : </b>{d.weight || ""}kg</td>
+                <td style={{ width: "50%", borderRight: "0px" }}><b>SEX : </b>{d.patient_sex || formData.sex || ""}&nbsp;&nbsp;<b>Age : </b>{d.patient_age || formData.age || ""}&nbsp;&nbsp;<b>Height : </b>{d.height || historyData?.height_feet || ""}cm&nbsp;&nbsp;<b> Weight : </b>{d.weight || historyData?.weight_kg || ""}kg</td>
                 <td style={{ width: "50%" }}><b>PATIENT'S IPD NO. : </b>{d.ipd_no || d.IPDNo || ""}</td>
               </tr>
               <tr>

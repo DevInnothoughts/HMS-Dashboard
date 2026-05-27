@@ -17,6 +17,7 @@ const OpdPrescriptionCard = ({
   onSelectPrescription,
   onNewPrescription,
   onSavePrescription,
+  onPrintPrescription,
   assistanceDoctors = [],
   location = "default",
 }) => {
@@ -155,6 +156,21 @@ const OpdPrescriptionCard = ({
             Outpatient Prescription (OPD)
           </h5>
           <div className="d-flex gap-2">
+            {selectedPrescriptionId && (
+              <Button
+                variant="outline-secondary"
+                size="sm"
+                onClick={onPrintPrescription}
+                style={{
+                  borderRadius: "20px",
+                  fontSize: "12px",
+                  fontWeight: "700",
+                  padding: "7px 10px",
+                }}
+              >
+                <FeatherIcon icon="printer" size="14" className="me-1" /> PRINT
+              </Button>
+            )}
             <Button
               variant="outline-info"
               size="sm"

@@ -24,6 +24,7 @@ import FollowUpCard from "./FollowUpCard";
 // import OtherTestsCard from "./OtherTestsCard";
 import ProctoscopyCard from "./ProctoscopyCard";
 import OpdPrescriptionCard from "./OpdPrescriptionCard";
+import OpdPrescriptionPrintView from "./OpdPrescriptionPrintView";
 // import SurgeryDetailsCard from "./SurgeryDetailsCard";
 import DischargeCard from "./DischargeCard";
 import DischargePrintView from "./DischargePrintView";
@@ -1247,6 +1248,11 @@ const PersonalDetailsCard = () => {
   const dischargePrintRef = useRef();
   const triggerPrintDischarge = useReactToPrint({
     contentRef: dischargePrintRef,
+  });
+
+  const opdPrescriptionPrintRef = useRef();
+  const triggerPrintOpdPrescription = useReactToPrint({
+    contentRef: opdPrescriptionPrintRef,
   });
 
   const [isFupPrintReady, setIsFupPrintReady] = useState(false);
@@ -4611,6 +4617,7 @@ const PersonalDetailsCard = () => {
                     onSelectPrescription={handleSelectPrescription}
                     onNewPrescription={handleNewPrescription}
                     onSavePrescription={handleSaveOpdPrescription}
+                    onPrintPrescription={() => triggerPrintOpdPrescription()}
                     assistanceDoctors={assistanceDoctors}
                     location={currentLocation}
                   />
@@ -4707,6 +4714,16 @@ const PersonalDetailsCard = () => {
             formData={formData}
             doctors={doctors}
             location={currentLocation}
+            historyData={historyData}
+          />
+        </div>
+        <div ref={opdPrescriptionPrintRef}>
+          <OpdPrescriptionPrintView
+            prescriptionData={prescriptionData}
+            formData={formData}
+            historyData={historyData}
+            assistanceDoctors={assistanceDoctors}
+            location={currentLocation}
           />
         </div>
       </div>
@@ -4775,6 +4792,7 @@ const PersonalDetailsCard = () => {
               formData={formData}
               doctors={doctors}
               location={currentLocation}
+              historyData={historyData}
             />
           </div>
         </Modal.Body>

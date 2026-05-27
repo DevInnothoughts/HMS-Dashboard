@@ -629,7 +629,7 @@ const DischargeCard = ({
             />
             {showMedicineDropdownGiven && medicineSearchResultsGiven.length > 0 && (
               <div
-                className="bg-white border rounded shadow-sm mt-1 position-absolute w-100"
+                className="bg-white border rounded shadow-sm mt-1 position-absolute"
                 style={{ maxHeight: "200px", overflowY: "auto", zIndex: 1060 }}
               >
                 {medicineSearchResultsGiven.map((med) => {
@@ -939,30 +939,30 @@ const DischargeCard = ({
             <table className="table table-sm table-hover align-middle" style={{ fontSize: "12px" }}>
               <thead className="table-light">
                 <tr>
-                  <th className="ps-3">Medicine Name</th>
-                  <th>Qty</th>
-                  <th>Strength/Unit</th>
-                  <th>Medicine time</th>
-                  <th>Frequency</th>
-                  <th>Days</th>
+                  <th className="ps-3 text-start">Medicine Name</th>
+                  <th className="text-start">Qty</th>
+                  <th className="text-start">Strength/Unit</th>
+                  <th className="text-start">Medicine time</th>
+                  <th className="text-start">Frequency</th>
+                  <th className="text-start">Days</th>
                   <th className="text-center" style={{ width: "50px" }}>Action</th>
                 </tr>
               </thead>
               <tbody>
                 {dischargeData.treatment_on_discharge.map((item) => (
                   <tr key={item.id}>
-                    <td className="ps-3 fw-bold text-dark">{item.medicine_name}</td>
-                    <td className="text-center">{item.qty}</td>
-                    <td className="text-center">{item.strength_unit}</td>
-                    <td>
-                      <div className="d-flex flex-wrap gap-1">
+                    <td className="ps-3 fw-bold text-dark text-start">{item.medicine_name}</td>
+                    <td className="text-start">{item.qty}</td>
+                    <td className="text-start">{item.strength_unit}</td>
+                    <td className="text-start">
+                      <div className="d-flex flex-wrap gap-1 justify-content-start">
                         {(item.medicine_time || []).map((t, idx) => (
                           <span key={idx} className="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2" style={{ fontSize: "10px" }}>{t}</span>
                         ))}
                       </div>
                     </td>
-                    <td>{item.frequency}</td>
-                    <td className="fw-bold">{item.days}</td>
+                    <td className="text-start">{item.frequency}</td>
+                    <td className="fw-bold text-start">{item.days}</td>
                     <td className="text-center">
                       <Button variant="link" className="text-danger p-0" onClick={() => removeTreatmentOnDischarge(item.id)}>
                         <FeatherIcon icon="trash-2" size="14" />
@@ -1064,6 +1064,19 @@ const DischargeCard = ({
                 <option key={doc.doctor_id} value={doc.doctor_id}>{doc.name}</option>
               ))}
             </Form.Select>
+          </Col>
+          <Col md={4}>
+            <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#e11d48" }}>FINAL DISCHARGE CARD</Form.Label>
+            <div className="d-flex align-items-center h-100 mt-1">
+              <Form.Check
+                type="switch"
+                id="final-discharge-card-switch"
+                checked={!!dischargeData.final_dc}
+                onChange={(e) => handleDischargeChange("final_dc", e.target.checked)}
+                label={<span style={{ fontSize: "12px", fontWeight: "600", color: "#333" }}>Mark as Final</span>}
+                className="mb-0 custom-switch-danger"
+              />
+            </div>
           </Col>
           {/* <Col md={6}>
             <div className="p-2 border rounded-3 bg-white d-flex align-items-center h-100">

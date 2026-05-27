@@ -76,8 +76,6 @@ export default function DoctorDashboard() {
   const [currentLocation, setCurrentLocation] = useState("default");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [currentView, setCurrentView] = useState("day");
-  const [showCancelModal, setShowCancelModal] = useState(false);
-  const [cancelComment, setCancelComment] = useState("");
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [viewMode, setViewMode] = useState("list"); // "calendar" or "list"
   const [daySearchTerm, setDaySearchTerm] = useState("");
@@ -384,65 +382,6 @@ export default function DoctorDashboard() {
     setSelectedEvent(event);
   };
 
-  const handleConfirm = async (appointmentId, patientType, phone) => {
-    const result = await Swal.fire({
-      title: "Confirm Arrival?",
-      text: "Mark patient as arrived at the facility?",
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Confirm Arrival",
-      cancelButtonText: "Cancel",
-      reverseButtons: true,
-      buttonsStyling: false,
-      customClass: {
-        confirmButton: "btn btn-primary swal-clinical-btn",
-        cancelButton: "btn btn-danger swal-clinical-btn me-2",
-      },
-    });
-    if (!result.isConfirmed) return;
-    try {
-      const url = `${BASE_URL}/V1/appointment/confirmAppointment?location=${currentLocation}&appId=${appointmentId}&patientType=${patientType}&patientPhone=${phone}`;
-      const response = await fetch(url, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-      });
-      const resData = await response.json();
-      if (resData.statusCode === 200) {
-        Toast.fire({ icon: "success", title: "Arrival Confirmed" });
-        setSelectedEvent((prev) => ({
-          ...prev,
-          confirmTime: moment().format("HH:mm"),
-        }));
-        await fetchAppointmentsForRange(selectedDate, selectedDoctorId);
-        window.dispatchEvent(new CustomEvent("refreshApptCounts"));
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const handleCancelSubmit = async (e) => {
-    e.preventDefault();
-    if (!cancelComment) return;
-    try {
-      const url = `${BASE_URL}/V1/appointment/delete/${selectedEvent.appointmentid}?location=${currentLocation}`;
-      const response = await fetch(url, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cancellationReason: cancelComment }),
-      });
-      if (response.ok) {
-        Toast.fire({ icon: "success", title: "Cancelled" });
-        fetchAppointmentsForRange(selectedDate, selectedDoctorId);
-        setSelectedEvent(null);
-        setShowCancelModal(false);
-        setCancelComment("");
-        window.dispatchEvent(new CustomEvent("refreshApptCounts"));
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  };
 
   const eventStyleGetter = useCallback((event) => {
     const colorMap = {
@@ -822,7 +761,7 @@ export default function DoctorDashboard() {
             <div className="text-center py-3">
               <p className="text-muted fw-bold mb-0">
                 <FeatherIcon icon="lock" size={14} className="me-1" />
-                Appointment is not confirmed to view
+                appointment is not confirmed yet
               </p>
             </div>
           )}
@@ -1480,56 +1419,6 @@ margin-left: 1px;
         </Container>
       </div>
 
-      <Modal
-        show={showCancelModal}
-        onHide={() => setShowCancelModal(false)}
-        centered
-      >
-        <Modal.Header
-          closeButton
-          style={{
-            backgroundColor: "#67c5cfff",
-            borderBottom: "2px solid #1a5b61ff",
-            padding: "7px 15px",
-          }}
-        >
-          <Modal.Title
-            style={{
-              color: "#1a5b61ff",
-              fontWeight: "600",
-              fontSize: "1.1rem",
-            }}
-          >
-            REASON OF CANCELLATION <span className="text-danger">*</span>
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="p-1 pt-0">
-          <Form style={{ padding: "10px" }} onSubmit={handleCancelSubmit}>
-            <Form.Group>
-              <Form.Control
-                as="textarea"
-                rows={4}
-                value={cancelComment}
-                onChange={(e) => setCancelComment(e.target.value)}
-                placeholder="State the reason for cancellation (e.g., patient request, reschedule)..."
-                className="p-5 mb-10"
-                style={{ border: "1px solid #008cc8ff'", borderRadius: "10px" }}
-                required
-              />
-            </Form.Group>
-            <div className="d-flex justify-content-end">
-              <Button
-                variant="danger"
-                type="submit"
-                className="fw-bold px-4"
-                style={{ borderRadius: "10px", padding: "10px 0" }}
-              >
-                Confirm & Cancel
-              </Button>
-            </div>
-          </Form>
-        </Modal.Body>
-      </Modal>
     </div>
   );
 }
