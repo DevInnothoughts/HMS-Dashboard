@@ -12,7 +12,7 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
   const madeByDoc = doctors.find(doc => String(doc.doctor_id) === String(d.madeby));
   const checkedByDoc = doctors.find(doc => String(doc.doctor_id) === String(d.checkedby));
   const assistantDoc = doctors.find(doc => String(doc.doctor_id) === String(d.assistance_doctor));
-  const prescriptionAssignDoc = doctors.find(doc => String(doc.doctor_id) === String(d.prescriptionAssign));
+  const prescriptionAssignDoc = doctors.find(doc => String(doc.doctor_id) === String(d.assistance_surgeon || d.prescriptionAssign));
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '';
@@ -40,7 +40,7 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
 
   const formatDoctorName = (name) => {
     if (!name) return "";
-    return name.toUpperCase();
+    return name.replace(/^dr(?!\.)/i, "Dr.");
   };
 
   const qrData = {
@@ -391,6 +391,33 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
       Helpline: "",
       Address: "<b>Healing Hands Clinic, </b><br>Office No. 601 to 607 and 613, Mehta 531, Beside V S Hospital, Ashram Road, Ellisbridge, Ahmedabad, Gujarat - 380006"
     },
+    "Thane": {
+      AssistantSurgeon: "",
+      Physiotherapist: "",
+      Insurance: "",
+      Nutritionist: "",
+      QueriesSMS: "",
+      Helpline: "8575999994",
+      Address: "<b>Healing Hands Clinic </b><br> Plot No.5, Gahlot Majesty, Sector 46, Seawoods, Navi Mumbai-400706"
+    },
+    "Katraj": {
+      AssistantSurgeon: "",
+      Physiotherapist: "",
+      Nutritionist: "",
+      Insurance: "",
+      QueriesSMS: "DR ATUL TAMBADE ON ",
+      Helpline: "",
+      Address: "<b>Healing Hands Clinic </b><br> Ground Floor, Atmosphere Building, Ambegaon Pathar, Ambegaon Budruk, Pune 411046"
+    },
+    "Kothrud": {
+      AssistantSurgeon: "",
+      Physiotherapist: "",
+      Insurance: "",
+      Nutritionist: "",
+      QueriesSMS: "",
+      Helpline: "8575999993",
+      Address: "<b>Healing Hands Clinic </b>"
+    },
     default: {
       AssistantSurgeon: "",
       Physiotherapist: "",
@@ -402,7 +429,14 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
     }
   };
 
-  const loc = locationData[sitelocation] || locationData.default;
+  const normalizeLocation = (locName) => {
+    if (!locName) return "default";
+    const keys = Object.keys(locationData);
+    const matchedKey = keys.find(k => k.toLowerCase() === locName.trim().toLowerCase());
+    return matchedKey || "default";
+  };
+  const locKey = normalizeLocation(sitelocation);
+  const loc = locationData[locKey];
 
   // Build investigations rows
   const invObj = d.investigations || {};
@@ -496,6 +530,9 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
           .discharge-print-container b, .discharge-print-container strong {
             font-weight: 700;
           }
+          .discharge-print-container .NABH {
+            display: none !important;
+          }
         }
       `}</style>
 
@@ -534,7 +571,16 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
           <table className="bordered FontAdjustment">
             <tbody>
               <tr>
-                <td style={{ width: "50%", borderRight: "0px" }}><b>PATIENT'S NAME : </b>{d.prefix || formData.prefix ? (d.prefix || formData.prefix) + ". " : ""}{d.patient_name || formData.name || ""}</td>
+                <td style={{ width: "50%", borderRight: "0px" }}>
+                  <b>PATIENT'S NAME : </b>
+                  {(() => {
+                    const prefix = (d.prefix || formData.prefix || "").trim();
+                    if (!prefix) return "";
+                    const clean = prefix.replace(/\.$/, "");
+                    return clean.charAt(0).toUpperCase() + clean.slice(1).toLowerCase() + ". ";
+                  })()}
+                  {d.patient_name || formData.name || ""}
+                </td>
                 <td style={{ width: "50%" }}><b>UHID. NO : </b>{d.Uid_no || formData.Uid_no || ""}</td>
               </tr>
               <tr>
@@ -554,7 +600,14 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
               </tr>
               <tr>
                 <td style={{ width: "50%", borderRight: "0px" }}><b>ADMITTED UNDER </b>{formatDoctorName(consultantName)}</td>
-                <td style={{ width: "50%" }}><b>REF.BY</b> {(d.reference_type === "dr_ref" || formData.reference_type === "dr_ref") ? `${d.ref_doctor_name || formData.ref || "NA"} ${d.ref_doctor_phone ? "(" + d.ref_doctor_phone + ")" : ""}` : "NA"}</td>
+                <td style={{ width: "50%" }}>
+                  <b>REF.BY :</b> {(d.reference_type === "dr_ref" || formData.reference_type === "dr_ref") ? (
+                    <span>
+                      {d.ref_doctor_name || formData.ref_doctor_name || formData.ref || "NA"}
+                      {(d.ref_doctor_phone || formData.ref_doctor_phone) ? ` (${d.ref_doctor_phone || formData.ref_doctor_phone})` : ""}
+                    </span>
+                  ) : "NA"}
+                </td>
               </tr>
             </tbody>
           </table>

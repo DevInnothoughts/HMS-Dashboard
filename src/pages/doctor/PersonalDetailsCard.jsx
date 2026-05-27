@@ -282,6 +282,8 @@ const PersonalDetailsCard = () => {
     ref: "",
     specific_work: "",
     patient_id: "",
+    ref_doctor_name: "",
+    ref_doctor_phone: "",
     nationality: "",
     language: "",
   });
@@ -1100,6 +1102,7 @@ const PersonalDetailsCard = () => {
           medical_advice: toArray(d.medical_advice),
           medicines_prescribed: toArray(d.medicines_prescribed),
           categories: toArray(d.categories),
+          surgical_advice: d.advice || "",
           speciality_data: {
             ...d.speciality_data,
             piles: toArray(d.speciality_data?.piles),
@@ -2181,6 +2184,8 @@ const PersonalDetailsCard = () => {
         ref: initialPatient.ref || "",
         specific_work: initialPatient.specific_work || "",
         patient_id: initialPatient.patient_id || "",
+        ref_doctor_name: initialPatient.ref_doctor_name || "",
+        ref_doctor_phone: initialPatient.ref_doctor_phone || "",
         nationality:
           initialPatient.additional_info?.nationality ||
           initialPatient.nationality ||
@@ -4385,16 +4390,43 @@ const PersonalDetailsCard = () => {
         padding: "10px",
       }}
     >
-      <PageBreadcrumb pagename="Patient Personal Details" />
+      <PageBreadcrumb pagename="Patient Medical Records" />
       <div className="theme-body">
         <Container fluid>
           {activeTab === "menu" ? (
             <div className="py-4 px-lg-7 animate__animated animate__fadeIn">
               <Card className="border-0 shadow-sm mb-20" style={{ borderRadius: "12px", background: "#fff", overflow: "hidden" }}>
                 <div className="p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center" style={{ borderLeft: "5px solid #00bcd4" }}>
-                  <div>
-                    <h4 className="fw-bold mb-1" style={{ color: "#2c3e50" }}>Patient Medical Records</h4>
-                    <p className="text-muted m-0" style={{ fontSize: "14px" }}>Manage and review clinical documentation across all categories.</p>
+                  <div className="d-flex align-items-center gap-3">
+                    <Button
+                      onClick={() => navigate(-1)}
+                      className="d-flex align-items-center justify-content-center shadow-sm"
+                      style={{
+                        borderRadius: "50%",
+                        width: "40px",
+                        height: "40px",
+                        padding: "0",
+                        backgroundColor: "#fff",
+                        border: "1px solid #e2e8f0",
+                        color: "#00838f",
+                        transition: "all 0.2s ease"
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = "#e0f7fa";
+                        e.currentTarget.style.transform = "translateX(-2px)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = "#fff";
+                        e.currentTarget.style.transform = "translateX(0)";
+                      }}
+                      title="Back to Patient List"
+                    >
+                      <FeatherIcon icon="arrow-left" size="20" />
+                    </Button>
+                    <div>
+                      <h4 className="fw-bold mb-1" style={{ color: "#2c3e50" }}>Patient Medical Records</h4>
+                      <p className="text-muted m-0" style={{ fontSize: "14px" }}>Manage and review clinical documentation across all categories.</p>
+                    </div>
                   </div>
                   <div className="mt-3 mt-md-0">
                     <span className="badge" style={{ backgroundColor: "#e0f7fa", color: "#00838f", padding: "20px 15px", borderRadius: "8px", fontSize: "13px", fontWeight: "600" }}>

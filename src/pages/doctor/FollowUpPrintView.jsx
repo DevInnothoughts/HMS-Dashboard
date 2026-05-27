@@ -112,7 +112,7 @@ const FollowUpPrintView = React.forwardRef(({ patient, followUpData = {}, histor
           <div style={{ clear: "both" }}></div>
 
           {/* Main Border Container (PHP Line 51 logic) */}
-          <div style={{ border: "2px solid green", padding: "15px", borderRadius: "25px", marginBottom: "20px" }}>
+          <div style={{ border: "2px solid green", padding: "15px", borderTopLeftRadius: "25px", borderBottomLeftRadius: "25px", marginBottom: "20px" }}>
 
             {/* Patient Header Box */}
             <div className="inner-border-box" style={{ padding: "10px 5px" }}>
@@ -305,7 +305,7 @@ const FollowUpPrintView = React.forwardRef(({ patient, followUpData = {}, histor
                     const invComments = (row2.newInvestigation_comment || "").split(",");
                     const knownInv = ["HB", "BSL-R", "Bleding Time-BT", "Clotting Time-BT", "PT INR", "HIV", "Hbsag", "SR.Creatinine", "Vit B12"];
                     const filtered = knownInv.filter(k => invList.includes(k));
-                    
+
                     if (filtered.length > 0) {
                       return (
                         <div className="row">
@@ -351,7 +351,7 @@ const FollowUpPrintView = React.forwardRef(({ patient, followUpData = {}, histor
                 <div key={idx} style={{ marginBottom: "10px" }}>
                   <div className="row">
                     <div className="col-md-9" style={{ width: "75%" }}>
-                      <p><b>Diagnosis :</b>&nbsp;{diag.diagnosis || "-"}</p>
+                      <p><b>Diagnosis :</b>&nbsp;{diag.diagnosis_text || "-"}</p>
                     </div>
                     <div className="col-md-3" style={{ width: "20%" }}>
                       <p className="text-right"><b>Date : </b>{formatDate(diag.date_diagnosis)}</p>
@@ -359,7 +359,7 @@ const FollowUpPrintView = React.forwardRef(({ patient, followUpData = {}, histor
                   </div>
                   <div className="row">
                     <div className="col-md-12">
-                      <p><b>Advice :</b>&nbsp;{diag.adviceComment || "-"}</p>
+                      <p><b>Advice :</b>&nbsp;{diag.advice || diag.surgical_advice || "-"}</p>
                     </div>
                   </div>
                   <div className="row">
@@ -396,10 +396,10 @@ const FollowUpPrintView = React.forwardRef(({ patient, followUpData = {}, histor
             <div className="inner-border-box" style={{ padding: "10px 5px" }}>
               <div className="row">
                 <div className="col-md-6" style={{ width: "30%" }}>
-                  <p><b>First visit Date :</b>&nbsp;{formatDate(followUpData?.first_visit_date) || "-"}</p>
+                  <p><b>First visit Date :</b>&nbsp;{formatDate(patient?.date) || "-"}</p>
                 </div>
                 <div className="col-md-6" style={{ width: "68%", textAlign: "right", float: "right" }}>
-                  <p><b>Last visit Date :</b>&nbsp;{currentDate}</p>
+                  <p><b>Last visit Date :</b>&nbsp;</p>
                 </div>
               </div>
               <div className="row">
@@ -410,20 +410,20 @@ const FollowUpPrintView = React.forwardRef(({ patient, followUpData = {}, histor
             </div>
 
             <div className="row">
-              <div className="col-md-12" style={{ width: "100%", height: "30px" }}>
+              <div className="col-md-12" style={{ width: "100%", height: "40px" }}>
                 <p><b>Diagnosis :</b> {followUpData?.diagnosis || ""}</p>
               </div>
             </div>
             <div className="row">
-              <div className="col-md-12" style={{ width: "100%", height: "40px" }}>
+              <div className="col-md-12" style={{ width: "100%", height: "80px" }}>
                 <p><b>Advice :</b> {followUpData?.advice || ""}</p>
               </div>
             </div>
             <div className="row">
-              <div className="col-md-9" style={{ width: "35%", height: "30px" }}>
+              <div className="col-md-9" style={{ width: "35%", height: "40px" }}>
                 <p><b>Next FU :</b> </p>
               </div>
-              <div className="col-md-3" style={{ width: "65%", height: "30px", textAlign: "center" }}>
+              <div className="col-md-3" style={{ width: "65%", height: "40px", textAlign: "center" }}>
                 <p><b>Assisting Doctor :</b> </p>
               </div>
             </div>

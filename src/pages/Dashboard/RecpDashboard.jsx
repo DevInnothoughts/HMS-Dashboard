@@ -289,6 +289,30 @@ export default function ReceptionistDashboard() {
   };
 
   const handleConfirm = async (appointmentId, patientType, phone) => {
+    // PRE-CHECK FOR DAILY CLOSING
+    try {
+      const prevDate = moment(selectedEvent.date, "DD-MM-YYYY").subtract(1, 'days').format("YYYY-MM-DD");
+      const checkResponse = await fetch(`${BASE_URL}/V1/managereports/dailyclosing-status?location=${currentLocation}&date=${prevDate}`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      });
+      const checkResult = await checkResponse.json();
+      
+      if (!checkResponse.ok || !checkResult.success || !checkResult.data) {
+        Swal.fire({
+          icon: "warning",
+          title: "Daily Closing Pending",
+          text: `Please fill the daily closing for ${moment(prevDate).format("DD-MM-YYYY")} before confirming appointments for this day.`,
+          confirmButtonColor: "#00bcd4",
+        });
+        return;
+      }
+    } catch (error) {
+      console.error("Error checking daily closing status:", error);
+      Swal.fire({ icon: "error", title: "Error", text: "Failed to verify daily closing status." });
+      return;
+    }
+
     const result = await Swal.fire({
       title: "Confirm Arrival?",
       text: "Mark patient as arrived at the facility?",
@@ -994,7 +1018,11 @@ margin-left: 1px;
 
                   <Button
                     variant="secondary"
-                    onClick={() => setSelectedDoctorId("")}
+                    onClick={() => {
+                      setSelectedDoctorId("");
+                      setActivePatientTypeFilter(null);
+                      setDaySearchTerm("");
+                    }}
                     style={{
                       backgroundColor: "#ff9800",
                       color: "white",

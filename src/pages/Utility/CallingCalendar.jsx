@@ -297,6 +297,8 @@ export default function CallingCalendar() {
 
                 <Row className="g-4">
                   {/* Card 1: Surgery Advised */}
+                  {false && (
+                  <>
                   <Col xs={12} sm={6} md={4}>
                     <Card
                       onClick={() => handleOpenAdvised("Surgery")}
@@ -499,6 +501,8 @@ export default function CallingCalendar() {
                       </Card.Body>
                     </Card>
                   </Col>
+                  </>
+                  )}
 
                   {/* Card 5: Enquiry Calls */}
                   <Col xs={12} sm={6} md={4}>

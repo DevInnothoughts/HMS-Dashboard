@@ -521,14 +521,16 @@ const DiagnosisCard = ({
             >
               <FeatherIcon icon="plus" size="13" className="me-1" /> NEW RECORD
             </Button>
-            <Button
-              variant="outline-secondary"
-              size="sm"
-              onClick={onPrintDiagnosis}
-              style={{ borderRadius: "20px", fontSize: "12px", fontWeight: "700", padding: "7px 10px" }}
-            >
-              <FeatherIcon icon="printer" size="13" className="me-1" /> PRINT
-            </Button>
+            {selectedDiagnosisId && (
+              <Button
+                variant="outline-secondary"
+                size="sm"
+                onClick={onPrintDiagnosis}
+                style={{ borderRadius: "20px", fontSize: "12px", fontWeight: "700", padding: "7px 10px" }}
+              >
+                <FeatherIcon icon="printer" size={13} className="me-1" /> PRINT
+              </Button>
+            )}
             <Dropdown onSelect={onSelectDiagnosis}>
               <Dropdown.Toggle
                 variant="outline-info"

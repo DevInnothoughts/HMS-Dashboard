@@ -159,12 +159,12 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
             <div className="row">
               {[
                 ['Height', row2.height, ''],
-                ['BP', row2.BP, ' /mm of Hg'],
+                ['BP', row2.BP, '/mm of Hg'],
                 ['RS', row2.RS, ''],
                 ['Weight', row2.weight, ''],
-                ['Pulse', row2.Pulse, ' / Min'],
+                ['Pulse', row2.Pulse, '/ Min'],
                 ['CVS', row2.CVS, ''],
-                ['RR', row2.RR, ' / Min'],
+                ['RR', row2.RR, '/ Min'],
                 ['CNS', row2.CNS, ''],
                 ['PA', row2.PA, '']
               ].map(([label, value, unit], i) => (
@@ -310,7 +310,7 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
               return null;
             })()}
 
-            {/* Fecal Incontinence - Note: PHP code had a typo where it used Urinary_incontinence_duration for Fecal as well in one place, I will stick to what's likely intended if I find the correct field or just mirror PHP exactly */}
+            {/* Fecal Incontinence */}
             {(() => {
               const symptoms = (row2.symptoms || "").split(',').map(s => s.trim());
               if (symptoms.includes('Fecal Incontinence') || row2.Fecal_incontinence_duration) {
@@ -369,7 +369,8 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
             {(() => {
               const symptoms = (row2.symptoms || "").split(',').map(s => s.trim());
               const urologySymptoms = ['Pain', 'Burning urination', 'Nausea', 'Vomiting', 'LUTS', 'Urgency of urination', 'Incomplete evacuation', 'Stream of urine', 'Nocturia'];
-              const hasUrology = urologySymptoms.some(s => symptoms.includes(s)) || row2.urology;
+              const uroDuration = row2.urology || row2.uro_duration;
+              const hasUrology = urologySymptoms.some(s => symptoms.includes(s)) || uroDuration;
               if (hasUrology) {
                 return (
                   <div className="row">
@@ -378,7 +379,7 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
                       {urologySymptoms.filter(s => symptoms.includes(s)).map((s, i, arr) => (
                         <span key={s}>{s}{i < arr.length - 1 ? " , " : ""}</span>
                       ))}
-                      {row2.urology && <span style={{ width: "100%", float: "left" }}><b>Duration :</b> {row2.urology}</span>}
+                      {uroDuration && <span style={{ width: "100%", float: "left" }}><b>Duration :</b> {uroDuration}</span>}
                     </div>
                   </div>
                 );
@@ -699,17 +700,17 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
           <div className="row">
             <div className="col-md-12"><b>Diagnosis Details: </b></div>
             <div className="col-md-12">
-              <p style={{ border: "1px solid #d7d7d7", height: "18px", margin: "0px" }}></p>
-              <p style={{ border: "1px solid #d7d7d7", height: "18px", borderTop: "0px", margin: "0px" }}></p>
-              <p style={{ border: "1px solid #d7d7d7", height: "18px", borderTop: "0px" }}></p>
+              <p style={{ border: "1px solid #d7d7d7", height: "20px", margin: "0px" }}></p>
+              <p style={{ border: "1px solid #d7d7d7", height: "20px", borderTop: "0px", margin: "0px" }}></p>
+              <p style={{ border: "1px solid #d7d7d7", height: "20px", borderTop: "0px" }}></p>
             </div>
           </div>
           <div className="row">
             <div className="col-md-12"><b>Plan: </b></div>
             <div className="col-md-12">
-              <p style={{ border: "1px solid #d7d7d7", height: "18px", margin: "0px" }}></p>
-              <p style={{ border: "1px solid #d7d7d7", height: "18px", borderTop: "0px", margin: "0px" }}></p>
-              <p style={{ border: "1px solid #d7d7d7", height: "18px", borderTop: "0px" }}></p>
+              <p style={{ border: "1px solid #d7d7d7", height: "20px", margin: "0px" }}></p>
+              <p style={{ border: "1px solid #d7d7d7", height: "20px", borderTop: "0px", margin: "0px" }}></p>
+              <p style={{ border: "1px solid #d7d7d7", height: "20px", borderTop: "0px" }}></p>
             </div>
           </div>
           <br />

@@ -106,7 +106,7 @@ export default function Login() {
       backendAccountType = "doctor";
       departmentVal = "OPD";
     } else if (accountType === "IPD") {
-      backendAccountType = "reception";
+      backendAccountType = "ipd";
       departmentVal = "IPD";
     }
 

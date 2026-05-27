@@ -52,6 +52,7 @@ export default function EnquiryList({ isTab = false }) {
   const [filters1, setFilters1] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
+  const [statusFilter, setStatusFilter] = useState("");
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditEnquiryModal, setShowEditEnquiryModal] = useState(false);
@@ -438,6 +439,51 @@ export default function EnquiryList({ isTab = false }) {
     }
   }, [fetchEnquiriesData, currentLocation]);
 
+  const handleStatusFilterChange = (e) => {
+    const value = e.target.value;
+    const updatedFilters = {
+      ...filters1,
+    };
+
+    if (value) {
+      updatedFilters.enquiry_status = {
+        value,
+        matchMode: FilterMatchMode.EQUALS,
+      };
+    } else {
+      delete updatedFilters.enquiry_status;
+    }
+
+    setStatusFilter(value);
+    setFilters1(updatedFilters);
+  };
+
+  const renderStatusHeader = () => (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <span style={{ fontSize: "12px", fontWeight: 600, marginBottom: "4px" }}>
+        Enquiry Status
+      </span>
+      <Form.Select
+        size="sm"
+        value={statusFilter}
+        onChange={handleStatusFilterChange}
+        style={{
+          width: "120px",
+          fontSize: "12px",
+          padding: "4px 6px",
+          borderRadius: "6px",
+          border: "1px solid #90caf9",
+        }}
+      >
+        <option value="">All</option>
+        <option value="Visited">Visited</option>
+        <option value="Not Visited">Not Visited</option>
+        <option value="Surgery Done">Surgery Done</option>
+        <option value="No FU done">No FU done</option>
+      </Form.Select>
+    </div>
+  );
+
   const handleGlobalSearchChange = (e) => {
     setFilters1({
       global: {
@@ -630,6 +676,7 @@ export default function EnquiryList({ isTab = false }) {
             onClick={() => {
               setFromDate(null);
               setToDate(null);
+              setStatusFilter("");
               setFilters1({
                 global: { value: null, matchMode: FilterMatchMode.CONTAINS },
               });
@@ -842,7 +889,7 @@ export default function EnquiryList({ isTab = false }) {
                       />
                       <Column
                         field="enquiry_status"
-                        header="Enquiry Status"
+                        header={renderStatusHeader}
                         body={(rowData) => {
                           const status = rowData.dynamic_status || rowData.enquiry_status;
                           if (!status) return "-";

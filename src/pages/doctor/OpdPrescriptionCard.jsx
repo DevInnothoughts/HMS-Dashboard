@@ -829,7 +829,8 @@ const OpdPrescriptionCard = ({
                     <div
                       key={med.medicine_id}
                       className="px-3 py-2 cursor-pointer hover-bg-light border-bottom"
-                      onClick={() => {
+                      onMouseDown={(e) => {
+                        e.preventDefault();
                         setCurrentMedicine((prev) => ({
                           ...prev,
                           name: fullSearchValue,

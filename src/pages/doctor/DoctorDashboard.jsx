@@ -1206,7 +1206,11 @@ margin-left: 1px;
 
                   <Button
                     variant="secondary"
-                    onClick={() => setSelectedDoctorId("")}
+                    onClick={() => {
+                      setSelectedDoctorId("");
+                      setActivePatientTypeFilter(null);
+                      setDaySearchTerm("");
+                    }}
                     style={{
                       backgroundColor: "#ff9800",
                       color: "white",

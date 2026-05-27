@@ -715,16 +715,51 @@ export default function All_patient() {
   }, [currentLocation, fromDate, toDate]);
 
   useEffect(() => {
-    if (location.state?.openEditForPhone && patients.length > 0) {
-      const patientToEdit = patients.find(p => String(p.phone) === String(location.state.openEditForPhone));
+    if (location.state?.openEditForPhone && currentLocation && currentLocation !== "default") {
+      const targetPhone = String(location.state.openEditForPhone);
+      const patientToEdit = patients.find(p => String(p.phone) === targetPhone);
+      
       if (patientToEdit) {
-         handleEditPatient(patientToEdit);
-         const newState = { ...location.state };
-         delete newState.openEditForPhone;
-         navigate(location.pathname, { replace: true, state: newState });
+        handleEditPatient(patientToEdit);
+        const newState = { ...location.state };
+        delete newState.openEditForPhone;
+        navigate(location.pathname, { replace: true, state: newState });
+      } else if (!loading) {
+        const searchAndEdit = async () => {
+          try {
+            const response = await fetch(
+              `${BASE_URL}/V1/patient/searchPatient?query=${encodeURIComponent(
+                targetPhone
+              )}&location=${currentLocation}`
+            );
+            if (response.ok) {
+              const resData = await response.json();
+              if (resData.data && resData.data.length > 0) {
+                const foundPatient = resData.data.find(p => String(p.phone) === targetPhone) || resData.data[0];
+                setPatients((prev) => {
+                  if (prev.some(p => p.patient_id === foundPatient.patient_id)) return prev;
+                  return [foundPatient, ...prev];
+                });
+                handleEditPatient(foundPatient);
+              } else {
+                toast.error("Patient details not found in database.");
+              }
+            } else {
+              toast.error("Failed to query patient details.");
+            }
+          } catch (error) {
+            console.error("Error searching patient for edit:", error);
+            toast.error("An error occurred while retrieving patient details.");
+          } finally {
+            const newState = { ...location.state };
+            delete newState.openEditForPhone;
+            navigate(location.pathname, { replace: true, state: newState });
+          }
+        };
+        searchAndEdit();
       }
     }
-  }, [location.state?.openEditForPhone, patients, navigate, location.pathname, location.state]);
+  }, [location.state?.openEditForPhone, patients, loading, navigate, location.pathname, location.state, currentLocation]);
 
   const formatDateToDisplay = (dateString) => {
     if (!dateString) return "";
@@ -986,13 +1021,13 @@ export default function All_patient() {
         setShowEditPatientModal(false);
         setSelectedPatient(null);
         setFormData({});
-        
+
         handlePrint(updatedPatientData);
 
         if (location.state?.returnToAppointment) {
-           navigate("/appointments", { 
-               state: { registered_appointment_id: location.state.appointment_id } 
-           });
+          navigate("/appointments", {
+            state: { registered_appointment_id: location.state.appointment_id }
+          });
         }
       } else {
         Swal.fire({
@@ -2675,6 +2710,31 @@ export default function All_patient() {
               )}
             </InputGroup>
           </Form.Group>
+
+          <Button
+            variant="info"
+            onClick={() => {
+              const today = new Date();
+              setFromDate(today);
+              setToDate(today);
+            }}
+            style={{
+              backgroundColor: "#29b6f6",
+              border: "none",
+              borderRadius: "6px",
+              padding: "5px 10px",
+              fontSize: "12px",
+              fontWeight: "500",
+              color: "white",
+              cursor: "pointer",
+              transition: "all 0.3s ease",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              marginLeft: "5px"
+            }}
+          >
+            <FeatherIcon icon="calendar" size={12} className="me-1" />
+            Today's Patients
+          </Button>
         </div>
 
         <div

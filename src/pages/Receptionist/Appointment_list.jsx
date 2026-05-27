@@ -960,6 +960,53 @@ export default function Appointment_list() {
     }
   };
 
+  const confirmAppointmentWithCheck = async (rowData) => {
+    const { appointment_id, patient_type, patient_phone, appointment_timestamp } = rowData;
+    
+    if (!appointment_timestamp) {
+      Swal.fire({ icon: "error", title: "Error", text: "Appointment date missing." });
+      return;
+    }
+
+    try {
+      // Calculate previous day
+      const aptDate = moment(appointment_timestamp);
+      const prevDate = aptDate.clone().subtract(1, 'days').format("YYYY-MM-DD");
+
+      // Check daily closing status for prevDate
+      const response = await fetch(`${BASE_URL}/V1/managereports/dailyclosing-status?location=${currentLocation}&date=${prevDate}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        }
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok && result.success && result.data) {
+        // Daily closing is filled
+        handleProcessUpdate(
+          appointment_id,
+          "confirmAppointment",
+          patient_type,
+          patient_phone,
+          "Appointment confirmed!",
+        );
+      } else {
+        // Daily closing is missing
+        Swal.fire({
+          icon: "warning",
+          title: "Daily Closing Pending",
+          text: `Please fill the daily closing for ${moment(prevDate).format("DD-MM-YYYY")} before confirming appointments for this day.`,
+          confirmButtonColor: "#00bcd4",
+        });
+      }
+    } catch (error) {
+      console.error("Error checking daily closing status:", error);
+      Swal.fire({ icon: "error", title: "Error", text: "Failed to verify daily closing status." });
+    }
+  };
+
   const getRowClassName = (rowData) => {
     const {
       ConfirmPatient,
@@ -1003,7 +1050,7 @@ export default function Appointment_list() {
 
     const showFourButtons =
       registeredAppointments.has(appointment_id) ||
-      ConfirmPatient === 1 ||
+      Number(ConfirmPatient) === 1 ||
       isHistoryDone ||
       isExecutionDone ||
       isConsultationDone ||
@@ -1043,15 +1090,7 @@ export default function Appointment_list() {
             />
             <ActionButton
               title="Confirm"
-              onClick={() =>
-                handleProcessUpdate(
-                  appointment_id,
-                  "confirmAppointment",
-                  patient_type,
-                  patient_phone,
-                  "Appointment confirmed!",
-                )
-              }
+              onClick={() => confirmAppointmentWithCheck(rowData)}
               disabled={isConfirmed}
               icon="check"
             />
@@ -1152,11 +1191,11 @@ export default function Appointment_list() {
         }}
         className={`color-legend-pill ${isSelected ? "selected" : ""}`}
         style={{
-          "--status-hover-color": bgColor === "#ffffff" ? "#0ea5e9" : bgColor,
-          "--status-hover-bg": `${bgColor === "#ffffff" ? "#0ea5e9" : bgColor}15`,
+          "--status-hover-color": bgColor,
+          "--status-hover-bg": `${bgColor}15`,
           ...(isSelected ? {
-            borderColor: bgColor === "#ffffff" ? "#0ea5e9" : bgColor,
-            backgroundColor: `${bgColor === "#ffffff" ? "#0ea5e9" : bgColor}25`,
+            borderColor: bgColor,
+            backgroundColor: `${bgColor}25`,
             transform: "translateY(-1.5px)",
             boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)"
           } : {})
@@ -1397,11 +1436,11 @@ export default function Appointment_list() {
       <div style={{ marginTop: "15px" }}>
         <Col xs={12} style={{ padding: "2px" }}>
           <div className="d-flex flex-wrap justify-content-start align-items-center">
-            <ColorLegend name="Pending Appointment" bgColor="#ffffff" />
-            <ColorLegend name="Appointment Confirmed" bgColor="#0ea5e9" />
-            <ColorLegend name="History Checked" bgColor="#f43f5e" />
-            <ColorLegend name="Diagnosis Checked" bgColor="#f59e0b" />
-            <ColorLegend name="Prescription Checked" bgColor="#8b5cf6" />
+            <ColorLegend name="Pending Appointment" bgColor="#94a3b8" />
+            <ColorLegend name="Appointment Confirmed" bgColor="#3b82f6" />
+            <ColorLegend name="History Checked" bgColor="#cd5c5c" />
+            <ColorLegend name="Diagnosis Checked" bgColor="#e67e22" />
+            <ColorLegend name="Prescription Checked" bgColor="#8e44ad" />
             <ColorLegend name="Receipt Generated" bgColor="#10b981" />
           </div>
         </Col>

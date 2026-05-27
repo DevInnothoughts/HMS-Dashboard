@@ -648,7 +648,8 @@ const DischargeCard = ({
                     <div
                       key={med.medicine_id}
                       className="px-3 py-2 cursor-pointer hover-bg-light border-bottom"
-                      onClick={() => {
+                      onMouseDown={(e) => {
+                        e.preventDefault();
                         setNewTreatmentGiven({ ...newTreatmentGiven, medicine_name: fullSearchValue, medicine_id: med.medicine_id, mrp: med.mrp });
                         setShowMedicineDropdownGiven(false);
                       }}
@@ -808,7 +809,8 @@ const DischargeCard = ({
                     <div
                       key={med.medicine_id}
                       className="px-3 py-2 cursor-pointer hover-bg-light border-bottom"
-                      onClick={() => {
+                      onMouseDown={(e) => {
+                        e.preventDefault();
                         setNewTreatmentOnDischarge((prev) => ({
                           ...prev,
                           medicine_name: fullSearchValue,

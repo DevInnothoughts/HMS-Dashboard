@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import moment from "moment";
 import {
   Container,
   Row,
@@ -157,10 +160,29 @@ const DailyClosing = () => {
             data: updatedData
           }));
         } else {
-          // If not found in DB, clear submitting state if localStorage is empty
+          setIsSubmitted(false);
           const savedData = localStorage.getItem("hms_daily_closing");
-          if (!savedData) {
-            setIsSubmitted(false);
+          let shouldUseLocal = false;
+          if (savedData) {
+            const parsed = JSON.parse(savedData);
+            if (parsed.date === dateStr) {
+              shouldUseLocal = true;
+            }
+          }
+          if (!shouldUseLocal) {
+            setFormData({
+              opdCash: "",
+              ipdCash: "",
+              pharmacyCash: "",
+              upiSettlement: "",
+              cardSettlement: "",
+              bankDeposit: "",
+              comment: "",
+              cashDepositReceipt: "",
+              cardSettlementSlip: "",
+            });
+            setCashDepositFile(null);
+            setCardSettlementFile(null);
           }
         }
       }
@@ -222,71 +244,12 @@ const DailyClosing = () => {
     }));
   };
 
-  const systemTotals = React.useMemo(() => {
-    let cash = 0;
-    let upi = 0;
-    let card = 0;
-    let total = 0;
-
-    receiptsList.forEach((r) => {
-      const net = parseFloat(r.totalamt || 0) - parseFloat(r.discountamt || 0);
-      const mode = (r.paymentmode || "").toLowerCase().trim();
-      if (mode.includes("cash")) {
-        cash += net;
-      } else if (mode.includes("upi")) {
-        upi += net;
-      } else if (mode.includes("card") || mode.includes("pos") || mode.includes("machine") || mode.includes("pinelabs") || mode.includes("pine labs")) {
-        card += net;
-      }
-      total += net;
-    });
-
-    return { cash, upi, card, total };
-  }, [receiptsList]);
-
-  const diffCash = (parseFloat(formData.opdCash || 0) - systemTotals.cash).toFixed(2);
-  const diffIpdCash = (parseFloat(formData.ipdCash || 0) - ipdSystemCash).toFixed(2);
-  const diffPharmacyCash = (parseFloat(formData.pharmacyCash || 0) - pharmacySystemCash).toFixed(2);
-  const diffUpi = (parseFloat(formData.upiSettlement || 0) - systemTotals.upi).toFixed(2);
-  const diffCard = (parseFloat(formData.cardSettlement || 0) - systemTotals.card).toFixed(2);
-  const totalEntered = parseFloat(formData.opdCash || 0) + parseFloat(formData.ipdCash || 0) + parseFloat(formData.upiSettlement || 0) + parseFloat(formData.cardSettlement || 0) + parseFloat(formData.pharmacyCash || 0);
-  const totalSystem = systemTotals.total + pharmacySystemCash + ipdSystemCash;
-  const diffTotal = (totalEntered - totalSystem).toFixed(2);
-
-  const formatDifference = (diffStr) => {
-    const diffVal = parseFloat(diffStr);
-    const absoluteValStr = Math.abs(diffVal).toFixed(2);
-    if (diffVal > 0.01) return `+₹ ${absoluteValStr}`;
-    if (diffVal < -0.01) return `-₹ ${absoluteValStr}`;
-    return `₹ ${absoluteValStr}`;
-  };
-
-  const hasMismatch = Math.abs(parseFloat(diffCash)) > 0.01 ||
-    Math.abs(parseFloat(diffIpdCash)) > 0.01 ||
-    Math.abs(parseFloat(diffPharmacyCash)) > 0.01 ||
-    Math.abs(parseFloat(diffUpi)) > 0.01 ||
-    Math.abs(parseFloat(diffCard)) > 0.01;
-  const hasEnteredAmount =
-    (formData.opdCash && formData.opdCash.trim() !== "") ||
-    (formData.ipdCash && formData.ipdCash.trim() !== "") ||
-    (formData.pharmacyCash && formData.pharmacyCash.trim() !== "") ||
-    (formData.upiSettlement && formData.upiSettlement.trim() !== "") ||
-    (formData.cardSettlement && formData.cardSettlement.trim() !== "");
-  const showReconciliation = hasEnteredAmount;
-  const isSaveDisabled = isSubmitted || loading || (hasMismatch && (!formData.comment || !formData.comment.trim()));
+  const isSaveDisabled = isSubmitted || loading;
 
   const handleSave = async () => {
     // Basic Validation
     if (!formData.opdCash || !formData.bankDeposit) {
       return Swal.fire("Required", "Please fill essential fields", "warning");
-    }
-
-    if (hasMismatch && (!formData.comment || !formData.comment.trim())) {
-      return Swal.fire(
-        "Mismatch Comment Required",
-        "There is a difference between system receipts/reports and entered totals. Please provide an explanation in the reconciliation section below the table.",
-        "warning"
-      );
     }
 
     setLoading(true);
@@ -385,24 +348,39 @@ const DailyClosing = () => {
                   padding: "10px 15px",
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "flex-start",
+                  justifyContent: "space-between",
                 }}
               >
-                <i
-                  className="fa fa-list"
-                  style={{ marginRight: "8px", color: "#333" }}
-                ></i>
-                <h5
-                  style={{
-                    margin: 0,
-                    fontSize: "17px",
-                    fontWeight: "bold",
-                    color: "#333",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  Today's Collection Summary
-                </h5>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <i
+                    className="fa fa-list"
+                    style={{ marginRight: "8px", color: "#333" }}
+                  ></i>
+                  <h5
+                    style={{
+                      margin: 0,
+                      fontSize: "17px",
+                      fontWeight: "bold",
+                      color: "#333",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    Collection Summary
+                  </h5>
+                </div>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <span style={{ marginRight: "10px", fontWeight: "bold", fontSize: "14px", color: "#00838f" }}>Date:</span>
+                  <DatePicker
+                    selected={currentDate ? moment(currentDate, "DD-MM-YYYY").toDate() : new Date()}
+                    onChange={(date) => {
+                      if (date) setCurrentDate(moment(date).format("DD-MM-YYYY"));
+                    }}
+                    dateFormat="dd-MM-yyyy"
+                    maxDate={new Date()}
+                    className="form-control form-control-sm"
+                    style={{ border: "2px solid #4dd0e1", borderRadius: "5px", width: "130px", fontSize: "13px", fontWeight: "600", color: "#006064" }}
+                  />
+                </div>
               </Card.Header>
               <Card.Body style={{ padding: "10px", background: "#ffffff", borderRadius: "0 0 5px 5px" }}>
                 <Table
@@ -1040,174 +1018,6 @@ const DailyClosing = () => {
                   </tbody>
                 </Table>
 
-                {showReconciliation && (
-                  <>
-                    <hr style={{ borderTop: "2px dashed #b2ebf2", margin: "10px 0" }} />
-
-                    <div>
-                      <h6 className="mb-3 font-weight-bold" style={{ color: "#006064" }}>
-                        Collections Comparison (Entered Closing vs System Receipts & Reports)
-                      </h6>
-
-                      {receiptsLoading ? (
-                        <div className="text-center py-5">
-                          <div className="spinner-border text-info" role="status">
-                            <span className="visually-hidden">Loading receipts...</span>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <Table bordered hover responsive style={{ fontSize: "14px", border: "1px solid #b2ebf2" }}>
-                            <thead>
-                              <tr style={{ backgroundColor: "#e0f7fa" }}>
-                                <th style={{ border: "1px solid #b2ebf2", color: "#006064", fontWeight: "bold" }}>Payment Mode</th>
-                                <th style={{ border: "1px solid #b2ebf2", color: "#006064", fontWeight: "bold" }}>System Receipts / Reports</th>
-                                <th style={{ border: "1px solid #b2ebf2", color: "#006064", fontWeight: "bold" }}>Entered Closing Form</th>
-                                <th style={{ border: "1px solid #b2ebf2", color: "#006064", fontWeight: "bold" }}>Difference</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr>
-                                <td>OPD Cash</td>
-                                <td>₹ {systemTotals.cash.toFixed(2)}</td>
-                                <td>₹ {parseFloat(formData.opdCash || 0).toFixed(2)}</td>
-                                <td style={{
-                                  color: Math.abs(parseFloat(diffCash)) > 0.01 ? "#d32f2f" : "#2e7d32",
-                                  fontWeight: "bold"
-                                }}>
-                                  {formatDifference(diffCash)}
-                                </td>
-                              </tr>
-                              <tr>
-                                <td>IPD Cash</td>
-                                <td>₹ {ipdSystemCash.toFixed(2)}</td>
-                                <td>₹ {parseFloat(formData.ipdCash || 0).toFixed(2)}</td>
-                                <td style={{
-                                  color: Math.abs(parseFloat(diffIpdCash)) > 0.01 ? "#d32f2f" : "#2e7d32",
-                                  fontWeight: "bold"
-                                }}>
-                                  {formatDifference(diffIpdCash)}
-                                </td>
-                              </tr>
-                              <tr>
-                                <td>Pharmacy Cash</td>
-                                <td>₹ {pharmacySystemCash.toFixed(2)}</td>
-                                <td>₹ {parseFloat(formData.pharmacyCash || 0).toFixed(2)}</td>
-                                <td style={{
-                                  color: Math.abs(parseFloat(diffPharmacyCash)) > 0.01 ? "#d32f2f" : "#2e7d32",
-                                  fontWeight: "bold"
-                                }}>
-                                  {formatDifference(diffPharmacyCash)}
-                                </td>
-                              </tr>
-                              <tr>
-                                <td>UPI Settlement</td>
-                                <td>₹ {systemTotals.upi.toFixed(2)}</td>
-                                <td>₹ {parseFloat(formData.upiSettlement || 0).toFixed(2)}</td>
-                                <td style={{
-                                  color: Math.abs(parseFloat(diffUpi)) > 0.01 ? "#d32f2f" : "#2e7d32",
-                                  fontWeight: "bold"
-                                }}>
-                                  {formatDifference(diffUpi)}
-                                </td>
-                              </tr>
-                              <tr>
-                                <td>Card Settlement</td>
-                                <td>₹ {systemTotals.card.toFixed(2)}</td>
-                                <td>₹ {parseFloat(formData.cardSettlement || 0).toFixed(2)}</td>
-                                <td style={{
-                                  color: Math.abs(parseFloat(diffCard)) > 0.01 ? "#d32f2f" : "#2e7d32",
-                                  fontWeight: "bold"
-                                }}>
-                                  {formatDifference(diffCard)}
-                                </td>
-                              </tr>
-                              <tr style={{ backgroundColor: "#eeeeee", fontWeight: "bold" }}>
-                                <td style={{ backgroundColor: "#eeeeee" }}>Total Collections</td>
-                                <td style={{ backgroundColor: "#eeeeee" }}>₹ {totalSystem.toFixed(2)}</td>
-                                <td style={{ backgroundColor: "#eeeeee" }}>₹ {totalEntered.toFixed(2)}</td>
-                                <td style={{
-                                  backgroundColor: "#eeeeee",
-                                  color: Math.abs(parseFloat(diffTotal)) > 0.01 ? "#d32f2f" : "#000000ff"
-                                }}>
-                                  {formatDifference(diffTotal)}
-                                </td>
-                              </tr>
-                            </tbody>
-                          </Table>
-
-                          {hasMismatch ? (
-                            <Alert variant="warning" className="mt-3" style={{ borderLeft: "5px solid #ff9800", backgroundColor: "#fffde7", color: "#5d4037", padding: "10px" }}>
-                              <Alert.Heading style={{ fontSize: "16px", fontWeight: "bold", color: "#f57c00" }}>
-                                <FeatherIcon icon="alert-triangle" size="18" className="me-2" />
-                                Collection Discrepancy Detected
-                              </Alert.Heading>
-                              <p className="mb-10 " style={{ margin: 3, fontSize: "13px", fontWeight: "bold" }}>
-                                The Entered Closing amounts do not match the system-generated Receipts and Reports list for today.
-                                Please enter an explanation comment below before saving.
-                              </p>
-
-                              <Form.Group >
-                                <Form.Label style={{ fontWeight: "bold", fontSize: "13px", color: "#e65100" }}>
-                                  Discrepancy Explanation Comment <span className="text-danger">*</span>
-                                </Form.Label>
-                                <Form.Control
-                                  as="textarea"
-                                  rows={3}
-                                  placeholder="Provide the reason for the difference (e.g. cash deposit delay, correction in receipt payment mode, etc.)"
-                                  name="comment"
-                                  value={formData.comment}
-                                  onChange={handleChange}
-                                  readOnly={isSubmitted}
-                                  required
-                                  style={{
-                                    border: "1px solid #ffb74d",
-                                    borderRadius: "8px",
-                                    fontSize: "13px",
-                                    padding: "5px",
-                                    backgroundColor: isSubmitted ? "#f8f9fa" : "white"
-                                  }}
-                                />
-                              </Form.Group>
-                            </Alert>
-                          ) : (
-                            <Alert variant="success" className="mt-3" style={{ borderLeft: "5px solid #4caf50", backgroundColor: "#f1f8e9", color: "#33691e" }}>
-                              <Alert.Heading style={{ fontSize: "16px", fontWeight: "bold", color: "#2e7d32" }}>
-                                <FeatherIcon icon="check-circle" size="18" className="me-2" />
-                                Collections Match Perfectly
-                              </Alert.Heading>
-                              <p style={{ margin: 0, fontSize: "13px" }}>
-                                Entered values align exactly with system receipts. You can proceed to submit.
-                              </p>
-
-                              <Form.Group className="mt-3">
-                                <Form.Label style={{ fontWeight: "600", fontSize: "13px", color: "#555" }}>
-                                  Additional Comment (Optional)
-                                </Form.Label>
-                                <Form.Control
-                                  as="textarea"
-                                  rows={2}
-                                  placeholder="Any additional notes..."
-                                  name="comment"
-                                  value={formData.comment}
-                                  onChange={handleChange}
-                                  readOnly={isSubmitted}
-                                  style={{
-                                    border: "1px solid #ced4da",
-                                    borderRadius: "8px",
-                                    fontSize: "13px",
-                                    padding: "8px",
-                                    backgroundColor: isSubmitted ? "#f8f9fa" : "white"
-                                  }}
-                                />
-                              </Form.Group>
-                            </Alert>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </>
-                )}
               </Card.Body>
             </Card>
           </Col>
