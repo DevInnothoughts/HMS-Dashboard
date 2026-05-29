@@ -67,7 +67,7 @@ const FollowUpCard = ({ followUpData, formData, handleFollowUpChange, onSaveFoll
             <Form.Control as="textarea" readOnly rows={2} value={followUpData.plan} onChange={(e) => handleFollowUpChange("plan", e.target.value)} placeholder="Next steps in treatment..." style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px", cursor: "not-allowed", backgroundColor: "#ebeceeff" }} />
           </Col>
           <Col md={4} className="mb-1">
-            <Form.Label className="fw-bold mb-3" style={{ fontSize: "11px", color: "#006064" }}>Present Complaints</Form.Label>
+            <Form.Label className="fw-bold mb-3" style={{ fontSize: "11px", color: "#006064" }}>Present Complaints <span className="text-danger">*</span></Form.Label>
             <Form.Control as="textarea" rows={2} placeholder="Describe the present symptoms..." value={followUpData.present_complaints} onChange={(e) => handleFollowUpChange("present_complaints", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", fontSize: "12px", padding: "6px 12px" }} />
           </Col>
           <Col md={4} className="mb-1">

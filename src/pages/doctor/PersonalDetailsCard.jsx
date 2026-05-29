@@ -333,6 +333,8 @@ const PersonalDetailsCard = () => {
 
   const [showDischargePrintModal, setShowDischargePrintModal] = useState(false);
   const [showDiagnosisPrintModal, setShowDiagnosisPrintModal] = useState(false);
+  const [showFollowUpPrintModal, setShowFollowUpPrintModal] = useState(false);
+  const [showOpdPrintModal, setShowOpdPrintModal] = useState(false);
 
   const [historyData, setHistoryData] = useState({
     patient_date: new Date().toISOString().split("T")[0],
@@ -474,9 +476,12 @@ const PersonalDetailsCard = () => {
           };
         });
         setPreviousDiagnosisList(formattedList);
+        return formattedList;
       }
+      return [];
     } catch (error) {
       console.error("Error fetching diagnosis dates:", error);
+      return [];
     }
   };
 
@@ -850,7 +855,7 @@ const PersonalDetailsCard = () => {
         const pastMedicalParsed = parseHistoryFields(d.past_history, [
           "DM",
           "HTN",
-          "Br Asthma",
+          "Bronchial Asthma",
           "Thyroid",
           "IHD",
           "Migraine",
@@ -862,9 +867,9 @@ const PersonalDetailsCard = () => {
           "Insomnia",
         ]);
         const generalParsed = parseHistoryFields(d.general_history, [
-          "H/O Wt Loss",
-          "Dec Appetite",
-          "H/O Straining for urination",
+          "History of Weight Loss",
+          "Decreased Appetite",
+          "Straining for Urination",
           "Acidity",
           "Gas",
           "Bloating",
@@ -1173,6 +1178,15 @@ const PersonalDetailsCard = () => {
     }
 
     const missingFields = [];
+
+    // Check if at least one specialty finding is selected
+    const hasSpecialityData = Object.values(diagnosisData.speciality_data || {}).some((v) =>
+      Array.isArray(v) ? v.length > 0 : v && v.trim() !== "",
+    );
+    if (!hasSpecialityData) {
+      missingFields.push("Specialty Findings");
+    }
+
     if (!diagnosisData.diagnosis_text || String(diagnosisData.diagnosis_text).trim() === "") {
       missingFields.push("Diagnosis");
     }
@@ -1202,7 +1216,14 @@ const PersonalDetailsCard = () => {
             location: currentLocation,
             "x-hms-location": currentLocation,
           },
-          body: JSON.stringify(diagnosisData),
+          body: JSON.stringify({
+            ...diagnosisData,
+            speciality_data: Object.fromEntries(
+              Object.entries(diagnosisData.speciality_data || {}).filter(([_, v]) => 
+                Array.isArray(v) ? v.length > 0 : (v && String(v).trim() !== "")
+              )
+            )
+          }),
         },
       );
       const data = await response.json();
@@ -1211,11 +1232,12 @@ const PersonalDetailsCard = () => {
           icon: "success",
           title: "Success",
           text: "Diagnosis saved successfully!",
-          timer: 3000,
+          timer: 1500,
           timerProgressBar: true,
         });
-        fetchDiagnosisDates();
+        const updatedDiagList = await fetchDiagnosisDates();
         setDiagnosisData(initialDiagnosisState);
+        handlePrintDiagnosis(updatedDiagList);
       } else {
         Swal.fire({
           icon: "error",
@@ -1255,18 +1277,45 @@ const PersonalDetailsCard = () => {
     contentRef: opdPrescriptionPrintRef,
   });
 
-  const [isFupPrintReady, setIsFupPrintReady] = useState(false);
 
-
-  useEffect(() => {
-    if (isFupPrintReady) {
-      triggerPrintFollowUp();
-      setIsFupPrintReady(false);
+  const handlePrintOpdPrescription = async () => {
+    if (previousHistoryList.length > 0 && (!historyData || !historyData.height_feet)) {
+      setLoading(true);
+      try {
+        const latestHistoryId = previousHistoryList[0].id;
+        const response = await fetch(
+          `${BASE_URL}/V1/doctor/get-patient-history/${formData.patient_id}?historyId=${latestHistoryId}&location=${currentLocation}`,
+          { headers: { location: currentLocation, "x-hms-location": currentLocation } }
+        );
+        const result = await response.json();
+        if (result.statusCode === 200 && result.data) {
+          const d = result.data;
+          setHistoryData(prev => ({
+            ...prev,
+            ...d,
+            vital_bp: d.BP || "",
+            vital_pulse: d.Pulse || "",
+            vital_rr: d.RR || "",
+            height_feet: d.height || "",
+            weight_kg: d.weight || "",
+            rs: d.RS || "",
+            cvs: d.CVS || "",
+            cns: d.CNS || "",
+            "p/a": d.PA || ""
+          }));
+        }
+      } catch (error) {
+        console.error("Error fetching latest history for print:", error);
+      } finally {
+        setLoading(false);
+      }
     }
-  }, [isFupPrintReady]);
+    setShowOpdPrintModal(true);
+  };
 
-  const handlePrintFollowUp = async () => {
+  const handlePrintFollowUp = async (updatedList = null) => {
     setLoading(true);
+    const diagnosisListToUse = Array.isArray(updatedList) ? updatedList : previousDiagnosisList;
     try {
       const historyResults = await Promise.all(
         previousHistoryList.map(async (h) => {
@@ -1285,9 +1334,10 @@ const PersonalDetailsCard = () => {
       );
 
       const diagnosisResults = await Promise.all(
-        previousDiagnosisList.map(async (d) => {
+        diagnosisListToUse.map(async (d) => {
+          const apiDate = moment(d.date, "DD-MM-YYYY").format("YYYY-MM-DD");
           const response = await fetch(
-            `${BASE_URL}/V1/doctor/get-diagnosis/${formData.patient_id}?date=${d.date}&location=${currentLocation}`,
+            `${BASE_URL}/V1/doctor/get-diagnosis/${formData.patient_id}?date=${apiDate}&location=${currentLocation}`,
             {
               headers: {
                 location: currentLocation,
@@ -1320,7 +1370,7 @@ const PersonalDetailsCard = () => {
 
       setAllHistoryDataForPrint(historyResults.filter(Boolean));
       setAllDiagnosisDataForPrint(diagnosisResults.filter(Boolean));
-      setIsFupPrintReady(true);
+      setShowFollowUpPrintModal(true);
     } catch (error) {
       console.error("Error loading data for follow-up print:", error);
       toast.error("Could not load history for printing.");
@@ -1329,8 +1379,9 @@ const PersonalDetailsCard = () => {
     }
   };
 
-  const handlePrintDiagnosis = async () => {
+  const handlePrintDiagnosis = async (updatedList = null) => {
     setLoading(true);
+    const diagnosisListToUse = Array.isArray(updatedList) ? updatedList : previousDiagnosisList;
     try {
       const historyResults = await Promise.all(
         previousHistoryList.map(async (h) => {
@@ -1349,9 +1400,10 @@ const PersonalDetailsCard = () => {
       );
 
       const diagnosisResults = await Promise.all(
-        previousDiagnosisList.map(async (d) => {
+        diagnosisListToUse.map(async (d) => {
+          const apiDate = moment(d.date, "DD-MM-YYYY").format("YYYY-MM-DD");
           const response = await fetch(
-            `${BASE_URL}/V1/doctor/get-diagnosis/${formData.patient_id}?date=${d.date}&location=${currentLocation}`,
+            `${BASE_URL}/V1/doctor/get-diagnosis/${formData.patient_id}?date=${apiDate}&location=${currentLocation}`,
             {
               headers: {
                 location: currentLocation,
@@ -2333,10 +2385,11 @@ const PersonalDetailsCard = () => {
           icon: "success",
           title: "Success",
           text: "Discharge card saved successfully!",
-          timer: 3000,
+          timer: 1500,
           timerProgressBar: true,
         });
-        fetchDischargeDates();
+        await fetchDischargeDates();
+        handlePrintDischarge();
       } else {
         Swal.fire({
           icon: "error",
@@ -2356,7 +2409,38 @@ const PersonalDetailsCard = () => {
     }
   };
 
-  const handlePrintDischarge = () => {
+  const handlePrintDischarge = async () => {
+    if (previousHistoryList.length > 0 && (!historyData || !historyData.height_feet)) {
+      setLoading(true);
+      try {
+        const latestHistoryId = previousHistoryList[0].id;
+        const response = await fetch(
+          `${BASE_URL}/V1/doctor/get-patient-history/${formData.patient_id}?historyId=${latestHistoryId}&location=${currentLocation}`,
+          { headers: { location: currentLocation, "x-hms-location": currentLocation } }
+        );
+        const result = await response.json();
+        if (result.statusCode === 200 && result.data) {
+          const d = result.data;
+          setHistoryData(prev => ({
+            ...prev,
+            ...d,
+            vital_bp: d.BP || "",
+            vital_pulse: d.Pulse || "",
+            vital_rr: d.RR || "",
+            height_feet: d.height || "",
+            weight_kg: d.weight || "",
+            rs: d.RS || "",
+            cvs: d.CVS || "",
+            cns: d.CNS || "",
+            "p/a": d.PA || ""
+          }));
+        }
+      } catch (error) {
+        console.error("Error fetching latest history for print:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
     setShowDischargePrintModal(true);
   };
 
@@ -3395,6 +3479,8 @@ const PersonalDetailsCard = () => {
         ? current.filter((item) => item !== value)
         : [...current, value];
 
+      console.log(`[Diagnosis Checkbox] ${isRemoving ? 'Deselected' : 'Selected'}:`, { field, value, updated });
+
       let nextState = { ...prev, [field]: updated };
 
       // Clear comment if Test is unselected
@@ -3409,9 +3495,13 @@ const PersonalDetailsCard = () => {
   const handleSpecialityCheckboxChange = (speciality, value) => {
     setDiagnosisData((prev) => {
       const currentSpecialityData = prev.speciality_data[speciality] || [];
-      const updatedList = currentSpecialityData.includes(value)
+      const isRemoving = currentSpecialityData.includes(value);
+      const updatedList = isRemoving
         ? currentSpecialityData.filter((item) => item !== value)
         : [...currentSpecialityData, value];
+
+      console.log(`[Speciality] ${isRemoving ? 'Deselected' : 'Selected'}:`, { speciality, value, updatedList });
+
       return {
         ...prev,
         speciality_data: {
@@ -3460,15 +3550,10 @@ const PersonalDetailsCard = () => {
   };
 
   const handleSaveFollowUp = async () => {
-    const hasData =
-      followUpData.diagnosis?.trim() ||
-      followUpData.advice?.trim() ||
-      followUpData.plan?.trim() ||
-      followUpData.present_complaints?.trim() ||
-      followUpData.ongoing_medicines?.trim();
+    const hasPresentComplaints = followUpData.present_complaints?.trim();
 
-    if (!hasData) {
-      toast.warning("Please fill in follow-up details before saving.");
+    if (!hasPresentComplaints) {
+      toast.warning("Please fill in Present Complaints before saving.");
       return;
     }
 
@@ -3492,10 +3577,11 @@ const PersonalDetailsCard = () => {
           icon: "success",
           title: "Success",
           text: "Follow-up data saved successfully!",
-          timer: 3000,
+          timer: 1500,
           timerProgressBar: true,
         });
-        // Optionally fetch updated visit count or dates if needed
+        const updatedDiagList = await fetchDiagnosisDates();
+        handlePrintFollowUp(updatedDiagList);
       } else {
         Swal.fire({
           icon: "error",
@@ -3580,34 +3666,18 @@ const PersonalDetailsCard = () => {
     }
 
     const missingFields = [];
-    if (!prescriptionData.prescription_type || String(prescriptionData.prescription_type).trim() === "") {
-      missingFields.push("Prescription Type");
-    }
 
-    const isUrology = prescriptionData.prescription_type === "Urology";
-    const assistantDoctor = isUrology ? prescriptionData.udoctor_id : prescriptionData.doctor_id;
-    if (!assistantDoctor || String(assistantDoctor).trim() === "") {
-      missingFields.push("Assistant Doctor");
-    }
-
-    if (!prescriptionData.patient_type || String(prescriptionData.patient_type).trim() === "") {
-      missingFields.push("Next Appointment");
-    } else {
-      const needsDate = !["surgery_patient", "nofollowupappointment"].includes(prescriptionData.patient_type);
-      if (needsDate && (!prescriptionData["next-appo-date"] || String(prescriptionData["next-appo-date"]).trim() === "")) {
-        missingFields.push("Next Appointment Date");
-      }
-    }
-
-    if (!prescriptionData.medicines || prescriptionData.medicines.length === 0) {
+    if (!prescriptionData.no_medicines_prescribed && (!prescriptionData.medicines || prescriptionData.medicines.length === 0)) {
       missingFields.push("Meditative Advice & Pharmacy Orders");
     }
 
     if (missingFields.length > 0) {
+      console.log("[DEBUG] Form submission blocked due to missing fields:", missingFields);
       toast.warning(`Required fields are not filled: ${missingFields.join(", ")}`);
       return;
     }
 
+    console.log("[DEBUG] Validation passed, submitting form with data:", prescriptionData);
     setLoading(true);
     try {
       const response = await fetch(
@@ -3628,10 +3698,11 @@ const PersonalDetailsCard = () => {
           icon: "success",
           title: "Success",
           text: "Prescription saved successfully!",
-          timer: 3000,
+          timer: 1500,
           timerProgressBar: true,
         });
-        fetchPrescriptionDates();
+        await fetchPrescriptionDates();
+        handlePrintOpdPrescription();
       } else {
         Swal.fire({
           icon: "error",
@@ -4203,7 +4274,7 @@ const PersonalDetailsCard = () => {
                 name="companyname"
                 value={formData.companyname}
                 onChange={handleInputChange}
-                placeholder="If billing through corporate..."
+                placeholder="Enter Company Name..."
                 style={{
                   border: "2px solid #b2ebf2",
                   borderRadius: "8px",
@@ -4377,7 +4448,7 @@ const PersonalDetailsCard = () => {
       case "personal": return true;
       case "patient-history": return previousHistoryList && previousHistoryList.length > 0;
       case "diagnosis": return previousDiagnosisList && previousDiagnosisList.length > 0;
-      case "follow-up": return followUpData && followUpData.visit_count && followUpData.visit_count !== "0";
+      case "follow-up": return followUpData && followUpData.visit_count && followUpData.visit_count !== "0" && followUpData.present_complaints && followUpData.present_complaints.trim() !== "";
       case "other-tests": return previousTestsList && previousTestsList.length > 0;
       case "proctoscopy": return previousProctoscopyList && previousProctoscopyList.length > 0;
       case "opd-prescription": return previousPrescriptionList && previousPrescriptionList.length > 0;
@@ -4412,17 +4483,17 @@ const PersonalDetailsCard = () => {
                         width: "40px",
                         height: "40px",
                         padding: "0",
-                        backgroundColor: "#fff",
-                        border: "1px solid #e2e8f0",
-                        color: "#00838f",
+                        backgroundColor: "#00bcd4",
+                        border: "1px solid #00bcd4",
+                        color: "#fff",
                         transition: "all 0.2s ease"
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = "#e0f7fa";
+                        e.currentTarget.style.backgroundColor = "#0097a7";
                         e.currentTarget.style.transform = "translateX(-2px)";
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = "#fff";
+                        e.currentTarget.style.backgroundColor = "#00bcd4";
                         e.currentTarget.style.transform = "translateX(0)";
                       }}
                       title="Back to Patient List"
@@ -4500,22 +4571,46 @@ const PersonalDetailsCard = () => {
             </div>
           ) : (
             <Card className="shadow-lg border-0 mb-4 animate__animated animate__fadeIn" style={{ borderRadius: "20px", overflow: "hidden", backgroundColor: "#fff" }}>
-              <div className="p-4 border-bottom d-flex align-items-center" style={{ backgroundColor: "#f8fafd" }}>
-                <Button
-                  className="d-flex align-items-center me-4 shadow-sm"
-                  style={{ borderRadius: "50px", padding: "10px 20px", fontWeight: "700", color: "#ffffffff", backgroundColor: "#fff", border: "1px solid #e0e6ed" }}
-                  onClick={() => setActiveTab("menu")}
-                >
-                  <FeatherIcon icon="arrow-left" size="18" className="me-2" /> Back to Menu
-                </Button>
-                <div className="d-flex align-items-center">
-                  <div className="rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm" style={{ width: "50px", height: "50px", backgroundColor: "#00bcd4", color: "#fff" }}>
+              <div className="p-10 border-bottom d-flex align-items-center justify-content-between position-relative" style={{ backgroundColor: "#f8fafd" }}>
+                <div>
+                  <Button
+                    className="d-flex align-items-center shadow-sm"
+                    style={{ borderRadius: "50px", padding: "7px 12px", fontWeight: "700", color: "#ffffffff", backgroundColor: "#fff", border: "1px solid #e0e6ed" }}
+                    onClick={() => setActiveTab("menu")}
+                  >
+                    <FeatherIcon icon="arrow-left" size="18" className="me-2" /> Back
+                  </Button>
+                </div>
+
+                <div className="position-absolute top-50 start-50 translate-middle d-flex align-items-center">
+                  <div className="rounded-circle d-flex align-items-center justify-content-center me-2 shadow-sm" style={{ width: "40px", height: "40px", backgroundColor: "#00bcd4", color: "#fff" }}>
                     <FeatherIcon icon={tabs.find(t => t.id === activeTab)?.icon} size="24" />
                   </div>
                   <div>
                     <h4 className="fw-bold m-0" style={{ color: "#2c3e50" }}>{tabs.find(t => t.id === activeTab)?.label}</h4>
                     <p className="text-muted m-0" style={{ fontSize: "13px" }}>Manage patient records</p>
                   </div>
+                </div>
+
+                <div>
+                  {activeTab === "opd-prescription" && (
+                    <div className="rounded px-2 py-1 d-flex align-items-center" style={{ border: "1px solid #d32f2f" }}>
+                      <Form.Check
+                        type="checkbox"
+                        id="no-medicines-checkbox-header"
+                        label="No medicines prescribed"
+                        checked={prescriptionData.no_medicines_prescribed || false}
+                        onChange={(e) => {
+                          handlePrescriptionChange("no_medicines_prescribed", e.target.checked);
+                          if (e.target.checked) {
+                            handlePrescriptionChange("medicines", []);
+                          }
+                        }}
+                        className="m-0"
+                        style={{ fontSize: "14px", fontWeight: "bold", color: "#d32f2f" }}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
               <Card.Body className="p-5" style={{ backgroundColor: "#ffffff" }}>
@@ -4617,7 +4712,7 @@ const PersonalDetailsCard = () => {
                     onSelectPrescription={handleSelectPrescription}
                     onNewPrescription={handleNewPrescription}
                     onSavePrescription={handleSaveOpdPrescription}
-                    onPrintPrescription={() => triggerPrintOpdPrescription()}
+                    onPrintPrescription={handlePrintOpdPrescription}
                     assistanceDoctors={assistanceDoctors}
                     location={currentLocation}
                   />
@@ -4701,31 +4796,6 @@ const PersonalDetailsCard = () => {
         .animate__fadeIn { animation-name: fadeIn; }
       `}</style>
       <div style={{ display: "none" }}>
-        <FollowUpPrintView
-          ref={fupPrintRef}
-          patient={formData}
-          followUpData={followUpData}
-          historyList={allHistoryDataForPrint}
-          diagnosisList={allDiagnosisDataForPrint}
-        />
-        <div ref={dischargePrintRef}>
-          <DischargePrintView
-            dischargeData={dischargeData}
-            formData={formData}
-            doctors={doctors}
-            location={currentLocation}
-            historyData={historyData}
-          />
-        </div>
-        <div ref={opdPrescriptionPrintRef}>
-          <OpdPrescriptionPrintView
-            prescriptionData={prescriptionData}
-            formData={formData}
-            historyData={historyData}
-            assistanceDoctors={assistanceDoctors}
-            location={currentLocation}
-          />
-        </div>
       </div>
 
       <Modal
@@ -4788,6 +4858,7 @@ const PersonalDetailsCard = () => {
         <Modal.Body className="p-0 bg-light" style={{ maxHeight: "80vh", overflowY: "auto" }}>
           <div className="p-4 bg-white shadow-sm mx-auto" style={{ width: "210mm", minHeight: "297mm" }}>
             <DischargePrintView
+              ref={dischargePrintRef}
               dischargeData={dischargeData}
               formData={formData}
               doctors={doctors}
@@ -4815,6 +4886,98 @@ const PersonalDetailsCard = () => {
           >
             <FeatherIcon icon="printer" size="18" className="me-2" />
             PRINT DISCHARGE CARD
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal
+        show={showFollowUpPrintModal}
+        onHide={() => setShowFollowUpPrintModal(false)}
+        size="xl"
+        centered
+      >
+        <Modal.Header closeButton className="bg-info text-white">
+          <Modal.Title className="fw-bold">
+            <FeatherIcon icon="printer" className="me-2" />
+            Follow Up Card Preview
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-0 bg-light" style={{ maxHeight: "80vh", overflowY: "auto" }}>
+          <div className="p-4 bg-white shadow-sm mx-auto" style={{ width: "210mm", minHeight: "297mm" }}>
+            <FollowUpPrintView
+              ref={fupPrintRef}
+              patient={formData}
+              followUpData={followUpData}
+              historyList={allHistoryDataForPrint}
+              diagnosisList={allDiagnosisDataForPrint}
+            />
+          </div>
+        </Modal.Body>
+        <Modal.Footer className="bg-white border-top shadow-sm justify-content-center">
+          <Button
+            variant="secondary"
+            onClick={() => setShowFollowUpPrintModal(false)}
+            style={{ borderRadius: "20px", padding: "8px 30px", fontWeight: "bold" }}
+          >
+            CANCEL
+          </Button>
+          <Button
+            variant="info"
+            className="text-white"
+            onClick={() => {
+              triggerPrintFollowUp();
+            }}
+            style={{ borderRadius: "20px", padding: "8px 50px", fontWeight: "bold" }}
+          >
+            <FeatherIcon icon="printer" size="18" className="me-2" />
+            PRINT FOLLOW UP CARD
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal
+        show={showOpdPrintModal}
+        onHide={() => setShowOpdPrintModal(false)}
+        size="xl"
+        centered
+      >
+        <Modal.Header closeButton className="bg-info text-white">
+          <Modal.Title className="fw-bold">
+            <FeatherIcon icon="printer" className="me-2" />
+            OPD Prescription Preview
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-0 bg-light" style={{ maxHeight: "80vh", overflowY: "auto" }}>
+          <div className="p-4 bg-white shadow-sm mx-auto" style={{ width: "210mm", minHeight: "297mm" }}>
+            <OpdPrescriptionPrintView
+              ref={opdPrescriptionPrintRef}
+              prescriptionData={prescriptionData}
+              formData={formData}
+              historyData={historyData}
+              doctors={doctors}
+              assistanceDoctors={assistanceDoctors}
+              location={currentLocation}
+            />
+          </div>
+        </Modal.Body>
+        <Modal.Footer className="bg-white border-top shadow-sm justify-content-center">
+          <Button
+            variant="secondary"
+            onClick={() => setShowOpdPrintModal(false)}
+            style={{ borderRadius: "20px", padding: "8px 30px", fontWeight: "bold" }}
+          >
+            CANCEL
+          </Button>
+          <Button
+            variant="info"
+            className="text-white"
+            onClick={() => {
+              triggerPrintOpdPrescription();
+            }}
+            style={{ borderRadius: "20px", padding: "8px 50px", fontWeight: "bold" }}
+          >
+            <FeatherIcon icon="printer" size="18" className="me-2" />
+            PRINT OPD PRESCRIPTION
           </Button>
         </Modal.Footer>
       </Modal>

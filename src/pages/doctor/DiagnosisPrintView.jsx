@@ -18,7 +18,7 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
         @media screen, print {
           .diagnosis-print-container {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #000;
+            color: #000 !important;
             padding: 10px;
             font-size: 9px !important;
             line-height: 1.2;
@@ -34,9 +34,11 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
           }
           .diagnosis-print-container p {
             margin: 0 0 5px 0;
+            color: #000 !important;
           }
           .diagnosis-print-container b {
-            font-weight: 600;
+            font-weight: 700 !important;
+            color: #000 !important;
           }
           .diagnosis-print-container .row {
             display: flex;
@@ -65,6 +67,7 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
             padding: 1px 10px;
             text-align: left;
             font-weight: normal;
+            color: #000 !important;
           }
           .diagnosis-print-container .text-right { text-align: right; }
           .diagnosis-print-container .medi_th { font-size: 9px !important; font-weight: bold; }
@@ -81,38 +84,7 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
             float: left;
           }
         }
-        .print-btn-float {
-          position: fixed;
-          bottom: 30px;
-          right: 30px;
-          z-index: 9999;
-          border-radius: 50px;
-          padding: 12px 30px;
-          font-weight: bold;
-          text-transform: uppercase;
-          box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-          transition: all 0.3s ease;
-          background-color: #00838f;
-          color: white;
-          border: none;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-        .print-btn-float:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-          background-color: #006064;
-        }
       `}</style>
-
-      <button 
-        className="print-btn-float d-print-none" 
-        onClick={onPrint}
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-        Print Diagnosis
-      </button>
 
       <div className="padded">
         {/* PATIENT INFORMATION */}

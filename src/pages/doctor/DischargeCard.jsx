@@ -307,7 +307,7 @@ const DischargeCard = ({
                 style={{
                   borderRadius: "12px",
                   border: "2px solid #b2ebf2",
-                  padding: "10px 16px",
+                  padding: "5px 10px",
                   fontSize: "12px",
                   minHeight: "48px",
                   transition: "all 0.3s ease"
@@ -396,7 +396,7 @@ const DischargeCard = ({
               <div className="vital-card p-2 rounded-3 border bg-white text-center shadow-sm">
                 <div className="d-flex align-items-center justify-content-center mb-1" style={{ color: vital.color }}>
                   <FeatherIcon icon={vital.icon} size="12" className="me-1" />
-                  <span className="fw-bold" style={{ fontSize: '10px', textTransform: 'uppercase' }}>{vital.label}</span>
+                  <span className="fw-bold" style={{ fontSize: '11px', textTransform: 'uppercase' }}>{vital.label}</span>
                 </div>
                 <Form.Control
                   type="text"
@@ -456,7 +456,7 @@ const DischargeCard = ({
               "HB", "WBC", "PLT", "BSL", "SR.CREATININE", "BILLIRUBIN", "PSA", "BT", "CT", "PT", "INR", "HIV", "HCV", "HBSAG"
             ].map(field => (
               <div key={field} className="p-2 border rounded bg-white shadow-sm d-flex align-items-center justify-content-between">
-                <span className="fw-bold text-muted" style={{ fontSize: "10px" }}>{field}</span>
+                <span className="fw-bold" style={{ fontSize: "11px" }}>{field}</span>
                 <Form.Control
                   size="sm"
                   type="text"
@@ -865,12 +865,12 @@ const DischargeCard = ({
           </Col>
           <Col md={2}>
             <Form.Label className="fw-bold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>Medicine time</Form.Label>
-            <Dropdown className="w-200">
+            <Dropdown>
               <Dropdown.Toggle
                 variant="outline-info"
                 id="medicine-time-dropdown"
                 className="w-200 d-flex justify-content-between align-items-center"
-                style={{ borderRadius: "10px", border: "2px solid #b2ebf2", fontSize: "12px", padding: "6px 12px" }}
+                style={{ borderRadius: "10px", border: "2px solid #b2ebf2", fontSize: "12px", padding: "10px 12px", width: "100%" }}
               >
                 <span className="text-truncate">
                   {newTreatmentOnDischarge.medicine_time.length > 0
@@ -878,7 +878,7 @@ const DischargeCard = ({
                     : "Select Time"}
                 </span>
               </Dropdown.Toggle>
-              <Dropdown.Menu className="w-100 shadow-sm border-0 py-2 px-1" style={{ maxHeight: "300px", overflowY: "auto", borderRadius: "10px" }}>
+              <Dropdown.Menu className="w-200 shadow-sm border-0 py-2 px-1" style={{ maxHeight: "300px", overflowY: "auto", borderRadius: "10px" }}>
                 {[
                   "Before Breakfast", "After Breakfast", "Before Lunch", "After Lunch",
                   "Before Dinner", "After Dinner", "After Evening Snacks",
@@ -977,14 +977,15 @@ const DischargeCard = ({
       </div>
 
       {/* Footer / Administrative Info */}
-      <div className="section-card" style={{ borderLeftColor: "#475569", backgroundColor: "#f8fafc" }}>
-        <h6 className="fw-bold mb-3 text-muted" style={{ fontSize: "12px", textTransform: "uppercase" }}>Administrative Details</h6>
+      <div className="section-card" style={{ borderLeftColor: "#475569", }}>
+        <h6 className="fw-bold mb-3 text-muted" style={{ fontSize: "14px", textTransform: "uppercase", letterSpacing: "1px" }}>
+          <FeatherIcon icon="file-text" size="18" className="me-2" />Administrative Details</h6>
         <Row className="g-3">
-          <Col md={4}>
+          <Col md={3}>
             <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>FOLLOWUP DATE</Form.Label>
             <Form.Control type="date" value={dischargeData.follow_date} onChange={(e) => handleDischargeChange("follow_date", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
           </Col>
-          <Col md={4}>
+          <Col md={3}>
             <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>TREATING BY</Form.Label>
             <Form.Select
               value={dischargeData.treating_by}
@@ -997,7 +998,7 @@ const DischargeCard = ({
               ))}
             </Form.Select>
           </Col>
-          <Col md={4}>
+          <Col md={3}>
             <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>MADE BY</Form.Label>
             <Form.Select
               value={dischargeData.made_by}
@@ -1018,7 +1019,7 @@ const DischargeCard = ({
                 ))}
             </Form.Select>
           </Col>
-          <Col md={4}>
+          <Col md={3}>
             <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>CHECKED BY</Form.Label>
             <Form.Select
               value={dischargeData.checked_by}
@@ -1039,7 +1040,7 @@ const DischargeCard = ({
                 ))}
             </Form.Select>
           </Col>
-          <Col md={4}>
+          <Col md={3}>
             <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>ASSISTANT DOCTOR</Form.Label>
             <Form.Select
               value={dischargeData.assistance_doctor}
@@ -1052,7 +1053,20 @@ const DischargeCard = ({
               ))}
             </Form.Select>
           </Col>
-          <Col md={4}>
+          <Col md={3}>
+            <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>CONSULTANT DOCTOR</Form.Label>
+            <Form.Select
+              value={dischargeData.consultant_doctor}
+              onChange={(e) => handleDischargeChange("consultant_doctor", e.target.value)}
+              style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }}
+            >
+              <option value="">Select Consultant Doctor</option>
+              {assistanceDoctors.map((doc) => (
+                <option key={doc.doctor_id} value={doc.doctor_id}>{doc.name}</option>
+              ))}
+            </Form.Select>
+          </Col>
+          <Col md={3}>
             <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>ASSISTANT SURGEON</Form.Label>
             <Form.Select
               value={dischargeData.assistance_surgeon}
@@ -1064,19 +1078,6 @@ const DischargeCard = ({
                 <option key={doc.doctor_id} value={doc.doctor_id}>{doc.name}</option>
               ))}
             </Form.Select>
-          </Col>
-          <Col md={4}>
-            <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#e11d48" }}>FINAL DISCHARGE CARD</Form.Label>
-            <div className="d-flex align-items-center h-100 mt-1">
-              <Form.Check
-                type="switch"
-                id="final-discharge-card-switch"
-                checked={!!dischargeData.final_dc}
-                onChange={(e) => handleDischargeChange("final_dc", e.target.checked)}
-                label={<span style={{ fontSize: "12px", fontWeight: "600", color: "#333" }}>Mark as Final</span>}
-                className="mb-0 custom-switch-danger"
-              />
-            </div>
           </Col>
           {/* <Col md={6}>
             <div className="p-2 border rounded-3 bg-white d-flex align-items-center h-100">

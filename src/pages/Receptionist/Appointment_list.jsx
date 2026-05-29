@@ -654,7 +654,7 @@ export default function Appointment_list() {
         const showPending =
           manualShowPending !== null ? manualShowPending : isToday;
 
-        const url = `${BASE_URL}/V1/appointment/listAppointments?from=${formattedFromDate}&to=${formattedToDate}&location=${currentLocation}&showPending=${showPending}`;
+        const url = `${BASE_URL}/V1/appointment/listAppointments?from=${formattedFromDate}&to=${formattedToDate}&location=${currentLocation}&showPending=${showPending}&_t=${Date.now()}`;
 
         console.log("Fetching appointments with URL:", url);
 
@@ -680,11 +680,11 @@ export default function Appointment_list() {
             const hasReceipt = Number(app.executivechk) === 2;
 
             let computedStatus = "Appointment Confirmed";
-            if (!isConfirmed) computedStatus = "Pending Appointment";
-            else if (hasReceipt) computedStatus = "Receipt Generated";
+            if (hasReceipt) computedStatus = "Receipt Generated";
             else if (hasConsultation) computedStatus = "Prescription Checked";
             else if (hasExecution) computedStatus = "Diagnosis Checked";
             else if (hasHistory) computedStatus = "History Checked";
+            else if (!isConfirmed) computedStatus = "Pending Appointment";
 
             return {
               ...app,
@@ -944,6 +944,16 @@ export default function Appointment_list() {
         });
         fetchAppointmentData();
         window.dispatchEvent(new CustomEvent("refreshApptCounts"));
+        
+        if (endpoint === "confirmAppointment") {
+          navigate('/patients', {
+            state: {
+              openEditForPhone: patient_phone,
+              returnToAppointment: true,
+              appointment_id: appId
+            }
+          });
+        }
       } else {
         Swal.fire({
           icon: "error",
@@ -962,7 +972,7 @@ export default function Appointment_list() {
 
   const confirmAppointmentWithCheck = async (rowData) => {
     const { appointment_id, patient_type, patient_phone, appointment_timestamp } = rowData;
-    
+
     if (!appointment_timestamp) {
       Swal.fire({ icon: "error", title: "Error", text: "Appointment date missing." });
       return;
@@ -980,9 +990,9 @@ export default function Appointment_list() {
           Authorization: `Bearer ${localStorage.getItem("token")}`
         }
       });
-      
+
       const result = await response.json();
-      
+
       if (response.ok && result.success && result.data) {
         // Daily closing is filled
         handleProcessUpdate(
@@ -1021,11 +1031,11 @@ export default function Appointment_list() {
     const hasConsultation = Number(consultationchk) === 4;
     const hasReceipt = Number(executivechk) === 2;
 
-    if (!isConfirmed) return "row-status-unconfirmed";
     if (hasReceipt) return "row-status-receipt";
     if (hasConsultation) return "row-status-consultation";
     if (hasExecution) return "row-status-execution";
     if (hasHistory) return "row-status-history";
+    if (!isConfirmed) return "row-status-unconfirmed";
 
     return "row-status-confirmed";
   };
@@ -1117,47 +1127,26 @@ export default function Appointment_list() {
           <>
             <ActionButton
               title="History"
-              onClick={() =>
-                handleProcessUpdate(
-                  appointment_id,
-                  "updateHistoryChk",
-                  null,
-                  null,
-                  "History process completed!",
-                )
-              }
+              onClick={() => { }}
               disabled={isHistoryDone}
               icon="book-open"
+              style={{ cursor: "not-allowed" }}
             />
 
             <ActionButton
               title="Diagnosis"
-              onClick={() =>
-                handleProcessUpdate(
-                  appointment_id,
-                  "updateExecutionChk",
-                  null,
-                  null,
-                  "Diagnosis process completed!",
-                )
-              }
+              onClick={() => { }}
               disabled={!isHistoryDone || isExecutionDone || isReceiptDone}
               icon="activity"
+              style={{ cursor: "not-allowed" }}
             />
 
             <ActionButton
               title="Prescription"
-              onClick={() =>
-                handleProcessUpdate(
-                  appointment_id,
-                  "updateConsultationChk",
-                  null,
-                  null,
-                  "Prescription process completed!",
-                )
-              }
+              onClick={() => { }}
               disabled={!isExecutionDone || isConsultationDone}
               icon="clipboard"
+              style={{ cursor: "not-allowed" }}
             />
 
             <ActionButton
@@ -1436,7 +1425,7 @@ export default function Appointment_list() {
       <div style={{ marginTop: "15px" }}>
         <Col xs={12} style={{ padding: "2px" }}>
           <div className="d-flex flex-wrap justify-content-start align-items-center">
-            <ColorLegend name="Pending Appointment" bgColor="#94a3b8" />
+            <ColorLegend name="Pending Appointment" bgColor="#ffffff" />
             <ColorLegend name="Appointment Confirmed" bgColor="#3b82f6" />
             <ColorLegend name="History Checked" bgColor="#cd5c5c" />
             <ColorLegend name="Diagnosis Checked" bgColor="#e67e22" />
@@ -1557,7 +1546,7 @@ export default function Appointment_list() {
               size="18"
               style={{ color: "#1a5b61ff" }}
             />
-            Edit Appointment
+            Edit Appointment Details
           </Modal.Title>
         </Modal.Header>
         <Modal.Body style={{ padding: "10px" }}>
@@ -1740,20 +1729,19 @@ export default function Appointment_list() {
                     </Form.Label>
                     <Form.Control
                       type="text"
+                      name="patient_phone"
                       value={selectedAppointment.patient_phone || ""}
-                      readOnly
+                      onChange={handleEditModalInputChange}
                       style={{
                         fontSize: "12px",
                         borderRadius: "9px",
                         border: "2px solid rgb(77, 208, 225)",
-                        backgroundColor: "#e7ebebff",
-                        cursor: "not-allowed",
                       }}
                     />
                   </Form.Group>
                 </Col>
 
-                <Col md={12}>
+                <Col md={6}>
                   <Form.Group className="mb-10">
                     <Form.Label
                       style={{
@@ -1769,6 +1757,33 @@ export default function Appointment_list() {
                       name="patient_location"
                       value={selectedAppointment?.patient_location || ""}
                       onChange={handleEditModalInputChange}
+                      style={{
+                        fontSize: "12px",
+                        borderRadius: "9px",
+                        border: "2px solid rgb(77, 208, 225)",
+                      }}
+                    />
+                  </Form.Group>
+                </Col>
+
+                <Col md={6}>
+                  <Form.Group className="mb-10">
+                    <Form.Label
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        marginBottom: "4px",
+                      }}
+                    >
+                      Note
+                    </Form.Label>
+                    <Form.Control
+                      as="textarea"
+                      rows={2}
+                      name="note"
+                      value={selectedAppointment?.note || ""}
+                      onChange={handleEditModalInputChange}
+                      placeholder="Enter additional note..."
                       style={{
                         fontSize: "12px",
                         borderRadius: "9px",
@@ -1839,6 +1854,8 @@ export default function Appointment_list() {
                     </Form.Select>
                   </Form.Group>
                 </Col>
+
+
               </Row>
 
               <div className="d-flex justify-content-end gap-2 mt-3">

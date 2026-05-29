@@ -63,7 +63,7 @@ const DoctorMenu = ({
                     <div className="icon-item">
                         <i className="fa fa-hospital-o"></i>
                     </div>
-                    {!isCollapsed && <span>Manage Admission</span>}
+                    {!isCollapsed && <span>Admissions</span>}
                 </Link>
             </li>
 
@@ -88,7 +88,7 @@ const DoctorMenu = ({
             <li className={`menu-item ${activeIndex === "/doctor-ipd-patients" ? "active" : ""}`}>
                 <Link to="/doctor-ipd-patients">
                     <div className="icon-item">
-                       <i className="fa fa-user"></i>
+                        <i className="fa fa-user"></i>
                     </div>
                     <span>IPD Patients</span>
                 </Link>

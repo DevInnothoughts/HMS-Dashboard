@@ -28,6 +28,7 @@ const OpdPrescriptionCard = ({
   );
   const [medicineSearchResults, setMedicineSearchResults] = useState([]);
   const [showMedicineDropdown, setShowMedicineDropdown] = useState(false);
+  const [editingMedicineIndex, setEditingMedicineIndex] = useState(null);
 
   useEffect(() => {
     const fetchDynamicData = async () => {
@@ -231,10 +232,10 @@ const OpdPrescriptionCard = ({
         <Row>
           <Col md={3} className="mb-3">
             <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>
-              Prescription Type <span className="text-danger">*</span>
+              Prescription Type
             </Form.Label>
             <Form.Select
-              required
+              disabled={prescriptionData.no_medicines_prescribed}
               value={prescriptionData.prescription_type || ""}
               onChange={(e) =>
                 handlePrescriptionChange("prescription_type", e.target.value)
@@ -258,6 +259,7 @@ const OpdPrescriptionCard = ({
             </Form.Label>
             <Form.Control
               type="date"
+              disabled={prescriptionData.no_medicines_prescribed}
               value={prescriptionData.creation_timestamp}
               onChange={(e) =>
                 handlePrescriptionChange("creation_timestamp", e.target.value)
@@ -272,23 +274,33 @@ const OpdPrescriptionCard = ({
           </Col>
           <Col md={3} className="mb-3">
             <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>
-              Assistant Doctor <span className="text-danger">*</span>
+              Assistant Doctor
             </Form.Label>
             <Form.Select
-              required
+              disabled={prescriptionData.no_medicines_prescribed}
               value={
                 (prescriptionData.prescription_type === "Urology"
                   ? prescriptionData.udoctor_id
                   : prescriptionData.doctor_id) || ""
               }
-              onChange={(e) =>
-                handlePrescriptionChange(
-                  prescriptionData.prescription_type === "Urology"
-                    ? "udoctor_id"
-                    : "doctor_id",
-                  e.target.value,
-                )
-              }
+              onChange={(e) => {
+                const val = e.target.value;
+                if (prescriptionData.prescription_type === "Urology") {
+                  handlePrescriptionChange("udoctor_id", val);
+                  handlePrescriptionChange("doctor_id", "");
+                } else {
+                  handlePrescriptionChange("doctor_id", val);
+                  handlePrescriptionChange("udoctor_id", "");
+                }
+                const selectedDoc = filteredAssistanceDoctors.find((d) => String(d.doctor_id) === String(val));
+                if (selectedDoc) {
+                  handlePrescriptionChange("assistant_doctor_name", selectedDoc.name);
+                  handlePrescriptionChange("assistant_doctor_phone", selectedDoc.phone || "");
+                } else {
+                  handlePrescriptionChange("assistant_doctor_name", "");
+                  handlePrescriptionChange("assistant_doctor_phone", "");
+                }
+              }}
               style={{
                 borderRadius: "10px",
                 border: "2px solid #b2ebf2",
@@ -313,13 +325,15 @@ const OpdPrescriptionCard = ({
             </Form.Label>
             <Dropdown>
               <Dropdown.Toggle
+                disabled={prescriptionData.no_medicines_prescribed}
                 variant="outline-info"
                 id="test-advice-dropdown"
-                className="w-300 text-start d-flex justify-content-between align-items-center"
+                className="text-start d-flex justify-content-between align-items-center"
                 style={{
                   borderRadius: "10px",
+                  width: "100%",
                   border: "2px solid #b2ebf2",
-                  padding: "6px 12px",
+                  padding: "10px 12px",
                   fontSize: "12px",
                   backgroundColor: "white",
                   color: "#333",
@@ -424,6 +438,7 @@ const OpdPrescriptionCard = ({
               </Form.Label>
               <Dropdown>
                 <Dropdown.Toggle
+                  disabled={prescriptionData.no_medicines_prescribed}
                   variant="outline-secondary"
                   id="preop-invest-dropdown"
                   className="w-200 text-start d-flex justify-content-between align-items-center"
@@ -527,6 +542,7 @@ const OpdPrescriptionCard = ({
             </Form.Label>
             <Form.Control
               as="textarea"
+              disabled={prescriptionData.no_medicines_prescribed}
               rows={2}
               value={prescriptionData.allergy}
               onChange={(e) =>
@@ -549,6 +565,7 @@ const OpdPrescriptionCard = ({
             {prescriptionData.prescription_type === "Urology" ? (
               <Form.Control
                 as="textarea"
+                disabled={prescriptionData.no_medicines_prescribed}
                 rows={2}
                 value={prescriptionData.urodiagnosis}
                 onChange={(e) =>
@@ -565,6 +582,7 @@ const OpdPrescriptionCard = ({
             ) : (
               <Form.Control
                 as="textarea"
+                disabled={prescriptionData.no_medicines_prescribed}
                 rows={2}
                 value={prescriptionData.diagnosis}
                 onChange={(e) =>
@@ -589,6 +607,7 @@ const OpdPrescriptionCard = ({
                 </Form.Label>
                 <Form.Control
                   as="textarea"
+                  disabled={prescriptionData.no_medicines_prescribed}
                   rows={2}
                   value={prescriptionData.medicalchiefcomplaints}
                   onChange={(e) =>
@@ -612,6 +631,7 @@ const OpdPrescriptionCard = ({
                 </Form.Label>
                 <Form.Control
                   as="textarea"
+                  disabled={prescriptionData.no_medicines_prescribed}
                   rows={2}
                   value={prescriptionData.medicalhistory}
                   onChange={(e) =>
@@ -632,6 +652,7 @@ const OpdPrescriptionCard = ({
                 </Form.Label>
                 <Form.Control
                   as="textarea"
+                  disabled={prescriptionData.no_medicines_prescribed}
                   rows={2}
                   value={prescriptionData.medicalpasthistory}
                   onChange={(e) =>
@@ -655,6 +676,7 @@ const OpdPrescriptionCard = ({
                 </Form.Label>
                 <Form.Control
                   as="textarea"
+                  disabled={prescriptionData.no_medicines_prescribed}
                   rows={2}
                   value={prescriptionData.investigation}
                   onChange={(e) =>
@@ -674,10 +696,10 @@ const OpdPrescriptionCard = ({
 
           <Col md={3} className="mb-3">
             <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>
-              Next Appointment <span className="text-danger">*</span>
+              Next Appointment
             </Form.Label>
             <Form.Select
-              required
+              disabled={prescriptionData.no_medicines_prescribed}
               value={prescriptionData.patient_type || ""}
               onChange={(e) =>
                 handlePrescriptionChange("patient_type", e.target.value)
@@ -700,16 +722,16 @@ const OpdPrescriptionCard = ({
           </Col>
           <Col md={3} className="mb-3">
             <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>
-              Next Appointment Date <span className="text-danger">*</span>
+              Next Appointment Date
             </Form.Label>
             <Form.Control
-              required
               type="date"
               value={prescriptionData["next-appo-date"] || ""}
               onChange={(e) =>
                 handlePrescriptionChange("next-appo-date", e.target.value)
               }
               disabled={
+                prescriptionData.no_medicines_prescribed ||
                 prescriptionData.patient_type === "surgery_patient" ||
                 prescriptionData.patient_type === "nofollowupappointment"
               }
@@ -742,48 +764,54 @@ const OpdPrescriptionCard = ({
             />{" "}
             Meditative Advice & Pharmacy Orders <span className="text-danger">*</span>
           </h6>
-          <Form.Check
-            type="checkbox"
-            label="AAC"
-            id="aac-checkbox"
-            checked={
-              prescriptionData.medicines?.some(m => m.name === "Anoac H tablet") &&
-              prescriptionData.medicines?.some(m => m.name === "Anoac Cream") &&
-              prescriptionData.medicines?.some(m => m.name === "Constac Powder")
-            }
-            onChange={(e) => {
-              const medsList = prescriptionData.medicines || [];
-              if (e.target.checked) {
-                const aacMeds = [
-                  { medicine_id: null, name: "Anoac H tablet", qty: "1", times: [], days: "", mrp: "0" },
-                  { medicine_id: null, name: "Anoac Cream", qty: "1", times: [], days: "", mrp: "0" },
-                  { medicine_id: null, name: "Constac Powder", qty: "1", times: [], days: "", mrp: "0" }
-                ];
-                const medsToAdd = aacMeds.filter(newMed => !medsList.some(m => m.name === newMed.name));
-                handlePrescriptionChange("medicines", [...medsList, ...medsToAdd]);
-              } else {
-                const updatedMeds = medsList.filter(
-                  med => !["Anoac H tablet", "Anoac Cream", "Constac Powder"].includes(med.name)
-                );
-                handlePrescriptionChange("medicines", updatedMeds);
-              }
-            }}
-            className="fw-bold"
-            style={{ color: "#00838f", fontSize: "14px" }}
-          />
+          <div className="d-flex gap-3">
+            <div className="rounded px-2 py-1 d-flex align-items-center" style={{ border: "1px solid #00838f" }}>
+              <Form.Check
+                type="checkbox"
+                label="AAC"
+                id="aac-checkbox"
+                disabled={prescriptionData.no_medicines_prescribed}
+                checked={
+                  prescriptionData.medicines?.some(m => m.name === "Anoac H tablet") &&
+                  prescriptionData.medicines?.some(m => m.name === "Anoac Cream") &&
+                  prescriptionData.medicines?.some(m => m.name === "Constac Powder")
+                }
+                onChange={(e) => {
+                  const medsList = prescriptionData.medicines || [];
+                  if (e.target.checked) {
+                    const aacMeds = [
+                      { medicine_id: null, name: "Anoac H tablet", qty: "1", times: [], days: "15", mrp: "0" },
+                      { medicine_id: null, name: "Anoac Cream", qty: "1", times: [], days: "15", mrp: "0" },
+                      { medicine_id: null, name: "Constac Powder", qty: "1", times: ["1 spoon At Night ( Before sleep )"], days: "15", mrp: "0" }
+                    ];
+                    const medsToAdd = aacMeds.filter(newMed => !medsList.some(m => m.name === newMed.name));
+                    handlePrescriptionChange("medicines", [...medsList, ...medsToAdd]);
+                  } else {
+                    const updatedMeds = medsList.filter(
+                      med => !["Anoac H tablet", "Anoac Cream", "Constac Powder"].includes(med.name)
+                    );
+                    handlePrescriptionChange("medicines", updatedMeds);
+                  }
+                }}
+                className="fw-bold m-0"
+                style={{ color: "#00838f", fontSize: "14px" }}
+              />
+            </div>
+          </div>
         </div>
 
         <Row className="align-items-end g-2">
           <Col md={3} className="position-relative" style={{ zIndex: showMedicineDropdown ? 1050 : 1 }}>
-            <Form.Label
-              className="fw-bold text-muted"
-              style={{ fontSize: "11px" }}
+            <div
+              className="fw-bold mb-4 pb-2"
+              style={{ fontSize: "12px", color: "#34495e" }}
             >
               Prescribed Medicines
-            </Form.Label>
+            </div>
             <Form.Control
               type="text"
               value={currentMedicine.name || ""}
+              disabled={prescriptionData.no_medicines_prescribed}
               onChange={(e) => {
                 const val = e.target.value;
                 setCurrentMedicine((prev) => ({
@@ -865,24 +893,19 @@ const OpdPrescriptionCard = ({
                 })}
               </div>
             )}
-            {/* <div className="d-flex gap-2 mt-2">
-              <div className="p-1 border rounded  flex-fill text-center" readOnly style={{ cursor: "not-allowed", fontSize: "10px", color: "#666", border: "2px solid #b2ebf2" }}>
-                <strong>ID:</strong> {currentMedicine.medicine_id || "N/A"}
-              </div>
-              <div className="p-1 border rounded  flex-fill text-center" readOnly style={{ cursor: "not-allowed", fontSize: "10px", color: "#666", border: "2px solid #b2ebf2" }}>
-                <strong>MRP:</strong> ₹{currentMedicine.mrp || "0"}
-              </div>
-            </div> */}
           </Col>
           <Col md={1}>
             <Form.Label
-              className="fw-bold text-muted"
-              style={{ fontSize: "11px" }}
+              className="fw-bold"
+              style={{ fontSize: "12px" }}
             >
               Qty
             </Form.Label>
-            <Form.Select
+            <Form.Control
+              type="number"
+              placeholder="Qty"
               value={currentMedicine.qty}
+              disabled={prescriptionData.no_medicines_prescribed}
               onChange={(e) =>
                 setCurrentMedicine((prev) => ({ ...prev, qty: e.target.value }))
               }
@@ -892,17 +915,10 @@ const OpdPrescriptionCard = ({
                 padding: "6px 12px",
                 fontSize: "12px",
               }}
-            >
-              <option value="">Qty</option>
-              {[...Array(60)].map((_, i) => (
-                <option key={i + 1} value={i + 1}>
-                  {i + 1}
-                </option>
-              ))}
-            </Form.Select>
+            />
           </Col>
           <Col md={6}>
-            <div className="d-flex flex-wrap gap-1 justify-content-between mb-1">
+            <div className="mb-1" style={{ marginLeft: "25px", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px" }}>
               {timeSlots.map((slot) => (
                 <div
                   key={slot}
@@ -911,8 +927,9 @@ const OpdPrescriptionCard = ({
                 >
                   <Form.Check
                     type="checkbox"
-                    id={`inline-slot-${slot}`}
+                    label={slot}
                     checked={currentMedicine.times?.includes(slot)}
+                    disabled={prescriptionData.no_medicines_prescribed}
                     onChange={(e) => {
                       const updated = e.target.checked
                         ? [...(currentMedicine.times || []), slot]
@@ -925,54 +942,22 @@ const OpdPrescriptionCard = ({
                       }));
                     }}
                     className="m-0 p-0"
+                    style={{ fontSize: "13px" }}
                   />
-                  {slot === "LA" ? (
-                    <OverlayTrigger placement="top" overlay={<Tooltip id="tooltip-la">Local Application</Tooltip>}>
-                      <label
-                        htmlFor={`inline-slot-${slot}`}
-                        className="text-center m-0 mt-1"
-                        style={{
-                          fontSize: "9px",
-                          lineHeight: "1",
-                          cursor: "help",
-                          fontWeight: "600",
-                          color: "#555",
-                          whiteSpace: "pre-wrap",
-                          borderBottom: "1px dashed #555"
-                        }}
-                      >
-                        {slot.split(" ").join("\n")}
-                      </label>
-                    </OverlayTrigger>
-                  ) : (
-                    <label
-                      htmlFor={`inline-slot-${slot}`}
-                      className="text-center m-0 mt-1"
-                      style={{
-                        fontSize: "9px",
-                        lineHeight: "1",
-                        cursor: "pointer",
-                        fontWeight: "600",
-                        color: "#555",
-                        whiteSpace: "pre-wrap",
-                      }}
-                    >
-                      {slot.split(" ").join("\n")}
-                    </label>
-                  )}
                 </div>
               ))}
             </div>
           </Col>
           <Col md={1}>
             <Form.Label
-              className="fw-bold text-muted"
-              style={{ fontSize: "11px" }}
+              className="fw-bold"
+              style={{ fontSize: "12px" }}
             >
               Days
             </Form.Label>
             <Form.Select
               value={currentMedicine.days}
+              disabled={prescriptionData.no_medicines_prescribed}
               onChange={(e) =>
                 setCurrentMedicine((prev) => ({
                   ...prev,
@@ -1011,7 +996,7 @@ const OpdPrescriptionCard = ({
           <Col md={1}>
             <Button
               onClick={handleAddMedicine}
-              className="w-100 py-1 btn-info shadow-sm"
+              className="w-100 py-6 btn-info shadow-sm"
               style={{ borderRadius: "8px" }}
             >
               <FeatherIcon icon="plus" size="18" />
@@ -1031,31 +1016,31 @@ const OpdPrescriptionCard = ({
                 <tr>
                   <th
                     className="py-2 px-3 border-0"
-                    style={{ fontSize: "12px", width: "15%" }}
+                    style={{ fontSize: "14px", width: "15%" }}
                   >
                     Medicine Name
                   </th>
                   <th
                     className="py-2 px-3 border-0 text-center"
-                    style={{ fontSize: "12px", width: "25%" }}
+                    style={{ fontSize: "14px", width: "25%" }}
                   >
                     Qty
                   </th>
                   <th
                     className="py-2 px-3 border-0"
-                    style={{ fontSize: "12px", width: "30%" }}
+                    style={{ fontSize: "14px", width: "30%" }}
                   >
                     Dosage Intervals
                   </th>
                   <th
                     className="py-2 px-3 border-0 text-center"
-                    style={{ fontSize: "12px", width: "20%" }}
+                    style={{ fontSize: "14px", width: "20%" }}
                   >
                     Duration
                   </th>
                   <th
                     className="py-2 px-3 border-0 text-center"
-                    style={{ fontSize: "12px", width: "10%" }}
+                    style={{ fontSize: "14px", width: "10%" }}
                   >
                     Action
                   </th>
@@ -1066,39 +1051,77 @@ const OpdPrescriptionCard = ({
                   <tr key={idx} className="align-middle">
                     <td
                       className="py-2 px-3 fw-bold"
-                      style={{ fontSize: "12px" }}
+                      style={{ fontSize: "14px" }}
                     >
                       {m.name}
                     </td>
                     <td className="py-2 px-3 fw-bold text-center">
-                      <span className="px-2 py-1" style={{ fontSize: "11px" }}>
+                      <span className="px-2 py-1" style={{ fontSize: "13px" }}>
                         {m.qty} Units
                       </span>
                     </td>
                     <td className="py-2 px-3 fw-bold">
-                      <div className="d-flex flex-wrap gap-1">
-                        {m.times?.map((t) => (
-                          <span
-                            key={t}
-                            className="py-1 px-2"
-                            style={{ fontSize: "11px", backgroundColor: "#e0f7fa", borderRadius: "4px" }}
-                          >
-                            {t}
-                          </span>
-                        ))}
-                      </div>
+                      {editingMedicineIndex === idx ? (
+                        <div className="d-flex flex-wrap gap-1">
+                          {timeSlots.map((slot) => (
+                            <Form.Check
+                              key={slot}
+                              type="checkbox"
+                              label={slot}
+                              checked={m.times?.includes(slot)}
+                              onChange={(e) => {
+                                const newMedicines = [...prescriptionData.medicines];
+                                const updatedTimes = e.target.checked
+                                  ? [...(m.times || []), slot]
+                                  : (m.times || []).filter((t) => t !== slot);
+                                newMedicines[idx] = { ...m, times: updatedTimes };
+                                handlePrescriptionChange("medicines", newMedicines);
+                              }}
+                              style={{ fontSize: "13px", marginRight: "8px" }}
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="d-flex flex-wrap gap-1">
+                          {m.times?.map((t) => (
+                            <span
+                              key={t}
+                              className="py-1 px-2"
+                              style={{ fontSize: "13px", backgroundColor: "#e0f7fa", borderRadius: "4px" }}
+                            >
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </td>
                     <td
                       className="py-2 px-3 fw-semibold fw-bold text-center"
-                      style={{ fontSize: "11px" }}
+                      style={{ fontSize: "13px" }}
                     >
                       {m.days} Days
                     </td>
                     <td className="py-2 px-3 text-center">
+                      {m.name !== "Constac Powder" && (
+                        <Button
+                          variant={editingMedicineIndex === idx ? "success" : "info"}
+                          size="sm"
+                          className="p-5 px-4 me-2"
+                          onClick={() => {
+                            if (editingMedicineIndex === idx) {
+                              setEditingMedicineIndex(null);
+                            } else {
+                              setEditingMedicineIndex(idx);
+                            }
+                          }}
+                        >
+                          <FeatherIcon icon={editingMedicineIndex === idx ? "check" : "edit-2"} size="14" />
+                        </Button>
+                      )}
                       <Button
                         variant="danger"
                         size="sm"
-                        className="p-5 px-5"
+                        className="p-5 px-4"
                         onClick={() => handleRemoveMedicine(idx)}
                       >
                         <FeatherIcon icon="trash" size="14" />

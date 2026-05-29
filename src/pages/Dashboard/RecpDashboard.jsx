@@ -297,7 +297,7 @@ export default function ReceptionistDashboard() {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       });
       const checkResult = await checkResponse.json();
-      
+
       if (!checkResponse.ok || !checkResult.success || !checkResult.data) {
         Swal.fire({
           icon: "warning",
@@ -436,8 +436,8 @@ export default function ReceptionistDashboard() {
         return {
           text: "Prescription Checked",
           icon: "clipboard",
-          color: "#8b5cf6",
-          bg: "#f5f3ff",
+          color: "#8e44ad",
+          bg: "#8e44ad15",
           time: selectedEvent.consultationTime || selectedEvent.confirmTime,
           label: "Completed at:"
         };
@@ -446,8 +446,8 @@ export default function ReceptionistDashboard() {
         return {
           text: "Diagnosis Checked",
           icon: "activity",
-          color: "#f59e0b",
-          bg: "#fffbeb",
+          color: "#e67e22",
+          bg: "#e67e2215",
           time: selectedEvent.executionTime || selectedEvent.confirmTime,
           label: "Completed at:"
         };
@@ -456,8 +456,8 @@ export default function ReceptionistDashboard() {
         return {
           text: "History Checked",
           icon: "book-open",
-          color: "#f43f5e",
-          bg: "#fff1f2",
+          color: "#cd5c5c",
+          bg: "#cd5c5c15",
           time: selectedEvent.historyTime || selectedEvent.confirmTime,
           label: "Completed at:"
         };
@@ -666,14 +666,14 @@ export default function ReceptionistDashboard() {
         <div
           className="status-dot"
           style={{
-            width: "8px",
-            height: "8px",
+            width: "11px",
+            height: "11px",
             backgroundColor: bgColor,
             ...(isSelected ? { transform: "scale(1.25)", boxShadow: `0 0 8px ${bgColor}` } : {})
           }}
         ></div>
-        <p style={{ fontWeight: isSelected ? "700" : "600", margin: 0, fontSize: "11px", display: "flex", alignItems: "center", gap: "3px", whiteSpace: "nowrap" }}>
-          {name} <span className="cnt" style={{ fontSize: "10px", color: "#64748b" }}>({count || 0})</span>
+        <p style={{ color: "#1e293b", fontWeight: isSelected ? "700" : "600", margin: 0, fontSize: "11px", display: "flex", alignItems: "center", gap: "3px", whiteSpace: "nowrap" }}>
+          {name} <span className="cnt" style={{ fontSize: "11px", color: "#2a3748ff" }}>({count || 0})</span>
         </p>
       </div>
     );
@@ -919,12 +919,11 @@ margin-left: 1px;
     font-weight: 600;
     color: #0f172a;
     font-size: 15px;
-    margin-bottom: 2px;
 }
 
 .doctor-info-text {
     font-size: 12px;
-    color: #64748b;
+    color: #586679ff;
 }
 
 .status-badge-container {
@@ -1177,37 +1176,59 @@ margin-left: 1px;
                             const typeColor = eventStyleGetter({ patientType: app.patientType }).style.backgroundColor;
                             const isActive = selectedEvent?.appointmentid === app.appointmentid;
 
+                            const isAppConfirmed = app.confirmTime && app.confirmTime !== "0" && app.confirmTime !== 0;
+                            let listStatus = null;
+                            if (isAppConfirmed) {
+                              const hasHistory = Number(app.historychk) === 3;
+                              const hasExecution = Number(app.executivechk) === 1;
+                              const hasConsultation = Number(app.consultationchk) === 4;
+                              const hasReceipt = Number(app.executivechk) === 2;
+
+                              if (hasReceipt) {
+                                listStatus = { text: "Receipt Generated", color: "#10b981", bg: "#ecfdf5" };
+                              } else if (hasConsultation) {
+                                listStatus = { text: "Prescription Checked", color: "#8e44ad", bg: "#8e44ad15" };
+                              } else if (hasExecution) {
+                                listStatus = { text: "Diagnosis Checked", color: "#e67e22", bg: "#e67e2215" };
+                              } else if (hasHistory) {
+                                listStatus = { text: "History Checked", color: "#cd5c5c", bg: "#cd5c5c15" };
+                              } else {
+                                listStatus = { text: "Patient Arrived", color: "#0ea5e9", bg: "#f0f9ff" };
+                              }
+                            } else {
+                              listStatus = { text: "Pending", color: "#d97706", bg: "#fef3c7" };
+                            }
+
+
                             return (
                               <div
                                 key={app.appointmentid || index}
                                 className={`appointment-item ${isActive ? 'active' : ''}`}
                                 onClick={() => handleEventClick(app)}
+                                style={{ position: 'relative' }}
                               >
                                 <div className="time-slot">
                                   {app.time}
                                 </div>
                                 <div
                                   className="type-indicator mx-1"
-                                  style={{ width: '4px', height: '24px', backgroundColor: typeColor, borderRadius: '2px' }}
+                                  style={{ width: '4px', height: '35px', backgroundColor: typeColor, borderRadius: '2px' }}
                                 ></div>
                                 <div className="patient-info">
                                   <div className="patient-name-text">
                                     {app.patientName}
-                                    {app.isConfirmed && (
-                                      <FeatherIcon icon="check-circle" size={14} className="ms-2 text-success" />
-                                    )}
                                   </div>
                                   <div className="doctor-info-text">
                                     <FeatherIcon icon="activity" size={12} className="me-1" />
                                     {app.doctorName}
                                   </div>
                                 </div>
-                                <div className="status-badge-container">
+                                <div className="status-badge-container d-flex gap-2 align-items-center" style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', margin: 0 }}>
                                   <span
                                     style={{
                                       backgroundColor: typeColor,
                                       color: 'white',
-                                      fontSize: '9px',
+                                      fontSize: '10px',
                                       padding: '2px 8px',
                                       borderRadius: '4px',
                                       minWidth: '70px',
@@ -1220,6 +1241,27 @@ margin-left: 1px;
                                     {app.patientType}
                                   </span>
                                 </div>
+                                {listStatus && (
+                                  <div className="d-flex align-items-center">
+                                    <span
+                                      style={{
+                                        backgroundColor: listStatus.bg,
+                                        color: listStatus.color,
+                                        border: `1px solid ${listStatus.color}40`,
+                                        fontSize: '10px',
+                                        padding: '2px 8px',
+                                        borderRadius: '4px',
+                                        minWidth: '70px',
+                                        display: 'inline-block',
+                                        textAlign: 'center',
+                                        fontWeight: '700',
+                                        textTransform: 'uppercase'
+                                      }}
+                                    >
+                                      {listStatus.text}
+                                    </span>
+                                  </div>
+                                )}
                                 <div className="ms-3">
                                   <FeatherIcon icon="chevron-right" size={16} className="text-muted" />
                                 </div>

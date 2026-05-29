@@ -2,13 +2,13 @@ import React from "react";
 import nabhLogo from "../../assets/images/nabh-logo.png";
 
 const OpdPrescriptionPrintView = React.forwardRef(
-  ({ prescriptionData, formData, historyData, assistanceDoctors, location: sitelocation }, ref) => {
+  ({ prescriptionData, formData, historyData, doctors = [], location: sitelocation }, ref) => {
     const d = prescriptionData || {};
     const patient = formData || {};
     const history = historyData || {};
 
-    const assistantDoc = assistanceDoctors.find(
-      (doc) => String(doc.doctor_id) === String(d.doctor_id || d.udoctor_id)
+    const assistantDoc = doctors.find(
+      (doc) => String(doc.doctor_id || doc.id) === String(d.doctor_id || d.udoctor_id)
     );
     const doctorName = assistantDoc ? assistantDoc.name : "";
     const doctorPhone = assistantDoc ? assistantDoc.phone : "";
@@ -75,11 +75,14 @@ const OpdPrescriptionPrintView = React.forwardRef(
           @media screen, print {
             .opd-print-container {
               font-family: Arial, sans-serif;
-              font-size: 14px;
+              font-size: 15px;
               margin: 0;
               padding: 20px;
-              background-color: white;
-              color: black;
+              background-color: white !important;
+              color: #000 !important;
+            }
+            .opd-print-container p, .opd-print-container span, .opd-print-container div {
+              color: #000 !important;
             }
             .opd-print-container .row-flex {
               display: flex;
@@ -89,14 +92,14 @@ const OpdPrescriptionPrintView = React.forwardRef(
               margin: 5px 0;
             }
             .opd-print-container .fw-bold {
-              font-weight: 700;
+              font-weight: 700 !important;
             }
             .opd-print-container .text-right {
               text-align: right;
             }
             .opd-print-container .medicine-header {
-              font-weight: 700;
-              border-bottom: 1px solid #000;
+              font-weight: 700 !important;
+              border-bottom: 2px solid #000;
               padding-bottom: 5px;
               margin-bottom: 10px;
             }
@@ -104,24 +107,13 @@ const OpdPrescriptionPrintView = React.forwardRef(
         `}</style>
 
         <div style={{ padding: "20px" }}>
-          {/* Top Spacing for Letterhead */}
-          <br />
-          <br />
-          <br />
-          <br />
-          <br />
-          <br />
-          <br />
-          <br />
-          <br />
-          <br />
-
-          <div className="row-flex">
-            <div style={{ width: "100%" }}>
-              <p className="text-right fw-bold">DATE : {cdate}</p>
+          <div className="row-flex" style={{ justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+            <div style={{ flex: 1 }}></div>
+            <h3 style={{ margin: 0, textAlign: "center", fontWeight: "bold", flex: 1, textDecoration: "underline" }}>PRESCRIPTION</h3>
+            <div style={{ flex: 1 }}>
+              <p className="text-right fw-bold" style={{ margin: 0 }}>DATE : {cdate}</p>
             </div>
           </div>
-          <br />
 
           <div className="row-flex">
             <div style={{ width: "100%" }}>
@@ -167,14 +159,6 @@ const OpdPrescriptionPrintView = React.forwardRef(
             </div>
           </div>
           <br />
-          <br />
-
-          <div className="row-flex">
-            <div style={{ width: "100%" }}>
-              <p style={{ fontSize: "17px", fontWeight: 700 }}>Rx</p>
-            </div>
-          </div>
-
           <div className="row-flex medicine-header">
             <div style={{ width: "30%" }}>Medicine</div>
             <div style={{ width: "45%" }}>Dosage</div>
@@ -189,7 +173,10 @@ const OpdPrescriptionPrintView = React.forwardRef(
               med.name?.toLowerCase().includes("ointment");
             const isConstac = med.name?.toLowerCase().includes("constac");
             const isAnospray = med.name?.toLowerCase().includes("anospray");
-            const timeString = formatMedicineTime(med.times || []);
+            let timeString = formatMedicineTime(med.times || []);
+            if (isConstac) {
+              timeString = "1 spoon At Night ( Before sleep )";
+            }
             const medName = med.name?.replace(/\([^)]*\)/, "").trim();
             const note = med.note || "";
 
@@ -239,7 +226,7 @@ const OpdPrescriptionPrintView = React.forwardRef(
                   <span>{timeString}</span>
                 </div>
                 <div style={{ width: "15%" }}>
-                  <span>{med.days}</span>
+                  <span>{med.days} Days</span>
                 </div>
                 <div style={{ width: "10%", textAlign: "right" }}>
                   <span>{med.qty}</span>
@@ -249,31 +236,25 @@ const OpdPrescriptionPrintView = React.forwardRef(
                   <div
                     style={{
                       width: "100%",
-                      paddingTop: "5px",
                     }}
                   >
-                    <span>
-                      ( Keep the area clean and dry. Apply locally as directed.
-                      Massage gently with a fingertip for approximately 5
-                      minutes. )
+                    <span style={{ fontSize: "12px", fontStyle: "italic" }}>
+                      ( Keep the area clean and dry. Apply locally as directed. Massage gently with a fingertip for approximately 5 minutes. )
                     </span>
                   </div>
                 )}
                 {isConstac && (
-                  <div style={{ width: "100%", paddingTop: "5px" }}>
-                    <span>
-                      1 spoon At Night ( Before sleep )<br />( Just put the
-                      powder over tongue and chew it Or Mix it in 100ml of
-                      water.Can be increased to 1.5 or 2 spoon if one spoon is
-                      not effective )
+                  <div style={{ width: "100%" }}>
+                    <span style={{ fontSize: "12px", fontStyle: "italic" }}>
+                      ( Just put the powder over tongue and chew it Or Mix it in 100ml of water.
+                      Can be increased to 1.5 or 2 spoon if one spoon is not effective )
                     </span>
                   </div>
                 )}
                 {isAnospray && (
                   <div style={{ width: "100%", paddingTop: "5px" }}>
-                    <span>
-                      ( For instant pain relief, spray 1-2 puffs at the anal
-                      opening before and after passing stools. )
+                    <span style={{ fontSize: "12px", fontStyle: "italic" }}>
+                      ( For instant pain relief, spray 1-2 puffs at the anal opening before and after passing stools. )
                     </span>
                   </div>
                 )}
@@ -285,22 +266,17 @@ const OpdPrescriptionPrintView = React.forwardRef(
               </div>
             );
           })}
-
           <br />
-          <br />
-          <br />
-
           <div className="row-flex">
             <div style={{ width: "100%" }}>
               <p>
-                <span className="fw-bold">Nxt.Appointment :</span>{" "}
-                {nextAppoDate}&nbsp;&nbsp;&nbsp;&nbsp;
+                <span className="fw-bold">Next Appointment :</span>{" "}
+                {nextAppoDate}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 <span className="fw-bold">Assistant Doctor :</span> {doctorName}{" "}
-                ( {doctorPhone} )
+                {doctorPhone}
               </p>
             </div>
-          </div>
-          <br />
+          </div><br />
 
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <tbody>
@@ -308,7 +284,7 @@ const OpdPrescriptionPrintView = React.forwardRef(
                 <td style={{ width: "100%" }}>
                   <p>
                     <span className="fw-bold">Important Note :</span> In case
-                    there is no relief with medications in 2 weeks of time ...
+                    there is no relief with medications in 2 weeks of time...
                     Consult the surgeon immediately to evaluate the disease
                     again.
                   </p>

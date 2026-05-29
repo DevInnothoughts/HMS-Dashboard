@@ -501,7 +501,7 @@ export default function DoctorCallingCalendar() {
                   </Col>
 
                   {/* Card 5: Enquiry Calls */}
-                  <Col xs={12} sm={6} md={4}>
+                  {/* <Col xs={12} sm={6} md={4}>
                     <Card
                       onClick={() => handleOpenAdvised("Enquiry")}
                       onMouseEnter={() => setHoveredCard("Enquiry")}
@@ -549,7 +549,7 @@ export default function DoctorCallingCalendar() {
                         </div>
                       </Card.Body>
                     </Card>
-                  </Col>
+                  </Col> */}
                 </Row>
               </div>
             ) : (

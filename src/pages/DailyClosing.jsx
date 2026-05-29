@@ -244,12 +244,17 @@ const DailyClosing = () => {
     }));
   };
 
-  const isSaveDisabled = isSubmitted || loading;
+  const checkFields = ["opdCash", "ipdCash", "pharmacyCash", "upiSettlement", "cardSettlement", "bankDeposit"];
+  const hasZero = checkFields.some(key => formData[key] !== "" && Number(formData[key]) === 0);
+  const isSaveDisabled = isSubmitted || loading || (hasZero && (!formData.comment || !formData.comment.trim()));
 
   const handleSave = async () => {
     // Basic Validation
     if (!formData.opdCash || !formData.bankDeposit) {
       return Swal.fire("Required", "Please fill essential fields", "warning");
+    }
+    if (hasZero && (!formData.comment || !formData.comment.trim())) {
+      return Swal.fire("Justification Required", "Please provide a justification for the zero balance.", "warning");
     }
 
     setLoading(true);
@@ -369,17 +374,32 @@ const DailyClosing = () => {
                   </h5>
                 </div>
                 <div style={{ display: "flex", alignItems: "center" }}>
+                  <style>{`
+                    .custom-datepicker-wrapper .react-datepicker__input-container input {
+                      border: 1px solid #4dd0e1 !important;
+                      border-radius: 5px !important;
+                      width: 130px !important;
+                      font-size: 13px !important;
+                      font-weight: 600 !important;
+                      color: #006064 !important;
+                      box-shadow: none !important;
+                    }
+                    .custom-datepicker-wrapper .react-datepicker__input-container input:focus {
+                      border-color: #00bcd4 !important;
+                    }
+                  `}</style>
                   <span style={{ marginRight: "10px", fontWeight: "bold", fontSize: "14px", color: "#00838f" }}>Date:</span>
-                  <DatePicker
-                    selected={currentDate ? moment(currentDate, "DD-MM-YYYY").toDate() : new Date()}
-                    onChange={(date) => {
-                      if (date) setCurrentDate(moment(date).format("DD-MM-YYYY"));
-                    }}
-                    dateFormat="dd-MM-yyyy"
-                    maxDate={new Date()}
-                    className="form-control form-control-sm"
-                    style={{ border: "2px solid #4dd0e1", borderRadius: "5px", width: "130px", fontSize: "13px", fontWeight: "600", color: "#006064" }}
-                  />
+                  <div className="custom-datepicker-wrapper">
+                    <DatePicker
+                      selected={currentDate ? moment(currentDate, "DD-MM-YYYY").toDate() : new Date()}
+                      onChange={(date) => {
+                        if (date) setCurrentDate(moment(date).format("DD-MM-YYYY"));
+                      }}
+                      dateFormat="dd-MM-yyyy"
+                      maxDate={new Date()}
+                      className="form-control form-control-sm"
+                    />
+                  </div>
                 </div>
               </Card.Header>
               <Card.Body style={{ padding: "10px", background: "#ffffff", borderRadius: "0 0 5px 5px" }}>
@@ -574,6 +594,7 @@ const DailyClosing = () => {
                             }
                           />
                         </InputGroup>
+                        {formData.opdCash !== "" && Number(formData.opdCash) === 0 && <div style={{ color: "#d32f2f", fontSize: "11px", marginTop: "4px", textAlign: "center", fontWeight: "600" }}><i className="fa fa-warning me-1"></i>0 has been entered</div>}
                       </td>
                       <td
                         style={{
@@ -627,6 +648,7 @@ const DailyClosing = () => {
                             }
                           />
                         </InputGroup>
+                        {formData.ipdCash !== "" && Number(formData.ipdCash) === 0 && <div style={{ color: "#d32f2f", fontSize: "11px", marginTop: "4px", textAlign: "center", fontWeight: "600" }}><i className="fa fa-warning me-1"></i>0 has been entered</div>}
                       </td>
                       <td
                         style={{
@@ -680,6 +702,7 @@ const DailyClosing = () => {
                             }
                           />
                         </InputGroup>
+                        {formData.pharmacyCash !== "" && Number(formData.pharmacyCash) === 0 && <div style={{ color: "#d32f2f", fontSize: "11px", marginTop: "4px", textAlign: "center", fontWeight: "600" }}><i className="fa fa-warning me-1"></i>0 has been entered</div>}
                       </td>
                       <td
                         style={{
@@ -733,6 +756,7 @@ const DailyClosing = () => {
                             }
                           />
                         </InputGroup>
+                        {formData.upiSettlement !== "" && Number(formData.upiSettlement) === 0 && <div style={{ color: "#d32f2f", fontSize: "11px", marginTop: "4px", textAlign: "center", fontWeight: "600" }}><i className="fa fa-warning me-1"></i>0 has been entered</div>}
                       </td>
                       <td
                         style={{
@@ -786,6 +810,7 @@ const DailyClosing = () => {
                             }
                           />
                         </InputGroup>
+                        {formData.cardSettlement !== "" && Number(formData.cardSettlement) === 0 && <div style={{ color: "#d32f2f", fontSize: "11px", marginTop: "4px", textAlign: "center", fontWeight: "600" }}><i className="fa fa-warning me-1"></i>0 has been entered</div>}
                       </td>
                       <td
                         style={{
@@ -839,6 +864,7 @@ const DailyClosing = () => {
                             }
                           />
                         </InputGroup>
+                        {formData.bankDeposit !== "" && Number(formData.bankDeposit) === 0 && <div style={{ color: "#d32f2f", fontSize: "11px", marginTop: "4px", textAlign: "center", fontWeight: "600" }}><i className="fa fa-warning me-1"></i>0 has been entered</div>}
                       </td>
                       <td
                         style={{
@@ -1017,6 +1043,32 @@ const DailyClosing = () => {
                     </tr>
                   </tbody>
                 </Table>
+
+                {(hasZero || formData.comment) && (
+                  <div style={{ marginTop: "20px", padding: "5px", backgroundColor: "#f8d7da", borderRadius: "5px", border: "1px solid #f5c6cb" }}>
+                    {hasZero && !isSubmitted && (
+                      <div style={{ color: "#721c24", fontSize: "13px", fontWeight: "bold", marginBottom: "10px" }}>
+                        <i className="fa fa-exclamation-triangle me-2"></i>
+                        A zero balance is recorded in one or more fields. Please provide a justification below to proceed.
+                      </div>
+                    )}
+                    <Form.Group>
+                      <Form.Label style={{ fontSize: "13px", fontWeight: "bold", color: "#721c24" }}>
+                        {hasZero ? "Justification for Zero Balance" : "Remarks"} {hasZero && !isSubmitted && <span className="text-danger">*</span>}
+                      </Form.Label>
+                      <Form.Control
+                        as="textarea"
+                        rows={2}
+                        name="comment"
+                        value={formData.comment}
+                        onChange={handleChange}
+                        readOnly={isSubmitted}
+                        placeholder="Enter justification or remarks..."
+                        style={{ fontSize: "13px", border: "1px solid #f5c6cb", borderRadius: "5px" }}
+                      />
+                    </Form.Group>
+                  </div>
+                )}
 
               </Card.Body>
             </Card>

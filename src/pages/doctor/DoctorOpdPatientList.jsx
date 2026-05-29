@@ -6,6 +6,9 @@ import { Column } from "primereact/column";
 import { useReactToPrint } from "react-to-print";
 import FeatherIcon from "feather-icons-react";
 import FollowUpPrintView from "./FollowUpPrintView";
+import DiagnosisPrintView from "./DiagnosisPrintView";
+import OpdPrescriptionPrintView from "./OpdPrescriptionPrintView";
+import DischargePrintView from "./DischargePrintView";
 import { Link, useNavigate } from "react-router-dom";
 import { decodeJwt } from "../../utils/decode-jwt";
 import Swal from "sweetalert2";
@@ -319,6 +322,8 @@ export default function DoctorOpdPatientList() {
     history: [],
     diagnosis: [],
     followup: {},
+    prescription: null,
+    discharge: null,
   });
   const [isPrintReady, setIsPrintReady] = useState(false);
 
@@ -1421,11 +1426,18 @@ export default function DoctorOpdPatientList() {
           return data.statusCode === 200 ? data.data : null;
         }),
       );
+      
       const diagDatesRes = await fetch(
         `${BASE_URL}/V1/doctor/list-diagnosis-dates/${patient.patient_id}?location=${currentLocation}`,
         { headers },
       );
       const diagDates = await diagDatesRes.json();
+      if (!diagDates.data || diagDates.data.length === 0) {
+        Swal.fire('Incomplete Forms', 'Not all forms are completed to print so fill all the respective forms to print (Diagnosis missing).', 'warning');
+        setLoading(false);
+        return;
+      }
+      
       const diagFull = await Promise.all(
         (diagDates.data || []).map(async (d) => {
           const res = await fetch(
@@ -1454,16 +1466,87 @@ export default function DoctorOpdPatientList() {
           return null;
         }),
       );
+      
       const followupRes = await fetch(
         `${BASE_URL}/V1/doctor/get-followup-details/${patient.patient_id}?location=${currentLocation}`,
         { headers },
       );
       const followupData = await followupRes.json();
+      if (followupData.statusCode !== 200 || !followupData.data || Object.keys(followupData.data).length === 0) {
+        Swal.fire('Incomplete Forms', 'Not all forms are completed to print so fill all the respective forms to print (FollowUp missing).', 'warning');
+        setLoading(false);
+        return;
+      }
+
+      const opdDatesRes = await fetch(
+        `${BASE_URL}/V1/doctor/list-opd-prescription-dates/${patient.patient_id}?location=${currentLocation}`,
+        { headers },
+      );
+      const opdDates = await opdDatesRes.json();
+      if (!opdDates.data || opdDates.data.length === 0) {
+        Swal.fire('Incomplete Forms', 'Not all forms are completed to print so fill all the respective forms to print (OPD Prescription missing).', 'warning');
+        setLoading(false);
+        return;
+      }
+      
+      const latestOpdDate = moment(opdDates.data[0].date, "DD-MM-YYYY").format("YYYY-MM-DD");
+      const opdDetailsRes = await fetch(
+        `${BASE_URL}/V1/doctor/get-opd-prescription/${patient.patient_id}/${latestOpdDate}?location=${currentLocation}`,
+        { headers }
+      );
+      const opdDetails = await opdDetailsRes.json();
+      
+      let parsedOpd = null;
+      if (opdDetails.statusCode === 200 && opdDetails.data) {
+        const d = opdDetails.data;
+        const toArray = (val) => {
+          if (!val) return [];
+          if (Array.isArray(val)) return val;
+          if (typeof val === "string") return val.split(",").map(s => s.trim()).filter(Boolean);
+          return [];
+        };
+        const safeMedicines = (val) => {
+          if (!val) return [];
+          if (Array.isArray(val)) return val;
+          if (typeof val === "string") {
+            try { return JSON.parse(val); } catch (e) { return []; }
+          }
+          return [];
+        };
+        parsedOpd = {
+          ...d,
+          surgical_advice: toArray(d.surgical_advice),
+          uroadvice: toArray(d.uroadvice),
+          preopinvestigation: toArray(d.preopinvestigation),
+          medicines: safeMedicines(d.medicines),
+        };
+      }
+
+      const dischargeDatesRes = await fetch(
+        `${BASE_URL}/V1/doctor/list-discharge-dates/${patient.patient_id}?location=${currentLocation}`,
+        { headers },
+      );
+      const dischargeDates = await dischargeDatesRes.json();
+      if (!dischargeDates.data || dischargeDates.data.length === 0) {
+        Swal.fire('Incomplete Forms', 'Not all forms are completed to print so fill all the respective forms to print (Discharge Card missing).', 'warning');
+        setLoading(false);
+        return;
+      }
+
+      const latestDischargeId = dischargeDates.data[0].id;
+      const dischargeDetailsRes = await fetch(
+        `${BASE_URL}/V1/doctor/get-discharge-card/${patient.patient_id}?dischargeId=${latestDischargeId}&location=${currentLocation}`,
+        { headers }
+      );
+      const dischargeDetails = await dischargeDetailsRes.json();
+
       setPrintData({
         patient: patient,
         history: historyFull.filter(Boolean),
         diagnosis: diagFull.filter(Boolean),
         followup: followupData.statusCode === 200 ? followupData.data : {},
+        prescription: parsedOpd,
+        discharge: dischargeDetails.statusCode === 200 ? dischargeDetails.data : null,
       });
       setIsPrintReady(true);
     } catch (error) {
@@ -1500,7 +1583,7 @@ export default function DoctorOpdPatientList() {
       <Button
         variant="primary"
         className="btn-primary btn-extra-small btn-icon"
-        title="Follow-Up Print"
+        title="Print All Forms"
         onClick={() => handlePrintFollowUp(patient)}
       >
         <FeatherIcon icon="printer" size="16" />
@@ -4386,13 +4469,49 @@ export default function DoctorOpdPatientList() {
         </Container>
       </div>
       <div style={{ display: "none" }}>
-        <FollowUpPrintView
-          ref={fupPrintRef}
-          patient={printData.patient}
-          followUpData={printData.followup}
-          historyList={printData.history}
-          diagnosisList={printData.diagnosis}
-        />
+        <div ref={fupPrintRef} style={{ display: "flex", flexDirection: "column" }}>
+          {printData.diagnosis && printData.diagnosis.length > 0 && (
+            <div style={{ pageBreakAfter: "always" }}>
+              <DiagnosisPrintView
+                patient={printData.patient}
+                historyList={printData.history}
+                diagnosisList={printData.diagnosis}
+              />
+            </div>
+          )}
+          {printData.followup && Object.keys(printData.followup).length > 0 && (
+            <div style={{ pageBreakAfter: "always" }}>
+              <FollowUpPrintView
+                patient={printData.patient}
+                followUpData={printData.followup}
+                historyList={printData.history}
+                diagnosisList={printData.diagnosis}
+              />
+            </div>
+          )}
+          {printData.prescription && (
+            <div style={{ pageBreakAfter: "always" }}>
+              <OpdPrescriptionPrintView
+                prescriptionData={printData.prescription}
+                formData={printData.patient}
+                historyData={printData.history}
+                assistanceDoctors={doctors}
+                location={currentLocation}
+              />
+            </div>
+          )}
+          {printData.discharge && (
+            <div>
+              <DischargePrintView
+                dischargeData={printData.discharge}
+                formData={printData.patient}
+                doctors={doctors}
+                location={currentLocation}
+                historyData={printData.history}
+              />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

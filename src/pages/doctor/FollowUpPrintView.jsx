@@ -112,7 +112,7 @@ const FollowUpPrintView = React.forwardRef(({ patient, followUpData = {}, histor
           <div style={{ clear: "both" }}></div>
 
           {/* Main Border Container (PHP Line 51 logic) */}
-          <div style={{ border: "2px solid green", padding: "15px", borderTopLeftRadius: "25px", borderBottomLeftRadius: "25px", marginBottom: "20px" }}>
+          <div style={{ border: "2px solid green", padding: "15px", borderRadius: "25px", marginBottom: "20px" }}>
 
             {/* Patient Header Box */}
             <div className="inner-border-box" style={{ padding: "10px 5px" }}>
@@ -351,7 +351,7 @@ const FollowUpPrintView = React.forwardRef(({ patient, followUpData = {}, histor
                 <div key={idx} style={{ marginBottom: "10px" }}>
                   <div className="row">
                     <div className="col-md-9" style={{ width: "75%" }}>
-                      <p><b>Diagnosis :</b>&nbsp;{diag.diagnosis_text || "-"}</p>
+                      <p><b>Diagnosis :</b>&nbsp;{diag.diagnosis || "-"}</p>
                     </div>
                     <div className="col-md-3" style={{ width: "20%" }}>
                       <p className="text-right"><b>Date : </b>{formatDate(diag.date_diagnosis)}</p>
@@ -372,11 +372,11 @@ const FollowUpPrintView = React.forwardRef(({ patient, followUpData = {}, histor
                     </div>
                   </div>
                   <div className="row">
-                    <div className="col-md-6" style={{ width: "45%" }}>
-                      <p><b>Last Time Assist By :</b>&nbsp;{diag.assistanceDoctorName || diag.assistanceDoctor || "-"}</p>
+                    <div className="col-md-6" style={{ width: "55%" }}>
+                      <p><b>Last Time Assisted By :</b>&nbsp;{diag.assistanceDoctorName || diag.assistanceDoctor || "-"}</p>
                     </div>
                     <div className="col-md-6" style={{ width: "45%", float: "right", textAlign: "right" }}>
-                      <p><b>Consultant By :</b>&nbsp;{diag.consultantDoctorName || diag.consultantDoctor || "-"}</p>
+                      <p><b>Consulted By :</b>&nbsp;{diag.consultantDoctorName || diag.consultantDoctor || "-"}</p>
                     </div>
                   </div>
                   {/* PHP mapping for follow up complaints on same date */}
@@ -415,7 +415,7 @@ const FollowUpPrintView = React.forwardRef(({ patient, followUpData = {}, histor
               </div>
             </div>
             <div className="row">
-              <div className="col-md-12" style={{ width: "100%", height: "80px" }}>
+              <div className="col-md-12" style={{ width: "100%", height: "40px" }}>
                 <p><b>Advice :</b> {followUpData?.advice || ""}</p>
               </div>
             </div>
@@ -424,7 +424,7 @@ const FollowUpPrintView = React.forwardRef(({ patient, followUpData = {}, histor
                 <p><b>Next FU :</b> </p>
               </div>
               <div className="col-md-3" style={{ width: "65%", height: "40px", textAlign: "center" }}>
-                <p><b>Assisting Doctor :</b> </p>
+                <p><b>Assistant Doctor :</b> </p>
               </div>
             </div>
 

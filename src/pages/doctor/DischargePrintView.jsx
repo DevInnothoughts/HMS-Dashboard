@@ -9,8 +9,8 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
   const consultantDoc = doctors.find(doc => String(doc.doctor_id) === String(d.consultant_doctor));
   const consultantName = consultantDoc ? consultantDoc.name : (d.consultant_doctor || '');
   
-  const madeByDoc = doctors.find(doc => String(doc.doctor_id) === String(d.madeby));
-  const checkedByDoc = doctors.find(doc => String(doc.doctor_id) === String(d.checkedby));
+  const madeByDoc = doctors.find(doc => String(doc.doctor_id) === String(d.made_by || d.madeby));
+  const checkedByDoc = doctors.find(doc => String(doc.doctor_id) === String(d.checked_by || d.checkedby));
   const assistantDoc = doctors.find(doc => String(doc.doctor_id) === String(d.assistance_doctor));
   const prescriptionAssignDoc = doctors.find(doc => String(doc.doctor_id) === String(d.assistance_surgeon || d.prescriptionAssign));
 
@@ -907,8 +907,8 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
             <tbody>
               <tr>
                 <td colSpan="2" style={{ width: "50%", borderRight: "0px", borderBottom: "0px" }}>
-                  <b>Assistant Surgeon :</b> {prescriptionAssignDoc ? `${prescriptionAssignDoc.name} (${prescriptionAssignDoc.phone})` : "NA"}<br />
-                  <b>Assistant Doctor : </b>{assistantDoc ? `${assistantDoc.name} (${assistantDoc.phone})` : "NA"}<br />
+                  <b>Assistant Surgeon :</b> {prescriptionAssignDoc ? `${prescriptionAssignDoc.name} ${prescriptionAssignDoc.phone ? `(${prescriptionAssignDoc.phone})` : ""}`.trim() : "NA"}<br />
+                  <b>Assistant Doctor : </b>{assistantDoc ? `${assistantDoc.name} ${assistantDoc.phone ? `(${assistantDoc.phone})` : ""}`.trim() : "NA"}<br />
                   <b>Physiotherapist : </b>{loc.Physiotherapist}
                 </td>
                 <td colSpan="2" style={{ width: "50%", borderLeft: "0px", borderBottom: "0px" }}>

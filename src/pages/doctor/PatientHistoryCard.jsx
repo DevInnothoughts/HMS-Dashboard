@@ -64,32 +64,36 @@ const PatientHistoryCard = ({
     <Card className="shadow-sm border-0 mb-3 overflow-hidden" style={{ borderRadius: "5px", marginTop: "10px" }}>
       <Card.Header className="p-0 border-0">
         <Nav className="flex-nowrap overflow-auto custom-subnav px-1 py-1" style={{ backgroundColor: "#e0f2f1", gap: "4px" }}>
-          {subTabs.map(st => (
-            <Nav.Item key={st.id}>
-              <Nav.Link
-                active={historyActiveSubTab === st.id}
-                onClick={() => setHistoryActiveSubTab(st.id)}
-                className="text-center d-flex align-items-center justify-content-center"
-                style={{
-                  whiteSpace: "nowrap",
-                  borderRadius: "30px",
-                  padding: "8px 19.8px",
-                  margin: "5px 2px",
-                  fontWeight: "700",
-                  fontSize: "12px",
-                  transition: "all 0.3s ease-in-out",
-                  backgroundColor: historyActiveSubTab === st.id ? "#00838f" : "#ffffff",
-                  color: historyActiveSubTab === st.id ? "#ffffff" : "#006064",
-                  border: historyActiveSubTab === st.id ? "1px solid #00838f" : "1px solid #e0f2f1",
-                  boxShadow: historyActiveSubTab === st.id ? "0 4px 10px rgba(0, 131, 143, 0.4)" : "0 2px 4px rgba(0,0,0,0.05)",
-                  cursor: "pointer"
-                }}
-              >
-                {historyActiveSubTab === st.id && <FeatherIcon icon="check-circle" size="14" className="me-1" />}
-                {st.label}
-              </Nav.Link>
-            </Nav.Item>
-          ))}
+          {subTabs.map(st => {
+            const isFilled = hasTabDetail(st.id);
+            const isActive = historyActiveSubTab === st.id;
+            return (
+              <Nav.Item key={st.id}>
+                <Nav.Link
+                  active={isActive}
+                  onClick={() => setHistoryActiveSubTab(st.id)}
+                  className="text-center d-flex align-items-center justify-content-center"
+                  style={{
+                    whiteSpace: "nowrap",
+                    borderRadius: "30px",
+                    padding: "8px 19px",
+                    margin: "5px 2px",
+                    fontWeight: "700",
+                    fontSize: "12px",
+                    transition: "all 0.3s ease-in-out",
+                    backgroundColor: (isActive || isFilled) ? "#00838f" : "#ffffff",
+                    color: (isActive || isFilled) ? "#ffffff" : "#006064",
+                    border: (isActive || isFilled) ? "1px solid #00838f" : "1px solid #e0f2f1",
+                    boxShadow: (isActive || isFilled) ? "0 4px 10px rgba(0, 131, 143, 0.4)" : "0 2px 4px rgba(0,0,0,0.05)",
+                    cursor: "pointer"
+                  }}
+                >
+                  {(isActive || isFilled) && <FeatherIcon icon="check-circle" size="14" className="me-1" />}
+                  {st.label}
+                </Nav.Link>
+              </Nav.Item>
+            )
+          })}
         </Nav>
       </Card.Header>
       <Card.Body className="bg-white p-2" style={{ minHeight: "120px" }}>
@@ -349,7 +353,7 @@ const PatientHistoryCard = ({
             {['rs', 'cvs', 'cns', 'p/a'].map(field => (
               <Col md={3} key={field}>
                 <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px", color: "#006064" }}>{field.toUpperCase()}</Form.Label>
-                <Form.Control size="sm" value={historyData[field]} onChange={(e) => handleHistoryChange(field, e.target.value)} style={{ borderRadius: "8px", border: "1px solid #80deea", fontSize: "11px", padding: "4px 8px" }} />
+                <Form.Control size="sm" value={historyData[field]} onChange={(e) => handleHistoryChange(field, e.target.value)} style={{ borderRadius: "8px", border: "1px solid #80deea", fontSize: "11px", padding: "8px 12px" }} />
               </Col>
             ))}
           </Row>
@@ -386,17 +390,17 @@ const PatientHistoryCard = ({
               { label: 'Past Medical History', key: 'past_medical_history', opts: ['DM', 'HTN', 'Bronchial Asthma', 'Thyroid', 'IHD', 'Migraine', 'Epilepsy', 'CKD', 'CLD', 'CVA', 'IBS', 'Insomnia'], other: 'past_medical_history_other' }
             ].map(sec => (
               <div key={sec.label} className="p-3 border rounded" style={{ backgroundColor: "#f1fcfd", border: "2px solid #b2ebf2" }}>
-                <h6 className="fw-bold mb-2" style={{ color: "#006064", fontSize: "12px" }}>{sec.label}</h6>
+                <h6 className="fw-bold mb-2" style={{ color: "#006064", fontSize: "14px" }}>{sec.label}</h6>
                 <div className="d-flex flex-wrap gap-3 mb-2">
                   {sec.opts.map(opt => (
-                    <Form.Check key={opt} label={renderLabelWithTooltip(opt)} checked={historyData[sec.key].includes(opt)} onChange={() => handleHistoryCheckboxChange(sec.key, opt)} style={{ fontSize: "11px", fontWeight: "600" }} />
+                    <Form.Check key={opt} label={renderLabelWithTooltip(opt)} checked={historyData[sec.key].includes(opt)} onChange={() => handleHistoryCheckboxChange(sec.key, opt)} style={{ fontSize: "13px", fontWeight: "600" }} />
                   ))}
                 </div>
-                {sec.other && <Form.Control size="sm" placeholder="Specify other conditions..." value={historyData[sec.other]} onChange={(e) => handleHistoryChange(sec.other, e.target.value)} style={{ borderRadius: "8px", border: "1px solid #80deea", fontSize: "11px" }} />}
+                {sec.other && <Form.Control size="sm" placeholder="Specify other conditions..." value={historyData[sec.other]} onChange={(e) => handleHistoryChange(sec.other, e.target.value)} style={{ borderRadius: "8px", border: "1px solid #80deea", fontSize: "13px" }} />}
                 {sec.comment && historyData[sec.key].includes('History of Weight Loss') && (
                   <div className="mt-2 animate__animated animate__fadeIn">
-                    <Form.Label className="fw-bold mb-1 text-danger" style={{ fontSize: "13px" }}>Weight Loss Details</Form.Label>
-                    <Form.Control size="sm" placeholder="e.g. 5kg in 2 months" value={historyData[sec.comment]} onChange={(e) => handleHistoryChange(sec.comment, e.target.value)} style={{ borderRadius: "8px", border: "1px solid #ef9a9a", padding: "4px 8px", fontSize: "13px" }} />
+                    <Form.Label className="fw-bold mb-1" style={{ fontSize: "13px" }}>Weight Loss Details</Form.Label>
+                    <Form.Control size="sm" placeholder="e.g. 5kg in 2 months" value={historyData[sec.comment]} onChange={(e) => handleHistoryChange(sec.comment, e.target.value)} style={{ borderRadius: "8px", border: "1px solid #80deea", padding: "4px 8px", fontSize: "14px" }} />
                   </div>
                 )}
               </div>
@@ -404,26 +408,26 @@ const PatientHistoryCard = ({
           })()}
           {/* Habits */}
           <div className="p-3 border rounded" style={{ backgroundColor: "#f1fcfd", border: "2px solid #b2ebf2" }}>
-            <h6 className="fw-bold mb-2" style={{ color: "#006064", fontSize: "12px" }}>Habits</h6>
+            <h6 className="fw-bold mb-2" style={{ color: "#006064", fontSize: "14px" }}>Habits</h6>
             <div className="d-flex flex-wrap gap-3">
               {['Smoking', 'Alcohol', 'Tobacco', 'Drugs'].map(h => (
-                <Form.Check key={h} label={h} checked={historyData.habits.includes(h)} onChange={() => handleHistoryCheckboxChange("habits", h)} style={{ fontSize: "11px", fontWeight: "600" }} />
+                <Form.Check key={h} label={h} checked={historyData.habits.includes(h)} onChange={() => handleHistoryCheckboxChange("habits", h)} style={{ fontSize: "13px", fontWeight: "600" }} />
               ))}
             </div>
           </div>
           {/* Drug Allergies */}
           <div className="p-3 border rounded" style={{ backgroundColor: "#f1fcfd", border: "2px solid #b2ebf2" }}>
-            <h6 className="fw-bold mb-2" style={{ color: "#006064", fontSize: "11px" }}>Drug Allergies</h6>
-            <Form.Control as="textarea" rows={1} placeholder="Specify any drug allergies..." value={historyData.drug_allergy} onChange={(e) => handleHistoryChange("drug_allergy", e.target.value)} style={{ borderRadius: "8px", border: "1px solid #80deea", fontSize: "11px", padding: "6px" }} />
+            <h6 className="fw-bold mb-2" style={{ color: "#006064", fontSize: "13px" }}>Drug Allergies</h6>
+            <Form.Control as="textarea" rows={1} placeholder="Specify any drug allergies..." value={historyData.drug_allergy} onChange={(e) => handleHistoryChange("drug_allergy", e.target.value)} style={{ borderRadius: "8px", border: "1px solid #80deea", fontSize: "13px", padding: "6px" }} />
           </div>
         </div>
       </div>
 
       {/* Medication, Habits & Complaints */}
       <div className="p-3 bg-white rounded shadow-sm border mb-3" style={{ borderLeft: "5px solid #00bcd4" }}>
-    <h5 className="fw-bold mb-3" style={{ color: "#00838f", textTransform: "uppercase", fontSize: "13px", padding: "5px" }}>Medication, Habits & Complaints</h5>
+        <h5 className="fw-bold mb-3" style={{ color: "#00838f", textTransform: "uppercase", fontSize: "13px", padding: "5px" }}>Medication, Habits & Complaints</h5>
 
-{/* Medication Table */ }
+        {/* Medication Table */}
         <div className="mb-4">
           <Table responsive bordered hover className="mb-0 overflow-hidden" style={{ borderRadius: "10px", borderCollapse: "separate", borderSpacing: 0 }}>
             <thead>
@@ -462,18 +466,18 @@ const PatientHistoryCard = ({
           {/* Surgical History & Other Notes */}
           <Col md={3}>
             <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "13px" }}>Surgical History & Other Notes</h6>
-            <Form.Control as="textarea" rows={9} placeholder="Past surgical history..." className="mb-3" value={historyData.past_surgical_history} onChange={(e) => handleHistoryChange("past_surgical_history", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+            <Form.Control as="textarea" rows={7} placeholder="Past surgical history..." className="mb-3" value={historyData.past_surgical_history} onChange={(e) => handleHistoryChange("past_surgical_history", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
           </Col>
 
           <Col md={3}>
             <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "13px" }}>Any Other Complaints</h6>
-            <Form.Control as="textarea" rows={9} placeholder="Describe other complaints..." value={historyData.any_other_complaints} onChange={(e) => handleHistoryChange("any_other_complaints", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+            <Form.Control as="textarea" rows={7} placeholder="Describe other complaints..." value={historyData.any_other_complaints} onChange={(e) => handleHistoryChange("any_other_complaints", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
           </Col>
 
           {/* Present Complaints (C/O) */}
           <Col md={3}>
             <h6 className="fw-bold mb-2" style={{ color: "#00838f", fontSize: "13px" }}>Present Complaints (C/O)</h6>
-            <Form.Control as="textarea" rows={9} placeholder="Describe the current symptoms in detail..." value={historyData.present_complaints} onChange={(e) => handleHistoryChange("present_complaints", e.target.value)} style={{ borderRadius: "10px", border: "1px solid #b2ebf2", fontSize: "12px", padding: "8px" }} />
+            <Form.Control as="textarea" rows={7} placeholder="Describe the current symptoms in detail..." value={historyData.present_complaints} onChange={(e) => handleHistoryChange("present_complaints", e.target.value)} style={{ borderRadius: "10px", border: "1px solid #b2ebf2", fontSize: "12px", padding: "8px" }} />
           </Col>
 
           {/* Ongoing Medicines */}
@@ -491,8 +495,8 @@ const PatientHistoryCard = ({
         </Row>
       </div >
 
-  {/* Investigations Section */ }
-  < div className = "p-3 bg-white rounded shadow-sm border mb-3" style = {{ borderLeft: "5px solid #0097a7" }}>
+      {/* Investigations Section */}
+      < div className="p-3 bg-white rounded shadow-sm border mb-3" style={{ borderLeft: "5px solid #0097a7" }}>
         <h5 className="fw-bold mb-3" style={{ color: "#00838f", textTransform: "uppercase", fontSize: "13px", padding: "5px" }}>External Investigations</h5>
         <div className="p-3 border rounded" style={{ backgroundColor: "#f8fbfc", border: "2px solid #e0f2f1" }}>
           <Row className="g-2">
@@ -511,10 +515,10 @@ const PatientHistoryCard = ({
                       <span style={{ borderBottom: "1px dashed #006064", cursor: "help" }}>{label}</span>
                     </OverlayTrigger>
                   ) : label;
-                  return <Form.Check label={renderLabel(inv.label)} checked={historyData.investigations.includes(inv.id)} onChange={() => handleHistoryCheckboxChange("investigations", inv.id)} className="mb-1" style={{ fontWeight: "700", color: "#006064", fontSize: "11px" }} />;
+                  return <Form.Check label={renderLabel(inv.label)} checked={historyData.investigations.includes(inv.id)} onChange={() => handleHistoryCheckboxChange("investigations", inv.id)} className="mb-1" style={{ fontWeight: "700", color: "#006064", fontSize: "13px" }} />;
                 })()}
                 {historyData.investigations.includes(inv.id) && (
-                  <Form.Control size="sm" placeholder="Findings / Value" value={historyData.investigation_notes[inv.id] || ""} onChange={(e) => handleInvestigationCommentChange(inv.id, e.target.value)} className="animate__animated animate__fadeIn" style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+                  <Form.Control size="sm" placeholder="Findings / Value" value={historyData.investigation_notes[inv.id] || ""} onChange={(e) => handleInvestigationCommentChange(inv.id, e.target.value)} className="animate__animated animate__fadeIn" style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "13px" }} />
                 )}
               </Col>
             ))}
@@ -523,7 +527,7 @@ const PatientHistoryCard = ({
           <Row>
             <Col md={12}>
               <Form.Group className="mb-15">
-                <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>Upload Investigation Image</Form.Label>
+                <Form.Label className="fw-bold mb-1" style={{ fontSize: "13px" }}>Upload Investigation Image</Form.Label>
                 {historyData.upload_investigation_existing && (
                   <div className="mb-2 text-center p-2 rounded" style={{ backgroundColor: "#f0fdfa", border: "1px dashed #00acc1" }}>
                     <a href={`${uploadBaseUrl}/${historyData.upload_investigation_existing}`} target="_blank" rel="noreferrer">
@@ -536,13 +540,13 @@ const PatientHistoryCard = ({
                     <div className="mt-1 small text-muted">Currently stored: {historyData.upload_investigation_existing}</div>
                   </div>
                 )}
-                <Form.Control type="file" id="capture" accept="image/*" capture="camera" onChange={(e) => handleHistoryChange("upload_investigation", e.target.files[0])} style={{ borderRadius: "10px", padding: "6px", border: "2px solid #b2ebf2", fontSize: "11px" }} />
+                <Form.Control type="file" id="capture" accept="image/*" capture="camera" onChange={(e) => handleHistoryChange("upload_investigation", e.target.files[0])} style={{ borderRadius: "10px", padding: "6px", border: "2px solid #b2ebf2", fontSize: "13px" }} />
               </Form.Group>
             </Col>
             <Col md={12}>
               <Form.Group>
-                <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>Investigation Details</Form.Label>
-                <Form.Control as="textarea" rows={3} placeholder="Investigation Details" value={historyData.investigation || ""} onChange={(e) => handleHistoryChange("investigation", e.target.value)} style={{ borderRadius: "10px", padding: "8px", border: "2px solid #b2ebf2", fontSize: "12px" }} />
+                <Form.Label className="fw-bold mb-1" style={{ fontSize: "13px" }}>Investigation Details</Form.Label>
+                <Form.Control as="textarea" rows={3} placeholder="Investigation Details" value={historyData.investigation || ""} onChange={(e) => handleHistoryChange("investigation", e.target.value)} style={{ borderRadius: "10px", padding: "8px", border: "2px solid #b2ebf2", fontSize: "13px" }} />
               </Form.Group>
             </Col>
           </Row>
@@ -574,15 +578,15 @@ const PatientHistoryCard = ({
         </Row>
       </div >
 
-  <div className="text-center mb-5 pb-5">
-    <Button
-      disabled={loading}
-      onClick={onSaveHistory}
-      style={{ backgroundColor: "#00acc1", borderColor: "#00acc1", padding: "10px 40px", borderRadius: "40px", fontWeight: "800", fontSize: "13px", boxShadow: "0 8px 25px rgba(0, 172, 193, 0.4)", textTransform: "uppercase", letterSpacing: "1px" }}>
-      {loading ? <Spinner size="sm" className="me-2" /> : <FeatherIcon icon="save" size="18" className="me-2" />}
-      SAVE PATIENT HISTORY
-    </Button>
-  </div>
+      <div className="text-center mb-5 pb-5">
+        <Button
+          disabled={loading}
+          onClick={onSaveHistory}
+          style={{ backgroundColor: "#00acc1", borderColor: "#00acc1", padding: "10px 40px", borderRadius: "40px", fontWeight: "800", fontSize: "13px", boxShadow: "0 8px 25px rgba(0, 172, 193, 0.4)", textTransform: "uppercase", letterSpacing: "1px" }}>
+          {loading ? <Spinner size="sm" className="me-2" /> : <FeatherIcon icon="save" size="18" className="me-2" />}
+          SAVE PATIENT HISTORY
+        </Button>
+      </div>
     </div >
   );
 };

@@ -51,6 +51,7 @@ const LOCATIONS_LIST = [
   "Pratiksha Local",
   "Demo Server",
   "demo",
+  "Aurangabad",
 ].sort();
 
 export default function Login() {

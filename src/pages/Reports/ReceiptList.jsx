@@ -567,27 +567,33 @@ export default function ReceiptList() {
     }
   }, [receipts, location.state]);
 
-  const actionBodyTemplate = (receipt) => (
-    <div className="d-flex align-items-center justify-content-center">
-      <Button
-        style={{ borderRadius: "8px" }}
-        onClick={() => handleDeleteReceipt(receipt)}
-        className="btn btn-extra-small btn-icon me-2"
-        variant="danger"
-        title="Delete"
-      >
-        <FeatherIcon icon="trash-2" size="14" />
-      </Button>
-      <Button
-        onClick={() => handlePrintReceipt(receipt)}
-        className="btn btn-extra-small btn-icon"
-        variant="primary"
-        title="Print"
-      >
-        <FeatherIcon icon="printer" size="14" />
-      </Button>
-    </div>
-  );
+  const actionBodyTemplate = (receipt) => {
+    const isToday = moment(receipt.receipt_date).isSame(moment(), "day");
+
+    return (
+      <div className="d-flex align-items-center justify-content-center">
+        {isToday && (
+          <Button
+            style={{ borderRadius: "8px" }}
+            onClick={() => handleDeleteReceipt(receipt)}
+            className="btn btn-extra-small btn-icon me-2"
+            variant="danger"
+            title="Delete"
+          >
+            <FeatherIcon icon="trash-2" size="14" />
+          </Button>
+        )}
+        <Button
+          onClick={() => handlePrintReceipt(receipt)}
+          className="btn btn-extra-small btn-icon"
+          variant="primary"
+          title="Print"
+        >
+          <FeatherIcon icon="printer" size="14" />
+        </Button>
+      </div>
+    );
+  };
 
   const renderHeader = () => (
     <div
