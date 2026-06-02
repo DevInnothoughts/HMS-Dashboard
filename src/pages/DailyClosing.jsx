@@ -238,6 +238,15 @@ const DailyClosing = () => {
   const handleChange = (e) => {
     if (isSubmitted) return;
     const { name, value } = e.target;
+    const numericFields = ["opdCash", "ipdCash", "pharmacyCash", "upiSettlement", "cardSettlement", "bankDeposit"];
+    if (numericFields.includes(name)) {
+      const cleanValue = value.replace(/\D/g, "");
+      setFormData((prev) => ({
+        ...prev,
+        [name]: cleanValue,
+      }));
+      return;
+    }
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -563,7 +572,9 @@ const DailyClosing = () => {
                             ₹
                           </InputGroup.Text>
                           <Form.Control
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
                             placeholder="0.00"
                             name="opdCash"
                             onWheel={(e) => e.target.blur()}
@@ -617,7 +628,9 @@ const DailyClosing = () => {
                             ₹
                           </InputGroup.Text>
                           <Form.Control
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
                             placeholder="0.00"
                             name="ipdCash"
                             onWheel={(e) => e.target.blur()}
@@ -671,7 +684,9 @@ const DailyClosing = () => {
                             ₹
                           </InputGroup.Text>
                           <Form.Control
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
                             placeholder="0.00"
                             name="pharmacyCash"
                             onWheel={(e) => e.target.blur()}
@@ -725,7 +740,9 @@ const DailyClosing = () => {
                             ₹
                           </InputGroup.Text>
                           <Form.Control
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
                             placeholder="0.00"
                             name="upiSettlement"
                             onWheel={(e) => e.target.blur()}
@@ -779,7 +796,9 @@ const DailyClosing = () => {
                             ₹
                           </InputGroup.Text>
                           <Form.Control
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
                             placeholder="0.00"
                             name="cardSettlement"
                             onWheel={(e) => e.target.blur()}
@@ -833,7 +852,9 @@ const DailyClosing = () => {
                             ₹
                           </InputGroup.Text>
                           <Form.Control
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
                             placeholder="0.00"
                             name="bankDeposit"
                             onWheel={(e) => e.target.blur()}

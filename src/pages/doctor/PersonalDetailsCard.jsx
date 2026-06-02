@@ -254,7 +254,7 @@ const Toast = Swal.mixin({
 const PersonalDetailsCard = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
-  const initialPatient = state?.patient;
+  const [patient, setPatient] = useState(state?.patient);
 
   const [activeTab, setActiveTab] = useState("menu");
   const [loading, setLoading] = useState(false);
@@ -403,6 +403,12 @@ const PersonalDetailsCard = () => {
   const [allHistoryDataForPrint, setAllHistoryDataForPrint] = useState([]);
   const [allDiagnosisDataForPrint, setAllDiagnosisDataForPrint] = useState([]);
   const [isPrintReady, setIsPrintReady] = useState(false);
+
+  const fetchedHistoryCache = useRef({});
+  const fetchedDiagnosisCache = useRef({});
+  const fetchedFollowUpCache = useRef({});
+  const fetchedOpdCache = useRef({});
+  const fetchedDischargeCache = useRef({});
 
   const fetchHistoryDates = async () => {
     if (!formData.patient_id) return;
@@ -594,6 +600,7 @@ const PersonalDetailsCard = () => {
           timer: 3000,
           timerProgressBar: true,
         });
+        await new Promise(resolve => setTimeout(resolve, 800));
         fetchHistoryDates();
         setHistoryData(initialHistoryState);
       } else {
@@ -708,8 +715,8 @@ const PersonalDetailsCard = () => {
 
         // Define symptom groups to filter category-specific data
         const pilesOpts = [
-          "PR Bleeding: Painless",
-          "PR Bleeding: Painful",
+          "PR Bleeding:Painless",
+          "PR Bleeding:Painful",
           "Burning",
           "Pricking",
           "Itching",
@@ -726,10 +733,10 @@ const PersonalDetailsCard = () => {
           "Swelling near anal region",
         ];
         const herniaOpts = [
-          "Swelling: Umbilical",
+          "Swelling:Umbilical",
           "Right Inguinal",
           "Left Inguinal",
-          "Swelling: Abdominal",
+          "Swelling:Abdominal",
           "Reducible",
           "Nonreducible",
           "Past Sx",
@@ -765,9 +772,9 @@ const PersonalDetailsCard = () => {
           "Frequency",
         ];
         const pilonidalOpts = [
-          "Pain: Tailbone",
-          "Boil: Tailbone",
-          "Swelling: Tailbone",
+          "Pain:Tailbone",
+          "Boil:Tailbone",
+          "Swelling:Tailbone",
           "Pus / Watery Discharge",
         ];
 
@@ -1219,7 +1226,7 @@ const PersonalDetailsCard = () => {
           body: JSON.stringify({
             ...diagnosisData,
             speciality_data: Object.fromEntries(
-              Object.entries(diagnosisData.speciality_data || {}).filter(([_, v]) => 
+              Object.entries(diagnosisData.speciality_data || {}).filter(([_, v]) =>
                 Array.isArray(v) ? v.length > 0 : (v && String(v).trim() !== "")
               )
             )
@@ -1235,8 +1242,30 @@ const PersonalDetailsCard = () => {
           timer: 1500,
           timerProgressBar: true,
         });
+        await new Promise(resolve => setTimeout(resolve, 800));
         const updatedDiagList = await fetchDiagnosisDates();
-        setDiagnosisData(initialDiagnosisState);
+        const saveDate = diagnosisData.date_diagnosis;
+        if (saveDate) {
+          try {
+            const res = await fetch(
+              `${BASE_URL}/V1/doctor/get-diagnosis/${formData.patient_id}?date=${saveDate}&location=${currentLocation}`,
+              {
+                headers: {
+                  location: currentLocation,
+                  "x-hms-location": currentLocation,
+                },
+              }
+            );
+            const result = await res.json();
+            if (result.statusCode === 200 && result.data) {
+              setDiagnosisData(result.data);
+              const formattedDateString = moment(saveDate, "YYYY-MM-DD").format("DD-MM-YYYY");
+              setSelectedDiagnosisId(formattedDateString);
+            }
+          } catch (e) {
+            console.error("Error reloading saved diagnosis:", e);
+          }
+        }
         handlePrintDiagnosis(updatedDiagList);
       } else {
         Swal.fire({
@@ -1283,13 +1312,8 @@ const PersonalDetailsCard = () => {
       setLoading(true);
       try {
         const latestHistoryId = previousHistoryList[0].id;
-        const response = await fetch(
-          `${BASE_URL}/V1/doctor/get-patient-history/${formData.patient_id}?historyId=${latestHistoryId}&location=${currentLocation}`,
-          { headers: { location: currentLocation, "x-hms-location": currentLocation } }
-        );
-        const result = await response.json();
-        if (result.statusCode === 200 && result.data) {
-          const d = result.data;
+        if (fetchedHistoryCache.current[latestHistoryId]) {
+          const d = fetchedHistoryCache.current[latestHistoryId];
           setHistoryData(prev => ({
             ...prev,
             ...d,
@@ -1303,6 +1327,29 @@ const PersonalDetailsCard = () => {
             cns: d.CNS || "",
             "p/a": d.PA || ""
           }));
+        } else {
+          const response = await fetch(
+            `${BASE_URL}/V1/doctor/get-patient-history/${formData.patient_id}?historyId=${latestHistoryId}&location=${currentLocation}`,
+            { headers: { location: currentLocation, "x-hms-location": currentLocation } }
+          );
+          const result = await response.json();
+          if (result.statusCode === 200 && result.data) {
+            const d = result.data;
+            fetchedHistoryCache.current[latestHistoryId] = d;
+            setHistoryData(prev => ({
+              ...prev,
+              ...d,
+              vital_bp: d.BP || "",
+              vital_pulse: d.Pulse || "",
+              vital_rr: d.RR || "",
+              height_feet: d.height || "",
+              weight_kg: d.weight || "",
+              rs: d.RS || "",
+              cvs: d.CVS || "",
+              cns: d.CNS || "",
+              "p/a": d.PA || ""
+            }));
+          }
         }
       } catch (error) {
         console.error("Error fetching latest history for print:", error);
@@ -1314,11 +1361,11 @@ const PersonalDetailsCard = () => {
   };
 
   const handlePrintFollowUp = async (updatedList = null) => {
-    setLoading(true);
     const diagnosisListToUse = Array.isArray(updatedList) ? updatedList : previousDiagnosisList;
     try {
       const historyResults = await Promise.all(
         previousHistoryList.map(async (h) => {
+          if (fetchedHistoryCache.current[h.id]) return fetchedHistoryCache.current[h.id];
           const response = await fetch(
             `${BASE_URL}/V1/doctor/get-patient-history/${formData.patient_id}?historyId=${h.id}&location=${currentLocation}`,
             {
@@ -1329,13 +1376,18 @@ const PersonalDetailsCard = () => {
             },
           );
           const result = await response.json();
-          return result.statusCode === 200 ? result.data : null;
+          if (result.statusCode === 200 && result.data) {
+            fetchedHistoryCache.current[h.id] = result.data;
+            return result.data;
+          }
+          return null;
         }),
       );
 
       const diagnosisResults = await Promise.all(
         diagnosisListToUse.map(async (d) => {
           const apiDate = moment(d.date, "DD-MM-YYYY").format("YYYY-MM-DD");
+          if (fetchedDiagnosisCache.current[apiDate]) return fetchedDiagnosisCache.current[apiDate];
           const response = await fetch(
             `${BASE_URL}/V1/doctor/get-diagnosis/${formData.patient_id}?date=${apiDate}&location=${currentLocation}`,
             {
@@ -1354,7 +1406,7 @@ const PersonalDetailsCard = () => {
             const consultDoc = doctors.find(
               (doc) => doc.doctor_id == diag.consultant_doctor,
             );
-            return {
+            const enrichedDiag = {
               ...diag,
               assistanceDoctorName: assistDoc
                 ? assistDoc.name
@@ -1363,6 +1415,8 @@ const PersonalDetailsCard = () => {
                 ? consultDoc.name
                 : diag.consultant_doctor,
             };
+            fetchedDiagnosisCache.current[apiDate] = enrichedDiag;
+            return enrichedDiag;
           }
           return null;
         }),
@@ -1385,6 +1439,7 @@ const PersonalDetailsCard = () => {
     try {
       const historyResults = await Promise.all(
         previousHistoryList.map(async (h) => {
+          if (fetchedHistoryCache.current[h.id]) return fetchedHistoryCache.current[h.id];
           const response = await fetch(
             `${BASE_URL}/V1/doctor/get-patient-history/${formData.patient_id}?historyId=${h.id}&location=${currentLocation}`,
             {
@@ -1395,13 +1450,18 @@ const PersonalDetailsCard = () => {
             },
           );
           const result = await response.json();
-          return result.statusCode === 200 ? result.data : null;
+          if (result.statusCode === 200 && result.data) {
+            fetchedHistoryCache.current[h.id] = result.data;
+            return result.data;
+          }
+          return null;
         }),
       );
 
       const diagnosisResults = await Promise.all(
         diagnosisListToUse.map(async (d) => {
           const apiDate = moment(d.date, "DD-MM-YYYY").format("YYYY-MM-DD");
+          if (fetchedDiagnosisCache.current[apiDate]) return fetchedDiagnosisCache.current[apiDate];
           const response = await fetch(
             `${BASE_URL}/V1/doctor/get-diagnosis/${formData.patient_id}?date=${apiDate}&location=${currentLocation}`,
             {
@@ -1412,7 +1472,11 @@ const PersonalDetailsCard = () => {
             },
           );
           const result = await response.json();
-          return result.statusCode === 200 ? result.data : null;
+          if (result.statusCode === 200 && result.data) {
+            fetchedDiagnosisCache.current[apiDate] = result.data;
+            return result.data;
+          }
+          return null;
         }),
       );
 
@@ -1818,18 +1882,20 @@ const PersonalDetailsCard = () => {
   const [prescriptionData, setPrescriptionData] = useState(
     initialPrescriptionState,
   );
+  const [removedMedicines, setRemovedMedicines] = useState([]);
   const [previousPrescriptionList, setPreviousPrescriptionList] = useState([]);
   const [selectedPrescriptionId, setSelectedPrescriptionId] = useState(null);
 
   const handleSelectPrescription = async (id) => {
     setSelectedPrescriptionId(id);
+    setRemovedMedicines([]);
     const selected = previousPrescriptionList.find((pr) => pr.id === id);
     if (selected) {
       try {
         const dateStr = moment(selected.date, "DD-MM-YYYY").format(
           "YYYY-MM-DD",
         );
-        const patientId = formData.patient_id || initialPatient?.patient_id;
+        const patientId = formData.patient_id || patient?.patient_id;
         const response = await fetch(
           `${BASE_URL}/V1/doctor/get-opd-prescription/${patientId}/${dateStr}?location=${currentLocation}`,
         );
@@ -1892,6 +1958,7 @@ const PersonalDetailsCard = () => {
   const handleNewPrescription = () => {
     setSelectedPrescriptionId(null);
     setPrescriptionData(initialPrescriptionState);
+    setRemovedMedicines([]);
     toast.info("Started a new prescription");
   };
 
@@ -2151,7 +2218,7 @@ const PersonalDetailsCard = () => {
 
   const handleSelectDischarge = async (id) => {
     setSelectedDischargeId(id);
-    const patientId = formData.patient_id || initialPatient?.patient_id;
+    const patientId = formData.patient_id || patient?.patient_id;
     if (!patientId) return;
 
     try {
@@ -2200,14 +2267,14 @@ const PersonalDetailsCard = () => {
       }
     }
 
-    if (initialPatient) {
-      const workPatternsArray = (initialPatient.specific_work || "")
+    if (patient) {
+      const workPatternsArray = (patient.specific_work || "")
         .split(",")
         .map((item) => item.trim());
 
       const rawPrefix = (
-        initialPatient.prefix ||
-        initialPatient.Prefix ||
+        patient.prefix ||
+        patient.Prefix ||
         ""
       ).trim();
       const prefixOptions = ["MR", "MRS", "MASTER", "MISS"];
@@ -2220,46 +2287,46 @@ const PersonalDetailsCard = () => {
       }
 
       setFormData({
-        Uid_no: initialPatient.Uid_no || initialPatient.uid || "",
-        date: initialPatient.date || "",
+        Uid_no: patient.Uid_no || patient.uid || "",
+        date: patient.date || "",
         prefix: finalPrefix,
-        name: initialPatient.name || "",
-        patient_type: initialPatient.patient_type ? 1 : 0,
-        email: initialPatient.email || "",
-        address: initialPatient.address || "",
-        sex: initialPatient.sex || "",
-        phone: initialPatient.phone || "",
-        mobile_2: initialPatient.mobile_2 || "",
-        pincode: initialPatient.pincode || "",
-        blood_group: initialPatient.blood_group || "",
-        identity: initialPatient.identity || "",
-        identityNumber: initialPatient.identityNumber || "",
-        birth_date: initialPatient.birth_date || "",
-        age: initialPatient.age || "",
-        occupation: initialPatient.occupation || "",
-        companyname: initialPatient.companyname || "",
-        reference_type: initialPatient.reference_type || "",
-        ref: initialPatient.ref || "",
-        specific_work: initialPatient.specific_work || "",
-        patient_id: initialPatient.patient_id || "",
-        ref_doctor_name: initialPatient.ref_doctor_name || "",
-        ref_doctor_phone: initialPatient.ref_doctor_phone || "",
+        name: patient.name || "",
+        patient_type: patient.patient_type ? 1 : 0,
+        email: patient.email || "",
+        address: patient.address || "",
+        sex: patient.sex || "",
+        phone: patient.phone || "",
+        mobile_2: patient.mobile_2 || "",
+        pincode: patient.pincode || "",
+        blood_group: patient.blood_group || "",
+        identity: patient.identity || "",
+        identityNumber: patient.identityNumber || "",
+        birth_date: patient.birth_date || "",
+        age: patient.age || "",
+        occupation: patient.occupation || "",
+        companyname: patient.companyname || "",
+        reference_type: patient.reference_type || "",
+        ref: patient.ref || "",
+        specific_work: patient.specific_work || "",
+        patient_id: patient.patient_id || "",
+        ref_doctor_name: patient.ref_doctor_name || "",
+        ref_doctor_phone: patient.ref_doctor_phone || "",
         nationality:
-          initialPatient.additional_info?.nationality ||
-          initialPatient.nationality ||
+          patient.additional_info?.nationality ||
+          patient.nationality ||
           "",
         language:
-          initialPatient.additional_info?.language ||
-          initialPatient.language ||
+          patient.additional_info?.language ||
+          patient.language ||
           "",
       });
 
       setDischargeData((prev) => ({
         ...prev,
-        patient_name: initialPatient.name || "",
-        patient_age: initialPatient.age || "",
-        patient_sex: initialPatient.sex || "",
-        address: initialPatient.address || "",
+        patient_name: patient.name || "",
+        patient_age: patient.age || "",
+        patient_sex: patient.sex || "",
+        address: patient.address || "",
       }));
 
       setWorkPatterns({
@@ -2271,20 +2338,60 @@ const PersonalDetailsCard = () => {
         "Mentally Stressful": workPatternsArray.includes("Mentally Stressful"),
       });
 
-      if (initialPatient.reference_type) {
-        setSelectedReference(initialPatient.reference_type);
-        if (initialPatient.reference_type === "old_ref") {
-          const parts = (initialPatient.ref || "").split(",");
+      if (patient.reference_type) {
+        setSelectedReference(patient.reference_type);
+        if (patient.reference_type === "old_ref") {
+          const parts = (patient.ref || "").split(",");
           setOldPatientDetails({
             patient_ref_no: parts[0] || "",
             old_patient_name: parts[1] || "",
             old_patient_id_value: parts[2] || "",
             old_patient_pincode: parts[3] || "",
           });
+        } else if (patient.reference_type === "dr_ref") {
+          const isManual = !patient.ref_doctor_name;
+          setIsManualEntry(isManual);
+          setReferenceDetails((prev) => ({
+            ...prev,
+            dr_name: patient.ref_doctor_name || patient.ref || "",
+            dr_id: patient.ref_doctor_name ? patient.ref || "" : "",
+            dr_contact: patient.ref_doctor_phone || "",
+            dr_specialty: patient.reference_doctor_speciality || "",
+            dr_location: patient.reference_doctor_location || "",
+          }));
+          if (patient.ref_doctor_name) {
+            const fetchRefDocDetails = async () => {
+              try {
+                const response = await fetch(
+                  `${BASE_URL}/V1/Patients/listDoctor?name=${encodeURIComponent(patient.ref_doctor_name)}&location=${currentLocation}`,
+                  {
+                    headers: {
+                      Authorization: `Bearer ${localStorage.getItem("token")}`,
+                    },
+                  }
+                );
+                if (response.ok) {
+                  const resData = await response.json();
+                  const doc = resData.data?.find(d => String(d.reference_doctor_id) === String(patient.ref));
+                  if (doc) {
+                    setReferenceDetails(prev => ({
+                      ...prev,
+                      dr_contact: doc.ref_doctor_phone || doc.reference_doctor_no || "",
+                      dr_specialty: doc.reference_doctor_speciality || "",
+                      dr_location: doc.reference_doctor_location || "",
+                    }));
+                  }
+                }
+              } catch (error) {
+                console.error("Error fetching ref doctor details:", error);
+              }
+            };
+            fetchRefDocDetails();
+          }
         } else {
           setReferenceDetails((prev) => ({
             ...prev,
-            [initialPatient.reference_type]: initialPatient.ref || "",
+            [patient.reference_type]: patient.ref || "",
           }));
         }
       }
@@ -2297,10 +2404,10 @@ const PersonalDetailsCard = () => {
       fetchProctoscopyDates();
       fetchFollowUpDetails();
     }
-  }, [initialPatient, formData.patient_id]);
+  }, [patient, formData.patient_id]);
 
   const fetchDischargeDates = async () => {
-    const patientId = formData.patient_id || initialPatient?.patient_id;
+    const patientId = formData.patient_id || patient?.patient_id;
     if (!patientId) return;
 
     try {
@@ -2333,7 +2440,7 @@ const PersonalDetailsCard = () => {
   };
 
   const handleSaveDischarge = async () => {
-    const patientId = formData.patient_id || initialPatient?.patient_id;
+    const patientId = formData.patient_id || patient?.patient_id;
     if (!patientId) {
       toast.error("Patient ID not found.");
       return;
@@ -2388,8 +2495,34 @@ const PersonalDetailsCard = () => {
           timer: 1500,
           timerProgressBar: true,
         });
-        await fetchDischargeDates();
-        handlePrintDischarge();
+        await new Promise(resolve => setTimeout(resolve, 800));
+        const updatedList = await fetchDischargeDates();
+        const saveDate = dischargeData.dod;
+        if (saveDate) {
+          try {
+            const res = await fetch(
+              `${BASE_URL}/V1/doctor/get-discharge-card/${patientId}?date=${saveDate}&location=${currentLocation}`,
+              {
+                headers: {
+                  location: currentLocation,
+                  "x-hms-location": currentLocation,
+                },
+              }
+            );
+            const result = await res.json();
+            if (result.statusCode === 200 && result.data) {
+              setDischargeData(result.data);
+              // Select the saved record in the list
+              const savedRecord = updatedList.find(r => r.date === saveDate);
+              if (savedRecord) {
+                setSelectedDischargeId(savedRecord.id);
+              }
+            }
+          } catch (e) {
+            console.error("Error reloading saved discharge card:", e);
+          }
+        }
+        handlePrintDischarge(updatedList);
       } else {
         Swal.fire({
           icon: "error",
@@ -2414,13 +2547,8 @@ const PersonalDetailsCard = () => {
       setLoading(true);
       try {
         const latestHistoryId = previousHistoryList[0].id;
-        const response = await fetch(
-          `${BASE_URL}/V1/doctor/get-patient-history/${formData.patient_id}?historyId=${latestHistoryId}&location=${currentLocation}`,
-          { headers: { location: currentLocation, "x-hms-location": currentLocation } }
-        );
-        const result = await response.json();
-        if (result.statusCode === 200 && result.data) {
-          const d = result.data;
+        if (fetchedHistoryCache.current[latestHistoryId]) {
+          const d = fetchedHistoryCache.current[latestHistoryId];
           setHistoryData(prev => ({
             ...prev,
             ...d,
@@ -2434,7 +2562,31 @@ const PersonalDetailsCard = () => {
             cns: d.CNS || "",
             "p/a": d.PA || ""
           }));
+        } else {
+          const response = await fetch(
+            `${BASE_URL}/V1/doctor/get-patient-history/${formData.patient_id}?historyId=${latestHistoryId}&location=${currentLocation}`,
+            { headers: { location: currentLocation, "x-hms-location": currentLocation } }
+          );
+          const result = await response.json();
+          if (result.statusCode === 200 && result.data) {
+            const d = result.data;
+            fetchedHistoryCache.current[latestHistoryId] = d;
+            setHistoryData(prev => ({
+              ...prev,
+              ...d,
+              vital_bp: d.BP || "",
+              vital_pulse: d.Pulse || "",
+              vital_rr: d.RR || "",
+              height_feet: d.height || "",
+              weight_kg: d.weight || "",
+              rs: d.RS || "",
+              cvs: d.CVS || "",
+              cns: d.CNS || "",
+              "p/a": d.PA || ""
+            }));
+          }
         }
+
       } catch (error) {
         console.error("Error fetching latest history for print:", error);
       } finally {
@@ -2445,7 +2597,7 @@ const PersonalDetailsCard = () => {
   };
 
   const fetchPrescriptionDates = async () => {
-    const patientId = formData.patient_id || initialPatient?.patient_id;
+    const patientId = formData.patient_id || patient?.patient_id;
     if (!patientId) return;
 
     try {
@@ -2455,22 +2607,23 @@ const PersonalDetailsCard = () => {
       if (!response.ok) return;
       const data = await response.json();
       if (data.statusCode === 200) {
-        setPreviousPrescriptionList(
-          data.data.map((item) => {
-            let displayDate = item.date;
-            if (item.date && item.date.includes("-")) {
-              const parts = item.date.split("-");
-              if (parts[0].length === 4) {
-                const [year, month, day] = parts;
-                displayDate = `${day}-${month}-${year}`;
-              }
+        const mappedData = data.data.map((item) => {
+          let displayDate = item.date;
+          if (item.date && item.date.includes("-")) {
+            const parts = item.date.split("-");
+            if (parts[0].length === 4) {
+              const [year, month, day] = parts;
+              displayDate = `${day}-${month}-${year}`;
             }
-            return {
-              id: item.id,
-              date: displayDate,
-            };
-          }),
-        );
+          }
+          return {
+            id: item.id,
+            date: displayDate,
+          };
+        });
+        setPreviousPrescriptionList(mappedData);
+        opdPrescriptionDatesRef.current = mappedData;
+        return mappedData;
       }
     } catch (error) {
       console.error("Error fetching prescription dates:", error);
@@ -2584,6 +2737,43 @@ const PersonalDetailsCard = () => {
       console.error("Error searching patient:", error);
     } finally {
       setIsSearchingPatient(false);
+    }
+  };
+
+  const refreshPatientData = async () => {
+    try {
+      const queryVal = formData.phone || patient?.phone || patient?.mobileNo;
+      if (!queryVal) return;
+      const response = await fetch(
+        `${BASE_URL}/V1/patient/searchPatient?query=${encodeURIComponent(queryVal)}&location=${currentLocation}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      if (response.ok) {
+        const resData = await response.json();
+        if (resData.statusCode === 200 && resData.data && resData.data.length > 0) {
+          const currentId = formData.patient_id || patient?.patient_id;
+          const freshPatient = resData.data.find(
+            (p) => String(p.patient_id) === String(currentId)
+          ) || resData.data[0];
+
+          const processedPatient = {
+            ...freshPatient,
+            patientName: freshPatient.name,
+            mobileNo: freshPatient.phone,
+            Prefix: freshPatient.prefix,
+            additional_info: typeof freshPatient.additional_info === "string"
+              ? JSON.parse(freshPatient.additional_info)
+              : freshPatient.additional_info
+          };
+          setPatient(processedPatient);
+        }
+      }
+    } catch (error) {
+      console.error("Error refreshing patient data:", error);
     }
   };
 
@@ -2728,7 +2918,7 @@ const PersonalDetailsCard = () => {
                   <Button
                     variant="dark"
                     size="sm"
-                    className="py-0 px-2"
+                    className="py-7 px-2"
                     style={{ fontSize: "10px", backgroundColor: "#003138" }}
                     onClick={() => setIsManualEntry(true)}
                   >
@@ -2739,7 +2929,7 @@ const PersonalDetailsCard = () => {
                 <Button
                   variant="danger"
                   size="sm"
-                  className="py-0 px-2"
+                  className="py-7 px-2"
                   style={{ fontSize: "10px" }}
                   onClick={() => {
                     setIsManualEntry(false);
@@ -2757,7 +2947,7 @@ const PersonalDetailsCard = () => {
               )}
             </div>
             <Row className="g-2 position-relative">
-              <Col md={3}>
+              <Col md={3} className="position-relative">
                 <Form.Control
                   type="text"
                   placeholder="Type Doctor Name"
@@ -2777,11 +2967,12 @@ const PersonalDetailsCard = () => {
                 {!isManualEntry &&
                   (isSearching || doctorSearchResults.length > 0) && (
                     <div
-                      className="position-absolute w-100 bg-white shadow border rounded mt-1"
+                      className="position-absolute w-200 bg-white shadow border rounded mb-1"
                       style={{
                         zIndex: 1000,
-                        maxHeight: "150px",
+                        maxHeight: "250px",
                         overflowY: "auto",
+                        bottom: "100%",
                       }}
                     >
                       {isSearching && (
@@ -2793,9 +2984,10 @@ const PersonalDetailsCard = () => {
                           className="p-2 border-bottom hover-bg-light cursor-pointer small"
                           onClick={() => {
                             setReferenceDetails({
+                              dr_id: doc.reference_doctor_id,
                               dr_name: doc.ref_doctor_name || doc.name,
                               dr_contact:
-                                doc.ref_doctor_phone || doc.phone || "",
+                                doc.ref_doctor_phone || doc.reference_doctor_no || doc.phone || "",
                               dr_specialty:
                                 doc.reference_doctor_speciality ||
                                 doc.specialization ||
@@ -2807,7 +2999,7 @@ const PersonalDetailsCard = () => {
                             });
                             setFormData((prev) => ({
                               ...prev,
-                              ref: doc.ref_doctor_name || doc.name,
+                              ref: doc.reference_doctor_id || doc.ref_doctor_name || doc.name,
                             }));
                             setDoctorSearchResults([]);
                           }}
@@ -2900,7 +3092,7 @@ const PersonalDetailsCard = () => {
               Patient Reference
             </Form.Label>
             <Row className="g-2 position-relative">
-              <Col md={4}>
+              <Col md={4} className="position-relative">
                 <Form.Control
                   type="tel"
                   placeholder="Enter Contact Number"
@@ -2924,10 +3116,10 @@ const PersonalDetailsCard = () => {
                 />
                 {(isSearchingPatient || patientSearchResults.length > 0) && (
                   <div
-                    className="position-absolute w-100 bg-white shadow border rounded mt-1"
+                    className="position-absolute w-200 bg-white shadow border rounded mt-1"
                     style={{
                       zIndex: 1000,
-                      maxHeight: "150px",
+                      maxHeight: "350px",
                       overflowY: "auto",
                     }}
                   >
@@ -2963,12 +3155,17 @@ const PersonalDetailsCard = () => {
                   type="text"
                   placeholder="Enter Patient Name"
                   value={oldPatientDetails.old_patient_name || ""}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const val = e.target.value;
                     setOldPatientDetails((prev) => ({
                       ...prev,
-                      old_patient_name: e.target.value,
-                    }))
-                  }
+                      old_patient_name: val,
+                    }));
+                    setFormData((prev) => ({
+                      ...prev,
+                      reference_type: "old_ref",
+                    }));
+                  }}
                   style={{
                     border: "2px solid #b2ebf2",
                     borderRadius: "8px",
@@ -2982,12 +3179,17 @@ const PersonalDetailsCard = () => {
                   type="text"
                   placeholder="Pincode"
                   value={oldPatientDetails.old_patient_pincode || ""}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const val = e.target.value;
                     setOldPatientDetails((prev) => ({
                       ...prev,
-                      old_patient_pincode: e.target.value,
-                    }))
-                  }
+                      old_patient_pincode: val,
+                    }));
+                    setFormData((prev) => ({
+                      ...prev,
+                      reference_type: "old_ref",
+                    }));
+                  }}
                   style={{
                     border: "2px solid #b2ebf2",
                     borderRadius: "8px",
@@ -3393,6 +3595,111 @@ const PersonalDetailsCard = () => {
 
     setLoading(true);
 
+    let reference_type = selectedReference || null;
+    let ref = "";
+
+    switch (selectedReference) {
+      case "newspaper":
+        reference_type = "newspaper";
+        ref = referenceDetails.newspaper || formData.ref || "";
+        break;
+      case "dr_ref":
+        reference_type = "dr_ref";
+        if (isManualEntry) {
+          if (!referenceDetails.dr_name || !referenceDetails.dr_name.trim()) {
+            toast.error("Please enter a doctor name.");
+            return;
+          }
+          try {
+            const addDoctorRes = await fetch(`${BASE_URL}/V1/patient/addRefDoctor?location=${currentLocation}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                ref_doctor_name: referenceDetails.dr_name,
+                ref_doctor_phone: referenceDetails.dr_contact,
+                reference_doctor_speciality: referenceDetails.dr_specialty,
+                reference_doctor_location: referenceDetails.dr_location,
+              }),
+            });
+            const addDoctorData = await addDoctorRes.json();
+            if (addDoctorRes.ok && addDoctorData?.data?.reference_doctor_id) {
+              const newDrId = addDoctorData.data.reference_doctor_id;
+              ref = newDrId;
+              // Also update referenceDetails to hold the new ID so the state aligns
+              setReferenceDetails(prev => ({ ...prev, dr_id: newDrId }));
+            } else {
+              toast.error(addDoctorData.message || "Failed to add manual doctor reference.");
+              return;
+            }
+          } catch (err) {
+            console.error(err);
+            toast.error("Error adding manual doctor reference.");
+            return;
+          }
+        } else {
+          ref = referenceDetails.dr_id || referenceDetails.dr_name || "";
+        }
+        break;
+      case "internet":
+        reference_type = "internet";
+        ref = referenceDetails.internet || formData.ref || "";
+        break;
+      case "MediaRef":
+        reference_type = "MediaRef";
+        ref = referenceDetails.MediaRef || formData.ref || "";
+        break;
+      case "TVShow":
+        reference_type = "TVShow";
+        ref = referenceDetails.TVShow || formData.ref || "";
+        break;
+      case "old_ref":
+        reference_type = "old_ref";
+        ref = `${oldPatientDetails.patient_ref_no || ""},${oldPatientDetails.old_patient_name || ""
+          },${oldPatientDetails.old_patient_id_value || ""},${oldPatientDetails.old_patient_pincode || ""
+          }`;
+        break;
+      case "family_friends":
+        reference_type = "family_friends";
+        ref = `${referenceDetails.friendname || ""},${referenceDetails.friendno || ""
+          }`;
+        break;
+      case "hhc_board":
+        reference_type = "hhc_board";
+        ref = referenceDetails.HHC_board || formData.ref || "";
+        break;
+      case "HHF":
+        reference_type = "HHF";
+        ref = referenceDetails.HHF || formData.ref || "";
+        break;
+      case "other":
+        reference_type = "other";
+        ref = referenceDetails.other || formData.ref || "";
+        break;
+      case "WOM":
+        reference_type = "WOM";
+        ref = referenceDetails.WOM || formData.ref || "";
+        break;
+      case "awareness_lecture":
+        reference_type = "awareness_lecture";
+        ref = referenceDetails.awareness_lecture || formData.ref || "";
+        break;
+      case "treated_past":
+        reference_type = "treated_past";
+        ref = referenceDetails.treated_past_status || formData.ref || "";
+        break;
+      case "hhc_branch":
+        reference_type = "hhc_branch";
+        ref = referenceDetails.hhc_branch || formData.ref || "";
+        break;
+      case "aggregators":
+        reference_type = "aggregators";
+        ref = referenceDetails.aggregators || formData.ref || "";
+        break;
+      default:
+        reference_type = selectedReference || null;
+        ref = referenceDetails[selectedReference] || formData.ref || "";
+    }
+
     const specificWork = Object.entries(workPatterns)
       .filter(([_, value]) => value)
       .map(([key]) => key)
@@ -3403,6 +3710,8 @@ const PersonalDetailsCard = () => {
       patientName: formData.name,
       mobileNo: formData.phone,
       specific_work: specificWork,
+      reference_type: reference_type,
+      ref: ref,
       additional_info: {
         nationality: formData.nationality,
         language: formData.language,
@@ -3422,6 +3731,7 @@ const PersonalDetailsCard = () => {
       const data = await response.json();
       if (response.ok) {
         Toast.fire({ icon: "success", title: "Patient updated successfully" });
+        await refreshPatientData();
       } else {
         Swal.fire({
           icon: "error",
@@ -3580,6 +3890,7 @@ const PersonalDetailsCard = () => {
           timer: 1500,
           timerProgressBar: true,
         });
+        await new Promise(resolve => setTimeout(resolve, 800));
         const updatedDiagList = await fetchDiagnosisDates();
         handlePrintFollowUp(updatedDiagList);
       } else {
@@ -3651,7 +3962,33 @@ const PersonalDetailsCard = () => {
     setCurrentMedicine({ name: "", qty: "", times: [], days: "" });
   };
 
-  const handleRemoveMedicine = (index) => {
+  const handleRemoveMedicine = async (index) => {
+    const medToRemove = prescriptionData.medicines[index];
+    if (!medToRemove) return;
+
+    if (medToRemove.prescription_id) {
+      try {
+        const response = await fetch(
+          `${BASE_URL}/V1/doctor/delete-prescription-medicine/${medToRemove.prescription_id}?location=${currentLocation}`,
+          {
+            method: "DELETE",
+          }
+        );
+        const result = await response.json();
+        if (result.statusCode === 200) {
+          toast.success(`Removed ${medToRemove.name} from database`);
+        } else {
+          console.error("Failed to delete medicine from backend:", result.message);
+          toast.error("Failed to delete medicine from database");
+        }
+      } catch (error) {
+        console.error("Error soft-deleting prescription medicine:", error);
+        toast.error("Error deleting medicine from database");
+      }
+    }
+
+    setRemovedMedicines((prev) => [...prev, medToRemove]);
+
     setPrescriptionData((prev) => ({
       ...prev,
       medicines: prev.medicines.filter((_, i) => i !== index),
@@ -3659,7 +3996,7 @@ const PersonalDetailsCard = () => {
   };
 
   const handleSaveOpdPrescription = async () => {
-    const patientId = formData.patient_id || initialPatient?.patient_id;
+    const patientId = formData.patient_id || patient?.patient_id;
     if (!patientId) {
       toast.error("Patient ID is missing");
       return;
@@ -3701,8 +4038,55 @@ const PersonalDetailsCard = () => {
           timer: 1500,
           timerProgressBar: true,
         });
-        await fetchPrescriptionDates();
-        handlePrintOpdPrescription();
+        await new Promise(resolve => setTimeout(resolve, 800));
+        const updatedOpdList = await fetchPrescriptionDates();
+        const saveDate = prescriptionData.creation_timestamp;
+        if (saveDate) {
+          try {
+            const res = await fetch(
+              `${BASE_URL}/V1/doctor/get-opd-prescription/${patientId}/${saveDate}?location=${currentLocation}`
+            );
+            const result = await res.json();
+            if (result.statusCode === 200 && result.data) {
+              const d = result.data;
+              const safeDate = (val) => (val ? String(val).substring(0, 10) : "");
+              const toArray = (val) => {
+                if (!val) return [];
+                if (Array.isArray(val)) return val;
+                if (typeof val === "string")
+                  return val.split(",").map((s) => s.trim()).filter(Boolean);
+                return [];
+              };
+              const safeMedicines = (val) => {
+                if (!val) return [];
+                if (Array.isArray(val)) return val;
+                return [];
+              };
+
+              setPrescriptionData({
+                ...initialPrescriptionState,
+                ...d,
+                creation_timestamp: safeDate(d.creation_timestamp) || new Date().toISOString().split("T")[0],
+                "next-appo-date": safeDate(d["next-appo-date"]),
+                surgical_advice: toArray(d.surgical_advice),
+                uroadvice: toArray(d.uroadvice),
+                preopinvestigation: toArray(d.preopinvestigation),
+                medicines: safeMedicines(d.medicines),
+              });
+
+              // Select the saved record in the list
+              const formattedDateString = moment(saveDate, "YYYY-MM-DD").format("DD-MM-YYYY");
+              const savedRecord = updatedOpdList.find(pr => pr.date === formattedDateString);
+              if (savedRecord) {
+                setSelectedPrescriptionId(savedRecord.id);
+              }
+            }
+          } catch (e) {
+            console.error("Error reloading saved prescription:", e);
+          }
+        }
+        setRemovedMedicines([]);
+        handlePrintOpdPrescription(updatedOpdList);
       } else {
         Swal.fire({
           icon: "error",
@@ -3775,7 +4159,7 @@ const PersonalDetailsCard = () => {
     }));
   };
 
-  if (!initialPatient) {
+  if (!patient) {
     return (
       <div
         className="themebody-wrap"
@@ -3918,7 +4302,7 @@ const PersonalDetailsCard = () => {
             </Col>
             <Col md={2}>
               <Form.Group
-                className="p-1 px-2 rounded w-100 text-center"
+                className="p-1 px-2 rounded w-200 text-center"
                 style={{
                   backgroundColor: "#e0f2f1",
                   border: "1px solid #b2ebf2",
@@ -4302,11 +4686,27 @@ const PersonalDetailsCard = () => {
                 {[
                   "English",
                   "Hindi",
-                  "Marathi",
+                  "Assamese",
+                  "Bengali",
+                  "Bodo",
+                  "Dogri",
                   "Gujarati",
                   "Kannada",
-                  "Telugu",
+                  "Kashmiri",
+                  "Konkani",
+                  "Maithili",
+                  "Malayalam",
+                  "Manipuri",
+                  "Marathi",
+                  "Nepali",
+                  "Odia",
+                  "Punjabi",
+                  "Sanskrit",
+                  "Santali",
+                  "Sindhi",
                   "Tamil",
+                  "Telugu",
+                  "Urdu",
                 ].map((l) => (
                   <option key={l} value={l}>
                     {l}
@@ -4714,6 +5114,7 @@ const PersonalDetailsCard = () => {
                     onSavePrescription={handleSaveOpdPrescription}
                     onPrintPrescription={handlePrintOpdPrescription}
                     assistanceDoctors={assistanceDoctors}
+                    removedMedicines={removedMedicines}
                     location={currentLocation}
                   />
                 )}
@@ -4817,6 +5218,7 @@ const PersonalDetailsCard = () => {
               patient={formData}
               historyList={allHistoryDataForPrint}
               diagnosisList={allDiagnosisDataForPrint}
+              selectedDiagnosisId={selectedDiagnosisId}
               onPrint={triggerPrintDiagnosis}
             />
           </div>

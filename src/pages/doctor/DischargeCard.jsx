@@ -226,7 +226,6 @@ const DischargeCard = ({
               <option value="">Select Type</option>
               <option value="Proctology">Proctology</option>
               <option value="Urology">Urology</option>
-              <option value="Gastroenterology">Gastroenterology</option>
               <option value="Other">Other</option>
             </Form.Select>
           </Col>
@@ -703,19 +702,19 @@ const DischargeCard = ({
               variant="info"
               className="flex-grow-0 text-white d-flex align-items-center justify-content-center p-0"
               onClick={addTreatmentGiven}
-              style={{ height: "38px", width: "70px", borderRadius: "8px" }}
+              style={{ height: "38px", width: "100px", borderRadius: "8px" }}
               title="Add Medicine"
             >
               <FeatherIcon icon="plus" size="20" />
             </Button>
-            <Button
+            {/* <Button
               variant="outline-info"
               className="flex-grow-1 d-flex align-items-center justify-content-center"
               onClick={() => setShowUploadModal(true)}
               style={{ height: "38px", borderRadius: "8px", fontWeight: "600", fontSize: "11px", whiteSpace: "nowrap" }}
             >
               <FeatherIcon icon="upload" size="16" className="me-1" /> UPLOAD MEDICINE
-            </Button>
+            </Button> */}
           </Col>
         </Row>
 
@@ -790,7 +789,7 @@ const DischargeCard = ({
             />
             {showMedicineDropdownOnDischarge && medicineSearchResultsOnDischarge.length > 0 && (
               <div
-                className="bg-white border rounded shadow-sm mt-1 position-absolute w-100"
+                className="bg-white border rounded shadow-sm mt-1 position-absolute w-200"
                 style={{ maxHeight: "200px", overflowY: "auto", zIndex: 1060 }}
               >
                 {medicineSearchResultsOnDischarge.map((med) => {
@@ -981,11 +980,11 @@ const DischargeCard = ({
         <h6 className="fw-bold mb-3 text-muted" style={{ fontSize: "14px", textTransform: "uppercase", letterSpacing: "1px" }}>
           <FeatherIcon icon="file-text" size="18" className="me-2" />Administrative Details</h6>
         <Row className="g-3">
-          <Col md={3}>
+          <Col md={2}>
             <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>FOLLOWUP DATE</Form.Label>
             <Form.Control type="date" value={dischargeData.follow_date} onChange={(e) => handleDischargeChange("follow_date", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
           </Col>
-          <Col md={3}>
+          <Col md={2}>
             <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>TREATING BY</Form.Label>
             <Form.Select
               value={dischargeData.treating_by}
@@ -998,7 +997,7 @@ const DischargeCard = ({
               ))}
             </Form.Select>
           </Col>
-          <Col md={3}>
+          <Col md={2}>
             <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>MADE BY</Form.Label>
             <Form.Select
               value={dischargeData.made_by}
@@ -1019,7 +1018,7 @@ const DischargeCard = ({
                 ))}
             </Form.Select>
           </Col>
-          <Col md={3}>
+          <Col md={2}>
             <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>CHECKED BY</Form.Label>
             <Form.Select
               value={dischargeData.checked_by}
@@ -1040,7 +1039,7 @@ const DischargeCard = ({
                 ))}
             </Form.Select>
           </Col>
-          <Col md={3}>
+          <Col md={2}>
             <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>ASSISTANT DOCTOR</Form.Label>
             <Form.Select
               value={dischargeData.assistance_doctor}
@@ -1053,7 +1052,7 @@ const DischargeCard = ({
               ))}
             </Form.Select>
           </Col>
-          <Col md={3}>
+          {/* <Col md={3}>
             <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>CONSULTANT DOCTOR</Form.Label>
             <Form.Select
               value={dischargeData.consultant_doctor}
@@ -1065,8 +1064,9 @@ const DischargeCard = ({
                 <option key={doc.doctor_id} value={doc.doctor_id}>{doc.name}</option>
               ))}
             </Form.Select>
-          </Col>
-          <Col md={3}>
+          </Col> */}
+
+          <Col md={2}>
             <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>ASSISTANT SURGEON</Form.Label>
             <Form.Select
               value={dischargeData.assistance_surgeon}
@@ -1208,26 +1208,25 @@ const DischargeCard = ({
         </Modal.Footer>
       </Modal>
 
-      {!selectedDischargeId && (
-        <div className="text-center mb-5 pb-5 mt-4">
-          <Button
-            disabled={loading}
-            onClick={handleFinalize}
-            style={{ backgroundColor: "#00838f", borderColor: "#00838f", padding: "12px 60px", borderRadius: "50px", fontWeight: "800", fontSize: "13px", boxShadow: "0 10px 30px rgba(0, 131, 143, 0.3)", textTransform: "uppercase", letterSpacing: "1.5px" }}
-          >
-            {loading ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                SAVING...
-              </>
-            ) : (
-              <>
-                <FeatherIcon icon="save" size="18" className="me-2" />SAVE DISCHARGE DATA
-              </>
-            )}
-          </Button>
-        </div>
-      )}
+      <div className="text-center mb-5 pb-5 mt-4">
+        <Button
+          disabled={loading}
+          onClick={handleFinalize}
+          style={{ backgroundColor: "#00838f", borderColor: "#00838f", padding: "12px 60px", borderRadius: "50px", fontWeight: "800", fontSize: "13px", boxShadow: "0 10px 30px rgba(0, 131, 143, 0.3)", textTransform: "uppercase", letterSpacing: "1.5px" }}
+        >
+          {loading ? (
+            <>
+              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              SAVING...
+            </>
+          ) : (
+            <>
+              <FeatherIcon icon="save" size="18" className="me-2" />SAVE DISCHARGE DATA
+            </>
+          )}
+        </Button>
+      </div>
+
     </div>
   );
 };

@@ -118,29 +118,29 @@ const OpdPrescriptionPrintView = React.forwardRef(
           <div className="row-flex">
             <div style={{ width: "100%" }}>
               <p>
-                <span className="fw-bold">NAME :</span> {patient.name} ({" "}
-                {patient.age} / {patient.sex} ) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                <span className="fw-bold">UID NO :</span> {patient.Uid_no}
+                <span className="fw-bold">NAME :</span> {patient.name || patient.Name} ({" "}
+                {patient.age || patient.Age} / {patient.sex || patient.Sex} ) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <span className="fw-bold">UID NO :</span> {patient.Uid_no || patient.uid_no || patient.UID_NO || patient.uid || ""}
               </p>
               <p>
-                <span className="fw-bold">BP : </span> {history.vital_bp || ""}
+                <span className="fw-bold">BP : </span> {history.vital_bp || history.Vital_bp || history.VITAL_BP || ""}
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 <span className="fw-bold">Pulse : </span>{" "}
-                {history.vital_pulse || ""}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                <span className="fw-bold">SPO2 : </span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                {history.vital_pulse || history.Vital_pulse || history.VITAL_PULSE || ""}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <span className="fw-bold">SPO2 : </span> {history.spo2 || history.Spo2 || history.SPO2 || ""} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 <span className="fw-bold">Height : </span>{" "}
-                {history.height_feet || ""} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                {history.height_feet || history.Height_feet || history.HEIGHT_FEET || ""} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 <span className="fw-bold">Weight : </span>{" "}
-                {history.weight_kg || ""}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                {history.weight_kg || history.Weight_kg || history.WEIGHT_KG || ""}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               </p>
               <p>
-                <span className="fw-bold">RS : </span> {history.rs || ""}
+                <span className="fw-bold">RS : </span> {history.rs || history.Rs || history.RS || ""}
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                <span className="fw-bold">CVS : </span> {history.cvs || ""}
+                <span className="fw-bold">CVS : </span> {history.cvs || history.Cvs || history.CVS || ""}
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                <span className="fw-bold">CNS : </span> {history.cns || ""}
+                <span className="fw-bold">CNS : </span> {history.cns || history.Cns || history.CNS || ""}
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                <span className="fw-bold">PA : </span> {history["p/a"] || ""}{" "}
+                <span className="fw-bold">PA : </span> {history["p/a"] || history["P/A"] || history.pa || history.PA || ""}{" "}
               </p>
             </div>
           </div>

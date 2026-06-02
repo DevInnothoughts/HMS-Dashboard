@@ -399,15 +399,24 @@ const DiagnosisCard = ({
           return;
         }
 
-        if (key === "cyst" || key === "hydrocele" || key === "lipoma" || key === "gynecomastia") {
+        if (key === "gynecomastia") {
+          const selectedGrades = value.filter(g => g.toUpperCase().startsWith("GRADE "));
+          if (selectedGrades.length > 0) {
+            const numbers = selectedGrades
+              .map(g => g.toUpperCase().replace("GRADE ", "").trim())
+              .sort((a, b) => parseInt(a) - parseInt(b));
+            diagParts.push(`Grade ${numbers.join("/")} Gynecomastia`);
+          }
+          return;
+        }
+
+        if (key === "cyst" || key === "hydrocele" || key === "lipoma") {
           if (value.length > 0) {
             diagParts.push(specialtyLabels[key]);
           }
         }
 
         value.forEach(item => {
-
-
           let keyword = item.toLowerCase();
           if (keyword.includes("grade")) {
             diagParts.push(keyword);
@@ -422,7 +431,7 @@ const DiagnosisCard = ({
         if (key === "other_text") {
           diagParts.push(value.trim());
         } else if (key !== "other_text") { // Handle other string findings if any
-          if (key === "cyst" || key === "hydrocele" || key === "lipoma" || key === "gynecomastia") {
+          if (key === "cyst" || key === "hydrocele" || key === "lipoma") {
             diagParts.push(specialtyLabels[key]);
           }
           diagParts.push(value.trim().toLowerCase());
@@ -560,16 +569,14 @@ const DiagnosisCard = ({
             >
               <FeatherIcon icon="plus" size="13" className="me-1" /> NEW RECORD
             </Button>
-            {selectedDiagnosisId && (
-              <Button
-                variant="outline-secondary"
-                size="sm"
-                onClick={onPrintDiagnosis}
-                style={{ borderRadius: "20px", fontSize: "12px", fontWeight: "700", padding: "7px 10px" }}
-              >
-                <FeatherIcon icon="printer" size={13} className="me-1" /> PRINT
-              </Button>
-            )}
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              onClick={onPrintDiagnosis}
+              style={{ borderRadius: "20px", fontSize: "12px", fontWeight: "700", padding: "7px 10px" }}
+            >
+              <FeatherIcon icon="printer" size={13} className="me-1" /> PRINT
+            </Button>
             <Dropdown onSelect={onSelectDiagnosis}>
               <Dropdown.Toggle
                 variant="outline-info"
@@ -691,10 +698,13 @@ const DiagnosisCard = ({
                             size="sm"
                             placeholder="e.g. 3,7,11"
                             value={diagnosisData.speciality_data.haemorrhoids_position || ""}
-                            onChange={(e) => setDiagnosisData(prev => ({
-                              ...prev,
-                              speciality_data: { ...prev.speciality_data, haemorrhoids_position: e.target.value }
-                            }))}
+                            onChange={(e) => {
+                              userInteracted.current = true;
+                              setDiagnosisData(prev => ({
+                                ...prev,
+                                speciality_data: { ...prev.speciality_data, haemorrhoids_position: e.target.value }
+                              }));
+                            }}
                             style={{ width: "80px", height: "25px", borderRadius: "5px", border: "2px solid #b2ebf2", fontSize: "11px" }}
                           />
                           <span style={{ fontSize: "11px", fontWeight: "700", color: "#006064" }}>o'clock</span>
@@ -709,10 +719,13 @@ const DiagnosisCard = ({
                             size="sm"
                             placeholder="e.g. 6"
                             value={diagnosisData.speciality_data.skin_tag_position || ""}
-                            onChange={(e) => setDiagnosisData(prev => ({
-                              ...prev,
-                              speciality_data: { ...prev.speciality_data, skin_tag_position: e.target.value }
-                            }))}
+                            onChange={(e) => {
+                              userInteracted.current = true;
+                              setDiagnosisData(prev => ({
+                                ...prev,
+                                speciality_data: { ...prev.speciality_data, skin_tag_position: e.target.value }
+                              }));
+                            }}
                             style={{ width: "60px", height: "25px", borderRadius: "5px", border: "2px solid #b2ebf2", fontSize: "11px" }}
                           />
                           <span style={{ fontSize: "11px", fontWeight: "700", color: "#006064" }}>o'clock</span>

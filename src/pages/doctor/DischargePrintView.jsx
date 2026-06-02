@@ -2,13 +2,13 @@ import React from "react";
 import { QRCodeSVG } from "qrcode.react";
 import nabhLogo from "../../assets/images/nabh-logo.png";
 import painScoreChart from "../../assets/images/pain-score-chart.jpg";
-import fistulaImg from "../../assets/images/fistula.jpg";
+
 
 const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors, location: sitelocation, historyData = {} }, ref) => {
   const d = dischargeData || {};
   const consultantDoc = doctors.find(doc => String(doc.doctor_id) === String(d.consultant_doctor));
   const consultantName = consultantDoc ? consultantDoc.name : (d.consultant_doctor || '');
-  
+
   const madeByDoc = doctors.find(doc => String(doc.doctor_id) === String(d.made_by || d.madeby));
   const checkedByDoc = doctors.find(doc => String(doc.doctor_id) === String(d.checked_by || d.checkedby));
   const assistantDoc = doctors.find(doc => String(doc.doctor_id) === String(d.assistance_doctor));
@@ -43,18 +43,37 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
     return name.replace(/^dr(?!\.)/i, "Dr.");
   };
 
+  const formatInvestigations = (inv) => {
+    if (!inv) return "";
+    if (typeof inv === "string") return inv;
+    return Object.entries(inv)
+      .filter(([_, v]) => v !== undefined && v !== null && String(v).trim() !== "")
+      .map(([k, v]) => `${k}:${v}`)
+      .join(",");
+  };
+
+  const parseLocalDOAToUnix = (doaStr) => {
+    if (!doaStr) return 0;
+    let normalized = doaStr;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(doaStr)) {
+      normalized = doaStr.replace(/-/g, "/") + " 00:00:00";
+    }
+    const parsed = Date.parse(normalized);
+    return isNaN(parsed) ? 0 : Math.floor(parsed / 1000);
+  };
+
   const qrData = {
-    timeStamp: d.doa ? Math.floor(new Date(d.doa).getTime() / 1000) : 0,
-    branchName: sitelocation || "",
+    timeStamp: parseLocalDOAToUnix(d.doa || d.DOA),
+    branchName: d.patient_location || formData.patient_location || sitelocation || "",
     mobileno: d.phone || formData.phone || "",
     uidNo: d.Uid_no || formData.Uid_no || "",
     name: d.patient_name || formData.name || "",
     medicalHistory: d.past_history || d.medical_history || "",
-    surgicalHistory: d.surgical_history || "",
-    investigation: d.investigation || (d.investigations ? Object.entries(d.investigations).filter(([_,v]) => v).map(([k,v]) => `${k}:${v}`).join(", ") : ""),
+    surgicalHistory: d.medical_history || d.surgical_history || "",
+    investigation: d.investigation || formatInvestigations(d.investigations),
     diagnosis: d.diagnosis || "",
     surgery: d.surgical_procedure || d.plan_of_treatment || "",
-    surgicalType: Array.isArray(d.surgery_type) ? d.surgery_type.join(", ") : (d.surgery_type || ""),
+    surgicalType: d.surgeryadvice || d.surgery_advice || (Array.isArray(d.surgery_type) ? d.surgery_type.join(",") : (d.surgery_type || "")),
     doctorsAction: "false",
     POCEmail: consultantDoc?.email || "",
     currentDay: 1
@@ -441,7 +460,7 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
   // Build investigations rows
   const invObj = d.investigations || {};
   const units = { HB: 'g/dL', WBC: 'cells/mcL', PLT: 'lakhs/mcL', BSL: 'mg/dL', 'SR.CREATININE': 'mg/dL', BILLIRUBIN: 'mg/dL', PSA: 'ng/mL', BT: 'min', CT: 'min', PT: 'sec', INR: 'ratio', HIV: '', HCV: '', HBSAG: '' };
-  
+
   const isValueEmpty = (val) => {
     if (!val) return true;
     const v = val.trim().toLowerCase();
@@ -449,7 +468,7 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
   };
 
   const invPairs = Object.entries(invObj).filter(([, v]) => !isValueEmpty(v));
-  
+
   const renderInvestigationRows = () => {
     const rows = [];
     for (let i = 0; i < invPairs.length; i += 4) {
@@ -779,7 +798,7 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
                   const name = (item.medicine_name || item.name || "").toUpperCase().trim();
                   const medTime = (item.medicine_time || item.times || []).join(", ");
                   const dosageFreq = item.dosage_frequency || "";
-                  
+
                   let frequencyDisplay;
                   if (name === "PRILOX CREAM") {
                     frequencyDisplay = (
@@ -841,16 +860,35 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
 2. PATIENT HAS BEEN ADVISED TO FOLLOW ALL POST OPERATIVE INSTRUCTIONS, INCLUDING MEDICINES, WOUND CARE, DIET PLAN, POST OP EXCERSISE AND SCHEDULED FOLLOW UPS UNTIL DECLARED HEALED BY THE SURGEON, NON COMPLIANCE WITH THESE INSTRUCTIONS MAY RESULT IN RELAPSE, RECURRENCE OR OTHER COMPLICATIONS FOR WHICH THE TREATING DOCTOR OR HOSPITAL SHALL NOT BE HELD RESPONSIBLE
 3. PATIENT IS COMFORTABLE AND IS WILLING TO GET DISCHARGED`)}</td>
               </tr>
-              {(d.fistula_cases || d.fistula_image_required) && (
-                <tr>
-                  <td colSpan="4" style={{ verticalAlign: "top" }}><b>FISTULA IMAGE :</b><br />
-                    <img src={fistulaImg} alt="Fistula" style={{ width: "220px", margin: "10px 15px 10px 0px" }} />
-                    {d.fistula_cases && String(d.fistula_cases).split(",").map((img, i) => (
-                      <img key={i} src={`/fistulacases/${img.trim()}.jpg`} alt={`Fistula ${img}`} style={{ width: "220px", margin: "10px 15px 10px 0px" }} onError={(e) => e.target.style.display = 'none'} />
-                    ))}
-                  </td>
-                </tr>
-              )}
+              {(() => {
+                const casesList = Array.isArray(d.fistula_cases)
+                  ? d.fistula_cases
+                  : (d.fistula_cases ? String(d.fistula_cases).split(",") : []);
+                const activeCases = casesList.map(c => String(c).trim()).filter(c => c !== "");
+
+                if (activeCases.length === 0) return null;
+
+                return (
+                  <tr>
+                    <td colSpan="4" style={{ verticalAlign: "top" }}>
+                      <b>FISTULA IMAGE :</b><br />
+                      {activeCases.map((img, i) => {
+                        const url = new URL(`../../assets/images/fistulacases/${img}.jpg`, import.meta.url).href;
+                        return (
+                          <img
+                            key={i}
+                            src={url}
+                            alt={`Fistula ${img}`}
+                            style={{ width: "180px", margin: "10px 15px 10px 0px" }}
+                            onError={(e) => e.target.style.display = 'none'}
+                          />
+                        );
+                      })}
+                    </td>
+                  </tr>
+                );
+              })()}
+
               {d.balloon_drain && (
                 <tr>
                   <td colSpan="4" style={{ verticalAlign: "top" }}><b>BALLOON DRAIN :</b> {formatWithLineBreaks(d.balloon_drain)}</td>
@@ -865,7 +903,7 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
               <tr>
                 <td colSpan="4" style={{ textAlign: "center" }}>
                   <img src={painScoreChart} alt="Pain Score Chart" style={{ width: "70%", margin: "10px 0px" }} />
-                  <p style={{ textAlign: "left" }}>In case of Pain score ≥5 & / or unanswered queries SMS or Call your assistant surgeon. If it is unanswered, kindly call on {loc.QueriesSMS}. You can also contact the above number in case of emergency or if you notice any of the following symptoms.</p>
+                  <p style={{ textAlign: "left" }}>In case of Pain score ≥ 5 & / or unanswered queries SMS or Call your assistant surgeon. If it is unanswered, kindly call on {loc.QueriesSMS}. You can also contact the above number in case of emergency or if you notice any of the following symptoms.</p>
                 </td>
               </tr>
               <tr>
@@ -878,10 +916,10 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
                 <td style={{ width: "30%", textAlign: "center" }}>
                   <b>Care Buddy App QR code</b><br />
                   <div style={{ margin: "10px auto" }}>
-                    <QRCodeSVG 
-                      value={qrString} 
-                      size={180} 
-                      level="H" 
+                    <QRCodeSVG
+                      value={qrString}
+                      size={180}
+                      level="H"
                       includeMargin={false}
                     />
                   </div>
@@ -942,12 +980,12 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
           <table className="bordered FontAdjustment">
             <tbody>
               <tr>
-                <td style={{ width: "50%" }}>Name of Doctor<br /><br /></td>
-                <td style={{ width: "50%" }}>Name of Patient / Relative receiving Discharge Summary<br /><br /></td>
+                <td style={{ width: "50%" }}>Name of Doctor: <br /><br /></td>
+                <td style={{ width: "50%" }}>Name of Patient / Relative receiving Discharge Summary:<br /><br /></td>
               </tr>
               <tr>
-                <td style={{ width: "50%" }}>Doctor’s Sign, Date & Time<br /><br /></td>
-                <td style={{ width: "50%" }}>Patient / Relative’s Sign, Date and Time<br /><br /></td>
+                <td style={{ width: "50%" }}>Doctor’s Sign, Date & Time:<br /><br /></td>
+                <td style={{ width: "50%" }}>Patient / Relative’s Sign, Date and Time:<br /><br /></td>
               </tr>
               <tr>
                 <td colSpan="2" style={{ width: "100%" }}>

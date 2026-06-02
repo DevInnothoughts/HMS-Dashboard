@@ -189,5 +189,10 @@ export const receiptlocations = {
     "address": "<b>Ahmedabad: </b><br>Healing Hands Clinic Office No. 601 to 607 and 613, Mehta 531, Beside V S Hospital, Ashram Road, Ellisbridge, Ahmedabad, Gujarat - 380006.",
     "phone": "8792503495",
     "hospitalcode": "AH"
+  },
+  "Aurangabad": {
+    "address": "<b>Ch. Sambhajinagar:</b> <br>Healing Hands Clinic, 4th Above PUMA Store, Jalna Road, Near Seven Hill Flyover, Near Yashodeep Hotel, Akashwani, Chhtrapati Sambhajinagar, Aurangabad, Maharashtra-431001.",
+    "phone": "9271066069",
+    "hospitalcode": "AU"
   }
 }

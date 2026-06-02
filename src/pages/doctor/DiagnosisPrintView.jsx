@@ -1,6 +1,6 @@
 import React from "react";
 
-const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagnosisList = [], onPrint }, ref) => {
+const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagnosisList = [], selectedDiagnosisId, onPrint }, ref) => {
   const currentDate = new Date().toISOString().split('T')[0];
 
   // Helper to format referral name based on legacy logic
@@ -20,7 +20,7 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color: #000 !important;
             padding: 10px;
-            font-size: 9px !important;
+            font-size: 12px !important;
             line-height: 1.2;
             background-color: white;
           }
@@ -29,7 +29,7 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
             font-weight: 600;
             margin: 0px;
             margin-bottom: 10px;
-            font-size: 11px;
+            font-size: 12px;
             text-transform: uppercase;
           }
           .diagnosis-print-container p {
@@ -544,123 +544,127 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
         ))}
 
         {/* DIAGNOSIS */}
-        <div className="row">
-          <div className="col-md-12">
-            <h4>DIAGNOSIS</h4>
-          </div>
-        </div>
-        {diagnosisList.map((row3, idx) => (
-          <div key={idx} className="record-box">
+        {selectedDiagnosisId && (
+          <>
             <div className="row">
               <div className="col-md-12">
-                <p className="text-right"><b>Date : </b>{row3.date_diagnosis}</p>
+                <h4>DIAGNOSIS</h4>
               </div>
             </div>
-            {row3.diagnosis_text && (
-              <div className="row">
-                <div className="symptom-label"><b>Diagnosis: </b></div>
-                <div className="symptom-values"><p>{row3.diagnosis_text}</p></div>
-              </div>
-            )}
-            {row3.investigation_orders && (
-              <div className="row">
-                <div className="symptom-label"><b>Investigation Orders: </b></div>
-                <div className="symptom-values"><p>{row3.investigation_orders}</p></div>
-              </div>
-            )}
-            {(row3.advice_types?.length > 0 || row3.diagnosis_comment) && (
-              <div className="row">
-                <div className="symptom-label"><b>Advice Type: </b></div>
-                <div className="symptom-values">
-                  <p>
-                    {row3.advice_types?.join(' , ')}
-                    {row3.advice_types?.length > 0 && row3.diagnosis_comment ? ' , ' : ''}
-                    {row3.diagnosis_comment ? `Comment: ${row3.diagnosis_comment}` : ''}
-                  </p>
+            {diagnosisList.map((row3, idx) => (
+              <div key={idx} className="record-box">
+                <div className="row">
+                  <div className="col-md-12">
+                    <p className="text-right"><b>Date : </b>{row3.date_diagnosis}</p>
+                  </div>
                 </div>
-              </div>
-            )}
-
-            {/* Medicines Prescribed */}
-            {(() => {
-              const checksub = row3.medicines_prescribed || [];
-              const fixed = ['AAC', 'IBS', 'NSAIDS', 'ANTIBIOTICS', 'ANTACID'];
-              const filteredFixed = fixed.filter(m => checksub.includes(m));
-              const other = checksub.filter(m => m && !fixed.includes(m)).join(', ');
-              if (filteredFixed.length > 0 || other) {
-                return (
+                {row3.diagnosis_text && (
                   <div className="row">
-                    <div className="symptom-label"><b>Medicines Prescribed :</b></div>
+                    <div className="symptom-label"><b>Diagnosis: </b></div>
+                    <div className="symptom-values"><p>{row3.diagnosis_text}</p></div>
+                  </div>
+                )}
+                {row3.investigation_orders && (
+                  <div className="row">
+                    <div className="symptom-label"><b>Investigation Orders: </b></div>
+                    <div className="symptom-values"><p>{row3.investigation_orders}</p></div>
+                  </div>
+                )}
+                {(row3.advice_types?.length > 0 || row3.diagnosis_comment) && (
+                  <div className="row">
+                    <div className="symptom-label"><b>Advice Type: </b></div>
                     <div className="symptom-values">
-                      {filteredFixed.map((m, i, arr) => (
-                        <span key={m}>{m}{i < arr.length - 1 || other ? " , " : ""}</span>
-                      ))}
-                      {other && <span style={{ width: "100%", float: "left", paddingTop: "5px" }}><b>Any other : </b>{other}</span>}
+                      <p>
+                        {row3.advice_types?.join(' , ')}
+                        {row3.advice_types?.length > 0 && row3.diagnosis_comment ? ' , ' : ''}
+                        {row3.diagnosis_comment ? `Comment: ${row3.diagnosis_comment}` : ''}
+                      </p>
                     </div>
                   </div>
-                );
-              }
-              return null;
-            })()}
+                )}
 
-            {row3.advice && (
-              <div className="row">
-                <div className="symptom-label"><b>Plan: </b></div>
-                <div className="symptom-values"><p>{row3.advice}</p></div>
-              </div>
-            )}
-            {row3.surgical_advice && (
-              <div className="row">
-                <div className="symptom-label"><b> Advice Comment: </b></div>
-                <div className="symptom-values"><p>{row3.surgical_advice}</p></div>
-              </div>
-            )}
-            {row3.general_comment && (
-              <div className="row">
-                <div className="symptom-label"><b> Comment: </b></div>
-                <div className="symptom-values"><p>{row3.general_comment}</p></div>
-              </div>
-            )}
-            {row3.category_comment && (
-              <div className="row">
-                <div className="symptom-label"><b>Category Comment: </b></div>
-                <div className="symptom-values"><p>{row3.category_comment}</p></div>
-              </div>
-            )}
+                {/* Medicines Prescribed */}
+                {(() => {
+                  const checksub = row3.medicines_prescribed || [];
+                  const fixed = ['AAC', 'IBS', 'NSAIDS', 'ANTIBIOTICS', 'ANTACID'];
+                  const filteredFixed = fixed.filter(m => checksub.includes(m));
+                  const other = checksub.filter(m => m && !fixed.includes(m)).join(', ');
+                  if (filteredFixed.length > 0 || other) {
+                    return (
+                      <div className="row">
+                        <div className="symptom-label"><b>Medicines Prescribed :</b></div>
+                        <div className="symptom-values">
+                          {filteredFixed.map((m, i, arr) => (
+                            <span key={m}>{m}{i < arr.length - 1 || other ? " , " : ""}</span>
+                          ))}
+                          {other && <span style={{ width: "100%", float: "left", paddingTop: "5px" }}><b>Any other : </b>{other}</span>}
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
 
-            {/* Advice */}
-            {(() => {
-              const checksub = row3.medical_advice || [];
-              const advice = ['MCDPA', 'UROFLOWMETRY', 'CHT', 'BIOFEEDBACK', 'MANOMETRY', 'COLO', 'GASTRO', 'LAB INVESTIGATION', 'DIET', 'X-RAY', 'CT', 'ULTRASONOGRAPHY', 'ECHO', 'MRI', 'DOPPLER', '3D ENDO ANAL IMAGING', 'BUGSPEAKS'];
-              const filteredAdvice = advice.filter(a => checksub.includes(a));
-              if (filteredAdvice.length > 0) {
-                return (
+                {row3.advice && (
                   <div className="row">
-                    <div className="symptom-label"><b>Advice : </b></div>
-                    <div className="symptom-values">{filteredAdvice.join(' , ')}</div>
+                    <div className="symptom-label"><b>Plan: </b></div>
+                    <div className="symptom-values"><p>{row3.advice}</p></div>
                   </div>
-                );
-              }
-              return null;
-            })()}
-
-            {/* Other */}
-            {(() => {
-              const checksub = row3.categories || [];
-              const options = ['Insurance', 'Reimbursement', 'Workshop', 'MCDPA', 'PDC'];
-              const filteredOther = options.filter(o => checksub.includes(o));
-              if (filteredOther.length > 0) {
-                return (
+                )}
+                {row3.surgical_advice && (
                   <div className="row">
-                    <div className="symptom-label"><b>Other : </b></div>
-                    <div className="symptom-values">{filteredOther.join(' , ')}</div>
+                    <div className="symptom-label"><b> Advice Comment: </b></div>
+                    <div className="symptom-values"><p>{row3.surgical_advice}</p></div>
                   </div>
-                );
-              }
-              return null;
-            })()}
-          </div>
-        ))}
+                )}
+                {row3.general_comment && (
+                  <div className="row">
+                    <div className="symptom-label"><b> Comment: </b></div>
+                    <div className="symptom-values"><p>{row3.general_comment}</p></div>
+                  </div>
+                )}
+                {row3.category_comment && (
+                  <div className="row">
+                    <div className="symptom-label"><b>Category Comment: </b></div>
+                    <div className="symptom-values"><p>{row3.category_comment}</p></div>
+                  </div>
+                )}
+
+                {/* Advice */}
+                {(() => {
+                  const checksub = row3.medical_advice || [];
+                  const advice = ['MCDPA', 'UROFLOWMETRY', 'CHT', 'BIOFEEDBACK', 'MANOMETRY', 'COLO', 'GASTRO', 'LAB INVESTIGATION', 'DIET', 'X-RAY', 'CT', 'ULTRASONOGRAPHY', 'ECHO', 'MRI', 'DOPPLER', '3D ENDO ANAL IMAGING', 'BUGSPEAKS'];
+                  const filteredAdvice = advice.filter(a => checksub.includes(a));
+                  if (filteredAdvice.length > 0) {
+                    return (
+                      <div className="row">
+                        <div className="symptom-label"><b>Advice : </b></div>
+                        <div className="symptom-values">{filteredAdvice.join(' , ')}</div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+
+                {/* Other */}
+                {(() => {
+                  const checksub = row3.categories || [];
+                  const options = ['Insurance', 'Reimbursement', 'Workshop', 'MCDPA', 'PDC'];
+                  const filteredOther = options.filter(o => checksub.includes(o));
+                  if (filteredOther.length > 0) {
+                    return (
+                      <div className="row">
+                        <div className="symptom-label"><b>Other : </b></div>
+                        <div className="symptom-values">{filteredOther.join(' , ')}</div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+              </div>
+            ))}
+          </>
+        )}
 
         {/* BLANK SECTION (FOR PRINTING) */}
         <div style={{ padding: "10px 5px", border: "1px solid #d7d7d7" }}>

@@ -20,6 +20,7 @@ const OpdPrescriptionCard = ({
   onPrintPrescription,
   assistanceDoctors = [],
   location = "default",
+  removedMedicines = [],
 }) => {
   const [testAdviceOptions, setTestAdviceOptions] = useState([]);
   const [preopInvestOptions, setPreopInvestOptions] = useState([]);
@@ -172,7 +173,7 @@ const OpdPrescriptionCard = ({
                 <FeatherIcon icon="printer" size="14" className="me-1" /> PRINT
               </Button>
             )}
-            <Button
+            {/* <Button
               variant="outline-info"
               size="sm"
               onClick={onNewPrescription}
@@ -184,7 +185,7 @@ const OpdPrescriptionCard = ({
               }}
             >
               <FeatherIcon icon="plus" size="14" className="me-1" /> NEW RECORD
-            </Button>
+            </Button> */}
             <Dropdown onSelect={onSelectPrescription}>
               <Dropdown.Toggle
                 variant="outline-info"
@@ -441,11 +442,12 @@ const OpdPrescriptionCard = ({
                   disabled={prescriptionData.no_medicines_prescribed}
                   variant="outline-secondary"
                   id="preop-invest-dropdown"
-                  className="w-200 text-start d-flex justify-content-between align-items-center"
+                  className="text-start d-flex justify-content-between align-items-center"
                   style={{
+                    width: "100%",
                     borderRadius: "10px",
                     border: "2px solid #b2ebf2",
-                    padding: "6px 12px",
+                    padding: "10px 12px",
                     fontSize: "12px",
                     backgroundColor: "white",
                     color: "#333",
@@ -1131,6 +1133,31 @@ const OpdPrescriptionCard = ({
                 ))}
               </tbody>
             </Table>
+          </div>
+        )}
+
+        {removedMedicines?.length > 0 && (
+          <div className="mt-3 p-3 bg-light rounded border border-danger border-opacity-25 animate__animated animate__fadeIn">
+            <h6 className="fw-bold text-danger mb-2 d-flex align-items-center" style={{ fontSize: "13px" }}>
+              <FeatherIcon icon="alert-circle" size="14" className="me-2" />
+              Removed Medicines (This Session)
+            </h6>
+            <div className="d-flex flex-wrap gap-2">
+              {removedMedicines.map((m, idx) => (
+                <span
+                  key={idx}
+                  className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 d-flex align-items-center"
+                  style={{
+                    fontSize: "11px",
+                    borderRadius: "20px",
+                    padding: "6px 12px",
+                    textDecoration: "line-through"
+                  }}
+                >
+                  {m.name} ({m.qty} Qty, {m.days} Days)
+                </span>
+              ))}
+            </div>
           </div>
         )}
       </div>

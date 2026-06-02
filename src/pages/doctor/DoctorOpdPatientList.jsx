@@ -1426,7 +1426,7 @@ export default function DoctorOpdPatientList() {
           return data.statusCode === 200 ? data.data : null;
         }),
       );
-      
+
       const diagDatesRes = await fetch(
         `${BASE_URL}/V1/doctor/list-diagnosis-dates/${patient.patient_id}?location=${currentLocation}`,
         { headers },
@@ -1437,7 +1437,7 @@ export default function DoctorOpdPatientList() {
         setLoading(false);
         return;
       }
-      
+
       const diagFull = await Promise.all(
         (diagDates.data || []).map(async (d) => {
           const res = await fetch(
@@ -1466,7 +1466,7 @@ export default function DoctorOpdPatientList() {
           return null;
         }),
       );
-      
+
       const followupRes = await fetch(
         `${BASE_URL}/V1/doctor/get-followup-details/${patient.patient_id}?location=${currentLocation}`,
         { headers },
@@ -1488,14 +1488,14 @@ export default function DoctorOpdPatientList() {
         setLoading(false);
         return;
       }
-      
+
       const latestOpdDate = moment(opdDates.data[0].date, "DD-MM-YYYY").format("YYYY-MM-DD");
       const opdDetailsRes = await fetch(
         `${BASE_URL}/V1/doctor/get-opd-prescription/${patient.patient_id}/${latestOpdDate}?location=${currentLocation}`,
         { headers }
       );
       const opdDetails = await opdDetailsRes.json();
-      
+
       let parsedOpd = null;
       if (opdDetails.statusCode === 200 && opdDetails.data) {
         const d = opdDetails.data;
@@ -4431,7 +4431,7 @@ export default function DoctorOpdPatientList() {
                           border: "1px solid #90caf9",
                           textAlign: "center",
                           padding: "0.75rem",
-                          width: "150px",
+                          width: "180px",
                         }}
                       />
 
@@ -4443,7 +4443,7 @@ export default function DoctorOpdPatientList() {
                         style={{
                           border: "1px solid #90caf9",
                           padding: "0.75rem",
-                          width: "200px",
+                          width: "180px",
                           textAlign: "center",
                         }}
                       />

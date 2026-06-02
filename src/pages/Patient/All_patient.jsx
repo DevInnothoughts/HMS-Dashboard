@@ -815,6 +815,9 @@ export default function All_patient() {
         ...prev,
         dr_name: patient.ref_doctor_name || patient.ref || "",
         dr_id: patient.ref_doctor_name ? patient.ref || "" : "",
+        dr_contact: patient.ref_doctor_phone || "",
+        dr_specialty: patient.reference_doctor_speciality || "",
+        dr_location: patient.reference_doctor_location || "",
       }));
     } else {
       const standardNewspapers = [
@@ -898,7 +901,40 @@ export default function All_patient() {
         break;
       case "dr_ref":
         reference_type = "dr_ref";
-        ref = referenceDetails.dr_id || referenceDetails.dr_name || "";
+        if (isManualEntry) {
+          if (!referenceDetails.dr_name || !referenceDetails.dr_name.trim()) {
+            toast.error("Please enter a doctor name.");
+            return;
+          }
+          try {
+            const addDoctorRes = await fetch(`${BASE_URL}/V1/patient/addRefDoctor?location=${currentLocation}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                ref_doctor_name: referenceDetails.dr_name,
+                ref_doctor_phone: referenceDetails.dr_contact,
+                reference_doctor_speciality: referenceDetails.dr_specialty,
+                reference_doctor_location: referenceDetails.dr_location,
+              }),
+            });
+            const addDoctorData = await addDoctorRes.json();
+            if (addDoctorRes.ok && addDoctorData?.data?.reference_doctor_id) {
+              const newDrId = addDoctorData.data.reference_doctor_id;
+              ref = newDrId;
+              // Also update referenceDetails to hold the new ID so the state aligns
+              setReferenceDetails(prev => ({ ...prev, dr_id: newDrId }));
+            } else {
+              toast.error(addDoctorData.message || "Failed to add manual doctor reference.");
+              return;
+            }
+          } catch (err) {
+            console.error(err);
+            toast.error("Error adding manual doctor reference.");
+            return;
+          }
+        } else {
+          ref = referenceDetails.dr_id || referenceDetails.dr_name || "";
+        }
         break;
       case "internet":
         reference_type = "internet";
@@ -981,6 +1017,8 @@ export default function All_patient() {
       // ref: formData.ref
       reference_type: reference_type,
       ref: ref,
+      ref_doctor_name: reference_type === "dr_ref" ? (referenceDetails.dr_name || "") : "",
+      ref_doctor_phone: reference_type === "dr_ref" ? (referenceDetails.dr_contact || "") : "",
       ConfirmPatient: 1,
       additional_info: {
         nationality: formData.nationality,
@@ -1344,7 +1382,7 @@ export default function All_patient() {
               <p><b>Email :-</b>&nbsp;&nbsp;${patient.email || "-"}</p>
               <p><b>Occupation :-</b>&nbsp;&nbsp;${patient.occupation || "-"}</p>
               ${patient.companyname ? `<p><b>Company Name :-</b>&nbsp;&nbsp;${patient.companyname}</p>` : ""}
-              ${patient.ref_doctor_name || patient.ref ? `<p><b>Reference :-</b>&nbsp;&nbsp;${patient.ref_doctor_name || patient.ref}</p>` : ""}
+              ${(patient.reference_type === "dr_ref" && (patient.ref_doctor_name || patient.ref)) ? `<p><b>Reference :-</b>&nbsp;&nbsp;${patient.ref_doctor_name || patient.ref}${patient.ref_doctor_phone ? ` (${patient.ref_doctor_phone})` : ""}</p>` : (patient.ref ? `<p><b>Reference :-</b>&nbsp;&nbsp;${patient.ref}</p>` : "")}
             </td>
           </tr>
           </table>

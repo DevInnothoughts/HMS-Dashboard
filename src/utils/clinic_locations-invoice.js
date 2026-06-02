@@ -190,8 +190,13 @@ export const clinincLoc = {
     "EmergencySMS": ""
   },
   "Ahmedabad": {
-    "invoiceAddress": "<b>Healing Hands Clinic</b><br>Office No. 601 to 607 and 613, Mehta 531, Beside V S Hospital, Ashram Road, Ellisbridge, Ahmedabad, Gujarat - 380006",
+    "invoiceAddress": "<b>Healing Hands Clinic</b><br>Office No. 601 to 607 and 613, Mehta 531,Beside V S Hospital, Ashram Road, Ellisbridge, Ahmedabad, Gujarat - 380006",
     "invoiceHelplineNo": "8792503495",
+    "EmergencySMS": ""
+  },
+  "Aurangabad": {
+    "invoiceAddress": "<b>Healing Hands Clinic</b><br>4th Floor Above PUMA Store, Jalna Road, Near Seven Hill Flyover, Near Yashodeep Hotel, Akashwani, Chhtrapati Sambhajinagar, Aurangabad, Maharashtra-431001.",
+    "invoiceHelplineNo": "9271066069",
     "EmergencySMS": ""
   }
 }

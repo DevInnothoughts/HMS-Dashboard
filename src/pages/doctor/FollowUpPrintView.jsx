@@ -351,7 +351,7 @@ const FollowUpPrintView = React.forwardRef(({ patient, followUpData = {}, histor
                 <div key={idx} style={{ marginBottom: "10px" }}>
                   <div className="row">
                     <div className="col-md-9" style={{ width: "75%" }}>
-                      <p><b>Diagnosis :</b>&nbsp;{diag.diagnosis || "-"}</p>
+                      <p><b>Diagnosis :</b>&nbsp;{diag.diagnosis_text || diag.diagnosis || "-"}</p>
                     </div>
                     <div className="col-md-3" style={{ width: "20%" }}>
                       <p className="text-right"><b>Date : </b>{formatDate(diag.date_diagnosis)}</p>
@@ -411,7 +411,7 @@ const FollowUpPrintView = React.forwardRef(({ patient, followUpData = {}, histor
 
             <div className="row">
               <div className="col-md-12" style={{ width: "100%", height: "40px" }}>
-                <p><b>Diagnosis :</b> {followUpData?.diagnosis || ""}</p>
+                <p><b>Diagnosis :</b> {followUpData?.diagnosis_text || followUpData?.diagnosis || ""}</p>
               </div>
             </div>
             <div className="row">

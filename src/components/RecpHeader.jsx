@@ -181,7 +181,7 @@ export default function RecpHeader() {
                             </div>
                           </div>
                           <SimpleBar style={{ maxHeight: '295px' }}>
-                            <div style={{ padding: '8px' }}>
+                            <div style={{ padding: '2px' }}>
                               {confirmedAppts.length > 0 ? (
                                 confirmedAppts.map((app, idx) => (
                                   <div key={idx} onClick={() => handlePatientClick(app)} style={{
@@ -264,7 +264,7 @@ export default function RecpHeader() {
                             </div>
                           </div>
                           <SimpleBar style={{ maxHeight: '295px' }}>
-                            <div style={{ padding: '8px' }}>
+                            <div style={{ padding: '2px' }}>
                               {pendingAppts.length > 0 ? (
                                 pendingAppts.map((app, idx) => (
                                   <div key={idx} onClick={() => handlePatientClick(app)} style={{
@@ -341,7 +341,7 @@ export default function RecpHeader() {
                             </div>
                           </div>
                           <SimpleBar style={{ maxHeight: '295px' }}>
-                            <div style={{ padding: '8px' }}>
+                            <div style={{ padding: '2px' }}>
                               {cancelledAppts.length > 0 ? (
                                 cancelledAppts.map((app, idx) => (
                                   <div key={idx} onClick={() => handlePatientClick(app)} style={{
@@ -385,7 +385,7 @@ export default function RecpHeader() {
               </div>
             )}
           </div>
-          
+
           <div className="header-right">
             <ul className="nav-iconlist">
               <li style={{ display: 'flex', alignItems: 'center', gap: '10px', marginRight: '15px' }}>

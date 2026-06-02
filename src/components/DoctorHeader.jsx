@@ -118,7 +118,7 @@ export default function DoctorHeader() {
     setShowFollowDropdown(false);
     setShowPostopDropdown(false);
     setShowOtherDropdown(false);
-    
+
     navigate("/doctor-dashboard");
   };
 
@@ -206,7 +206,7 @@ export default function DoctorHeader() {
                             </div>
                           </div>
                           <SimpleBar style={{ maxHeight: '295px' }}>
-                            <div style={{ padding: '8px' }}>
+                            <div style={{ padding: '2px' }}>
                               {stats.lists.new.length > 0 ? (
                                 stats.lists.new.map((app, idx) => (
                                   <div key={idx} onClick={() => handlePatientClick(app)} style={{
@@ -283,7 +283,7 @@ export default function DoctorHeader() {
                             </div>
                           </div>
                           <SimpleBar style={{ maxHeight: '295px' }}>
-                            <div style={{ padding: '8px' }}>
+                            <div style={{ padding: '2px' }}>
                               {stats.lists.follow.length > 0 ? (
                                 stats.lists.follow.map((app, idx) => (
                                   <div key={idx} onClick={() => handlePatientClick(app)} style={{
@@ -360,7 +360,7 @@ export default function DoctorHeader() {
                             </div>
                           </div>
                           <SimpleBar style={{ maxHeight: '295px' }}>
-                            <div style={{ padding: '8px' }}>
+                            <div style={{ padding: '2px' }}>
                               {stats.lists.postop.length > 0 ? (
                                 stats.lists.postop.map((app, idx) => (
                                   <div key={idx} onClick={() => handlePatientClick(app)} style={{
@@ -437,7 +437,7 @@ export default function DoctorHeader() {
                             </div>
                           </div>
                           <SimpleBar style={{ maxHeight: '295px' }}>
-                            <div style={{ padding: '8px' }}>
+                            <div style={{ padding: '2px' }}>
                               {stats.lists.other.length > 0 ? (
                                 stats.lists.other.map((app, idx) => (
                                   <div key={idx} onClick={() => handlePatientClick(app)} style={{
@@ -514,7 +514,7 @@ export default function DoctorHeader() {
                             </div>
                           </div>
                           <SimpleBar style={{ maxHeight: '295px' }}>
-                            <div style={{ padding: '8px' }}>
+                            <div style={{ padding: '2px' }}>
                               {stats.lists.ipd && stats.lists.ipd.length > 0 ? (
                                 stats.lists.ipd.map((app, idx) => (
                                   <div key={idx} onClick={() => handleIpdClick(app)} style={{
@@ -560,7 +560,7 @@ export default function DoctorHeader() {
               </div>
             )}
           </div>
-          
+
           <div className="header-right">
             <ul className="nav-iconlist">
 
