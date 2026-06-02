@@ -4858,6 +4858,21 @@ const PersonalDetailsCard = () => {
     }
   };
 
+  const isTabAccessible = (tabId) => {
+    switch (tabId) {
+      case "personal":
+      case "patient-history":
+        return true;
+      case "diagnosis":
+        return isTabCompleted("patient-history");
+      case "opd-prescription":
+        return isTabCompleted("patient-history") && isTabCompleted("diagnosis");
+      default:
+        return true;
+    }
+  };
+
+
   return (
     <div
       className="themebody-wrap"
@@ -4916,6 +4931,7 @@ const PersonalDetailsCard = () => {
               <Row className="g-10">
                 {tabs.map((tab) => {
                   const completed = isTabCompleted(tab.id);
+                  const accessible = isTabAccessible(tab.id);
                   return (
                     <Col sm={6} lg={3} key={tab.id} className="d-flex">
                       <Card
@@ -4923,17 +4939,32 @@ const PersonalDetailsCard = () => {
                         style={{
                           width: "300px",
                           padding: "5px",
-                          borderRadius: "12px", cursor: "pointer",
-                          border: completed ? "1px solid #10b981" : "1px solid #f1f5f9"
+                          borderRadius: "12px", 
+                          cursor: accessible ? "pointer" : "not-allowed",
+                          border: completed ? "1px solid #10b981" : "1px solid #f1f5f9",
+                          opacity: accessible ? 1 : 0.6
                         }}
-                        onClick={() => setActiveTab(tab.id)}
+                        onClick={() => {
+                          if (accessible) {
+                            setActiveTab(tab.id);
+                          } else {
+                            let req = "";
+                            if (tab.id === "diagnosis") req = "Patient History";
+                            if (tab.id === "opd-prescription") req = "Diagnosis";
+                            toast.warning(`Please complete ${req} first!`);
+                          }
+                        }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = "translateY(-4px)";
-                          e.currentTarget.style.boxShadow = "0 8px 16px rgba(0, 0, 0, 0.08)";
+                          if (accessible) {
+                            e.currentTarget.style.transform = "translateY(-4px)";
+                            e.currentTarget.style.boxShadow = "0 8px 16px rgba(0, 0, 0, 0.08)";
+                          }
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = "translateY(0)";
-                          e.currentTarget.style.boxShadow = "0 2px 6px rgba(0, 0, 0, 0.04)";
+                          if (accessible) {
+                            e.currentTarget.style.transform = "translateY(0)";
+                            e.currentTarget.style.boxShadow = "0 2px 6px rgba(0, 0, 0, 0.04)";
+                          }
                         }}
                       >
                         <Card.Body className="p-3 d-flex align-items-center">

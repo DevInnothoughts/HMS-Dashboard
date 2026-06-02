@@ -675,15 +675,20 @@ export default function Appointment_list() {
           const mappedData = sortedData.map((app) => {
             const isConfirmed = app.confirm_time != 0;
             const hasHistory = Number(app.historychk) === 3;
-            const hasExecution = Number(app.executivechk) === 1;
+            const hasExecution = Number(app.executivechk) === 1 || Number(app.executivechk) === 2;
             const hasConsultation = Number(app.consultationchk) === 4;
             const hasReceipt = Number(app.executivechk) === 2;
 
+            const isHistoryDone = hasHistory;
+            const isExecutionDone = hasHistory && hasExecution;
+            const isConsultationDone = hasHistory && hasExecution && hasConsultation;
+            const isReceiptDone = hasReceipt;
+
             let computedStatus = "Appointment Confirmed";
-            if (hasReceipt) computedStatus = "Receipt Generated";
-            else if (hasConsultation) computedStatus = "Prescription Checked";
-            else if (hasExecution) computedStatus = "Diagnosis Checked";
-            else if (hasHistory) computedStatus = "History Checked";
+            if (isReceiptDone) computedStatus = "Receipt Generated";
+            else if (isConsultationDone) computedStatus = "Prescription Checked";
+            else if (isExecutionDone) computedStatus = "Diagnosis Checked";
+            else if (isHistoryDone) computedStatus = "History Checked";
             else if (!isConfirmed) computedStatus = "Pending Appointment";
 
             return {
@@ -1027,14 +1032,19 @@ export default function Appointment_list() {
     } = rowData;
     const isConfirmed = confirm_time != 0;
     const hasHistory = Number(historychk) === 3;
-    const hasExecution = Number(executivechk) === 1;
+    const hasExecution = Number(executivechk) === 1 || Number(executivechk) === 2;
     const hasConsultation = Number(consultationchk) === 4;
     const hasReceipt = Number(executivechk) === 2;
 
-    if (hasReceipt) return "row-status-receipt";
-    if (hasConsultation) return "row-status-consultation";
-    if (hasExecution) return "row-status-execution";
-    if (hasHistory) return "row-status-history";
+    const isHistoryDone = hasHistory;
+    const isExecutionDone = hasHistory && hasExecution;
+    const isConsultationDone = hasHistory && hasExecution && hasConsultation;
+    const isReceiptDone = hasReceipt;
+
+    if (isReceiptDone) return "row-status-receipt";
+    if (isConsultationDone) return "row-status-consultation";
+    if (isExecutionDone) return "row-status-execution";
+    if (isHistoryDone) return "row-status-history";
     if (!isConfirmed) return "row-status-unconfirmed";
 
     return "row-status-confirmed";
@@ -1053,18 +1063,23 @@ export default function Appointment_list() {
     } = rowData;
     // console.log("ROW DATA:", rowData);
     const isConfirmed = confirm_time != 0;
-    const isHistoryDone = Number(historychk) === 3;
-    const isExecutionDone = Number(executivechk) === 1;
-    const isConsultationDone = Number(consultationchk) === 4;
-    const isReceiptDone = Number(executivechk) === 2;
+    const hasHistory = Number(historychk) === 3;
+    const hasExecution = Number(executivechk) === 1 || Number(executivechk) === 2;
+    const hasConsultation = Number(consultationchk) === 4;
+    const hasReceipt = Number(executivechk) === 2;
+
+    const isHistoryDone = hasHistory;
+    const isExecutionDone = hasHistory && hasExecution;
+    const isConsultationDone = hasHistory && hasExecution && hasConsultation;
+    const isReceiptDone = hasReceipt;
 
     const showFourButtons =
       registeredAppointments.has(appointment_id) ||
       Number(ConfirmPatient) === 1 ||
-      isHistoryDone ||
-      isExecutionDone ||
-      isConsultationDone ||
-      isReceiptDone;
+      hasHistory ||
+      hasExecution ||
+      hasConsultation ||
+      hasReceipt;
 
     return (
       <div
@@ -1128,7 +1143,7 @@ export default function Appointment_list() {
             <ActionButton
               title="History"
               onClick={() => { }}
-              disabled={isHistoryDone}
+              disabled={isHistoryDone || isReceiptDone}
               icon="book-open"
               style={{ cursor: "not-allowed" }}
             />
@@ -1144,7 +1159,7 @@ export default function Appointment_list() {
             <ActionButton
               title="Prescription"
               onClick={() => { }}
-              disabled={!isExecutionDone || isConsultationDone}
+              disabled={!isExecutionDone || isConsultationDone || isReceiptDone}
               icon="clipboard"
               style={{ cursor: "not-allowed" }}
             />
@@ -1155,7 +1170,7 @@ export default function Appointment_list() {
                 setSelectedAppointment(rowData);
                 setShowReceiptModal(true);
               }}
-              disabled={!isConsultationDone}
+              disabled={!isConsultationDone || isReceiptDone}
               icon="credit-card"
             />
           </>

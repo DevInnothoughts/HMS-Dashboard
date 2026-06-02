@@ -7,6 +7,8 @@ const OpdPrescriptionPrintView = React.forwardRef(
     const patient = formData || {};
     const history = historyData || {};
 
+    console.log("[DEBUG] OpdPrescriptionPrintView data fetched:", patient.Uid_no);
+
     const assistantDoc = doctors.find(
       (doc) => String(doc.doctor_id || doc.id) === String(d.doctor_id || d.udoctor_id)
     );
@@ -120,7 +122,7 @@ const OpdPrescriptionPrintView = React.forwardRef(
               <p>
                 <span className="fw-bold">NAME :</span> {patient.name || patient.Name} ({" "}
                 {patient.age || patient.Age} / {patient.sex || patient.Sex} ) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                <span className="fw-bold">UID NO :</span> {patient.Uid_no || patient.uid_no || patient.UID_NO || patient.uid || ""}
+                <span className="fw-bold">UID NO :</span> {patient.Uid_no || ""}
               </p>
               <p>
                 <span className="fw-bold">BP : </span> {history.vital_bp || history.Vital_bp || history.VITAL_BP || ""}
