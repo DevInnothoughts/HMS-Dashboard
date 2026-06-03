@@ -259,6 +259,7 @@ const PersonalDetailsCard = () => {
   const [activeTab, setActiveTab] = useState("menu");
   const [loading, setLoading] = useState(false);
   const [currentLocation, setCurrentLocation] = useState("default");
+  const [hasFetchedPatient, setHasFetchedPatient] = useState(false);
 
   const [formData, setFormData] = useState({
     Uid_no: "",
@@ -2259,6 +2260,44 @@ const PersonalDetailsCard = () => {
   };
 
   useEffect(() => {
+    const fetchPatientDetails = async () => {
+      const patientId = state?.patient?.patient_id || patient?.patient_id;
+      if (!patientId || hasFetchedPatient) return;
+
+      let resolvedLocation = "default";
+      const token = localStorage.getItem("token");
+      if (token) {
+        const payload = decodeJwt(token);
+        if (payload && payload.jobLocation) {
+          resolvedLocation = payload.jobLocation;
+        }
+      }
+
+      try {
+        const response = await fetch(
+          `${BASE_URL}/V1/patient/getPatient/${patientId}?location=${resolvedLocation}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+        if (response.ok) {
+          const resData = await response.json();
+          if (resData.statusCode === 200 && resData.data) {
+            setPatient(resData.data);
+            setHasFetchedPatient(true);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching patient details:", error);
+      }
+    };
+
+    fetchPatientDetails();
+  }, [patient?.patient_id, hasFetchedPatient]);
+
+  useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       const payload = decodeJwt(token);
@@ -2404,7 +2443,7 @@ const PersonalDetailsCard = () => {
       fetchProctoscopyDates();
       fetchFollowUpDetails();
     }
-  }, [patient, formData.patient_id]);
+  }, [patient, formData.patient_id, currentLocation]);
 
   const fetchDischargeDates = async () => {
     const patientId = formData.patient_id || patient?.patient_id;

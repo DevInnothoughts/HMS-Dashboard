@@ -679,9 +679,11 @@ export default function Appointment_list() {
             const hasConsultation = Number(app.consultationchk) === 4;
             const hasReceipt = Number(app.executivechk) === 2;
 
-            const isHistoryDone = hasHistory;
-            const isExecutionDone = hasHistory && hasExecution;
-            const isConsultationDone = hasHistory && hasExecution && hasConsultation;
+            const isExistingPatient = isConfirmed && ["Follow", "Postoperative", "Post Operative", "Other"].includes(app.patient_type);
+
+            const isHistoryDone = hasHistory || isExistingPatient;
+            const isExecutionDone = (hasHistory && hasExecution) || isExistingPatient;
+            const isConsultationDone = (hasHistory && hasExecution && hasConsultation) || isExistingPatient;
             const isReceiptDone = hasReceipt;
 
             let computedStatus = "Appointment Confirmed";
@@ -949,7 +951,7 @@ export default function Appointment_list() {
         });
         fetchAppointmentData();
         window.dispatchEvent(new CustomEvent("refreshApptCounts"));
-        
+
         if (endpoint === "confirmAppointment") {
           navigate('/patients', {
             state: {
@@ -1029,6 +1031,7 @@ export default function Appointment_list() {
       executivechk,
       consultationchk,
       confirm_time,
+      patient_type
     } = rowData;
     const isConfirmed = confirm_time != 0;
     const hasHistory = Number(historychk) === 3;
@@ -1036,9 +1039,11 @@ export default function Appointment_list() {
     const hasConsultation = Number(consultationchk) === 4;
     const hasReceipt = Number(executivechk) === 2;
 
-    const isHistoryDone = hasHistory;
-    const isExecutionDone = hasHistory && hasExecution;
-    const isConsultationDone = hasHistory && hasExecution && hasConsultation;
+    const isExistingPatient = isConfirmed && ["Follow", "Postoperative", "Post Operative", "Other"].includes(patient_type);
+
+    const isHistoryDone = hasHistory || isExistingPatient;
+    const isExecutionDone = (hasHistory && hasExecution) || isExistingPatient;
+    const isConsultationDone = (hasHistory && hasExecution && hasConsultation) || isExistingPatient;
     const isReceiptDone = hasReceipt;
 
     if (isReceiptDone) return "row-status-receipt";
@@ -1068,9 +1073,11 @@ export default function Appointment_list() {
     const hasConsultation = Number(consultationchk) === 4;
     const hasReceipt = Number(executivechk) === 2;
 
-    const isHistoryDone = hasHistory;
-    const isExecutionDone = hasHistory && hasExecution;
-    const isConsultationDone = hasHistory && hasExecution && hasConsultation;
+    const isExistingPatient = isConfirmed && ["Follow", "Postoperative", "Post Operative", "Other"].includes(patient_type);
+
+    const isHistoryDone = hasHistory || isExistingPatient;
+    const isExecutionDone = (hasHistory && hasExecution) || isExistingPatient;
+    const isConsultationDone = (hasHistory && hasExecution && hasConsultation) || isExistingPatient;
     const isReceiptDone = hasReceipt;
 
     const showFourButtons =
@@ -1079,7 +1086,8 @@ export default function Appointment_list() {
       hasHistory ||
       hasExecution ||
       hasConsultation ||
-      hasReceipt;
+      hasReceipt ||
+      isExistingPatient;
 
     return (
       <div
@@ -1170,7 +1178,7 @@ export default function Appointment_list() {
                 setSelectedAppointment(rowData);
                 setShowReceiptModal(true);
               }}
-              disabled={!isConsultationDone || isReceiptDone}
+              disabled={!isConsultationDone}
               icon="credit-card"
             />
           </>

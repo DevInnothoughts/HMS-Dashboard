@@ -60,6 +60,10 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
             margin-bottom: 5px;
             font-size: 9px !important;
           }
+          .diagnosis-print-container table.blank-section-table,
+          .diagnosis-print-container table.blank-section-table td { 
+            font-size: 12px !important;
+          }
           .diagnosis-print-container table, .diagnosis-print-container th, .diagnosis-print-container td {
             border: 1px solid #d7d7d7;
           }
@@ -125,20 +129,20 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
             </div>
             <div className="row">
               <div className="col-md-12">
-                <p><b>Pain Scale : </b>{row2.painscale}</p>
+                <p><b>Pain Scale : </b>{row2.painscale || row2.painScale || 0}</p>
               </div>
             </div>
             <div className="row">
               {[
-                ['Height', row2.height, ''],
-                ['BP', row2.BP, '/mm of Hg'],
-                ['RS', row2.RS, ''],
-                ['Weight', row2.weight, ''],
-                ['Pulse', row2.Pulse, '/ Min'],
-                ['CVS', row2.CVS, ''],
-                ['RR', row2.RR, '/ Min'],
-                ['CNS', row2.CNS, ''],
-                ['PA', row2.PA, '']
+                ['Height', row2.height || row2.Height || '', ''],
+                ['BP', row2.BP || row2.bp || '', '/mm of Hg'],
+                ['RS', row2.RS || row2.rs || '', ''],
+                ['Weight', row2.weight || row2.Weight || '', ''],
+                ['Pulse', row2.Pulse || row2.pulse || '', '/ Min'],
+                ['CVS', row2.CVS || row2.cvs || '', ''],
+                ['RR', row2.RR || row2.rr || '', '/ Min'],
+                ['CNS', row2.CNS || row2.cns || '', ''],
+                ['PA', row2.PA || row2.pa || row2['p/a'] || row2['P/A'] || '', '']
               ].map(([label, value, unit], i) => (
                 value ? (
                   <div key={i} style={{ width: "20%", float: "left" }}>
@@ -692,7 +696,7 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
           <br />
           <div className="row">
             <div className="col-md-12">
-              <table style={{ width: "100%" }}>
+              <table className="blank-section-table" style={{ width: "100%" }}>
                 <thead>
                   <tr>
                     <td>RF</td>
@@ -709,7 +713,7 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
           <br />
           <div className="row">
             <div className="col-md-12">
-              <table style={{ width: "100%" }}>
+              <table className="blank-section-table" style={{ width: "100%" }}>
                 <thead>
                   <tr>
                     <td>Constac/Plus</td>
@@ -731,7 +735,7 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
           <br />
           <div className="row">
             <div className="col-md-12">
-              <table style={{ width: "100%" }}>
+              <table className="blank-section-table" style={{ width: "100%" }}>
                 <thead>
                   <tr>
                     <td>3D Endoanal imaging</td>
@@ -746,7 +750,7 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
           <br />
           <div className="row">
             <div className="col-md-12">
-              <table style={{ width: "100%" }}>
+              <table className="blank-section-table" style={{ width: "100%" }}>
                 <thead>
                   <tr>
                     <td>CHT</td>
@@ -764,7 +768,7 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
           <br />
           <div className="row">
             <div className="col-md-12">
-              <table style={{ width: "100%" }}>
+              <table className="blank-section-table" style={{ width: "100%" }}>
                 <thead>
                   <tr>
                     <td>Cashless</td>
@@ -780,7 +784,7 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
           <br />
           <div className="row">
             <div className="col-md-12">
-              <table style={{ width: "100%" }}>
+              <table className="blank-section-table" style={{ width: "100%" }}>
                 <thead>
                   <tr>
                     <td style={{ width: "40%" }}>Next FU : </td>

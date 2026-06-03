@@ -570,9 +570,10 @@ export default function DoctorDashboard() {
 
     const getDetailedStatus = () => {
       if (!isConfirmed) return null;
-      const hasHistory = Number(selectedEvent.historychk) === 3;
-      const hasExecution = Number(selectedEvent.executivechk) === 1;
-      const hasConsultation = Number(selectedEvent.consultationchk) === 4;
+      const isExistingPatient = ["FOLLOW", "POSTOPERATIVE", "OTHER"].includes(selectedEvent.patientType?.toUpperCase());
+      const hasHistory = Number(selectedEvent.historychk) === 3 || isExistingPatient;
+      const hasExecution = Number(selectedEvent.executivechk) === 1 || isExistingPatient;
+      const hasConsultation = Number(selectedEvent.consultationchk) === 4 || isExistingPatient;
       const hasReceipt = Number(selectedEvent.executivechk) === 2;
 
       if (hasReceipt) {
@@ -726,6 +727,7 @@ export default function DoctorDashboard() {
                       patient: {
                         patient_id: selectedEvent.patientid,
                         name: selectedEvent.patientName,
+                        phone: selectedEvent.phone,
                         contact: selectedEvent.phone,
                         age: selectedEvent.age,
                         sex: selectedEvent.gender
@@ -1306,9 +1308,10 @@ margin-left: 1px;
                             const isAppConfirmed = app.confirmTime && app.confirmTime !== "0" && app.confirmTime !== 0;
                             let listStatus = null;
                             if (isAppConfirmed) {
-                              const hasHistory = Number(app.historychk) === 3;
-                              const hasExecution = Number(app.executivechk) === 1;
-                              const hasConsultation = Number(app.consultationchk) === 4;
+                              const isExistingPatient = ["FOLLOW", "POSTOPERATIVE", "OTHER"].includes(app.patientType?.toUpperCase());
+                              const hasHistory = Number(app.historychk) === 3 || isExistingPatient;
+                              const hasExecution = Number(app.executivechk) === 1 || isExistingPatient;
+                              const hasConsultation = Number(app.consultationchk) === 4 || isExistingPatient;
                               const hasReceipt = Number(app.executivechk) === 2;
 
                               if (hasReceipt) {

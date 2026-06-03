@@ -38,7 +38,8 @@ const DailyOPDReport = () => {
       setLoading(true);
 
       // Define the static date string here so it doesn't trigger re-renders
-      const apiDate = new Date().toISOString().split("T")[0];
+      const today = new Date();
+      const apiDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
       const response = await fetch(
         `${BASE_URL}/V1/appointment/daily-opd?location=${currentLocation}&date=${apiDate}`,
@@ -56,7 +57,14 @@ const DailyOPDReport = () => {
             { type: "TOTAL", count: d.dailyOPDReport[0][4] },
           ],
           opdDetails: d.detailedData.map((row, index) => {
-            const labels = ["DNC", "DNP", "DNW", "DNT", "WALK IN"];
+            const labels = [
+              "DNC",
+              "DNP",
+              "DNW",
+              "DNT",
+              "ONLY REGISTRATION",
+              "WALK IN",
+            ];
             return {
               type: labels[index],
               new: row[0],
@@ -115,7 +123,7 @@ const DailyOPDReport = () => {
         <table class="table table-sm table-striped text-center"
           style="border:1px solid #00bcd4; background:white; border-collapse: collapse; width: 100%;">
           <thead>
-            <tr style="background:#e3f2fd;">
+            <tr class="collection-header-row">
               <th colspan="2" style="text-align:left;padding-left:10px;border:1px solid #00bcd4;">
                 ${title}
               </th>
@@ -156,7 +164,13 @@ const DailyOPDReport = () => {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   
     <style>
-      body { background:white; padding:5px; }
+      @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+      body { 
+        font-family: 'Poppins', Arial, sans-serif;
+        background: white; 
+        padding: 5px; 
+      }
   
       @media print {
         * {
@@ -166,6 +180,19 @@ const DailyOPDReport = () => {
       }
       table { border-collapse: collapse; width: 100%; border: 1px solid #00bcd4 !important; }
       th, td { border: 1px solid #00bcd4 !important; }
+
+      .card-header {
+        background-color: #00acc1 !important;
+        color: white !important;
+      }
+      thead th {
+        background-color: #0288d1 !important;
+        color: white !important;
+      }
+      .collection-header-row th {
+        background-color: #e3f2fd !important;
+        color: #0288d1 !important;
+      }
     </style>
   </head>
   
@@ -182,8 +209,6 @@ const DailyOPDReport = () => {
   
         <div class="card-header text-center"
           style="font-weight:bold;
-                 background:#00acc1;
-                 color:white;
                  font-size:16px;
                  border-bottom:2px solid #0288d1;">
           DAILY OPD REPORT
