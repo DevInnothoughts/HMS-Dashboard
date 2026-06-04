@@ -10,6 +10,7 @@ import {
   Spinner,
 } from "react-bootstrap";
 import { decodeJwt } from "../../../utils/decode-jwt";
+import { FaPrint } from "react-icons/fa";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
 const BASE_URL = "http://194.195.117.79:5100/api";
@@ -17,6 +18,7 @@ const BASE_URL = "http://194.195.117.79:5100/api";
 const initialReportState = {
   opdCounts: [],
   opdDetails: [],
+  opdCollectionDetails: [],
   overallCollectionDetails: [],
   labCollectionDetails: [],
   pharmacyCollectionDetails: [],
@@ -33,16 +35,16 @@ const DailyOPDReport = () => {
   const formattedDate = `${String(today.getDate()).padStart(2, "0")}-${String(today.getMonth() + 1).padStart(2, "0")}-${today.getFullYear()}`;
 
   // 2. Remove 'selectedDate' from the useCallback dependencies
-  const fetchDailyReport = useCallback(async (currentLocation) => {
+  const fetchDailyReport = useCallback(async (currentLocation, isBackground = false) => {
     try {
-      setLoading(true);
+      if (!isBackground) setLoading(true);
 
       // Define the static date string here so it doesn't trigger re-renders
       const today = new Date();
       const apiDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
       const response = await fetch(
-        `${BASE_URL}/V1/appointment/daily-opd?location=${currentLocation}&date=${apiDate}`,
+        `${BASE_URL}/V1/daily-opd-report?location=${currentLocation}&date=${apiDate}`,
       );
       const result = await response.json();
       console.log(result);
@@ -73,6 +75,10 @@ const DailyOPDReport = () => {
               total: row[3],
             };
           }),
+          opdCollectionDetails: d.opdCollection.map((item) => ({
+            method: item[0],
+            amount: item[1],
+          })),
           overallCollectionDetails: d.overallCollection.map((item) => ({
             method: item[0],
             amount: item[1],
@@ -95,20 +101,31 @@ const DailyOPDReport = () => {
     } catch (error) {
       console.error("Error setting report data:", error);
     } finally {
-      setLoading(false);
+      if (!isBackground) setLoading(false);
     }
   }, []); // Empty dependency array means this function is created only once
 
   // 3. Effect triggers only when the function or identity changes (which is now never)
   useEffect(() => {
     const token = localStorage.getItem("token");
+    let loc = "";
     if (token) {
       const payload = decodeJwt(token);
       if (payload?.jobLocation) {
-        setCurrentLocation(payload.jobLocation);
-        fetchDailyReport(payload.jobLocation);
+        loc = payload.jobLocation;
+        setCurrentLocation(loc);
+        fetchDailyReport(loc);
       }
     }
+
+    // Auto-refresh data every 15 seconds in the background
+    const interval = setInterval(() => {
+      if (loc) {
+        fetchDailyReport(loc, true);
+      }
+    }, 15000);
+
+    return () => clearInterval(interval);
   }, [fetchDailyReport]);
 
   // const handlePrint = () => {
@@ -119,36 +136,34 @@ const DailyOPDReport = () => {
     const printWindow = window.open("", "_blank", "width=1000,height=900");
 
     const buildCollectionTable = (title, data) => `
-      <div class="col-4 mb-4">
-        <table class="table table-sm table-striped text-center"
-          style="border:1px solid #00bcd4; background:white; border-collapse: collapse; width: 100%;">
+      <div class="col-4 mb-2">
+        <table class="table table-bordered table-sm table-striped mx-auto"
+          style="border:1px solid #00bcd4; background:white; font-size:13px; text-align:center; border-collapse: collapse; width: 100%;">
           <thead>
-            <tr class="collection-header-row">
-              <th colspan="2" style="text-align:left;padding-left:10px;border:1px solid #00bcd4;">
+            <tr style="background-color:#e3f2fd !important;">
+              <th colspan="2" style="background-color:#e3f2fd !important; color:#000 !important; text-align:left; padding-left:10px; border-right:1px solid #00bcd4 !important; border-left:1px solid #00bcd4 !important;">
                 ${title}
               </th>
             </tr>
           </thead>
           <tbody>
             ${data
-              .map(
-                (item) => `
+        .map(
+          (item) => `
               <tr>
                 <td style="text-align:left;padding-left:10px;width:70%;
-                    font-weight:${item.method === "TOTAL" ? "bold" : "normal"};
-                    color:${item.method === "TOTAL" ? "#000" : "#6c757d"};
-                    border: 1px solid #00bcd4;">
+                    font-weight:bold;
+                    color:${item.method === "TOTAL" ? "inherit" : "#343030ff"} !important;">
                   ${item.method}
                 </td>
                 <td style="width:30%;
-                    font-weight:${item.method === "TOTAL" ? "bold" : "normal"};
-                    border: 1px solid #00bcd4;">
+                    font-weight:${item.method === "TOTAL" ? "bold" : "normal"};">
                   ${item.amount}
                 </td>
               </tr>
             `,
-              )
-              .join("")}
+        )
+        .join("")}
           </tbody>
         </table>
       </div>
@@ -177,21 +192,22 @@ const DailyOPDReport = () => {
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
         }
+        body {
+          zoom: 0.85; /* Scale down the whole page to fit perfectly */
+        }
+        .card {
+          page-break-inside: avoid;
+        }
       }
       table { border-collapse: collapse; width: 100%; border: 1px solid #00bcd4 !important; }
-      th, td { border: 1px solid #00bcd4 !important; }
+      th, td { 
+        border: 1px solid #00bcd4 !important; 
+        padding: 2px 4px !important; /* Aggressively reduce padding */
+      }
 
       .card-header {
         background-color: #00acc1 !important;
         color: white !important;
-      }
-      thead th {
-        background-color: #0288d1 !important;
-        color: white !important;
-      }
-      .collection-header-row th {
-        background-color: #e3f2fd !important;
-        color: #0288d1 !important;
       }
     </style>
   </head>
@@ -221,87 +237,87 @@ const DailyOPDReport = () => {
           </div>
   
           <!-- OPD COUNT -->
-          <div class="row justify-content-center mb-4">
+          <div class="row justify-content-center mb-2">
             <div class="col-6">
               <table class="table table-sm table-striped text-center"
                 style="border:1px solid #00bcd4; border-collapse: collapse; width: 100%;">
-                <thead style="background:#0288d1;color:white;font-size:13px;">
+                <thead style="background:#e3f2fd;color:#000;font-size:13px;">
                   <tr>
-                    <th style="width:60%">Type</th>
-                    <th style="width:40%">Total</th>
+                    <th style="background-color:#e3f2fd !important; color:#000 !important; width:60%; border-right:1px solid #00bcd4 !important; border-left:1px solid #00bcd4 !important;">Type</th>
+                    <th style="background-color:#e3f2fd !important; color:#000 !important; width:40%; border-right:1px solid #00bcd4 !important; border-left:1px solid #00bcd4 !important;">Total</th>
                   </tr>
                 </thead>
                 <tbody style="font-size:12px;">
                   ${reportData.opdCounts
-                    .map(
-                      (i) => `
+        .map(
+          (i) => `
                     <tr>
-                      <td class="fw-bold text-secondary">${i.type}</td>
+                      <td class="fw-bold" style="color:#000 !important;">${i.type}</td>
                       <td>${i.count}</td>
                     </tr>
                   `,
-                    )
-                    .join("")}
+        )
+        .join("")}
                 </tbody>
               </table>
             </div>
           </div>
   
           <!-- OPD DETAILS -->
-          <div class="row justify-content-center mb-4">
+          <div class="row justify-content-center mb-2">
             <div class="col-10">
               <table class="table table-sm table-striped text-center"
                 style="border:1px solid #00bcd4; border-collapse: collapse; width: 100%;">
-                <thead style="background:#0288d1;color:white;font-size:13px;">
+                <thead style="background:#e3f2fd;color:#000;font-size:13px;">
                   <tr>
-                    <th>Type</th>
-                    <th>New</th>
-                    <th>Follow UP</th>
-                    <th>PO</th>
-                    <th>Total</th>
+                    <th style="background-color:#e3f2fd !important; color:#000 !important; border-right:1px solid #00bcd4 !important; border-left:1px solid #00bcd4 !important;">Type</th>
+                    <th style="background-color:#e3f2fd !important; color:#000 !important; border-right:1px solid #00bcd4 !important; border-left:1px solid #00bcd4 !important;">New</th>
+                    <th style="background-color:#e3f2fd !important; color:#000 !important; border-right:1px solid #00bcd4 !important; border-left:1px solid #00bcd4 !important;">Follow UP</th>
+                    <th style="background-color:#e3f2fd !important; color:#000 !important; border-right:1px solid #00bcd4 !important; border-left:1px solid #00bcd4 !important;">PO</th>
+                    <th style="background-color:#e3f2fd !important; color:#000 !important; border-right:1px solid #00bcd4 !important; border-left:1px solid #00bcd4 !important;">Total</th>
                   </tr>
                 </thead>
                 <tbody style="font-size:12px;">
                   ${reportData.opdDetails
-                    .map(
-                      (i) => `
+        .map(
+          (i) => `
                     <tr>
-                      <td class="fw-bold text-secondary">${i.type}</td>
+                      <td class="fw-bold" style="color:#000 !important;">${i.type}</td>
                       <td>${i.new}</td>
                       <td>${i.followUp}</td>
                       <td>${i.po}</td>
                       <td>${i.total}</td>
                     </tr>
                   `,
-                    )
-                    .join("")}
+        )
+        .join("")}
                 </tbody>
               </table>
             </div>
           </div>
   
           <!-- TEST DETAILS -->
-          <div class="row justify-content-center mb-4">
+          <div class="row justify-content-center mb-2">
             <div class="col-6">
               <table class="table table-sm table-striped text-center"
                 style="border:1px solid #00bcd4; border-collapse: collapse; width: 100%;">
-                <thead style="background:#0288d1;color:white;font-size:13px;">
+                <thead style="background:#e3f2fd;color:#000;font-size:13px;">
                   <tr>
-                    <th>Test</th>
-                    <th>Amount</th>
+                    <th style="background-color:#e3f2fd !important; color:#000 !important; border-right:1px solid #00bcd4 !important; border-left:1px solid #00bcd4 !important;">Test</th>
+                    <th style="background-color:#e3f2fd !important; color:#000 !important; border-right:1px solid #00bcd4 !important; border-left:1px solid #00bcd4 !important;">Amount</th>
                   </tr>
                 </thead>
                 <tbody style="font-size:12px;">
                   ${reportData.testDetails
-                    .map(
-                      (i) => `
+        .map(
+          (i) => `
                     <tr>
-                      <td class="fw-bold text-secondary">${i.testName}</td>
+                      <td class="fw-bold" style="color:#000 !important;">${i.testName}</td>
                       <td>₹ ${i.amount}</td>
                     </tr>
                   `,
-                    )
-                    .join("")}
+        )
+        .join("")}
                 </tbody>
               </table>
             </div>
@@ -309,9 +325,12 @@ const DailyOPDReport = () => {
   
           <!-- COLLECTIONS -->
           <div class="row justify-content-center">
-            ${buildCollectionTable("Overall Collection Detail (Rs)", reportData.overallCollectionDetails)}
-            ${buildCollectionTable("LAB Collection Detail (Rs)", reportData.labCollectionDetails)}
-            ${buildCollectionTable("Pharmacy Collection Detail (Rs)", reportData.pharmacyCollectionDetails)}
+            ${buildCollectionTable("OPD Collection Details(Rs)", reportData.opdCollectionDetails)}
+            ${buildCollectionTable("LAB Collection Details(Rs)", reportData.labCollectionDetails)}
+            ${buildCollectionTable("Pharmacy Collection Details(Rs)", reportData.pharmacyCollectionDetails)}
+          </div>
+          <div class="row justify-content-center">
+            ${buildCollectionTable("Overall Collection Details(Rs)", reportData.overallCollectionDetails)}
           </div>
   
         </div>
@@ -435,8 +454,8 @@ const DailyOPDReport = () => {
                     >
                       <thead
                         style={{
-                          backgroundColor: "#0288d1",
-                          color: "white",
+                          backgroundColor: "#e3f2fd",
+                          color: "#000",
                           fontSize: "13px",
                         }}
                       >
@@ -488,8 +507,8 @@ const DailyOPDReport = () => {
                     >
                       <thead
                         style={{
-                          backgroundColor: "#0288d1",
-                          color: "white",
+                          backgroundColor: "#e3f2fd",
+                          color: "#000",
                           fontSize: "13px",
                         }}
                       >
@@ -564,8 +583,8 @@ const DailyOPDReport = () => {
                     >
                       <thead
                         style={{
-                          backgroundColor: "#0288d1",
-                          color: "white",
+                          backgroundColor: "#e3f2fd",
+                          color: "#000",
                           fontSize: "13px",
                         }}
                       >
@@ -600,16 +619,79 @@ const DailyOPDReport = () => {
                 <Row className="justify-content-center">
                   {[
                     {
-                      title: "Overall Collection Detail(Rs)",
-                      data: reportData.overallCollectionDetails,
+                      title: "OPD Collection Details(Rs)",
+                      data: reportData.opdCollectionDetails,
                     },
                     {
-                      title: "LAB Collection Detail(Rs)",
+                      title: "LAB Collection Details(Rs)",
                       data: reportData.labCollectionDetails,
                     },
                     {
-                      title: "Pharmacy Collection Detail(Rs)",
+                      title: "Pharmacy Collection Details(Rs)",
                       data: reportData.pharmacyCollectionDetails,
+                    },
+                  ].map((section, idx) => (
+                    <Col key={idx} xs={12} lg={4} className="mb-4">
+                      <Table
+                        bordered
+                        responsive
+                        className="table-sm table-striped mx-auto"
+                        style={{
+                          border: "1px solid #00bcd4",
+                          textAlign: "center",
+                          fontSize: "13px",
+                          backgroundColor: "white",
+                        }}
+                      >
+                        <thead>
+                          <tr style={{ backgroundColor: "#e3f2fd" }}>
+                            <th
+                              colSpan="2"
+                              style={{
+                                textAlign: "left",
+                                paddingLeft: "10px",
+                                borderRight: "1px solid #00bcd4",
+                                borderLeft: "1px solid #00bcd4",
+                              }}
+                            >
+                              {section.title}
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {section.data.map((item, index) => (
+                            <tr key={index}>
+                              <td
+                                className={`fw-bold ${item.method === "TOTAL" ? "" : "text-secondary"}`}
+                                style={{
+                                  textAlign: "left",
+                                  paddingLeft: "10px",
+                                  width: "70%",
+                                }}
+                              >
+                                {item.method}
+                              </td>
+                              <td
+                                style={{
+                                  width: "30%",
+                                  fontWeight:
+                                    item.method === "TOTAL" ? "bold" : "normal",
+                                }}
+                              >
+                                {item.amount}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </Table>
+                    </Col>
+                  ))}
+                </Row>
+                <Row className="justify-content-center">
+                  {[
+                    {
+                      title: "Overall Collection Details(Rs)",
+                      data: reportData.overallCollectionDetails,
                     },
                   ].map((section, idx) => (
                     <Col key={idx} xs={12} lg={4} className="mb-4">
@@ -678,10 +760,10 @@ const DailyOPDReport = () => {
               >
                 <Button
                   variant="primary"
-                  style={{ border: "none" }}
+                  style={{ border: "none", display: "inline-flex", alignItems: "center", gap: "8px" }}
                   onClick={handlePrint}
                 >
-                  Print Report
+                  <FaPrint /> Print Report
                 </Button>
               </Card.Footer>
             </Card>

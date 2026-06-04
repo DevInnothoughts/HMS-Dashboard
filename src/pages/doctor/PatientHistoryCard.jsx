@@ -34,12 +34,17 @@ const PatientHistoryCard = ({
     { id: "circumcision", label: "Circumcision", icon: "plus-circle" }
   ];
 
+  const lastAutoSwitchedId = React.useRef(null);
+
   // Auto-switch to first non-empty tab when loading a history record
   useEffect(() => {
-    if (selectedHistoryId && historyData) {
+    if (!selectedHistoryId) {
+      lastAutoSwitchedId.current = null;
+    } else if (historyData && lastAutoSwitchedId.current !== selectedHistoryId) {
       const firstWithData = subTabs.find(st => hasTabDetail(st.id));
       if (firstWithData) {
         setHistoryActiveSubTab(firstWithData.id);
+        lastAutoSwitchedId.current = selectedHistoryId;
       }
     }
   }, [selectedHistoryId, historyData]);
@@ -264,7 +269,7 @@ const PatientHistoryCard = ({
         <Row className="g-2 px-1">
           <Col md={4}>
             <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px", color: "#006064" }}>Consultation Date</Form.Label>
-            <Form.Control type="date" size="sm" value={historyData.patient_date} onChange={(e) => handleHistoryChange("patient_date", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+            <Form.Control type="date" max={new Date().toISOString().split("T")[0]} size="sm" value={historyData.patient_date} onChange={(e) => handleHistoryChange("patient_date", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
           </Col>
           <Col md={4}>
             <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px", color: "#006064" }}>

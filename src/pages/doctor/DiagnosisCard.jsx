@@ -603,7 +603,7 @@ const DiagnosisCard = ({
         <Row>
           <Col md={2} className="mb-17">
             <Form.Label className="fw-bold" style={{ fontSize: "13px", color: "#006064" }}>Diagnosis Date</Form.Label>
-            <Form.Control type="date" value={diagnosisData.date_diagnosis} onChange={(e) => handleDiagnosisChange("date_diagnosis", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+            <Form.Control type="date" max={new Date().toISOString().split("T")[0]} value={diagnosisData.date_diagnosis} onChange={(e) => handleDiagnosisChange("date_diagnosis", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
           </Col>
           {/* <Col md={5} className="mb-3">
             <Form.Label className="fw-bold" style={{ fontSize: "11px", color: "#006064" }}>Investigation Orders</Form.Label>

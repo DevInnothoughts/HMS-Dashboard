@@ -53,16 +53,20 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
             border: 1px solid #d7d7d7;
             padding: 10px 5px;
             margin-bottom: 10px;
+            font-size: 14px !important;
+          }
+          .diagnosis-print-container .record-box p {
+            font-size: 14px !important;
           }
           .diagnosis-print-container table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 5px;
-            font-size: 9px !important;
+            font-size: 12px !important;
           }
           .diagnosis-print-container table.blank-section-table,
           .diagnosis-print-container table.blank-section-table td { 
-            font-size: 12px !important;
+            font-size: 14px !important;
           }
           .diagnosis-print-container table, .diagnosis-print-container th, .diagnosis-print-container td {
             border: 1px solid #d7d7d7;
@@ -94,7 +98,7 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
         {/* PATIENT INFORMATION */}
         <div className="row">
           <div className="col-md-12">
-            <h4>PATIENT INFORMATION</h4>
+            <h4 style={{ fontWeight: "bold", fontSize: "20px" }}>PATIENT INFORMATION</h4>
           </div>
         </div>
         <div className="record-box">
@@ -117,7 +121,7 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
         {/* PATIENT HISTORY */}
         <div className="row">
           <div className="col-md-12">
-            <h4>PATIENT HISTORY</h4>
+            <h4 style={{ fontWeight: "bold", fontSize: "20px" }}>PATIENT HISTORY</h4>
           </div>
         </div>
         {historyList.map((row2, idx) => (
@@ -137,7 +141,7 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
                 ['Height', row2.height || row2.Height || '', ''],
                 ['BP', row2.BP || row2.bp || '', '/mm of Hg'],
                 ['RS', row2.RS || row2.rs || '', ''],
-                ['Weight', row2.weight || row2.Weight || '', ''],
+                ['Weight', row2.weight || row2.Weight || '', ' kgs'],
                 ['Pulse', row2.Pulse || row2.pulse || '', '/ Min'],
                 ['CVS', row2.CVS || row2.cvs || '', ''],
                 ['RR', row2.RR || row2.rr || '', '/ Min'],
@@ -552,7 +556,7 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
           <>
             <div className="row">
               <div className="col-md-12">
-                <h4>DIAGNOSIS</h4>
+                <h4 style={{ fontWeight: "bold", fontSize: "20px" }}>DIAGNOSIS</h4>
               </div>
             </div>
             {diagnosisList.map((row3, idx) => (
@@ -678,7 +682,7 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
             </div>
           </div>
           <div className="row">
-            <div className="col-md-12"><b>Diagnosis Details: </b></div>
+            <div className="col-md-12" style={{ fontSize: "14px" }}><b>Diagnosis Details: </b></div>
             <div className="col-md-12">
               <p style={{ border: "1px solid #d7d7d7", height: "20px", margin: "0px" }}></p>
               <p style={{ border: "1px solid #d7d7d7", height: "20px", borderTop: "0px", margin: "0px" }}></p>
@@ -686,7 +690,7 @@ const DiagnosisPrintView = React.forwardRef(({ patient, historyList = [], diagno
             </div>
           </div>
           <div className="row">
-            <div className="col-md-12"><b>Plan: </b></div>
+            <div className="col-md-12" style={{ fontSize: "14px" }}><b>Plan: </b></div>
             <div className="col-md-12">
               <p style={{ border: "1px solid #d7d7d7", height: "20px", margin: "0px" }}></p>
               <p style={{ border: "1px solid #d7d7d7", height: "20px", borderTop: "0px", margin: "0px" }}></p>

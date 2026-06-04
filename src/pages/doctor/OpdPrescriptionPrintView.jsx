@@ -173,6 +173,14 @@ const OpdPrescriptionPrintView = React.forwardRef(
             <div style={{ width: "10%", textAlign: "right" }}>Qty</div>
           </div>
 
+          {d.no_medicines_prescribed && (
+            <div className="row-flex" style={{ marginBottom: "10px" }}>
+              <div style={{ width: "100%", textAlign: "center" }}>
+                <i>No Medicines Prescribed</i>
+              </div>
+            </div>
+          )}
+
           {medicines.map((med, idx) => {
             const isAnoacCream =
               med.name?.toLowerCase().includes("cream") ||

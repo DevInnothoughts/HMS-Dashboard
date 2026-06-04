@@ -85,6 +85,7 @@ const ProctoscopyCard = ({
             <h6 className="fw-bold mb-5" style={{ color: "#006064", fontSize: "12px" }}>Date</h6>
             <Form.Control
               type="date"
+              max={new Date().toISOString().split("T")[0]}
               value={proctoscopyData.procto_date}
               onChange={(e) => handleProctoscopyChange("procto_date", e.target.value)}
               style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px", background: "white" }}

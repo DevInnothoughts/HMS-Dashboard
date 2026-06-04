@@ -89,7 +89,7 @@ const DailyClosing = () => {
       }
 
       // Fetch Daily OPD Report for Pharmacy Cash
-      const opdReportUrl = `${BASE_URL}/V1/appointment/daily-opd?location=${loc}&date=${entryDate}`;
+      const opdReportUrl = `${BASE_URL}/V1/daily-opd-report?location=${loc}&date=${entryDate}`;
       const opdReportResponse = await fetch(opdReportUrl, {
         method: "GET",
         headers: {

@@ -807,8 +807,8 @@ export default function All_patient() {
       setOldPatientDetails({
         patient_ref_no: parts[0] || "",
         old_patient_name: parts[1] || "",
-        old_patient_id_value: parts[2] || "",
-        old_patient_pincode: parts[3] || "",
+        old_patient_id_value: "",
+        old_patient_pincode: "",
       });
     } else if (patient.reference_type === "dr_ref") {
       setReferenceDetails((prev) => ({
@@ -818,6 +818,13 @@ export default function All_patient() {
         dr_contact: patient.ref_doctor_phone || "",
         dr_specialty: patient.reference_doctor_speciality || "",
         dr_location: patient.reference_doctor_location || "",
+      }));
+    } else if (patient.reference_type === "family_friends") {
+      const parts = (patient.ref || "").split(",");
+      setReferenceDetails((prev) => ({
+        ...prev,
+        friendname: parts[0] || "",
+        friendno: parts[1] || "",
       }));
     } else {
       const standardNewspapers = [
@@ -950,9 +957,7 @@ export default function All_patient() {
         break;
       case "old_ref":
         reference_type = "old_ref";
-        ref = `${oldPatientDetails.patient_ref_no || ""},${oldPatientDetails.old_patient_name || ""
-          },${oldPatientDetails.old_patient_id_value || ""},${oldPatientDetails.old_patient_pincode || ""
-          }`;
+        ref = `${oldPatientDetails.patient_ref_no || ""},${oldPatientDetails.old_patient_name || ""}`;
         break;
       case "family_friends":
         reference_type = "family_friends";
@@ -1703,14 +1708,14 @@ export default function All_patient() {
                         setOldPatientDetails({
                           patient_ref_no: patient.phone || "",
                           old_patient_name: patient.name || "",
-                          old_patient_id_value: patient.patient_id || "",
-                          old_patient_pincode: patient.pincode || "",
+                          old_patient_id_value: "",
+                          old_patient_pincode: "",
                         });
                         setPatientSearchResults([]);
                         setFormData((prev) => ({
                           ...prev,
                           reference_type: "old_ref",
-                          ref: `${patient.phone},${patient.name},${patient.patient_id},${patient.pincode}`,
+                          ref: `${patient.phone},${patient.name}`,
                         }));
                       }}
                     >
@@ -1746,31 +1751,6 @@ export default function All_patient() {
                 }}
               />
 
-              <input
-                className="form-control"
-                type="text"
-                name="old_patient_pincode"
-                placeholder="Pincode"
-                value={oldPatientDetails.old_patient_pincode || ""}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setOldPatientDetails((prev) => ({
-                    ...prev,
-                    old_patient_pincode: val,
-                  }));
-                  setFormData((prev) => ({
-                    ...prev,
-                    reference_type: "old_ref",
-                  }));
-                }}
-                style={{
-                  flex: "1",
-                  minWidth: "200px",
-                  border: "2px solid rgb(77, 208, 225)",
-                  fontSize: "12px",
-                  borderRadius: "10px",
-                }}
-              />
             </div>
           </div>
         );

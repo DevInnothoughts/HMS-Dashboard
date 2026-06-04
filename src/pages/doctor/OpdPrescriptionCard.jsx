@@ -260,6 +260,7 @@ const OpdPrescriptionCard = ({
             </Form.Label>
             <Form.Control
               type="date"
+              max={new Date().toISOString().split("T")[0]}
               disabled={prescriptionData.no_medicines_prescribed}
               value={prescriptionData.creation_timestamp}
               onChange={(e) =>
@@ -728,6 +729,7 @@ const OpdPrescriptionCard = ({
             </Form.Label>
             <Form.Control
               type="date"
+              min={new Date().toISOString().split("T")[0]}
               value={prescriptionData["next-appo-date"] || ""}
               onChange={(e) =>
                 handlePrescriptionChange("next-appo-date", e.target.value)
@@ -1006,7 +1008,7 @@ const OpdPrescriptionCard = ({
           </Col>
         </Row>
 
-        {prescriptionData.medicines?.length > 0 && (
+        {(prescriptionData.medicines?.length > 0 || prescriptionData.no_medicines_prescribed) && (
           <div className="mt-4 rounded overflow-hidden border">
             <Table responsive hover className="mb-0">
               <thead
@@ -1049,8 +1051,15 @@ const OpdPrescriptionCard = ({
                 </tr>
               </thead>
               <tbody>
-                {prescriptionData.medicines.map((m, idx) => (
-                  <tr key={idx} className="align-middle">
+                {prescriptionData.no_medicines_prescribed ? (
+                  <tr>
+                    <td colSpan="5" className="text-center py-3">
+                      <i className="fw-bold">No Medicines Prescribed</i>
+                    </td>
+                  </tr>
+                ) : (
+                  prescriptionData.medicines.map((m, idx) => (
+                    <tr key={idx} className="align-middle">
                     <td
                       className="py-2 px-3 fw-bold"
                       style={{ fontSize: "14px" }}
@@ -1130,36 +1139,13 @@ const OpdPrescriptionCard = ({
                       </Button>
                     </td>
                   </tr>
-                ))}
+                )))}
               </tbody>
             </Table>
           </div>
         )}
 
-        {removedMedicines?.length > 0 && (
-          <div className="mt-3 p-3 bg-light rounded border border-danger border-opacity-25 animate__animated animate__fadeIn">
-            <h6 className="fw-bold text-danger mb-2 d-flex align-items-center" style={{ fontSize: "13px" }}>
-              <FeatherIcon icon="alert-circle" size="14" className="me-2" />
-              Removed Medicines (This Session)
-            </h6>
-            <div className="d-flex flex-wrap gap-2">
-              {removedMedicines.map((m, idx) => (
-                <span
-                  key={idx}
-                  className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 d-flex align-items-center"
-                  style={{
-                    fontSize: "11px",
-                    borderRadius: "20px",
-                    padding: "6px 12px",
-                    textDecoration: "line-through"
-                  }}
-                >
-                  {m.name} ({m.qty} Qty, {m.days} Days)
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
+
       </div>
 
       <div className="text-center mb-5 pb-5">

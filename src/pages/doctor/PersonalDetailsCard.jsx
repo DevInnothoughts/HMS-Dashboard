@@ -539,9 +539,7 @@ const PersonalDetailsCard = () => {
     };
 
     if (isHistoryEmpty()) {
-      toast.warning(
-        "Please fill in at least one history detail before saving.",
-      );
+      Swal.fire({ icon: "warning", title: "Incomplete Details", text: "Please fill in at least one history detail before saving." });
       return;
     }
 
@@ -557,7 +555,7 @@ const PersonalDetailsCard = () => {
     }
 
     if (missingFields.length > 0) {
-      toast.warning(`Required fields are not filled: ${missingFields.join(", ")}`);
+      Swal.fire({ icon: "warning", title: "Missing Required Fields", text: `Please fill the required fields: ${missingFields.join(", ")}` });
       return;
     }
 
@@ -1181,7 +1179,7 @@ const PersonalDetailsCard = () => {
       );
 
     if (!hasData) {
-      toast.warning("Please fill in diagnosis details before saving.");
+      Swal.fire({ icon: "warning", title: "Incomplete Details", text: "Please fill in diagnosis details before saving." });
       return;
     }
 
@@ -1209,7 +1207,7 @@ const PersonalDetailsCard = () => {
     }
 
     if (missingFields.length > 0) {
-      toast.warning(`Required fields are not filled: ${missingFields.join(", ")}`);
+      Swal.fire({ icon: "warning", title: "Missing Required Fields", text: `Please fill the required fields: ${missingFields.join(", ")}` });
       return;
     }
 
@@ -1770,9 +1768,7 @@ const PersonalDetailsCard = () => {
       !proctoscopyData.interpretation?.trim() &&
       (!proctoscopyData.images || proctoscopyData.images.length === 0)
     ) {
-      toast.warning(
-        "Please provide an interpretation or upload images before saving.",
-      );
+      Swal.fire({ icon: "warning", title: "Incomplete Details", text: "Please provide an interpretation or upload images before saving." });
       return;
     }
 
@@ -1946,6 +1942,7 @@ const PersonalDetailsCard = () => {
             uroadvice: toArray(d.uroadvice),
             preopinvestigation: toArray(d.preopinvestigation),
             medicines: safeMedicines(d.medicines),
+            no_medicines_prescribed: d.no_medicines_prescribed === true || d.no_medicines_prescribed === "true" || d.no_medicines_prescribed === 1 || d.no_medicines_prescribed === "1",
           });
           toast.success(`Loaded prescription for ${selected.date}`);
         }
@@ -2384,8 +2381,8 @@ const PersonalDetailsCard = () => {
           setOldPatientDetails({
             patient_ref_no: parts[0] || "",
             old_patient_name: parts[1] || "",
-            old_patient_id_value: parts[2] || "",
-            old_patient_pincode: parts[3] || "",
+            old_patient_id_value: "",
+            old_patient_pincode: "",
           });
         } else if (patient.reference_type === "dr_ref") {
           const isManual = !patient.ref_doctor_name;
@@ -2427,6 +2424,13 @@ const PersonalDetailsCard = () => {
             };
             fetchRefDocDetails();
           }
+        } else if (patient.reference_type === "family_friends") {
+          const parts = (patient.ref || "").split(",");
+          setReferenceDetails((prev) => ({
+            ...prev,
+            friendname: parts[0] || "",
+            friendno: parts[1] || "",
+          }));
         } else {
           setReferenceDetails((prev) => ({
             ...prev,
@@ -2496,7 +2500,7 @@ const PersonalDetailsCard = () => {
         dischargeData.treatment_on_discharge.length > 0);
 
     if (!hasData) {
-      toast.warning("Please fill in discharge details before saving.");
+      Swal.fire({ icon: "warning", title: "Incomplete Details", text: "Please fill in discharge details before saving." });
       return;
     }
 
@@ -3173,12 +3177,12 @@ const PersonalDetailsCard = () => {
                           setOldPatientDetails({
                             patient_ref_no: p.phone || "",
                             old_patient_name: p.name || "",
-                            old_patient_id_value: p.patient_id || "",
-                            old_patient_pincode: p.pincode || "",
+                            old_patient_id_value: "",
+                            old_patient_pincode: "",
                           });
                           setFormData((prev) => ({
                             ...prev,
-                            ref: `${p.phone},${p.name},${p.patient_id},${p.pincode}`,
+                            ref: `${p.phone},${p.name}`,
                           }));
                           setPatientSearchResults([]);
                         }}
@@ -3199,30 +3203,6 @@ const PersonalDetailsCard = () => {
                     setOldPatientDetails((prev) => ({
                       ...prev,
                       old_patient_name: val,
-                    }));
-                    setFormData((prev) => ({
-                      ...prev,
-                      reference_type: "old_ref",
-                    }));
-                  }}
-                  style={{
-                    border: "2px solid #b2ebf2",
-                    borderRadius: "8px",
-                    padding: "4px 10px",
-                    fontSize: "12px",
-                  }}
-                />
-              </Col>
-              <Col md={4}>
-                <Form.Control
-                  type="text"
-                  placeholder="Pincode"
-                  value={oldPatientDetails.old_patient_pincode || ""}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setOldPatientDetails((prev) => ({
-                      ...prev,
-                      old_patient_pincode: val,
                     }));
                     setFormData((prev) => ({
                       ...prev,
@@ -3627,7 +3607,7 @@ const PersonalDetailsCard = () => {
 
     for (let req of requiredFields) {
       if (!formData[req.field]) {
-        toast.error(`Please fill the required field: ${req.name}`);
+        Swal.fire({ icon: "warning", title: "Missing Required Fields", text: `Please fill the required field: ${req.name}` });
         return;
       }
     }
@@ -3693,9 +3673,7 @@ const PersonalDetailsCard = () => {
         break;
       case "old_ref":
         reference_type = "old_ref";
-        ref = `${oldPatientDetails.patient_ref_no || ""},${oldPatientDetails.old_patient_name || ""
-          },${oldPatientDetails.old_patient_id_value || ""},${oldPatientDetails.old_patient_pincode || ""
-          }`;
+        ref = `${oldPatientDetails.patient_ref_no || ""},${oldPatientDetails.old_patient_name || ""}`;
         break;
       case "family_friends":
         reference_type = "family_friends";
@@ -3902,7 +3880,7 @@ const PersonalDetailsCard = () => {
     const hasPresentComplaints = followUpData.present_complaints?.trim();
 
     if (!hasPresentComplaints) {
-      toast.warning("Please fill in Present Complaints before saving.");
+      Swal.fire({ icon: "warning", title: "Incomplete Details", text: "Please fill in Present Complaints before saving." });
       return;
     }
 
@@ -4049,7 +4027,7 @@ const PersonalDetailsCard = () => {
 
     if (missingFields.length > 0) {
       console.log("[DEBUG] Form submission blocked due to missing fields:", missingFields);
-      toast.warning(`Required fields are not filled: ${missingFields.join(", ")}`);
+      Swal.fire({ icon: "warning", title: "Missing Required Fields", text: `Please fill the required fields: ${missingFields.join(", ")}` });
       return;
     }
 
@@ -5074,6 +5052,8 @@ const PersonalDetailsCard = () => {
                           handlePrescriptionChange("no_medicines_prescribed", e.target.checked);
                           if (e.target.checked) {
                             handlePrescriptionChange("medicines", []);
+                            handlePrescriptionChange("next-appo-date", "");
+                            handlePrescriptionChange("patient_type", "");
                           }
                         }}
                         className="m-0"

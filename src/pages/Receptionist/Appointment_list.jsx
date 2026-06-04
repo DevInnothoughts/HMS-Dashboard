@@ -340,7 +340,10 @@ export default function Appointment_list() {
               : receiptForm.paymentMode === "upi"
                 ? "UPI"
                 : receiptForm.paymentMode,
-        regtype: receiptForm.registrationType,
+        regtype:
+          receiptForm.registrationType === "Only Registration"
+            ? "Registration"
+            : receiptForm.registrationType,
         expectedamt: parseFloat(payable) || 0,
         discountamt: parseFloat(receiptForm.discountAmt) || 0,
         discountnote: receiptForm.discountNote || "",
@@ -812,7 +815,7 @@ export default function Appointment_list() {
     );
     console.log(dateOnly);
     const finalAppointmentTime = selectedAppointment.appointment_time
-      ? moment(selectedAppointment.appointment_time, ["HH:mm:ss", "hh:mm A"]).format("HH:mm:ss")
+      ? moment(selectedAppointment.appointment_time, ["HH:mm:ss", "hh:mm A"]).format("HH:mm")
       : null;
 
     const updatePayload = {
@@ -884,7 +887,7 @@ export default function Appointment_list() {
         {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ reason: cancellationReason }),
+          body: JSON.stringify({ cancellationReason: cancellationReason }),
         },
       );
 
@@ -2387,6 +2390,11 @@ export default function Appointment_list() {
                           receiptForm.registrationType !== "Only Registration"
                         }
                         onWheel={(e) => e.target.blur()}
+                        onKeyDown={(e) => {
+                          if (["e", "E", "+", "-", "."].includes(e.key)) {
+                            e.preventDefault();
+                          }
+                        }}
                         onChange={(e) => {
                           const newItems = [...billingItems];
                           newItems[index].amount = e.target.value;
@@ -2470,6 +2478,11 @@ export default function Appointment_list() {
                         receiptForm.registrationType !== "Only Registration"
                       }
                       onWheel={(e) => e.target.blur()}
+                      onKeyDown={(e) => {
+                        if (["e", "E", "+", "-", "."].includes(e.key)) {
+                          e.preventDefault();
+                        }
+                      }}
                       onChange={handleReceiptFormChange}
                     />
                   </InputGroup>

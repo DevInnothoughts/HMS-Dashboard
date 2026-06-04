@@ -259,7 +259,7 @@ const DischargeCard = ({
             <Row className="g-2">
               <Col md={6}>
                 <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>Date Of Admission</Form.Label>
-                <Form.Control type="date" value={dischargeData.doa} onChange={(e) => handleDischargeChange("doa", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+                <Form.Control type="date" max={new Date().toISOString().split("T")[0]} value={dischargeData.doa} onChange={(e) => handleDischargeChange("doa", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
               </Col>
               <Col md={6}>
                 <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>Admission Time</Form.Label>
@@ -271,7 +271,7 @@ const DischargeCard = ({
             <Row className="g-2">
               <Col md={6}>
                 <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>Date Of Discharge</Form.Label>
-                <Form.Control type="date" value={dischargeData.dod} onChange={(e) => handleDischargeChange("dod", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
+                <Form.Control type="date" min={dischargeData.doa || ""} value={dischargeData.dod} onChange={(e) => handleDischargeChange("dod", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
               </Col>
               <Col md={6}>
                 <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>Discharge Time</Form.Label>
