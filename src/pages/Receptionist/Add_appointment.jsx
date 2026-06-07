@@ -80,6 +80,22 @@ const countryNumberLimits = {
   default: { min: 7, max: 15 },
 };
 
+const referralSources = [
+  { id: "family_friends", label: "Family/friends" },
+  { id: "dr_ref", label: "Referred by another doctor" },
+  { id: "old_ref", label: "Referred by another patient" },
+  { id: "internet", label: "Internet" },
+  { id: "socialMedia", label: "Social Media" },
+  { id: "MediaRef", label: "TV Show/Radio" },
+  { id: "newspaper", label: "Newspaper/Magazine" },
+  { id: "awareness_lecture", label: "Awareness Lecture" },
+  { id: "hhc_board", label: "HHC Board on building" },
+  { id: "self_old_pt", label: "I was treated here in past" },
+  { id: "hhc_branch", label: "Healing Hands Clinic Branch" },
+  { id: "aggregators", label: "Aggregators" },
+  { id: "other", label: "Other" },
+];
+
 export default function Add_appointment() {
   const [loading, setLoading] = useState(false);
   const [doctors, setDoctors] = useState([]);
@@ -532,7 +548,7 @@ export default function Add_appointment() {
               </div>
 
               <Card.Body style={{ padding: "10px" }}>
-                 <Form onSubmit={(e) => handleSubmit(e, "save")}>
+                <Form onSubmit={(e) => handleSubmit(e, "save")}>
                   <Row className="g-3">
                     <Col md={3}>
                       <Form.Label style={labelStyle}>
@@ -556,7 +572,7 @@ export default function Add_appointment() {
                       <Form.Label style={labelStyle}>
                         Patient Type <span className="text-danger">*</span>
                       </Form.Label>
-                       <Form.Select
+                      <Form.Select
                         required
                         style={inputStyle}
                         name="patient_type"
@@ -726,24 +742,9 @@ export default function Add_appointment() {
                           onChange={handleInputChange}
                         >
                           <option value="">Select Reference</option>
-                          {[
-                            "Family / Friends",
-                            "Referred By Another Doctor",
-                            "Referred By Another Patient",
-                            "Internet",
-                            "Social Media",
-                            "Entertainment Media",
-                            "TV Show",
-                            "Newspaper / Magazine",
-                            "Awareness Lecture",
-                            "HHC Board on building",
-                            "I was treated here in past ",
-                            "Healing Hands Clinic Branch",
-                            "Aggregators",
-                            "Other",
-                          ].map((r) => (
-                            <option key={r} value={r}>
-                              {r}
+                          {referralSources.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.label}
                             </option>
                           ))}
                         </Form.Select>
@@ -783,7 +784,7 @@ export default function Add_appointment() {
                     >
                       Reset Form
                     </Button>
-                     <Button
+                    <Button
                       variant="primary"
                       type="submit"
                       style={{

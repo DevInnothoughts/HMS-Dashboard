@@ -2,7 +2,15 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import NavbarIpdBills from "../../components/NavbarIpdBills";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
-import { Row, Col, Form, Container, Card, Button, InputGroup } from "react-bootstrap";
+import {
+  Row,
+  Col,
+  Form,
+  Container,
+  Card,
+  Button,
+  InputGroup,
+} from "react-bootstrap";
 import { decodeJwt } from "../../utils/decode-jwt";
 import Swal from "sweetalert2";
 
@@ -823,9 +831,26 @@ const AddInvoice = () => {
                       Amount (₹)
                     </Form.Label>
                     <InputGroup size="sm" style={{ flexWrap: "nowrap" }}>
-                      <InputGroup.Text style={{ ...inputStyle, borderRight: "none", backgroundColor: "#f8f9fa", borderTopRightRadius: 0, borderBottomRightRadius: 0, paddingRight: "5px" }}>₹</InputGroup.Text>
+                      <InputGroup.Text
+                        style={{
+                          ...inputStyle,
+                          borderRight: "none",
+                          backgroundColor: "#f8f9fa",
+                          borderTopRightRadius: 0,
+                          borderBottomRightRadius: 0,
+                          paddingRight: "5px",
+                        }}
+                      >
+                        ₹
+                      </InputGroup.Text>
                       <Form.Control
-                        style={{ ...inputStyle, borderLeft: "none", borderTopLeftRadius: 0, borderBottomLeftRadius: 0, paddingLeft: "5px" }}
+                        style={{
+                          ...inputStyle,
+                          borderLeft: "none",
+                          borderTopLeftRadius: 0,
+                          borderBottomLeftRadius: 0,
+                          paddingLeft: "5px",
+                        }}
                         type="number"
                         placeholder="e.g. 500"
                         value={row.value}
@@ -999,9 +1024,26 @@ const AddInvoice = () => {
                         PDC Amount (₹)
                       </Form.Label>
                       <InputGroup size="sm" style={{ flexWrap: "nowrap" }}>
-                        <InputGroup.Text style={{ ...inputStyle, borderRight: "none", backgroundColor: "#f8f9fa", borderTopRightRadius: 0, borderBottomRightRadius: 0, paddingRight: "5px" }}>₹</InputGroup.Text>
+                        <InputGroup.Text
+                          style={{
+                            ...inputStyle,
+                            borderRight: "none",
+                            backgroundColor: "#f8f9fa",
+                            borderTopRightRadius: 0,
+                            borderBottomRightRadius: 0,
+                            paddingRight: "5px",
+                          }}
+                        >
+                          ₹
+                        </InputGroup.Text>
                         <Form.Control
-                          style={{ ...inputStyle, borderLeft: "none", borderTopLeftRadius: 0, borderBottomLeftRadius: 0, paddingLeft: "5px" }}
+                          style={{
+                            ...inputStyle,
+                            borderLeft: "none",
+                            borderTopLeftRadius: 0,
+                            borderBottomLeftRadius: 0,
+                            paddingLeft: "5px",
+                          }}
                           onWheel={(e) => e.target.blur()}
                           placeholder="Enter PDC Amount"
                           type="number"
@@ -1026,9 +1068,26 @@ const AddInvoice = () => {
                       Discount Amount (₹)
                     </Form.Label>
                     <InputGroup size="sm" style={{ flexWrap: "nowrap" }}>
-                      <InputGroup.Text style={{ ...inputStyle, borderRight: "none", backgroundColor: "#f8f9fa", borderTopRightRadius: 0, borderBottomRightRadius: 0, paddingRight: "5px" }}>₹</InputGroup.Text>
+                      <InputGroup.Text
+                        style={{
+                          ...inputStyle,
+                          borderRight: "none",
+                          backgroundColor: "#f8f9fa",
+                          borderTopRightRadius: 0,
+                          borderBottomRightRadius: 0,
+                          paddingRight: "5px",
+                        }}
+                      >
+                        ₹
+                      </InputGroup.Text>
                       <Form.Control
-                        style={{ ...inputStyle, borderLeft: "none", borderTopLeftRadius: 0, borderBottomLeftRadius: 0, paddingLeft: "5px" }}
+                        style={{
+                          ...inputStyle,
+                          borderLeft: "none",
+                          borderTopLeftRadius: 0,
+                          borderBottomLeftRadius: 0,
+                          paddingLeft: "5px",
+                        }}
                         onWheel={(e) => e.target.blur()}
                         placeholder="e.g. 1000"
                         type="number"
@@ -1052,9 +1111,26 @@ const AddInvoice = () => {
                       Discount Amount (₹)
                     </Form.Label>
                     <InputGroup size="sm" style={{ flexWrap: "nowrap" }}>
-                      <InputGroup.Text style={{ ...inputStyle, borderRight: "none", backgroundColor: "#f8f9fa", borderTopRightRadius: 0, borderBottomRightRadius: 0, paddingRight: "5px" }}>₹</InputGroup.Text>
+                      <InputGroup.Text
+                        style={{
+                          ...inputStyle,
+                          borderRight: "none",
+                          backgroundColor: "#f8f9fa",
+                          borderTopRightRadius: 0,
+                          borderBottomRightRadius: 0,
+                          paddingRight: "5px",
+                        }}
+                      >
+                        ₹
+                      </InputGroup.Text>
                       <Form.Control
-                        style={{ ...inputStyle, borderLeft: "none", borderTopLeftRadius: 0, borderBottomLeftRadius: 0, paddingLeft: "5px" }}
+                        style={{
+                          ...inputStyle,
+                          borderLeft: "none",
+                          borderTopLeftRadius: 0,
+                          borderBottomLeftRadius: 0,
+                          paddingLeft: "5px",
+                        }}
                         onWheel={(e) => e.target.blur()}
                         placeholder="e.g. 100"
                         type="number"

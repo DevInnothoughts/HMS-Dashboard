@@ -126,7 +126,7 @@ export default function UnattendedLeadsTab() {
 
     if (name === "doctor_id") {
       const selectedDoctor = doctors.find(
-        (doc) => String(doc.doctor_id) === value
+        (doc) => String(doc.doctor_id) === value,
       );
       setFormData((prev) => ({
         ...prev,
@@ -209,8 +209,12 @@ export default function UnattendedLeadsTab() {
     if (!currentLocation) return;
     try {
       const [fdeRes, docRes] = await Promise.all([
-        fetch(`${BASE_URL}/V1/appointment/fdeDropdown?location=${currentLocation}`),
-        fetch(`${BASE_URL}/V1/doctor/doctorDropdown?location=${currentLocation}`),
+        fetch(
+          `${BASE_URL}/V1/appointment/fdeDropdown?location=${currentLocation}`,
+        ),
+        fetch(
+          `${BASE_URL}/V1/doctor/doctorDropdown?location=${currentLocation}`,
+        ),
       ]);
       const fdeData = await fdeRes.json();
       const docData = await docRes.json();
@@ -231,7 +235,9 @@ export default function UnattendedLeadsTab() {
     if (!currentLocation) return;
     setLoading(true);
     try {
-      const formattedFrom = fromDate ? moment(fromDate).format("DD-MM-YYYY") : "";
+      const formattedFrom = fromDate
+        ? moment(fromDate).format("DD-MM-YYYY")
+        : "";
       const formattedTo = toDate ? moment(toDate).format("DD-MM-YYYY") : "";
 
       const ivrUrl = `${BASE_URL}/V1/ivrdata/listIvrdata?location=${currentLocation}&from=${formattedFrom}&to=${formattedTo}`;
@@ -252,17 +258,23 @@ export default function UnattendedLeadsTab() {
       if (ivrRes.ok && ivrData.data) {
         processedIvr = ivrData.data
           .filter(
-            (log) => log.call_status && log.call_status.toLowerCase() === "missed"
+            (log) =>
+              log.call_status && log.call_status.toLowerCase() === "missed",
           )
           .map((log) => ({
             ...log,
             id: `ivr-${log.ivr_id}`,
             source: "IVR",
             date: log.call_date
-              ? moment(log.call_date + " " + (log.call_time || "00:00:00"), "YYYY-MM-DD HH:mm:ss").toDate()
+              ? moment(
+                  log.call_date + " " + (log.call_time || "00:00:00"),
+                  "YYYY-MM-DD HH:mm:ss",
+                ).toDate()
               : new Date(),
             name: log.patient_name || "-",
-            phoneno: log.caller_no ? String(log.caller_no).replace(/^0+/, "") : "-",
+            phoneno: log.caller_no
+              ? String(log.caller_no).replace(/^0+/, "")
+              : "-",
             reason: "Missed Call",
           }));
       }
@@ -294,9 +306,11 @@ export default function UnattendedLeadsTab() {
       }
 
       // Combine and sort by date descending
-      const combined = [...processedIvr, ...processedWeb, ...processedChatbot].sort(
-        (a, b) => new Date(b.date) - new Date(a.date)
-      );
+      const combined = [
+        ...processedIvr,
+        ...processedWeb,
+        ...processedChatbot,
+      ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
       setUnattendedLeads(combined);
     } catch (err) {
@@ -446,7 +460,7 @@ export default function UnattendedLeadsTab() {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ ivr_id: ivrId, note: trimmedNote }),
-          }
+          },
         );
       } else if (selectedLead.source === "Web") {
         response = await fetch(
@@ -455,7 +469,7 @@ export default function UnattendedLeadsTab() {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ note: trimmedNote }),
-          }
+          },
         );
       } else if (selectedLead.source === "Chatbot") {
         response = await fetch(
@@ -464,7 +478,7 @@ export default function UnattendedLeadsTab() {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ note: trimmedNote }),
-          }
+          },
         );
       }
 
@@ -473,11 +487,15 @@ export default function UnattendedLeadsTab() {
         if (selectedLead.source === "IVR") {
           setUnattendedLeads((prev) =>
             prev.map((lead) =>
-              lead.id === selectedLead.id ? { ...lead, note: trimmedNote } : lead
-            )
+              lead.id === selectedLead.id
+                ? { ...lead, note: trimmedNote }
+                : lead,
+            ),
           );
         } else {
-          setUnattendedLeads((prev) => prev.filter((lead) => lead.id !== selectedLead.id));
+          setUnattendedLeads((prev) =>
+            prev.filter((lead) => lead.id !== selectedLead.id),
+          );
         }
 
         setShowNoteModal(false);
@@ -492,7 +510,10 @@ export default function UnattendedLeadsTab() {
       }
     } catch (err) {
       console.error(err);
-      Toast.fire({ icon: "error", title: "An error occurred while saving note" });
+      Toast.fire({
+        icon: "error",
+        title: "An error occurred while saving note",
+      });
     }
   };
 
@@ -530,13 +551,13 @@ export default function UnattendedLeadsTab() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
-        }
+        },
       );
 
       const responseData = await response.json();
       if (!response.ok) {
         throw new Error(
-          `Error: ${response.status} - ${responseData.message || "Bad Request"}`
+          `Error: ${response.status} - ${responseData.message || "Bad Request"}`,
         );
       }
       Swal.fire({
@@ -569,12 +590,12 @@ export default function UnattendedLeadsTab() {
   const handleAppointmentSubmit = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     const selectedFDE = fdeList.find(
-      (fde) => String(fde.FDEID) === formData.FDE_Name
+      (fde) => String(fde.FDEID) === formData.FDE_Name,
     );
     const fdeName = selectedFDE ? selectedFDE.FDEName : "";
 
     const selectedDoctor = doctors.find(
-      (doc) => String(doc.doctor_id) === formData.doctor_id
+      (doc) => String(doc.doctor_id) === formData.doctor_id,
     );
     const doctorName = selectedDoctor ? selectedDoctor.name : "";
 
@@ -604,7 +625,7 @@ export default function UnattendedLeadsTab() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -906,7 +927,11 @@ export default function UnattendedLeadsTab() {
         onClick={() => handleEnquiryClick(rowData)}
         className="enquiry-btn btn-primary btn-extra-small btn-icon me-2"
         title="Add Enquiry"
-        style={{ padding: "4px 8px", backgroundColor: "#00bcd4", border: "none" }}
+        style={{
+          padding: "4px 8px",
+          backgroundColor: "#00bcd4",
+          border: "none",
+        }}
       >
         <FeatherIcon icon="help-circle" size="16" />
       </Button>
@@ -916,7 +941,11 @@ export default function UnattendedLeadsTab() {
         onClick={() => handleAddAppointmentClick(rowData)}
         className="appointment-btn btn-primary btn-extra-small btn-icon me-2"
         title="Add Appointment"
-        style={{ padding: "4px 8px", backgroundColor: "#00bcd4", border: "none" }}
+        style={{
+          padding: "4px 8px",
+          backgroundColor: "#00bcd4",
+          border: "none",
+        }}
       >
         <FeatherIcon icon="plus-square" size="16" />
       </Button>
@@ -926,7 +955,11 @@ export default function UnattendedLeadsTab() {
         onClick={() => handleNoteClick(rowData)}
         className="note-btn btn-primary btn-extra-small btn-icon"
         title="Add Note"
-        style={{ padding: "4px 8px", backgroundColor: "#00bcd4", border: "none" }}
+        style={{
+          padding: "4px 8px",
+          backgroundColor: "#00bcd4",
+          border: "none",
+        }}
       >
         <FeatherIcon icon="file-text" size="16" />
       </Button>
@@ -940,7 +973,14 @@ export default function UnattendedLeadsTab() {
 
   const sourceHeaderTemplate = () => {
     return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "5px" }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "5px",
+        }}
+      >
         <span>Lead Source</span>
         <Form.Select
           size="sm"
@@ -995,7 +1035,13 @@ export default function UnattendedLeadsTab() {
               filters={filters1}
               header={renderHeader()}
               loading={loading}
-              globalFilterFields={["name", "phoneno", "source", "reason", "note"]}
+              globalFilterFields={[
+                "name",
+                "phoneno",
+                "source",
+                "reason",
+                "note",
+              ]}
               paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
               currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
               responsiveLayout="scroll"
@@ -1005,7 +1051,9 @@ export default function UnattendedLeadsTab() {
               <Column
                 field="date"
                 header="Date & Time"
-                body={(rowData) => moment(rowData.date).format("DD-MM-YYYY hh:mm A")}
+                body={(rowData) =>
+                  moment(rowData.date).format("DD-MM-YYYY hh:mm A")
+                }
                 headerClassName="datatable-header-center"
                 style={{
                   border: "1px solid #90caf9",
@@ -1144,7 +1192,11 @@ export default function UnattendedLeadsTab() {
               <Button
                 size="sm"
                 className="px-3"
-                style={{ borderRadius: "10px", fontSize: "12px", padding: "10px" }}
+                style={{
+                  borderRadius: "10px",
+                  fontSize: "12px",
+                  padding: "10px",
+                }}
                 variant="secondary"
                 onClick={() => setShowNoteModal(false)}
               >
@@ -1616,8 +1668,7 @@ export default function UnattendedLeadsTab() {
                     }}
                   >
                     <option value="">Select Type</option>
-                    {formData.patient_type === "New" ||
-                      !formData.patient_id ? (
+                    {formData.patient_type === "New" || !formData.patient_id ? (
                       <option value="New">NEW</option>
                     ) : (
                       <>

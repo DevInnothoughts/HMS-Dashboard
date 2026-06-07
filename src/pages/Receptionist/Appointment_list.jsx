@@ -104,18 +104,19 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
     padding: "1px 3px",
     minWidth: "33px",
     borderRadius: "4px",
-    border: `1px solid ${disabled
-      ? "#ddd"
-      : isDanger
-        ? "#dc3545"
-        : isEdit
-          ? "#007bff"
-          : isConfirm
-            ? "#28a745"
-            : isBlueAction
-              ? "#0babb9ff"
-              : defaultBorder
-      }`,
+    border: `1px solid ${
+      disabled
+        ? "#ddd"
+        : isDanger
+          ? "#dc3545"
+          : isEdit
+            ? "#007bff"
+            : isConfirm
+              ? "#28a745"
+              : isBlueAction
+                ? "#0babb9ff"
+                : defaultBorder
+    }`,
     backgroundColor: disabled ? "#f8f9fa" : defaultBg,
     color: disabled
       ? "#aaa"
@@ -169,16 +170,17 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
               ? "#15cbd8ff"
               : "#e0e0e0";
 
-      e.currentTarget.style.border = `1px solid ${isDanger
-        ? "#c82333"
-        : isEdit
-          ? "#007bff"
-          : isConfirm
-            ? "#218838"
-            : isBlueAction
-              ? "#007bff"
-              : "#b0b0b0"
-        }`;
+      e.currentTarget.style.border = `1px solid ${
+        isDanger
+          ? "#c82333"
+          : isEdit
+            ? "#007bff"
+            : isConfirm
+              ? "#218838"
+              : isBlueAction
+                ? "#007bff"
+                : "#b0b0b0"
+      }`;
 
       e.currentTarget.style.color = "white";
       if (e.currentTarget.children[0]) {
@@ -200,16 +202,17 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
               ? "#23adb2ff"
               : defaultColor;
 
-      e.currentTarget.style.border = `1px solid ${isDanger
-        ? "#dc3545"
-        : isEdit
-          ? "#007bff"
-          : isConfirm
-            ? "#28a745"
-            : isBlueAction
-              ? "#007bff"
-              : defaultBorder
-        }`;
+      e.currentTarget.style.border = `1px solid ${
+        isDanger
+          ? "#dc3545"
+          : isEdit
+            ? "#007bff"
+            : isConfirm
+              ? "#28a745"
+              : isBlueAction
+                ? "#007bff"
+                : defaultBorder
+      }`;
 
       if (e.currentTarget.children[0]) {
         e.currentTarget.children[0].style.stroke = iconColor;
@@ -246,15 +249,22 @@ export default function Appointment_list() {
   const [currentLocation, setCurrentLocation] = useState("default");
   const [fromDate, setFromDate] = useState(new Date());
   const [toDate, setToDate] = useState(new Date());
+  const [posTerminalList, setPosTerminalList] = useState([]);
 
   useEffect(() => {
     if (location.state?.searchPhone) {
       setFilters((prev) => ({
         ...prev,
-        global: { value: location.state.searchPhone, matchMode: FilterMatchMode.CONTAINS }
+        global: {
+          value: location.state.searchPhone,
+          matchMode: FilterMatchMode.CONTAINS,
+        },
       }));
       if (location.state.appointmentDate) {
-        const parsedDate = moment(location.state.appointmentDate, "DD-MM-YYYY").toDate();
+        const parsedDate = moment(
+          location.state.appointmentDate,
+          "DD-MM-YYYY",
+        ).toDate();
         if (moment(parsedDate).isValid()) {
           setFromDate(parsedDate);
           setToDate(parsedDate);
@@ -262,7 +272,7 @@ export default function Appointment_list() {
       }
     }
     if (location.state?.registered_appointment_id) {
-      setRegisteredAppointments(prev => {
+      setRegisteredAppointments((prev) => {
         const newSet = new Set(prev);
         newSet.add(location.state.registered_appointment_id);
         return newSet;
@@ -271,7 +281,9 @@ export default function Appointment_list() {
   }, [location.state]);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [registeredAppointments, setRegisteredAppointments] = useState(new Set());
+  const [registeredAppointments, setRegisteredAppointments] = useState(
+    new Set(),
+  );
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [appointmentIdToDelete, setAppointmentIdToDelete] = useState(null);
   const [cancellationReason, setCancellationReason] = useState("");
@@ -368,7 +380,9 @@ export default function Appointment_list() {
       if (result.statusCode === 201 || result.statusCode === 200) {
         Swal.fire("Success", "Receipt Generated Successfully", "success");
         setShowReceiptModal(false);
-        navigate("/reports/receipts", { state: { printReceiptId: result.data?.receipt_id } });
+        navigate("/reports/receipts", {
+          state: { printReceiptId: result.data?.receipt_id },
+        });
       } else if (
         result.statusCode === 202 &&
         (result.data?.result === "success" || result.data?.stat === "success")
@@ -512,7 +526,7 @@ export default function Appointment_list() {
               Swal.fire(
                 "Error",
                 cancelResult?.message ||
-                "Remote cancel failed. Please cancel manually on machine.",
+                  "Remote cancel failed. Please cancel manually on machine.",
                 "error",
               );
             }
@@ -531,21 +545,38 @@ export default function Appointment_list() {
 
     if (name === "doctorName") {
       const selectedDoctor = doctors.find((d) => d.name === value);
-      // console.log(selectedDoctor);
       setReceiptForm((prev) => ({
         ...prev,
         doctorName: selectedDoctor ? selectedDoctor.name : "",
         doctor_id: selectedDoctor ? selectedDoctor.doctor_id : "",
       }));
-      // console.log(receiptForm);
+    } else if (name === "registrationType") {
+      setReceiptForm((prev) => ({
+        ...prev,
+        registrationType: value,
+        // DNC defaults the POS terminal to OFFLINE; doctor can still change it.
+        ...(value === "DNC" || value === "DNW"
+          ? { posTerminal: "OFFLINE" }
+          : {}),
+      }));
     } else {
       setReceiptForm((prev) => ({ ...prev, [name]: value }));
     }
   };
 
-  // useEffect(() => {
-  //   console.log("receiptForm changed:", receiptForm);
-  // }, [receiptForm]);
+  const resetReceiptForm = () => {
+    setReceiptForm({
+      consultationType: "",
+      registrationType: "",
+      regComment: "",
+      discountAmt: "",
+      discountNote: "",
+      paymentMode: "",
+      posTerminal: "",
+    });
+    setBillingItems([{ label: "", amount: "" }]);
+    setSelectedAppointment(null);
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -586,14 +617,15 @@ export default function Appointment_list() {
   };
 
   const searchFromDatabase = async (query) => {
-    if (!currentLocation || currentLocation === "default" || isDbSearching) return;
+    if (!currentLocation || currentLocation === "default" || isDbSearching)
+      return;
 
     setIsDbSearching(true);
     try {
       const response = await fetch(
         `${BASE_URL}/V1/appointment/searchAppointments?query=${encodeURIComponent(
-          query
-        )}&location=${currentLocation}`
+          query,
+        )}&location=${currentLocation}`,
       );
 
       if (response.ok) {
@@ -602,7 +634,7 @@ export default function Appointment_list() {
           setAppointmentData((prev) => {
             const existingIds = new Set(prev.map((app) => app.appointment_id));
             const newUniqueApps = data.data.filter(
-              (app) => !existingIds.has(app.appointment_id)
+              (app) => !existingIds.has(app.appointment_id),
             );
             return [...prev, ...newUniqueApps];
           });
@@ -623,7 +655,8 @@ export default function Appointment_list() {
       const lowerSearch = searchValue.toLowerCase();
       return (
         (app.patient_phone && app.patient_phone.includes(searchValue)) ||
-        (app.patient_name && app.patient_name.toLowerCase().includes(lowerSearch)) ||
+        (app.patient_name &&
+          app.patient_name.toLowerCase().includes(lowerSearch)) ||
         (app.Uid_no && app.Uid_no.toLowerCase().includes(lowerSearch))
       );
     });
@@ -671,27 +704,40 @@ export default function Appointment_list() {
             "records",
           );
           const sortedData = data.data.sort((a, b) => {
-            const timeA = a.appointment_time ? moment(a.appointment_time, ["HH:mm:ss", "hh:mm A"]).valueOf() : Number.MAX_SAFE_INTEGER;
-            const timeB = b.appointment_time ? moment(b.appointment_time, ["HH:mm:ss", "hh:mm A"]).valueOf() : Number.MAX_SAFE_INTEGER;
+            const timeA = a.appointment_time
+              ? moment(a.appointment_time, ["HH:mm:ss", "hh:mm A"]).valueOf()
+              : Number.MAX_SAFE_INTEGER;
+            const timeB = b.appointment_time
+              ? moment(b.appointment_time, ["HH:mm:ss", "hh:mm A"]).valueOf()
+              : Number.MAX_SAFE_INTEGER;
             return timeA - timeB;
           });
           const mappedData = sortedData.map((app) => {
             const isConfirmed = app.confirm_time != 0;
             const hasHistory = Number(app.historychk) === 3;
-            const hasExecution = Number(app.executivechk) === 1 || Number(app.executivechk) === 2;
+            const hasExecution =
+              Number(app.executivechk) === 1 || Number(app.executivechk) === 2;
             const hasConsultation = Number(app.consultationchk) === 4;
             const hasReceipt = Number(app.executivechk) === 2;
 
-            const isExistingPatient = isConfirmed && ["Follow", "Postoperative", "Post Operative", "Other"].includes(app.patient_type);
+            const isExistingPatient =
+              isConfirmed &&
+              ["Follow", "Postoperative", "Post Operative", "Other"].includes(
+                app.patient_type,
+              );
 
             const isHistoryDone = hasHistory || isExistingPatient;
-            const isExecutionDone = (hasHistory && hasExecution) || isExistingPatient;
-            const isConsultationDone = (hasHistory && hasExecution && hasConsultation) || isExistingPatient;
+            const isExecutionDone =
+              (hasHistory && hasExecution) || isExistingPatient;
+            const isConsultationDone =
+              (hasHistory && hasExecution && hasConsultation) ||
+              isExistingPatient;
             const isReceiptDone = hasReceipt;
 
             let computedStatus = "Appointment Confirmed";
             if (isReceiptDone) computedStatus = "Receipt Generated";
-            else if (isConsultationDone) computedStatus = "Prescription Checked";
+            else if (isConsultationDone)
+              computedStatus = "Prescription Checked";
             else if (isExecutionDone) computedStatus = "Diagnosis Checked";
             else if (isHistoryDone) computedStatus = "History Checked";
             else if (!isConfirmed) computedStatus = "Pending Appointment";
@@ -729,6 +775,7 @@ export default function Appointment_list() {
         `${BASE_URL}/V1/doctor/doctorDropdown?location=${currentLocation}`,
         `${BASE_URL}/V1/appointment/fdeDropdown?location=${currentLocation}`,
         `${BASE_URL}/V1/doctor/consultationDetailsDropdown?location=${currentLocation}`,
+        `${BASE_URL}/V1/appointment/posTerminalDropdown?location=${currentLocation}`,
       ];
 
       const [
@@ -736,6 +783,7 @@ export default function Appointment_list() {
         doctorResponse,
         fdeResponse,
         consultationDetailsResponse,
+        posTerminalResponse,
       ] = await Promise.all(
         endpoints.map((url) => fetch(url).then((res) => res.json())),
       );
@@ -758,6 +806,9 @@ export default function Appointment_list() {
         Array.isArray(consultationDetailsResponse.data)
           ? consultationDetailsResponse.data
           : [],
+      );
+      setPosTerminalList(
+        Array.isArray(posTerminalResponse.data) ? posTerminalResponse.data : [],
       );
     } catch (error) {
       console.error("Error fetching dropdown data:", error.message);
@@ -815,7 +866,10 @@ export default function Appointment_list() {
     );
     console.log(dateOnly);
     const finalAppointmentTime = selectedAppointment.appointment_time
-      ? moment(selectedAppointment.appointment_time, ["HH:mm:ss", "hh:mm A"]).format("HH:mm")
+      ? moment(selectedAppointment.appointment_time, [
+          "HH:mm:ss",
+          "hh:mm A",
+        ]).format("HH:mm")
       : null;
 
     const updatePayload = {
@@ -956,12 +1010,12 @@ export default function Appointment_list() {
         window.dispatchEvent(new CustomEvent("refreshApptCounts"));
 
         if (endpoint === "confirmAppointment") {
-          navigate('/patients', {
+          navigate("/patients", {
             state: {
               openEditForPhone: patient_phone,
               returnToAppointment: true,
-              appointment_id: appId
-            }
+              appointment_id: appId,
+            },
           });
         }
       } else {
@@ -981,25 +1035,37 @@ export default function Appointment_list() {
   };
 
   const confirmAppointmentWithCheck = async (rowData) => {
-    const { appointment_id, patient_type, patient_phone, appointment_timestamp } = rowData;
+    const {
+      appointment_id,
+      patient_type,
+      patient_phone,
+      appointment_timestamp,
+    } = rowData;
 
     if (!appointment_timestamp) {
-      Swal.fire({ icon: "error", title: "Error", text: "Appointment date missing." });
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Appointment date missing.",
+      });
       return;
     }
 
     try {
       // Calculate previous day
       const aptDate = moment(appointment_timestamp);
-      const prevDate = aptDate.clone().subtract(1, 'days').format("YYYY-MM-DD");
+      const prevDate = aptDate.clone().subtract(1, "days").format("YYYY-MM-DD");
 
       // Check daily closing status for prevDate
-      const response = await fetch(`${BASE_URL}/V1/managereports/dailyclosing-status?location=${currentLocation}&date=${prevDate}`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`
-        }
-      });
+      const response = await fetch(
+        `${BASE_URL}/V1/managereports/dailyclosing-status?location=${currentLocation}&date=${prevDate}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        },
+      );
 
       const result = await response.json();
 
@@ -1023,7 +1089,11 @@ export default function Appointment_list() {
       }
     } catch (error) {
       console.error("Error checking daily closing status:", error);
-      Swal.fire({ icon: "error", title: "Error", text: "Failed to verify daily closing status." });
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Failed to verify daily closing status.",
+      });
     }
   };
 
@@ -1034,19 +1104,25 @@ export default function Appointment_list() {
       executivechk,
       consultationchk,
       confirm_time,
-      patient_type
+      patient_type,
     } = rowData;
     const isConfirmed = confirm_time != 0;
     const hasHistory = Number(historychk) === 3;
-    const hasExecution = Number(executivechk) === 1 || Number(executivechk) === 2;
+    const hasExecution =
+      Number(executivechk) === 1 || Number(executivechk) === 2;
     const hasConsultation = Number(consultationchk) === 4;
     const hasReceipt = Number(executivechk) === 2;
 
-    const isExistingPatient = isConfirmed && ["Follow", "Postoperative", "Post Operative", "Other"].includes(patient_type);
+    const isExistingPatient =
+      isConfirmed &&
+      ["Follow", "Postoperative", "Post Operative", "Other"].includes(
+        patient_type,
+      );
 
     const isHistoryDone = hasHistory || isExistingPatient;
     const isExecutionDone = (hasHistory && hasExecution) || isExistingPatient;
-    const isConsultationDone = (hasHistory && hasExecution && hasConsultation) || isExistingPatient;
+    const isConsultationDone =
+      (hasHistory && hasExecution && hasConsultation) || isExistingPatient;
     const isReceiptDone = hasReceipt;
 
     if (isReceiptDone) return "row-status-receipt";
@@ -1072,15 +1148,21 @@ export default function Appointment_list() {
     // console.log("ROW DATA:", rowData);
     const isConfirmed = confirm_time != 0;
     const hasHistory = Number(historychk) === 3;
-    const hasExecution = Number(executivechk) === 1 || Number(executivechk) === 2;
+    const hasExecution =
+      Number(executivechk) === 1 || Number(executivechk) === 2;
     const hasConsultation = Number(consultationchk) === 4;
     const hasReceipt = Number(executivechk) === 2;
 
-    const isExistingPatient = isConfirmed && ["Follow", "Postoperative", "Post Operative", "Other"].includes(patient_type);
+    const isExistingPatient =
+      isConfirmed &&
+      ["Follow", "Postoperative", "Post Operative", "Other"].includes(
+        patient_type,
+      );
 
     const isHistoryDone = hasHistory || isExistingPatient;
     const isExecutionDone = (hasHistory && hasExecution) || isExistingPatient;
-    const isConsultationDone = (hasHistory && hasExecution && hasConsultation) || isExistingPatient;
+    const isConsultationDone =
+      (hasHistory && hasExecution && hasConsultation) || isExistingPatient;
     const isReceiptDone = hasReceipt;
 
     const showFourButtons =
@@ -1137,12 +1219,12 @@ export default function Appointment_list() {
           <ActionButton
             title="Edit Patient"
             onClick={() => {
-              navigate('/patients', {
+              navigate("/patients", {
                 state: {
                   openEditForPhone: patient_phone,
                   returnToAppointment: true,
-                  appointment_id: appointment_id
-                }
+                  appointment_id: appointment_id,
+                },
               });
             }}
             icon="user-check"
@@ -1153,7 +1235,7 @@ export default function Appointment_list() {
           <>
             <ActionButton
               title="History"
-              onClick={() => { }}
+              onClick={() => {}}
               disabled={isHistoryDone || isReceiptDone}
               icon="book-open"
               style={{ cursor: "not-allowed" }}
@@ -1161,7 +1243,7 @@ export default function Appointment_list() {
 
             <ActionButton
               title="Diagnosis"
-              onClick={() => { }}
+              onClick={() => {}}
               disabled={!isHistoryDone || isExecutionDone || isReceiptDone}
               icon="activity"
               style={{ cursor: "not-allowed" }}
@@ -1169,7 +1251,7 @@ export default function Appointment_list() {
 
             <ActionButton
               title="Prescription"
-              onClick={() => { }}
+              onClick={() => {}}
               disabled={!isExecutionDone || isConsultationDone || isReceiptDone}
               icon="clipboard"
               style={{ cursor: "not-allowed" }}
@@ -1200,7 +1282,10 @@ export default function Appointment_list() {
             const newVal = currentVal === name ? null : name;
             return {
               ...prev,
-              computedStatus: { value: newVal, matchMode: FilterMatchMode.EQUALS }
+              computedStatus: {
+                value: newVal,
+                matchMode: FilterMatchMode.EQUALS,
+              },
             };
           });
         }}
@@ -1208,19 +1293,24 @@ export default function Appointment_list() {
         style={{
           "--status-hover-color": bgColor,
           "--status-hover-bg": `${bgColor}15`,
-          ...(isSelected ? {
-            borderColor: bgColor,
-            backgroundColor: `${bgColor}25`,
-            transform: "translateY(-1.5px)",
-            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)"
-          } : {})
+          ...(isSelected
+            ? {
+                borderColor: bgColor,
+                backgroundColor: `${bgColor}25`,
+                transform: "translateY(-1.5px)",
+                boxShadow:
+                  "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
+              }
+            : {}),
         }}
       >
         <div
           className="status-dot"
           style={{
             backgroundColor: bgColor,
-            ...(isSelected ? { transform: "scale(1.25)", boxShadow: `0 0 8px ${bgColor}` } : {})
+            ...(isSelected
+              ? { transform: "scale(1.25)", boxShadow: `0 0 8px ${bgColor}` }
+              : {}),
           }}
         ></div>
         <p style={{ fontWeight: isSelected ? "700" : "600" }}>{name}</p>
@@ -1294,7 +1384,7 @@ export default function Appointment_list() {
             >
               Search
             </span>
-            <InputGroup style={{ position: 'relative' }}>
+            <InputGroup style={{ position: "relative" }}>
               <Form.Control
                 type="search"
                 value={filters.global.value || ""}
@@ -1319,15 +1409,22 @@ export default function Appointment_list() {
                 }}
               />
               {isDbSearching && (
-                <div style={{
-                  position: 'absolute',
-                  right: '10px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  zIndex: 5,
-                  pointerEvents: 'none'
-                }}>
-                  <Spinner animation="border" size="sm" variant="info" style={{ width: '12px', height: '12px' }} />
+                <div
+                  style={{
+                    position: "absolute",
+                    right: "10px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    zIndex: 5,
+                    pointerEvents: "none",
+                  }}
+                >
+                  <Spinner
+                    animation="border"
+                    size="sm"
+                    variant="info"
+                    style={{ width: "12px", height: "12px" }}
+                  />
                 </div>
               )}
             </InputGroup>
@@ -1425,8 +1522,14 @@ export default function Appointment_list() {
               setFilters((prev) => ({
                 ...prev,
                 global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-                patient_type: { value: null, matchMode: FilterMatchMode.EQUALS },
-                computedStatus: { value: null, matchMode: FilterMatchMode.EQUALS },
+                patient_type: {
+                  value: null,
+                  matchMode: FilterMatchMode.EQUALS,
+                },
+                computedStatus: {
+                  value: null,
+                  matchMode: FilterMatchMode.EQUALS,
+                },
               }));
             }}
             style={{
@@ -1541,7 +1644,11 @@ export default function Appointment_list() {
               size="sm"
               type="submit"
               className="me-2 px-3 mb-5"
-              style={{ borderRadius: "10px", fontSize: "12px", padding: "10px" }}
+              style={{
+                borderRadius: "10px",
+                fontSize: "12px",
+                padding: "10px",
+              }}
             >
               Submit & Cancel
             </Button>
@@ -1623,10 +1730,10 @@ export default function Appointment_list() {
                       name="appointment_time"
                       value={
                         selectedAppointment.appointment_time
-                          ? moment(
-                            selectedAppointment.appointment_time,
-                            ["HH:mm:ss", "hh:mm A"]
-                          ).format("hh:mm A")
+                          ? moment(selectedAppointment.appointment_time, [
+                              "HH:mm:ss",
+                              "hh:mm A",
+                            ]).format("hh:mm A")
                           : ""
                       }
                       onChange={handleEditModalInputChange}
@@ -1880,8 +1987,6 @@ export default function Appointment_list() {
                     </Form.Select>
                   </Form.Group>
                 </Col>
-
-
               </Row>
 
               <div className="d-flex justify-content-end gap-2 mt-3">
@@ -1993,8 +2098,8 @@ export default function Appointment_list() {
                         body={(rowData) =>
                           rowData.appointment_timestamp
                             ? moment(rowData.appointment_timestamp).format(
-                              "DD-MM-YYYY",
-                            )
+                                "DD-MM-YYYY",
+                              )
                             : "-"
                         }
                         headerClassName="datatable-header-center"
@@ -2010,9 +2115,9 @@ export default function Appointment_list() {
                         body={(rowData) =>
                           rowData.appointment_time
                             ? moment(rowData.appointment_time, [
-                              "hh:mm A",
-                              "HH:mm",
-                            ]).format("HH:mm")
+                                "hh:mm A",
+                                "HH:mm",
+                              ]).format("HH:mm")
                             : "-"
                         }
                         headerClassName="datatable-header-center"
@@ -2051,7 +2156,7 @@ export default function Appointment_list() {
                               cursor: "pointer",
                               outline: "none",
                               color: "inherit",
-                              textAlign: "center"
+                              textAlign: "center",
                             }}
                           >
                             <option value="">Patient Type</option>
@@ -2065,13 +2170,16 @@ export default function Appointment_list() {
                         style={{
                           ...getColumnStyle("110px"),
                           border: "1px solid #90caf9",
-                          padding: "0"
+                          padding: "0",
                         }}
                         body={(rowData) => rowData.patient_type || "-"}
                         headerClassName="datatable-header-center"
                       />
 
-                      <Column field="computedStatus" style={{ display: 'none' }} />
+                      <Column
+                        field="computedStatus"
+                        style={{ display: "none" }}
+                      />
 
                       <Column
                         field="patient_name"
@@ -2148,7 +2256,10 @@ export default function Appointment_list() {
 
       <Modal
         show={showReceiptModal}
-        onHide={() => setShowReceiptModal(false)}
+        onHide={() => {
+          resetReceiptForm();
+          setShowReceiptModal(false);
+        }}
         size="lg"
         centered
       >
@@ -2275,6 +2386,7 @@ export default function Appointment_list() {
                         setReceiptForm((prev) => ({
                           ...prev,
                           registrationType: "",
+                          posTerminal: "",
                         }))
                       }
                     >
@@ -2354,9 +2466,7 @@ export default function Appointment_list() {
                     </Form.Select>
                   </Col>
                   <Col md={2}>
-                    <Form.Label style={{ fontSize: "11px" }}>
-                      Amount
-                    </Form.Label>
+                    <Form.Label style={{ fontSize: "11px" }}>Amount</Form.Label>
                     <InputGroup>
                       <InputGroup.Text
                         style={{
@@ -2365,7 +2475,7 @@ export default function Appointment_list() {
                           borderRight: "none",
                           backgroundColor: "#f8f9fa",
                           borderRadius: "10px 0 0 10px",
-                          padding: "0.375rem 0.5rem"
+                          padding: "0.375rem 0.5rem",
                         }}
                       >
                         ₹
@@ -2381,7 +2491,7 @@ export default function Appointment_list() {
                         }}
                         value={
                           receiptForm.registrationType &&
-                            receiptForm.registrationType !== "Only Registration"
+                          receiptForm.registrationType !== "Only Registration"
                             ? 0
                             : item.amount
                         }
@@ -2452,7 +2562,7 @@ export default function Appointment_list() {
                         borderRight: "none",
                         backgroundColor: "#f8f9fa",
                         borderRadius: "10px 0 0 10px",
-                        padding: "0.375rem 0.5rem"
+                        padding: "0.375rem 0.5rem",
                       }}
                     >
                       ₹
@@ -2469,7 +2579,7 @@ export default function Appointment_list() {
                       }}
                       value={
                         receiptForm.registrationType &&
-                          receiptForm.registrationType !== "Only Registration"
+                        receiptForm.registrationType !== "Only Registration"
                           ? 0
                           : receiptForm.discountAmt
                       }
@@ -2542,31 +2652,28 @@ export default function Appointment_list() {
                     className="d-flex flex-wrap gap-4 p-2"
                     style={{
                       border: "2px solid rgb(77, 208, 225)",
-                      borderRadius: "6px",
+
                       backgroundColor: "#94e2eeff",
                       borderRadius: "10px",
                     }}
                   >
-                    {[
-                      "HDFC",
-                      "BharatPe2",
-                      "PINE LABS",
-                      "OFFLINE",
-                    ].map((opt) => (
-                      <Form.Check
-                        required
-                        inline
-                        key={opt}
-                        label={opt}
-                        name="posTerminal"
-                        type="radio"
-                        id={`pos-${opt}`}
-                        value={opt}
-                        checked={receiptForm.posTerminal === opt}
-                        onChange={handleReceiptFormChange}
-                        style={{ fontSize: "12px", margin: "5px" }}
-                      />
-                    ))}
+                    {[...new Set([...posTerminalList, "OFFLINE"])].map(
+                      (opt) => (
+                        <Form.Check
+                          required
+                          inline
+                          key={opt}
+                          label={opt}
+                          name="posTerminal"
+                          type="radio"
+                          id={`pos-${opt}`}
+                          value={opt}
+                          checked={receiptForm.posTerminal === opt}
+                          onChange={handleReceiptFormChange}
+                          style={{ fontSize: "12px", margin: "5px" }}
+                        />
+                      ),
+                    )}
                   </div>
                 </Col>
               </Row>
@@ -2662,14 +2769,24 @@ export default function Appointment_list() {
           }}
         >
           {calculateTotals().subtotal > 10000 && (
-            <span className="text-danger fw-bold me-auto d-flex align-items-center" style={{ fontSize: "14px", marginRight: "10px" }}>
-              <FeatherIcon icon="alert-triangle" size="16" style={{ marginRight: "5px" }} />
+            <span
+              className="text-danger fw-bold me-auto d-flex align-items-center"
+              style={{ fontSize: "14px", marginRight: "10px" }}
+            >
+              <FeatherIcon
+                icon="alert-triangle"
+                size="16"
+                style={{ marginRight: "5px" }}
+              />
               Warning: The subtotal exceeds the permissible limit of ₹10,000.
             </span>
           )}
           <Button
             variant="secondary"
-            onClick={() => setShowReceiptModal(false)}
+            onClick={() => {
+              resetReceiptForm();
+              setShowReceiptModal(false);
+            }}
             style={{ fontSize: "12px", borderRadius: "10px", padding: "9px" }}
           >
             Cancel
@@ -2678,9 +2795,10 @@ export default function Appointment_list() {
           <Button
             type="submit"
             form="opd-receipt-form"
-            disabled={calculateTotals().subtotal > 10000}
+            //disabled={calculateTotals().subtotal > 10000}
             style={{
-              backgroundColor: calculateTotals().subtotal > 10000 ? "#cccccc" : "#00bcd4",
+              backgroundColor:
+                calculateTotals().subtotal > 10000 ? "#cccccc" : "#00bcd4",
               border: "none",
               fontSize: "12px",
               borderRadius: "10px",

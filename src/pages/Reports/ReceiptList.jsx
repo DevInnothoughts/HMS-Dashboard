@@ -79,14 +79,15 @@ export default function ReceiptList() {
   };
 
   const searchFromDatabase = async (query) => {
-    if (!currentLocation || currentLocation === "default" || isDbSearching) return;
+    if (!currentLocation || currentLocation === "default" || isDbSearching)
+      return;
 
     setIsDbSearching(true);
     try {
       const response = await fetch(
         `${BASE_URL}/V1/appointment/searchReceipts?query=${encodeURIComponent(
-          query
-        )}&location=${currentLocation}`
+          query,
+        )}&location=${currentLocation}`,
       );
 
       if (response.ok) {
@@ -95,7 +96,7 @@ export default function ReceiptList() {
           setReceipts((prev) => {
             const existingIds = new Set(prev.map((r) => r.receipt_id));
             const newUniqueReceipts = data.data.filter(
-              (r) => !existingIds.has(r.receipt_id)
+              (r) => !existingIds.has(r.receipt_id),
             );
             return [...prev, ...newUniqueReceipts];
           });
@@ -298,10 +299,10 @@ export default function ReceiptList() {
     const trimmedLocation = currentLocation ? currentLocation.trim() : "";
     const clinicAddr = receiptlocations[trimmedLocation] ||
       receiptlocations[currentLocation] || {
-      address:
-        "Healing Hands Clinic Pvt Ltd, DP Road, Ground Floor, Millenium Star Extension, Adjacent to Ruby Hall Clinic, Pune 411001",
-      phone: "8888288884 | 020-26164488/99",
-    };
+        address:
+          "Healing Hands Clinic Pvt Ltd, DP Road, Ground Floor, Millenium Star Extension, Adjacent to Ruby Hall Clinic, Pune 411001",
+        phone: "8888288884 | 020-26164488/99",
+      };
     console.log(clinicAddr);
     const getBase64Image = (imgUrl) => {
       return new Promise((resolve) => {
@@ -496,27 +497,28 @@ export default function ReceiptList() {
                     </tr>
                   </thead>
                   <tbody>
-                    ${selectedReceipt.item_details
-            ? selectedReceipt.item_details
-              .split(",")
-              .map((itemGroup, index) => {
-                const parts = itemGroup.split(":");
-                const label = parts[0] ? parts[0].trim() : "-";
-                const amount = parts[1]
-                  ? parseFloat(parts[1].trim())
-                  : 0;
+                    ${
+                      selectedReceipt.item_details
+                        ? selectedReceipt.item_details
+                            .split(",")
+                            .map((itemGroup, index) => {
+                              const parts = itemGroup.split(":");
+                              const label = parts[0] ? parts[0].trim() : "-";
+                              const amount = parts[1]
+                                ? parseFloat(parts[1].trim())
+                                : 0;
 
-                return `
+                              return `
                         <tr>
                               <td class="col-sr">${index + 1}</td>
                               <td class="col-desc">${label}</td>
                               <td class="col-amt">${amount.toFixed(2)}</td>
                             </tr>
                           `;
-              })
-              .join("")
-            : `<tr><td class="col-sr">1</td><td class="col-desc">-</td><td class="col-amt">0.00</td></tr>`
-          }
+                            })
+                            .join("")
+                        : `<tr><td class="col-sr">1</td><td class="col-desc">-</td><td class="col-amt">0.00</td></tr>`
+                    }
                   </tbody>
                 </table>
                 <div class="summary-section">
@@ -557,7 +559,7 @@ export default function ReceiptList() {
   useEffect(() => {
     if (location.state?.printReceiptId && receipts.length > 0) {
       const receiptToPrint = receipts.find(
-        (r) => r.receipt_id === location.state.printReceiptId
+        (r) => r.receipt_id === location.state.printReceiptId,
       );
       if (receiptToPrint) {
         handlePrintReceipt(receiptToPrint);
@@ -661,7 +663,7 @@ export default function ReceiptList() {
             >
               Search
             </span>
-            <InputGroup style={{ position: 'relative' }}>
+            <InputGroup style={{ position: "relative" }}>
               <Form.Control
                 type="search"
                 value={filters.global.value || ""}
@@ -685,15 +687,22 @@ export default function ReceiptList() {
                 }}
               />
               {isDbSearching && (
-                <div style={{
-                  position: 'absolute',
-                  right: '10px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  zIndex: 5,
-                  pointerEvents: 'none'
-                }}>
-                  <Spinner animation="border" size="sm" variant="info" style={{ width: '12px', height: '12px' }} />
+                <div
+                  style={{
+                    position: "absolute",
+                    right: "10px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    zIndex: 5,
+                    pointerEvents: "none",
+                  }}
+                >
+                  <Spinner
+                    animation="border"
+                    size="sm"
+                    variant="info"
+                    style={{ width: "12px", height: "12px" }}
+                  />
                 </div>
               )}
             </InputGroup>

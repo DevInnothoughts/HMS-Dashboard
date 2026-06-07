@@ -73,13 +73,13 @@ const convertToWords = (number) => {
       } else {
         str.push(
           words[Math.floor(n / 10) * 10] +
-          " " +
-          words[n % 10] +
-          " " +
-          digits[counter] +
-          plural +
-          " " +
-          hundred,
+            " " +
+            words[n % 10] +
+            " " +
+            digits[counter] +
+            plural +
+            " " +
+            hundred,
         );
       }
     } else {
@@ -317,7 +317,7 @@ const IpdPaymentData = () => {
           } else {
             Swal.showValidationMessage(
               result.message ||
-              "Swipe not detected yet. Please try again after swiping.",
+                "Swipe not detected yet. Please try again after swiping.",
             );
             return false;
           }
@@ -371,7 +371,7 @@ const IpdPaymentData = () => {
               Swal.fire(
                 "Cancellation Error",
                 cancelResult?.message ||
-                "Remote cancel failed. Please cancel manually on the POS machine.",
+                  "Remote cancel failed. Please cancel manually on the POS machine.",
                 "error",
               );
             }
@@ -512,10 +512,10 @@ const IpdPaymentData = () => {
     const trimmedLocation = currentLocation ? currentLocation.trim() : "";
     const invoiceInfo = clinincLoc[trimmedLocation] ||
       clinincLoc[currentLocation] || {
-      invoiceAddress: "<b>Healing Hands Clinic</b>",
-      invoiceHelplineNo: "8888288884",
-      EmergencySMS: "",
-    };
+        invoiceAddress: "<b>Healing Hands Clinic</b>",
+        invoiceHelplineNo: "8888288884",
+        EmergencySMS: "",
+      };
     const receiptInfo = receiptlocations[currentLocation] || {
       hospitalcode: "HHC",
     };

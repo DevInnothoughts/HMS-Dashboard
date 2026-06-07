@@ -117,7 +117,12 @@ export default function Login() {
       const response = await fetch(`${BASE_URL}/V1/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, accountType: backendAccountType, jobLocation }),
+        body: JSON.stringify({
+          email,
+          password,
+          accountType: backendAccountType,
+          jobLocation,
+        }),
       });
 
       const data = await response.json();
@@ -194,9 +199,7 @@ export default function Login() {
                 <strong>{errorMessage}</strong>
               </div>
             ) : (
-              <p
-                style={{ color: "#718096", fontSize: "13px" }}
-              >
+              <p style={{ color: "#718096", fontSize: "13px" }}>
                 Enter your credentials to continue
               </p>
             )}
@@ -449,8 +452,6 @@ const dividerStyle = {
   borderRadius: "2px",
   marginTop: "42px",
 };
-
-
 
 const welcomeTitleStyle = {
   fontSize: "22px",

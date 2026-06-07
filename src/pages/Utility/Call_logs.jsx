@@ -227,14 +227,15 @@ export default function Call_logs({ isTab = false }) {
   };
 
   const searchFromDatabase = async (query) => {
-    if (!currentLocation || currentLocation === "default" || isDbSearching) return;
+    if (!currentLocation || currentLocation === "default" || isDbSearching)
+      return;
 
     setIsDbSearching(true);
     try {
       const response = await fetch(
         `${BASE_URL}/V1/ivrdata/searchIvrdata?query=${encodeURIComponent(
-          query
-        )}&location=${currentLocation}`
+          query,
+        )}&location=${currentLocation}`,
       );
 
       if (response.ok) {
@@ -269,7 +270,8 @@ export default function Call_logs({ isTab = false }) {
       const lowerSearch = searchValue.toLowerCase();
       return (
         (log.caller_no && log.caller_no.includes(searchValue)) ||
-        (log.patient_name && log.patient_name.toLowerCase().includes(lowerSearch)) ||
+        (log.patient_name &&
+          log.patient_name.toLowerCase().includes(lowerSearch)) ||
         (log.note && log.note.toLowerCase().includes(lowerSearch)) ||
         (log.destination_no && log.destination_no.includes(searchValue))
       );
@@ -529,7 +531,9 @@ export default function Call_logs({ isTab = false }) {
   };
 
   const renderStatusHeader = () => (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+    <div
+      style={{ display: "flex", flexDirection: "column", alignItems: "center" }}
+    >
       <span style={{ fontSize: "12px", fontWeight: 600, marginBottom: "4px" }}>
         Enquiry Status
       </span>
@@ -582,8 +586,6 @@ export default function Call_logs({ isTab = false }) {
       </span>
     );
   };
-
-
 
   const actionBodyTemplate = (rowData) => (
     <div className="d-flex align-items-center justify-content-center">
@@ -682,7 +684,7 @@ export default function Call_logs({ isTab = false }) {
             >
               Search
             </span>
-            <InputGroup style={{ position: 'relative' }}>
+            <InputGroup style={{ position: "relative" }}>
               <Form.Control
                 type="search"
                 value={filters1.global.value || ""}
@@ -706,15 +708,22 @@ export default function Call_logs({ isTab = false }) {
                 }}
               />
               {isDbSearching && (
-                <div style={{
-                  position: 'absolute',
-                  right: '10px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  zIndex: 5,
-                  pointerEvents: 'none'
-                }}>
-                  <Spinner animation="border" size="sm" variant="info" style={{ width: '12px', height: '12px' }} />
+                <div
+                  style={{
+                    position: "absolute",
+                    right: "10px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    zIndex: 5,
+                    pointerEvents: "none",
+                  }}
+                >
+                  <Spinner
+                    animation="border"
+                    size="sm"
+                    variant="info"
+                    style={{ width: "12px", height: "12px" }}
+                  />
                 </div>
               )}
             </InputGroup>
@@ -1027,7 +1036,10 @@ export default function Call_logs({ isTab = false }) {
   };
 
   const pageContent = (
-    <div className="theme-body" style={isTab ? { padding: "0px", marginTop: "0px" } : {}}>
+    <div
+      className="theme-body"
+      style={isTab ? { padding: "0px", marginTop: "0px" } : {}}
+    >
       <Container fluid>
         <Row>
           <Col>
@@ -1043,10 +1055,7 @@ export default function Call_logs({ isTab = false }) {
               }}
             >
               <Card.Body>
-                <Row
-                  className="Product_list"
-                  style={{ marginTop: "-18px" }}
-                >
+                <Row className="Product_list" style={{ marginTop: "-18px" }}>
                   {loading ? (
                     <div
                       className="d-flex justify-content-center py-5"
@@ -1253,7 +1262,6 @@ export default function Call_logs({ isTab = false }) {
                         }}
                       />
 
-
                       <Column
                         header="Actions"
                         body={actionBodyTemplate}
@@ -1445,7 +1453,7 @@ export default function Call_logs({ isTab = false }) {
                     <option value="">Select Type</option>
 
                     {formData.patient_type === "New" ||
-                      formData.patient_id === undefined ? (
+                    formData.patient_id === undefined ? (
                       <option value="New">NEW</option>
                     ) : (
                       <>
@@ -1660,7 +1668,11 @@ export default function Call_logs({ isTab = false }) {
               <Button
                 size="sm"
                 className="px-3"
-                style={{ borderRadius: "10px", fontSize: "12px", padding: "10px" }}
+                style={{
+                  borderRadius: "10px",
+                  fontSize: "12px",
+                  padding: "10px",
+                }}
                 variant="secondary"
                 onClick={() => setShowNoteModal(false)}
               >

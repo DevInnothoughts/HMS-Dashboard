@@ -110,11 +110,14 @@ export default function Add_Enquiry({ isTab = false }) {
 
       setIsCheckingPhone(true);
       try {
-        const response = await fetch(`${BASE_URL}/V1/patient/searchPatient?query=${encodeURIComponent(phone)}&location=${encodeURIComponent(currentLocation)}`);
+        const response = await fetch(
+          `${BASE_URL}/V1/patient/searchPatient?query=${encodeURIComponent(phone)}&location=${encodeURIComponent(currentLocation)}`,
+        );
         if (response.ok) {
           const data = await response.json();
           // Check if any returned patient has this phone as primary and has a Uid_no generated
-          const isRegistered = data.data && data.data.some(p => p.phone === phone && p.Uid_no);
+          const isRegistered =
+            data.data && data.data.some((p) => p.phone === phone && p.Uid_no);
           if (isRegistered) {
             setIsPatientRegistered(true);
             Swal.fire({
@@ -315,12 +318,16 @@ export default function Add_Enquiry({ isTab = false }) {
   return (
     <div
       className={isTab ? "" : "themebody-wrap"}
-      style={isTab ? { fontFamily: "'Poppins', Arial, sans-serif" } : {
-        background: "linear-gradient(to right, #e0f7fa, #80deea)",
-        minHeight: "100vh",
-        padding: "10px",
-        fontFamily: "'Poppins', Arial, sans-serif",
-      }}
+      style={
+        isTab
+          ? { fontFamily: "'Poppins', Arial, sans-serif" }
+          : {
+              background: "linear-gradient(to right, #e0f7fa, #80deea)",
+              minHeight: "100vh",
+              padding: "10px",
+              fontFamily: "'Poppins', Arial, sans-serif",
+            }
+      }
     >
       {!isTab && <PageBreadcrumb pagename="Add Enquiry Form" />}
       {!isTab && <NavBarA pagename="Add Enquiry" />}
@@ -713,9 +720,16 @@ export default function Add_Enquiry({ isTab = false }) {
                         fontSize: "13px",
                         padding: "9px 35px",
                       }}
-                      disabled={loading || !currentLocation || isPatientRegistered || isCheckingPhone}
+                      disabled={
+                        loading ||
+                        !currentLocation ||
+                        isPatientRegistered ||
+                        isCheckingPhone
+                      }
                     >
-                      {loading || isCheckingPhone ? "Please wait..." : "Add Enquiry"}
+                      {loading || isCheckingPhone
+                        ? "Please wait..."
+                        : "Add Enquiry"}
                     </Button>
                   </div>
                 </Form>

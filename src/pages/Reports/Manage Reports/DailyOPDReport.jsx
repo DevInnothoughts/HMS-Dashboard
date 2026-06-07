@@ -35,75 +35,78 @@ const DailyOPDReport = () => {
   const formattedDate = `${String(today.getDate()).padStart(2, "0")}-${String(today.getMonth() + 1).padStart(2, "0")}-${today.getFullYear()}`;
 
   // 2. Remove 'selectedDate' from the useCallback dependencies
-  const fetchDailyReport = useCallback(async (currentLocation, isBackground = false) => {
-    try {
-      if (!isBackground) setLoading(true);
+  const fetchDailyReport = useCallback(
+    async (currentLocation, isBackground = false) => {
+      try {
+        if (!isBackground) setLoading(true);
 
-      // Define the static date string here so it doesn't trigger re-renders
-      const today = new Date();
-      const apiDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+        // Define the static date string here so it doesn't trigger re-renders
+        const today = new Date();
+        const apiDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
-      const response = await fetch(
-        `${BASE_URL}/V1/daily-opd-report?location=${currentLocation}&date=${apiDate}`,
-      );
-      const result = await response.json();
-      console.log(result);
-      if (result.statusCode === 200) {
-        const d = result.description;
-        setReportData({
-          opdCounts: [
-            { type: "New", count: d.dailyOPDReport[0][0] },
-            { type: "Follow UP", count: d.dailyOPDReport[0][1] },
-            { type: "PO", count: d.dailyOPDReport[0][2] },
-            { type: "PROCTOSCOPY", count: d.dailyOPDReport[0][3] },
-            { type: "TOTAL", count: d.dailyOPDReport[0][4] },
-          ],
-          opdDetails: d.detailedData.map((row, index) => {
-            const labels = [
-              "DNC",
-              "DNP",
-              "DNW",
-              "DNT",
-              "ONLY REGISTRATION",
-              "WALK IN",
-            ];
-            return {
-              type: labels[index],
-              new: row[0],
-              followUp: row[1],
-              po: row[2],
-              total: row[3],
-            };
-          }),
-          opdCollectionDetails: d.opdCollection.map((item) => ({
-            method: item[0],
-            amount: item[1],
-          })),
-          overallCollectionDetails: d.overallCollection.map((item) => ({
-            method: item[0],
-            amount: item[1],
-          })),
-          labCollectionDetails: d.labCollection.map((item) => ({
-            method: item[0],
-            amount: item[1],
-          })),
-          pharmacyCollectionDetails: d.pharmacyCollection.map((item) => ({
-            method: item[0],
-            amount: item[1],
-          })),
+        const response = await fetch(
+          `${BASE_URL}/V1/daily-opd-report?location=${currentLocation}&date=${apiDate}`,
+        );
+        const result = await response.json();
+        console.log(result);
+        if (result.statusCode === 200) {
+          const d = result.description;
+          setReportData({
+            opdCounts: [
+              { type: "New", count: d.dailyOPDReport[0][0] },
+              { type: "Follow UP", count: d.dailyOPDReport[0][1] },
+              { type: "PO", count: d.dailyOPDReport[0][2] },
+              { type: "PROCTOSCOPY", count: d.dailyOPDReport[0][3] },
+              { type: "TOTAL", count: d.dailyOPDReport[0][4] },
+            ],
+            opdDetails: d.detailedData.map((row, index) => {
+              const labels = [
+                "DNC",
+                "DNP",
+                "DNW",
+                "DNT",
+                "ONLY REGISTRATION",
+                "WALK IN",
+              ];
+              return {
+                type: labels[index],
+                new: row[0],
+                followUp: row[1],
+                po: row[2],
+                total: row[3],
+              };
+            }),
+            opdCollectionDetails: d.opdCollection.map((item) => ({
+              method: item[0],
+              amount: item[1],
+            })),
+            overallCollectionDetails: d.overallCollection.map((item) => ({
+              method: item[0],
+              amount: item[1],
+            })),
+            labCollectionDetails: d.labCollection.map((item) => ({
+              method: item[0],
+              amount: item[1],
+            })),
+            pharmacyCollectionDetails: d.pharmacyCollection.map((item) => ({
+              method: item[0],
+              amount: item[1],
+            })),
 
-          testDetails: d.testReport.map((test) => ({
-            testName: test[0],
-            amount: test[1],
-          })),
-        });
+            testDetails: d.testReport.map((test) => ({
+              testName: test[0],
+              amount: test[1],
+            })),
+          });
+        }
+      } catch (error) {
+        console.error("Error setting report data:", error);
+      } finally {
+        if (!isBackground) setLoading(false);
       }
-    } catch (error) {
-      console.error("Error setting report data:", error);
-    } finally {
-      if (!isBackground) setLoading(false);
-    }
-  }, []); // Empty dependency array means this function is created only once
+    },
+    [],
+  ); // Empty dependency array means this function is created only once
 
   // 3. Effect triggers only when the function or identity changes (which is now never)
   useEffect(() => {
@@ -148,8 +151,8 @@ const DailyOPDReport = () => {
           </thead>
           <tbody>
             ${data
-        .map(
-          (item) => `
+              .map(
+                (item) => `
               <tr>
                 <td style="text-align:left;padding-left:10px;width:70%;
                     font-weight:bold;
@@ -162,8 +165,8 @@ const DailyOPDReport = () => {
                 </td>
               </tr>
             `,
-        )
-        .join("")}
+              )
+              .join("")}
           </tbody>
         </table>
       </div>
@@ -249,15 +252,15 @@ const DailyOPDReport = () => {
                 </thead>
                 <tbody style="font-size:12px;">
                   ${reportData.opdCounts
-        .map(
-          (i) => `
+                    .map(
+                      (i) => `
                     <tr>
                       <td class="fw-bold" style="color:#000 !important;">${i.type}</td>
                       <td>${i.count}</td>
                     </tr>
                   `,
-        )
-        .join("")}
+                    )
+                    .join("")}
                 </tbody>
               </table>
             </div>
@@ -279,8 +282,8 @@ const DailyOPDReport = () => {
                 </thead>
                 <tbody style="font-size:12px;">
                   ${reportData.opdDetails
-        .map(
-          (i) => `
+                    .map(
+                      (i) => `
                     <tr>
                       <td class="fw-bold" style="color:#000 !important;">${i.type}</td>
                       <td>${i.new}</td>
@@ -289,8 +292,8 @@ const DailyOPDReport = () => {
                       <td>${i.total}</td>
                     </tr>
                   `,
-        )
-        .join("")}
+                    )
+                    .join("")}
                 </tbody>
               </table>
             </div>
@@ -309,15 +312,15 @@ const DailyOPDReport = () => {
                 </thead>
                 <tbody style="font-size:12px;">
                   ${reportData.testDetails
-        .map(
-          (i) => `
+                    .map(
+                      (i) => `
                     <tr>
                       <td class="fw-bold" style="color:#000 !important;">${i.testName}</td>
                       <td>₹ ${i.amount}</td>
                     </tr>
                   `,
-        )
-        .join("")}
+                    )
+                    .join("")}
                 </tbody>
               </table>
             </div>
@@ -760,7 +763,12 @@ const DailyOPDReport = () => {
               >
                 <Button
                   variant="primary"
-                  style={{ border: "none", display: "inline-flex", alignItems: "center", gap: "8px" }}
+                  style={{
+                    border: "none",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
                   onClick={handlePrint}
                 >
                   <FaPrint /> Print Report

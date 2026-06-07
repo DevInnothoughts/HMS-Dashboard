@@ -564,14 +564,15 @@ export default function All_patient() {
   };
 
   const searchFromDatabase = async (query) => {
-    if (!currentLocation || currentLocation === "default" || isDbSearching) return;
+    if (!currentLocation || currentLocation === "default" || isDbSearching)
+      return;
 
     setIsDbSearching(true);
     try {
       const response = await fetch(
         `${BASE_URL}/V1/patient/searchPatient?query=${encodeURIComponent(
-          query
-        )}&location=${currentLocation}`
+          query,
+        )}&location=${currentLocation}`,
       );
 
       if (response.ok) {
@@ -581,7 +582,7 @@ export default function All_patient() {
             // Filter out patients that are already in the list to avoid duplicates
             const existingIds = new Set(prev.map((p) => p.patient_id));
             const newUniquePatients = data.data.filter(
-              (p) => !existingIds.has(p.patient_id)
+              (p) => !existingIds.has(p.patient_id),
             );
             return [...prev, ...newUniquePatients];
           });
@@ -715,10 +716,16 @@ export default function All_patient() {
   }, [currentLocation, fromDate, toDate]);
 
   useEffect(() => {
-    if (location.state?.openEditForPhone && currentLocation && currentLocation !== "default") {
+    if (
+      location.state?.openEditForPhone &&
+      currentLocation &&
+      currentLocation !== "default"
+    ) {
       const targetPhone = String(location.state.openEditForPhone);
-      const patientToEdit = patients.find(p => String(p.phone) === targetPhone);
-      
+      const patientToEdit = patients.find(
+        (p) => String(p.phone) === targetPhone,
+      );
+
       if (patientToEdit) {
         handleEditPatient(patientToEdit);
         const newState = { ...location.state };
@@ -729,15 +736,20 @@ export default function All_patient() {
           try {
             const response = await fetch(
               `${BASE_URL}/V1/patient/searchPatient?query=${encodeURIComponent(
-                targetPhone
-              )}&location=${currentLocation}`
+                targetPhone,
+              )}&location=${currentLocation}`,
             );
             if (response.ok) {
               const resData = await response.json();
               if (resData.data && resData.data.length > 0) {
-                const foundPatient = resData.data.find(p => String(p.phone) === targetPhone) || resData.data[0];
+                const foundPatient =
+                  resData.data.find((p) => String(p.phone) === targetPhone) ||
+                  resData.data[0];
                 setPatients((prev) => {
-                  if (prev.some(p => p.patient_id === foundPatient.patient_id)) return prev;
+                  if (
+                    prev.some((p) => p.patient_id === foundPatient.patient_id)
+                  )
+                    return prev;
                   return [foundPatient, ...prev];
                 });
                 handleEditPatient(foundPatient);
@@ -759,7 +771,15 @@ export default function All_patient() {
         searchAndEdit();
       }
     }
-  }, [location.state?.openEditForPhone, patients, loading, navigate, location.pathname, location.state, currentLocation]);
+  }, [
+    location.state?.openEditForPhone,
+    patients,
+    loading,
+    navigate,
+    location.pathname,
+    location.state,
+    currentLocation,
+  ]);
 
   const formatDateToDisplay = (dateString) => {
     if (!dateString) return "";
@@ -839,7 +859,7 @@ export default function All_patient() {
         [patient.reference_type]: patient.ref || "",
         Other_Newspaper:
           patient.reference_type === "newspaper" &&
-            !standardNewspapers.includes(patient.ref)
+          !standardNewspapers.includes(patient.ref)
             ? patient.ref
             : "",
       }));
@@ -914,24 +934,30 @@ export default function All_patient() {
             return;
           }
           try {
-            const addDoctorRes = await fetch(`${BASE_URL}/V1/patient/addRefDoctor?location=${currentLocation}`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                ref_doctor_name: referenceDetails.dr_name,
-                ref_doctor_phone: referenceDetails.dr_contact,
-                reference_doctor_speciality: referenceDetails.dr_specialty,
-                reference_doctor_location: referenceDetails.dr_location,
-              }),
-            });
+            const addDoctorRes = await fetch(
+              `${BASE_URL}/V1/patient/addRefDoctor?location=${currentLocation}`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  ref_doctor_name: referenceDetails.dr_name,
+                  ref_doctor_phone: referenceDetails.dr_contact,
+                  reference_doctor_speciality: referenceDetails.dr_specialty,
+                  reference_doctor_location: referenceDetails.dr_location,
+                }),
+              },
+            );
             const addDoctorData = await addDoctorRes.json();
             if (addDoctorRes.ok && addDoctorData?.data?.reference_doctor_id) {
               const newDrId = addDoctorData.data.reference_doctor_id;
               ref = newDrId;
               // Also update referenceDetails to hold the new ID so the state aligns
-              setReferenceDetails(prev => ({ ...prev, dr_id: newDrId }));
+              setReferenceDetails((prev) => ({ ...prev, dr_id: newDrId }));
             } else {
-              toast.error(addDoctorData.message || "Failed to add manual doctor reference.");
+              toast.error(
+                addDoctorData.message ||
+                  "Failed to add manual doctor reference.",
+              );
               return;
             }
           } catch (err) {
@@ -961,8 +987,9 @@ export default function All_patient() {
         break;
       case "family_friends":
         reference_type = "family_friends";
-        ref = `${referenceDetails.friendname || ""},${referenceDetails.friendno || ""
-          }`;
+        ref = `${referenceDetails.friendname || ""},${
+          referenceDetails.friendno || ""
+        }`;
         break;
       case "hhc_board":
         reference_type = "hhc_board";
@@ -1022,8 +1049,10 @@ export default function All_patient() {
       // ref: formData.ref
       reference_type: reference_type,
       ref: ref,
-      ref_doctor_name: reference_type === "dr_ref" ? (referenceDetails.dr_name || "") : "",
-      ref_doctor_phone: reference_type === "dr_ref" ? (referenceDetails.dr_contact || "") : "",
+      ref_doctor_name:
+        reference_type === "dr_ref" ? referenceDetails.dr_name || "" : "",
+      ref_doctor_phone:
+        reference_type === "dr_ref" ? referenceDetails.dr_contact || "" : "",
       ConfirmPatient: 1,
       additional_info: {
         nationality: formData.nationality,
@@ -1069,7 +1098,7 @@ export default function All_patient() {
 
         if (location.state?.returnToAppointment) {
           navigate("/appointments", {
-            state: { registered_appointment_id: location.state.appointment_id }
+            state: { registered_appointment_id: location.state.appointment_id },
           });
         }
       } else {
@@ -1090,10 +1119,11 @@ export default function All_patient() {
 
   const statusBodyTemplate = (formData) => (
     <span
-      className={`badge ${formData.status
-        ? ` status- ${formData.status.toLowerCase()}`
-        : "status-unknown"
-        }`}
+      className={`badge ${
+        formData.status
+          ? ` status- ${formData.status.toLowerCase()}`
+          : "status-unknown"
+      }`}
     >
       {formData.status || "Unknown"}
     </span>
@@ -1387,7 +1417,7 @@ export default function All_patient() {
               <p><b>Email :-</b>&nbsp;&nbsp;${patient.email || "-"}</p>
               <p><b>Occupation :-</b>&nbsp;&nbsp;${patient.occupation || "-"}</p>
               ${patient.companyname ? `<p><b>Company Name :-</b>&nbsp;&nbsp;${patient.companyname}</p>` : ""}
-              ${(patient.reference_type === "dr_ref" && (patient.ref_doctor_name || patient.ref)) ? `<p><b>Reference :-</b>&nbsp;&nbsp;${patient.ref_doctor_name || patient.ref}${patient.ref_doctor_phone ? ` (${patient.ref_doctor_phone})` : ""}</p>` : (patient.ref ? `<p><b>Reference :-</b>&nbsp;&nbsp;${patient.ref}</p>` : "")}
+              ${patient.reference_type === "dr_ref" && (patient.ref_doctor_name || patient.ref) ? `<p><b>Reference :-</b>&nbsp;&nbsp;${patient.ref_doctor_name || patient.ref}${patient.ref_doctor_phone ? ` (${patient.ref_doctor_phone})` : ""}</p>` : patient.ref ? `<p><b>Reference :-</b>&nbsp;&nbsp;${patient.ref}</p>` : ""}
             </td>
           </tr>
           </table>
@@ -1750,7 +1780,6 @@ export default function All_patient() {
                   borderRadius: "10px",
                 }}
               />
-
             </div>
           </div>
         );
@@ -2691,7 +2720,7 @@ export default function All_patient() {
             >
               Search
             </span>
-            <InputGroup style={{ position: 'relative' }}>
+            <InputGroup style={{ position: "relative" }}>
               <Form.Control
                 type="search"
                 value={filters1.global.value || ""}
@@ -2715,15 +2744,22 @@ export default function All_patient() {
                 }}
               />
               {isDbSearching && (
-                <div style={{
-                  position: 'absolute',
-                  right: '10px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  zIndex: 5,
-                  pointerEvents: 'none'
-                }}>
-                  <Spinner animation="border" size="sm" variant="info" style={{ width: '12px', height: '12px' }} />
+                <div
+                  style={{
+                    position: "absolute",
+                    right: "10px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    zIndex: 5,
+                    pointerEvents: "none",
+                  }}
+                >
+                  <Spinner
+                    animation="border"
+                    size="sm"
+                    variant="info"
+                    style={{ width: "12px", height: "12px" }}
+                  />
                 </div>
               )}
             </InputGroup>
@@ -2747,7 +2783,7 @@ export default function All_patient() {
               cursor: "pointer",
               transition: "all 0.3s ease",
               boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              marginLeft: "5px"
+              marginLeft: "5px",
             }}
           >
             <FeatherIcon icon="calendar" size={12} className="me-1" />
@@ -4023,7 +4059,6 @@ export default function All_patient() {
         </Modal.Body>
 
         <Modal.Footer style={{ backgroundColor: "#f1f4f6", padding: "5px" }}>
-
           <Button
             variant="secondary"
             className="px-3"
@@ -4176,14 +4211,14 @@ export default function All_patient() {
                           <span>
                             {(rowData.patient_type === 1 ||
                               rowData.patient_type === true) && (
-                                <span className="me-1" title="VIP Patient">
-                                  <FeatherIcon
-                                    icon="star"
-                                    size="16"
-                                    style={{ color: "#ffc107", fill: "#ffc107" }}
-                                  />
-                                </span>
-                              )}
+                              <span className="me-1" title="VIP Patient">
+                                <FeatherIcon
+                                  icon="star"
+                                  size="16"
+                                  style={{ color: "#ffc107", fill: "#ffc107" }}
+                                />
+                              </span>
+                            )}
                             {rowData.name || "-"}
                           </span>
                         )}

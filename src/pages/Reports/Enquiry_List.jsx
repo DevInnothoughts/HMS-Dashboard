@@ -108,7 +108,7 @@ export default function EnquiryList({ isTab = false }) {
         {
           method: "GET",
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
 
       if (doctorResponse.ok) {
@@ -121,7 +121,7 @@ export default function EnquiryList({ isTab = false }) {
         {
           method: "GET",
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
 
       if (fdeResponse.ok) {
@@ -158,7 +158,7 @@ export default function EnquiryList({ isTab = false }) {
     try {
       // Check if patient exists
       const response = await fetch(
-        `${BASE_URL}/V1/appointment/getPatientByMobile?patient_phone=${phone}&location=${currentLocation}`
+        `${BASE_URL}/V1/appointment/getPatientByMobile?patient_phone=${phone}&location=${currentLocation}`,
       );
       const result = await response.json();
 
@@ -204,7 +204,7 @@ export default function EnquiryList({ isTab = false }) {
             enquiry_id: selectedEnquiry.enquiry_id,
             status: editEnquiryStatus,
           }),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -238,9 +238,11 @@ export default function EnquiryList({ isTab = false }) {
 
     const formattedDate = moment(appointmentFormData.date).format("YYYY-MM-DD");
     const selectedDoctor = doctors.find(
-      (doc) => doc.doctor_id === appointmentFormData.doctor_id
+      (doc) => doc.doctor_id === appointmentFormData.doctor_id,
     );
-    const doctorName = selectedDoctor ? selectedDoctor.name : appointmentFormData.doctorName;
+    const doctorName = selectedDoctor
+      ? selectedDoctor.name
+      : appointmentFormData.doctorName;
 
     const payload = {
       appointment_timestamp: formattedDate,
@@ -249,7 +251,10 @@ export default function EnquiryList({ isTab = false }) {
       patientName: appointmentFormData.name,
       patient_phone: appointmentFormData.phone,
       patient_id: appointmentFormData.patient_id,
-      patient_type: appointmentFormData.patient_type === "Post Operative" ? "Postoperative" : appointmentFormData.patient_type,
+      patient_type:
+        appointmentFormData.patient_type === "Post Operative"
+          ? "Postoperative"
+          : appointmentFormData.patient_type,
       appointment_time: appointmentFormData.appointmentTime,
       FDE_Name: appointmentFormData.FDE_Name,
       note: appointmentFormData.note,
@@ -263,7 +268,7 @@ export default function EnquiryList({ isTab = false }) {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -376,14 +381,15 @@ export default function EnquiryList({ isTab = false }) {
   }, [fromDate, toDate, currentLocation]);
 
   const searchFromDatabase = async (query) => {
-    if (!currentLocation || currentLocation === "default" || isDbSearching) return;
+    if (!currentLocation || currentLocation === "default" || isDbSearching)
+      return;
 
     setIsDbSearching(true);
     try {
       const response = await fetch(
         `${BASE_URL}/V1/enquiry/searchEnquiry?query=${encodeURIComponent(
-          query
-        )}&location=${currentLocation}`
+          query,
+        )}&location=${currentLocation}`,
       );
 
       if (response.ok) {
@@ -392,14 +398,14 @@ export default function EnquiryList({ isTab = false }) {
           setEnquiries((prev) => {
             const existingIds = new Set(prev.map((e) => e.enquiry_id));
             const newUniqueEnquiries = data.data.filter(
-              (e) => !existingIds.has(e.enquiry_id)
+              (e) => !existingIds.has(e.enquiry_id),
             );
             return [...prev, ...newUniqueEnquiries];
           });
           setFilteredEnquiries((prev) => {
             const existingIds = new Set(prev.map((e) => e.enquiry_id));
             const newUniqueEnquiries = data.data.filter(
-              (e) => !existingIds.has(e.enquiry_id)
+              (e) => !existingIds.has(e.enquiry_id),
             );
             return [...prev, ...newUniqueEnquiries];
           });
@@ -419,7 +425,8 @@ export default function EnquiryList({ isTab = false }) {
     const hasLocalMatches = enquiries.some((e) => {
       const lowerSearch = searchValue.toLowerCase();
       return (
-        (e.patient_name && e.patient_name.toLowerCase().includes(lowerSearch)) ||
+        (e.patient_name &&
+          e.patient_name.toLowerCase().includes(lowerSearch)) ||
         (e.patient_phone && e.patient_phone.includes(searchValue))
       );
     });
@@ -459,7 +466,9 @@ export default function EnquiryList({ isTab = false }) {
   };
 
   const renderStatusHeader = () => (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+    <div
+      style={{ display: "flex", flexDirection: "column", alignItems: "center" }}
+    >
       <span style={{ fontSize: "12px", fontWeight: 600, marginBottom: "4px" }}>
         Enquiry Status
       </span>
@@ -559,7 +568,7 @@ export default function EnquiryList({ isTab = false }) {
             >
               Search
             </span>
-            <InputGroup style={{ position: 'relative' }}>
+            <InputGroup style={{ position: "relative" }}>
               <Form.Control
                 type="search"
                 value={filters1.global.value || ""}
@@ -576,15 +585,22 @@ export default function EnquiryList({ isTab = false }) {
                 }}
               />
               {isDbSearching && (
-                <div style={{
-                  position: 'absolute',
-                  right: '10px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  zIndex: 5,
-                  pointerEvents: 'none'
-                }}>
-                  <Spinner animation="border" size="sm" variant="info" style={{ width: '12px', height: '12px' }} />
+                <div
+                  style={{
+                    position: "absolute",
+                    right: "10px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    zIndex: 5,
+                    pointerEvents: "none",
+                  }}
+                >
+                  <Spinner
+                    animation="border"
+                    size="sm"
+                    variant="info"
+                    style={{ width: "12px", height: "12px" }}
+                  />
                 </div>
               )}
             </InputGroup>
@@ -708,15 +724,21 @@ export default function EnquiryList({ isTab = false }) {
   return (
     <div
       className={isTab ? "" : "themebody-wrap"}
-      style={isTab ? { fontFamily: "'Poppins', Arial, sans-serif" } : {
-        background: "linear-gradient(to right, #e0f7fa, #80deea)",
-        fontFamily: "'Poppins', Arial, sans-serif",
-        minHeight: "100vh",
-        padding: "10px",
-      }}
+      style={
+        isTab
+          ? { fontFamily: "'Poppins', Arial, sans-serif" }
+          : {
+              background: "linear-gradient(to right, #e0f7fa, #80deea)",
+              fontFamily: "'Poppins', Arial, sans-serif",
+              minHeight: "100vh",
+              padding: "10px",
+            }
+      }
     >
       {!isTab && <PageBreadcrumb pagename="Enquiry List" />}
-      {!isTab && <NavBarA pagename={`Enquiry List (${currentLocation.toUpperCase()})`} />}
+      {!isTab && (
+        <NavBarA pagename={`Enquiry List (${currentLocation.toUpperCase()})`} />
+      )}
 
       <div className={isTab ? "" : "theme-body"}>
         <Container fluid>
@@ -891,26 +913,38 @@ export default function EnquiryList({ isTab = false }) {
                         field="enquiry_status"
                         header={renderStatusHeader}
                         body={(rowData) => {
-                          const status = rowData.dynamic_status || rowData.enquiry_status;
+                          const status =
+                            rowData.dynamic_status || rowData.enquiry_status;
                           if (!status) return "-";
 
                           let badgeBg = "#ffe0b2";
                           let badgeColor = "#e65100";
-                          if (status === "Visited") { badgeBg = "#e0f2f1"; badgeColor = "#004d40"; }
-                          else if (status === "Surgery Done") { badgeBg = "#e8f5e9"; badgeColor = "#1b5e20"; }
-                          else if (status === "No FU done") { badgeBg = "#ffebee"; badgeColor = "#c62828"; }
-                          else if (status === "Not Visited") { badgeBg = "#efebe9"; badgeColor = "#4e342e"; }
+                          if (status === "Visited") {
+                            badgeBg = "#e0f2f1";
+                            badgeColor = "#004d40";
+                          } else if (status === "Surgery Done") {
+                            badgeBg = "#e8f5e9";
+                            badgeColor = "#1b5e20";
+                          } else if (status === "No FU done") {
+                            badgeBg = "#ffebee";
+                            badgeColor = "#c62828";
+                          } else if (status === "Not Visited") {
+                            badgeBg = "#efebe9";
+                            badgeColor = "#4e342e";
+                          }
 
                           return (
-                            <span style={{
-                              backgroundColor: badgeBg,
-                              color: badgeColor,
-                              padding: "4px 8px",
-                              borderRadius: "12px",
-                              fontSize: "11px",
-                              fontWeight: "600",
-                              display: "inline-block"
-                            }}>
+                            <span
+                              style={{
+                                backgroundColor: badgeBg,
+                                color: badgeColor,
+                                padding: "4px 8px",
+                                borderRadius: "12px",
+                                fontSize: "11px",
+                                fontWeight: "600",
+                                display: "inline-block",
+                              }}
+                            >
                               {status}
                             </span>
                           );
@@ -1317,7 +1351,7 @@ export default function EnquiryList({ isTab = false }) {
                   fontSize: "13px",
                   borderRadius: "10px",
                   padding: "8px 12px",
-                  height: "40px"
+                  height: "40px",
                 }}
                 required
               >
@@ -1329,12 +1363,19 @@ export default function EnquiryList({ isTab = false }) {
               </Form.Select>
             </Form.Group>
 
-            <div className="d-flex justify-content-end pt-2" style={{ marginTop: "15px" }}>
+            <div
+              className="d-flex justify-content-end pt-2"
+              style={{ marginTop: "15px" }}
+            >
               <Button
                 variant="secondary"
                 className="me-2 px-4"
                 onClick={() => setShowEditEnquiryModal(false)}
-                style={{ borderRadius: "10px", fontSize: "12px", height: "35px" }}
+                style={{
+                  borderRadius: "10px",
+                  fontSize: "12px",
+                  height: "35px",
+                }}
               >
                 Cancel
               </Button>
@@ -1347,7 +1388,7 @@ export default function EnquiryList({ isTab = false }) {
                   fontSize: "12px",
                   backgroundColor: "#00bcd4",
                   borderColor: "#00bcd4",
-                  height: "35px"
+                  height: "35px",
                 }}
               >
                 Confirm & Save

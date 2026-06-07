@@ -127,7 +127,7 @@ export default function WebLeadsTab() {
 
     if (name === "doctor_id") {
       const selectedDoctor = doctors.find(
-        (doc) => String(doc.doctor_id) === value
+        (doc) => String(doc.doctor_id) === value,
       );
       setFormData((prev) => ({
         ...prev,
@@ -210,8 +210,12 @@ export default function WebLeadsTab() {
     if (!currentLocation) return;
     try {
       const [fdeRes, docRes] = await Promise.all([
-        fetch(`${BASE_URL}/V1/appointment/fdeDropdown?location=${currentLocation}`),
-        fetch(`${BASE_URL}/V1/doctor/doctorDropdown?location=${currentLocation}`),
+        fetch(
+          `${BASE_URL}/V1/appointment/fdeDropdown?location=${currentLocation}`,
+        ),
+        fetch(
+          `${BASE_URL}/V1/doctor/doctorDropdown?location=${currentLocation}`,
+        ),
       ]);
       const fdeData = await fdeRes.json();
       const docData = await docRes.json();
@@ -232,12 +236,14 @@ export default function WebLeadsTab() {
     if (!currentLocation) return;
     setLoading(true);
     try {
-      const formattedFrom = fromDate ? moment(fromDate).format("DD-MM-YYYY") : "";
+      const formattedFrom = fromDate
+        ? moment(fromDate).format("DD-MM-YYYY")
+        : "";
       const formattedTo = toDate ? moment(toDate).format("DD-MM-YYYY") : "";
 
       const res = await fetch(
         `${BASE_URL}/V1/webleads/listWebleads?location=${currentLocation}&from=${formattedFrom}&to=${formattedTo}`,
-        { method: "GET", headers: { "Content-Type": "application/json" } }
+        { method: "GET", headers: { "Content-Type": "application/json" } },
       );
       const resData = await res.json();
       if (res.ok && resData.data) {
@@ -265,7 +271,7 @@ export default function WebLeadsTab() {
         setIsDbSearching(true);
         try {
           const res = await fetch(
-            `${BASE_URL}/V1/webleads/searchWebleads?location=${currentLocation}&query=${encodeURIComponent(queryVal)}`
+            `${BASE_URL}/V1/webleads/searchWebleads?location=${currentLocation}&query=${encodeURIComponent(queryVal)}`,
           );
           const resData = await res.json();
           if (res.ok && resData.data) {
@@ -414,7 +420,7 @@ export default function WebLeadsTab() {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ note: formData.note.trim() }),
-        }
+        },
       );
       const resData = await response.json();
       if (response.ok && resData.statusCode === 200) {
@@ -422,8 +428,8 @@ export default function WebLeadsTab() {
           prev.map((lead) =>
             lead.appointment_id === selectedLead.appointment_id
               ? { ...lead, note: formData.note.trim() }
-              : lead
-          )
+              : lead,
+          ),
         );
         setShowNoteModal(false);
         Swal.fire({
@@ -437,7 +443,10 @@ export default function WebLeadsTab() {
       }
     } catch (err) {
       console.error(err);
-      Toast.fire({ icon: "error", title: "An error occurred while saving note" });
+      Toast.fire({
+        icon: "error",
+        title: "An error occurred while saving note",
+      });
     }
   };
 
@@ -475,13 +484,13 @@ export default function WebLeadsTab() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
-        }
+        },
       );
 
       const responseData = await response.json();
       if (!response.ok) {
         throw new Error(
-          `Error: ${response.status} - ${responseData.message || "Bad Request"}`
+          `Error: ${response.status} - ${responseData.message || "Bad Request"}`,
         );
       }
       Swal.fire({
@@ -514,12 +523,12 @@ export default function WebLeadsTab() {
   const handleAppointmentSubmit = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     const selectedFDE = fdeList.find(
-      (fde) => String(fde.FDEID) === formData.FDE_Name
+      (fde) => String(fde.FDEID) === formData.FDE_Name,
     );
     const fdeName = selectedFDE ? selectedFDE.FDEName : "";
 
     const selectedDoctor = doctors.find(
-      (doc) => String(doc.doctor_id) === formData.doctor_id
+      (doc) => String(doc.doctor_id) === formData.doctor_id,
     );
     const doctorName = selectedDoctor ? selectedDoctor.name : "";
 
@@ -549,7 +558,7 @@ export default function WebLeadsTab() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -665,15 +674,22 @@ export default function WebLeadsTab() {
                 }}
               />
               {isDbSearching && (
-                <div style={{
-                  position: 'absolute',
-                  right: '10px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  zIndex: 5,
-                  pointerEvents: 'none'
-                }}>
-                  <Spinner animation="border" size="sm" variant="info" style={{ width: '12px', height: '12px' }} />
+                <div
+                  style={{
+                    position: "absolute",
+                    right: "10px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    zIndex: 5,
+                    pointerEvents: "none",
+                  }}
+                >
+                  <Spinner
+                    animation="border"
+                    size="sm"
+                    variant="info"
+                    style={{ width: "12px", height: "12px" }}
+                  />
                 </div>
               )}
             </InputGroup>
@@ -812,7 +828,9 @@ export default function WebLeadsTab() {
   };
 
   const renderStatusHeader = () => (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+    <div
+      style={{ display: "flex", flexDirection: "column", alignItems: "center" }}
+    >
       <span style={{ fontSize: "12px", fontWeight: 600, marginBottom: "4px" }}>
         Enquiry Status
       </span>
@@ -866,8 +884,6 @@ export default function WebLeadsTab() {
     );
   };
 
-
-
   const actionBodyTemplate = (rowData) => (
     <div className="d-flex align-items-center justify-content-center">
       <Button
@@ -875,7 +891,11 @@ export default function WebLeadsTab() {
         onClick={() => handleEnquiryClick(rowData)}
         className="enquiry-btn btn-primary btn-extra-small btn-icon me-2"
         title="Add Enquiry"
-        style={{ padding: "4px 8px", backgroundColor: "#00bcd4", border: "none" }}
+        style={{
+          padding: "4px 8px",
+          backgroundColor: "#00bcd4",
+          border: "none",
+        }}
       >
         <FeatherIcon icon="help-circle" size="16" />
       </Button>
@@ -885,7 +905,11 @@ export default function WebLeadsTab() {
         onClick={() => handleAddAppointmentClick(rowData)}
         className="appointment-btn btn-primary btn-extra-small btn-icon me-2"
         title="Add Appointment"
-        style={{ padding: "4px 8px", backgroundColor: "#00bcd4", border: "none" }}
+        style={{
+          padding: "4px 8px",
+          backgroundColor: "#00bcd4",
+          border: "none",
+        }}
       >
         <FeatherIcon icon="plus-square" size="16" />
       </Button>
@@ -895,7 +919,11 @@ export default function WebLeadsTab() {
         onClick={() => handleNoteClick(rowData)}
         className="note-btn btn-primary btn-extra-small btn-icon"
         title="Add Note"
-        style={{ padding: "4px 8px", backgroundColor: "#00bcd4", border: "none" }}
+        style={{
+          padding: "4px 8px",
+          backgroundColor: "#00bcd4",
+          border: "none",
+        }}
       >
         <FeatherIcon icon="file-text" size="16" />
       </Button>
@@ -907,7 +935,9 @@ export default function WebLeadsTab() {
     return (
       <span
         style={{
-          backgroundColor: src.toLowerCase().includes("organic") ? "#e1f5fe" : "#efebe9",
+          backgroundColor: src.toLowerCase().includes("organic")
+            ? "#e1f5fe"
+            : "#efebe9",
           color: src.toLowerCase().includes("organic") ? "#0288d1" : "#5d4037",
           border: `1px solid ${src.toLowerCase().includes("organic") ? "#29b6f6" : "#8d6e63"}`,
           borderRadius: "4px",
@@ -944,7 +974,13 @@ export default function WebLeadsTab() {
               filters={filters1}
               header={renderHeader()}
               loading={loading}
-              globalFilterFields={["name", "phoneno", "email_id", "message", "note"]}
+              globalFilterFields={[
+                "name",
+                "phoneno",
+                "email_id",
+                "message",
+                "note",
+              ]}
               paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
               currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
               responsiveLayout="scroll"
@@ -1037,7 +1073,18 @@ export default function WebLeadsTab() {
               <Column
                 field="message"
                 header="Message"
-                body={(rowData) => <div style={{ fontSize: "11px", maxWidth: "250px", overflow: "hidden", textOverflow: "ellipsis" }}>{rowData.message}</div>}
+                body={(rowData) => (
+                  <div
+                    style={{
+                      fontSize: "11px",
+                      maxWidth: "250px",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {rowData.message}
+                  </div>
+                )}
                 headerClassName="datatable-header-center"
                 style={{
                   border: "1px solid #90caf9",
@@ -1139,7 +1186,11 @@ export default function WebLeadsTab() {
               <Button
                 size="sm"
                 className="px-3"
-                style={{ borderRadius: "10px", fontSize: "12px", padding: "10px" }}
+                style={{
+                  borderRadius: "10px",
+                  fontSize: "12px",
+                  padding: "10px",
+                }}
                 variant="secondary"
                 onClick={() => setShowNoteModal(false)}
               >
@@ -1611,8 +1662,7 @@ export default function WebLeadsTab() {
                     }}
                   >
                     <option value="">Select Type</option>
-                    {formData.patient_type === "New" ||
-                      !formData.patient_id ? (
+                    {formData.patient_type === "New" || !formData.patient_id ? (
                       <option value="New">NEW</option>
                     ) : (
                       <>

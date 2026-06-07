@@ -41,7 +41,7 @@ const toast = new Proxy(hotToast, {
       return (msg, options) => hotToast(msg, { ...options, icon: "ℹ️" });
     }
     return target[prop];
-  }
+  },
 });
 import { decodeJwt } from "../../utils/decode-jwt";
 import nabhLogo from "../../assets/images/nabh-logo.png";
@@ -403,6 +403,8 @@ const PersonalDetailsCard = () => {
   const [selectedHistoryId, setSelectedHistoryId] = useState(null);
   const [allHistoryDataForPrint, setAllHistoryDataForPrint] = useState([]);
   const [allDiagnosisDataForPrint, setAllDiagnosisDataForPrint] = useState([]);
+  const [historyForPrint, setHistoryForPrint] = useState(null);
+  const [prescriptionForPrint, setPrescriptionForPrint] = useState(null);
   const [isPrintReady, setIsPrintReady] = useState(false);
 
   const fetchedHistoryCache = useRef({});
@@ -410,6 +412,15 @@ const PersonalDetailsCard = () => {
   const fetchedFollowUpCache = useRef({});
   const fetchedOpdCache = useRef({});
   const fetchedDischargeCache = useRef({});
+
+  const [isEditingPrescription, setIsEditingPrescription] = useState(false);
+  const [isEditingHistory, setIsEditingHistory] = useState(false);
+  const [isEditingDiagnosis, setIsEditingDiagnosis] = useState(false);
+
+  const handleEditHistory = () => setIsEditingHistory(true);
+  const handleEditDiagnosis = () => setIsEditingDiagnosis(true);
+
+  const handleEditPrescription = () => setIsEditingPrescription(true);
 
   const fetchHistoryDates = async () => {
     if (!formData.patient_id) return;
@@ -539,23 +550,37 @@ const PersonalDetailsCard = () => {
     };
 
     if (isHistoryEmpty()) {
-      Swal.fire({ icon: "warning", title: "Incomplete Details", text: "Please fill in at least one history detail before saving." });
+      Swal.fire({
+        icon: "warning",
+        title: "Incomplete Details",
+        text: "Please fill in at least one history detail before saving.",
+      });
       return;
     }
 
     const missingFields = [];
-    if (!historyData.height_feet || String(historyData.height_feet).trim() === "") {
+    if (
+      !historyData.height_feet ||
+      String(historyData.height_feet).trim() === ""
+    ) {
       missingFields.push("Height");
     }
     if (!historyData.weight_kg || String(historyData.weight_kg).trim() === "") {
       missingFields.push("Weight");
     }
-    if (!historyData.assistance_doctor || String(historyData.assistance_doctor).trim() === "") {
+    if (
+      !historyData.assistance_doctor ||
+      String(historyData.assistance_doctor).trim() === ""
+    ) {
       missingFields.push("Assistant Doctor");
     }
 
     if (missingFields.length > 0) {
-      Swal.fire({ icon: "warning", title: "Missing Required Fields", text: `Please fill the required fields: ${missingFields.join(", ")}` });
+      Swal.fire({
+        icon: "warning",
+        title: "Missing Required Fields",
+        text: `Please fill the required fields: ${missingFields.join(", ")}`,
+      });
       return;
     }
 
@@ -599,7 +624,7 @@ const PersonalDetailsCard = () => {
           timer: 3000,
           timerProgressBar: true,
         });
-        await new Promise(resolve => setTimeout(resolve, 800));
+        await new Promise((resolve) => setTimeout(resolve, 800));
         fetchHistoryDates();
         setHistoryData(initialHistoryState);
       } else {
@@ -684,6 +709,7 @@ const PersonalDetailsCard = () => {
   };
 
   const handleSelectHistory = async (id) => {
+    setIsEditingHistory(false);
     setSelectedHistoryId(id);
     const selected = previousHistoryList.find((h) => h.id === id);
     if (!selected) return;
@@ -706,9 +732,9 @@ const PersonalDetailsCard = () => {
         const toArray = (str) =>
           str
             ? str
-              .split(",")
-              .map((s) => s.trim())
-              .filter(Boolean)
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean)
             : [];
         const symptomsArr = toArray(d.symptoms);
 
@@ -786,7 +812,7 @@ const PersonalDetailsCard = () => {
               parsedOdsBowelHabits = arr[0] || "";
               parsedOdsDuration = arr[1] || "";
             }
-          } catch (e) { }
+          } catch (e) {}
         }
 
         const investigationTypes = [
@@ -1005,6 +1031,7 @@ const PersonalDetailsCard = () => {
         }
 
         setHistoryData(loadedState);
+        setIsEditingHistory(false);
         console.log("[DEBUG] Loaded History State for UI:", loadedState);
         toast.success(`Loaded history from ${selected.date}`);
       } else {
@@ -1019,6 +1046,7 @@ const PersonalDetailsCard = () => {
   };
 
   const handleNewRecord = () => {
+    setIsEditingHistory(false);
     setSelectedHistoryId(null);
     setHistoryData(initialHistoryState);
     toast.info("Started a new record session");
@@ -1077,6 +1105,7 @@ const PersonalDetailsCard = () => {
   const [diagnosisData, setDiagnosisData] = useState(initialDiagnosisState);
 
   const handleSelectDiagnosis = async (id) => {
+    setIsEditingDiagnosis(false);
     setSelectedDiagnosisId(id);
     const selected = previousDiagnosisList.find((d) => d.id === id);
     if (!selected) return;
@@ -1119,7 +1148,9 @@ const PersonalDetailsCard = () => {
             ...d.speciality_data,
             piles: toArray(d.speciality_data?.piles),
             fistula: toArray(d.speciality_data?.fistula),
-            fistula_detailed_findings: toArray(d.speciality_data?.fistula_detailed_findings),
+            fistula_detailed_findings: toArray(
+              d.speciality_data?.fistula_detailed_findings,
+            ),
             fistula_other: d.speciality_data?.fistula_other || "",
             hernia: toArray(d.speciality_data?.hernia),
             hernia_other: d.speciality_data?.hernia_other || "",
@@ -1148,6 +1179,7 @@ const PersonalDetailsCard = () => {
         };
 
         setDiagnosisData(parsedData);
+        setIsEditingDiagnosis(false);
         toast.success(`Loaded diagnosis for ${selected.date}`);
       } else {
         toast.error("Could not fetch diagnosis record data");
@@ -1161,6 +1193,7 @@ const PersonalDetailsCard = () => {
   };
 
   const handleNewDiagnosis = () => {
+    setIsEditingDiagnosis(false);
     setSelectedDiagnosisId(null);
     setDiagnosisData(initialDiagnosisState);
     toast.info("Started a new diagnosis session");
@@ -1179,35 +1212,55 @@ const PersonalDetailsCard = () => {
       );
 
     if (!hasData) {
-      Swal.fire({ icon: "warning", title: "Incomplete Details", text: "Please fill in diagnosis details before saving." });
+      Swal.fire({
+        icon: "warning",
+        title: "Incomplete Details",
+        text: "Please fill in diagnosis details before saving.",
+      });
       return;
     }
 
     const missingFields = [];
 
     // Check if at least one specialty finding is selected
-    const hasSpecialityData = Object.values(diagnosisData.speciality_data || {}).some((v) =>
-      Array.isArray(v) ? v.length > 0 : v && v.trim() !== "",
-    );
+    const hasSpecialityData = Object.values(
+      diagnosisData.speciality_data || {},
+    ).some((v) => (Array.isArray(v) ? v.length > 0 : v && v.trim() !== ""));
     if (!hasSpecialityData) {
       missingFields.push("Specialty Findings");
     }
 
-    if (!diagnosisData.diagnosis_text || String(diagnosisData.diagnosis_text).trim() === "") {
+    if (
+      !diagnosisData.diagnosis_text ||
+      String(diagnosisData.diagnosis_text).trim() === ""
+    ) {
       missingFields.push("Diagnosis");
     }
-    if (!diagnosisData.advice_types || diagnosisData.advice_types.length === 0) {
+    if (
+      !diagnosisData.advice_types ||
+      diagnosisData.advice_types.length === 0
+    ) {
       missingFields.push("Advice Type");
     }
-    if (!diagnosisData.consultant_doctor || String(diagnosisData.consultant_doctor).trim() === "") {
+    if (
+      !diagnosisData.consultant_doctor ||
+      String(diagnosisData.consultant_doctor).trim() === ""
+    ) {
       missingFields.push("Consultant Doctor");
     }
-    if (!diagnosisData.assistance_doctor || String(diagnosisData.assistance_doctor).trim() === "") {
+    if (
+      !diagnosisData.assistance_doctor ||
+      String(diagnosisData.assistance_doctor).trim() === ""
+    ) {
       missingFields.push("Assistant Doctor");
     }
 
     if (missingFields.length > 0) {
-      Swal.fire({ icon: "warning", title: "Missing Required Fields", text: `Please fill the required fields: ${missingFields.join(", ")}` });
+      Swal.fire({
+        icon: "warning",
+        title: "Missing Required Fields",
+        text: `Please fill the required fields: ${missingFields.join(", ")}`,
+      });
       return;
     }
 
@@ -1225,10 +1278,13 @@ const PersonalDetailsCard = () => {
           body: JSON.stringify({
             ...diagnosisData,
             speciality_data: Object.fromEntries(
-              Object.entries(diagnosisData.speciality_data || {}).filter(([_, v]) =>
-                Array.isArray(v) ? v.length > 0 : (v && String(v).trim() !== "")
-              )
-            )
+              Object.entries(diagnosisData.speciality_data || {}).filter(
+                ([_, v]) =>
+                  Array.isArray(v)
+                    ? v.length > 0
+                    : v && String(v).trim() !== "",
+              ),
+            ),
           }),
         },
       );
@@ -1241,7 +1297,7 @@ const PersonalDetailsCard = () => {
           timer: 1500,
           timerProgressBar: true,
         });
-        await new Promise(resolve => setTimeout(resolve, 800));
+        await new Promise((resolve) => setTimeout(resolve, 800));
         const updatedDiagList = await fetchDiagnosisDates();
         const saveDate = diagnosisData.date_diagnosis;
         if (saveDate) {
@@ -1253,12 +1309,14 @@ const PersonalDetailsCard = () => {
                   location: currentLocation,
                   "x-hms-location": currentLocation,
                 },
-              }
+              },
             );
             const result = await res.json();
             if (result.statusCode === 200 && result.data) {
               setDiagnosisData(result.data);
-              const formattedDateString = moment(saveDate, "YYYY-MM-DD").format("DD-MM-YYYY");
+              const formattedDateString = moment(saveDate, "YYYY-MM-DD").format(
+                "DD-MM-YYYY",
+              );
               setSelectedDiagnosisId(formattedDateString);
             }
           } catch (e) {
@@ -1273,6 +1331,7 @@ const PersonalDetailsCard = () => {
           text: data.message || "Failed to save diagnosis",
         });
       }
+      setIsEditingDiagnosis(false);
     } catch (error) {
       console.error("Error saving diagnosis:", error);
       Swal.fire({
@@ -1305,16 +1364,36 @@ const PersonalDetailsCard = () => {
     contentRef: opdPrescriptionPrintRef,
   });
 
-
   const handlePrintOpdPrescription = async () => {
-    if (previousHistoryList.length > 0 && (!historyData || !historyData.height_feet)) {
+    setPrescriptionForPrint(prescriptionData);
+    // PRINT-ONLY snapshot of vitals — must never write into historyData (the form),
+    // so a fresh entry always stays blank.
+    if (historyData && historyData.height_feet) {
+      setHistoryForPrint(historyData); // form already has a loaded record → print that
+    } else if (previousHistoryList.length > 0) {
       setLoading(true);
       try {
         const latestHistoryId = previousHistoryList[0].id;
-        if (fetchedHistoryCache.current[latestHistoryId]) {
-          const d = fetchedHistoryCache.current[latestHistoryId];
-          setHistoryData(prev => ({
-            ...prev,
+        let d = fetchedHistoryCache.current[latestHistoryId];
+        if (!d) {
+          const response = await fetch(
+            `${BASE_URL}/V1/doctor/get-patient-history/${formData.patient_id}?historyId=${latestHistoryId}&location=${currentLocation}`,
+            {
+              headers: {
+                location: currentLocation,
+                "x-hms-location": currentLocation,
+              },
+            },
+          );
+          const result = await response.json();
+          if (result.statusCode === 200 && result.data) {
+            d = result.data;
+            fetchedHistoryCache.current[latestHistoryId] = d;
+          }
+        }
+        if (d) {
+          setHistoryForPrint({
+            ...initialHistoryState,
             ...d,
             vital_bp: d.BP || "",
             vital_pulse: d.Pulse || "",
@@ -1324,47 +1403,29 @@ const PersonalDetailsCard = () => {
             rs: d.RS || "",
             cvs: d.CVS || "",
             cns: d.CNS || "",
-            "p/a": d.PA || ""
-          }));
-        } else {
-          const response = await fetch(
-            `${BASE_URL}/V1/doctor/get-patient-history/${formData.patient_id}?historyId=${latestHistoryId}&location=${currentLocation}`,
-            { headers: { location: currentLocation, "x-hms-location": currentLocation } }
-          );
-          const result = await response.json();
-          if (result.statusCode === 200 && result.data) {
-            const d = result.data;
-            fetchedHistoryCache.current[latestHistoryId] = d;
-            setHistoryData(prev => ({
-              ...prev,
-              ...d,
-              vital_bp: d.BP || "",
-              vital_pulse: d.Pulse || "",
-              vital_rr: d.RR || "",
-              height_feet: d.height || "",
-              weight_kg: d.weight || "",
-              rs: d.RS || "",
-              cvs: d.CVS || "",
-              cns: d.CNS || "",
-              "p/a": d.PA || ""
-            }));
-          }
+            "p/a": d.PA || "",
+          });
         }
       } catch (error) {
         console.error("Error fetching latest history for print:", error);
       } finally {
         setLoading(false);
       }
+    } else {
+      setHistoryForPrint(initialHistoryState);
     }
     setShowOpdPrintModal(true);
   };
 
   const handlePrintFollowUp = async (updatedList = null) => {
-    const diagnosisListToUse = Array.isArray(updatedList) ? updatedList : previousDiagnosisList;
+    const diagnosisListToUse = Array.isArray(updatedList)
+      ? updatedList
+      : previousDiagnosisList;
     try {
       const historyResults = await Promise.all(
         previousHistoryList.map(async (h) => {
-          if (fetchedHistoryCache.current[h.id]) return fetchedHistoryCache.current[h.id];
+          if (fetchedHistoryCache.current[h.id])
+            return fetchedHistoryCache.current[h.id];
           const response = await fetch(
             `${BASE_URL}/V1/doctor/get-patient-history/${formData.patient_id}?historyId=${h.id}&location=${currentLocation}`,
             {
@@ -1386,7 +1447,8 @@ const PersonalDetailsCard = () => {
       const diagnosisResults = await Promise.all(
         diagnosisListToUse.map(async (d) => {
           const apiDate = moment(d.date, "DD-MM-YYYY").format("YYYY-MM-DD");
-          if (fetchedDiagnosisCache.current[apiDate]) return fetchedDiagnosisCache.current[apiDate];
+          if (fetchedDiagnosisCache.current[apiDate])
+            return fetchedDiagnosisCache.current[apiDate];
           const response = await fetch(
             `${BASE_URL}/V1/doctor/get-diagnosis/${formData.patient_id}?date=${apiDate}&location=${currentLocation}`,
             {
@@ -1434,11 +1496,14 @@ const PersonalDetailsCard = () => {
 
   const handlePrintDiagnosis = async (updatedList = null) => {
     setLoading(true);
-    const diagnosisListToUse = Array.isArray(updatedList) ? updatedList : previousDiagnosisList;
+    const diagnosisListToUse = Array.isArray(updatedList)
+      ? updatedList
+      : previousDiagnosisList;
     try {
       const historyResults = await Promise.all(
         previousHistoryList.map(async (h) => {
-          if (fetchedHistoryCache.current[h.id]) return fetchedHistoryCache.current[h.id];
+          if (fetchedHistoryCache.current[h.id])
+            return fetchedHistoryCache.current[h.id];
           const response = await fetch(
             `${BASE_URL}/V1/doctor/get-patient-history/${formData.patient_id}?historyId=${h.id}&location=${currentLocation}`,
             {
@@ -1460,7 +1525,8 @@ const PersonalDetailsCard = () => {
       const diagnosisResults = await Promise.all(
         diagnosisListToUse.map(async (d) => {
           const apiDate = moment(d.date, "DD-MM-YYYY").format("YYYY-MM-DD");
-          if (fetchedDiagnosisCache.current[apiDate]) return fetchedDiagnosisCache.current[apiDate];
+          if (fetchedDiagnosisCache.current[apiDate])
+            return fetchedDiagnosisCache.current[apiDate];
           const response = await fetch(
             `${BASE_URL}/V1/doctor/get-diagnosis/${formData.patient_id}?date=${apiDate}&location=${currentLocation}`,
             {
@@ -1685,8 +1751,7 @@ const PersonalDetailsCard = () => {
 
   const initialProctoscopyState = {
     procto_date: new Date().toISOString().split("T")[0],
-    interpretation: "",
-    images: [],
+    url: "",
   };
 
   const [proctoscopyData, setProctoscopyData] = useState(
@@ -1763,83 +1828,32 @@ const PersonalDetailsCard = () => {
     }
   };
 
-  const handleSaveProctoscopy = async () => {
-    if (
-      !proctoscopyData.interpretation?.trim() &&
-      (!proctoscopyData.images || proctoscopyData.images.length === 0)
-    ) {
-      Swal.fire({ icon: "warning", title: "Incomplete Details", text: "Please provide an interpretation or upload images before saving." });
-      return;
-    }
-
-    setLoading(true);
+  const handleRefreshProctoscopy = async () => {
+    if (!formData.patient_id) return;
     try {
-      const formDataToSend = new FormData();
-      formDataToSend.append("procto_date", proctoscopyData.procto_date);
-      formDataToSend.append("interpretation", proctoscopyData.interpretation);
-
-      if (proctoscopyData.images && proctoscopyData.images.length > 0) {
-        proctoscopyData.images.forEach((file) => {
-          formDataToSend.append("userfile[]", file);
-        });
-      }
-
+      setLoading(true);
       const response = await fetch(
-        `${BASE_URL}/V1/doctor/save-proctoscopy/${formData.patient_id}?location=${currentLocation}`,
+        `${BASE_URL}/V1/doctor/get-proctoscopy/${formData.patient_id}?date=${proctoscopyData.procto_date}&location=${currentLocation}`,
         {
-          method: "POST",
           headers: {
             location: currentLocation,
             "x-hms-location": currentLocation,
           },
-          body: formDataToSend,
         },
       );
-      const data = await response.json();
-      if (data.statusCode === 200 || data.statusCode === 201) {
-        Swal.fire({
-          icon: "success",
-          title: "Success",
-          text: data.message || "Proctoscopy report saved successfully!",
-          timer: 3000,
-          timerProgressBar: true,
-        });
-        fetchProctoscopyDates();
-        // Clear local image selection after successful upload
-        setProctoscopyData((prev) => ({ ...prev, images: [] }));
-
-        // RE-FETCH the record details to show the newly uploaded images
-        try {
-          const detailRes = await fetch(
-            `${BASE_URL}/V1/doctor/get-proctoscopy/${formData.patient_id}?date=${proctoscopyData.procto_date}&location=${currentLocation}`,
-            {
-              headers: {
-                location: currentLocation,
-                "x-hms-location": currentLocation,
-              },
-            },
-          );
-          const detailResult = await detailRes.json();
-          if (detailResult.statusCode === 200 && detailResult.data) {
-            setProctoscopyData(detailResult.data);
-          }
-        } catch (fetchErr) {
-          console.error("Error re-fetching proctoscopy after save:", fetchErr);
-        }
+      const result = await response.json();
+      if (result.statusCode === 200 && result.data && result.data.url) {
+        setProctoscopyData((prev) => ({ ...prev, ...result.data }));
+        toast.success("Report found.");
       } else {
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: data.message || "Failed to save proctoscopy report",
-        });
+        setProctoscopyData((prev) => ({ ...prev, url: "" }));
+        toast.info(
+          "No report yet for this date. Run the AI tool, then click Refresh.",
+        );
       }
     } catch (error) {
-      console.error("Error saving proctoscopy:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "An error occurred while saving proctoscopy report.",
-      });
+      console.error("Error refreshing proctoscopy:", error);
+      toast.error("Could not check report status.");
     } finally {
       setLoading(false);
     }
@@ -1884,6 +1898,7 @@ const PersonalDetailsCard = () => {
   const [selectedPrescriptionId, setSelectedPrescriptionId] = useState(null);
 
   const handleSelectPrescription = async (id) => {
+    setIsEditingPrescription(false);
     setSelectedPrescriptionId(id);
     setRemovedMedicines([]);
     const selected = previousPrescriptionList.find((pr) => pr.id === id);
@@ -1942,7 +1957,11 @@ const PersonalDetailsCard = () => {
             uroadvice: toArray(d.uroadvice),
             preopinvestigation: toArray(d.preopinvestigation),
             medicines: safeMedicines(d.medicines),
-            no_medicines_prescribed: d.no_medicines_prescribed === true || d.no_medicines_prescribed === "true" || d.no_medicines_prescribed === 1 || d.no_medicines_prescribed === "1",
+            no_medicines_prescribed:
+              d.no_medicines_prescribed === true ||
+              d.no_medicines_prescribed === "true" ||
+              d.no_medicines_prescribed === 1 ||
+              d.no_medicines_prescribed === "1",
           });
           toast.success(`Loaded prescription for ${selected.date}`);
         }
@@ -1954,6 +1973,7 @@ const PersonalDetailsCard = () => {
   };
 
   const handleNewPrescription = () => {
+    setIsEditingPrescription(false);
     setSelectedPrescriptionId(null);
     setPrescriptionData(initialPrescriptionState);
     setRemovedMedicines([]);
@@ -2277,7 +2297,7 @@ const PersonalDetailsCard = () => {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-          }
+          },
         );
         if (response.ok) {
           const resData = await response.json();
@@ -2308,11 +2328,7 @@ const PersonalDetailsCard = () => {
         .split(",")
         .map((item) => item.trim());
 
-      const rawPrefix = (
-        patient.prefix ||
-        patient.Prefix ||
-        ""
-      ).trim();
+      const rawPrefix = (patient.prefix || patient.Prefix || "").trim();
       const prefixOptions = ["MR", "MRS", "MASTER", "MISS"];
       let finalPrefix = rawPrefix.toUpperCase().replace(/\.$/, "");
       if (finalPrefix === "M/S") finalPrefix = "MISS"; // Common legacy shorthand
@@ -2348,13 +2364,8 @@ const PersonalDetailsCard = () => {
         ref_doctor_name: patient.ref_doctor_name || "",
         ref_doctor_phone: patient.ref_doctor_phone || "",
         nationality:
-          patient.additional_info?.nationality ||
-          patient.nationality ||
-          "",
-        language:
-          patient.additional_info?.language ||
-          patient.language ||
-          "",
+          patient.additional_info?.nationality || patient.nationality || "",
+        language: patient.additional_info?.language || patient.language || "",
       });
 
       setDischargeData((prev) => ({
@@ -2404,15 +2415,19 @@ const PersonalDetailsCard = () => {
                     headers: {
                       Authorization: `Bearer ${localStorage.getItem("token")}`,
                     },
-                  }
+                  },
                 );
                 if (response.ok) {
                   const resData = await response.json();
-                  const doc = resData.data?.find(d => String(d.reference_doctor_id) === String(patient.ref));
+                  const doc = resData.data?.find(
+                    (d) =>
+                      String(d.reference_doctor_id) === String(patient.ref),
+                  );
                   if (doc) {
-                    setReferenceDetails(prev => ({
+                    setReferenceDetails((prev) => ({
                       ...prev,
-                      dr_contact: doc.ref_doctor_phone || doc.reference_doctor_no || "",
+                      dr_contact:
+                        doc.ref_doctor_phone || doc.reference_doctor_no || "",
                       dr_specialty: doc.reference_doctor_speciality || "",
                       dr_location: doc.reference_doctor_location || "",
                     }));
@@ -2500,7 +2515,11 @@ const PersonalDetailsCard = () => {
         dischargeData.treatment_on_discharge.length > 0);
 
     if (!hasData) {
-      Swal.fire({ icon: "warning", title: "Incomplete Details", text: "Please fill in discharge details before saving." });
+      Swal.fire({
+        icon: "warning",
+        title: "Incomplete Details",
+        text: "Please fill in discharge details before saving.",
+      });
       return;
     }
 
@@ -2538,7 +2557,7 @@ const PersonalDetailsCard = () => {
           timer: 1500,
           timerProgressBar: true,
         });
-        await new Promise(resolve => setTimeout(resolve, 800));
+        await new Promise((resolve) => setTimeout(resolve, 800));
         const updatedList = await fetchDischargeDates();
         const saveDate = dischargeData.dod;
         if (saveDate) {
@@ -2550,13 +2569,13 @@ const PersonalDetailsCard = () => {
                   location: currentLocation,
                   "x-hms-location": currentLocation,
                 },
-              }
+              },
             );
             const result = await res.json();
             if (result.statusCode === 200 && result.data) {
               setDischargeData(result.data);
               // Select the saved record in the list
-              const savedRecord = updatedList.find(r => r.date === saveDate);
+              const savedRecord = updatedList.find((r) => r.date === saveDate);
               if (savedRecord) {
                 setSelectedDischargeId(savedRecord.id);
               }
@@ -2586,14 +2605,32 @@ const PersonalDetailsCard = () => {
   };
 
   const handlePrintDischarge = async () => {
-    if (previousHistoryList.length > 0 && (!historyData || !historyData.height_feet)) {
+    if (historyData && historyData.height_feet) {
+      setHistoryForPrint(historyData);
+    } else if (previousHistoryList.length > 0) {
       setLoading(true);
       try {
         const latestHistoryId = previousHistoryList[0].id;
-        if (fetchedHistoryCache.current[latestHistoryId]) {
-          const d = fetchedHistoryCache.current[latestHistoryId];
-          setHistoryData(prev => ({
-            ...prev,
+        let d = fetchedHistoryCache.current[latestHistoryId];
+        if (!d) {
+          const response = await fetch(
+            `${BASE_URL}/V1/doctor/get-patient-history/${formData.patient_id}?historyId=${latestHistoryId}&location=${currentLocation}`,
+            {
+              headers: {
+                location: currentLocation,
+                "x-hms-location": currentLocation,
+              },
+            },
+          );
+          const result = await response.json();
+          if (result.statusCode === 200 && result.data) {
+            d = result.data;
+            fetchedHistoryCache.current[latestHistoryId] = d;
+          }
+        }
+        if (d) {
+          setHistoryForPrint({
+            ...initialHistoryState,
             ...d,
             vital_bp: d.BP || "",
             vital_pulse: d.Pulse || "",
@@ -2603,38 +2640,16 @@ const PersonalDetailsCard = () => {
             rs: d.RS || "",
             cvs: d.CVS || "",
             cns: d.CNS || "",
-            "p/a": d.PA || ""
-          }));
-        } else {
-          const response = await fetch(
-            `${BASE_URL}/V1/doctor/get-patient-history/${formData.patient_id}?historyId=${latestHistoryId}&location=${currentLocation}`,
-            { headers: { location: currentLocation, "x-hms-location": currentLocation } }
-          );
-          const result = await response.json();
-          if (result.statusCode === 200 && result.data) {
-            const d = result.data;
-            fetchedHistoryCache.current[latestHistoryId] = d;
-            setHistoryData(prev => ({
-              ...prev,
-              ...d,
-              vital_bp: d.BP || "",
-              vital_pulse: d.Pulse || "",
-              vital_rr: d.RR || "",
-              height_feet: d.height || "",
-              weight_kg: d.weight || "",
-              rs: d.RS || "",
-              cvs: d.CVS || "",
-              cns: d.CNS || "",
-              "p/a": d.PA || ""
-            }));
-          }
+            "p/a": d.PA || "",
+          });
         }
-
       } catch (error) {
         console.error("Error fetching latest history for print:", error);
       } finally {
         setLoading(false);
       }
+    } else {
+      setHistoryForPrint(initialHistoryState);
     }
     setShowDischargePrintModal(true);
   };
@@ -2793,24 +2808,30 @@ const PersonalDetailsCard = () => {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
       if (response.ok) {
         const resData = await response.json();
-        if (resData.statusCode === 200 && resData.data && resData.data.length > 0) {
+        if (
+          resData.statusCode === 200 &&
+          resData.data &&
+          resData.data.length > 0
+        ) {
           const currentId = formData.patient_id || patient?.patient_id;
-          const freshPatient = resData.data.find(
-            (p) => String(p.patient_id) === String(currentId)
-          ) || resData.data[0];
+          const freshPatient =
+            resData.data.find(
+              (p) => String(p.patient_id) === String(currentId),
+            ) || resData.data[0];
 
           const processedPatient = {
             ...freshPatient,
             patientName: freshPatient.name,
             mobileNo: freshPatient.phone,
             Prefix: freshPatient.prefix,
-            additional_info: typeof freshPatient.additional_info === "string"
-              ? JSON.parse(freshPatient.additional_info)
-              : freshPatient.additional_info
+            additional_info:
+              typeof freshPatient.additional_info === "string"
+                ? JSON.parse(freshPatient.additional_info)
+                : freshPatient.additional_info,
           };
           setPatient(processedPatient);
         }
@@ -3030,7 +3051,10 @@ const PersonalDetailsCard = () => {
                               dr_id: doc.reference_doctor_id,
                               dr_name: doc.ref_doctor_name || doc.name,
                               dr_contact:
-                                doc.ref_doctor_phone || doc.reference_doctor_no || doc.phone || "",
+                                doc.ref_doctor_phone ||
+                                doc.reference_doctor_no ||
+                                doc.phone ||
+                                "",
                               dr_specialty:
                                 doc.reference_doctor_speciality ||
                                 doc.specialization ||
@@ -3042,7 +3066,10 @@ const PersonalDetailsCard = () => {
                             });
                             setFormData((prev) => ({
                               ...prev,
-                              ref: doc.reference_doctor_id || doc.ref_doctor_name || doc.name,
+                              ref:
+                                doc.reference_doctor_id ||
+                                doc.ref_doctor_name ||
+                                doc.name,
                             }));
                             setDoctorSearchResults([]);
                           }}
@@ -3607,7 +3634,11 @@ const PersonalDetailsCard = () => {
 
     for (let req of requiredFields) {
       if (!formData[req.field]) {
-        Swal.fire({ icon: "warning", title: "Missing Required Fields", text: `Please fill the required field: ${req.name}` });
+        Swal.fire({
+          icon: "warning",
+          title: "Missing Required Fields",
+          text: `Please fill the required field: ${req.name}`,
+        });
         return;
       }
     }
@@ -3630,24 +3661,30 @@ const PersonalDetailsCard = () => {
             return;
           }
           try {
-            const addDoctorRes = await fetch(`${BASE_URL}/V1/patient/addRefDoctor?location=${currentLocation}`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                ref_doctor_name: referenceDetails.dr_name,
-                ref_doctor_phone: referenceDetails.dr_contact,
-                reference_doctor_speciality: referenceDetails.dr_specialty,
-                reference_doctor_location: referenceDetails.dr_location,
-              }),
-            });
+            const addDoctorRes = await fetch(
+              `${BASE_URL}/V1/patient/addRefDoctor?location=${currentLocation}`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  ref_doctor_name: referenceDetails.dr_name,
+                  ref_doctor_phone: referenceDetails.dr_contact,
+                  reference_doctor_speciality: referenceDetails.dr_specialty,
+                  reference_doctor_location: referenceDetails.dr_location,
+                }),
+              },
+            );
             const addDoctorData = await addDoctorRes.json();
             if (addDoctorRes.ok && addDoctorData?.data?.reference_doctor_id) {
               const newDrId = addDoctorData.data.reference_doctor_id;
               ref = newDrId;
               // Also update referenceDetails to hold the new ID so the state aligns
-              setReferenceDetails(prev => ({ ...prev, dr_id: newDrId }));
+              setReferenceDetails((prev) => ({ ...prev, dr_id: newDrId }));
             } else {
-              toast.error(addDoctorData.message || "Failed to add manual doctor reference.");
+              toast.error(
+                addDoctorData.message ||
+                  "Failed to add manual doctor reference.",
+              );
               return;
             }
           } catch (err) {
@@ -3677,8 +3714,9 @@ const PersonalDetailsCard = () => {
         break;
       case "family_friends":
         reference_type = "family_friends";
-        ref = `${referenceDetails.friendname || ""},${referenceDetails.friendno || ""
-          }`;
+        ref = `${referenceDetails.friendname || ""},${
+          referenceDetails.friendno || ""
+        }`;
         break;
       case "hhc_board":
         reference_type = "hhc_board";
@@ -3806,7 +3844,10 @@ const PersonalDetailsCard = () => {
         ? current.filter((item) => item !== value)
         : [...current, value];
 
-      console.log(`[Diagnosis Checkbox] ${isRemoving ? 'Deselected' : 'Selected'}:`, { field, value, updated });
+      console.log(
+        `[Diagnosis Checkbox] ${isRemoving ? "Deselected" : "Selected"}:`,
+        { field, value, updated },
+      );
 
       let nextState = { ...prev, [field]: updated };
 
@@ -3827,7 +3868,11 @@ const PersonalDetailsCard = () => {
         ? currentSpecialityData.filter((item) => item !== value)
         : [...currentSpecialityData, value];
 
-      console.log(`[Speciality] ${isRemoving ? 'Deselected' : 'Selected'}:`, { speciality, value, updatedList });
+      console.log(`[Speciality] ${isRemoving ? "Deselected" : "Selected"}:`, {
+        speciality,
+        value,
+        updatedList,
+      });
 
       return {
         ...prev,
@@ -3860,15 +3905,15 @@ const PersonalDetailsCard = () => {
       ...prev,
       medication_history: [
         ...prev.medication_history,
-        { medicine: "", indication: "", since: "" }
-      ]
+        { medicine: "", indication: "", since: "" },
+      ],
     }));
   };
 
   const handleRemoveMedicationRow = (index) => {
     setHistoryData((prev) => ({
       ...prev,
-      medication_history: prev.medication_history.filter((_, i) => i !== index)
+      medication_history: prev.medication_history.filter((_, i) => i !== index),
     }));
   };
 
@@ -3880,7 +3925,11 @@ const PersonalDetailsCard = () => {
     const hasPresentComplaints = followUpData.present_complaints?.trim();
 
     if (!hasPresentComplaints) {
-      Swal.fire({ icon: "warning", title: "Incomplete Details", text: "Please fill in Present Complaints before saving." });
+      Swal.fire({
+        icon: "warning",
+        title: "Incomplete Details",
+        text: "Please fill in Present Complaints before saving.",
+      });
       return;
     }
 
@@ -3907,7 +3956,7 @@ const PersonalDetailsCard = () => {
           timer: 1500,
           timerProgressBar: true,
         });
-        await new Promise(resolve => setTimeout(resolve, 800));
+        await new Promise((resolve) => setTimeout(resolve, 800));
         const updatedDiagList = await fetchDiagnosisDates();
         handlePrintFollowUp(updatedDiagList);
       } else {
@@ -3950,7 +3999,10 @@ const PersonalDetailsCard = () => {
   const handlePrescriptionChange = (field, value) => {
     setPrescriptionData((prev) => {
       const updated = { ...prev, [field]: value };
-      if (field === "patient_type" && ["surgery_patient", "nofollowupappointment"].includes(value)) {
+      if (
+        field === "patient_type" &&
+        ["surgery_patient", "nofollowupappointment"].includes(value)
+      ) {
         updated["next-appo-date"] = null;
       }
       return updated;
@@ -3989,13 +4041,16 @@ const PersonalDetailsCard = () => {
           `${BASE_URL}/V1/doctor/delete-prescription-medicine/${medToRemove.prescription_id}?location=${currentLocation}`,
           {
             method: "DELETE",
-          }
+          },
         );
         const result = await response.json();
         if (result.statusCode === 200) {
           toast.success(`Removed ${medToRemove.name} from database`);
         } else {
-          console.error("Failed to delete medicine from backend:", result.message);
+          console.error(
+            "Failed to delete medicine from backend:",
+            result.message,
+          );
           toast.error("Failed to delete medicine from database");
         }
       } catch (error) {
@@ -4021,17 +4076,30 @@ const PersonalDetailsCard = () => {
 
     const missingFields = [];
 
-    if (!prescriptionData.no_medicines_prescribed && (!prescriptionData.medicines || prescriptionData.medicines.length === 0)) {
+    if (
+      !prescriptionData.no_medicines_prescribed &&
+      (!prescriptionData.medicines || prescriptionData.medicines.length === 0)
+    ) {
       missingFields.push("Meditative Advice & Pharmacy Orders");
     }
 
     if (missingFields.length > 0) {
-      console.log("[DEBUG] Form submission blocked due to missing fields:", missingFields);
-      Swal.fire({ icon: "warning", title: "Missing Required Fields", text: `Please fill the required fields: ${missingFields.join(", ")}` });
+      console.log(
+        "[DEBUG] Form submission blocked due to missing fields:",
+        missingFields,
+      );
+      Swal.fire({
+        icon: "warning",
+        title: "Missing Required Fields",
+        text: `Please fill the required fields: ${missingFields.join(", ")}`,
+      });
       return;
     }
 
-    console.log("[DEBUG] Validation passed, submitting form with data:", prescriptionData);
+    console.log(
+      "[DEBUG] Validation passed, submitting form with data:",
+      prescriptionData,
+    );
     setLoading(true);
     try {
       const response = await fetch(
@@ -4043,7 +4111,10 @@ const PersonalDetailsCard = () => {
             location: currentLocation,
             "x-hms-location": currentLocation,
           },
-          body: JSON.stringify(prescriptionData),
+          body: JSON.stringify({
+            ...prescriptionData,
+            mode: isEditingPrescription ? "edit" : "new",
+          }),
         },
       );
       const data = await response.json();
@@ -4055,55 +4126,17 @@ const PersonalDetailsCard = () => {
           timer: 1500,
           timerProgressBar: true,
         });
-        await new Promise(resolve => setTimeout(resolve, 800));
-        const updatedOpdList = await fetchPrescriptionDates();
-        const saveDate = prescriptionData.creation_timestamp;
-        if (saveDate) {
-          try {
-            const res = await fetch(
-              `${BASE_URL}/V1/doctor/get-opd-prescription/${patientId}/${saveDate}?location=${currentLocation}`
-            );
-            const result = await res.json();
-            if (result.statusCode === 200 && result.data) {
-              const d = result.data;
-              const safeDate = (val) => (val ? String(val).substring(0, 10) : "");
-              const toArray = (val) => {
-                if (!val) return [];
-                if (Array.isArray(val)) return val;
-                if (typeof val === "string")
-                  return val.split(",").map((s) => s.trim()).filter(Boolean);
-                return [];
-              };
-              const safeMedicines = (val) => {
-                if (!val) return [];
-                if (Array.isArray(val)) return val;
-                return [];
-              };
+        await new Promise((resolve) => setTimeout(resolve, 800));
+        await fetchPrescriptionDates();
 
-              setPrescriptionData({
-                ...initialPrescriptionState,
-                ...d,
-                creation_timestamp: safeDate(d.creation_timestamp) || new Date().toISOString().split("T")[0],
-                "next-appo-date": safeDate(d["next-appo-date"]),
-                surgical_advice: toArray(d.surgical_advice),
-                uroadvice: toArray(d.uroadvice),
-                preopinvestigation: toArray(d.preopinvestigation),
-                medicines: safeMedicines(d.medicines),
-              });
+        // Open the print preview for what we just saved (snapshots prescriptionForPrint
+        // from the still-current prescriptionData via closure), then clear the card.
+        handlePrintOpdPrescription();
 
-              // Select the saved record in the list
-              const formattedDateString = moment(saveDate, "YYYY-MM-DD").format("DD-MM-YYYY");
-              const savedRecord = updatedOpdList.find(pr => pr.date === formattedDateString);
-              if (savedRecord) {
-                setSelectedPrescriptionId(savedRecord.id);
-              }
-            }
-          } catch (e) {
-            console.error("Error reloading saved prescription:", e);
-          }
-        }
+        setSelectedPrescriptionId(null);
+        setIsEditingPrescription(false);
         setRemovedMedicines([]);
-        handlePrintOpdPrescription(updatedOpdList);
+        setPrescriptionData(initialPrescriptionState);
       } else {
         Swal.fire({
           icon: "error",
@@ -4862,33 +4895,75 @@ const PersonalDetailsCard = () => {
 
   const isTabCompleted = (tabId) => {
     switch (tabId) {
-      case "personal": return true;
-      case "patient-history": return previousHistoryList && previousHistoryList.length > 0;
-      case "diagnosis": return previousDiagnosisList && previousDiagnosisList.length > 0;
-      case "follow-up": return followUpData && followUpData.visit_count && followUpData.visit_count !== "0" && followUpData.present_complaints && followUpData.present_complaints.trim() !== "";
-      case "other-tests": return previousTestsList && previousTestsList.length > 0;
-      case "proctoscopy": return previousProctoscopyList && previousProctoscopyList.length > 0;
-      case "opd-prescription": return previousPrescriptionList && previousPrescriptionList.length > 0;
-      case "surgery-details": return previousSurgeryList && previousSurgeryList.length > 0;
-      case "discharge-card": return previousDischargesList && previousDischargesList.length > 0;
-      default: return false;
+      case "personal":
+        return true;
+      case "patient-history":
+        return previousHistoryList && previousHistoryList.length > 0;
+      case "diagnosis":
+        return previousDiagnosisList && previousDiagnosisList.length > 0;
+      case "follow-up":
+        return (
+          followUpData &&
+          followUpData.visit_count &&
+          followUpData.visit_count !== "0" &&
+          followUpData.present_complaints &&
+          followUpData.present_complaints.trim() !== ""
+        );
+      case "other-tests":
+        return previousTestsList && previousTestsList.length > 0;
+      case "proctoscopy":
+        return previousProctoscopyList && previousProctoscopyList.length > 0;
+      case "opd-prescription":
+        return previousPrescriptionList && previousPrescriptionList.length > 0;
+      case "surgery-details":
+        return previousSurgeryList && previousSurgeryList.length > 0;
+      case "discharge-card":
+        return previousDischargesList && previousDischargesList.length > 0;
+      default:
+        return false;
     }
   };
 
   const isTabAccessible = (tabId) => {
-    switch (tabId) {
-      case "personal":
-      case "patient-history":
-        return true;
-      case "diagnosis":
-        return isTabCompleted("patient-history");
-      case "opd-prescription":
-        return isTabCompleted("patient-history") && isTabCompleted("diagnosis");
-      default:
-        return true;
+    // Discharge card is the only gated section: it stays locked until every
+    // other OPD clinical section has been filled and saved.
+    if (tabId === "discharge-card") {
+      return (
+        isTabCompleted("patient-history") &&
+        isTabCompleted("diagnosis") &&
+        isTabCompleted("follow-up") &&
+        isTabCompleted("proctoscopy") &&
+        isTabCompleted("opd-prescription")
+      );
     }
+    // Every other section is open for entry in any order.
+    return true;
   };
 
+  useEffect(() => {
+    if (!formData.patient_id) return;
+    // New patient context → wipe every per-record form, selection, and cache.
+    setHistoryData(initialHistoryState);
+    setDiagnosisData(initialDiagnosisState);
+    setPrescriptionData(initialPrescriptionState);
+    setProctoscopyData(initialProctoscopyState);
+    setDischargeData(initialDischargeState);
+    // setOtherTestData(initialOtherTestsState);  // if/when that tab is enabled
+
+    setSelectedHistoryId(null);
+    setSelectedDiagnosisId(null);
+    setSelectedPrescriptionId(null);
+    setSelectedProctoscopyId(null);
+    setSelectedDischargeId(null);
+
+    setHistoryForPrint(null);
+
+    fetchedHistoryCache.current = {};
+    fetchedDiagnosisCache.current = {};
+    fetchedFollowUpCache.current = {};
+    fetchedOpdCache.current = {};
+    fetchedDischargeCache.current = {};
+  }, [formData.patient_id]);
 
   return (
     <div
@@ -4904,8 +4979,18 @@ const PersonalDetailsCard = () => {
         <Container fluid>
           {activeTab === "menu" ? (
             <div className="py-4 px-lg-7 animate__animated animate__fadeIn">
-              <Card className="border-0 shadow-sm mb-20" style={{ borderRadius: "12px", background: "#fff", overflow: "hidden" }}>
-                <div className="p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center" style={{ borderLeft: "5px solid #00bcd4" }}>
+              <Card
+                className="border-0 shadow-sm mb-20"
+                style={{
+                  borderRadius: "12px",
+                  background: "#fff",
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  className="p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center"
+                  style={{ borderLeft: "5px solid #00bcd4" }}
+                >
                   <div className="d-flex align-items-center gap-3">
                     <Button
                       onClick={() => navigate(-1)}
@@ -4918,7 +5003,7 @@ const PersonalDetailsCard = () => {
                         backgroundColor: "#00bcd4",
                         border: "1px solid #00bcd4",
                         color: "#fff",
-                        transition: "all 0.2s ease"
+                        transition: "all 0.2s ease",
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor = "#0097a7";
@@ -4933,13 +5018,32 @@ const PersonalDetailsCard = () => {
                       <FeatherIcon icon="arrow-left" size="20" />
                     </Button>
                     <div>
-                      <h4 className="fw-bold mb-1" style={{ color: "#2c3e50" }}>Patient Medical Records</h4>
-                      <p className="text-muted m-0" style={{ fontSize: "14px" }}>Manage and review clinical documentation across all categories.</p>
+                      <h4 className="fw-bold mb-1" style={{ color: "#2c3e50" }}>
+                        Patient Medical Records
+                      </h4>
+                      <p
+                        className="text-muted m-0"
+                        style={{ fontSize: "14px" }}
+                      >
+                        Manage and review clinical documentation across all
+                        categories.
+                      </p>
                     </div>
                   </div>
                   <div className="mt-3 mt-md-0">
-                    <span className="badge" style={{ backgroundColor: "#e0f7fa", color: "#00838f", padding: "20px 15px", borderRadius: "8px", fontSize: "13px", fontWeight: "600" }}>
-                      {tabs.filter(t => isTabCompleted(t.id)).length} of {tabs.length} Sections Completed
+                    <span
+                      className="badge"
+                      style={{
+                        backgroundColor: "#e0f7fa",
+                        color: "#00838f",
+                        padding: "20px 15px",
+                        borderRadius: "8px",
+                        fontSize: "13px",
+                        fontWeight: "600",
+                      }}
+                    >
+                      {tabs.filter((t) => isTabCompleted(t.id)).length} of{" "}
+                      {tabs.length} Sections Completed
                     </span>
                   </div>
                 </div>
@@ -4956,31 +5060,35 @@ const PersonalDetailsCard = () => {
                         style={{
                           width: "300px",
                           padding: "5px",
-                          borderRadius: "12px", 
+                          borderRadius: "12px",
                           cursor: accessible ? "pointer" : "not-allowed",
-                          border: completed ? "1px solid #10b981" : "1px solid #f1f5f9",
-                          opacity: accessible ? 1 : 0.6
+                          border: completed
+                            ? "1px solid #10b981"
+                            : "1px solid #f1f5f9",
+                          opacity: accessible ? 1 : 0.6,
                         }}
                         onClick={() => {
                           if (accessible) {
                             setActiveTab(tab.id);
                           } else {
-                            let req = "";
-                            if (tab.id === "diagnosis") req = "Patient History";
-                            if (tab.id === "opd-prescription") req = "Diagnosis";
-                            toast.warning(`Please complete ${req} first!`);
+                            toast.warning(
+                              "Please complete all clinical sections (History, Diagnosis, Follow Up, Proctoscopy, Prescription) before filling the Discharge Card.",
+                            );
                           }
                         }}
                         onMouseEnter={(e) => {
                           if (accessible) {
-                            e.currentTarget.style.transform = "translateY(-4px)";
-                            e.currentTarget.style.boxShadow = "0 8px 16px rgba(0, 0, 0, 0.08)";
+                            e.currentTarget.style.transform =
+                              "translateY(-4px)";
+                            e.currentTarget.style.boxShadow =
+                              "0 8px 16px rgba(0, 0, 0, 0.08)";
                           }
                         }}
                         onMouseLeave={(e) => {
                           if (accessible) {
                             e.currentTarget.style.transform = "translateY(0)";
-                            e.currentTarget.style.boxShadow = "0 2px 6px rgba(0, 0, 0, 0.04)";
+                            e.currentTarget.style.boxShadow =
+                              "0 2px 6px rgba(0, 0, 0, 0.04)";
                           }
                         }}
                       >
@@ -4988,26 +5096,54 @@ const PersonalDetailsCard = () => {
                           <div
                             className="d-flex align-items-center justify-content-center rounded me-3"
                             style={{
-                              width: "48px", height: "48px",
-                              backgroundColor: completed ? "#f0fdf4" : "#f8fafc",
-                              color: completed ? "#10b981" : "#64748b"
+                              width: "48px",
+                              height: "48px",
+                              backgroundColor: completed
+                                ? "#f0fdf4"
+                                : "#f8fafc",
+                              color: completed ? "#10b981" : "#64748b",
                             }}
                           >
                             <FeatherIcon icon={tab.icon} size="22" />
                           </div>
                           <div className="flex-grow-1">
-                            <h6 className="fw-bold m-0 mb-1" style={{ color: "#334155", fontSize: "14px" }}>{tab.label}</h6>
+                            <h6
+                              className="fw-bold m-0 mb-1"
+                              style={{ color: "#334155", fontSize: "14px" }}
+                            >
+                              {tab.label}
+                            </h6>
                             {completed ? (
-                              <span style={{ fontSize: "12px", color: "#10b981", fontWeight: "600" }}>Filled & Saved</span>
+                              <span
+                                style={{
+                                  fontSize: "12px",
+                                  color: "#10b981",
+                                  fontWeight: "600",
+                                }}
+                              >
+                                Filled & Saved
+                              </span>
                             ) : (
-                              <span style={{ fontSize: "12px", color: "#94a3b8" }}>No Record</span>
+                              <span
+                                style={{ fontSize: "12px", color: "#94a3b8" }}
+                              >
+                                No Record
+                              </span>
                             )}
                           </div>
                           <div className="ms-2">
                             {completed ? (
-                              <FeatherIcon icon="check-circle" size="20" style={{ color: "#10b981" }} />
+                              <FeatherIcon
+                                icon="check-circle"
+                                size="20"
+                                style={{ color: "#10b981" }}
+                              />
                             ) : (
-                              <FeatherIcon icon="chevron-right" size="20" style={{ color: "#cbd5e1" }} />
+                              <FeatherIcon
+                                icon="chevron-right"
+                                size="20"
+                                style={{ color: "#cbd5e1" }}
+                              />
                             )}
                           </div>
                         </Card.Body>
@@ -5018,38 +5154,79 @@ const PersonalDetailsCard = () => {
               </Row>
             </div>
           ) : (
-            <Card className="shadow-lg border-0 mb-4 animate__animated animate__fadeIn" style={{ borderRadius: "20px", overflow: "hidden", backgroundColor: "#fff" }}>
-              <div className="p-10 border-bottom d-flex align-items-center justify-content-between position-relative" style={{ backgroundColor: "#f8fafd" }}>
+            <Card
+              className="shadow-lg border-0 mb-4 animate__animated animate__fadeIn"
+              style={{
+                borderRadius: "20px",
+                overflow: "hidden",
+                backgroundColor: "#fff",
+              }}
+            >
+              <div
+                className="p-10 border-bottom d-flex align-items-center justify-content-between position-relative"
+                style={{ backgroundColor: "#f8fafd" }}
+              >
                 <div>
                   <Button
                     className="d-flex align-items-center shadow-sm"
-                    style={{ borderRadius: "50px", padding: "7px 12px", fontWeight: "700", color: "#ffffffff", backgroundColor: "#fff", border: "1px solid #e0e6ed" }}
+                    style={{
+                      borderRadius: "50px",
+                      padding: "7px 12px",
+                      fontWeight: "700",
+                      color: "#ffffffff",
+                      backgroundColor: "#fff",
+                      border: "1px solid #e0e6ed",
+                    }}
                     onClick={() => setActiveTab("menu")}
                   >
-                    <FeatherIcon icon="arrow-left" size="18" className="me-2" /> Back
+                    <FeatherIcon icon="arrow-left" size="18" className="me-2" />{" "}
+                    Back
                   </Button>
                 </div>
 
                 <div className="position-absolute top-50 start-50 translate-middle d-flex align-items-center">
-                  <div className="rounded-circle d-flex align-items-center justify-content-center me-2 shadow-sm" style={{ width: "40px", height: "40px", backgroundColor: "#00bcd4", color: "#fff" }}>
-                    <FeatherIcon icon={tabs.find(t => t.id === activeTab)?.icon} size="24" />
+                  <div
+                    className="rounded-circle d-flex align-items-center justify-content-center me-2 shadow-sm"
+                    style={{
+                      width: "40px",
+                      height: "40px",
+                      backgroundColor: "#00bcd4",
+                      color: "#fff",
+                    }}
+                  >
+                    <FeatherIcon
+                      icon={tabs.find((t) => t.id === activeTab)?.icon}
+                      size="24"
+                    />
                   </div>
                   <div>
-                    <h4 className="fw-bold m-0" style={{ color: "#2c3e50" }}>{tabs.find(t => t.id === activeTab)?.label}</h4>
-                    <p className="text-muted m-0" style={{ fontSize: "13px" }}>Manage patient records</p>
+                    <h4 className="fw-bold m-0" style={{ color: "#2c3e50" }}>
+                      {tabs.find((t) => t.id === activeTab)?.label}
+                    </h4>
+                    <p className="text-muted m-0" style={{ fontSize: "13px" }}>
+                      Manage patient records
+                    </p>
                   </div>
                 </div>
 
                 <div>
                   {activeTab === "opd-prescription" && (
-                    <div className="rounded px-2 py-1 d-flex align-items-center" style={{ border: "1px solid #d32f2f" }}>
+                    <div
+                      className="rounded px-2 py-1 d-flex align-items-center"
+                      style={{ border: "1px solid #d32f2f" }}
+                    >
                       <Form.Check
                         type="checkbox"
                         id="no-medicines-checkbox-header"
                         label="No medicines prescribed"
-                        checked={prescriptionData.no_medicines_prescribed || false}
+                        checked={
+                          prescriptionData.no_medicines_prescribed || false
+                        }
                         onChange={(e) => {
-                          handlePrescriptionChange("no_medicines_prescribed", e.target.checked);
+                          handlePrescriptionChange(
+                            "no_medicines_prescribed",
+                            e.target.checked,
+                          );
                           if (e.target.checked) {
                             handlePrescriptionChange("medicines", []);
                             handlePrescriptionChange("next-appo-date", "");
@@ -5057,7 +5234,11 @@ const PersonalDetailsCard = () => {
                           }
                         }}
                         className="m-0"
-                        style={{ fontSize: "14px", fontWeight: "bold", color: "#d32f2f" }}
+                        style={{
+                          fontSize: "14px",
+                          fontWeight: "bold",
+                          color: "#d32f2f",
+                        }}
                       />
                     </div>
                   )}
@@ -5084,18 +5265,24 @@ const PersonalDetailsCard = () => {
                     onSaveHistory={handleSaveHistory}
                     assistanceDoctors={assistanceDoctors}
                     uploadBaseUrl={UPLOAD_BASE_URL}
+                    isEditing={isEditingHistory}
+                    onEditHistory={handleEditHistory}
                   />
                 )}
                 {activeTab === "diagnosis" && (
                   <DiagnosisCard
                     diagnosisData={diagnosisData}
                     handleDiagnosisChange={handleDiagnosisChange}
-                    handleDiagnosisCheckboxChange={handleDiagnosisCheckboxChange}
+                    handleDiagnosisCheckboxChange={
+                      handleDiagnosisCheckboxChange
+                    }
                     handleSpecialityCheckboxChange={
                       handleSpecialityCheckboxChange
                     }
                     setDiagnosisData={setDiagnosisData}
-                    handleMedicalAdviceNoteChange={handleMedicalAdviceNoteChange}
+                    handleMedicalAdviceNoteChange={
+                      handleMedicalAdviceNoteChange
+                    }
                     loading={loading}
                     previousDiagnosisList={previousDiagnosisList}
                     selectedDiagnosisId={selectedDiagnosisId}
@@ -5105,6 +5292,8 @@ const PersonalDetailsCard = () => {
                     onPrintDiagnosis={handlePrintDiagnosis}
                     doctors={doctors}
                     assistanceDoctors={assistanceDoctors}
+                    isEditing={isEditingDiagnosis}
+                    onEditDiagnosis={handleEditDiagnosis}
                   />
                 )}
                 {activeTab === "follow-up" && (
@@ -5140,9 +5329,8 @@ const PersonalDetailsCard = () => {
                     selectedProctoscopyId={selectedProctoscopyId}
                     onSelectProctoscopy={handleSelectProctoscopy}
                     onNewProctoscopy={handleNewProctoscopy}
-                    onSaveProctoscopy={handleSaveProctoscopy}
+                    onRefreshProctoscopy={handleRefreshProctoscopy}
                     loading={loading}
-                    uploadBaseUrl={UPLOAD_BASE_URL}
                     location={currentLocation}
                   />
                 )}
@@ -5166,6 +5354,8 @@ const PersonalDetailsCard = () => {
                     assistanceDoctors={assistanceDoctors}
                     removedMedicines={removedMedicines}
                     location={currentLocation}
+                    isEditing={isEditingPrescription}
+                    onEditPrescription={handleEditPrescription}
                   />
                 )}
                 {/* {activeTab === "surgery-details" && (
@@ -5215,24 +5405,24 @@ const PersonalDetailsCard = () => {
                   "surgery-details",
                   "discharge-card",
                 ].includes(activeTab) && (
-                    <div className="text-center py-5 animate__animated animate__fadeIn">
-                      <div
-                        className="d-inline-flex p-4 rounded-circle mb-4"
-                        style={{ backgroundColor: "#f0f4f8" }}
-                      >
-                        <FeatherIcon
-                          icon="clock"
-                          size="48"
-                          className="text-muted"
-                        />
-                      </div>
-                      <h4 className="text-muted fw-bold">Coming Soon</h4>
-                      <p className="text-muted">
-                        The {tabs.find((t) => t.id === activeTab).label} section is
-                        under development.
-                      </p>
+                  <div className="text-center py-5 animate__animated animate__fadeIn">
+                    <div
+                      className="d-inline-flex p-4 rounded-circle mb-4"
+                      style={{ backgroundColor: "#f0f4f8" }}
+                    >
+                      <FeatherIcon
+                        icon="clock"
+                        size="48"
+                        className="text-muted"
+                      />
                     </div>
-                  )}
+                    <h4 className="text-muted fw-bold">Coming Soon</h4>
+                    <p className="text-muted">
+                      The {tabs.find((t) => t.id === activeTab).label} section
+                      is under development.
+                    </p>
+                  </div>
+                )}
               </Card.Body>
             </Card>
           )}
@@ -5246,8 +5436,7 @@ const PersonalDetailsCard = () => {
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate__fadeIn { animation-name: fadeIn; }
       `}</style>
-      <div style={{ display: "none" }}>
-      </div>
+      <div style={{ display: "none" }}></div>
 
       <Modal
         show={showDiagnosisPrintModal}
@@ -5261,8 +5450,14 @@ const PersonalDetailsCard = () => {
             Diagnosis Card Preview
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body className="p-0 bg-light" style={{ maxHeight: "80vh", overflowY: "auto" }}>
-          <div className="p-4 bg-white shadow-sm mx-auto" style={{ width: "210mm", minHeight: "297mm" }}>
+        <Modal.Body
+          className="p-0 bg-light"
+          style={{ maxHeight: "80vh", overflowY: "auto" }}
+        >
+          <div
+            className="p-4 bg-white shadow-sm mx-auto"
+            style={{ width: "210mm", minHeight: "297mm" }}
+          >
             <DiagnosisPrintView
               ref={diagPrintRef}
               patient={formData}
@@ -5277,7 +5472,11 @@ const PersonalDetailsCard = () => {
           <Button
             variant="secondary"
             onClick={() => setShowDiagnosisPrintModal(false)}
-            style={{ borderRadius: "20px", padding: "8px 30px", fontWeight: "bold" }}
+            style={{
+              borderRadius: "20px",
+              padding: "8px 30px",
+              fontWeight: "bold",
+            }}
           >
             CANCEL
           </Button>
@@ -5287,7 +5486,11 @@ const PersonalDetailsCard = () => {
             onClick={() => {
               triggerPrintDiagnosis();
             }}
-            style={{ borderRadius: "20px", padding: "8px 50px", fontWeight: "bold" }}
+            style={{
+              borderRadius: "20px",
+              padding: "8px 50px",
+              fontWeight: "bold",
+            }}
           >
             <FeatherIcon icon="printer" size="18" className="me-2" />
             PRINT DIAGNOSIS CARD
@@ -5307,15 +5510,21 @@ const PersonalDetailsCard = () => {
             Discharge Card Preview
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body className="p-0 bg-light" style={{ maxHeight: "80vh", overflowY: "auto" }}>
-          <div className="p-4 bg-white shadow-sm mx-auto" style={{ width: "210mm", minHeight: "297mm" }}>
+        <Modal.Body
+          className="p-0 bg-light"
+          style={{ maxHeight: "80vh", overflowY: "auto" }}
+        >
+          <div
+            className="p-4 bg-white shadow-sm mx-auto"
+            style={{ width: "210mm", minHeight: "297mm" }}
+          >
             <DischargePrintView
               ref={dischargePrintRef}
               dischargeData={dischargeData}
               formData={formData}
               doctors={doctors}
               location={currentLocation}
-              historyData={historyData}
+              historyData={historyForPrint}
             />
           </div>
         </Modal.Body>
@@ -5323,7 +5532,11 @@ const PersonalDetailsCard = () => {
           <Button
             variant="secondary"
             onClick={() => setShowDischargePrintModal(false)}
-            style={{ borderRadius: "20px", padding: "8px 30px", fontWeight: "bold" }}
+            style={{
+              borderRadius: "20px",
+              padding: "8px 30px",
+              fontWeight: "bold",
+            }}
           >
             CANCEL
           </Button>
@@ -5334,7 +5547,11 @@ const PersonalDetailsCard = () => {
               triggerPrintDischarge();
               // setShowDischargePrintModal(false);
             }}
-            style={{ borderRadius: "20px", padding: "8px 50px", fontWeight: "bold" }}
+            style={{
+              borderRadius: "20px",
+              padding: "8px 50px",
+              fontWeight: "bold",
+            }}
           >
             <FeatherIcon icon="printer" size="18" className="me-2" />
             PRINT DISCHARGE CARD
@@ -5354,8 +5571,14 @@ const PersonalDetailsCard = () => {
             Follow Up Card Preview
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body className="p-0 bg-light" style={{ maxHeight: "80vh", overflowY: "auto" }}>
-          <div className="p-4 bg-white shadow-sm mx-auto" style={{ width: "210mm", minHeight: "297mm" }}>
+        <Modal.Body
+          className="p-0 bg-light"
+          style={{ maxHeight: "80vh", overflowY: "auto" }}
+        >
+          <div
+            className="p-4 bg-white shadow-sm mx-auto"
+            style={{ width: "210mm", minHeight: "297mm" }}
+          >
             <FollowUpPrintView
               ref={fupPrintRef}
               patient={formData}
@@ -5369,7 +5592,11 @@ const PersonalDetailsCard = () => {
           <Button
             variant="secondary"
             onClick={() => setShowFollowUpPrintModal(false)}
-            style={{ borderRadius: "20px", padding: "8px 30px", fontWeight: "bold" }}
+            style={{
+              borderRadius: "20px",
+              padding: "8px 30px",
+              fontWeight: "bold",
+            }}
           >
             CANCEL
           </Button>
@@ -5379,7 +5606,11 @@ const PersonalDetailsCard = () => {
             onClick={() => {
               triggerPrintFollowUp();
             }}
-            style={{ borderRadius: "20px", padding: "8px 50px", fontWeight: "bold" }}
+            style={{
+              borderRadius: "20px",
+              padding: "8px 50px",
+              fontWeight: "bold",
+            }}
           >
             <FeatherIcon icon="printer" size="18" className="me-2" />
             PRINT FOLLOW UP CARD
@@ -5399,13 +5630,19 @@ const PersonalDetailsCard = () => {
             OPD Prescription Preview
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body className="p-0 bg-light" style={{ maxHeight: "80vh", overflowY: "auto" }}>
-          <div className="p-4 bg-white shadow-sm mx-auto" style={{ width: "210mm", minHeight: "297mm" }}>
+        <Modal.Body
+          className="p-0 bg-light"
+          style={{ maxHeight: "80vh", overflowY: "auto" }}
+        >
+          <div
+            className="p-4 bg-white shadow-sm mx-auto"
+            style={{ width: "210mm", minHeight: "297mm" }}
+          >
             <OpdPrescriptionPrintView
               ref={opdPrescriptionPrintRef}
-              prescriptionData={prescriptionData}
+              prescriptionData={prescriptionForPrint}
               formData={formData}
-              historyData={historyData}
+              historyData={historyForPrint}
               doctors={doctors}
               assistanceDoctors={assistanceDoctors}
               location={currentLocation}
@@ -5416,7 +5653,11 @@ const PersonalDetailsCard = () => {
           <Button
             variant="secondary"
             onClick={() => setShowOpdPrintModal(false)}
-            style={{ borderRadius: "20px", padding: "8px 30px", fontWeight: "bold" }}
+            style={{
+              borderRadius: "20px",
+              padding: "8px 30px",
+              fontWeight: "bold",
+            }}
           >
             CANCEL
           </Button>
@@ -5426,7 +5667,11 @@ const PersonalDetailsCard = () => {
             onClick={() => {
               triggerPrintOpdPrescription();
             }}
-            style={{ borderRadius: "20px", padding: "8px 50px", fontWeight: "bold" }}
+            style={{
+              borderRadius: "20px",
+              padding: "8px 50px",
+              fontWeight: "bold",
+            }}
           >
             <FeatherIcon icon="printer" size="18" className="me-2" />
             PRINT OPD PRESCRIPTION

@@ -76,7 +76,7 @@ const DailyClosing = () => {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
 
@@ -84,7 +84,10 @@ const DailyClosing = () => {
       if (response.ok && Array.isArray(data.data)) {
         setReceiptsList(data.data);
       } else {
-        console.error("Failed to load receipts for reconciliation:", data.message);
+        console.error(
+          "Failed to load receipts for reconciliation:",
+          data.message,
+        );
         setReceiptsList([]);
       }
 
@@ -94,13 +97,14 @@ const DailyClosing = () => {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
       const opdReportResult = await opdReportResponse.json();
       if (opdReportResponse.ok && opdReportResult.statusCode === 200) {
-        const pharmacyColl = opdReportResult.description?.pharmacyCollection || [];
-        const cashRow = pharmacyColl.find(item => item[0] === "Cash");
+        const pharmacyColl =
+          opdReportResult.description?.pharmacyCollection || [];
+        const cashRow = pharmacyColl.find((item) => item[0] === "Cash");
         const cashAmt = cashRow ? Number(cashRow[1]) : 0;
         setPharmacySystemCash(cashAmt);
       } else {
@@ -113,17 +117,20 @@ const DailyClosing = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({
           location: loc,
           Fromdate: entryDate,
-          Todate: entryDate
-        })
+          Todate: entryDate,
+        }),
       });
       const ipdReportResult = await ipdReportResponse.json();
       if (ipdReportResponse.ok && Array.isArray(ipdReportResult)) {
-        const ipdCashSum = ipdReportResult.reduce((sum, item) => sum + Number(item.cashamt || 0), 0);
+        const ipdCashSum = ipdReportResult.reduce(
+          (sum, item) => sum + Number(item.cashamt || 0),
+          0,
+        );
         setIpdSystemCash(ipdCashSum);
       } else {
         setIpdSystemCash(0);
@@ -134,20 +141,38 @@ const DailyClosing = () => {
       const closingStatusResponse = await fetch(closingStatusUrl, {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`
-        }
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
       });
       if (closingStatusResponse.ok) {
         const closingStatusResult = await closingStatusResponse.json();
         if (closingStatusResult.success && closingStatusResult.data) {
           const dbData = closingStatusResult.data;
           const updatedData = {
-            opdCash: dbData.opdcash !== null && dbData.opdcash !== undefined ? String(dbData.opdcash) : "",
-            ipdCash: dbData.ipdcash !== null && dbData.ipdcash !== undefined ? String(dbData.ipdcash) : "",
-            pharmacyCash: dbData.pharmacycash !== null && dbData.pharmacycash !== undefined ? String(dbData.pharmacycash) : "",
-            upiSettlement: dbData.upiamt !== null && dbData.upiamt !== undefined ? String(dbData.upiamt) : "",
-            cardSettlement: dbData.cardamt !== null && dbData.cardamt !== undefined ? String(dbData.cardamt) : "",
-            bankDeposit: dbData.bankdeposit !== null && dbData.bankdeposit !== undefined ? String(dbData.bankdeposit) : "",
+            opdCash:
+              dbData.opdcash !== null && dbData.opdcash !== undefined
+                ? String(dbData.opdcash)
+                : "",
+            ipdCash:
+              dbData.ipdcash !== null && dbData.ipdcash !== undefined
+                ? String(dbData.ipdcash)
+                : "",
+            pharmacyCash:
+              dbData.pharmacycash !== null && dbData.pharmacycash !== undefined
+                ? String(dbData.pharmacycash)
+                : "",
+            upiSettlement:
+              dbData.upiamt !== null && dbData.upiamt !== undefined
+                ? String(dbData.upiamt)
+                : "",
+            cardSettlement:
+              dbData.cardamt !== null && dbData.cardamt !== undefined
+                ? String(dbData.cardamt)
+                : "",
+            bankDeposit:
+              dbData.bankdeposit !== null && dbData.bankdeposit !== undefined
+                ? String(dbData.bankdeposit)
+                : "",
             comment: dbData.comment || "",
             cashDepositReceipt: dbData.cash_deposit_receipt || "",
             cardSettlementSlip: dbData.card_settlement_slip || "",
@@ -155,10 +180,13 @@ const DailyClosing = () => {
           setFormData(updatedData);
           setIsSubmitted(true);
           // Sync to localStorage
-          localStorage.setItem("hms_daily_closing", JSON.stringify({
-            date: dateStr,
-            data: updatedData
-          }));
+          localStorage.setItem(
+            "hms_daily_closing",
+            JSON.stringify({
+              date: dateStr,
+              data: updatedData,
+            }),
+          );
         } else {
           setIsSubmitted(false);
           const savedData = localStorage.getItem("hms_daily_closing");
@@ -187,7 +215,10 @@ const DailyClosing = () => {
         }
       }
     } catch (error) {
-      console.error("Error fetching receipts/reports for reconciliation:", error);
+      console.error(
+        "Error fetching receipts/reports for reconciliation:",
+        error,
+      );
       setReceiptsList([]);
       setPharmacySystemCash(0);
       setIpdSystemCash(0);
@@ -238,7 +269,14 @@ const DailyClosing = () => {
   const handleChange = (e) => {
     if (isSubmitted) return;
     const { name, value } = e.target;
-    const numericFields = ["opdCash", "ipdCash", "pharmacyCash", "upiSettlement", "cardSettlement", "bankDeposit"];
+    const numericFields = [
+      "opdCash",
+      "ipdCash",
+      "pharmacyCash",
+      "upiSettlement",
+      "cardSettlement",
+      "bankDeposit",
+    ];
     if (numericFields.includes(name)) {
       const cleanValue = value.replace(/\D/g, "");
       setFormData((prev) => ({
@@ -253,9 +291,21 @@ const DailyClosing = () => {
     }));
   };
 
-  const checkFields = ["opdCash", "ipdCash", "pharmacyCash", "upiSettlement", "cardSettlement", "bankDeposit"];
-  const hasZero = checkFields.some(key => formData[key] !== "" && Number(formData[key]) === 0);
-  const isSaveDisabled = isSubmitted || loading || (hasZero && (!formData.comment || !formData.comment.trim()));
+  const checkFields = [
+    "opdCash",
+    "ipdCash",
+    "pharmacyCash",
+    "upiSettlement",
+    "cardSettlement",
+    "bankDeposit",
+  ];
+  const hasZero = checkFields.some(
+    (key) => formData[key] !== "" && Number(formData[key]) === 0,
+  );
+  const isSaveDisabled =
+    isSubmitted ||
+    loading ||
+    (hasZero && (!formData.comment || !formData.comment.trim()));
 
   const handleSave = async () => {
     // Basic Validation
@@ -263,7 +313,11 @@ const DailyClosing = () => {
       return Swal.fire("Required", "Please fill essential fields", "warning");
     }
     if (hasZero && (!formData.comment || !formData.comment.trim())) {
-      return Swal.fire("Justification Required", "Please provide a justification for the zero balance.", "warning");
+      return Swal.fire(
+        "Justification Required",
+        "Please provide a justification for the zero balance.",
+        "warning",
+      );
     }
 
     setLoading(true);
@@ -397,12 +451,26 @@ const DailyClosing = () => {
                       border-color: #00bcd4 !important;
                     }
                   `}</style>
-                  <span style={{ marginRight: "10px", fontWeight: "bold", fontSize: "14px", color: "#00838f" }}>Date:</span>
+                  <span
+                    style={{
+                      marginRight: "10px",
+                      fontWeight: "bold",
+                      fontSize: "14px",
+                      color: "#00838f",
+                    }}
+                  >
+                    Date:
+                  </span>
                   <div className="custom-datepicker-wrapper">
                     <DatePicker
-                      selected={currentDate ? moment(currentDate, "DD-MM-YYYY").toDate() : new Date()}
+                      selected={
+                        currentDate
+                          ? moment(currentDate, "DD-MM-YYYY").toDate()
+                          : new Date()
+                      }
                       onChange={(date) => {
-                        if (date) setCurrentDate(moment(date).format("DD-MM-YYYY"));
+                        if (date)
+                          setCurrentDate(moment(date).format("DD-MM-YYYY"));
                       }}
                       dateFormat="dd-MM-yyyy"
                       maxDate={new Date()}
@@ -411,7 +479,13 @@ const DailyClosing = () => {
                   </div>
                 </div>
               </Card.Header>
-              <Card.Body style={{ padding: "10px", background: "#ffffff", borderRadius: "0 0 5px 5px" }}>
+              <Card.Body
+                style={{
+                  padding: "10px",
+                  background: "#ffffff",
+                  borderRadius: "0 0 5px 5px",
+                }}
+              >
                 <Table
                   striped
                   bordered
@@ -593,7 +667,9 @@ const DailyClosing = () => {
                               transition: "all 0.3s ease",
                               boxShadow: "none",
                               cursor: isSubmitted ? "not-allowed" : "text",
-                              backgroundColor: isSubmitted ? "#f8f9fa" : "white",
+                              backgroundColor: isSubmitted
+                                ? "#f8f9fa"
+                                : "white",
                             }}
                             onFocus={(e) =>
                               !isSubmitted &&
@@ -605,7 +681,21 @@ const DailyClosing = () => {
                             }
                           />
                         </InputGroup>
-                        {formData.opdCash !== "" && Number(formData.opdCash) === 0 && <div style={{ color: "#d32f2f", fontSize: "11px", marginTop: "4px", textAlign: "center", fontWeight: "600" }}><i className="fa fa-warning me-1"></i>0 has been entered</div>}
+                        {formData.opdCash !== "" &&
+                          Number(formData.opdCash) === 0 && (
+                            <div
+                              style={{
+                                color: "#d32f2f",
+                                fontSize: "11px",
+                                marginTop: "4px",
+                                textAlign: "center",
+                                fontWeight: "600",
+                              }}
+                            >
+                              <i className="fa fa-warning me-1"></i>0 has been
+                              entered
+                            </div>
+                          )}
                       </td>
                       <td
                         style={{
@@ -649,7 +739,9 @@ const DailyClosing = () => {
                               transition: "all 0.3s ease",
                               boxShadow: "none",
                               cursor: isSubmitted ? "not-allowed" : "text",
-                              backgroundColor: isSubmitted ? "#f8f9fa" : "white",
+                              backgroundColor: isSubmitted
+                                ? "#f8f9fa"
+                                : "white",
                             }}
                             onFocus={(e) =>
                               !isSubmitted &&
@@ -661,7 +753,21 @@ const DailyClosing = () => {
                             }
                           />
                         </InputGroup>
-                        {formData.ipdCash !== "" && Number(formData.ipdCash) === 0 && <div style={{ color: "#d32f2f", fontSize: "11px", marginTop: "4px", textAlign: "center", fontWeight: "600" }}><i className="fa fa-warning me-1"></i>0 has been entered</div>}
+                        {formData.ipdCash !== "" &&
+                          Number(formData.ipdCash) === 0 && (
+                            <div
+                              style={{
+                                color: "#d32f2f",
+                                fontSize: "11px",
+                                marginTop: "4px",
+                                textAlign: "center",
+                                fontWeight: "600",
+                              }}
+                            >
+                              <i className="fa fa-warning me-1"></i>0 has been
+                              entered
+                            </div>
+                          )}
                       </td>
                       <td
                         style={{
@@ -705,7 +811,9 @@ const DailyClosing = () => {
                               transition: "all 0.3s ease",
                               boxShadow: "none",
                               cursor: isSubmitted ? "not-allowed" : "text",
-                              backgroundColor: isSubmitted ? "#f8f9fa" : "white",
+                              backgroundColor: isSubmitted
+                                ? "#f8f9fa"
+                                : "white",
                             }}
                             onFocus={(e) =>
                               !isSubmitted &&
@@ -717,7 +825,21 @@ const DailyClosing = () => {
                             }
                           />
                         </InputGroup>
-                        {formData.pharmacyCash !== "" && Number(formData.pharmacyCash) === 0 && <div style={{ color: "#d32f2f", fontSize: "11px", marginTop: "4px", textAlign: "center", fontWeight: "600" }}><i className="fa fa-warning me-1"></i>0 has been entered</div>}
+                        {formData.pharmacyCash !== "" &&
+                          Number(formData.pharmacyCash) === 0 && (
+                            <div
+                              style={{
+                                color: "#d32f2f",
+                                fontSize: "11px",
+                                marginTop: "4px",
+                                textAlign: "center",
+                                fontWeight: "600",
+                              }}
+                            >
+                              <i className="fa fa-warning me-1"></i>0 has been
+                              entered
+                            </div>
+                          )}
                       </td>
                       <td
                         style={{
@@ -761,7 +883,9 @@ const DailyClosing = () => {
                               transition: "all 0.3s ease",
                               boxShadow: "none",
                               cursor: isSubmitted ? "not-allowed" : "text",
-                              backgroundColor: isSubmitted ? "#f8f9fa" : "white",
+                              backgroundColor: isSubmitted
+                                ? "#f8f9fa"
+                                : "white",
                             }}
                             onFocus={(e) =>
                               !isSubmitted &&
@@ -773,7 +897,21 @@ const DailyClosing = () => {
                             }
                           />
                         </InputGroup>
-                        {formData.upiSettlement !== "" && Number(formData.upiSettlement) === 0 && <div style={{ color: "#d32f2f", fontSize: "11px", marginTop: "4px", textAlign: "center", fontWeight: "600" }}><i className="fa fa-warning me-1"></i>0 has been entered</div>}
+                        {formData.upiSettlement !== "" &&
+                          Number(formData.upiSettlement) === 0 && (
+                            <div
+                              style={{
+                                color: "#d32f2f",
+                                fontSize: "11px",
+                                marginTop: "4px",
+                                textAlign: "center",
+                                fontWeight: "600",
+                              }}
+                            >
+                              <i className="fa fa-warning me-1"></i>0 has been
+                              entered
+                            </div>
+                          )}
                       </td>
                       <td
                         style={{
@@ -817,7 +955,9 @@ const DailyClosing = () => {
                               transition: "all 0.3s ease",
                               boxShadow: "none",
                               cursor: isSubmitted ? "not-allowed" : "text",
-                              backgroundColor: isSubmitted ? "#f8f9fa" : "white",
+                              backgroundColor: isSubmitted
+                                ? "#f8f9fa"
+                                : "white",
                             }}
                             onFocus={(e) =>
                               !isSubmitted &&
@@ -829,7 +969,21 @@ const DailyClosing = () => {
                             }
                           />
                         </InputGroup>
-                        {formData.cardSettlement !== "" && Number(formData.cardSettlement) === 0 && <div style={{ color: "#d32f2f", fontSize: "11px", marginTop: "4px", textAlign: "center", fontWeight: "600" }}><i className="fa fa-warning me-1"></i>0 has been entered</div>}
+                        {formData.cardSettlement !== "" &&
+                          Number(formData.cardSettlement) === 0 && (
+                            <div
+                              style={{
+                                color: "#d32f2f",
+                                fontSize: "11px",
+                                marginTop: "4px",
+                                textAlign: "center",
+                                fontWeight: "600",
+                              }}
+                            >
+                              <i className="fa fa-warning me-1"></i>0 has been
+                              entered
+                            </div>
+                          )}
                       </td>
                       <td
                         style={{
@@ -873,7 +1027,9 @@ const DailyClosing = () => {
                               transition: "all 0.3s ease",
                               boxShadow: "none",
                               cursor: isSubmitted ? "not-allowed" : "text",
-                              backgroundColor: isSubmitted ? "#f8f9fa" : "white",
+                              backgroundColor: isSubmitted
+                                ? "#f8f9fa"
+                                : "white",
                             }}
                             onFocus={(e) =>
                               !isSubmitted &&
@@ -885,7 +1041,21 @@ const DailyClosing = () => {
                             }
                           />
                         </InputGroup>
-                        {formData.bankDeposit !== "" && Number(formData.bankDeposit) === 0 && <div style={{ color: "#d32f2f", fontSize: "11px", marginTop: "4px", textAlign: "center", fontWeight: "600" }}><i className="fa fa-warning me-1"></i>0 has been entered</div>}
+                        {formData.bankDeposit !== "" &&
+                          Number(formData.bankDeposit) === 0 && (
+                            <div
+                              style={{
+                                color: "#d32f2f",
+                                fontSize: "11px",
+                                marginTop: "4px",
+                                textAlign: "center",
+                                fontWeight: "600",
+                              }}
+                            >
+                              <i className="fa fa-warning me-1"></i>0 has been
+                              entered
+                            </div>
+                          )}
                       </td>
                       <td
                         style={{
@@ -901,12 +1071,17 @@ const DailyClosing = () => {
                               <Form.Control
                                 type="text"
                                 readOnly
-                                value={`${BASE_URL.replace('/api', '')}${formData.cashDepositReceipt}`}
-                                style={{ fontSize: "11px", textAlign: "center", width: "130px", textOverflow: "ellipsis" }}
+                                value={`${BASE_URL.replace("/api", "")}${formData.cashDepositReceipt}`}
+                                style={{
+                                  fontSize: "11px",
+                                  textAlign: "center",
+                                  width: "130px",
+                                  textOverflow: "ellipsis",
+                                }}
                                 onClick={(e) => e.target.select()}
                               />
                               <a
-                                href={`${BASE_URL.replace('/api', '')}${formData.cashDepositReceipt}`}
+                                href={`${BASE_URL.replace("/api", "")}${formData.cashDepositReceipt}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="btn btn-sm btn-outline-info py-5 px-2"
@@ -916,7 +1091,12 @@ const DailyClosing = () => {
                               </a>
                             </div>
                           ) : (
-                            <span className="text-muted" style={{ fontSize: "12px" }}>-</span>
+                            <span
+                              className="text-muted"
+                              style={{ fontSize: "12px" }}
+                            >
+                              -
+                            </span>
                           )
                         ) : (
                           <div className="d-flex flex-column align-items-center gap-1">
@@ -938,15 +1118,25 @@ const DailyClosing = () => {
                                 fontSize: "12px",
                                 padding: "6px 12px",
                                 borderRadius: "6px",
-                                backgroundColor: cashDepositFile ? "#0097a7" : "#00bcd4",
-                                borderColor: cashDepositFile ? "#0097a7" : "#00bcd4",
+                                backgroundColor: cashDepositFile
+                                  ? "#0097a7"
+                                  : "#00bcd4",
+                                borderColor: cashDepositFile
+                                  ? "#0097a7"
+                                  : "#00bcd4",
                               }}
                             >
                               {cashDepositFile ? "Change File" : "Choose File"}
                             </label>
                             {cashDepositFile && (
                               <span
-                                style={{ fontSize: "11px", maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                                style={{
+                                  fontSize: "11px",
+                                  maxWidth: "120px",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                }}
                                 title={cashDepositFile.name}
                               >
                                 {cashDepositFile.name}
@@ -969,12 +1159,17 @@ const DailyClosing = () => {
                               <Form.Control
                                 type="text"
                                 readOnly
-                                value={`${BASE_URL.replace('/api', '')}${formData.cardSettlementSlip}`}
-                                style={{ fontSize: "11px", textAlign: "center", width: "130px", textOverflow: "ellipsis" }}
+                                value={`${BASE_URL.replace("/api", "")}${formData.cardSettlementSlip}`}
+                                style={{
+                                  fontSize: "11px",
+                                  textAlign: "center",
+                                  width: "130px",
+                                  textOverflow: "ellipsis",
+                                }}
                                 onClick={(e) => e.target.select()}
                               />
                               <a
-                                href={`${BASE_URL.replace('/api', '')}${formData.cardSettlementSlip}`}
+                                href={`${BASE_URL.replace("/api", "")}${formData.cardSettlementSlip}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="btn btn-sm btn-outline-info py-5 px-2"
@@ -984,7 +1179,12 @@ const DailyClosing = () => {
                               </a>
                             </div>
                           ) : (
-                            <span className="text-muted" style={{ fontSize: "12px" }}>-</span>
+                            <span
+                              className="text-muted"
+                              style={{ fontSize: "12px" }}
+                            >
+                              -
+                            </span>
                           )
                         ) : (
                           <div className="d-flex flex-column align-items-center gap-1">
@@ -1006,15 +1206,27 @@ const DailyClosing = () => {
                                 fontSize: "12px",
                                 padding: "6px 12px",
                                 borderRadius: "6px",
-                                backgroundColor: cardSettlementFile ? "#0097a7" : "#00bcd4",
-                                borderColor: cardSettlementFile ? "#0097a7" : "#00bcd4",
+                                backgroundColor: cardSettlementFile
+                                  ? "#0097a7"
+                                  : "#00bcd4",
+                                borderColor: cardSettlementFile
+                                  ? "#0097a7"
+                                  : "#00bcd4",
                               }}
                             >
-                              {cardSettlementFile ? "Change File" : "Choose File"}
+                              {cardSettlementFile
+                                ? "Change File"
+                                : "Choose File"}
                             </label>
                             {cardSettlementFile && (
                               <span
-                                style={{ fontSize: "11px", maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                                style={{
+                                  fontSize: "11px",
+                                  maxWidth: "120px",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                }}
                                 title={cardSettlementFile.name}
                               >
                                 {cardSettlementFile.name}
@@ -1040,7 +1252,9 @@ const DailyClosing = () => {
                             padding: "8px 20px",
                             fontSize: "13px",
                             fontWeight: "bold",
-                            backgroundColor: isSaveDisabled ? "#ccc" : "#00bcd4",
+                            backgroundColor: isSaveDisabled
+                              ? "#ccc"
+                              : "#00bcd4",
                             borderColor: isSaveDisabled ? "#ccc" : "#00bcd4",
                             boxShadow: isSaveDisabled
                               ? "none"
@@ -1066,16 +1280,41 @@ const DailyClosing = () => {
                 </Table>
 
                 {(hasZero || formData.comment) && (
-                  <div style={{ marginTop: "20px", padding: "5px", backgroundColor: "#f8d7da", borderRadius: "5px", border: "1px solid #f5c6cb" }}>
+                  <div
+                    style={{
+                      marginTop: "20px",
+                      padding: "5px",
+                      backgroundColor: "#f8d7da",
+                      borderRadius: "5px",
+                      border: "1px solid #f5c6cb",
+                    }}
+                  >
                     {hasZero && !isSubmitted && (
-                      <div style={{ color: "#721c24", fontSize: "13px", fontWeight: "bold", marginBottom: "10px" }}>
-                        <i className="fa fa-exclamation-triangle me-2"></i>
-                        A zero balance is recorded in one or more fields. Please provide a justification below to proceed.
+                      <div
+                        style={{
+                          color: "#721c24",
+                          fontSize: "13px",
+                          fontWeight: "bold",
+                          marginBottom: "10px",
+                        }}
+                      >
+                        <i className="fa fa-exclamation-triangle me-2"></i>A
+                        zero balance is recorded in one or more fields. Please
+                        provide a justification below to proceed.
                       </div>
                     )}
                     <Form.Group>
-                      <Form.Label style={{ fontSize: "13px", fontWeight: "bold", color: "#721c24" }}>
-                        {hasZero ? "Justification for Zero Balance" : "Remarks"} {hasZero && !isSubmitted && <span className="text-danger">*</span>}
+                      <Form.Label
+                        style={{
+                          fontSize: "13px",
+                          fontWeight: "bold",
+                          color: "#721c24",
+                        }}
+                      >
+                        {hasZero ? "Justification for Zero Balance" : "Remarks"}{" "}
+                        {hasZero && !isSubmitted && (
+                          <span className="text-danger">*</span>
+                        )}
                       </Form.Label>
                       <Form.Control
                         as="textarea"
@@ -1085,12 +1324,15 @@ const DailyClosing = () => {
                         onChange={handleChange}
                         readOnly={isSubmitted}
                         placeholder="Enter justification or remarks..."
-                        style={{ fontSize: "13px", border: "1px solid #f5c6cb", borderRadius: "5px" }}
+                        style={{
+                          fontSize: "13px",
+                          border: "1px solid #f5c6cb",
+                          borderRadius: "5px",
+                        }}
                       />
                     </Form.Group>
                   </div>
                 )}
-
               </Card.Body>
             </Card>
           </Col>

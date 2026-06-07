@@ -63,7 +63,9 @@ export default function DoctorSearchBy() {
 
   const fetchMainDoctors = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/V1/doctor/mainDoctorDropdown?location=${currentLocation}`);
+      const response = await fetch(
+        `${BASE_URL}/V1/doctor/mainDoctorDropdown?location=${currentLocation}`,
+      );
       if (response.ok) {
         const data = await response.json();
         setMainDoctors(data.data || []);
@@ -78,7 +80,11 @@ export default function DoctorSearchBy() {
     if (!uhid) return;
 
     if (currentLocation === "default") {
-      Swal.fire("Location Missing", "Your clinic location is not set. Please log in again.", "warning");
+      Swal.fire(
+        "Location Missing",
+        "Your clinic location is not set. Please log in again.",
+        "warning",
+      );
       return;
     }
 
@@ -102,7 +108,11 @@ export default function DoctorSearchBy() {
       } else {
         const errorData = await response.json().catch(() => ({}));
         setPatientData(null);
-        Swal.fire("Error", errorData.message || "Failed to search patient", "error");
+        Swal.fire(
+          "Error",
+          errorData.message || "Failed to search patient",
+          "error",
+        );
       }
     } catch (error) {
       console.error("Search error:", error);
@@ -205,7 +215,11 @@ export default function DoctorSearchBy() {
           navigate("/doctor-manage-admission");
         });
       } else {
-        Swal.fire("Error", result.message || "Failed to book admission", "error");
+        Swal.fire(
+          "Error",
+          result.message || "Failed to book admission",
+          "error",
+        );
       }
     } catch (error) {
       console.error("Booking Error:", error);
@@ -387,17 +401,32 @@ export default function DoctorSearchBy() {
                       {patientData && (
                         <>
                           <Col md={12} className="mb-2 mt-2">
-                            <hr style={{ borderTop: "1px solid #67c5cfff", opacity: 0.3 }} />
-                            <p style={{ fontSize: "0.75rem", color: "#ff1500ff", fontWeight: "600", marginBottom: "5px" }}>
-                              *Fill the below details to book the patient for admission
+                            <hr
+                              style={{
+                                borderTop: "1px solid #67c5cfff",
+                                opacity: 0.3,
+                              }}
+                            />
+                            <p
+                              style={{
+                                fontSize: "0.75rem",
+                                color: "#ff1500ff",
+                                fontWeight: "600",
+                                marginBottom: "5px",
+                              }}
+                            >
+                              *Fill the below details to book the patient for
+                              admission
                             </p>
                           </Col>
 
-                           <Col md={4} className="mb-3">
+                          <Col md={4} className="mb-3">
                             <MuiDateTimePicker
                               label="Admission Date & Time"
                               value={admissionDatetime}
-                              onChange={(e) => setAdmissionDatetime(e.target.value)}
+                              onChange={(e) =>
+                                setAdmissionDatetime(e.target.value)
+                              }
                               type="datetime"
                               labelClassName={labelStyle}
                               labelStyle={{ fontSize: "0.75rem" }}
@@ -433,7 +462,9 @@ export default function DoctorSearchBy() {
                             <MuiDateTimePicker
                               label="Surgery Date & Time"
                               value={surgeryDatetime}
-                              onChange={(e) => setSurgeryDatetime(e.target.value)}
+                              onChange={(e) =>
+                                setSurgeryDatetime(e.target.value)
+                              }
                               type="datetime"
                               labelClassName={labelStyle}
                               labelStyle={{ fontSize: "0.75rem" }}
@@ -467,7 +498,10 @@ export default function DoctorSearchBy() {
 
                           <Col md={4} className="mb-3">
                             <Form.Group>
-                              <Form.Label className={labelStyle} style={{ fontSize: "0.75rem" }}>
+                              <Form.Label
+                                className={labelStyle}
+                                style={{ fontSize: "0.75rem" }}
+                              >
                                 Room Type
                               </Form.Label>
                               <Form.Select
@@ -478,12 +512,16 @@ export default function DoctorSearchBy() {
                                   borderRadius: "8px",
                                   padding: "3px 10px",
                                   fontSize: "0.8rem",
-                                  height: "31px"
+                                  height: "31px",
                                 }}
                               >
                                 <option value="">Select Room Type</option>
-                                <option value="General Ward">General Ward</option>
-                                <option value="Semi Private">Semi Private</option>
+                                <option value="General Ward">
+                                  General Ward
+                                </option>
+                                <option value="Semi Private">
+                                  Semi Private
+                                </option>
                                 <option value="Private">Private</option>
                                 <option value="Deluxe">Deluxe</option>
                               </Form.Select>
@@ -492,7 +530,10 @@ export default function DoctorSearchBy() {
 
                           <Col md={4} className="mb-3">
                             <Form.Group>
-                              <Form.Label className={labelStyle} style={{ fontSize: "0.75rem" }}>
+                              <Form.Label
+                                className={labelStyle}
+                                style={{ fontSize: "0.75rem" }}
+                              >
                                 Room Number
                               </Form.Label>
                               <Form.Control
@@ -504,7 +545,7 @@ export default function DoctorSearchBy() {
                                   borderRadius: "8px",
                                   padding: "3px 10px",
                                   fontSize: "0.8rem",
-                                  height: "31px"
+                                  height: "31px",
                                 }}
                               />
                             </Form.Group>
@@ -512,7 +553,10 @@ export default function DoctorSearchBy() {
 
                           <Col md={4} className="mb-3">
                             <Form.Group>
-                              <Form.Label className={labelStyle} style={{ fontSize: "0.75rem" }}>
+                              <Form.Label
+                                className={labelStyle}
+                                style={{ fontSize: "0.75rem" }}
+                              >
                                 SX Plan
                               </Form.Label>
                               <Form.Control
@@ -524,7 +568,7 @@ export default function DoctorSearchBy() {
                                   borderRadius: "8px",
                                   padding: "3px 10px",
                                   fontSize: "0.8rem",
-                                  height: "31px"
+                                  height: "31px",
                                 }}
                               />
                             </Form.Group>
@@ -566,23 +610,31 @@ export default function DoctorSearchBy() {
 
                           <Col md={4} className="mb-3">
                             <Form.Group>
-                              <Form.Label className={labelStyle} style={{ fontSize: "0.75rem" }}>
+                              <Form.Label
+                                className={labelStyle}
+                                style={{ fontSize: "0.75rem" }}
+                              >
                                 Surgeon Name
                               </Form.Label>
                               <Form.Select
                                 value={mainDoctorId}
-                                onChange={(e) => setMainDoctorId(e.target.value)}
+                                onChange={(e) =>
+                                  setMainDoctorId(e.target.value)
+                                }
                                 style={{
                                   border: "1.5px solid rgb(77, 208, 225)",
                                   borderRadius: "8px",
                                   padding: "3px 10px",
                                   fontSize: "0.8rem",
-                                  height: "31px"
+                                  height: "31px",
                                 }}
                               >
                                 <option value="">Select Surgeon</option>
                                 {mainDoctors.map((doc) => (
-                                  <option key={doc.doctor_id} value={doc.doctor_id}>
+                                  <option
+                                    key={doc.doctor_id}
+                                    value={doc.doctor_id}
+                                  >
                                     {doc.name}
                                   </option>
                                 ))}
@@ -598,9 +650,18 @@ export default function DoctorSearchBy() {
                         onClick={handleVerifyAndSubmit}
                         variant="success"
                         className="px-4 py-7"
-                        style={{ borderRadius: "8px", fontWeight: "600", backgroundColor: "#28a745", border: "none" }}
+                        style={{
+                          borderRadius: "8px",
+                          fontWeight: "600",
+                          backgroundColor: "#28a745",
+                          border: "none",
+                        }}
                       >
-                        <FeatherIcon icon="check-circle" size={16} className="me-2" />
+                        <FeatherIcon
+                          icon="check-circle"
+                          size={16}
+                          className="me-2"
+                        />
                         Book For Admission
                       </Button>
                       {/* <Button

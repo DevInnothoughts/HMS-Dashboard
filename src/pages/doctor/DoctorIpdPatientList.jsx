@@ -3,7 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { FilterMatchMode } from "primereact/api";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
-import { Container, Row, Col, Card, Form, InputGroup, Button } from "react-bootstrap";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Form,
+  InputGroup,
+  Button,
+} from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 import DatePicker from "react-datepicker";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
@@ -105,7 +113,10 @@ export default function DoctorIpdPatientList() {
       const normalizedPatients = Array.isArray(result)
         ? result.map((patient) => ({
             ...patient,
-            surgeryDate: buildSurgeryValue(patient.surgery_date, patient.surgery_time),
+            surgeryDate: buildSurgeryValue(
+              patient.surgery_date,
+              patient.surgery_time,
+            ),
             admissionNo: patient.adm_no || "",
             patientName: patient.patient_name || "",
             name: patient.patient_name || "",
@@ -169,8 +180,16 @@ export default function DoctorIpdPatientList() {
 
   const handleTodayPatients = () => {
     const today = new Date();
-    const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const end = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+    const start = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+    );
+    const end = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate() + 1,
+    );
 
     setFromDate(start);
     setToDate(end);
@@ -193,7 +212,9 @@ export default function DoctorIpdPatientList() {
         variant="primary"
         className="btn-primary btn-extra-small btn-icon"
         title="View"
-        onClick={() => navigate("/doctor-patient-details", { state: { patient } })}
+        onClick={() =>
+          navigate("/doctor-patient-details", { state: { patient } })
+        }
         style={{
           borderRadius: "6px",
           padding: "5px 8px",

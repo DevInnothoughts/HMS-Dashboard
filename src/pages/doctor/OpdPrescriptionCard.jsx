@@ -1,8 +1,25 @@
 import React, { useState, useEffect } from "react";
-import { Row, Col, Form, Button, Table, Dropdown, OverlayTrigger, Tooltip } from "react-bootstrap";
+import {
+  Row,
+  Col,
+  Form,
+  Button,
+  Table,
+  Dropdown,
+  OverlayTrigger,
+  Tooltip,
+} from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
+
+const todayLocal = (() => {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+})();
 
 const OpdPrescriptionCard = ({
   prescriptionData,
@@ -18,6 +35,8 @@ const OpdPrescriptionCard = ({
   onNewPrescription,
   onSavePrescription,
   onPrintPrescription,
+  isEditing = false,
+  onEditPrescription,
   assistanceDoctors = [],
   location = "default",
   removedMedicines = [],
@@ -30,6 +49,20 @@ const OpdPrescriptionCard = ({
   const [medicineSearchResults, setMedicineSearchResults] = useState([]);
   const [showMedicineDropdown, setShowMedicineDropdown] = useState(false);
   const [editingMedicineIndex, setEditingMedicineIndex] = useState(null);
+
+  // A saved prescription is being viewed when an id is selected.
+  const isViewingSaved = !!selectedPrescriptionId;
+  // It stays LOCKED until the doctor clicks EDIT (isEditing, owned by parent).
+  // A brand-new prescription (no id selected) is always editable.
+  const isReadOnly = isViewingSaved && !isEditing;
+
+  // Layout-transparent lock wrapper (same approach as the other cards):
+  // `display: contents` removes the fieldset's box from layout so the grid/flex
+  // render unchanged, while disabled cascades to nested native form controls.
+  // NOTE: a disabled fieldset does NOT block clicks on non-form elements such
+  // as the SVG "x" icons on the advice chips, so those are hidden while locked
+  // and the parent handlers are additionally guarded.
+  const lockStyle = { display: "contents" };
 
   useEffect(() => {
     const fetchDynamicData = async () => {
@@ -140,6 +173,7 @@ const OpdPrescriptionCard = ({
         className="p-3 bg-white rounded shadow-sm border mb-3"
         style={{ borderLeft: "5px solid #0097a7" }}
       >
+        {/* Toolbar stays OUTSIDE the lock so PRINT / EDIT / NEW RECORD / PREVIOUS DATES keep working. */}
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h5
             className="fw-bold mb-0"
@@ -173,7 +207,24 @@ const OpdPrescriptionCard = ({
                 <FeatherIcon icon="printer" size="14" className="me-1" /> PRINT
               </Button>
             )}
-            {/* <Button
+            {/* EDIT: only on a saved record that is still locked. Click to unlock
+                the form; saving then UPDATES this prescription. */}
+            {isViewingSaved && !isEditing && (
+              <Button
+                variant="outline-warning"
+                size="sm"
+                onClick={onEditPrescription}
+                style={{
+                  borderRadius: "20px",
+                  fontSize: "12px",
+                  fontWeight: "700",
+                  padding: "7px 10px",
+                }}
+              >
+                <FeatherIcon icon="edit-2" size="14" className="me-1" /> EDIT
+              </Button>
+            )}
+            <Button
               variant="outline-info"
               size="sm"
               onClick={onNewPrescription}
@@ -185,7 +236,7 @@ const OpdPrescriptionCard = ({
               }}
             >
               <FeatherIcon icon="plus" size="14" className="me-1" /> NEW RECORD
-            </Button> */}
+            </Button>
             <Dropdown onSelect={onSelectPrescription}>
               <Dropdown.Toggle
                 variant="outline-info"
@@ -230,223 +281,137 @@ const OpdPrescriptionCard = ({
           </div>
         </div>
 
-        <Row>
-          <Col md={3} className="mb-3">
-            <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>
-              Prescription Type
-            </Form.Label>
-            <Form.Select
-              disabled={prescriptionData.no_medicines_prescribed}
-              value={prescriptionData.prescription_type || ""}
-              onChange={(e) =>
-                handlePrescriptionChange("prescription_type", e.target.value)
-              }
-              style={{
-                borderRadius: "10px",
-                border: "2px solid #b2ebf2",
-                padding: "6px 12px",
-                fontSize: "12px",
-              }}
-            >
-              <option value="">Select Prescription Type</option>
-              <option value="Proctology">Proctology</option>
-              <option value="Urology">Urology</option>
-              <option value="Other">Other</option>
-            </Form.Select>
-          </Col>
-          <Col md={3} className="mb-3">
-            <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>
-              Date of Prescription
-            </Form.Label>
-            <Form.Control
-              type="date"
-              max={new Date().toISOString().split("T")[0]}
-              disabled={prescriptionData.no_medicines_prescribed}
-              value={prescriptionData.creation_timestamp}
-              onChange={(e) =>
-                handlePrescriptionChange("creation_timestamp", e.target.value)
-              }
-              style={{
-                borderRadius: "10px",
-                border: "2px solid #b2ebf2",
-                padding: "6px 12px",
-                fontSize: "12px",
-              }}
-            />
-          </Col>
-          <Col md={3} className="mb-3">
-            <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>
-              Assistant Doctor
-            </Form.Label>
-            <Form.Select
-              disabled={prescriptionData.no_medicines_prescribed}
-              value={
-                (prescriptionData.prescription_type === "Urology"
-                  ? prescriptionData.udoctor_id
-                  : prescriptionData.doctor_id) || ""
-              }
-              onChange={(e) => {
-                const val = e.target.value;
-                if (prescriptionData.prescription_type === "Urology") {
-                  handlePrescriptionChange("udoctor_id", val);
-                  handlePrescriptionChange("doctor_id", "");
-                } else {
-                  handlePrescriptionChange("doctor_id", val);
-                  handlePrescriptionChange("udoctor_id", "");
-                }
-                const selectedDoc = filteredAssistanceDoctors.find((d) => String(d.doctor_id) === String(val));
-                if (selectedDoc) {
-                  handlePrescriptionChange("assistant_doctor_name", selectedDoc.name);
-                  handlePrescriptionChange("assistant_doctor_phone", selectedDoc.phone || "");
-                } else {
-                  handlePrescriptionChange("assistant_doctor_name", "");
-                  handlePrescriptionChange("assistant_doctor_phone", "");
-                }
-              }}
-              style={{
-                borderRadius: "10px",
-                border: "2px solid #b2ebf2",
-                padding: "6px 12px",
-                fontSize: "12px",
-              }}
-            >
-              <option value="">Select Assistant Doctor</option>
-              {filteredAssistanceDoctors.map((doc) => (
-                <option key={doc.doctor_id} value={doc.doctor_id}>
-                  {doc.name}
-                </option>
-              ))}
-            </Form.Select>
-          </Col>
-          <Col
-            md={prescriptionData.prescription_type === "Urology" ? 3 : 3}
-            className="mb-20"
+        {isViewingSaved && !isEditing && (
+          <div
+            className="d-flex align-items-center mb-3 px-3 py-2 rounded"
+            style={{
+              backgroundColor: "#f1fcfd",
+              border: "1px solid #b2ebf2",
+              color: "#00838f",
+              fontWeight: 600,
+              fontSize: "12px",
+            }}
           >
-            <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>
-              Test Advice
-            </Form.Label>
-            <Dropdown>
-              <Dropdown.Toggle
-                disabled={prescriptionData.no_medicines_prescribed}
-                variant="outline-info"
-                id="test-advice-dropdown"
-                className="text-start d-flex justify-content-between align-items-center"
-                style={{
-                  borderRadius: "10px",
-                  width: "100%",
-                  border: "2px solid #b2ebf2",
-                  padding: "10px 12px",
-                  fontSize: "12px",
-                  backgroundColor: "white",
-                  color: "#333",
-                }}
-              >
-                Select Tests...
-              </Dropdown.Toggle>
-              <Dropdown.Menu
-                className="w-300 shadow-sm border-0"
-                style={{
-                  maxHeight: "300px",
-                  overflowY: "auto",
-                  padding: "10px",
-                  borderRadius: "12px",
-                }}
-              >
-                {testAdviceOptions.length > 0 ? (
-                  testAdviceOptions.map((t) => {
-                    const isChecked = (
-                      prescriptionData.prescription_type === "Urology"
-                        ? prescriptionData.uroadvice
-                        : prescriptionData.surgical_advice
-                    )?.includes(t.padvice_desc);
-                    return (
-                      <div
-                        key={t.padvice_id}
-                        className="px-2 py-1 mb-1 rounded hover-bg-light"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Form.Check
-                          type="checkbox"
-                          id={`test-advice-${t.padvice_id}`}
-                          label={
-                            <span
-                              style={{ fontSize: "12px", cursor: "pointer" }}
-                            >
-                              {t.padvice_desc}
-                            </span>
-                          }
-                          checked={isChecked}
-                          onChange={() =>
-                            handlePrescriptionCheckboxChange(
-                              prescriptionData.prescription_type === "Urology"
-                                ? "uroadvice"
-                                : "surgical_advice",
-                              t.padvice_desc,
-                            )
-                          }
-                          className="custom-checkbox"
-                        />
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div
-                    className="text-muted text-center p-2"
-                    style={{ fontSize: "11px" }}
-                  >
-                    No options available
-                  </div>
-                )}
-              </Dropdown.Menu>
-            </Dropdown>
-            <div className="mt-2 d-flex flex-wrap gap-1">
-              {(prescriptionData.prescription_type === "Urology"
-                ? prescriptionData.uroadvice
-                : prescriptionData.surgical_advice
-              )?.map((item, idx) => (
-                <span
-                  key={idx}
-                  className="badge bg-info text-white d-flex align-items-center"
-                  style={{
-                    fontSize: "10px",
-                    borderRadius: "20px",
-                    padding: "4px 10px",
-                    fontWeight: "600",
-                  }}
-                >
-                  {item}
-                  <FeatherIcon
-                    icon="x"
-                    size="12"
-                    className="ms-2 cursor-pointer hover-text-danger"
-                    onClick={() =>
-                      handlePrescriptionCheckboxChange(
-                        prescriptionData.prescription_type === "Urology"
-                          ? "uroadvice"
-                          : "surgical_advice",
-                        item,
-                      )
-                    }
-                  />
-                </span>
-              ))}
-            </div>
-          </Col>
+            <FeatherIcon icon="lock" size="14" className="me-2" />
+            This is a saved prescription (read only). Click EDIT to modify it,
+            or NEW RECORD to add another.
+          </div>
+        )}
 
-          {prescriptionData.prescription_type === "Urology" && (
+        <fieldset disabled={isReadOnly} style={lockStyle}>
+          <Row>
             <Col md={3} className="mb-3">
               <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>
-                PREOP Investigation
+                Prescription Type
+              </Form.Label>
+              <Form.Select
+                disabled={prescriptionData.no_medicines_prescribed}
+                value={prescriptionData.prescription_type || ""}
+                onChange={(e) =>
+                  handlePrescriptionChange("prescription_type", e.target.value)
+                }
+                style={{
+                  borderRadius: "10px",
+                  border: "2px solid #b2ebf2",
+                  padding: "6px 12px",
+                  fontSize: "12px",
+                }}
+              >
+                <option value="">Select Prescription Type</option>
+                <option value="Proctology">Proctology</option>
+                <option value="Urology">Urology</option>
+                <option value="Other">Other</option>
+              </Form.Select>
+            </Col>
+            <Col md={3} className="mb-3">
+              <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>
+                Date of Prescription
+              </Form.Label>
+              <Form.Control
+                type="date"
+                max={new Date().toISOString().split("T")[0]}
+                disabled={prescriptionData.no_medicines_prescribed || isEditing}
+                value={prescriptionData.creation_timestamp}
+                onChange={(e) =>
+                  handlePrescriptionChange("creation_timestamp", e.target.value)
+                }
+                style={{
+                  borderRadius: "10px",
+                  border: "2px solid #b2ebf2",
+                  padding: "6px 12px",
+                  fontSize: "12px",
+                  backgroundColor: isEditing ? "#e9ecef" : "white",
+                }}
+              />
+            </Col>
+            <Col md={3} className="mb-3">
+              <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>
+                Assistant Doctor
+              </Form.Label>
+              <Form.Select
+                disabled={prescriptionData.no_medicines_prescribed}
+                value={
+                  (prescriptionData.prescription_type === "Urology"
+                    ? prescriptionData.udoctor_id
+                    : prescriptionData.doctor_id) || ""
+                }
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (prescriptionData.prescription_type === "Urology") {
+                    handlePrescriptionChange("udoctor_id", val);
+                    handlePrescriptionChange("doctor_id", "");
+                  } else {
+                    handlePrescriptionChange("doctor_id", val);
+                    handlePrescriptionChange("udoctor_id", "");
+                  }
+                  const selectedDoc = filteredAssistanceDoctors.find(
+                    (d) => String(d.doctor_id) === String(val),
+                  );
+                  if (selectedDoc) {
+                    handlePrescriptionChange(
+                      "assistant_doctor_name",
+                      selectedDoc.name,
+                    );
+                    handlePrescriptionChange(
+                      "assistant_doctor_phone",
+                      selectedDoc.phone || "",
+                    );
+                  } else {
+                    handlePrescriptionChange("assistant_doctor_name", "");
+                    handlePrescriptionChange("assistant_doctor_phone", "");
+                  }
+                }}
+                style={{
+                  borderRadius: "10px",
+                  border: "2px solid #b2ebf2",
+                  padding: "6px 12px",
+                  fontSize: "12px",
+                }}
+              >
+                <option value="">Select Assistant Doctor</option>
+                {filteredAssistanceDoctors.map((doc) => (
+                  <option key={doc.doctor_id} value={doc.doctor_id}>
+                    {doc.name}
+                  </option>
+                ))}
+              </Form.Select>
+            </Col>
+            <Col
+              md={prescriptionData.prescription_type === "Urology" ? 3 : 3}
+              className="mb-20"
+            >
+              <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>
+                Test Advice
               </Form.Label>
               <Dropdown>
                 <Dropdown.Toggle
                   disabled={prescriptionData.no_medicines_prescribed}
-                  variant="outline-secondary"
-                  id="preop-invest-dropdown"
+                  variant="outline-info"
+                  id="test-advice-dropdown"
                   className="text-start d-flex justify-content-between align-items-center"
                   style={{
-                    width: "100%",
                     borderRadius: "10px",
+                    width: "100%",
                     border: "2px solid #b2ebf2",
                     padding: "10px 12px",
                     fontSize: "12px",
@@ -454,10 +419,10 @@ const OpdPrescriptionCard = ({
                     color: "#333",
                   }}
                 >
-                  Select PREOP...
+                  Select Tests...
                 </Dropdown.Toggle>
                 <Dropdown.Menu
-                  className="w-200 shadow-sm border-0"
+                  className="w-300 shadow-sm border-0"
                   style={{
                     maxHeight: "300px",
                     overflowY: "auto",
@@ -465,12 +430,13 @@ const OpdPrescriptionCard = ({
                     borderRadius: "12px",
                   }}
                 >
-                  {preopInvestOptions.length > 0 ? (
-                    preopInvestOptions.map((t) => {
-                      const isChecked =
-                        prescriptionData.preopinvestigation?.includes(
-                          t.padvice_desc,
-                        );
+                  {testAdviceOptions.length > 0 ? (
+                    testAdviceOptions.map((t) => {
+                      const isChecked = (
+                        prescriptionData.prescription_type === "Urology"
+                          ? prescriptionData.uroadvice
+                          : prescriptionData.surgical_advice
+                      )?.includes(t.padvice_desc);
                       return (
                         <div
                           key={t.padvice_id}
@@ -479,7 +445,7 @@ const OpdPrescriptionCard = ({
                         >
                           <Form.Check
                             type="checkbox"
-                            id={`preop-invest-${t.padvice_id}`}
+                            id={`test-advice-${t.padvice_id}`}
                             label={
                               <span
                                 style={{ fontSize: "12px", cursor: "pointer" }}
@@ -490,7 +456,9 @@ const OpdPrescriptionCard = ({
                             checked={isChecked}
                             onChange={() =>
                               handlePrescriptionCheckboxChange(
-                                "preopinvestigation",
+                                prescriptionData.prescription_type === "Urology"
+                                  ? "uroadvice"
+                                  : "surgical_advice",
                                 t.padvice_desc,
                               )
                             }
@@ -510,10 +478,13 @@ const OpdPrescriptionCard = ({
                 </Dropdown.Menu>
               </Dropdown>
               <div className="mt-2 d-flex flex-wrap gap-1">
-                {prescriptionData.preopinvestigation?.map((item, idx) => (
+                {(prescriptionData.prescription_type === "Urology"
+                  ? prescriptionData.uroadvice
+                  : prescriptionData.surgical_advice
+                )?.map((item, idx) => (
                   <span
                     key={idx}
-                    className="badge bg-secondary text-white d-flex align-items-center"
+                    className="badge bg-info text-white d-flex align-items-center"
                     style={{
                       fontSize: "10px",
                       borderRadius: "20px",
@@ -522,650 +493,882 @@ const OpdPrescriptionCard = ({
                     }}
                   >
                     {item}
-                    <FeatherIcon
-                      icon="x"
-                      size="12"
-                      className="ms-2 cursor-pointer hover-text-danger"
-                      onClick={() =>
-                        handlePrescriptionCheckboxChange(
-                          "preopinvestigation",
-                          item,
-                        )
-                      }
-                    />
+                    {/* Hidden while locked: this "x" is an SVG, which a disabled
+                        fieldset cannot disable, so we remove it from the DOM in
+                        read-only mode (and the parent handler is also guarded). */}
+                    {!isReadOnly && (
+                      <FeatherIcon
+                        icon="x"
+                        size="12"
+                        className="ms-2 cursor-pointer hover-text-danger"
+                        onClick={() =>
+                          handlePrescriptionCheckboxChange(
+                            prescriptionData.prescription_type === "Urology"
+                              ? "uroadvice"
+                              : "surgical_advice",
+                            item,
+                          )
+                        }
+                      />
+                    )}
                   </span>
                 ))}
               </div>
             </Col>
-          )}
 
-          <Col md={3} className="mb-15">
-            <Form.Label className="fw-bold" style={{ fontSize: "12px" }}>
-              Allergy
-            </Form.Label>
-            <Form.Control
-              as="textarea"
-              disabled={prescriptionData.no_medicines_prescribed}
-              rows={2}
-              value={prescriptionData.allergy}
-              onChange={(e) =>
-                handlePrescriptionChange("allergy", e.target.value)
-              }
-              placeholder="e.g. Penicillin, Sulfa..."
-              style={{
-                borderRadius: "10px",
-                border: "2px solid #b2ebf2",
-                padding: "6px 12px",
-                fontSize: "12px",
-              }}
-            />
-          </Col>
-
-          <Col md={3} className="mb-3">
-            <Form.Label className="fw-bold" style={{ fontSize: "12px" }}>
-              Provisional Diagnosis
-            </Form.Label>
-            {prescriptionData.prescription_type === "Urology" ? (
-              <Form.Control
-                as="textarea"
-                disabled={prescriptionData.no_medicines_prescribed}
-                rows={2}
-                value={prescriptionData.urodiagnosis}
-                onChange={(e) =>
-                  handlePrescriptionChange("urodiagnosis", e.target.value)
-                }
-                placeholder="Urology diagnosis..."
-                style={{
-                  borderRadius: "10px",
-                  border: "2px solid #b2ebf2",
-                  padding: "6px 12px",
-                  fontSize: "12px",
-                }}
-              />
-            ) : (
-              <Form.Control
-                as="textarea"
-                disabled={prescriptionData.no_medicines_prescribed}
-                rows={2}
-                value={prescriptionData.diagnosis}
-                onChange={(e) =>
-                  handlePrescriptionChange("diagnosis", e.target.value)
-                }
-                placeholder="Core diagnosis for this visit..."
-                style={{
-                  borderRadius: "10px",
-                  border: "2px solid #b2ebf2",
-                  padding: "6px 12px",
-                  fontSize: "12px",
-                }}
-              />
-            )}
-          </Col>
-
-          {prescriptionData.prescription_type === "Urology" && (
-            <>
+            {prescriptionData.prescription_type === "Urology" && (
               <Col md={3} className="mb-3">
                 <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>
-                  Chief Complaints (C/O)
+                  PREOP Investigation
                 </Form.Label>
-                <Form.Control
-                  as="textarea"
-                  disabled={prescriptionData.no_medicines_prescribed}
-                  rows={2}
-                  value={prescriptionData.medicalchiefcomplaints}
-                  onChange={(e) =>
-                    handlePrescriptionChange(
-                      "medicalchiefcomplaints",
-                      e.target.value,
-                    )
-                  }
-                  placeholder="Enter chief complaints..."
-                  style={{
-                    borderRadius: "10px",
-                    border: "2px solid #b2ebf2",
-                    padding: "6px 12px",
-                    fontSize: "12px",
-                  }}
-                />
-              </Col>
-              <Col md={3} className="mb-15">
-                <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>
-                  Known Case Of
-                </Form.Label>
-                <Form.Control
-                  as="textarea"
-                  disabled={prescriptionData.no_medicines_prescribed}
-                  rows={2}
-                  value={prescriptionData.medicalhistory}
-                  onChange={(e) =>
-                    handlePrescriptionChange("medicalhistory", e.target.value)
-                  }
-                  placeholder="Medical history..."
-                  style={{
-                    borderRadius: "10px",
-                    border: "2px solid #b2ebf2",
-                    padding: "6px 12px",
-                    fontSize: "12px",
-                  }}
-                />
-              </Col>
-              <Col md={3} className="mb-3">
-                <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>
-                  Past Surgical History (S/P)
-                </Form.Label>
-                <Form.Control
-                  as="textarea"
-                  disabled={prescriptionData.no_medicines_prescribed}
-                  rows={2}
-                  value={prescriptionData.medicalpasthistory}
-                  onChange={(e) =>
-                    handlePrescriptionChange(
-                      "medicalpasthistory",
-                      e.target.value,
-                    )
-                  }
-                  placeholder="Past surgeries..."
-                  style={{
-                    borderRadius: "10px",
-                    border: "2px solid #b2ebf2",
-                    padding: "6px 12px",
-                    fontSize: "12px",
-                  }}
-                />
-              </Col>
-              <Col md={3} className="mb-3">
-                <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>
-                  Investigation
-                </Form.Label>
-                <Form.Control
-                  as="textarea"
-                  disabled={prescriptionData.no_medicines_prescribed}
-                  rows={2}
-                  value={prescriptionData.investigation}
-                  onChange={(e) =>
-                    handlePrescriptionChange("investigation", e.target.value)
-                  }
-                  placeholder="Previous investigations..."
-                  style={{
-                    borderRadius: "10px",
-                    border: "2px solid #b2ebf2",
-                    padding: "6px 12px",
-                    fontSize: "12px",
-                  }}
-                />
-              </Col>
-            </>
-          )}
-
-          <Col md={3} className="mb-3">
-            <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>
-              Next Appointment
-            </Form.Label>
-            <Form.Select
-              disabled={prescriptionData.no_medicines_prescribed}
-              value={prescriptionData.patient_type || ""}
-              onChange={(e) =>
-                handlePrescriptionChange("patient_type", e.target.value)
-              }
-              style={{
-                borderRadius: "10px",
-                border: "2px solid #b2ebf2",
-                padding: "6px 12px",
-                fontSize: "12px",
-              }}
-            >
-              <option value="">Select Appointment Type</option>
-              <option value="Follow">Follow Up Patient</option>
-              <option value="Postoperative">Post Operative Patient</option>
-              <option value="surgery_patient">Surgery Patient</option>
-              <option value="nofollowupappointment">
-                No Followup Appointment
-              </option>
-            </Form.Select>
-          </Col>
-          <Col md={3} className="mb-3">
-            <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>
-              Next Appointment Date
-            </Form.Label>
-            <Form.Control
-              type="date"
-              min={new Date().toISOString().split("T")[0]}
-              value={prescriptionData["next-appo-date"] || ""}
-              onChange={(e) =>
-                handlePrescriptionChange("next-appo-date", e.target.value)
-              }
-              disabled={
-                prescriptionData.no_medicines_prescribed ||
-                prescriptionData.patient_type === "surgery_patient" ||
-                prescriptionData.patient_type === "nofollowupappointment"
-              }
-              style={{
-                borderRadius: "10px",
-                border: "2px solid #b2ebf2",
-                padding: "6px 12px",
-                fontSize: "12px",
-                backgroundColor:
-                  prescriptionData.patient_type === "surgery_patient" ||
-                    prescriptionData.patient_type === "nofollowupappointment"
-                    ? "#e9ecef"
-                    : "white",
-              }}
-            />
-          </Col>
-        </Row>
-
-        <hr className="my-4" style={{ opacity: "0.1" }} />
-
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <h6
-            className="fw-bold m-0 d-flex align-items-center"
-            style={{ color: "#005979ff", fontSize: "14px", padding: "5px" }}
-          >
-            <FeatherIcon
-              icon="plus-circle"
-              size="16"
-              className="me-2 text-success"
-            />{" "}
-            Meditative Advice & Pharmacy Orders <span className="text-danger">*</span>
-          </h6>
-          <div className="d-flex gap-3">
-            <div className="rounded px-2 py-1 d-flex align-items-center" style={{ border: "1px solid #00838f" }}>
-              <Form.Check
-                type="checkbox"
-                label="AAC"
-                id="aac-checkbox"
-                disabled={prescriptionData.no_medicines_prescribed}
-                checked={
-                  prescriptionData.medicines?.some(m => m.name === "Anoac H tablet") &&
-                  prescriptionData.medicines?.some(m => m.name === "Anoac Cream") &&
-                  prescriptionData.medicines?.some(m => m.name === "Constac Powder")
-                }
-                onChange={(e) => {
-                  const medsList = prescriptionData.medicines || [];
-                  if (e.target.checked) {
-                    const aacMeds = [
-                      { medicine_id: null, name: "Anoac H tablet", qty: "1", times: [], days: "15", mrp: "0" },
-                      { medicine_id: null, name: "Anoac Cream", qty: "1", times: [], days: "15", mrp: "0" },
-                      { medicine_id: null, name: "Constac Powder", qty: "1", times: ["1 spoon At Night ( Before sleep )"], days: "15", mrp: "0" }
-                    ];
-                    const medsToAdd = aacMeds.filter(newMed => !medsList.some(m => m.name === newMed.name));
-                    handlePrescriptionChange("medicines", [...medsList, ...medsToAdd]);
-                  } else {
-                    const updatedMeds = medsList.filter(
-                      med => !["Anoac H tablet", "Anoac Cream", "Constac Powder"].includes(med.name)
-                    );
-                    handlePrescriptionChange("medicines", updatedMeds);
-                  }
-                }}
-                className="fw-bold m-0"
-                style={{ color: "#00838f", fontSize: "14px" }}
-              />
-            </div>
-          </div>
-        </div>
-
-        <Row className="align-items-end g-2">
-          <Col md={3} className="position-relative" style={{ zIndex: showMedicineDropdown ? 1050 : 1 }}>
-            <div
-              className="fw-bold mb-4 pb-2"
-              style={{ fontSize: "12px", color: "#34495e" }}
-            >
-              Prescribed Medicines
-            </div>
-            <Form.Control
-              type="text"
-              value={currentMedicine.name || ""}
-              disabled={prescriptionData.no_medicines_prescribed}
-              onChange={(e) => {
-                const val = e.target.value;
-                setCurrentMedicine((prev) => ({
-                  ...prev,
-                  name: val,
-                }));
-                if (val.length >= 2) {
-                  fetch(`${BASE_URL}/V1/doctor/search-medicine?location=${location}&keyword=${encodeURIComponent(val)}`)
-                    .then(res => res.json())
-                    .then(data => {
-                      if (data.statusCode === 200) {
-                        setMedicineSearchResults(data.data);
-                        setShowMedicineDropdown(true);
-                      }
-                    })
-                    .catch(console.error);
-                } else {
-                  setShowMedicineDropdown(false);
-                }
-              }}
-              onFocus={() => {
-                if (currentMedicine.name && currentMedicine.name.length >= 2 && medicineSearchResults.length > 0) {
-                  setShowMedicineDropdown(true);
-                }
-              }}
-              onBlur={() => {
-                setTimeout(() => setShowMedicineDropdown(false), 200);
-              }}
-              placeholder="Start typing name..."
-              style={{
-                borderRadius: "10px",
-                border: "2px solid #b2ebf2",
-                padding: "6px 12px",
-                fontSize: "12px",
-              }}
-            />
-            {showMedicineDropdown && medicineSearchResults.length > 0 && (
-              <div
-                className="bg-white border rounded shadow-sm mt-1"
-                style={{ maxHeight: "200px", overflowY: "auto", width: "100%" }}
-              >
-                {medicineSearchResults.map((med) => {
-                  const medType = med.medicine_type ? `(${med.medicine_type})` : "";
-                  const strength = med.medicine_strength || "";
-                  const unit = med.medicine_unit || "";
-                  const topText = `${med.name} ${med.qty ? `(${med.qty} qty)` : ""}`.replace(/\s+/g, ' ').trim();
-
-                  let bottomText = "";
-                  if (med.content) {
-                    bottomText = med.content;
-                  } else {
-                    bottomText = `${medType} ${strength} ${unit}`.replace(/\s+/g, ' ').trim() || "Local Medicine";
-                  }
-
-                  const fullSearchValue = med.content
-                    ? `${med.name}`
-                    : `${med.name} ${medType} ${strength} ${unit}`.replace(/\s+/g, ' ').trim();
-                  return (
-                    <div
-                      key={med.medicine_id}
-                      className="px-3 py-2 cursor-pointer hover-bg-light border-bottom"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        setCurrentMedicine((prev) => ({
-                          ...prev,
-                          name: fullSearchValue,
-                          medicine_id: med.medicine_id,
-                          mrp: med.mrp
-                        }));
-                        setShowMedicineDropdown(false);
+                <Dropdown>
+                  <Dropdown.Toggle
+                    disabled={prescriptionData.no_medicines_prescribed}
+                    variant="outline-secondary"
+                    id="preop-invest-dropdown"
+                    className="text-start d-flex justify-content-between align-items-center"
+                    style={{
+                      width: "100%",
+                      borderRadius: "10px",
+                      border: "2px solid #b2ebf2",
+                      padding: "10px 12px",
+                      fontSize: "12px",
+                      backgroundColor: "white",
+                      color: "#333",
+                    }}
+                  >
+                    Select PREOP...
+                  </Dropdown.Toggle>
+                  <Dropdown.Menu
+                    className="w-200 shadow-sm border-0"
+                    style={{
+                      maxHeight: "300px",
+                      overflowY: "auto",
+                      padding: "10px",
+                      borderRadius: "12px",
+                    }}
+                  >
+                    {preopInvestOptions.length > 0 ? (
+                      preopInvestOptions.map((t) => {
+                        const isChecked =
+                          prescriptionData.preopinvestigation?.includes(
+                            t.padvice_desc,
+                          );
+                        return (
+                          <div
+                            key={t.padvice_id}
+                            className="px-2 py-1 mb-1 rounded hover-bg-light"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Form.Check
+                              type="checkbox"
+                              id={`preop-invest-${t.padvice_id}`}
+                              label={
+                                <span
+                                  style={{
+                                    fontSize: "12px",
+                                    cursor: "pointer",
+                                  }}
+                                >
+                                  {t.padvice_desc}
+                                </span>
+                              }
+                              checked={isChecked}
+                              onChange={() =>
+                                handlePrescriptionCheckboxChange(
+                                  "preopinvestigation",
+                                  t.padvice_desc,
+                                )
+                              }
+                              className="custom-checkbox"
+                            />
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div
+                        className="text-muted text-center p-2"
+                        style={{ fontSize: "11px" }}
+                      >
+                        No options available
+                      </div>
+                    )}
+                  </Dropdown.Menu>
+                </Dropdown>
+                <div className="mt-2 d-flex flex-wrap gap-1">
+                  {prescriptionData.preopinvestigation?.map((item, idx) => (
+                    <span
+                      key={idx}
+                      className="badge bg-secondary text-white d-flex align-items-center"
+                      style={{
+                        fontSize: "10px",
+                        borderRadius: "20px",
+                        padding: "4px 10px",
+                        fontWeight: "600",
                       }}
                     >
-                      <div style={{ fontSize: "12px", color: "#333" }}>
-                        <strong>{topText}</strong><br />
-                        <small>{bottomText}</small>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </Col>
-          <Col md={1}>
-            <Form.Label
-              className="fw-bold"
-              style={{ fontSize: "12px" }}
-            >
-              Qty
-            </Form.Label>
-            <Form.Control
-              type="number"
-              placeholder="Qty"
-              value={currentMedicine.qty}
-              disabled={prescriptionData.no_medicines_prescribed}
-              onChange={(e) =>
-                setCurrentMedicine((prev) => ({ ...prev, qty: e.target.value }))
-              }
-              style={{
-                borderRadius: "10px",
-                border: "2px solid #b2ebf2",
-                padding: "6px 12px",
-                fontSize: "12px",
-              }}
-            />
-          </Col>
-          <Col md={6}>
-            <div className="mb-1" style={{ marginLeft: "25px", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px" }}>
-              {timeSlots.map((slot) => (
-                <div
-                  key={slot}
-                  className="d-flex flex-column align-items-center"
-                  style={{ minWidth: "45px" }}
-                >
-                  <Form.Check
-                    type="checkbox"
-                    label={slot}
-                    checked={currentMedicine.times?.includes(slot)}
-                    disabled={prescriptionData.no_medicines_prescribed}
-                    onChange={(e) => {
-                      const updated = e.target.checked
-                        ? [...(currentMedicine.times || []), slot]
-                        : (currentMedicine.times || []).filter(
-                          (t) => t !== slot,
-                        );
-                      setCurrentMedicine((prev) => ({
-                        ...prev,
-                        times: updated,
-                      }));
-                    }}
-                    className="m-0 p-0"
-                    style={{ fontSize: "13px" }}
-                  />
+                      {item}
+                      {!isReadOnly && (
+                        <FeatherIcon
+                          icon="x"
+                          size="12"
+                          className="ms-2 cursor-pointer hover-text-danger"
+                          onClick={() =>
+                            handlePrescriptionCheckboxChange(
+                              "preopinvestigation",
+                              item,
+                            )
+                          }
+                        />
+                      )}
+                    </span>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </Col>
-          <Col md={1}>
-            <Form.Label
-              className="fw-bold"
-              style={{ fontSize: "12px" }}
-            >
-              Days
-            </Form.Label>
-            <Form.Select
-              value={currentMedicine.days}
-              disabled={prescriptionData.no_medicines_prescribed}
-              onChange={(e) =>
-                setCurrentMedicine((prev) => ({
-                  ...prev,
-                  days: e.target.value,
-                }))
-              }
-              style={{
-                borderRadius: "10px",
-                border: "2px solid #b2ebf2",
-                padding: "6px 12px",
-                fontSize: "12px",
-              }}
-            >
-              <option value="">Day</option>
-              {[
-                "1",
-                "2",
-                "3",
-                "5",
-                "7",
-                "10",
-                "15",
-                "30",
-                "45",
-                "60",
-                "90",
-                "120",
-                "SOS",
-              ].map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
-            </Form.Select>
-          </Col>
-          <Col md={1}>
-            <Button
-              onClick={handleAddMedicine}
-              className="w-100 py-6 btn-info shadow-sm"
-              style={{ borderRadius: "8px" }}
-            >
-              <FeatherIcon icon="plus" size="18" />
-            </Button>
-          </Col>
-        </Row>
+              </Col>
+            )}
 
-        {(prescriptionData.medicines?.length > 0 || prescriptionData.no_medicines_prescribed) && (
-          <div className="mt-4 rounded overflow-hidden border">
-            <Table responsive hover className="mb-0">
-              <thead
+            <Col md={3} className="mb-15">
+              <Form.Label className="fw-bold" style={{ fontSize: "12px" }}>
+                Allergy
+              </Form.Label>
+              <Form.Control
+                as="textarea"
+                disabled={prescriptionData.no_medicines_prescribed}
+                rows={2}
+                value={prescriptionData.allergy}
+                onChange={(e) =>
+                  handlePrescriptionChange("allergy", e.target.value)
+                }
+                placeholder="e.g. Penicillin, Sulfa..."
                 style={{
-                  backgroundColor: "#f1fcfd",
-                  borderBottom: "2px solid #b2ebf2",
+                  borderRadius: "10px",
+                  border: "2px solid #b2ebf2",
+                  padding: "6px 12px",
+                  fontSize: "12px",
+                }}
+              />
+            </Col>
+
+            <Col md={3} className="mb-3">
+              <Form.Label className="fw-bold" style={{ fontSize: "12px" }}>
+                Provisional Diagnosis
+              </Form.Label>
+              {prescriptionData.prescription_type === "Urology" ? (
+                <Form.Control
+                  as="textarea"
+                  disabled={prescriptionData.no_medicines_prescribed}
+                  rows={2}
+                  value={prescriptionData.urodiagnosis}
+                  onChange={(e) =>
+                    handlePrescriptionChange("urodiagnosis", e.target.value)
+                  }
+                  placeholder="Urology diagnosis..."
+                  style={{
+                    borderRadius: "10px",
+                    border: "2px solid #b2ebf2",
+                    padding: "6px 12px",
+                    fontSize: "12px",
+                  }}
+                />
+              ) : (
+                <Form.Control
+                  as="textarea"
+                  disabled={prescriptionData.no_medicines_prescribed}
+                  rows={2}
+                  value={prescriptionData.diagnosis}
+                  onChange={(e) =>
+                    handlePrescriptionChange("diagnosis", e.target.value)
+                  }
+                  placeholder="Core diagnosis for this visit..."
+                  style={{
+                    borderRadius: "10px",
+                    border: "2px solid #b2ebf2",
+                    padding: "6px 12px",
+                    fontSize: "12px",
+                  }}
+                />
+              )}
+            </Col>
+
+            {prescriptionData.prescription_type === "Urology" && (
+              <>
+                <Col md={3} className="mb-3">
+                  <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>
+                    Chief Complaints (C/O)
+                  </Form.Label>
+                  <Form.Control
+                    as="textarea"
+                    disabled={prescriptionData.no_medicines_prescribed}
+                    rows={2}
+                    value={prescriptionData.medicalchiefcomplaints}
+                    onChange={(e) =>
+                      handlePrescriptionChange(
+                        "medicalchiefcomplaints",
+                        e.target.value,
+                      )
+                    }
+                    placeholder="Enter chief complaints..."
+                    style={{
+                      borderRadius: "10px",
+                      border: "2px solid #b2ebf2",
+                      padding: "6px 12px",
+                      fontSize: "12px",
+                    }}
+                  />
+                </Col>
+                <Col md={3} className="mb-15">
+                  <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>
+                    Known Case Of
+                  </Form.Label>
+                  <Form.Control
+                    as="textarea"
+                    disabled={prescriptionData.no_medicines_prescribed}
+                    rows={2}
+                    value={prescriptionData.medicalhistory}
+                    onChange={(e) =>
+                      handlePrescriptionChange("medicalhistory", e.target.value)
+                    }
+                    placeholder="Medical history..."
+                    style={{
+                      borderRadius: "10px",
+                      border: "2px solid #b2ebf2",
+                      padding: "6px 12px",
+                      fontSize: "12px",
+                    }}
+                  />
+                </Col>
+                <Col md={3} className="mb-3">
+                  <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>
+                    Past Surgical History (S/P)
+                  </Form.Label>
+                  <Form.Control
+                    as="textarea"
+                    disabled={prescriptionData.no_medicines_prescribed}
+                    rows={2}
+                    value={prescriptionData.medicalpasthistory}
+                    onChange={(e) =>
+                      handlePrescriptionChange(
+                        "medicalpasthistory",
+                        e.target.value,
+                      )
+                    }
+                    placeholder="Past surgeries..."
+                    style={{
+                      borderRadius: "10px",
+                      border: "2px solid #b2ebf2",
+                      padding: "6px 12px",
+                      fontSize: "12px",
+                    }}
+                  />
+                </Col>
+                <Col md={3} className="mb-3">
+                  <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>
+                    Investigation
+                  </Form.Label>
+                  <Form.Control
+                    as="textarea"
+                    disabled={prescriptionData.no_medicines_prescribed}
+                    rows={2}
+                    value={prescriptionData.investigation}
+                    onChange={(e) =>
+                      handlePrescriptionChange("investigation", e.target.value)
+                    }
+                    placeholder="Previous investigations..."
+                    style={{
+                      borderRadius: "10px",
+                      border: "2px solid #b2ebf2",
+                      padding: "6px 12px",
+                      fontSize: "12px",
+                    }}
+                  />
+                </Col>
+              </>
+            )}
+
+            <Col md={3} className="mb-3">
+              <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>
+                Next Appointment
+              </Form.Label>
+              <Form.Select
+                disabled={prescriptionData.no_medicines_prescribed}
+                value={prescriptionData.patient_type || ""}
+                onChange={(e) =>
+                  handlePrescriptionChange("patient_type", e.target.value)
+                }
+                style={{
+                  borderRadius: "10px",
+                  border: "2px solid #b2ebf2",
+                  padding: "6px 12px",
+                  fontSize: "12px",
                 }}
               >
-                <tr>
-                  <th
-                    className="py-2 px-3 border-0"
-                    style={{ fontSize: "14px", width: "15%" }}
-                  >
-                    Medicine Name
-                  </th>
-                  <th
-                    className="py-2 px-3 border-0 text-center"
-                    style={{ fontSize: "14px", width: "25%" }}
-                  >
-                    Qty
-                  </th>
-                  <th
-                    className="py-2 px-3 border-0"
-                    style={{ fontSize: "14px", width: "30%" }}
-                  >
-                    Dosage Intervals
-                  </th>
-                  <th
-                    className="py-2 px-3 border-0 text-center"
-                    style={{ fontSize: "14px", width: "20%" }}
-                  >
-                    Duration
-                  </th>
-                  <th
-                    className="py-2 px-3 border-0 text-center"
-                    style={{ fontSize: "14px", width: "10%" }}
-                  >
-                    Action
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {prescriptionData.no_medicines_prescribed ? (
-                  <tr>
-                    <td colSpan="5" className="text-center py-3">
-                      <i className="fw-bold">No Medicines Prescribed</i>
-                    </td>
-                  </tr>
-                ) : (
-                  prescriptionData.medicines.map((m, idx) => (
-                    <tr key={idx} className="align-middle">
-                    <td
-                      className="py-2 px-3 fw-bold"
-                      style={{ fontSize: "14px" }}
-                    >
-                      {m.name}
-                    </td>
-                    <td className="py-2 px-3 fw-bold text-center">
-                      <span className="px-2 py-1" style={{ fontSize: "13px" }}>
-                        {m.qty} Units
-                      </span>
-                    </td>
-                    <td className="py-2 px-3 fw-bold">
-                      {editingMedicineIndex === idx ? (
-                        <div className="d-flex flex-wrap gap-1">
-                          {timeSlots.map((slot) => (
-                            <Form.Check
-                              key={slot}
-                              type="checkbox"
-                              label={slot}
-                              checked={m.times?.includes(slot)}
-                              onChange={(e) => {
-                                const newMedicines = [...prescriptionData.medicines];
-                                const updatedTimes = e.target.checked
-                                  ? [...(m.times || []), slot]
-                                  : (m.times || []).filter((t) => t !== slot);
-                                newMedicines[idx] = { ...m, times: updatedTimes };
-                                handlePrescriptionChange("medicines", newMedicines);
-                              }}
-                              style={{ fontSize: "13px", marginRight: "8px" }}
-                            />
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="d-flex flex-wrap gap-1">
-                          {m.times?.map((t) => (
-                            <span
-                              key={t}
-                              className="py-1 px-2"
-                              style={{ fontSize: "13px", backgroundColor: "#e0f7fa", borderRadius: "4px" }}
-                            >
-                              {t}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </td>
-                    <td
-                      className="py-2 px-3 fw-semibold fw-bold text-center"
-                      style={{ fontSize: "13px" }}
-                    >
-                      {m.days} Days
-                    </td>
-                    <td className="py-2 px-3 text-center">
-                      {m.name !== "Constac Powder" && (
-                        <Button
-                          variant={editingMedicineIndex === idx ? "success" : "info"}
-                          size="sm"
-                          className="p-5 px-4 me-2"
-                          onClick={() => {
-                            if (editingMedicineIndex === idx) {
-                              setEditingMedicineIndex(null);
-                            } else {
-                              setEditingMedicineIndex(idx);
-                            }
-                          }}
-                        >
-                          <FeatherIcon icon={editingMedicineIndex === idx ? "check" : "edit-2"} size="14" />
-                        </Button>
-                      )}
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        className="p-5 px-4"
-                        onClick={() => handleRemoveMedicine(idx)}
-                      >
-                        <FeatherIcon icon="trash" size="14" />
-                      </Button>
-                    </td>
-                  </tr>
-                )))}
-              </tbody>
-            </Table>
+                <option value="">Select Appointment Type</option>
+                <option value="Follow">Follow Up Patient</option>
+                <option value="Postoperative">Post Operative Patient</option>
+                <option value="surgery_patient">Surgery Patient</option>
+                <option value="nofollowupappointment">
+                  No Followup Appointment
+                </option>
+              </Form.Select>
+            </Col>
+            <Col md={3} className="mb-3">
+              <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>
+                Next Appointment Date
+              </Form.Label>
+              <Form.Control
+                type="date"
+                min={todayLocal}
+                value={prescriptionData["next-appo-date"] || ""}
+                onChange={(e) =>
+                  handlePrescriptionChange("next-appo-date", e.target.value)
+                }
+                disabled={
+                  prescriptionData.no_medicines_prescribed ||
+                  prescriptionData.patient_type === "surgery_patient" ||
+                  prescriptionData.patient_type === "nofollowupappointment"
+                }
+                style={{
+                  borderRadius: "10px",
+                  border: "2px solid #b2ebf2",
+                  padding: "6px 12px",
+                  fontSize: "12px",
+                  backgroundColor:
+                    prescriptionData.patient_type === "surgery_patient" ||
+                    prescriptionData.patient_type === "nofollowupappointment"
+                      ? "#e9ecef"
+                      : "white",
+                }}
+              />
+            </Col>
+          </Row>
+
+          <hr className="my-4" style={{ opacity: "0.1" }} />
+
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h6
+              className="fw-bold m-0 d-flex align-items-center"
+              style={{ color: "#005979ff", fontSize: "14px", padding: "5px" }}
+            >
+              <FeatherIcon
+                icon="plus-circle"
+                size="16"
+                className="me-2 text-success"
+              />{" "}
+              Meditative Advice & Pharmacy Orders{" "}
+              <span className="text-danger">*</span>
+            </h6>
+            <div className="d-flex gap-3">
+              <div
+                className="rounded px-2 py-1 d-flex align-items-center"
+                style={{ border: "1px solid #00838f" }}
+              >
+                <Form.Check
+                  type="checkbox"
+                  label="AAC"
+                  id="aac-checkbox"
+                  disabled={prescriptionData.no_medicines_prescribed}
+                  checked={
+                    prescriptionData.medicines?.some(
+                      (m) => m.name === "Anoac H tablet",
+                    ) &&
+                    prescriptionData.medicines?.some(
+                      (m) => m.name === "Anoac Cream",
+                    ) &&
+                    prescriptionData.medicines?.some(
+                      (m) => m.name === "Constac Powder",
+                    )
+                  }
+                  onChange={(e) => {
+                    const medsList = prescriptionData.medicines || [];
+                    if (e.target.checked) {
+                      const aacMeds = [
+                        {
+                          medicine_id: "mXjWV0SDBCVpjPz01d6NhA==",
+                          name: "Anoac Cream",
+                          qty: "1",
+                          times: [],
+                          days: "15",
+                          mrp: "0",
+                        },
+                        {
+                          medicine_id: "VgqhMj4FIesznTusecgBeg==",
+                          name: "Anoac H tablet",
+                          qty: "1",
+                          times: ["After Lunch", "After Dinner"],
+                          days: "15",
+                          mrp: "0",
+                        },
+                        {
+                          medicine_id: "UrD5Ww+76xqbQKh+dH7+jw==",
+                          name: "Constac Powder",
+                          qty: "1",
+                          times: ["After Dinner"],
+                          days: "15",
+                          mrp: "0",
+                        },
+                      ];
+                      const medsToAdd = aacMeds.filter(
+                        (newMed) =>
+                          !medsList.some((m) => m.name === newMed.name),
+                      );
+                      handlePrescriptionChange("medicines", [
+                        ...medsList,
+                        ...medsToAdd,
+                      ]);
+                    } else {
+                      const updatedMeds = medsList.filter(
+                        (med) =>
+                          ![
+                            "Anoac H tablet",
+                            "Anoac Cream",
+                            "Constac Powder",
+                          ].includes(med.name),
+                      );
+                      handlePrescriptionChange("medicines", updatedMeds);
+                    }
+                  }}
+                  className="fw-bold m-0"
+                  style={{ color: "#00838f", fontSize: "14px" }}
+                />
+              </div>
+            </div>
           </div>
-        )}
 
+          <Row className="align-items-end g-2">
+            <Col
+              md={3}
+              className="position-relative"
+              style={{ zIndex: showMedicineDropdown ? 1050 : 1 }}
+            >
+              <div
+                className="fw-bold mb-4 pb-2"
+                style={{ fontSize: "12px", color: "#34495e" }}
+              >
+                Prescribed Medicines
+              </div>
+              <Form.Control
+                type="text"
+                value={currentMedicine.name || ""}
+                disabled={prescriptionData.no_medicines_prescribed}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setCurrentMedicine((prev) => ({
+                    ...prev,
+                    name: val,
+                  }));
+                  if (val.length >= 2) {
+                    fetch(
+                      `${BASE_URL}/V1/doctor/search-medicine?location=${location}&keyword=${encodeURIComponent(val)}`,
+                    )
+                      .then((res) => res.json())
+                      .then((data) => {
+                        if (data.statusCode === 200) {
+                          setMedicineSearchResults(data.data);
+                          setShowMedicineDropdown(true);
+                        }
+                      })
+                      .catch(console.error);
+                  } else {
+                    setShowMedicineDropdown(false);
+                  }
+                }}
+                onFocus={() => {
+                  if (
+                    currentMedicine.name &&
+                    currentMedicine.name.length >= 2 &&
+                    medicineSearchResults.length > 0
+                  ) {
+                    setShowMedicineDropdown(true);
+                  }
+                }}
+                onBlur={() => {
+                  setTimeout(() => setShowMedicineDropdown(false), 200);
+                }}
+                placeholder="Start typing name..."
+                style={{
+                  borderRadius: "10px",
+                  border: "2px solid #b2ebf2",
+                  padding: "6px 12px",
+                  fontSize: "12px",
+                }}
+              />
+              {showMedicineDropdown && medicineSearchResults.length > 0 && (
+                <div
+                  className="bg-white border rounded shadow-sm mt-1"
+                  style={{
+                    maxHeight: "200px",
+                    overflowY: "auto",
+                    width: "100%",
+                  }}
+                >
+                  {medicineSearchResults.map((med) => {
+                    const medType = med.medicine_type
+                      ? `(${med.medicine_type})`
+                      : "";
+                    const strength = med.medicine_strength || "";
+                    const unit = med.medicine_unit || "";
+                    const topText =
+                      `${med.name} ${med.qty ? `(${med.qty} qty)` : ""}`
+                        .replace(/\s+/g, " ")
+                        .trim();
 
+                    let bottomText = "";
+                    if (med.content) {
+                      bottomText = med.content;
+                    } else {
+                      bottomText =
+                        `${medType} ${strength} ${unit}`
+                          .replace(/\s+/g, " ")
+                          .trim() || "Local Medicine";
+                    }
+
+                    const fullSearchValue = med.content
+                      ? `${med.name}`
+                      : `${med.name} ${medType} ${strength} ${unit}`
+                          .replace(/\s+/g, " ")
+                          .trim();
+                    return (
+                      <div
+                        key={med.medicine_id}
+                        className="px-3 py-2 cursor-pointer hover-bg-light border-bottom"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          setCurrentMedicine((prev) => ({
+                            ...prev,
+                            name: fullSearchValue,
+                            medicine_id: med.medicine_id,
+                            mrp: med.mrp,
+                          }));
+                          setShowMedicineDropdown(false);
+                        }}
+                      >
+                        <div style={{ fontSize: "12px", color: "#333" }}>
+                          <strong>{topText}</strong>
+                          <br />
+                          <small>{bottomText}</small>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </Col>
+            <Col md={1}>
+              <Form.Label className="fw-bold" style={{ fontSize: "12px" }}>
+                Qty
+              </Form.Label>
+              <Form.Control
+                type="number"
+                placeholder="Qty"
+                value={currentMedicine.qty}
+                disabled={prescriptionData.no_medicines_prescribed}
+                onChange={(e) =>
+                  setCurrentMedicine((prev) => ({
+                    ...prev,
+                    qty: e.target.value,
+                  }))
+                }
+                style={{
+                  borderRadius: "10px",
+                  border: "2px solid #b2ebf2",
+                  padding: "6px 12px",
+                  fontSize: "12px",
+                }}
+              />
+            </Col>
+            <Col md={6}>
+              <div
+                className="mb-1"
+                style={{
+                  marginLeft: "25px",
+                  display: "grid",
+                  gridTemplateColumns: "repeat(4, 1fr)",
+                  gap: "10px",
+                }}
+              >
+                {timeSlots.map((slot) => (
+                  <div
+                    key={slot}
+                    className="d-flex flex-column align-items-center"
+                    style={{ minWidth: "45px" }}
+                  >
+                    <Form.Check
+                      type="checkbox"
+                      label={slot}
+                      checked={currentMedicine.times?.includes(slot)}
+                      disabled={prescriptionData.no_medicines_prescribed}
+                      onChange={(e) => {
+                        const updated = e.target.checked
+                          ? [...(currentMedicine.times || []), slot]
+                          : (currentMedicine.times || []).filter(
+                              (t) => t !== slot,
+                            );
+                        setCurrentMedicine((prev) => ({
+                          ...prev,
+                          times: updated,
+                        }));
+                      }}
+                      className="m-0 p-0"
+                      style={{ fontSize: "13px" }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </Col>
+            <Col md={1}>
+              <Form.Label className="fw-bold" style={{ fontSize: "12px" }}>
+                Days
+              </Form.Label>
+              <Form.Select
+                value={currentMedicine.days}
+                disabled={prescriptionData.no_medicines_prescribed}
+                onChange={(e) =>
+                  setCurrentMedicine((prev) => ({
+                    ...prev,
+                    days: e.target.value,
+                  }))
+                }
+                style={{
+                  borderRadius: "10px",
+                  border: "2px solid #b2ebf2",
+                  padding: "6px 12px",
+                  fontSize: "12px",
+                }}
+              >
+                <option value="">Day</option>
+                {[
+                  "1",
+                  "2",
+                  "3",
+                  "5",
+                  "7",
+                  "10",
+                  "15",
+                  "30",
+                  "45",
+                  "60",
+                  "90",
+                  "120",
+                  "SOS",
+                ].map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </Form.Select>
+            </Col>
+            <Col md={1}>
+              <Button
+                onClick={handleAddMedicine}
+                className="w-100 py-6 btn-info shadow-sm"
+                style={{ borderRadius: "8px" }}
+              >
+                <FeatherIcon icon="plus" size="18" />
+              </Button>
+            </Col>
+          </Row>
+
+          {(prescriptionData.medicines?.length > 0 ||
+            prescriptionData.no_medicines_prescribed) && (
+            <div className="mt-4 rounded overflow-hidden border">
+              <Table responsive hover className="mb-0">
+                <thead
+                  style={{
+                    backgroundColor: "#f1fcfd",
+                    borderBottom: "2px solid #b2ebf2",
+                  }}
+                >
+                  <tr>
+                    <th
+                      className="py-2 px-3 border-0"
+                      style={{ fontSize: "14px", width: "15%" }}
+                    >
+                      Medicine Name
+                    </th>
+                    <th
+                      className="py-2 px-3 border-0 text-center"
+                      style={{ fontSize: "14px", width: "25%" }}
+                    >
+                      Qty
+                    </th>
+                    <th
+                      className="py-2 px-3 border-0"
+                      style={{ fontSize: "14px", width: "30%" }}
+                    >
+                      Dosage Intervals
+                    </th>
+                    <th
+                      className="py-2 px-3 border-0 text-center"
+                      style={{ fontSize: "14px", width: "20%" }}
+                    >
+                      Duration
+                    </th>
+                    <th
+                      className="py-2 px-3 border-0 text-center"
+                      style={{ fontSize: "14px", width: "10%" }}
+                    >
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {prescriptionData.no_medicines_prescribed ? (
+                    <tr>
+                      <td colSpan="5" className="text-center py-3">
+                        <i className="fw-bold">No Medicines Prescribed</i>
+                      </td>
+                    </tr>
+                  ) : (
+                    prescriptionData.medicines.map((m, idx) => (
+                      <tr key={idx} className="align-middle">
+                        <td
+                          className="py-2 px-3 fw-bold"
+                          style={{ fontSize: "14px" }}
+                        >
+                          {m.name}
+                        </td>
+                        <td className="py-2 px-3 fw-bold text-center">
+                          <span
+                            className="px-2 py-1"
+                            style={{ fontSize: "13px" }}
+                          >
+                            {m.qty} Units
+                          </span>
+                        </td>
+                        <td className="py-2 px-3 fw-bold">
+                          {editingMedicineIndex === idx ? (
+                            <div className="d-flex flex-wrap gap-1">
+                              {timeSlots.map((slot) => (
+                                <Form.Check
+                                  key={slot}
+                                  type="checkbox"
+                                  label={slot}
+                                  checked={m.times?.includes(slot)}
+                                  onChange={(e) => {
+                                    const newMedicines = [
+                                      ...prescriptionData.medicines,
+                                    ];
+                                    const updatedTimes = e.target.checked
+                                      ? [...(m.times || []), slot]
+                                      : (m.times || []).filter(
+                                          (t) => t !== slot,
+                                        );
+                                    newMedicines[idx] = {
+                                      ...m,
+                                      times: updatedTimes,
+                                    };
+                                    handlePrescriptionChange(
+                                      "medicines",
+                                      newMedicines,
+                                    );
+                                  }}
+                                  style={{
+                                    fontSize: "13px",
+                                    marginRight: "8px",
+                                  }}
+                                />
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="d-flex flex-wrap gap-1">
+                              {m.times?.map((t) => (
+                                <span
+                                  key={t}
+                                  className="py-1 px-2"
+                                  style={{
+                                    fontSize: "13px",
+                                    backgroundColor: "#e0f7fa",
+                                    borderRadius: "4px",
+                                  }}
+                                >
+                                  {t}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </td>
+                        <td
+                          className="py-2 px-3 fw-semibold fw-bold text-center"
+                          style={{ fontSize: "13px" }}
+                        >
+                          {m.days} Days
+                        </td>
+                        <td className="py-2 px-3 text-center">
+                          {m.name !== "Constac Powder" && (
+                            <Button
+                              variant={
+                                editingMedicineIndex === idx
+                                  ? "success"
+                                  : "info"
+                              }
+                              size="sm"
+                              className="p-5 px-4 me-2"
+                              onClick={() => {
+                                if (editingMedicineIndex === idx) {
+                                  setEditingMedicineIndex(null);
+                                } else {
+                                  setEditingMedicineIndex(idx);
+                                }
+                              }}
+                            >
+                              <FeatherIcon
+                                icon={
+                                  editingMedicineIndex === idx
+                                    ? "check"
+                                    : "edit-2"
+                                }
+                                size="14"
+                              />
+                            </Button>
+                          )}
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            className="p-5 px-4"
+                            onClick={() => handleRemoveMedicine(idx)}
+                          >
+                            <FeatherIcon icon="trash" size="14" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </Table>
+            </div>
+          )}
+        </fieldset>
       </div>
 
       <div className="text-center mb-5 pb-5">
-        <Button
-          onClick={onSavePrescription}
-          style={{
-            backgroundColor: "#00796b",
-            borderColor: "#00796b",
-            padding: "10px 40px",
-            borderRadius: "50px",
-            fontWeight: "800",
-            fontSize: "13px",
-            boxShadow: "0 10px 30px rgba(0, 121, 107, 0.3)",
-            textTransform: "uppercase",
-            letterSpacing: "1px",
-          }}
-        >
-          <FeatherIcon icon="save" size="18" className="me-2" />
-          SAVE PRESCRIPTION DATA
-        </Button>
+        {isReadOnly ? (
+          <span
+            className="d-inline-flex align-items-center"
+            style={{ color: "#00796b", fontWeight: 700, fontSize: "13px" }}
+          >
+            <FeatherIcon icon="lock" size="16" className="me-2" />
+            Locked — click EDIT to modify this prescription, or NEW RECORD to
+            add another.
+          </span>
+        ) : (
+          <Button
+            onClick={onSavePrescription}
+            style={{
+              backgroundColor: "#00796b",
+              borderColor: "#00796b",
+              padding: "10px 40px",
+              borderRadius: "50px",
+              fontWeight: "800",
+              fontSize: "13px",
+              boxShadow: "0 10px 30px rgba(0, 121, 107, 0.3)",
+              textTransform: "uppercase",
+              letterSpacing: "1px",
+            }}
+          >
+            <FeatherIcon icon="save" size="18" className="me-2" />
+            {isEditing ? "UPDATE PRESCRIPTION" : "SAVE PRESCRIPTION DATA"}
+          </Button>
+        )}
       </div>
     </div>
   );

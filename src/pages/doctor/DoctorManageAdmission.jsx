@@ -9,7 +9,7 @@ import {
   Form,
   InputGroup,
   Spinner,
-  Modal
+  Modal,
 } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
@@ -75,13 +75,13 @@ export default function DoctorManageAdmission() {
     aadharCard: null,
     panCard: null,
     cancelledCheque: null,
-    pdcCheque: null
+    pdcCheque: null,
   });
   const [previews, setPreviews] = useState({
     aadharCard: null,
     panCard: null,
     cancelledCheque: null,
-    pdcCheque: null
+    pdcCheque: null,
   });
   const [fullScreenImage, setFullScreenImage] = useState(null);
 
@@ -159,13 +159,13 @@ export default function DoctorManageAdmission() {
     try {
       const response = await fetch(
         `${BASE_URL}/V1/doctor/manage-admission/search?query=${encodeURIComponent(
-          query
+          query,
         )}&location=${currentLocation}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
 
       if (response.ok) {
@@ -197,7 +197,9 @@ export default function DoctorManageAdmission() {
 
           setPatients((prev) => {
             const existingIds = new Set(prev.map((p) => String(p.uhid)));
-            const uniqueNew = formattedNew.filter((p) => !existingIds.has(String(p.uhid)));
+            const uniqueNew = formattedNew.filter(
+              (p) => !existingIds.has(String(p.uhid)),
+            );
             return [...prev, ...uniqueNew];
           });
         }
@@ -219,7 +221,8 @@ export default function DoctorManageAdmission() {
         (p.uhid && p.uhid.toLowerCase().includes(lowerSearch)) ||
         (p.name && p.name.toLowerCase().includes(lowerSearch)) ||
         (p.contact && p.contact.includes(searchValue)) ||
-        (p.admissionNo && String(p.admissionNo).toLowerCase().includes(lowerSearch))
+        (p.admissionNo &&
+          String(p.admissionNo).toLowerCase().includes(lowerSearch))
       );
     });
 
@@ -253,7 +256,9 @@ export default function DoctorManageAdmission() {
   const handleRescheduleClick = (patient) => {
     setReschedulePatient(patient);
     // Initialize with current date if available, otherwise null
-    setRescheduleDate(patient.surgeryDate !== "Not Scheduled" ? patient.surgeryDate : null);
+    setRescheduleDate(
+      patient.surgeryDate !== "Not Scheduled" ? patient.surgeryDate : null,
+    );
     setShowRescheduleModal(true);
   };
 
@@ -355,7 +360,11 @@ export default function DoctorManageAdmission() {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${localStorage.getItem("token")}`,
               },
-              body: JSON.stringify({ contact, uhid, location: currentLocation }),
+              body: JSON.stringify({
+                contact,
+                uhid,
+                location: currentLocation,
+              }),
             },
           );
 
@@ -392,7 +401,7 @@ export default function DoctorManageAdmission() {
       aadharCard: null,
       panCard: null,
       cancelledCheque: null,
-      pdcCheque: null
+      pdcCheque: null,
     });
     setPreviews(buildDocPreviewMap(patient));
   };
@@ -400,15 +409,15 @@ export default function DoctorManageAdmission() {
   const handleFileChange = (e, docType) => {
     const file = e.target.files[0];
     if (file) {
-      setDocuments(prev => ({
+      setDocuments((prev) => ({
         ...prev,
-        [docType]: file
+        [docType]: file,
       }));
       // Generate preview
       const previewUrl = URL.createObjectURL(file);
-      setPreviews(prev => ({
+      setPreviews((prev) => ({
         ...prev,
-        [docType]: previewUrl
+        [docType]: previewUrl,
       }));
     }
   };
@@ -422,16 +431,27 @@ export default function DoctorManageAdmission() {
     }
 
     const requiredDocs = ["aadharCard", "panCard", "cancelledCheque"];
-    const hasExistingDocs = requiredDocs.some((docType) => Boolean(previews[docType]));
-    const hasNewFiles = requiredDocs.some((docType) => Boolean(documents[docType]));
+    const hasExistingDocs = requiredDocs.some((docType) =>
+      Boolean(previews[docType]),
+    );
+    const hasNewFiles = requiredDocs.some((docType) =>
+      Boolean(documents[docType]),
+    );
 
     if (!hasExistingDocs && !hasNewFiles) {
-      Swal.fire("Required", "Please upload Aadhar, PAN, and Cancelled Cheque documents.", "warning");
+      Swal.fire(
+        "Required",
+        "Please upload Aadhar, PAN, and Cancelled Cheque documents.",
+        "warning",
+      );
       return;
     }
 
     try {
-      Swal.fire({ title: "Saving documents...", didOpen: () => Swal.showLoading() });
+      Swal.fire({
+        title: "Saving documents...",
+        didOpen: () => Swal.showLoading(),
+      });
 
       const formData = new FormData();
       formData.append("location", currentLocation);
@@ -475,7 +495,8 @@ export default function DoctorManageAdmission() {
                 ...patient,
                 aadharcard: savedDocuments.aadharcard || patient.aadharcard,
                 pancard: savedDocuments.pancard || patient.pancard,
-                cancelled_cheque: savedDocuments.cancelled_cheque || patient.cancelled_cheque,
+                cancelled_cheque:
+                  savedDocuments.cancelled_cheque || patient.cancelled_cheque,
                 pdc_cheque: savedDocuments.pdc_cheque || patient.pdc_cheque,
               }
             : patient,
@@ -488,18 +509,22 @@ export default function DoctorManageAdmission() {
               ...prev,
               aadharcard: savedDocuments.aadharcard || prev.aadharcard,
               pancard: savedDocuments.pancard || prev.pancard,
-              cancelled_cheque: savedDocuments.cancelled_cheque || prev.cancelled_cheque,
+              cancelled_cheque:
+                savedDocuments.cancelled_cheque || prev.cancelled_cheque,
               pdc_cheque: savedDocuments.pdc_cheque || prev.pdc_cheque,
             }
           : prev,
       );
-      setPreviews(buildDocPreviewMap({
-        ...docPatient,
-        aadharcard: savedDocuments.aadharcard || docPatient.aadharcard,
-        pancard: savedDocuments.pancard || docPatient.pancard,
-        cancelled_cheque: savedDocuments.cancelled_cheque || docPatient.cancelled_cheque,
-        pdc_cheque: savedDocuments.pdc_cheque || docPatient.pdc_cheque,
-      }));
+      setPreviews(
+        buildDocPreviewMap({
+          ...docPatient,
+          aadharcard: savedDocuments.aadharcard || docPatient.aadharcard,
+          pancard: savedDocuments.pancard || docPatient.pancard,
+          cancelled_cheque:
+            savedDocuments.cancelled_cheque || docPatient.cancelled_cheque,
+          pdc_cheque: savedDocuments.pdc_cheque || docPatient.pdc_cheque,
+        }),
+      );
 
       Swal.fire("Saved!", "Documents were saved successfully.", "success");
       setShowDocModal(false);
@@ -582,7 +607,7 @@ export default function DoctorManageAdmission() {
             >
               Search
             </span>
-            <InputGroup style={{ position: 'relative' }}>
+            <InputGroup style={{ position: "relative" }}>
               <Form.Control
                 type="search"
                 value={searchTerm}
@@ -612,15 +637,22 @@ export default function DoctorManageAdmission() {
                 }}
               />
               {isDbSearching && (
-                <div style={{
-                  position: 'absolute',
-                  right: '10px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  zIndex: 5,
-                  pointerEvents: 'none'
-                }}>
-                  <Spinner animation="border" size="sm" variant="info" style={{ width: '12px', height: '12px' }} />
+                <div
+                  style={{
+                    position: "absolute",
+                    right: "10px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    zIndex: 5,
+                    pointerEvents: "none",
+                  }}
+                >
+                  <Spinner
+                    animation="border"
+                    size="sm"
+                    variant="info"
+                    style={{ width: "12px", height: "12px" }}
+                  />
                 </div>
               )}
             </InputGroup>
@@ -743,9 +775,20 @@ export default function DoctorManageAdmission() {
   const header = renderHeader();
 
   const formatDisplayDateTime = (dateTimeStr) => {
-    if (!dateTimeStr || dateTimeStr === "Not Scheduled" || dateTimeStr === "NOT ADMITTED") return dateTimeStr;
+    if (
+      !dateTimeStr ||
+      dateTimeStr === "Not Scheduled" ||
+      dateTimeStr === "NOT ADMITTED"
+    )
+      return dateTimeStr;
     try {
-      const parsed = moment(dateTimeStr, ["DD-MM-YYYY HH:mm", "DD-MM-YYYY hh:mm A", "YYYY-MM-DD HH:mm", "YYYY-MM-DD hh:mm A", "YYYY-MM-DDTHH:mm:ss.SSSZ"]);
+      const parsed = moment(dateTimeStr, [
+        "DD-MM-YYYY HH:mm",
+        "DD-MM-YYYY hh:mm A",
+        "YYYY-MM-DD HH:mm",
+        "YYYY-MM-DD hh:mm A",
+        "YYYY-MM-DDTHH:mm:ss.SSSZ",
+      ]);
       if (parsed.isValid()) {
         return parsed.format("DD-MM-YYYY HH:mm");
       }
@@ -798,12 +841,11 @@ export default function DoctorManageAdmission() {
               style={{
                 borderRadius: "6px",
                 padding: "5px 8px",
-                color: "white"
+                color: "white",
               }}
             >
               <FeatherIcon icon="file-text" size={16} />
             </Button>
-
           </>
         )}
       </div>
@@ -865,7 +907,6 @@ export default function DoctorManageAdmission() {
                       className="datatable-compact-style datatable-medium-small"
                       style={{ padding: "5px" }}
                     >
-                      
                       <Column
                         field="verifiedDate"
                         header="Admission Date & Time"
@@ -973,7 +1014,9 @@ export default function DoctorManageAdmission() {
                       <Column
                         header="Age/Gender"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => `${rowData.age} yrs / ${rowData.gender}`}
+                        body={(rowData) =>
+                          `${rowData.age} yrs / ${rowData.gender}`
+                        }
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -1064,8 +1107,15 @@ export default function DoctorManageAdmission() {
             </Form.Group>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowRescheduleModal(false)}>Cancel</Button>
-            <Button variant="primary" type="submit">Reschedule</Button>
+            <Button
+              variant="secondary"
+              onClick={() => setShowRescheduleModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button variant="primary" type="submit">
+              Reschedule
+            </Button>
           </Modal.Footer>
         </Form>
       </Modal>
@@ -1095,8 +1145,12 @@ export default function DoctorManageAdmission() {
             </Form.Group>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="primary" onClick={() => setShowCancelModal(false)}>Back</Button>
-            <Button variant="danger" type="submit">Cancel Admission</Button>
+            <Button variant="primary" onClick={() => setShowCancelModal(false)}>
+              Back
+            </Button>
+            <Button variant="danger" type="submit">
+              Cancel Admission
+            </Button>
           </Modal.Footer>
         </Form>
       </Modal>
@@ -1127,7 +1181,14 @@ export default function DoctorManageAdmission() {
           <Modal.Body style={{ fontSize: "13px", padding: "10px" }}>
             {Object.values(previews).some(Boolean) && (
               <div className="mb-3">
-                <div style={{ fontSize: "12px", fontWeight: "700", color: "#00838f", marginBottom: "8px" }}>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: "700",
+                    color: "#00838f",
+                    marginBottom: "8px",
+                  }}
+                >
                   Saved Documents
                 </div>
                 <Row>
@@ -1154,10 +1215,21 @@ export default function DoctorManageAdmission() {
                           <img
                             src={previews[doc.key]}
                             alt={`${doc.label} Preview`}
-                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              objectFit: "cover",
+                            }}
                           />
                         </div>
-                        <div style={{ fontSize: "10px", textAlign: "center", marginTop: "4px", color: "#006064" }}>
+                        <div
+                          style={{
+                            fontSize: "10px",
+                            textAlign: "center",
+                            marginTop: "4px",
+                            color: "#006064",
+                          }}
+                        >
                           {doc.label}
                         </div>
                       </Col>
@@ -1176,7 +1248,11 @@ export default function DoctorManageAdmission() {
                       marginBottom: "4px",
                     }}
                   >
-                    <FeatherIcon icon="credit-card" size={14} className="me-1" />
+                    <FeatherIcon
+                      icon="credit-card"
+                      size={14}
+                      className="me-1"
+                    />
                     Aadharcard <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
@@ -1199,14 +1275,28 @@ export default function DoctorManageAdmission() {
                           overflow: "hidden",
                           cursor: "pointer",
                           width: "60px",
-                          height: "45px"
+                          height: "45px",
                         }}
                         onClick={() => setFullScreenImage(previews.aadharCard)}
                         title="Click to view full image"
                       >
-                        <img src={previews.aadharCard} alt="Aadhar Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <img
+                          src={previews.aadharCard}
+                          alt="Aadhar Preview"
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
+                        />
                       </div>
-                      <span style={{ fontSize: "10px", color: "red", marginTop: "10px" }}>
+                      <span
+                        style={{
+                          fontSize: "10px",
+                          color: "red",
+                          marginTop: "10px",
+                        }}
+                      >
                         click to preview the image
                       </span>
                     </div>
@@ -1222,7 +1312,11 @@ export default function DoctorManageAdmission() {
                       marginBottom: "4px",
                     }}
                   >
-                    <FeatherIcon icon="credit-card" size={14} className="me-1" />
+                    <FeatherIcon
+                      icon="credit-card"
+                      size={14}
+                      className="me-1"
+                    />
                     Pan Card <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
@@ -1245,14 +1339,28 @@ export default function DoctorManageAdmission() {
                           overflow: "hidden",
                           cursor: "pointer",
                           width: "60px",
-                          height: "45px"
+                          height: "45px",
                         }}
                         onClick={() => setFullScreenImage(previews.panCard)}
                         title="Click to view full image"
                       >
-                        <img src={previews.panCard} alt="PAN Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <img
+                          src={previews.panCard}
+                          alt="PAN Preview"
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
+                        />
                       </div>
-                      <span style={{ fontSize: "10px", color: "red", marginTop: "10px" }}>
+                      <span
+                        style={{
+                          fontSize: "10px",
+                          color: "red",
+                          marginTop: "10px",
+                        }}
+                      >
                         click to preview the image
                       </span>
                     </div>
@@ -1291,14 +1399,30 @@ export default function DoctorManageAdmission() {
                           overflow: "hidden",
                           cursor: "pointer",
                           width: "60px",
-                          height: "45px"
+                          height: "45px",
                         }}
-                        onClick={() => setFullScreenImage(previews.cancelledCheque)}
+                        onClick={() =>
+                          setFullScreenImage(previews.cancelledCheque)
+                        }
                         title="Click to view full image"
                       >
-                        <img src={previews.cancelledCheque} alt="Cheque Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <img
+                          src={previews.cancelledCheque}
+                          alt="Cheque Preview"
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
+                        />
                       </div>
-                      <span style={{ fontSize: "10px", color: "red", marginTop: "10px" }}>
+                      <span
+                        style={{
+                          fontSize: "10px",
+                          color: "red",
+                          marginTop: "10px",
+                        }}
+                      >
                         click to preview the image
                       </span>
                     </div>
@@ -1337,14 +1461,28 @@ export default function DoctorManageAdmission() {
                           overflow: "hidden",
                           cursor: "pointer",
                           width: "60px",
-                          height: "45px"
+                          height: "45px",
                         }}
                         onClick={() => setFullScreenImage(previews.pdcCheque)}
                         title="Click to view full image"
                       >
-                        <img src={previews.pdcCheque} alt="PDC Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <img
+                          src={previews.pdcCheque}
+                          alt="PDC Preview"
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
+                        />
                       </div>
-                      <span style={{ fontSize: "10px", color: "red", marginTop: "10px" }}>
+                      <span
+                        style={{
+                          fontSize: "10px",
+                          color: "red",
+                          marginTop: "10px",
+                        }}
+                      >
                         click to preview the image
                       </span>
                     </div>
@@ -1394,15 +1532,30 @@ export default function DoctorManageAdmission() {
         centered
         size="lg"
       >
-        <Modal.Header closeButton style={{ border: "none", backgroundColor: "#f8f9fa" }}>
-          <Modal.Title style={{ fontSize: "14px", fontWeight: "bold", color: "#333" }}>Document Preview</Modal.Title>
+        <Modal.Header
+          closeButton
+          style={{ border: "none", backgroundColor: "#f8f9fa" }}
+        >
+          <Modal.Title
+            style={{ fontSize: "14px", fontWeight: "bold", color: "#333" }}
+          >
+            Document Preview
+          </Modal.Title>
         </Modal.Header>
-        <Modal.Body className="text-center p-3" style={{ backgroundColor: "#fff" }}>
+        <Modal.Body
+          className="text-center p-3"
+          style={{ backgroundColor: "#fff" }}
+        >
           {fullScreenImage && (
             <img
               src={fullScreenImage}
               alt="Full Preview"
-              style={{ maxWidth: "100%", maxHeight: "80vh", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
+              style={{
+                maxWidth: "100%",
+                maxHeight: "80vh",
+                borderRadius: "8px",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+              }}
             />
           )}
         </Modal.Body>

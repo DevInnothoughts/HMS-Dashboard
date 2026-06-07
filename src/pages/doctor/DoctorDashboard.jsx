@@ -83,10 +83,10 @@ export default function DoctorDashboard() {
   const calendarRef = React.useRef(null);
 
   const togglePatientTypeFilter = (type) => {
-    setActivePatientTypeFilter(prev => prev === type ? null : type);
+    setActivePatientTypeFilter((prev) => (prev === type ? null : type));
   };
 
-  const filteredAppointments = appointments.filter(a => {
+  const filteredAppointments = appointments.filter((a) => {
     if (!activePatientTypeFilter) return true;
     return a.patientType === activePatientTypeFilter;
   });
@@ -94,10 +94,11 @@ export default function DoctorDashboard() {
     const handleSelectEvent = (e) => {
       const { appointmentId } = e.detail;
       // Match regular appointment OR ipd-prefixed format
-      const appt = appointments.find(a =>
-        a.appointmentid === appointmentId ||
-        a.appointmentid === parseInt(appointmentId) ||
-        a.appointmentid === `ipd-${appointmentId}`
+      const appt = appointments.find(
+        (a) =>
+          a.appointmentid === appointmentId ||
+          a.appointmentid === parseInt(appointmentId) ||
+          a.appointmentid === `ipd-${appointmentId}`,
       );
       if (appt) {
         setSelectedEvent(appt);
@@ -110,10 +111,11 @@ export default function DoctorDashboard() {
     // Also check localStorage on mount/refresh
     const autoSelectId = localStorage.getItem("autoSelectAppointmentId");
     if (autoSelectId && appointments.length > 0) {
-      const appt = appointments.find(a =>
-        a.appointmentid === parseInt(autoSelectId) ||
-        a.appointmentid === autoSelectId ||
-        a.appointmentid === `ipd-${autoSelectId}`
+      const appt = appointments.find(
+        (a) =>
+          a.appointmentid === parseInt(autoSelectId) ||
+          a.appointmentid === autoSelectId ||
+          a.appointmentid === `ipd-${autoSelectId}`,
       );
       if (appt) {
         setSelectedEvent(appt);
@@ -122,9 +124,9 @@ export default function DoctorDashboard() {
       }
     }
 
-    return () => window.removeEventListener("selectAppointment", handleSelectEvent);
+    return () =>
+      window.removeEventListener("selectAppointment", handleSelectEvent);
   }, [appointments]);
-
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -176,7 +178,9 @@ export default function DoctorDashboard() {
         standardizedType = "POSTOPERATIVE";
       // ------------------------------
 
-      const appointmentTime24 = startTime.isValid() ? startTime.format("HH:mm") : app.appointment_time;
+      const appointmentTime24 = startTime.isValid()
+        ? startTime.format("HH:mm")
+        : app.appointment_time;
 
       return {
         title: `${appointmentTime24 || "N/A"} — ${app.patient_name || "Patient"}`,
@@ -212,20 +216,32 @@ export default function DoctorDashboard() {
       let start = new Date(ipd.created_at);
 
       if (ipd.admission_datetime) {
-        const parsed = moment(ipd.admission_datetime, ["DD-MM-YYYY HH:mm", "DD-MM-YYYY hh:mm A", "YYYY-MM-DD HH:mm", "YYYY-MM-DD hh:mm A", "YYYY-MM-DDTHH:mm:ss.SSSZ"]);
+        const parsed = moment(ipd.admission_datetime, [
+          "DD-MM-YYYY HH:mm",
+          "DD-MM-YYYY hh:mm A",
+          "YYYY-MM-DD HH:mm",
+          "YYYY-MM-DD hh:mm A",
+          "YYYY-MM-DDTHH:mm:ss.SSSZ",
+        ]);
         if (parsed.isValid()) {
           start = parsed.toDate();
           dateString = parsed.format("DD-MM-YYYY");
           admissionTime = parsed.format("HH:mm");
         } else {
-          const parts = ipd.admission_datetime.split(' ');
+          const parts = ipd.admission_datetime.split(" ");
           admissionTime = parts[1] || "00:00";
         }
       }
 
       let formattedSurgery = "Not Scheduled";
       if (ipd.surgery_datetime && ipd.surgery_datetime !== "Not Scheduled") {
-        const parsedSx = moment(ipd.surgery_datetime, ["DD-MM-YYYY HH:mm", "DD-MM-YYYY hh:mm A", "YYYY-MM-DD HH:mm", "YYYY-MM-DD hh:mm A", "YYYY-MM-DDTHH:mm:ss.SSSZ"]);
+        const parsedSx = moment(ipd.surgery_datetime, [
+          "DD-MM-YYYY HH:mm",
+          "DD-MM-YYYY hh:mm A",
+          "YYYY-MM-DD HH:mm",
+          "YYYY-MM-DD hh:mm A",
+          "YYYY-MM-DDTHH:mm:ss.SSSZ",
+        ]);
         if (parsedSx.isValid()) {
           formattedSurgery = parsedSx.format("DD-MM-YYYY HH:mm");
         } else {
@@ -245,19 +261,24 @@ export default function DoctorDashboard() {
         patientName: ipd.name,
         doctorName: ipd.surgeon_name || "N/A",
         patientType: "IPD",
-        status: ipd.admission_no && ipd.admission_no !== "0" ? "Admitted" : "Booked",
+        status:
+          ipd.admission_no && ipd.admission_no !== "0" ? "Admitted" : "Booked",
         note: `Room Details: Room ${ipd.room_no || "N/A"} (${ipd.room_type || "N/A"})\nSurgery Plan: ${ipd.sx_plan || "No surgery plan filled"}`,
-        confirmTime: ipd.admission_no && ipd.admission_no !== "0" ? ipd.created_at : "0",
+        confirmTime:
+          ipd.admission_no && ipd.admission_no !== "0" ? ipd.created_at : "0",
         patientid: ipd.patient_id,
         appointmentid: `ipd-${ipd.id}`,
-        isConfirmed: ipd.admission_no && ipd.admission_no !== "0" && ipd.admission_no !== 0,
+        isConfirmed:
+          ipd.admission_no &&
+          ipd.admission_no !== "0" &&
+          ipd.admission_no !== 0,
         isIpd: true,
         uid: ipd.uid,
         admissionNo: ipd.admission_no,
         surgeryDatetime: formattedSurgery,
         sxPlan: ipd.sx_plan,
         roomNo: ipd.room_no,
-        roomType: ipd.room_type
+        roomType: ipd.room_type,
       };
     });
   }, []);
@@ -325,8 +346,8 @@ export default function DoctorDashboard() {
             {
               headers: {
                 Authorization: `Bearer ${localStorage.getItem("token")}`,
-              }
-            }
+              },
+            },
           );
           if (ipdResponse.ok) {
             const ipdData = await ipdResponse.json();
@@ -334,7 +355,7 @@ export default function DoctorDashboard() {
               let filteredIpd = ipdData;
               if (doctorId) {
                 filteredIpd = ipdData.filter(
-                  (ipd) => String(ipd.doctor_id) === String(doctorId)
+                  (ipd) => String(ipd.doctor_id) === String(doctorId),
                 );
               }
               ipdEvents = formatIpdAppointments(filteredIpd);
@@ -377,19 +398,17 @@ export default function DoctorDashboard() {
     setSelectedDate(moment(e.target.value, "YYYY-MM-DD").toDate());
   const handleDoctorChange = (e) => setSelectedDoctorId(e.target.value);
 
-
   const handleEventClick = (event) => {
     setSelectedEvent(event);
   };
 
-
   const eventStyleGetter = useCallback((event) => {
     const colorMap = {
-      NEW: "#0284c7",          // Premium Sky Blue
-      FOLLOW: "#10b981",       // Clinical Emerald Green
+      NEW: "#0284c7", // Premium Sky Blue
+      FOLLOW: "#10b981", // Clinical Emerald Green
       POSTOPERATIVE: "#8b5cf6", // Soft Violet
-      OTHER: "#f59e0b",        // Warm Amber
-      IPD: "#d946ef",          // Vibrant Fuchsia
+      OTHER: "#f59e0b", // Warm Amber
+      IPD: "#d946ef", // Vibrant Fuchsia
     };
 
     return {
@@ -450,10 +469,14 @@ export default function DoctorDashboard() {
                 <FeatherIcon icon="clipboard" size={14} /> Admission No:
               </label>
               <span className="data-value fw-bold">
-                {selectedEvent.admissionNo && selectedEvent.admissionNo !== "0" && selectedEvent.admissionNo !== 0 ? (
+                {selectedEvent.admissionNo &&
+                selectedEvent.admissionNo !== "0" &&
+                selectedEvent.admissionNo !== 0 ? (
                   <span>{selectedEvent.admissionNo}</span>
                 ) : (
-                  <span style={{ fontStyle: "italic", color: "red" }}>Not generated yet</span>
+                  <span style={{ fontStyle: "italic", color: "red" }}>
+                    Not generated yet
+                  </span>
                 )}
               </span>
             </div>
@@ -480,7 +503,17 @@ export default function DoctorDashboard() {
               <span className="data-value">
                 <span
                   style={{
-                    backgroundColor: "#d946ef", color: 'white', fontSize: '11px', padding: '4px 12px', borderRadius: '50px', minWidth: '90px', display: 'inline-block', textAlign: 'center', fontWeight: '700', textTransform: 'uppercase', boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                    backgroundColor: "#d946ef",
+                    color: "white",
+                    fontSize: "11px",
+                    padding: "4px 12px",
+                    borderRadius: "50px",
+                    minWidth: "90px",
+                    display: "inline-block",
+                    textAlign: "center",
+                    fontWeight: "700",
+                    textTransform: "uppercase",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                   }}
                 >
                   IPD
@@ -516,12 +549,32 @@ export default function DoctorDashboard() {
           <div className="clinical-actions pt-5">
             <div
               className="d-flex align-items-center p-3 mb-2"
-              style={{ borderRadius: "8px", backgroundColor: "#fdf4ff", color: "#d946ef", border: "1px solid rgba(217, 70, 239, 0.2)" }}
+              style={{
+                borderRadius: "8px",
+                backgroundColor: "#fdf4ff",
+                color: "#d946ef",
+                border: "1px solid rgba(217, 70, 239, 0.2)",
+              }}
             >
-              <FeatherIcon icon={selectedEvent.isConfirmed ? "check-circle" : "clock"} size={20} className="me-2" />
+              <FeatherIcon
+                icon={selectedEvent.isConfirmed ? "check-circle" : "clock"}
+                size={20}
+                className="me-2"
+              />
               <div className="d-flex align-items-center py-4 justify-content-between flex-grow-1">
-                <strong>{selectedEvent.isConfirmed ? "Admission Confirmed" : "Admission Pending"}</strong>
-                <div style={{ fontSize: "13px", opacity: 1.0, marginLeft: "10px", textAlign: "right" }}>
+                <strong>
+                  {selectedEvent.isConfirmed
+                    ? "Admission Confirmed"
+                    : "Admission Pending"}
+                </strong>
+                <div
+                  style={{
+                    fontSize: "13px",
+                    opacity: 1.0,
+                    marginLeft: "10px",
+                    textAlign: "right",
+                  }}
+                >
                   Status: {selectedEvent.status}
                 </div>
               </div>
@@ -541,7 +594,7 @@ export default function DoctorDashboard() {
                 fontSize: "13px",
                 padding: "8px",
                 transition: "all 0.2s ease-in-out",
-                width: "100%"
+                width: "100%",
               }}
               onMouseOver={(e) => {
                 e.currentTarget.style.backgroundColor = "#d946ef";
@@ -570,10 +623,15 @@ export default function DoctorDashboard() {
 
     const getDetailedStatus = () => {
       if (!isConfirmed) return null;
-      const isExistingPatient = ["FOLLOW", "POSTOPERATIVE", "OTHER"].includes(selectedEvent.patientType?.toUpperCase());
-      const hasHistory = Number(selectedEvent.historychk) === 3 || isExistingPatient;
-      const hasExecution = Number(selectedEvent.executivechk) === 1 || isExistingPatient;
-      const hasConsultation = Number(selectedEvent.consultationchk) === 4 || isExistingPatient;
+      const isExistingPatient = ["FOLLOW", "POSTOPERATIVE", "OTHER"].includes(
+        selectedEvent.patientType?.toUpperCase(),
+      );
+      const hasHistory =
+        Number(selectedEvent.historychk) === 3 || isExistingPatient;
+      const hasExecution =
+        Number(selectedEvent.executivechk) === 1 || isExistingPatient;
+      const hasConsultation =
+        Number(selectedEvent.consultationchk) === 4 || isExistingPatient;
       const hasReceipt = Number(selectedEvent.executivechk) === 2;
 
       if (hasReceipt) {
@@ -583,7 +641,7 @@ export default function DoctorDashboard() {
           color: "#10b981",
           bg: "#ecfdf5",
           time: selectedEvent.receiptTime || selectedEvent.confirmTime,
-          label: "Completed at:"
+          label: "Completed at:",
         };
       }
       if (hasConsultation) {
@@ -593,7 +651,7 @@ export default function DoctorDashboard() {
           color: "#8e44ad",
           bg: "#8e44ad15",
           time: selectedEvent.consultationTime || selectedEvent.confirmTime,
-          label: "Completed at:"
+          label: "Completed at:",
         };
       }
       if (hasExecution) {
@@ -603,7 +661,7 @@ export default function DoctorDashboard() {
           color: "#e67e22",
           bg: "#e67e2215",
           time: selectedEvent.executionTime || selectedEvent.confirmTime,
-          label: "Completed at:"
+          label: "Completed at:",
         };
       }
       if (hasHistory) {
@@ -613,7 +671,7 @@ export default function DoctorDashboard() {
           color: "#cd5c5c",
           bg: "#cd5c5c15",
           time: selectedEvent.historyTime || selectedEvent.confirmTime,
-          label: "Completed at:"
+          label: "Completed at:",
         };
       }
       return {
@@ -622,7 +680,7 @@ export default function DoctorDashboard() {
         color: "#0ea5e9",
         bg: "#f0f9ff",
         time: selectedEvent.confirmTime,
-        label: "Checked in at:"
+        label: "Checked in at:",
       };
     };
 
@@ -668,7 +726,17 @@ export default function DoctorDashboard() {
               <span
                 pill
                 style={{
-                  backgroundColor: typeColor, color: 'white', fontSize: '11px', padding: '4px 12px', borderRadius: '50px', minWidth: '90px', display: 'inline-block', textAlign: 'center', fontWeight: '700', textTransform: 'uppercase', boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                  backgroundColor: typeColor,
+                  color: "white",
+                  fontSize: "11px",
+                  padding: "4px 12px",
+                  borderRadius: "50px",
+                  minWidth: "90px",
+                  display: "inline-block",
+                  textAlign: "center",
+                  fontWeight: "700",
+                  textTransform: "uppercase",
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                   fontSize: "11px",
                   padding: "5px 5px",
                 }}
@@ -708,12 +776,28 @@ export default function DoctorDashboard() {
             <>
               <div
                 className="d-flex align-items-center p-3 mb-2"
-                style={{ borderRadius: "8px", backgroundColor: detailedStatus.bg, color: detailedStatus.color, border: `1px solid ${detailedStatus.color}40` }}
+                style={{
+                  borderRadius: "8px",
+                  backgroundColor: detailedStatus.bg,
+                  color: detailedStatus.color,
+                  border: `1px solid ${detailedStatus.color}40`,
+                }}
               >
-                <FeatherIcon icon={detailedStatus.icon} size={20} className="me-2" />
+                <FeatherIcon
+                  icon={detailedStatus.icon}
+                  size={20}
+                  className="me-2"
+                />
                 <div className="d-flex align-items-center py-4 justify-content-between flex-grow-1">
                   <strong>{detailedStatus.text}</strong>
-                  <div style={{ fontSize: "13px", opacity: 1.0, marginLeft: "10px", textAlign: "right" }}>
+                  <div
+                    style={{
+                      fontSize: "13px",
+                      opacity: 1.0,
+                      marginLeft: "10px",
+                      textAlign: "right",
+                    }}
+                  >
                     {detailedStatus.label} {detailedStatus.time}
                   </div>
                 </div>
@@ -730,9 +814,9 @@ export default function DoctorDashboard() {
                         phone: selectedEvent.phone,
                         contact: selectedEvent.phone,
                         age: selectedEvent.age,
-                        sex: selectedEvent.gender
-                      }
-                    }
+                        sex: selectedEvent.gender,
+                      },
+                    },
                   });
                 }}
                 style={{
@@ -744,7 +828,7 @@ export default function DoctorDashboard() {
                   fontSize: "13px",
                   padding: "8px",
                   transition: "all 0.2s ease-in-out",
-                  width: "100%"
+                  width: "100%",
                 }}
                 onMouseOver={(e) => {
                   e.currentTarget.style.backgroundColor = detailedStatus.color;
@@ -783,12 +867,15 @@ export default function DoctorDashboard() {
           minWidth: "fit-content",
           "--status-hover-color": bgColor,
           "--status-hover-bg": `${bgColor}15`,
-          ...(isSelected ? {
-            borderColor: bgColor,
-            backgroundColor: `${bgColor}25`,
-            transform: "translateY(-1.5px)",
-            boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)"
-          } : {})
+          ...(isSelected
+            ? {
+                borderColor: bgColor,
+                backgroundColor: `${bgColor}25`,
+                transform: "translateY(-1.5px)",
+                boxShadow:
+                  "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
+              }
+            : {}),
         }}
       >
         <div
@@ -797,11 +884,30 @@ export default function DoctorDashboard() {
             width: "11px",
             height: "11px",
             backgroundColor: bgColor,
-            ...(isSelected ? { transform: "scale(1.25)", boxShadow: `0 0 8px ${bgColor}` } : {})
+            ...(isSelected
+              ? { transform: "scale(1.25)", boxShadow: `0 0 8px ${bgColor}` }
+              : {}),
           }}
         ></div>
-        <p style={{ color: "#1e293b", fontWeight: isSelected ? "700" : "600", margin: 0, fontSize: "11px", display: "flex", alignItems: "center", gap: "3px", whiteSpace: "nowrap" }}>
-          {name} <span className="cnt" style={{ fontSize: "11px", color: "#2a3748ff" }}>({count || 0})</span>
+        <p
+          style={{
+            color: "#1e293b",
+            fontWeight: isSelected ? "700" : "600",
+            margin: 0,
+            fontSize: "11px",
+            display: "flex",
+            alignItems: "center",
+            gap: "3px",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {name}{" "}
+          <span
+            className="cnt"
+            style={{ fontSize: "11px", color: "#2a3748ff" }}
+          >
+            ({count || 0})
+          </span>
         </p>
       </div>
     );
@@ -1090,12 +1196,40 @@ margin-left: 1px;
                     )}
                   </h4>
                 </div>
-                <div className="d-flex align-items-center flex-nowrap" style={{ gap: '6px', position: 'relative', zIndex: 2 }}>
-                  <ColorLegend name="New Patient" type="NEW" count={counts.NEW} bgColor="#0284c7" />
-                  <ColorLegend name="Follow Patient" type="FOLLOW" count={counts.FOLLOW} bgColor="#10b981" />
-                  <ColorLegend name="Postoperative Patient" type="POSTOPERATIVE" count={counts.POSTOPERATIVE} bgColor="#8b5cf6" />
-                  <ColorLegend name="Other Patient" type="OTHER" count={counts.OTHER} bgColor="#f59e0b" />
-                  <ColorLegend name="IPD Patient" type="IPD" count={counts.IPD} bgColor="#d946ef" />
+                <div
+                  className="d-flex align-items-center flex-nowrap"
+                  style={{ gap: "6px", position: "relative", zIndex: 2 }}
+                >
+                  <ColorLegend
+                    name="New Patient"
+                    type="NEW"
+                    count={counts.NEW}
+                    bgColor="#0284c7"
+                  />
+                  <ColorLegend
+                    name="Follow Patient"
+                    type="FOLLOW"
+                    count={counts.FOLLOW}
+                    bgColor="#10b981"
+                  />
+                  <ColorLegend
+                    name="Postoperative Patient"
+                    type="POSTOPERATIVE"
+                    count={counts.POSTOPERATIVE}
+                    bgColor="#8b5cf6"
+                  />
+                  <ColorLegend
+                    name="Other Patient"
+                    type="OTHER"
+                    count={counts.OTHER}
+                    bgColor="#f59e0b"
+                  />
+                  <ColorLegend
+                    name="IPD Patient"
+                    type="IPD"
+                    count={counts.IPD}
+                    bgColor="#d946ef"
+                  />
                 </div>
               </Col>
               <Col lg={5}>
@@ -1143,7 +1277,6 @@ margin-left: 1px;
                     </Form.Select>
                   </div>
 
-
                   <Button
                     variant="secondary"
                     onClick={() => {
@@ -1162,9 +1295,9 @@ margin-left: 1px;
                       alignItems: "center",
                       fontSize: "12px",
                       padding: 0,
-                      borderRadius: '10px',
-                      alignSelf: 'flex-end',
-                      marginBottom: '3px'
+                      borderRadius: "10px",
+                      alignSelf: "flex-end",
+                      marginBottom: "3px",
                     }}
                   >
                     <FeatherIcon icon="filter" size={10} className="me-1" />
@@ -1184,25 +1317,38 @@ margin-left: 1px;
                 <Card.Header
                   className="bg-white py-2 px-3 d-flex justify-content-between align-items-center"
                   style={{
-                    borderTopLeftRadius: '10px',
-                    borderTopRightRadius: '10px',
-                    border: '2px solid rgb(77, 208, 225)',
-                    borderBottom: '1px solid #f1f5f9'
+                    borderTopLeftRadius: "10px",
+                    borderTopRightRadius: "10px",
+                    border: "2px solid rgb(77, 208, 225)",
+                    borderBottom: "1px solid #f1f5f9",
                   }}
                 >
                   <div className="d-flex align-items-center">
-                    <FeatherIcon icon={viewMode === 'calendar' ? 'calendar' : 'list'} size={18} className="text-primary me-2" />
+                    <FeatherIcon
+                      icon={viewMode === "calendar" ? "calendar" : "list"}
+                      size={18}
+                      className="text-primary me-2"
+                    />
                     <h6 className="mb-0 fw-bold text-dark">
-                      {viewMode === 'calendar' ? 'Calendar View' : 'Day Schedule'}
+                      {viewMode === "calendar"
+                        ? "Calendar View"
+                        : "Day Schedule"}
                     </h6>
                   </div>
                   <div className="btn-group bg-light p-1 rounded-3">
                     <Button
                       variant={viewMode === "calendar" ? "primary" : "light"}
                       className={`view-toggle-btn py-1 px-3 ${viewMode === "calendar" ? "active shadow-sm" : ""}`}
-                      onClick={() => { setViewMode("calendar"); setCurrentView("month"); }}
+                      onClick={() => {
+                        setViewMode("calendar");
+                        setCurrentView("month");
+                      }}
                       size="sm"
-                      style={{ height: '28px', border: 'none', fontSize: '11px' }}
+                      style={{
+                        height: "28px",
+                        border: "none",
+                        fontSize: "11px",
+                      }}
                     >
                       Calendar
                     </Button>
@@ -1214,7 +1360,11 @@ margin-left: 1px;
                         setCurrentView("day");
                       }}
                       size="sm"
-                      style={{ height: '28px', border: 'none', fontSize: '11px' }}
+                      style={{
+                        height: "28px",
+                        border: "none",
+                        fontSize: "11px",
+                      }}
                     >
                       Day Schedule
                     </Button>
@@ -1224,7 +1374,7 @@ margin-left: 1px;
                   className="p-3"
                   style={{
                     border: "2px solid rgb(77, 208, 225)",
-                    borderTop: 'none',
+                    borderTop: "none",
                     borderBottomLeftRadius: "10px",
                     borderBottomRightRadius: "10px",
                   }}
@@ -1252,19 +1402,25 @@ margin-left: 1px;
                       maxEvents={3}
                     />
                   ) : (
-                    <div className="day-list-container" >
-                      <div className="mb-4" >
+                    <div className="day-list-container">
+                      <div className="mb-4">
                         <div className="d-flex justify-content-between align-items-center">
-                          <div className="search-box-day" style={{ position: 'relative', marginBottom: "5px" }}>
+                          <div
+                            className="search-box-day"
+                            style={{
+                              position: "relative",
+                              marginBottom: "5px",
+                            }}
+                          >
                             <FeatherIcon
                               icon="search"
                               size={14}
                               style={{
-                                position: 'absolute',
-                                left: '10px',
-                                top: '50%',
-                                transform: 'translateY(-50%)',
-                                color: '#94a3b8',
+                                position: "absolute",
+                                left: "10px",
+                                top: "50%",
+                                transform: "translateY(-50%)",
+                                color: "#94a3b8",
                               }}
                             />
                             <Form.Control
@@ -1273,100 +1429,167 @@ margin-left: 1px;
                               value={daySearchTerm}
                               onChange={(e) => setDaySearchTerm(e.target.value)}
                               style={{
-                                paddingLeft: '32px',
-                                height: '32px',
-                                fontSize: '12px',
-                                borderRadius: '8px',
-                                border: '1.5px solid #009bad', backgroundColor: '#fdfdfd',
-                                width: '220px',
+                                paddingLeft: "32px",
+                                height: "32px",
+                                fontSize: "12px",
+                                borderRadius: "8px",
+                                border: "1.5px solid #009bad",
+                                backgroundColor: "#fdfdfd",
+                                width: "220px",
                               }}
                             />
                           </div>
                           <Badge bg="info" className="p-6">
-                            {filteredAppointments.filter(a => moment(a.start).isSame(selectedDate, 'day')).length} Appointments
+                            {
+                              filteredAppointments.filter((a) =>
+                                moment(a.start).isSame(selectedDate, "day"),
+                              ).length
+                            }{" "}
+                            Appointments
                           </Badge>
                         </div>
                       </div>
 
                       <div className="appointment-list-scroll">
                         {filteredAppointments
-                          .filter(app => {
-                            const isSameDay = moment(app.start).isSame(selectedDate, 'day');
+                          .filter((app) => {
+                            const isSameDay = moment(app.start).isSame(
+                              selectedDate,
+                              "day",
+                            );
                             if (!isSameDay) return false;
 
                             const term = daySearchTerm.toLowerCase();
-                            const nameMatch = app.patientName?.toLowerCase().includes(term);
-                            const phoneMatch = app.phone?.toLowerCase().includes(term);
+                            const nameMatch = app.patientName
+                              ?.toLowerCase()
+                              .includes(term);
+                            const phoneMatch = app.phone
+                              ?.toLowerCase()
+                              .includes(term);
 
                             return nameMatch || phoneMatch;
                           })
                           .sort((a, b) => moment(a.start).diff(moment(b.start)))
                           .map((app, index) => {
-                            const typeColor = eventStyleGetter({ patientType: app.patientType }).style.backgroundColor;
-                            const isActive = selectedEvent?.appointmentid === app.appointmentid;
+                            const typeColor = eventStyleGetter({
+                              patientType: app.patientType,
+                            }).style.backgroundColor;
+                            const isActive =
+                              selectedEvent?.appointmentid ===
+                              app.appointmentid;
 
-                            const isAppConfirmed = app.confirmTime && app.confirmTime !== "0" && app.confirmTime !== 0;
+                            const isAppConfirmed =
+                              app.confirmTime &&
+                              app.confirmTime !== "0" &&
+                              app.confirmTime !== 0;
                             let listStatus = null;
                             if (isAppConfirmed) {
-                              const isExistingPatient = ["FOLLOW", "POSTOPERATIVE", "OTHER"].includes(app.patientType?.toUpperCase());
-                              const hasHistory = Number(app.historychk) === 3 || isExistingPatient;
-                              const hasExecution = Number(app.executivechk) === 1 || isExistingPatient;
-                              const hasConsultation = Number(app.consultationchk) === 4 || isExistingPatient;
+                              const isExistingPatient = [
+                                "FOLLOW",
+                                "POSTOPERATIVE",
+                                "OTHER",
+                              ].includes(app.patientType?.toUpperCase());
+                              const hasHistory =
+                                Number(app.historychk) === 3 ||
+                                isExistingPatient;
+                              const hasExecution =
+                                Number(app.executivechk) === 1 ||
+                                isExistingPatient;
+                              const hasConsultation =
+                                Number(app.consultationchk) === 4 ||
+                                isExistingPatient;
                               const hasReceipt = Number(app.executivechk) === 2;
 
                               if (hasReceipt) {
-                                listStatus = { text: "Receipt Generated", color: "#10b981", bg: "#ecfdf5" };
+                                listStatus = {
+                                  text: "Receipt Generated",
+                                  color: "#10b981",
+                                  bg: "#ecfdf5",
+                                };
                               } else if (hasConsultation) {
-                                listStatus = { text: "Prescription Checked", color: "#8e44ad", bg: "#8e44ad15" };
+                                listStatus = {
+                                  text: "Prescription Checked",
+                                  color: "#8e44ad",
+                                  bg: "#8e44ad15",
+                                };
                               } else if (hasExecution) {
-                                listStatus = { text: "Diagnosis Checked", color: "#e67e22", bg: "#e67e2215" };
+                                listStatus = {
+                                  text: "Diagnosis Checked",
+                                  color: "#e67e22",
+                                  bg: "#e67e2215",
+                                };
                               } else if (hasHistory) {
-                                listStatus = { text: "History Checked", color: "#cd5c5c", bg: "#cd5c5c15" };
+                                listStatus = {
+                                  text: "History Checked",
+                                  color: "#cd5c5c",
+                                  bg: "#cd5c5c15",
+                                };
                               } else {
-                                listStatus = { text: "Patient Arrived", color: "#0ea5e9", bg: "#f0f9ff" };
+                                listStatus = {
+                                  text: "Patient Arrived",
+                                  color: "#0ea5e9",
+                                  bg: "#f0f9ff",
+                                };
                               }
                             } else {
-                              listStatus = { text: "Pending", color: "#d97706", bg: "#fef3c7" };
+                              listStatus = {
+                                text: "Pending",
+                                color: "#d97706",
+                                bg: "#fef3c7",
+                              };
                             }
-
 
                             return (
                               <div
                                 key={app.appointmentid || index}
-                                className={`appointment-item ${isActive ? 'active' : ''}`}
+                                className={`appointment-item ${isActive ? "active" : ""}`}
                                 onClick={() => handleEventClick(app)}
-                                style={{ position: 'relative' }}
+                                style={{ position: "relative" }}
                               >
-                                <div className="time-slot">
-                                  {app.time}
-                                </div>
+                                <div className="time-slot">{app.time}</div>
                                 <div
                                   className="type-indicator mx-1"
-                                  style={{ width: '4px', height: '35px', backgroundColor: typeColor, borderRadius: '2px' }}
+                                  style={{
+                                    width: "4px",
+                                    height: "35px",
+                                    backgroundColor: typeColor,
+                                    borderRadius: "2px",
+                                  }}
                                 ></div>
                                 <div className="patient-info">
                                   <div className="patient-name-text">
                                     {app.patientName}
-
                                   </div>
                                   <div className="doctor-info-text">
-                                    <FeatherIcon icon="activity" size={12} className="me-1" />
+                                    <FeatherIcon
+                                      icon="activity"
+                                      size={12}
+                                      className="me-1"
+                                    />
                                     {app.doctorName}
                                   </div>
                                 </div>
-                                <div className="status-badge-container d-flex gap-2 align-items-center" style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', margin: 0 }}>
+                                <div
+                                  className="status-badge-container d-flex gap-2 align-items-center"
+                                  style={{
+                                    position: "absolute",
+                                    left: "50%",
+                                    transform: "translateX(-50%)",
+                                    margin: 0,
+                                  }}
+                                >
                                   <span
                                     style={{
                                       backgroundColor: typeColor,
-                                      color: 'white',
-                                      fontSize: '10px',
-                                      padding: '2px 8px',
-                                      borderRadius: '4px',
-                                      minWidth: '70px',
-                                      display: 'inline-block',
-                                      textAlign: 'center',
-                                      fontWeight: '700',
-                                      textTransform: 'uppercase'
+                                      color: "white",
+                                      fontSize: "10px",
+                                      padding: "2px 8px",
+                                      borderRadius: "4px",
+                                      minWidth: "70px",
+                                      display: "inline-block",
+                                      textAlign: "center",
+                                      fontWeight: "700",
+                                      textTransform: "uppercase",
                                     }}
                                   >
                                     {app.patientType}
@@ -1379,14 +1602,14 @@ margin-left: 1px;
                                         backgroundColor: listStatus.bg,
                                         color: listStatus.color,
                                         border: `1px solid ${listStatus.color}40`,
-                                        fontSize: '10px',
-                                        padding: '2px 8px',
-                                        borderRadius: '4px',
-                                        minWidth: '70px',
-                                        display: 'inline-block',
-                                        textAlign: 'center',
-                                        fontWeight: '700',
-                                        textTransform: 'uppercase'
+                                        fontSize: "10px",
+                                        padding: "2px 8px",
+                                        borderRadius: "4px",
+                                        minWidth: "70px",
+                                        display: "inline-block",
+                                        textAlign: "center",
+                                        fontWeight: "700",
+                                        textTransform: "uppercase",
                                       }}
                                     >
                                       {listStatus.text}
@@ -1394,18 +1617,29 @@ margin-left: 1px;
                                   </div>
                                 )}
                                 <div className="ms-3">
-                                  <FeatherIcon icon="chevron-right" size={16} className="text-muted" />
+                                  <FeatherIcon
+                                    icon="chevron-right"
+                                    size={16}
+                                    className="text-muted"
+                                  />
                                 </div>
                               </div>
                             );
-                          })
-                        }
+                          })}
                       </div>
 
-                      {filteredAppointments.filter(a => moment(a.start).isSame(selectedDate, 'day')).length === 0 && (
+                      {filteredAppointments.filter((a) =>
+                        moment(a.start).isSame(selectedDate, "day"),
+                      ).length === 0 && (
                         <div className="text-center py-5">
-                          <FeatherIcon icon="calendar" size={50} className="text-muted mb-3 opacity-25" />
-                          <p className="text-muted">No appointments scheduled for this day.</p>
+                          <FeatherIcon
+                            icon="calendar"
+                            size={50}
+                            className="text-muted mb-3 opacity-25"
+                          />
+                          <p className="text-muted">
+                            No appointments scheduled for this day.
+                          </p>
                         </div>
                       )}
                     </div>
@@ -1464,7 +1698,6 @@ margin-left: 1px;
           </Row>
         </Container>
       </div>
-
     </div>
   );
 }

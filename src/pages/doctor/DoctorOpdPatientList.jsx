@@ -553,7 +553,8 @@ export default function DoctorOpdPatientList() {
       if (!labels.includes(label)) labels.push(label);
     };
 
-    if (/haemorrhoid|hemorrhoid|hemorrhoids?/.test(diagnosisText)) addLabel("piles");
+    if (/haemorrhoid|hemorrhoid|hemorrhoids?/.test(diagnosisText))
+      addLabel("piles");
     if (diagnosisText.includes("fistula")) addLabel("fistula");
     if (diagnosisText.includes("hernia")) addLabel("hernia");
     if (diagnosisText.includes("varicose")) addLabel("varicose veins");
@@ -730,13 +731,13 @@ export default function DoctorOpdPatientList() {
     try {
       const response = await fetch(
         `${BASE_URL}/V1/patient/searchPatient?query=${encodeURIComponent(
-          query
+          query,
         )}&location=${currentLocation}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
 
       if (response.ok) {
@@ -744,7 +745,9 @@ export default function DoctorOpdPatientList() {
         if (result && result.data && result.data.length > 0) {
           setPatients((prev) => {
             const existingIds = new Set(prev.map((p) => String(p.patient_id)));
-            const uniqueNew = result.data.filter((p) => !existingIds.has(String(p.patient_id)));
+            const uniqueNew = result.data.filter(
+              (p) => !existingIds.has(String(p.patient_id)),
+            );
             return [...prev, ...uniqueNew];
           });
         }
@@ -923,7 +926,6 @@ export default function DoctorOpdPatientList() {
       }
     }
 
-
     let reference_type = selectedReference;
     let ref = "";
 
@@ -948,13 +950,16 @@ export default function DoctorOpdPatientList() {
         ref = referenceDetails.TVShow || formData.ref || "";
         break;
       case "old_ref":
-        ref = `${oldPatientDetails.patient_ref_no || ""},${oldPatientDetails.old_patient_name || ""
-          },${oldPatientDetails.old_patient_id_value || ""},${oldPatientDetails.old_patient_pincode || ""
-          }`;
+        ref = `${oldPatientDetails.patient_ref_no || ""},${
+          oldPatientDetails.old_patient_name || ""
+        },${oldPatientDetails.old_patient_id_value || ""},${
+          oldPatientDetails.old_patient_pincode || ""
+        }`;
         break;
       case "family_friends":
-        ref = `${referenceDetails.friendname || ""},${referenceDetails.friendno || ""
-          }`;
+        ref = `${referenceDetails.friendname || ""},${
+          referenceDetails.friendno || ""
+        }`;
         break;
       case "hhc_board":
         ref = referenceDetails.HHC_board || "";
@@ -1062,10 +1067,11 @@ export default function DoctorOpdPatientList() {
 
   const statusBodyTemplate = (formData) => (
     <span
-      className={`badge ${formData.status
-        ? ` status- ${formData.status.toLowerCase()}`
-        : "status-unknown"
-        }`}
+      className={`badge ${
+        formData.status
+          ? ` status- ${formData.status.toLowerCase()}`
+          : "status-unknown"
+      }`}
     >
       {formData.status || "Unknown"}
     </span>
@@ -1433,7 +1439,11 @@ export default function DoctorOpdPatientList() {
       );
       const diagDates = await diagDatesRes.json();
       if (!diagDates.data || diagDates.data.length === 0) {
-        Swal.fire('Incomplete Forms', 'Not all forms are completed to print so fill all the respective forms to print (Diagnosis missing).', 'warning');
+        Swal.fire(
+          "Incomplete Forms",
+          "Not all forms are completed to print so fill all the respective forms to print (Diagnosis missing).",
+          "warning",
+        );
         setLoading(false);
         return;
       }
@@ -1472,8 +1482,16 @@ export default function DoctorOpdPatientList() {
         { headers },
       );
       const followupData = await followupRes.json();
-      if (followupData.statusCode !== 200 || !followupData.data || Object.keys(followupData.data).length === 0) {
-        Swal.fire('Incomplete Forms', 'Not all forms are completed to print so fill all the respective forms to print (FollowUp missing).', 'warning');
+      if (
+        followupData.statusCode !== 200 ||
+        !followupData.data ||
+        Object.keys(followupData.data).length === 0
+      ) {
+        Swal.fire(
+          "Incomplete Forms",
+          "Not all forms are completed to print so fill all the respective forms to print (FollowUp missing).",
+          "warning",
+        );
         setLoading(false);
         return;
       }
@@ -1484,15 +1502,21 @@ export default function DoctorOpdPatientList() {
       );
       const opdDates = await opdDatesRes.json();
       if (!opdDates.data || opdDates.data.length === 0) {
-        Swal.fire('Incomplete Forms', 'Not all forms are completed to print so fill all the respective forms to print (OPD Prescription missing).', 'warning');
+        Swal.fire(
+          "Incomplete Forms",
+          "Not all forms are completed to print so fill all the respective forms to print (OPD Prescription missing).",
+          "warning",
+        );
         setLoading(false);
         return;
       }
 
-      const latestOpdDate = moment(opdDates.data[0].date, "DD-MM-YYYY").format("YYYY-MM-DD");
+      const latestOpdDate = moment(opdDates.data[0].date, "DD-MM-YYYY").format(
+        "YYYY-MM-DD",
+      );
       const opdDetailsRes = await fetch(
         `${BASE_URL}/V1/doctor/get-opd-prescription/${patient.patient_id}/${latestOpdDate}?location=${currentLocation}`,
-        { headers }
+        { headers },
       );
       const opdDetails = await opdDetailsRes.json();
 
@@ -1502,14 +1526,22 @@ export default function DoctorOpdPatientList() {
         const toArray = (val) => {
           if (!val) return [];
           if (Array.isArray(val)) return val;
-          if (typeof val === "string") return val.split(",").map(s => s.trim()).filter(Boolean);
+          if (typeof val === "string")
+            return val
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean);
           return [];
         };
         const safeMedicines = (val) => {
           if (!val) return [];
           if (Array.isArray(val)) return val;
           if (typeof val === "string") {
-            try { return JSON.parse(val); } catch (e) { return []; }
+            try {
+              return JSON.parse(val);
+            } catch (e) {
+              return [];
+            }
           }
           return [];
         };
@@ -1528,7 +1560,11 @@ export default function DoctorOpdPatientList() {
       );
       const dischargeDates = await dischargeDatesRes.json();
       if (!dischargeDates.data || dischargeDates.data.length === 0) {
-        Swal.fire('Incomplete Forms', 'Not all forms are completed to print so fill all the respective forms to print (Discharge Card missing).', 'warning');
+        Swal.fire(
+          "Incomplete Forms",
+          "Not all forms are completed to print so fill all the respective forms to print (Discharge Card missing).",
+          "warning",
+        );
         setLoading(false);
         return;
       }
@@ -1536,7 +1572,7 @@ export default function DoctorOpdPatientList() {
       const latestDischargeId = dischargeDates.data[0].id;
       const dischargeDetailsRes = await fetch(
         `${BASE_URL}/V1/doctor/get-discharge-card/${patient.patient_id}?dischargeId=${latestDischargeId}&location=${currentLocation}`,
-        { headers }
+        { headers },
       );
       const dischargeDetails = await dischargeDetailsRes.json();
 
@@ -1546,7 +1582,8 @@ export default function DoctorOpdPatientList() {
         diagnosis: diagFull.filter(Boolean),
         followup: followupData.statusCode === 200 ? followupData.data : {},
         prescription: parsedOpd,
-        discharge: dischargeDetails.statusCode === 200 ? dischargeDetails.data : null,
+        discharge:
+          dischargeDetails.statusCode === 200 ? dischargeDetails.data : null,
       });
       setIsPrintReady(true);
     } catch (error) {
@@ -2843,7 +2880,7 @@ export default function DoctorOpdPatientList() {
             >
               Search
             </span>
-            <InputGroup style={{ position: 'relative' }}>
+            <InputGroup style={{ position: "relative" }}>
               <Form.Control
                 type="search"
                 value={searchTerm}
@@ -2869,15 +2906,22 @@ export default function DoctorOpdPatientList() {
                 }}
               />
               {isDbSearching && (
-                <div style={{
-                  position: 'absolute',
-                  right: '10px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  zIndex: 5,
-                  pointerEvents: 'none'
-                }}>
-                  <Spinner animation="border" size="sm" variant="info" style={{ width: '12px', height: '12px' }} />
+                <div
+                  style={{
+                    position: "absolute",
+                    right: "10px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    zIndex: 5,
+                    pointerEvents: "none",
+                  }}
+                >
+                  <Spinner
+                    animation="border"
+                    size="sm"
+                    variant="info"
+                    style={{ width: "12px", height: "12px" }}
+                  />
                 </div>
               )}
             </InputGroup>
@@ -2901,7 +2945,7 @@ export default function DoctorOpdPatientList() {
               cursor: "pointer",
               transition: "all 0.3s ease",
               boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              marginLeft: "15px"
+              marginLeft: "15px",
             }}
           >
             <FeatherIcon icon="calendar" size={12} className="me-1" />
@@ -4381,7 +4425,6 @@ export default function DoctorOpdPatientList() {
                         }}
                       />
 
-
                       <Column
                         field="sex"
                         header="Gender"
@@ -4469,7 +4512,10 @@ export default function DoctorOpdPatientList() {
         </Container>
       </div>
       <div style={{ display: "none" }}>
-        <div ref={fupPrintRef} style={{ display: "flex", flexDirection: "column" }}>
+        <div
+          ref={fupPrintRef}
+          style={{ display: "flex", flexDirection: "column" }}
+        >
           {printData.diagnosis && printData.diagnosis.length > 0 && (
             <div style={{ pageBreakAfter: "always" }}>
               <DiagnosisPrintView
