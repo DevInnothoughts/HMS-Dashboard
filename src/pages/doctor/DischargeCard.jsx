@@ -54,6 +54,7 @@ const DischargeCard = ({
     times: "",
     route: "",
   });
+
   const [newTreatmentOnDischarge, setNewTreatmentOnDischarge] = useState({
     medicine_name: "",
     medicine_id: "",
@@ -63,6 +64,8 @@ const DischargeCard = ({
     medicine_time: [],
     frequency: "",
     days: "",
+    available_qty: 0, // ← add
+    inventory_available: false, // ← add
   });
 
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -147,6 +150,8 @@ const DischargeCard = ({
       medicine_time: [],
       frequency: "",
       days: "",
+      available_qty: 0, // ← add
+      inventory_available: false, // ← add
     });
   };
 
@@ -1543,6 +1548,11 @@ const DischargeCard = ({
                             strength_unit:
                               `${strength} ${unit}`.trim() ||
                               prev.strength_unit,
+                            available_qty: Number(med.qty) || 0, // ← add
+                            inventory_available:
+                              String(
+                                med.is_inventory_available,
+                              ).toLowerCase() === "yes", // ← add
                           }));
                           setShowMedicineDropdownOnDischarge(false);
                         }}

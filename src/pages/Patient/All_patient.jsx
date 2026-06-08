@@ -3795,6 +3795,7 @@ export default function All_patient() {
                       <option value="O-">O-</option>
                       <option value="AB+">AB+</option>
                       <option value="AB-">AB-</option>
+                      <option value="Dont Know">DONT KNOW</option>
                     </Form.Select>
                   </Form.Group>
                 </Col>

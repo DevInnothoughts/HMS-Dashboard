@@ -883,12 +883,13 @@ const OpdPrescriptionCard = ({
                     if (e.target.checked) {
                       const aacMeds = [
                         {
-                          medicine_id: "mXjWV0SDBCVpjPz01d6NhA==",
+                          medicine_id: "UrD5Ww+76xqbQKh+dH7+jw==",
                           name: "Anoac Cream",
                           qty: "1",
                           times: [],
                           days: "15",
-                          mrp: "0",
+                          mrp: "347",
+                          is_aac: true,
                         },
                         {
                           medicine_id: "VgqhMj4FIesznTusecgBeg==",
@@ -896,15 +897,17 @@ const OpdPrescriptionCard = ({
                           qty: "1",
                           times: ["After Lunch", "After Dinner"],
                           days: "15",
-                          mrp: "0",
+                          mrp: "516",
+                          is_aac: true,
                         },
                         {
-                          medicine_id: "UrD5Ww+76xqbQKh+dH7+jw==",
+                          medicine_id: "yz3tZfKtlXM5nkB3DLn20Q==",
                           name: "Constac Powder",
                           qty: "1",
                           times: ["After Dinner"],
                           days: "15",
-                          mrp: "0",
+                          mrp: "269",
+                          is_aac: true,
                         },
                       ];
                       const medsToAdd = aacMeds.filter(
@@ -1038,6 +1041,7 @@ const OpdPrescriptionCard = ({
                             name: fullSearchValue,
                             medicine_id: med.medicine_id,
                             mrp: med.mrp,
+                            available_qty: Number(med.qty) || 0, // ← carry eVital stock onto the picked medicine
                           }));
                           setShowMedicineDropdown(false);
                         }}

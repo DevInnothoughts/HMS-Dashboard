@@ -4028,7 +4028,15 @@ const PersonalDetailsCard = () => {
       ...prev,
       medicines: [...prev.medicines, { ...currentMedicine }],
     }));
-    setCurrentMedicine({ name: "", qty: "", times: [], days: "" });
+    setCurrentMedicine({
+      name: "",
+      qty: "",
+      times: [],
+      days: "",
+      medicine_id: null,
+      mrp: "0",
+      available_qty: 0,
+    });
   };
 
   const handleRemoveMedicine = async (index) => {
@@ -4624,13 +4632,21 @@ const PersonalDetailsCard = () => {
                 }}
               >
                 <option value="">Select</option>
-                {["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-"].map(
-                  (bg) => (
-                    <option key={bg} value={bg}>
-                      {bg}
-                    </option>
-                  ),
-                )}
+                {[
+                  "A+",
+                  "A-",
+                  "B+",
+                  "B-",
+                  "O+",
+                  "O-",
+                  "AB+",
+                  "AB-",
+                  "Dont Know",
+                ].map((bg) => (
+                  <option key={bg} value={bg}>
+                    {bg}
+                  </option>
+                ))}
               </Form.Select>
             </Col>
             <Col md={3}>
@@ -4929,11 +4945,10 @@ const PersonalDetailsCard = () => {
     // other OPD clinical section has been filled and saved.
     if (tabId === "discharge-card") {
       return (
-        isTabCompleted("patient-history") &&
-        isTabCompleted("diagnosis") &&
-        isTabCompleted("follow-up") &&
-        isTabCompleted("proctoscopy") &&
-        isTabCompleted("opd-prescription")
+        isTabCompleted("patient-history") && isTabCompleted("diagnosis")
+        // isTabCompleted("follow-up") &&
+        // isTabCompleted("proctoscopy") &&
+        // isTabCompleted("opd-prescription")
       );
     }
     // Every other section is open for entry in any order.
@@ -5072,7 +5087,7 @@ const PersonalDetailsCard = () => {
                             setActiveTab(tab.id);
                           } else {
                             toast.warning(
-                              "Please complete all clinical sections (History, Diagnosis, Follow Up, Proctoscopy, Prescription) before filling the Discharge Card.",
+                              "Please complete History and Diagnosis before filling the Discharge Card.",
                             );
                           }
                         }}
