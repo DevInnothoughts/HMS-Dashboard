@@ -10,6 +10,7 @@ import {
   ListGroup,
   Table,
   Spinner,
+  InputGroup,
 } from "react-bootstrap";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import { FaPrint, FaPlus, FaListUl, FaTasks } from "react-icons/fa";
@@ -20,8 +21,8 @@ import receiptLogo from "../../assets/images/4.png";
 import { clinincLoc } from "../../utils/clinic_locations-invoice.js";
 import { receiptlocations } from "../../utils/clinic_locations-receipt.js";
 
-const BASE_URL = "http://194.195.117.79:5100/api";
-const IMAGE_BASE_URL = "http://194.195.117.79:5100";
+const BASE_URL = "http://localhost:5100/api";
+const IMAGE_BASE_URL = "http://localhost:5100";
 
 const convertToWords = (number) => {
   if (number === 0) return "Zero";
@@ -73,13 +74,13 @@ const convertToWords = (number) => {
       } else {
         str.push(
           words[Math.floor(n / 10) * 10] +
-            " " +
-            words[n % 10] +
-            " " +
-            digits[counter] +
-            plural +
-            " " +
-            hundred,
+          " " +
+          words[n % 10] +
+          " " +
+          digits[counter] +
+          plural +
+          " " +
+          hundred,
         );
       }
     } else {
@@ -317,7 +318,7 @@ const IpdPaymentData = () => {
           } else {
             Swal.showValidationMessage(
               result.message ||
-                "Swipe not detected yet. Please try again after swiping.",
+              "Swipe not detected yet. Please try again after swiping.",
             );
             return false;
           }
@@ -371,7 +372,7 @@ const IpdPaymentData = () => {
               Swal.fire(
                 "Cancellation Error",
                 cancelResult?.message ||
-                  "Remote cancel failed. Please cancel manually on the POS machine.",
+                "Remote cancel failed. Please cancel manually on the POS machine.",
                 "error",
               );
             }
@@ -512,10 +513,10 @@ const IpdPaymentData = () => {
     const trimmedLocation = currentLocation ? currentLocation.trim() : "";
     const invoiceInfo = clinincLoc[trimmedLocation] ||
       clinincLoc[currentLocation] || {
-        invoiceAddress: "<b>Healing Hands Clinic</b>",
-        invoiceHelplineNo: "8888288884",
-        EmergencySMS: "",
-      };
+      invoiceAddress: "<b>Healing Hands Clinic</b>",
+      invoiceHelplineNo: "8888288884",
+      EmergencySMS: "",
+    };
     const receiptInfo = receiptlocations[currentLocation] || {
       hospitalcode: "HHC",
     };
@@ -757,19 +758,19 @@ const IpdPaymentData = () => {
                 <div className="summary-header">
                   <span>
                     <FaListUl className="me-1" />
-                    Total Bill: {summary.totalBill}
+                    Total Bill:  ₹ {summary.totalBill}
                   </span>
                   <span>
                     <FaTasks className="me-1" />
-                    Insurance Approved: {summary.insuranceApproved}
+                    Insurance Approved: ₹ {summary.insuranceApproved}
                   </span>
                   <span>
                     <FaListUl className="me-1" />
-                    Patient Payable: {summary.patientPayable}
+                    Patient Payable: ₹ {summary.patientPayable}
                   </span>
                   <span>
                     <FaListUl className="me-1" />
-                    Total Due: {summary.totalDue}
+                    Total Due: ₹ {summary.totalDue}
                   </span>
                 </div>
                 <Card.Body>
@@ -813,52 +814,64 @@ const IpdPaymentData = () => {
                             />
                           </td>
                           <td>
-                            <Form.Control
-                              className="table-input"
-                              style={{ width: "135px" }}
-                              readOnly
-                              value={`₹${pay.cashamt}`}
-                            />
+                            <InputGroup size="sm" style={{ width: "135px", flexWrap: "nowrap" }}>
+                              <InputGroup.Text className="table-input-group-text">₹</InputGroup.Text>
+                              <Form.Control
+                                className="table-input-group-control"
+                                readOnly
+                                value={pay.cashamt}
+                              />
+                            </InputGroup>
                           </td>
                           <td>
-                            <Form.Control
-                              className="table-input"
-                              style={{ width: "135px" }}
-                              readOnly
-                              value={`₹${pay.cardamt}`}
-                            />
+                            <InputGroup size="sm" style={{ width: "135px", flexWrap: "nowrap" }}>
+                              <InputGroup.Text className="table-input-group-text">₹</InputGroup.Text>
+                              <Form.Control
+                                className="table-input-group-control"
+                                readOnly
+                                value={pay.cardamt}
+                              />
+                            </InputGroup>
                           </td>
                           <td>
-                            <Form.Control
-                              className="table-input"
-                              style={{ width: "135px" }}
-                              readOnly
-                              value={`₹${pay.chequeamt}`}
-                            />
+                            <InputGroup size="sm" style={{ width: "135px", flexWrap: "nowrap" }}>
+                              <InputGroup.Text className="table-input-group-text">₹</InputGroup.Text>
+                              <Form.Control
+                                className="table-input-group-control"
+                                readOnly
+                                value={pay.chequeamt}
+                              />
+                            </InputGroup>
                           </td>
                           <td>
-                            <Form.Control
-                              className="table-input"
-                              style={{ width: "135px" }}
-                              readOnly
-                              value={`₹${pay.onlineamt}`}
-                            />
+                            <InputGroup size="sm" style={{ width: "135px", flexWrap: "nowrap" }}>
+                              <InputGroup.Text className="table-input-group-text">₹</InputGroup.Text>
+                              <Form.Control
+                                className="table-input-group-control"
+                                readOnly
+                                value={pay.onlineamt}
+                              />
+                            </InputGroup>
                           </td>
                           <td>
-                            <Form.Control
-                              className="table-input"
-                              style={{ width: "135px" }}
-                              readOnly
-                              value={`₹${pay.discountamt}`}
-                            />
+                            <InputGroup size="sm" style={{ width: "135px", flexWrap: "nowrap" }}>
+                              <InputGroup.Text className="table-input-group-text">₹</InputGroup.Text>
+                              <Form.Control
+                                className="table-input-group-control"
+                                readOnly
+                                value={pay.discountamt}
+                              />
+                            </InputGroup>
                           </td>
                           <td>
-                            <Form.Control
-                              className="table-input"
-                              style={{ width: "135px" }}
-                              readOnly
-                              value={`₹${pay.tdsamt}`}
-                            />
+                            <InputGroup size="sm" style={{ width: "135px", flexWrap: "nowrap" }}>
+                              <InputGroup.Text className="table-input-group-text">₹</InputGroup.Text>
+                              <Form.Control
+                                className="table-input-group-control"
+                                readOnly
+                                value={pay.tdsamt}
+                              />
+                            </InputGroup>
                           </td>
                           <td className="text-center">
                             <Button
@@ -956,96 +969,138 @@ const IpdPaymentData = () => {
                                 />
                               </Col>
                               <Col>
-                                <Form.Control
-                                  type="number"
-                                  onWheel={(e) => e.target.blur()}
-                                  placeholder="Cash"
-                                  className="input-style"
-                                  value={newPayment.cash || ""}
-                                  onChange={(e) =>
-                                    setNewPayment({
-                                      ...newPayment,
-                                      cash: +e.target.value,
-                                    })
-                                  }
-                                />
+                                <InputGroup size="sm" style={{ flexWrap: "nowrap" }}>
+                                  <InputGroup.Text className="input-group-text-rupee">₹</InputGroup.Text>
+                                  <Form.Control
+                                    type="number"
+                                    onWheel={(e) => e.target.blur()}
+                                    onKeyDown={(e) =>
+                                      ["e", "E", "+", "-"].includes(e.key) &&
+                                      e.preventDefault()
+                                    }
+                                    placeholder="Cash"
+                                    className="input-group-control-rupee"
+                                    value={newPayment.cash || ""}
+                                    onChange={(e) =>
+                                      setNewPayment({
+                                        ...newPayment,
+                                        cash: +e.target.value,
+                                      })
+                                    }
+                                  />
+                                </InputGroup>
                               </Col>
                               <Col>
-                                <Form.Control
-                                  type="number"
-                                  onWheel={(e) => e.target.blur()}
-                                  placeholder="Card"
-                                  className="input-style"
-                                  value={newPayment.card || ""}
-                                  disabled={newPayment.online > 0}
-                                  onChange={(e) =>
-                                    setNewPayment({
-                                      ...newPayment,
-                                      card: +e.target.value,
-                                    })
-                                  }
-                                />
+                                <InputGroup size="sm" style={{ flexWrap: "nowrap" }}>
+                                  <InputGroup.Text className="input-group-text-rupee">₹</InputGroup.Text>
+                                  <Form.Control
+                                    type="number"
+                                    onWheel={(e) => e.target.blur()}
+                                    onKeyDown={(e) =>
+                                      ["e", "E", "+", "-"].includes(e.key) &&
+                                      e.preventDefault()
+                                    }
+                                    placeholder="Card"
+                                    className="input-group-control-rupee"
+                                    value={newPayment.card || ""}
+                                    disabled={newPayment.online > 0}
+                                    onChange={(e) =>
+                                      setNewPayment({
+                                        ...newPayment,
+                                        card: +e.target.value,
+                                      })
+                                    }
+                                  />
+                                </InputGroup>
                               </Col>
                               <Col>
-                                <Form.Control
-                                  type="number"
-                                  onWheel={(e) => e.target.blur()}
-                                  placeholder="Cheque"
-                                  className="input-style"
-                                  value={newPayment.cheque || ""}
-                                  onChange={(e) =>
-                                    setNewPayment({
-                                      ...newPayment,
-                                      cheque: +e.target.value,
-                                    })
-                                  }
-                                />
+                                <InputGroup size="sm" style={{ flexWrap: "nowrap" }}>
+                                  <InputGroup.Text className="input-group-text-rupee">₹</InputGroup.Text>
+                                  <Form.Control
+                                    type="number"
+                                    onWheel={(e) => e.target.blur()}
+                                    onKeyDown={(e) =>
+                                      ["e", "E", "+", "-"].includes(e.key) &&
+                                      e.preventDefault()
+                                    }
+                                    placeholder="Cheque"
+                                    className="input-group-control-rupee"
+                                    value={newPayment.cheque || ""}
+                                    onChange={(e) =>
+                                      setNewPayment({
+                                        ...newPayment,
+                                        cheque: +e.target.value,
+                                      })
+                                    }
+                                  />
+                                </InputGroup>
                               </Col>
                               <Col>
-                                <Form.Control
-                                  type="number"
-                                  onWheel={(e) => e.target.blur()}
-                                  placeholder="Online"
-                                  className="input-style"
-                                  value={newPayment.online || ""}
-                                  disabled={newPayment.card > 0}
-                                  onChange={(e) =>
-                                    setNewPayment({
-                                      ...newPayment,
-                                      online: +e.target.value,
-                                    })
-                                  }
-                                />
+                                <InputGroup size="sm" style={{ flexWrap: "nowrap" }}>
+                                  <InputGroup.Text className="input-group-text-rupee">₹</InputGroup.Text>
+                                  <Form.Control
+                                    type="number"
+                                    onWheel={(e) => e.target.blur()}
+                                    onKeyDown={(e) =>
+                                      ["e", "E", "+", "-"].includes(e.key) &&
+                                      e.preventDefault()
+                                    }
+                                    placeholder="Online"
+                                    className="input-group-control-rupee"
+                                    value={newPayment.online || ""}
+                                    disabled={newPayment.card > 0}
+                                    onChange={(e) =>
+                                      setNewPayment({
+                                        ...newPayment,
+                                        online: +e.target.value,
+                                      })
+                                    }
+                                  />
+                                </InputGroup>
                               </Col>
                               <Col>
-                                <Form.Control
-                                  type="number"
-                                  onWheel={(e) => e.target.blur()}
-                                  placeholder="Internal Discount"
-                                  className="input-style"
-                                  value={newPayment.internalDiscount || ""}
-                                  onChange={(e) =>
-                                    setNewPayment({
-                                      ...newPayment,
-                                      internalDiscount: +e.target.value,
-                                    })
-                                  }
-                                />
+                                <InputGroup size="sm" style={{ flexWrap: "nowrap" }}>
+                                  <InputGroup.Text className="input-group-text-rupee">₹</InputGroup.Text>
+                                  <Form.Control
+                                    type="number"
+                                    onWheel={(e) => e.target.blur()}
+                                    onKeyDown={(e) =>
+                                      ["e", "E", "+", "-"].includes(e.key) &&
+                                      e.preventDefault()
+                                    }
+                                    placeholder="Internal Discount"
+                                    className="input-group-control-rupee"
+                                    value={newPayment.internalDiscount || ""}
+                                    onChange={(e) =>
+                                      setNewPayment({
+                                        ...newPayment,
+                                        internalDiscount: +e.target.value,
+                                      })
+                                    }
+                                  />
+                                </InputGroup>
                               </Col>
                               <Col>
-                                <Form.Control
-                                  type="number"
-                                  onWheel={(e) => e.target.blur()}
-                                  placeholder="Hospital Discount"
-                                  className="input-style"
-                                  value={newPayment.tds || ""}
-                                  onChange={(e) =>
-                                    setNewPayment({
-                                      ...newPayment,
-                                      tds: +e.target.value,
-                                    })
-                                  }
-                                />
+                                <InputGroup size="sm" style={{ flexWrap: "nowrap" }}>
+                                  <InputGroup.Text className="input-group-text-rupee">₹</InputGroup.Text>
+                                  <Form.Control
+                                    type="number"
+                                    onWheel={(e) => e.target.blur()}
+                                    onKeyDown={(e) =>
+                                      ["e", "E", "+", "-"].includes(e.key) &&
+                                      e.preventDefault()
+                                    }
+                                    placeholder="Hospital Discount"
+                                    className="input-group-control-rupee"
+                                    value={newPayment.tds || ""}
+                                    onChange={(e) =>
+                                      setNewPayment({
+                                        ...newPayment,
+                                        tds: +e.target.value,
+                                      })
+                                    }
+                                  />
+                                </InputGroup>
                               </Col>
                               <Col md={1}>
                                 <Button
@@ -1086,6 +1141,31 @@ const IpdPaymentData = () => {
                 }
                 .input-style:disabled, 
                 .input-style[readonly] { 
+                    background-color: #e7ebebff !important; 
+                    cursor: not-allowed !important; 
+                }
+                .input-group-text-rupee {
+                    border-radius: 10px 0 0 10px !important;
+                    border: 1px solid #80deea !important;
+                    border-right: none !important;
+                    height: 30px !important;
+                    background-color: #f8f9fa !important;
+                    font-size: 14px;
+                    padding-right: 5px;
+                    display: flex;
+                    align-items: center;
+                }
+                .input-group-control-rupee {
+                    border-radius: 0 10px 10px 0 !important;
+                    border: 1px solid #80deea !important;
+                    border-left: none !important;
+                    height: 30px !important;
+                    background-color: #ffffff !important;
+                    font-size: 14px;
+                    padding-left: 5px;
+                }
+                .input-group-control-rupee:disabled, 
+                .input-group-control-rupee[readonly] { 
                     background-color: #e7ebebff !important; 
                     cursor: not-allowed !important; 
                 }
@@ -1136,6 +1216,28 @@ const IpdPaymentData = () => {
                      cursor: not-allowed !important; 
                      box-shadow: none !important;
                      font-size: 13px;
+                }
+                .table-input-group-text {
+                    border-radius: 6px 0 0 6px !important;
+                    border: 1px solid #80deea !important;
+                    border-right: none !important;
+                    height: 32px !important;
+                    background-color: #f1f3f5 !important;
+                    font-size: 13px;
+                    padding-right: 5px;
+                    display: flex;
+                    align-items: center;
+                }
+                .table-input-group-control {
+                    border-radius: 0 6px 6px 0 !important;
+                    border: 1px solid #80deea !important;
+                    border-left: none !important;
+                    height: 32px !important;
+                    background-color: #f1f3f5 !important;
+                    font-size: 13px;
+                    padding-left: 5px;
+                    cursor: not-allowed !important;
+                    box-shadow: none !important;
                 }
                 .btn-view { 
                     background-color: #00bcd4; 

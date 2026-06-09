@@ -29,7 +29,7 @@ import logo from "../../assets/images/3.png";
 import receiptLogo from "../../assets/images/4.png";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 const LOCATION = "demo";
 
@@ -480,7 +480,7 @@ export default function ReceiptList() {
               <td class="data-cell">
                 <table class="meta-table">
                   <tr>
-              <td class="meta-left">Patient Name : <b style="text-transform: uppercase;">${selectedReceipt.patientName}</b></td>
+              <td class="meta-left">Patient Name : <b style="text-transform: uppercase;">${selectedReceipt.prefix ? `${selectedReceipt.prefix} ` : ""}${selectedReceipt.patientName}</b></td>
               <td class="meta-right">Receipt No : <b>${selectedReceipt.receipt_id}</b></td>
             </tr>
                   <tr>
@@ -937,7 +937,7 @@ export default function ReceiptList() {
                       <Column
                         field="patientName"
                         header="Patient Name"
-                        body={(rowData) => rowData.patientName || "-"}
+                        body={(rowData) => <span>{rowData.prefix ? `${rowData.prefix} ` : ""}{rowData.patientName || "-"}</span>}
                         headerClassName="datatable-header-center"
                         style={{
                           border: "1px solid #90caf9",

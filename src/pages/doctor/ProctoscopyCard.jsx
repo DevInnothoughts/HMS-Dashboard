@@ -147,7 +147,7 @@ const ProctoscopyCard = ({
               className="fw-bold mb-1"
               style={{ color: "#006064", fontSize: "12px" }}
             >
-              Run Detection
+              HDS AI Examination
             </h6>
             <Button
               size="sm"
@@ -168,7 +168,7 @@ const ProctoscopyCard = ({
               }}
             >
               <FeatherIcon icon="external-link" size="14" className="me-1" />
-              OPEN LINK
+              OPEN PAGE
             </Button>
           </Col>
 
@@ -299,7 +299,7 @@ const ProctoscopyCard = ({
               <div
                 style={{ fontSize: "12px", color: "#607d8b", marginTop: "4px" }}
               >
-                Click OPEN LINK to run the AI proctoscopy, then come back and
+                Click OPEN PAGE to run the AI proctoscopy, then come back and
                 click REFRESH to pull in the generated report.
               </div>
             </div>

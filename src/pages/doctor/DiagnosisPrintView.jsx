@@ -140,6 +140,12 @@ const DiagnosisPrintView = React.forwardRef(
               <div className="col-md-6">
                 <p>
                   <b>Name : </b>
+                  {(() => {
+                    const prefix = (patient?.prefix || "").trim();
+                    if (!prefix) return "";
+                    const clean = prefix.replace(/\.$/, "");
+                    return clean.charAt(0).toUpperCase() + clean.slice(1).toLowerCase() + ". ";
+                  })()}
                   {patient?.name || ""}
                 </p>
                 <p>

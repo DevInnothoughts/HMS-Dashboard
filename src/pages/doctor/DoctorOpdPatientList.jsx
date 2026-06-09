@@ -31,7 +31,7 @@ import DatePicker from "react-datepicker";
 import logo from "../../assets/images/3.png";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 const countries = [
   "Afghanistan",
@@ -567,13 +567,23 @@ export default function DoctorOpdPatientList() {
     ) {
       addLabel("circumcision");
     }
-    if (diagnosisText.includes("abscess")) addLabel("abscess");
+    if (
+      diagnosisText.includes("abscess") ||
+      diagnosisText.includes("infected sebaceous cyst")
+    ) {
+      addLabel("abscess");
+    }
     if (diagnosisText.includes("fissure")) addLabel("fissure");
     if (diagnosisText.includes("hydrocele")) addLabel("hydrocele");
     if (diagnosisText.includes("lipoma")) addLabel("lipoma");
     if (diagnosisText.includes("gynecomastia")) addLabel("gynecomastia");
     if (diagnosisText.includes("pilonidal")) addLabel("pilonidal sinus");
-    if (diagnosisText.includes("cyst")) addLabel("cyst");
+    if (
+      diagnosisText.includes("cyst") &&
+      !diagnosisText.includes("infected sebaceous cyst")
+    ) {
+      addLabel("cyst");
+    }
     if (
       diagnosisText.includes("prostate") ||
       diagnosisText.includes("urethra") ||
@@ -4387,7 +4397,7 @@ export default function DoctorOpdPatientList() {
                         field="name"
                         header="Patient Name"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => rowData.name || "-"}
+                        body={(rowData) => <span>{rowData.prefix ? `${rowData.prefix} ` : ""}{rowData.name || "-"}</span>}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",

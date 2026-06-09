@@ -15,7 +15,7 @@ import { decodeJwt } from "../../utils/decode-jwt";
 import Swal from "sweetalert2";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 const Toast = Swal.mixin({
   toast: true,
@@ -510,8 +510,6 @@ const AddInvoice = () => {
     marginBottom: "10px",
     marginTop: "5px",
     backgroundColor: "#fff",
-    marginLeft: "24px",
-    marginRight: "24px",
   };
 
   return (
@@ -858,6 +856,10 @@ const AddInvoice = () => {
                           handleDynamicRowChange(index, "value", e.target.value)
                         }
                         onWheel={(e) => e.target.blur()}
+                        onKeyDown={(e) =>
+                          ["e", "E", "+", "-"].includes(e.key) &&
+                          e.preventDefault()
+                        }
                       />
                     </InputGroup>
                   </Col>
@@ -992,7 +994,7 @@ const AddInvoice = () => {
                 )}
 
                 {formData.bill_method === "PDC" && (
-                  <>
+                  <React.Fragment key="pdc-fields">
                     <Col md={3}>
                       <Form.Label
                         style={{
@@ -1006,6 +1008,10 @@ const AddInvoice = () => {
                       <Form.Control
                         style={inputStyle}
                         onWheel={(e) => e.target.blur()}
+                        onKeyDown={(e) =>
+                          ["e", "E", "+", "-"].includes(e.key) &&
+                          e.preventDefault()
+                        }
                         placeholder="Enter cheque No"
                         type="number"
                         name="chequeno"
@@ -1045,6 +1051,10 @@ const AddInvoice = () => {
                             paddingLeft: "5px",
                           }}
                           onWheel={(e) => e.target.blur()}
+                          onKeyDown={(e) =>
+                            ["e", "E", "+", "-"].includes(e.key) &&
+                            e.preventDefault()
+                          }
                           placeholder="Enter PDC Amount"
                           type="number"
                           name="pdc"
@@ -1053,11 +1063,11 @@ const AddInvoice = () => {
                         />
                       </InputGroup>
                     </Col>
-                  </>
+                  </React.Fragment>
                 )}
 
                 {formData.bill_Type === "non_insurance" && (
-                  <Col md={4}>
+                  <Col md={4} key="discount-non-insurance">
                     <Form.Label
                       style={{
                         fontSize: "12px",
@@ -1089,6 +1099,10 @@ const AddInvoice = () => {
                           paddingLeft: "5px",
                         }}
                         onWheel={(e) => e.target.blur()}
+                        onKeyDown={(e) =>
+                          ["e", "E", "+", "-"].includes(e.key) &&
+                          e.preventDefault()
+                        }
                         placeholder="e.g. 1000"
                         type="number"
                         name="discount"
@@ -1100,7 +1114,7 @@ const AddInvoice = () => {
                 )}
 
                 {formData.bill_Type === "charity" && (
-                  <Col md={4}>
+                  <Col md={4} key="discount-charity">
                     <Form.Label
                       style={{
                         fontSize: "12px",
@@ -1132,6 +1146,10 @@ const AddInvoice = () => {
                           paddingLeft: "5px",
                         }}
                         onWheel={(e) => e.target.blur()}
+                        onKeyDown={(e) =>
+                          ["e", "E", "+", "-"].includes(e.key) &&
+                          e.preventDefault()
+                        }
                         placeholder="e.g. 100"
                         type="number"
                         name="discountAmount"

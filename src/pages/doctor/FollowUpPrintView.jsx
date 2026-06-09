@@ -126,7 +126,14 @@ const FollowUpPrintView = React.forwardRef(
                 <div className="row">
                   <div className="col-md-4-50">
                     <p>
-                      <b>Patient Name :</b>&nbsp;{patient?.name || "-"}
+                      <b>Patient Name :</b>&nbsp;
+                      {(() => {
+                        const prefix = (patient?.prefix || "").trim();
+                        if (!prefix) return "";
+                        const clean = prefix.replace(/\.$/, "");
+                        return clean.charAt(0).toUpperCase() + clean.slice(1).toLowerCase() + ". ";
+                      })()}
+                      {patient?.name || "-"}
                     </p>
                   </div>
                   <div className="col-md-4-30">

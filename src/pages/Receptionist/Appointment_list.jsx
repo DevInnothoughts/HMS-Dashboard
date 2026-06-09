@@ -24,7 +24,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import moment from "moment";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 const NoteCell = ({ note }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -2188,7 +2188,7 @@ export default function Appointment_list() {
                           ...getColumnStyle("120px"),
                           border: "1px solid #90caf9",
                         }}
-                        body={(rowData) => rowData.patient_name || "-"}
+                        body={(rowData) => <span>{rowData.prefix ? `${rowData.prefix} ` : ""}{rowData.patient_name || "-"}</span>}
                         headerClassName="datatable-header-center"
                       />
 

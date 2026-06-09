@@ -15,7 +15,7 @@ import { decodeJwt } from "../../utils/decode-jwt";
 import Swal from "sweetalert2";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 const Toast = Swal.mixin({
   toast: true,
@@ -265,7 +265,7 @@ export default function CallingCalendar() {
       >
         <PageBreadcrumb pagename="Calling Calendar" />
         <div className="theme-body">
-          <Container fluid style={{ padding: "0px" }}>
+          <Container fluid style={{ padding: "10px", marginTop: "10px" }}>
             {/* Date Filter Bar */}
             <div
               style={{
@@ -276,7 +276,7 @@ export default function CallingCalendar() {
                 alignItems: "center",
                 gap: "16px",
                 marginBottom: "28px",
-                border: "1px solid #d4e8e3",
+                border: "1px solid #4dd0e1",
                 boxShadow: "0 2px 8px rgba(15,123,99,0.08)",
               }}
             >
@@ -1158,14 +1158,48 @@ export default function CallingCalendar() {
                             : row.diag_id;
                       let parsedNotes = [];
                       if (row.calling_notes) {
-                        try {
-                          parsedNotes = JSON.parse(row.calling_notes);
-                          if (!Array.isArray(parsedNotes)) {
-                            parsedNotes = [];
+                        let parsed = row.calling_notes;
+                        if (typeof parsed === "string") {
+                          if (parsed === "{}" || parsed === "[]") {
+                            parsed = [];
+                          } else {
+                            try {
+                              parsed = JSON.parse(parsed);
+                            } catch (e) { }
                           }
-                        } catch (e) {
-                          parsedNotes = [];
                         }
+
+                        if (Array.isArray(parsed)) {
+                          parsedNotes = parsed;
+                        } else if (typeof parsed === "object" && parsed !== null && Object.keys(parsed).length > 0) {
+                          parsedNotes = [parsed];
+                        } else if (typeof parsed === "string" && parsed.trim() !== "") {
+                          parsedNotes = [{ note: parsed }];
+                        }
+
+                        // Flatten any nested arrays from previous bad saves
+                        let flattened = [];
+                        parsedNotes.forEach(item => {
+                          if (item && Array.isArray(item.note)) {
+                            flattened.push(...item.note);
+                          } else if (item && typeof item.note === "string") {
+                            try {
+                              const inner = JSON.parse(item.note);
+                              if (Array.isArray(inner)) {
+                                flattened.push(...inner);
+                              } else {
+                                flattened.push(item);
+                              }
+                            } catch (e) {
+                              flattened.push(item);
+                            }
+                          } else if (item && typeof item === "string") {
+                            flattened.push({ note: item });
+                          } else if (item) {
+                            flattened.push(item);
+                          }
+                        });
+                        parsedNotes = flattened;
                       }
 
                       return (
@@ -1240,31 +1274,25 @@ export default function CallingCalendar() {
                                 ) : (
                                   parsedNotes.map((note, index) => {
                                     const formattedNoteDate = note.date
-                                      ? moment(note.date).format("DD/MM/YYYY")
+                                      ? moment(note.date).format("YYYY-MM-DD")
                                       : "";
                                     return (
                                       <div
                                         key={index}
-                                        style={{ marginBottom: "10px" }}
+                                        style={{ marginBottom: "8px", paddingBottom: "8px", borderBottom: index < parsedNotes.length - 1 ? "1px dashed #d4e8e3" : "none" }}
                                       >
-                                        <p
-                                          style={{
-                                            margin: "0 0 2px 0",
-                                            fontSize: "12px",
-                                            fontWeight: "700",
-                                            color: "#0f7b63",
-                                          }}
-                                        >
-                                          {formattedNoteDate}
-                                        </p>
-                                        <span
-                                          style={{
-                                            fontSize: "13px",
-                                            color: "#1a2b26",
-                                          }}
-                                        >
-                                          {index + 1}. {note.note}
-                                        </span>
+                                        <div style={{ fontSize: "13px", color: "#1a2b26", lineHeight: "1.4" }}>
+                                          <span style={{ fontWeight: "700", color: "#0f7b63" }}>{index + 1}.</span>{" "}
+                                          {formattedNoteDate && (
+                                            <>
+                                              <span style={{ fontWeight: "600", color: "#6b8f85" }}>{formattedNoteDate}</span>
+                                              <span style={{ margin: "0 4px", color: "#d4e8e3" }}>|</span>
+                                            </>
+                                          )}
+                                          <span style={{ fontWeight: "500" }}>
+                                            {typeof note === 'string' ? note : (typeof note.note === 'object' ? JSON.stringify(note.note) : (note.note || ""))}
+                                          </span>
+                                        </div>
                                       </div>
                                     );
                                   })

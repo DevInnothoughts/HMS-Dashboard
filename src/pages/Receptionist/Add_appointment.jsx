@@ -12,7 +12,7 @@ import PageBreadcrumb from "../../components/PageBreadcrumb";
 import { decodeJwt } from "../../utils/decode-jwt";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 const Toast = Swal.mixin({
   toast: true,
@@ -146,6 +146,7 @@ export default function Add_appointment() {
     async (patient_phone) => {
       if (!patient_phone || !currentLocation) {
         setIsExistingPatient(false);
+        setNoPendingAppt(true);
         setFormData((prev) => ({
           ...prev,
           patientName: "",
@@ -175,6 +176,7 @@ export default function Add_appointment() {
 
         if (!response.ok) {
           setIsExistingPatient(false);
+          setNoPendingAppt(true);
           setFormData((prev) => ({
             ...prev,
             patientName: "",
@@ -190,6 +192,7 @@ export default function Add_appointment() {
         if (data.statusCode === 200 && data.data) {
           setIsExistingPatient(true);
 
+          let hasPendingAppt = false;
           try {
             const confirmUrl = `${BASE_URL}/V1/appointment/getPatientByApptConfirm?patient_phone=${patient_phone}&location=${currentLocation}`;
             const confirmResponse = await fetch(confirmUrl, {
@@ -202,27 +205,28 @@ export default function Add_appointment() {
             if (confirmResponse.status === 400) {
               Swal.fire({
                 icon: "warning",
-                title: "Duplicate Appointment",
-                text:
-                  confirmData.message ||
-                  "This patient already has a pending appointment.",
+                title: "Pending Appointment",
+                text: "Pending appointment, close that appointment first.",
                 confirmButtonColor: "#f39c12",
               });
               setNoPendingAppt(false);
-              return;
+              hasPendingAppt = true;
+            } else {
+              setNoPendingAppt(true);
             }
-            setNoPendingAppt(true);
           } catch (innerError) {
             console.error("Error in confirmation check API call:", innerError);
           }
 
-          Swal.fire({
-            icon: "info",
-            title: "Patient Found",
-            text: `${data.data.name} is already registered.`,
-            confirmButtonColor: "#00bcd4",
-            timer: 3000,
-          });
+          if (!hasPendingAppt) {
+            Swal.fire({
+              icon: "info",
+              title: "Patient Found",
+              text: `${data.data.name} is already registered.`,
+              confirmButtonColor: "#00bcd4",
+              timer: 3000,
+            });
+          }
 
           setFormData((prev) => ({
             ...prev,
@@ -239,6 +243,7 @@ export default function Add_appointment() {
           }));
         } else {
           setIsExistingPatient(false);
+          setNoPendingAppt(true);
           setFormData((prev) => ({
             ...prev,
             patientName: "",
@@ -312,6 +317,7 @@ export default function Add_appointment() {
       patient_id: "",
     });
     setIsExistingPatient(false);
+    setNoPendingAppt(true);
     setErrors({});
     setType("");
   };

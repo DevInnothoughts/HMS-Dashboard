@@ -16,7 +16,9 @@ const OpdPrescriptionPrintView = React.forwardRef(
     const patient = formData || {};
     const history = historyData || {};
 
-    const patientName = patient.name || patient.Name || "";
+    const patientPrefixRaw = patient.prefix || "";
+    const patientPrefix = patientPrefixRaw.trim() ? patientPrefixRaw.trim().replace(/\.$/, "").charAt(0).toUpperCase() + patientPrefixRaw.trim().replace(/\.$/, "").slice(1).toLowerCase() + ". " : "";
+    const patientName = patientPrefix + (patient.name || patient.Name || "");
     const patientAge = patient.age || patient.Age || "";
     const patientSex = patient.sex || patient.Sex || patient.gender || "";
     const patientUid =

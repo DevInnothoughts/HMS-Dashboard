@@ -152,13 +152,13 @@ textarea.form-control {
 }
 
 /* Highlight styles for Invoice List */
-.red-row {
+.p-datatable .p-datatable-tbody > tr.red-row,
+.p-datatable .p-datatable-tbody > tr.red-row > td {
     background-color: #D9534F !important;
-    color: white !important;
 }
 
-.red-row td {
-    background-color: #D9534F !important;
+.p-datatable .p-datatable-tbody > tr.red-row > td:not(:last-child),
+.p-datatable .p-datatable-tbody > tr.red-row > td:not(:last-child) * {
     color: white !important;
 }
 
