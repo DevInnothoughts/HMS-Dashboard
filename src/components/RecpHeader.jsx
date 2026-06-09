@@ -34,7 +34,7 @@ export default function RecpHeader() {
       const day = String(localDate.getDate()).padStart(2, "0");
       const date = `${year}-${month}-${day}`;
 
-      const response = await fetch(`http://localhost:5100/api/V1/appointment/getAppointmentCounts?location=${currentLocation}&date=${date}`);
+      const response = await fetch(`http://194.195.117.79:5100/api/V1/appointment/getAppointmentCounts?location=${currentLocation}&date=${date}`);
       const data = await response.json();
       if (data.statusCode === 200) {
         setApptCounts(data.data);
@@ -42,7 +42,7 @@ export default function RecpHeader() {
 
       // Fetch pending & confirmed list for today
       const formattedDate = new Date().toLocaleDateString('en-GB').split('/').join('-');
-      const listRes = await fetch(`http://localhost:5100/api/V1/appointment/listAppointments?from=${formattedDate}&to=${formattedDate}&location=${currentLocation}`);
+      const listRes = await fetch(`http://194.195.117.79:5100/api/V1/appointment/listAppointments?from=${formattedDate}&to=${formattedDate}&location=${currentLocation}`);
       const listData = await listRes.json();
       if (listData.statusCode === 200 && Array.isArray(listData.data)) {
         const pending = listData.data.filter(
@@ -56,7 +56,7 @@ export default function RecpHeader() {
       }
 
       // Fetch cancelled list for today
-      const cancelledRes = await fetch(`http://localhost:5100/api/V1/appointment/listAppointments?from=${formattedDate}&to=${formattedDate}&location=${currentLocation}&includeDeleted=true`);
+      const cancelledRes = await fetch(`http://194.195.117.79:5100/api/V1/appointment/listAppointments?from=${formattedDate}&to=${formattedDate}&location=${currentLocation}&includeDeleted=true`);
       const cancelledData = await cancelledRes.json();
       if (
         cancelledData.statusCode === 200 &&

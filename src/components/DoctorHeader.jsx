@@ -49,7 +49,7 @@ export default function DoctorHeader() {
       return;
     }
     try {
-      const url = `http://localhost:5100/api/V1/doctor/header-stats?location=${currentLocation}&doctorId=${doctorId}`;
+      const url = `http://194.195.117.79:5100/api/V1/doctor/header-stats?location=${currentLocation}&doctorId=${doctorId}`;
       console.log("📡 [DoctorHeader] Fetching:", url);
       const response = await fetch(url);
       const data = await response.json();
