@@ -4632,13 +4632,21 @@ const PersonalDetailsCard = () => {
                 }}
               >
                 <option value="">Select</option>
-                {["A+", "A-", "B+", "B-", "O+", "O-", "AB+", "AB-", "Don't Know"].map(
-                  (bg) => (
-                    <option key={bg} value={bg}>
-                      {bg}
-                    </option>
-                  ),
-                )}
+                {[
+                  "A+",
+                  "A-",
+                  "B+",
+                  "B-",
+                  "O+",
+                  "O-",
+                  "AB+",
+                  "AB-",
+                  "Don't Know",
+                ].map((bg) => (
+                  <option key={bg} value={bg}>
+                    {bg}
+                  </option>
+                ))}
               </Form.Select>
             </Col>
             <Col md={3}>

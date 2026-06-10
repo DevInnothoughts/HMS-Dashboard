@@ -47,11 +47,17 @@ const LOCATIONS_LIST = [
   "Rajaji Nagar",
   "Sarjapura",
   "Katraj",
-  "lead",
-  "Pratiksha Local",
-  "Demo Server",
+  //"lead",
+  //"Pratiksha Local",
+  //"Demo Server",
   "demo",
   "Aurangabad",
+  "Ahmedabad",
+  "Mohali",
+  "Whitefield",
+  "Hadapsar",
+  "Kalyan",
+  "Bopal",
 ].sort();
 
 export default function Login() {

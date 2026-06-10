@@ -1116,21 +1116,28 @@ export default function DoctorCallingCalendar() {
                           } else {
                             try {
                               parsed = JSON.parse(parsed);
-                            } catch (e) { }
+                            } catch (e) {}
                           }
                         }
 
                         if (Array.isArray(parsed)) {
                           parsedNotes = parsed;
-                        } else if (typeof parsed === "object" && parsed !== null && Object.keys(parsed).length > 0) {
+                        } else if (
+                          typeof parsed === "object" &&
+                          parsed !== null &&
+                          Object.keys(parsed).length > 0
+                        ) {
                           parsedNotes = [parsed];
-                        } else if (typeof parsed === "string" && parsed.trim() !== "") {
+                        } else if (
+                          typeof parsed === "string" &&
+                          parsed.trim() !== ""
+                        ) {
                           parsedNotes = [{ note: parsed }];
                         }
 
                         // Flatten any nested arrays from previous bad saves
                         let flattened = [];
-                        parsedNotes.forEach(item => {
+                        parsedNotes.forEach((item) => {
                           if (item && Array.isArray(item.note)) {
                             flattened.push(...item.note);
                           } else if (item && typeof item.note === "string") {
@@ -1230,18 +1237,56 @@ export default function DoctorCallingCalendar() {
                                     return (
                                       <div
                                         key={index}
-                                        style={{ marginBottom: "8px", paddingBottom: "8px", borderBottom: index < parsedNotes.length - 1 ? "1px dashed #d4e8e3" : "none" }}
+                                        style={{
+                                          marginBottom: "8px",
+                                          paddingBottom: "8px",
+                                          borderBottom:
+                                            index < parsedNotes.length - 1
+                                              ? "1px dashed #d4e8e3"
+                                              : "none",
+                                        }}
                                       >
-                                        <div style={{ fontSize: "13px", color: "#1a2b26", lineHeight: "1.4" }}>
-                                          <span style={{ fontWeight: "700", color: "#0f7b63" }}>{index + 1}.</span>{" "}
+                                        <div
+                                          style={{
+                                            fontSize: "13px",
+                                            color: "#1a2b26",
+                                            lineHeight: "1.4",
+                                          }}
+                                        >
+                                          <span
+                                            style={{
+                                              fontWeight: "700",
+                                              color: "#0f7b63",
+                                            }}
+                                          >
+                                            {index + 1}.
+                                          </span>{" "}
                                           {formattedNoteDate && (
                                             <>
-                                              <span style={{ fontWeight: "600", color: "#486f64ff" }}>{formattedNoteDate}</span>
-                                              <span style={{ margin: "0 4px", color: "#6f988eff" }}>|</span>
+                                              <span
+                                                style={{
+                                                  fontWeight: "600",
+                                                  color: "#486f64ff",
+                                                }}
+                                              >
+                                                {formattedNoteDate}
+                                              </span>
+                                              <span
+                                                style={{
+                                                  margin: "0 4px",
+                                                  color: "#6f988eff",
+                                                }}
+                                              >
+                                                |
+                                              </span>
                                             </>
                                           )}
                                           <span style={{ fontWeight: "600" }}>
-                                            {typeof note === 'string' ? note : (typeof note.note === 'object' ? JSON.stringify(note.note) : (note.note || ""))}
+                                            {typeof note === "string"
+                                              ? note
+                                              : typeof note.note === "object"
+                                                ? JSON.stringify(note.note)
+                                                : note.note || ""}
                                           </span>
                                         </div>
                                       </div>

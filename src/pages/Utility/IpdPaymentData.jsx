@@ -74,13 +74,13 @@ const convertToWords = (number) => {
       } else {
         str.push(
           words[Math.floor(n / 10) * 10] +
-          " " +
-          words[n % 10] +
-          " " +
-          digits[counter] +
-          plural +
-          " " +
-          hundred,
+            " " +
+            words[n % 10] +
+            " " +
+            digits[counter] +
+            plural +
+            " " +
+            hundred,
         );
       }
     } else {
@@ -318,7 +318,7 @@ const IpdPaymentData = () => {
           } else {
             Swal.showValidationMessage(
               result.message ||
-              "Swipe not detected yet. Please try again after swiping.",
+                "Swipe not detected yet. Please try again after swiping.",
             );
             return false;
           }
@@ -372,7 +372,7 @@ const IpdPaymentData = () => {
               Swal.fire(
                 "Cancellation Error",
                 cancelResult?.message ||
-                "Remote cancel failed. Please cancel manually on the POS machine.",
+                  "Remote cancel failed. Please cancel manually on the POS machine.",
                 "error",
               );
             }
@@ -513,10 +513,10 @@ const IpdPaymentData = () => {
     const trimmedLocation = currentLocation ? currentLocation.trim() : "";
     const invoiceInfo = clinincLoc[trimmedLocation] ||
       clinincLoc[currentLocation] || {
-      invoiceAddress: "<b>Healing Hands Clinic</b>",
-      invoiceHelplineNo: "8888288884",
-      EmergencySMS: "",
-    };
+        invoiceAddress: "<b>Healing Hands Clinic</b>",
+        invoiceHelplineNo: "8888288884",
+        EmergencySMS: "",
+      };
     const receiptInfo = receiptlocations[currentLocation] || {
       hospitalcode: "HHC",
     };
@@ -758,7 +758,7 @@ const IpdPaymentData = () => {
                 <div className="summary-header">
                   <span>
                     <FaListUl className="me-1" />
-                    Total Bill:  ₹ {summary.totalBill}
+                    Total Bill: ₹ {summary.totalBill}
                   </span>
                   <span>
                     <FaTasks className="me-1" />
@@ -814,8 +814,13 @@ const IpdPaymentData = () => {
                             />
                           </td>
                           <td>
-                            <InputGroup size="sm" style={{ width: "135px", flexWrap: "nowrap" }}>
-                              <InputGroup.Text className="table-input-group-text">₹</InputGroup.Text>
+                            <InputGroup
+                              size="sm"
+                              style={{ width: "135px", flexWrap: "nowrap" }}
+                            >
+                              <InputGroup.Text className="table-input-group-text">
+                                ₹
+                              </InputGroup.Text>
                               <Form.Control
                                 className="table-input-group-control"
                                 readOnly
@@ -824,8 +829,13 @@ const IpdPaymentData = () => {
                             </InputGroup>
                           </td>
                           <td>
-                            <InputGroup size="sm" style={{ width: "135px", flexWrap: "nowrap" }}>
-                              <InputGroup.Text className="table-input-group-text">₹</InputGroup.Text>
+                            <InputGroup
+                              size="sm"
+                              style={{ width: "135px", flexWrap: "nowrap" }}
+                            >
+                              <InputGroup.Text className="table-input-group-text">
+                                ₹
+                              </InputGroup.Text>
                               <Form.Control
                                 className="table-input-group-control"
                                 readOnly
@@ -834,8 +844,13 @@ const IpdPaymentData = () => {
                             </InputGroup>
                           </td>
                           <td>
-                            <InputGroup size="sm" style={{ width: "135px", flexWrap: "nowrap" }}>
-                              <InputGroup.Text className="table-input-group-text">₹</InputGroup.Text>
+                            <InputGroup
+                              size="sm"
+                              style={{ width: "135px", flexWrap: "nowrap" }}
+                            >
+                              <InputGroup.Text className="table-input-group-text">
+                                ₹
+                              </InputGroup.Text>
                               <Form.Control
                                 className="table-input-group-control"
                                 readOnly
@@ -844,8 +859,13 @@ const IpdPaymentData = () => {
                             </InputGroup>
                           </td>
                           <td>
-                            <InputGroup size="sm" style={{ width: "135px", flexWrap: "nowrap" }}>
-                              <InputGroup.Text className="table-input-group-text">₹</InputGroup.Text>
+                            <InputGroup
+                              size="sm"
+                              style={{ width: "135px", flexWrap: "nowrap" }}
+                            >
+                              <InputGroup.Text className="table-input-group-text">
+                                ₹
+                              </InputGroup.Text>
                               <Form.Control
                                 className="table-input-group-control"
                                 readOnly
@@ -854,8 +874,13 @@ const IpdPaymentData = () => {
                             </InputGroup>
                           </td>
                           <td>
-                            <InputGroup size="sm" style={{ width: "135px", flexWrap: "nowrap" }}>
-                              <InputGroup.Text className="table-input-group-text">₹</InputGroup.Text>
+                            <InputGroup
+                              size="sm"
+                              style={{ width: "135px", flexWrap: "nowrap" }}
+                            >
+                              <InputGroup.Text className="table-input-group-text">
+                                ₹
+                              </InputGroup.Text>
                               <Form.Control
                                 className="table-input-group-control"
                                 readOnly
@@ -864,8 +889,13 @@ const IpdPaymentData = () => {
                             </InputGroup>
                           </td>
                           <td>
-                            <InputGroup size="sm" style={{ width: "135px", flexWrap: "nowrap" }}>
-                              <InputGroup.Text className="table-input-group-text">₹</InputGroup.Text>
+                            <InputGroup
+                              size="sm"
+                              style={{ width: "135px", flexWrap: "nowrap" }}
+                            >
+                              <InputGroup.Text className="table-input-group-text">
+                                ₹
+                              </InputGroup.Text>
                               <Form.Control
                                 className="table-input-group-control"
                                 readOnly
@@ -969,8 +999,13 @@ const IpdPaymentData = () => {
                                 />
                               </Col>
                               <Col>
-                                <InputGroup size="sm" style={{ flexWrap: "nowrap" }}>
-                                  <InputGroup.Text className="input-group-text-rupee">₹</InputGroup.Text>
+                                <InputGroup
+                                  size="sm"
+                                  style={{ flexWrap: "nowrap" }}
+                                >
+                                  <InputGroup.Text className="input-group-text-rupee">
+                                    ₹
+                                  </InputGroup.Text>
                                   <Form.Control
                                     type="number"
                                     onWheel={(e) => e.target.blur()}
@@ -991,8 +1026,13 @@ const IpdPaymentData = () => {
                                 </InputGroup>
                               </Col>
                               <Col>
-                                <InputGroup size="sm" style={{ flexWrap: "nowrap" }}>
-                                  <InputGroup.Text className="input-group-text-rupee">₹</InputGroup.Text>
+                                <InputGroup
+                                  size="sm"
+                                  style={{ flexWrap: "nowrap" }}
+                                >
+                                  <InputGroup.Text className="input-group-text-rupee">
+                                    ₹
+                                  </InputGroup.Text>
                                   <Form.Control
                                     type="number"
                                     onWheel={(e) => e.target.blur()}
@@ -1014,8 +1054,13 @@ const IpdPaymentData = () => {
                                 </InputGroup>
                               </Col>
                               <Col>
-                                <InputGroup size="sm" style={{ flexWrap: "nowrap" }}>
-                                  <InputGroup.Text className="input-group-text-rupee">₹</InputGroup.Text>
+                                <InputGroup
+                                  size="sm"
+                                  style={{ flexWrap: "nowrap" }}
+                                >
+                                  <InputGroup.Text className="input-group-text-rupee">
+                                    ₹
+                                  </InputGroup.Text>
                                   <Form.Control
                                     type="number"
                                     onWheel={(e) => e.target.blur()}
@@ -1036,8 +1081,13 @@ const IpdPaymentData = () => {
                                 </InputGroup>
                               </Col>
                               <Col>
-                                <InputGroup size="sm" style={{ flexWrap: "nowrap" }}>
-                                  <InputGroup.Text className="input-group-text-rupee">₹</InputGroup.Text>
+                                <InputGroup
+                                  size="sm"
+                                  style={{ flexWrap: "nowrap" }}
+                                >
+                                  <InputGroup.Text className="input-group-text-rupee">
+                                    ₹
+                                  </InputGroup.Text>
                                   <Form.Control
                                     type="number"
                                     onWheel={(e) => e.target.blur()}
@@ -1059,8 +1109,13 @@ const IpdPaymentData = () => {
                                 </InputGroup>
                               </Col>
                               <Col>
-                                <InputGroup size="sm" style={{ flexWrap: "nowrap" }}>
-                                  <InputGroup.Text className="input-group-text-rupee">₹</InputGroup.Text>
+                                <InputGroup
+                                  size="sm"
+                                  style={{ flexWrap: "nowrap" }}
+                                >
+                                  <InputGroup.Text className="input-group-text-rupee">
+                                    ₹
+                                  </InputGroup.Text>
                                   <Form.Control
                                     type="number"
                                     onWheel={(e) => e.target.blur()}
@@ -1081,8 +1136,13 @@ const IpdPaymentData = () => {
                                 </InputGroup>
                               </Col>
                               <Col>
-                                <InputGroup size="sm" style={{ flexWrap: "nowrap" }}>
-                                  <InputGroup.Text className="input-group-text-rupee">₹</InputGroup.Text>
+                                <InputGroup
+                                  size="sm"
+                                  style={{ flexWrap: "nowrap" }}
+                                >
+                                  <InputGroup.Text className="input-group-text-rupee">
+                                    ₹
+                                  </InputGroup.Text>
                                   <Form.Control
                                     type="number"
                                     onWheel={(e) => e.target.blur()}

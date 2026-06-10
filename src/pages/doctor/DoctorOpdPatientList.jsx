@@ -4397,7 +4397,12 @@ export default function DoctorOpdPatientList() {
                         field="name"
                         header="Patient Name"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => <span>{rowData.prefix ? `${rowData.prefix} ` : ""}{rowData.name || "-"}</span>}
+                        body={(rowData) => (
+                          <span>
+                            {rowData.prefix ? `${rowData.prefix} ` : ""}
+                            {rowData.name || "-"}
+                          </span>
+                        )}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",

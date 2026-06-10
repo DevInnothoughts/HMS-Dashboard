@@ -2188,7 +2188,12 @@ export default function Appointment_list() {
                           ...getColumnStyle("120px"),
                           border: "1px solid #90caf9",
                         }}
-                        body={(rowData) => <span>{rowData.prefix ? `${rowData.prefix} ` : ""}{rowData.patient_name || "-"}</span>}
+                        body={(rowData) => (
+                          <span>
+                            {rowData.prefix ? `${rowData.prefix} ` : ""}
+                            {rowData.patient_name || "-"}
+                          </span>
+                        )}
                         headerClassName="datatable-header-center"
                       />
 

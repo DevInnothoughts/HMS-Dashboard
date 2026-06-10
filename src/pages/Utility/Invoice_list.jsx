@@ -106,8 +106,8 @@ const getDynamicRowsFromInvoice = (invoice) => {
 
   const rowSource =
     invoice.package &&
-      typeof invoice.package === "string" &&
-      invoice.package !== ""
+    typeof invoice.package === "string" &&
+    invoice.package !== ""
       ? invoice.package
       : invoice.title && typeof invoice.title === "string"
         ? invoice.title
@@ -291,7 +291,9 @@ const InvoiceList = () => {
   });
 
   const openCashlessModal = (rowData) => {
-    const total = parseFloat(rowData.totalamt || rowData.total_amt || rowData.payable_amt || 0).toFixed(2);
+    const total = parseFloat(
+      rowData.totalamt || rowData.total_amt || rowData.payable_amt || 0,
+    ).toFixed(2);
     setCashlessData({
       invoiceid: rowData.invoice_id || "",
       totalamt: total,
@@ -331,7 +333,7 @@ const InvoiceList = () => {
         invoice_id: cashlessData.invoiceid,
         receivedamt: parseFloat(cashlessData.receivedamt) || 0,
         coopay: parseFloat(cashlessData.coopay) || 0,
-        deductionamt: parseFloat(cashlessData.deductionamt) || 0
+        deductionamt: parseFloat(cashlessData.deductionamt) || 0,
       };
 
       const res = await fetch(`${BASE_URL}/invoice/insuranceSettlement`, {
@@ -341,7 +343,10 @@ const InvoiceList = () => {
       });
       const data = await res.json();
       if (data.status) {
-        Toast.fire({ icon: "success", title: "Cashless amounts updated successfully." });
+        Toast.fire({
+          icon: "success",
+          title: "Cashless amounts updated successfully.",
+        });
         setShowCashlessModal(false);
         fetchInvoices();
       } else {
@@ -483,17 +488,17 @@ const InvoiceList = () => {
             payable_amt,
             pay_mode:
               invoice.status === "PDC" ||
-                invoice.bill_method === "PDC" ||
-                (invoice.chequeno && invoice.chequeno !== "NULL")
+              invoice.bill_method === "PDC" ||
+              (invoice.chequeno && invoice.chequeno !== "NULL")
                 ? "PDC"
                 : invoice.status === "Cashless" ||
-                  invoice.bill_method === "Cashless"
+                    invoice.bill_method === "Cashless"
                   ? "Cashless"
                   : invoice.status === "Reimbursement" ||
-                    invoice.bill_method === "Reimbursement"
+                      invoice.bill_method === "Reimbursement"
                     ? "Reimbursement"
                     : invoice.bill_Type === "charity" ||
-                      invoice.status === "Charity"
+                        invoice.status === "Charity"
                       ? "Charity"
                       : "NonInsurance",
             patient_name: invoice.patient_name || invoice.name || "N/A",
@@ -913,16 +918,16 @@ const InvoiceList = () => {
         : statusVal === "reimbursement"
           ? "Reimbursement"
           : statusVal === "pdc" ||
-            (invoice.chequeno && invoice.chequeno !== "NULL")
+              (invoice.chequeno && invoice.chequeno !== "NULL")
             ? "PDC"
             : "NonInsurance");
 
     const bill_Type =
       invoice.bill_Type ||
       (statusVal === "cashless" ||
-        statusVal === "reimbursement" ||
-        statusVal === "pdc" ||
-        invoice.insurancecompany
+      statusVal === "reimbursement" ||
+      statusVal === "pdc" ||
+      invoice.insurancecompany
         ? "insurance"
         : statusVal === "charity"
           ? "charity"
@@ -1120,9 +1125,9 @@ const InvoiceList = () => {
     const trimmedLocation = currentLocation ? currentLocation.trim() : "";
     const clinicAddr = clinincLoc[trimmedLocation] ||
       clinincLoc[currentLocation] || {
-      invoiceAddress: "<b>Healing Hands Clinic</b>",
-      invoiceHelplineNo: "8888288884",
-    };
+        invoiceAddress: "<b>Healing Hands Clinic</b>",
+        invoiceHelplineNo: "8888288884",
+      };
 
     const { dynamicRows, Sub_Total } = getDynamicRowsFromInvoice(invoice);
     const printWindow = window.open("", "_blank", "width=900,height=900");
@@ -1287,15 +1292,15 @@ const InvoiceList = () => {
                 <td>Amount (INR)</td>
               </tr>
               ${dynamicRows
-          .map(
-            (row) => `
+                .map(
+                  (row) => `
                 <tr>
                   <td>${row.label}</td>
                   <td>${Math.round(parseFloat(row.value))}</td>
                 </tr>
               `,
-          )
-          .join("")}
+                )
+                .join("")}
             </table>
           </td>
       <td style="width: 50%; vertical-align: top; padding-left: 10px;">
@@ -1308,15 +1313,16 @@ const InvoiceList = () => {
       <td>Total</td>
       <td>${(Math.round(parseFloat(invoice.totalamt || Sub_Total)) || 0).toLocaleString()}</td>
     </tr>
-    ${(Math.round(parseFloat(invoice.discount)) || 0) > 0
-          ? `
+    ${
+      (Math.round(parseFloat(invoice.discount)) || 0) > 0
+        ? `
     <tr>
       <td>Discount</td>
       <td>${(Math.round(parseFloat(invoice.discount)) || 0).toLocaleString()}</td>
     </tr>
     `
-          : ""
-        }
+        : ""
+    }
   </table>
 </td>
         </tr>
@@ -1363,8 +1369,8 @@ const InvoiceList = () => {
       <div class="footer">
         <table class="footer-table">
           <tr>
-            <td>For Queries Call: <b>${clinicAddr.invoiceHelplineNo || "7774099753"}</b></td>
-            <td style="text-align:right;">For Emergency SMS: <b>${clinicAddr.EmergencySMS || "7774053187"}</b></td>
+            <td>For Queries Call: <b>${clinicAddr.invoiceHelplineNo}</b></td>
+            ${clinicAddr.EmergencySMS ? `<td style="text-align:right;">For Emergency SMS: <b>${clinicAddr.EmergencySMS}</b></td>` : ""}
           </tr>
         </table>
       </div>
@@ -1377,7 +1383,7 @@ const InvoiceList = () => {
   `;
       printWindow.document.write(printContent);
       printWindow.document.close();
-      setTimeout(() => { }, 1000);
+      setTimeout(() => {}, 1000);
     });
   };
 
@@ -1710,7 +1716,12 @@ const InvoiceList = () => {
                       headerClassName="datatable-header-center"
                       field="patient_name"
                       header="Patient Name"
-                      body={(rowData) => <span>{rowData.prefix ? `${rowData.prefix} ` : ""}{rowData.patient_name || "-"}</span>}
+                      body={(rowData) => (
+                        <span>
+                          {rowData.prefix ? `${rowData.prefix} ` : ""}
+                          {rowData.patient_name || "-"}
+                        </span>
+                      )}
                       style={{
                         width: "200px",
                         border: "1px solid #4dd0e1",
@@ -1734,8 +1745,20 @@ const InvoiceList = () => {
                         return (
                           <div
                             className={isCashless ? "cashless-patient" : ""}
-                            style={isCashless ? { cursor: "pointer", color: "red", fontWeight: "bold" } : {}}
-                            onClick={isCashless ? () => openCashlessModal(rowData) : undefined}
+                            style={
+                              isCashless
+                                ? {
+                                    cursor: "pointer",
+                                    color: "red",
+                                    fontWeight: "bold",
+                                  }
+                                : {}
+                            }
+                            onClick={
+                              isCashless
+                                ? () => openCashlessModal(rowData)
+                                : undefined
+                            }
                           >
                             {status || rowData.pay_mode}
                           </div>
@@ -1793,7 +1816,13 @@ const InvoiceList = () => {
                             variant="primary"
                             disabled={
                               parseFloat(rowData.payable_amt || 0) >
-                                parseFloat(rowData.totaldue !== undefined ? rowData.totaldue : rowData.due_amt !== undefined ? rowData.due_amt : rowData.payable_amt || 0) ||
+                                parseFloat(
+                                  rowData.totaldue !== undefined
+                                    ? rowData.totaldue
+                                    : rowData.due_amt !== undefined
+                                      ? rowData.due_amt
+                                      : rowData.payable_amt || 0,
+                                ) ||
                               parseFloat(rowData.receivedamt || 0) > 0 ||
                               parseFloat(rowData.received_amt || 0) > 0
                             }
@@ -2555,9 +2584,13 @@ const InvoiceList = () => {
                                   bill_method: "non_insurance",
                                 }),
                               };
-                              const subTotal = parseFloat(updated.Sub_Total) || 0;
+                              const subTotal =
+                                parseFloat(updated.Sub_Total) || 0;
                               const payable = subTotal;
-                              updated.payableAmount = Math.max(0, payable).toFixed(0);
+                              updated.payableAmount = Math.max(
+                                0,
+                                payable,
+                              ).toFixed(0);
 
                               setSelectedInvoice((prevInvoice) => ({
                                 ...prevInvoice,
@@ -2576,103 +2609,103 @@ const InvoiceList = () => {
                       {/* 1. Show Insurance Company Dropdown */}
                       {(selectedInvoice.bill_Type === "insurance" ||
                         selectedInvoice.insurancecompany) && (
-                          <Col md={4}>
-                            <Form.Label
-                              style={{
-                                fontSize: "12px",
-                                fontWeight: "600",
-                                marginBottom: "2px",
-                              }}
-                              className="text-muted"
-                            >
-                              Insurance Company
-                            </Form.Label>
-                            <Form.Select
-                              required
-                              size="sm"
-                              style={{
-                                borderRadius: "10px",
-                                fontSize: "12px",
-                                border: "1px solid #4dd0e1",
-                              }}
-                              value={selectedInvoice.insurancecompany || ""}
-                              onChange={(e) =>
-                                setSelectedInvoice({
-                                  ...selectedInvoice,
-                                  insurancecompany: e.target.value,
-                                })
-                              }
-                            >
-                              <option value="">Select Company</option>
-                              {insurance.map((co, idx) => (
-                                <option key={idx} value={co.comapny_id}>
-                                  {co.companyname}
+                        <Col md={4}>
+                          <Form.Label
+                            style={{
+                              fontSize: "12px",
+                              fontWeight: "600",
+                              marginBottom: "2px",
+                            }}
+                            className="text-muted"
+                          >
+                            Insurance Company
+                          </Form.Label>
+                          <Form.Select
+                            required
+                            size="sm"
+                            style={{
+                              borderRadius: "10px",
+                              fontSize: "12px",
+                              border: "1px solid #4dd0e1",
+                            }}
+                            value={selectedInvoice.insurancecompany || ""}
+                            onChange={(e) =>
+                              setSelectedInvoice({
+                                ...selectedInvoice,
+                                insurancecompany: e.target.value,
+                              })
+                            }
+                          >
+                            <option value="">Select Company</option>
+                            {insurance.map((co, idx) => (
+                              <option key={idx} value={co.comapny_id}>
+                                {co.companyname}
+                              </option>
+                            ))}
+                            {selectedInvoice.insurancecompany &&
+                              !insurance.some(
+                                (co) =>
+                                  co.comapny_id ==
+                                  selectedInvoice.insurancecompany,
+                              ) && (
+                                <option
+                                  value={selectedInvoice.insurancecompany}
+                                >
+                                  {selectedInvoice.insurance_company_name ||
+                                    selectedInvoice.insurancecompany}
                                 </option>
-                              ))}
-                              {selectedInvoice.insurancecompany &&
-                                !insurance.some(
-                                  (co) =>
-                                    co.comapny_id ==
-                                    selectedInvoice.insurancecompany,
-                                ) && (
-                                  <option
-                                    value={selectedInvoice.insurancecompany}
-                                  >
-                                    {selectedInvoice.insurance_company_name ||
-                                      selectedInvoice.insurancecompany}
-                                  </option>
-                                )}
-                            </Form.Select>
-                          </Col>
-                        )}
+                              )}
+                          </Form.Select>
+                        </Col>
+                      )}
 
                       {/* 2. Show TPA Dropdown */}
                       {(selectedInvoice.bill_Type === "insurance" ||
                         selectedInvoice.tpa) && (
-                          <Col md={4}>
-                            <Form.Label
-                              style={{
-                                fontSize: "12px",
-                                fontWeight: "600",
-                                marginBottom: "2px",
-                              }}
-                              className="text-muted"
-                            >
-                              TPA
-                            </Form.Label>
-                            <Form.Select
-                              size="sm"
-                              style={{
-                                borderRadius: "10px",
-                                fontSize: "12px",
-                                border: "1px solid #4dd0e1",
-                              }}
-                              value={selectedInvoice.tpa || ""}
-                              onChange={(e) =>
-                                setSelectedInvoice({
-                                  ...selectedInvoice,
-                                  tpa: e.target.value,
-                                })
-                              }
-                            >
-                              <option value="">Select TPA</option>
-                              {tpa.map((t, idx) => (
-                                <option key={idx} value={t.comapny_id}>
-                                  {t.companyname}
+                        <Col md={4}>
+                          <Form.Label
+                            style={{
+                              fontSize: "12px",
+                              fontWeight: "600",
+                              marginBottom: "2px",
+                            }}
+                            className="text-muted"
+                          >
+                            TPA
+                          </Form.Label>
+                          <Form.Select
+                            size="sm"
+                            style={{
+                              borderRadius: "10px",
+                              fontSize: "12px",
+                              border: "1px solid #4dd0e1",
+                            }}
+                            value={selectedInvoice.tpa || ""}
+                            onChange={(e) =>
+                              setSelectedInvoice({
+                                ...selectedInvoice,
+                                tpa: e.target.value,
+                              })
+                            }
+                          >
+                            <option value="">Select TPA</option>
+                            {tpa.map((t, idx) => (
+                              <option key={idx} value={t.comapny_id}>
+                                {t.companyname}
+                              </option>
+                            ))}
+                            {selectedInvoice.tpa &&
+                              !tpa.some(
+                                (t) => t.comapny_id == selectedInvoice.tpa,
+                              ) && (
+                                <option value={selectedInvoice.tpa}>
+                                  {selectedInvoice.tpa_name ||
+                                    selectedInvoice.tpa}
                                 </option>
-                              ))}
-                              {selectedInvoice.tpa &&
-                                !tpa.some(
-                                  (t) => t.comapny_id == selectedInvoice.tpa,
-                                ) && (
-                                  <option value={selectedInvoice.tpa}>
-                                    {selectedInvoice.tpa_name ||
-                                      selectedInvoice.tpa}
-                                  </option>
-                                )}
-                            </Form.Select>
-                          </Col>
-                        )}
+                              )}
+                          </Form.Select>
+                        </Col>
+                      )}
 
                       {/* 3. Bill Method - Only shown if type is insurance */}
                       {selectedInvoice.bill_Type === "insurance" && (
@@ -2727,71 +2760,74 @@ const InvoiceList = () => {
                       {/* 4. Deduction Fields (Discount/PDC) based on type/method */}
                       {(selectedInvoice.bill_Type === "non_insurance" ||
                         selectedInvoice.bill_Type === "charity") && (
-                          <Col md={4}>
-                            <Form.Label
+                        <Col md={4}>
+                          <Form.Label
+                            style={{
+                              fontSize: "12px",
+                              fontWeight: "600",
+                              marginBottom: "2px",
+                            }}
+                            className="text-muted"
+                          >
+                            Discount Amount (₹)
+                          </Form.Label>
+                          <InputGroup size="sm" style={{ flexWrap: "nowrap" }}>
+                            <InputGroup.Text
                               style={{
+                                borderRadius: "10px",
                                 fontSize: "12px",
-                                fontWeight: "600",
-                                marginBottom: "2px",
+                                border: "1px solid #4dd0e1",
+                                borderRight: "none",
+                                backgroundColor: "#f8f9fa",
+                                borderTopRightRadius: 0,
+                                borderBottomRightRadius: 0,
+                                paddingRight: "5px",
                               }}
-                              className="text-muted"
                             >
-                              Discount Amount (₹)
-                            </Form.Label>
-                            <InputGroup size="sm" style={{ flexWrap: "nowrap" }}>
-                              <InputGroup.Text
-                                style={{
-                                  borderRadius: "10px",
-                                  fontSize: "12px",
-                                  border: "1px solid #4dd0e1",
-                                  borderRight: "none",
-                                  backgroundColor: "#f8f9fa",
-                                  borderTopRightRadius: 0,
-                                  borderBottomRightRadius: 0,
-                                  paddingRight: "5px",
-                                }}
-                              >
-                                ₹
-                              </InputGroup.Text>
-                              <Form.Control
-                                size="sm"
-                                type="text"
-                                min="0"
-                                onWheel={(e) => e.target.blur()}
-                                onKeyDown={(e) => {
-                                  if (["e", "E", "+", "-", "."].includes(e.key)) {
-                                    e.preventDefault();
-                                  }
-                                }}
-                                style={{
-                                  borderRadius: "10px",
-                                  fontSize: "12px",
-                                  border: "1px solid #4dd0e1",
-                                  borderLeft: "none",
-                                  borderTopLeftRadius: 0,
-                                  borderBottomLeftRadius: 0,
-                                  paddingLeft: "5px",
-                                }}
-                                value={modalInvoiceData.discount || ""}
-                                onChange={(e) => {
-                                  const val = e.target.value.replace(/[^0-9]/g, "");
-                                  setModalInvoiceData((prev) => ({
-                                    ...prev,
-                                    discount: val,
-                                    payableAmount: calculateActivePayableAmt(
-                                      selectedInvoice,
-                                      prev.Sub_Total,
-                                      val,
-                                      prev.pdc,
-                                      prev.bill_Type,
-                                      prev.bill_method,
-                                    ),
-                                  }));
-                                }}
-                              />
-                            </InputGroup>
-                          </Col>
-                        )}
+                              ₹
+                            </InputGroup.Text>
+                            <Form.Control
+                              size="sm"
+                              type="text"
+                              min="0"
+                              onWheel={(e) => e.target.blur()}
+                              onKeyDown={(e) => {
+                                if (["e", "E", "+", "-", "."].includes(e.key)) {
+                                  e.preventDefault();
+                                }
+                              }}
+                              style={{
+                                borderRadius: "10px",
+                                fontSize: "12px",
+                                border: "1px solid #4dd0e1",
+                                borderLeft: "none",
+                                borderTopLeftRadius: 0,
+                                borderBottomLeftRadius: 0,
+                                paddingLeft: "5px",
+                              }}
+                              value={modalInvoiceData.discount || ""}
+                              onChange={(e) => {
+                                const val = e.target.value.replace(
+                                  /[^0-9]/g,
+                                  "",
+                                );
+                                setModalInvoiceData((prev) => ({
+                                  ...prev,
+                                  discount: val,
+                                  payableAmount: calculateActivePayableAmt(
+                                    selectedInvoice,
+                                    prev.Sub_Total,
+                                    val,
+                                    prev.pdc,
+                                    prev.bill_Type,
+                                    prev.bill_method,
+                                  ),
+                                }));
+                              }}
+                            />
+                          </InputGroup>
+                        </Col>
+                      )}
 
                       {selectedInvoice.bill_Type === "insurance" &&
                         selectedInvoice.bill_method === "PDC" && (
@@ -2830,7 +2866,9 @@ const InvoiceList = () => {
                                 min="0"
                                 onWheel={(e) => e.target.blur()}
                                 onKeyDown={(e) => {
-                                  if (["e", "E", "+", "-", "."].includes(e.key)) {
+                                  if (
+                                    ["e", "E", "+", "-", "."].includes(e.key)
+                                  ) {
                                     e.preventDefault();
                                   }
                                 }}
@@ -2845,7 +2883,10 @@ const InvoiceList = () => {
                                 }}
                                 value={modalInvoiceData.pdc || ""}
                                 onChange={(e) => {
-                                  const val = e.target.value.replace(/[^0-9]/g, "");
+                                  const val = e.target.value.replace(
+                                    /[^0-9]/g,
+                                    "",
+                                  );
                                   setModalInvoiceData((prev) => ({
                                     ...prev,
                                     pdc: val,
@@ -3096,77 +3137,137 @@ const InvoiceList = () => {
       </Modal>
 
       {/* Cashless Settlement Modal */}
-      <Modal show={showCashlessModal} onHide={() => setShowCashlessModal(false)} centered backdrop="static" keyboard={false}>
-        <Modal.Header closeButton style={{
-          backgroundColor: "#e0f7fa",
-          borderBottom: "2px solid #4dd0e1",
-          padding: "10px",
-        }}>
-          <Modal.Title style={{ fontSize: "16px", fontWeight: "600", color: "#00838f" }}>
+      <Modal
+        show={showCashlessModal}
+        onHide={() => setShowCashlessModal(false)}
+        centered
+        backdrop="static"
+        keyboard={false}
+      >
+        <Modal.Header
+          closeButton
+          style={{
+            backgroundColor: "#e0f7fa",
+            borderBottom: "2px solid #4dd0e1",
+            padding: "10px",
+          }}
+        >
+          <Modal.Title
+            style={{ fontSize: "16px", fontWeight: "600", color: "#00838f" }}
+          >
             Add Cashless Amount
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form onSubmit={submitCashless} id="cashless-form">
             <Form.Group className="mb-10 d-flex align-items-center">
-              <Form.Label style={{ width: "35%", margin: 0, fontWeight: "500" }}>Total Amount</Form.Label>
+              <Form.Label
+                style={{ width: "35%", margin: 0, fontWeight: "500" }}
+              >
+                Total Amount
+              </Form.Label>
               <Form.Control
                 type="text"
                 readOnly
                 value={cashlessData.totalamt}
-                style={{ width: "65%", backgroundColor: "#e9ecef", cursor: "not-allowed", border: "1px solid rgb(77, 208, 225)", }}
+                style={{
+                  width: "65%",
+                  backgroundColor: "#e9ecef",
+                  cursor: "not-allowed",
+                  border: "1px solid rgb(77, 208, 225)",
+                }}
               />
             </Form.Group>
             <Form.Group className="mb-10 d-flex align-items-center">
-              <Form.Label style={{ width: "35%", margin: 0, fontWeight: "500" }}>Approved Amount <span className="text-danger">*</span></Form.Label>
+              <Form.Label
+                style={{ width: "35%", margin: 0, fontWeight: "500" }}
+              >
+                Approved Amount <span className="text-danger">*</span>
+              </Form.Label>
               <Form.Control
                 type="text"
                 required
                 value={cashlessData.receivedamt}
-                onChange={(e) => handleCashlessChange("receivedamt", e.target.value)}
+                onChange={(e) =>
+                  handleCashlessChange("receivedamt", e.target.value)
+                }
                 style={{ width: "65%", border: "1px solid rgb(77, 208, 225)" }}
               />
             </Form.Group>
             <Form.Group className="mb-10 d-flex align-items-center">
-              <Form.Label style={{ width: "35%", margin: 0, fontWeight: "500" }}>CoPay <span className="text-danger">*</span></Form.Label>
+              <Form.Label
+                style={{ width: "35%", margin: 0, fontWeight: "500" }}
+              >
+                CoPay <span className="text-danger">*</span>
+              </Form.Label>
               <Form.Control
                 type="text"
                 required
                 value={cashlessData.coopay}
                 onChange={(e) => handleCashlessChange("coopay", e.target.value)}
-                style={{ width: "65%", border: "1px solid rgb(77, 208, 225)", }}
+                style={{ width: "65%", border: "1px solid rgb(77, 208, 225)" }}
               />
             </Form.Group>
             <Form.Group className="mb-10 d-flex align-items-center">
-              <Form.Label style={{ width: "35%", margin: 0, fontWeight: "500" }}>Deduction Amount</Form.Label>
+              <Form.Label
+                style={{ width: "35%", margin: 0, fontWeight: "500" }}
+              >
+                Deduction Amount
+              </Form.Label>
               <Form.Control
                 type="text"
                 readOnly
                 value={cashlessData.deductionamt}
-                style={{ width: "65%", backgroundColor: "#e9ecef", cursor: "not-allowed", border: "1px solid rgb(77, 208, 225)", }}
+                style={{
+                  width: "65%",
+                  backgroundColor: "#e9ecef",
+                  cursor: "not-allowed",
+                  border: "1px solid rgb(77, 208, 225)",
+                }}
               />
             </Form.Group>
             <Form.Group className="mb-3 d-flex align-items-center">
-              <Form.Label style={{ width: "35%", margin: 0, fontWeight: "500" }}>Payable Amount</Form.Label>
+              <Form.Label
+                style={{ width: "35%", margin: 0, fontWeight: "500" }}
+              >
+                Payable Amount
+              </Form.Label>
               <Form.Control
                 type="text"
                 readOnly
                 value={cashlessData.payableamt}
-                style={{ width: "65%", backgroundColor: "#e9ecef", cursor: "not-allowed", border: "1px solid rgb(77, 208, 225)", }}
+                style={{
+                  width: "65%",
+                  backgroundColor: "#e9ecef",
+                  cursor: "not-allowed",
+                  border: "1px solid rgb(77, 208, 225)",
+                }}
               />
             </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button style={{ borderRadius: "10px" }} variant="secondary" onClick={() => setShowCashlessModal(false)}>
+          <Button
+            style={{ borderRadius: "10px" }}
+            variant="secondary"
+            onClick={() => setShowCashlessModal(false)}
+          >
             Close
           </Button>
-          <Button variant="primary" type="submit" form="cashless-form" style={{ backgroundColor: "teal", border: "none", borderRadius: "10px" }}>
+          <Button
+            variant="primary"
+            type="submit"
+            form="cashless-form"
+            style={{
+              backgroundColor: "teal",
+              border: "none",
+              borderRadius: "10px",
+            }}
+          >
             Save
           </Button>
         </Modal.Footer>
       </Modal>
-
     </div>
   );
 };

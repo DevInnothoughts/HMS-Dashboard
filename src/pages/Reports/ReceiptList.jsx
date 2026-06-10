@@ -937,7 +937,12 @@ export default function ReceiptList() {
                       <Column
                         field="patientName"
                         header="Patient Name"
-                        body={(rowData) => <span>{rowData.prefix ? `${rowData.prefix} ` : ""}{rowData.patientName || "-"}</span>}
+                        body={(rowData) => (
+                          <span>
+                            {rowData.prefix ? `${rowData.prefix} ` : ""}
+                            {rowData.patientName || "-"}
+                          </span>
+                        )}
                         headerClassName="datatable-header-center"
                         style={{
                           border: "1px solid #90caf9",
