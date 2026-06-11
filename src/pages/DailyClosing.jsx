@@ -36,6 +36,8 @@ const DailyClosing = () => {
 
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [currentLocation, setCurrentLocation] = useState("");
+  const [isYesterdayFilled, setIsYesterdayFilled] = useState(null);
+  const [checkingYesterday, setCheckingYesterday] = useState(false);
   const [receiptsList, setReceiptsList] = useState([]);
   const [receiptsLoading, setReceiptsLoading] = useState(false);
   const [pharmacySystemCash, setPharmacySystemCash] = useState(0);
@@ -191,13 +193,27 @@ const DailyClosing = () => {
           setIsSubmitted(false);
           const savedData = localStorage.getItem("hms_daily_closing");
           let shouldUseLocal = false;
+          let localParsed = null;
           if (savedData) {
             const parsed = JSON.parse(savedData);
             if (parsed.date === dateStr) {
               shouldUseLocal = true;
+              localParsed = parsed.data;
             }
           }
-          if (!shouldUseLocal) {
+          if (shouldUseLocal && localParsed) {
+            setFormData({
+              opdCash: localParsed.opdCash || "",
+              ipdCash: localParsed.ipdCash || "",
+              pharmacyCash: localParsed.pharmacyCash || "",
+              upiSettlement: localParsed.upiSettlement || "",
+              cardSettlement: localParsed.cardSettlement || "",
+              bankDeposit: localParsed.bankDeposit || "",
+              comment: localParsed.comment || "",
+              cashDepositReceipt: localParsed.cashDepositReceipt || "",
+              cardSettlementSlip: localParsed.cardSettlementSlip || "",
+            });
+          } else {
             setFormData({
               opdCash: "",
               ipdCash: "",
@@ -228,37 +244,62 @@ const DailyClosing = () => {
   };
 
   useEffect(() => {
-    const today = new Date();
-    const dd = String(today.getDate()).padStart(2, "0");
-    const mm = String(today.getMonth() + 1).padStart(2, "0");
-    const yyyy = today.getFullYear();
-    const dateStr = `${dd}-${mm}-${yyyy}`;
-    setCurrentDate(dateStr);
+    const checkYesterdayAndSetDate = async () => {
+      if (!currentLocation || currentLocation === "default") return;
 
-    // Check for existing submission for today
-    const savedData = localStorage.getItem("hms_daily_closing");
-    if (savedData) {
-      const parsed = JSON.parse(savedData);
-      if (parsed.date === dateStr) {
-        setFormData({
-          opdCash: parsed.data.opdCash || "",
-          ipdCash: parsed.data.ipdCash || "",
-          pharmacyCash: parsed.data.pharmacyCash || "",
-          upiSettlement: parsed.data.upiSettlement || "",
-          cardSettlement: parsed.data.cardSettlement || "",
-          bankDeposit: parsed.data.bankDeposit || "",
-          comment: parsed.data.comment || "",
-          cashDepositReceipt: parsed.data.cashDepositReceipt || "",
-          cardSettlementSlip: parsed.data.cardSettlementSlip || "",
+      setCheckingYesterday(true);
+      try {
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        const yyyy = yesterday.getFullYear();
+        const mm = String(yesterday.getMonth() + 1).padStart(2, "0");
+        const dd = String(yesterday.getDate()).padStart(2, "0");
+        const yesterdayYMD = `${yyyy}-${mm}-${dd}`;
+        const yesterdayDMY = `${dd}-${mm}-${yyyy}`;
+
+        const url = `${BASE_URL}/V1/managereports/dailyclosing-status?location=${currentLocation}&date=${yesterdayYMD}`;
+        const response = await fetch(url, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         });
-        setIsSubmitted(true);
-      } else {
-        // It's a new day, clear old data
-        localStorage.removeItem("hms_daily_closing");
-        setIsSubmitted(false);
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data) {
+            setIsYesterdayFilled(true);
+            const tdd = String(today.getDate()).padStart(2, "0");
+            const tmm = String(today.getMonth() + 1).padStart(2, "0");
+            const tyyyy = today.getFullYear();
+            setCurrentDate(`${tdd}-${tmm}-${tyyyy}`);
+          } else {
+            setIsYesterdayFilled(false);
+            setCurrentDate(yesterdayDMY);
+          }
+        } else {
+          setIsYesterdayFilled(false);
+          setCurrentDate(yesterdayDMY);
+        }
+      } catch (error) {
+        console.error("Error checking yesterday closing status:", error);
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yyyy = yesterday.getFullYear();
+        const mm = String(yesterday.getMonth() + 1).padStart(2, "0");
+        const dd = String(yesterday.getDate()).padStart(2, "0");
+        setCurrentDate(`${dd}-${mm}-${yyyy}`);
+        setIsYesterdayFilled(false);
+      } finally {
+        setCheckingYesterday(false);
       }
-    }
-  }, []);
+    };
+
+    checkYesterdayAndSetDate();
+  }, [currentLocation]);
 
   useEffect(() => {
     if (currentDate && currentLocation && currentLocation !== "default") {
@@ -299,20 +340,21 @@ const DailyClosing = () => {
     "cardSettlement",
     "bankDeposit",
   ];
-  const hasZero = checkFields.some(
-    (key) => formData[key] !== "" && Number(formData[key]) === 0,
-  );
+  const allEntered = checkFields.every((key) => formData[key] !== "");
+  const totalSum = checkFields.reduce((sum, key) => sum + Number(formData[key] || 0), 0);
+  const isSumZero = allEntered && totalSum === 0;
+
   const isSaveDisabled =
     isSubmitted ||
     loading ||
-    (hasZero && (!formData.comment || !formData.comment.trim()));
+    (isSumZero && (!formData.comment || !formData.comment.trim()));
 
   const handleSave = async () => {
     // Basic Validation
     if (!formData.opdCash || !formData.bankDeposit) {
       return Swal.fire("Required", "Please fill essential fields", "warning");
     }
-    if (hasZero && (!formData.comment || !formData.comment.trim())) {
+    if (isSumZero && (!formData.comment || !formData.comment.trim())) {
       return Swal.fire(
         "Justification Required",
         "Please provide a justification for the zero balance.",
@@ -486,6 +528,30 @@ const DailyClosing = () => {
                   borderRadius: "0 0 5px 5px",
                 }}
               >
+                {isYesterdayFilled !== null && (
+                  <Alert
+                    variant={isYesterdayFilled ? "success" : "warning"}
+                    className="mb-3 d-flex align-items-center gap-2"
+                    style={{
+                      fontSize: "13px",
+                      fontWeight: "600",
+                      borderRadius: "6px",
+                      border: isYesterdayFilled ? "1px solid #c3e6cb" : "1px solid #ffeeba",
+                      backgroundColor: isYesterdayFilled ? "#d4edda" : "#fff3cd",
+                      color: isYesterdayFilled ? "#155724" : "#856404",
+                    }}
+                  >
+                    <FeatherIcon
+                      icon={isYesterdayFilled ? "check-circle" : "alert-triangle"}
+                      size="16"
+                    />
+                    <div>
+                      {isYesterdayFilled
+                        ? "Yesterday's daily closing has been submitted. Showing today's date for new entry."
+                        : "Yesterday's daily closing is pending submission! Defaulted to yesterday's date to fill."}
+                    </div>
+                  </Alert>
+                )}
                 <Table
                   striped
                   bordered
@@ -681,8 +747,7 @@ const DailyClosing = () => {
                             }
                           />
                         </InputGroup>
-                        {formData.opdCash !== "" &&
-                          Number(formData.opdCash) === 0 && (
+                        {isSumZero && (
                             <div
                               style={{
                                 color: "#d32f2f",
@@ -753,8 +818,7 @@ const DailyClosing = () => {
                             }
                           />
                         </InputGroup>
-                        {formData.ipdCash !== "" &&
-                          Number(formData.ipdCash) === 0 && (
+                        {isSumZero && (
                             <div
                               style={{
                                 color: "#d32f2f",
@@ -825,8 +889,7 @@ const DailyClosing = () => {
                             }
                           />
                         </InputGroup>
-                        {formData.pharmacyCash !== "" &&
-                          Number(formData.pharmacyCash) === 0 && (
+                        {isSumZero && (
                             <div
                               style={{
                                 color: "#d32f2f",
@@ -897,8 +960,7 @@ const DailyClosing = () => {
                             }
                           />
                         </InputGroup>
-                        {formData.upiSettlement !== "" &&
-                          Number(formData.upiSettlement) === 0 && (
+                        {isSumZero && (
                             <div
                               style={{
                                 color: "#d32f2f",
@@ -969,8 +1031,7 @@ const DailyClosing = () => {
                             }
                           />
                         </InputGroup>
-                        {formData.cardSettlement !== "" &&
-                          Number(formData.cardSettlement) === 0 && (
+                        {isSumZero && (
                             <div
                               style={{
                                 color: "#d32f2f",
@@ -1041,8 +1102,7 @@ const DailyClosing = () => {
                             }
                           />
                         </InputGroup>
-                        {formData.bankDeposit !== "" &&
-                          Number(formData.bankDeposit) === 0 && (
+                        {isSumZero && (
                             <div
                               style={{
                                 color: "#d32f2f",
@@ -1279,7 +1339,7 @@ const DailyClosing = () => {
                   </tbody>
                 </Table>
 
-                {(hasZero || formData.comment) && (
+                {(isSumZero || formData.comment) && (
                   <div
                     style={{
                       marginTop: "20px",
@@ -1289,7 +1349,7 @@ const DailyClosing = () => {
                       border: "1px solid #f5c6cb",
                     }}
                   >
-                    {hasZero && !isSubmitted && (
+                    {isSumZero && !isSubmitted && (
                       <div
                         style={{
                           color: "#721c24",
@@ -1299,7 +1359,7 @@ const DailyClosing = () => {
                         }}
                       >
                         <i className="fa fa-exclamation-triangle me-2"></i>A
-                        zero balance is recorded in one or more fields. Please
+                        zero balance is recorded in all fields. Please
                         provide a justification below to proceed.
                       </div>
                     )}
@@ -1311,8 +1371,8 @@ const DailyClosing = () => {
                           color: "#721c24",
                         }}
                       >
-                        {hasZero ? "Justification for Zero Balance" : "Remarks"}{" "}
-                        {hasZero && !isSubmitted && (
+                        {isSumZero ? "Justification for Zero Balance" : "Remarks"}{" "}
+                        {isSumZero && !isSubmitted && (
                           <span className="text-danger">*</span>
                         )}
                       </Form.Label>

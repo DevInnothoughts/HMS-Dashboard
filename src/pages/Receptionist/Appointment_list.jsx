@@ -55,7 +55,7 @@ const NoteCell = ({ note }) => {
   );
 };
 
-const TYPE_LIST = ["New", "Follow", "Post Operative", "Other"];
+const TYPE_LIST = ["New", "Follow", "Post Operative", "MCDPA", "Other"];
 const REFERENCE_OPTIONS = [
   "Family / Friends",
   "Referred By Another Doctor",
@@ -326,7 +326,7 @@ export default function Appointment_list() {
 
   const handleGenerateReceipt = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
-    console.log("handleGenerateReceipt called");
+    
 
     try {
       if (!selectedAppointment) {
@@ -364,7 +364,7 @@ export default function Appointment_list() {
         MachineType: "OPD",
       };
 
-      console.log("Submitting payload:", payload);
+      
 
       const response = await fetch(
         `${BASE_URL}/V1/appointment/saveReceipt?location=${currentLocation}`,
@@ -451,11 +451,7 @@ export default function Appointment_list() {
       showLoaderOnConfirm: true,
       preConfirm: async () => {
         try {
-          console.log(
-            "Check status data sending: ",
-            referenceId,
-            originalPayload,
-          );
+          
           const response = await fetch(
             `${BASE_URL}/V1/appointment/checkPaymentStatus?location=${currentLocation}`,
             {
@@ -580,13 +576,13 @@ export default function Appointment_list() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    console.log("Token:", token);
+    
     if (token) {
       const payload = decodeJwt(token);
       if (payload && payload.jobLocation) {
         setCurrentLocation(payload.jobLocation);
       }
-      console.log(payload.jobLocation);
+      
     }
   }, []);
 
@@ -692,17 +688,13 @@ export default function Appointment_list() {
 
         const url = `${BASE_URL}/V1/appointment/listAppointments?from=${formattedFromDate}&to=${formattedToDate}&location=${currentLocation}&showPending=${showPending}&_t=${Date.now()}`;
 
-        console.log("Fetching appointments with URL:", url);
+        
 
         const response = await fetch(url, { method: "GET" });
         const data = await response.json();
 
         if (response.ok && data.data) {
-          console.log(
-            "Data fetched successfully:",
-            data.data.length,
-            "records",
-          );
+          
           const sortedData = data.data.sort((a, b) => {
             const timeA = a.appointment_time
               ? moment(a.appointment_time, ["HH:mm:ss", "hh:mm A"]).valueOf()
@@ -722,7 +714,7 @@ export default function Appointment_list() {
 
             const isExistingPatient =
               isConfirmed &&
-              ["Follow", "Postoperative", "Post Operative", "Other"].includes(
+              ["Follow", "Postoperative", "Post Operative", "MCDPA", "Other"].includes(
                 app.patient_type,
               );
 
@@ -788,12 +780,9 @@ export default function Appointment_list() {
         endpoints.map((url) => fetch(url).then((res) => res.json())),
       );
 
-      console.log("Current Location:", currentLocation);
-      console.log("FDE API Full Response:", fdeResponse);
-      console.log(
-        "Consultation Details API Response:",
-        consultationDetailsResponse,
-      );
+      
+      
+      
 
       setConsultationList(
         Array.isArray(consultationResponse.data)
@@ -864,7 +853,7 @@ export default function Appointment_list() {
     const dateOnly = moment(selectedAppointment.appointment_timestamp).format(
       "YYYY-MM-DD",
     );
-    console.log(dateOnly);
+    
     const finalAppointmentTime = selectedAppointment.appointment_time
       ? moment(selectedAppointment.appointment_time, [
           "HH:mm:ss",
@@ -882,7 +871,7 @@ export default function Appointment_list() {
       appointment_time: finalAppointmentTime,
       patient_location: currentLocation,
     };
-    console.log(updatePayload);
+    
     try {
       const response = await fetch(
         `${BASE_URL}/V1/appointment/editAppointment/${selectedAppointment.appointment_id}?location=${currentLocation}`,
@@ -982,14 +971,14 @@ export default function Appointment_list() {
     successMessage = "Confirmed!",
   ) => {
     try {
-      console.log(appId, endpoint, successMessage);
+      
       let response = "";
       if (!patient_phone && !patient_type) {
         response = await fetch(
           `${BASE_URL}/V1/appointment/${endpoint}?appId=${appId}&location=${currentLocation}`,
           { method: "PUT", headers: { "Content-Type": "application/json" } },
         );
-        console.log(response);
+        
       } else {
         const mappedPatientType =
           patient_type === "Post Operative" ? "Postoperative" : patient_type;
@@ -997,7 +986,7 @@ export default function Appointment_list() {
           `${BASE_URL}/V1/appointment/${endpoint}?appId=${appId}&location=${currentLocation}&patientType=${mappedPatientType}&patientPhone=${patient_phone}`,
           { method: "PUT", headers: { "Content-Type": "application/json" } },
         );
-        console.log(response);
+        
       }
       const data = await response.json();
 
@@ -1115,7 +1104,7 @@ export default function Appointment_list() {
 
     const isExistingPatient =
       isConfirmed &&
-      ["Follow", "Postoperative", "Post Operative", "Other"].includes(
+      ["Follow", "Postoperative", "Post Operative", "MCDPA", "Other"].includes(
         patient_type,
       );
 
@@ -1155,7 +1144,7 @@ export default function Appointment_list() {
 
     const isExistingPatient =
       isConfirmed &&
-      ["Follow", "Postoperative", "Post Operative", "Other"].includes(
+      ["Follow", "Postoperative", "Post Operative", "MCDPA", "Other"].includes(
         patient_type,
       );
 
@@ -1457,7 +1446,6 @@ export default function Appointment_list() {
               selected={fromDate}
               onChange={(date) => setFromDate(date)}
               dateFormat="dd-MM-yyyy"
-              maxDate={new Date()}
               placeholderText="Select from date"
               customInput={
                 <Form.Control
@@ -1481,7 +1469,6 @@ export default function Appointment_list() {
               selected={toDate}
               onChange={setToDate}
               dateFormat="dd-MM-yyyy"
-              minDate={fromDate}
               customInput={
                 <Form.Control
                   style={{ padding: "5px 8px", fontSize: "12px" }}

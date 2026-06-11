@@ -141,7 +141,7 @@ export default function ManageAdmission() {
 
       if (response.ok) {
         const result = await response.json();
-        console.log(result);
+        
         // 1. Sort the raw data by date (Descending: Newest first)
         const sortedData = result.sort((a, b) => {
           return new Date(b.created_at) - new Date(a.created_at);
@@ -587,7 +587,7 @@ export default function ManageAdmission() {
 
           if (response.ok) {
             const data = await response.json();
-            console.log(data);
+            
             Swal.fire(
               "Confirmed!",
               `Admission No: ${data.admissionNo} generated.`,

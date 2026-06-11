@@ -353,7 +353,7 @@ export default function All_patient() {
 
       if (doctorResponse.ok) {
         const doctorData = await doctorResponse.json();
-        console.log("Doctors API Response:", doctorData);
+        
         setDoctors(Array.isArray(doctorData.data) ? doctorData.data : []);
       } else {
         console.error("Failed to fetch doctors:", doctorResponse.statusText);
@@ -371,7 +371,7 @@ export default function All_patient() {
 
       if (fdeResponse.ok) {
         const fdeData = await fdeResponse.json();
-        console.log("FDE API Response:", fdeData);
+        
         setFdeList(Array.isArray(fdeData.data) ? fdeData.data : []);
       } else {
         console.error("Failed to fetch FDE list:", fdeResponse.statusText);
@@ -438,7 +438,7 @@ export default function All_patient() {
 
     setIsSearchingPatient(true);
     try {
-      console.log("Calling API with phone:", phone);
+      
 
       const response = await fetch(
         `${BASE_URL}/V1/Patients/listRefPatient?phone=${phone}&location=${currentLocation}`,
@@ -450,20 +450,20 @@ export default function All_patient() {
         },
       );
 
-      console.log("API Response Status:", response.status);
+      
 
       if (response.ok) {
         const data = await response.json();
-        console.log("API Response Data:", data);
+        
 
         if (data.statusCode === 200 && data.data.refPatientData) {
           const results = Array.isArray(data.data.refPatientData)
             ? data.data.refPatientData
             : [data.data.refPatientData];
           setPatientSearchResults(results);
-          console.log("Updated Patient Search Results:", results);
+          
         } else {
-          console.log("No patient found.");
+          
           setPatientSearchResults([]);
         }
       } else {
@@ -477,7 +477,7 @@ export default function All_patient() {
   };
 
   useEffect(() => {
-    console.log("Updated state in UI:", patientSearchResults);
+    
   }, [patientSearchResults]);
 
   const calculateAge = (birthDate) => {
@@ -517,7 +517,7 @@ export default function All_patient() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    console.log("Input Change:", name, value);
+    
 
     setFormData((prev) => {
       let nextState = { ...prev };
@@ -559,7 +559,7 @@ export default function All_patient() {
 
   const handleAddAppointment = (e) => {
     e.preventDefault();
-    console.log("Submitting Appointment:", formData);
+    
     setShowAddModal(false);
   };
 
@@ -813,7 +813,7 @@ export default function All_patient() {
   };
 
   const handleEditPatient = (patient) => {
-    console.log("Editing patient:", patient);
+    
 
     const formattedBirthDate = patient.birth_date || "";
     const workPatternsArray = (patient.specific_work || "")
@@ -865,7 +865,7 @@ export default function All_patient() {
       }));
     }
 
-    console.log("Setting formData for prefix:", patient.prefix);
+    
     setFormData({
       // Uid_no: patient.uid || "",
       Uid_no: patient.Uid_no || patient.uid || "",
@@ -1028,8 +1028,8 @@ export default function All_patient() {
         ref = referenceDetails[selectedReference] || formData.ref;
     }
 
-    console.log("Reference Type:", reference_type);
-    console.log("Reference:", ref);
+    
+    
 
     const specificWork = Object.entries(workPatterns)
       .filter(([_, value]) => value)
@@ -1060,7 +1060,7 @@ export default function All_patient() {
       },
     };
 
-    console.log("Updated Patient Data:", updatedPatientData);
+    
     try {
       const response = await fetch(
         `${BASE_URL}/V1/patient/editPatient?patient_id=${selectedPatient.patient_id}&location=${currentLocation}`,
@@ -1130,7 +1130,7 @@ export default function All_patient() {
   );
 
   const handleViewPatient = async (patient) => {
-    console.log("Being passed data:", patient);
+    
     if (!patient || !patient.phone) {
       console.error("Patient data or phone number is missing");
       return;
@@ -1190,9 +1190,9 @@ export default function All_patient() {
       note: formData.note,
       phone: formData.phone,
     };
-    console.log(payload);
+    
     try {
-      console.log("Sending request to backend...", payload);
+      
 
       const response = await fetch(
         `${BASE_URL}/V1/appointment/addAppointment?location=${currentLocation}`,
@@ -1208,7 +1208,7 @@ export default function All_patient() {
       }
 
       const responseData = await response.json();
-      console.log("Appointment added successfully:", responseData);
+      
       Swal.fire({
         icon: "success",
         title: "Booked!",
@@ -2821,7 +2821,6 @@ export default function All_patient() {
               onChange={(date) => setFromDate(date)}
               dateFormat="dd-MM-yyyy"
               placeholderText="Select from date"
-              maxDate={new Date()}
               customInput={
                 <Form.Control
                   style={{ padding: "5px 8px", fontSize: "12px" }}
@@ -2846,7 +2845,6 @@ export default function All_patient() {
               onChange={(date) => setToDate(date)}
               dateFormat="dd-MM-yyyy"
               placeholderText="Select to date"
-              minDate={fromDate}
               customInput={
                 <Form.Control
                   style={{ padding: "5px 8px", fontSize: "12px" }}
@@ -3395,7 +3393,52 @@ export default function All_patient() {
                 Basic Registration Info
               </h5>
               <Row>
-                <Col md={3} className="mb-3">
+                <Col md={2} className="mb-3">
+                  <Form.Group>
+                    <Form.Label
+                      className="small fw-bold mb-3"
+                      style={{ fontSize: "12px" }}
+                    >
+                      Date <span className="text-danger">*</span>
+                    </Form.Label>
+                    <DatePicker
+                      required
+                      selected={
+                        formData?.date
+                          ? parseDate(formData.date)
+                          : null
+                      }
+                      onChange={(date) => {
+                        if (date) {
+                          const formattedDate = moment(date).format("DD-MM-YYYY");
+                          setFormData((prev) => ({
+                            ...prev,
+                            date: formattedDate,
+                          }));
+                        }
+                      }}
+                      filterDate={() => false}
+                      onChangeRaw={(e) => e.preventDefault()}
+                      className="form-control custom-datepicker"
+                      dateFormat="dd-MM-yyyy"
+                      placeholderText="Select Date"
+                      showMonthDropdown
+                      showYearDropdown
+                      dropdownMode="select"
+                      customInput={
+                        <Form.Control
+                          style={{
+                            border: "2px solid rgb(77, 208, 225)",
+                            fontSize: "12px",
+                            borderRadius: "10px",
+                            backgroundColor: "#e7ebebff",
+                          }}
+                        />
+                      }
+                    />
+                  </Form.Group>
+                </Col>
+                <Col md={2} className="mb-3">
                   <Form.Group>
                     <Form.Label
                       className="small fw-bold mb-3"
@@ -3419,7 +3462,7 @@ export default function All_patient() {
                     />
                   </Form.Group>
                 </Col>
-                <Col md={3} className="mb-3">
+                <Col md={2} className="mb-3">
                   <Form.Group>
                     <Form.Label
                       className="small fw-bold mb-3"

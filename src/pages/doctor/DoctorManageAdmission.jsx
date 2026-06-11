@@ -106,7 +106,7 @@ export default function DoctorManageAdmission() {
 
       if (response.ok) {
         const result = await response.json();
-        console.log("Doctor Manage Admission Result:", result);
+        
 
         if (!Array.isArray(result)) {
           console.error("Expected array but got:", typeof result);
@@ -492,13 +492,13 @@ export default function DoctorManageAdmission() {
         prev.map((patient) =>
           patient.id === docPatient.id
             ? {
-                ...patient,
-                aadharcard: savedDocuments.aadharcard || patient.aadharcard,
-                pancard: savedDocuments.pancard || patient.pancard,
-                cancelled_cheque:
-                  savedDocuments.cancelled_cheque || patient.cancelled_cheque,
-                pdc_cheque: savedDocuments.pdc_cheque || patient.pdc_cheque,
-              }
+              ...patient,
+              aadharcard: savedDocuments.aadharcard || patient.aadharcard,
+              pancard: savedDocuments.pancard || patient.pancard,
+              cancelled_cheque:
+                savedDocuments.cancelled_cheque || patient.cancelled_cheque,
+              pdc_cheque: savedDocuments.pdc_cheque || patient.pdc_cheque,
+            }
             : patient,
         ),
       );
@@ -506,13 +506,13 @@ export default function DoctorManageAdmission() {
       setDocPatient((prev) =>
         prev
           ? {
-              ...prev,
-              aadharcard: savedDocuments.aadharcard || prev.aadharcard,
-              pancard: savedDocuments.pancard || prev.pancard,
-              cancelled_cheque:
-                savedDocuments.cancelled_cheque || prev.cancelled_cheque,
-              pdc_cheque: savedDocuments.pdc_cheque || prev.pdc_cheque,
-            }
+            ...prev,
+            aadharcard: savedDocuments.aadharcard || prev.aadharcard,
+            pancard: savedDocuments.pancard || prev.pancard,
+            cancelled_cheque:
+              savedDocuments.cancelled_cheque || prev.cancelled_cheque,
+            pdc_cheque: savedDocuments.pdc_cheque || prev.pdc_cheque,
+          }
           : prev,
       );
       setPreviews(
@@ -686,7 +686,7 @@ export default function DoctorManageAdmission() {
               onChange={(date) => setFromDate(date)}
               dateFormat="dd-MM-yyyy"
               placeholderText="Select from date"
-              maxDate={new Date()}
+              portalId="root"
               customInput={
                 <Form.Control
                   style={{ padding: "5px 8px", fontSize: "12px" }}
@@ -711,7 +711,7 @@ export default function DoctorManageAdmission() {
               onChange={(date) => setToDate(date)}
               dateFormat="dd-MM-yyyy"
               placeholderText="Select to date"
-              minDate={fromDate}
+              portalId="root"
               customInput={
                 <Form.Control
                   style={{ padding: "5px 8px", fontSize: "12px" }}

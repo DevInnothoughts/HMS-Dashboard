@@ -96,7 +96,7 @@ const DischargeCard = ({
 
   const saveUploadedMedicine = () => {
     // Implement save logic here or call a handler
-    console.log("Saving Medicine:", uploadMedicineData);
+    
     setShowUploadModal(false);
     // Reset form
     setUploadMedicineData({

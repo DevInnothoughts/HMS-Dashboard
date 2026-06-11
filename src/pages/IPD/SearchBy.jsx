@@ -163,7 +163,7 @@ export default function SearchBy() {
       pre_planning: preplan,
     };
 
-    console.log(payload);
+    
     try {
       // 2. Call the backend API
       const response = await fetch(
@@ -179,10 +179,10 @@ export default function SearchBy() {
         },
       );
 
-      console.log(payload);
+      
 
       const result = await response.json();
-      console.log(result);
+      
       if (response.ok) {
         // 4. Success Message and Navigation
         Swal.fire({

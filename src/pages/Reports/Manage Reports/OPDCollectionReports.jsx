@@ -85,7 +85,7 @@ const OPDCollectionReports = () => {
       }
 
       const msg = await response.json();
-      console.log("msg:", msg);
+      
       // 1. Handle Backup/File Download logic from PHP
       if (msg.serachdata2?.success) {
         if (

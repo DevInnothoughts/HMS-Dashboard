@@ -1032,7 +1032,7 @@ const PersonalDetailsCard = () => {
 
         setHistoryData(loadedState);
         setIsEditingHistory(false);
-        console.log("[DEBUG] Loaded History State for UI:", loadedState);
+        
         toast.success(`Loaded history from ${selected.date}`);
       } else {
         toast.error("Could not fetch history record data");
@@ -1916,12 +1916,7 @@ const PersonalDetailsCard = () => {
           const d = result.data;
           // Slice to YYYY-MM-DD only — avoids moment() timezone shifts on already-formatted strings
           const safeDate = (val) => (val ? String(val).substring(0, 10) : "");
-          console.log(
-            "[DEBUG] Prescription fetch - next-appo-date:",
-            d["next-appo-date"],
-            "patient_type:",
-            d.patient_type,
-          );
+          
           const toArray = (val) => {
             if (!val) return [];
             if (Array.isArray(val)) return val;
@@ -2061,7 +2056,7 @@ const PersonalDetailsCard = () => {
       setLoading(true);
       const apiDate = moment(selected.date, "DD-MM-YYYY").format("YYYY-MM-DD");
       const url = `${BASE_URL}/V1/doctor/get-surgery-details/${formData.patient_id}?date=${apiDate}&location=${currentLocation}`;
-      console.log(`[DEBUG] Fetching Surgery Details from: ${url}`);
+      
 
       const response = await fetch(url, {
         headers: {
@@ -3844,10 +3839,7 @@ const PersonalDetailsCard = () => {
         ? current.filter((item) => item !== value)
         : [...current, value];
 
-      console.log(
-        `[Diagnosis Checkbox] ${isRemoving ? "Deselected" : "Selected"}:`,
-        { field, value, updated },
-      );
+      
 
       let nextState = { ...prev, [field]: updated };
 
@@ -3868,11 +3860,7 @@ const PersonalDetailsCard = () => {
         ? currentSpecialityData.filter((item) => item !== value)
         : [...currentSpecialityData, value];
 
-      console.log(`[Speciality] ${isRemoving ? "Deselected" : "Selected"}:`, {
-        speciality,
-        value,
-        updatedList,
-      });
+      
 
       return {
         ...prev,
@@ -4092,10 +4080,7 @@ const PersonalDetailsCard = () => {
     }
 
     if (missingFields.length > 0) {
-      console.log(
-        "[DEBUG] Form submission blocked due to missing fields:",
-        missingFields,
-      );
+      
       Swal.fire({
         icon: "warning",
         title: "Missing Required Fields",
@@ -4104,10 +4089,7 @@ const PersonalDetailsCard = () => {
       return;
     }
 
-    console.log(
-      "[DEBUG] Validation passed, submitting form with data:",
-      prescriptionData,
-    );
+    
     setLoading(true);
     try {
       const response = await fetch(
@@ -4298,7 +4280,50 @@ const PersonalDetailsCard = () => {
             Basic Registration Info
           </h5>
           <Row className="g-2">
-            <Col md={3}>
+            <Col md={2}>
+              <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>
+                Date <span className="text-danger">*</span>
+              </Form.Label>
+              <DatePicker
+                required
+                selected={
+                  formData?.date
+                    ? parseDate(formData.date)
+                    : null
+                }
+                onChange={(date) => {
+                  if (date) {
+                    const formattedDate = moment(date).format("DD-MM-YYYY");
+                    setFormData((prev) => ({
+                      ...prev,
+                      date: formattedDate,
+                    }));
+                  }
+                }}
+                filterDate={() => false}
+                onChangeRaw={(e) => e.preventDefault()}
+                className="form-control custom-datepicker"
+                dateFormat="dd-MM-yyyy"
+                placeholderText="Select Date"
+                showMonthDropdown
+                showYearDropdown
+                dropdownMode="select"
+                customInput={
+                  <Form.Control
+                    style={{
+                      cursor: "not-allowed",
+                      backgroundColor: "#ebeceeff",
+                      border: "2px solid #b2ebf2",
+                      borderRadius: "8px",
+                      padding: "4px 10px",
+                      fontWeight: "bold",
+                      fontSize: "12px",
+                    }}
+                  />
+                }
+              />
+            </Col>
+            <Col md={2}>
               <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>
                 UID No <span className="text-danger">*</span>
               </Form.Label>
@@ -4318,7 +4343,7 @@ const PersonalDetailsCard = () => {
                 }}
               />
             </Col>
-            <Col md={3}>
+            <Col md={2}>
               <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>
                 Prefix <span className="text-danger">*</span>
               </Form.Label>

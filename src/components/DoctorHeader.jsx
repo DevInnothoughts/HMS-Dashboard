@@ -50,13 +50,13 @@ export default function DoctorHeader() {
     }
     try {
       const url = `http://194.195.117.79:5100/api/V1/doctor/header-stats?location=${currentLocation}&doctorId=${doctorId}`;
-      console.log("📡 [DoctorHeader] Fetching:", url);
+      
       const response = await fetch(url);
       const data = await response.json();
-      console.log("📦 [DoctorHeader] API Response:", JSON.stringify(data));
+      
       if (data.statusCode === 200 && data.data) {
         setStats(data.data);
-        console.log("✅ [DoctorHeader] Stats set:", data.data.counts);
+        
       } else {
         console.warn("⚠️ [DoctorHeader] Unexpected response structure:", data);
       }
@@ -69,7 +69,7 @@ export default function DoctorHeader() {
     const token = localStorage.getItem("token");
     if (token) {
       const payload = decodeJwt(token);
-      console.log("🔑 [DoctorHeader] JWT Payload:", payload);
+      
       if (payload) {
         if (payload.jobLocation) {
           setCurrentLocation(payload.jobLocation);

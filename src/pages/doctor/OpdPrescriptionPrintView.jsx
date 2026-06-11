@@ -24,7 +24,7 @@ const OpdPrescriptionPrintView = React.forwardRef(
     const patientUid =
       patient.Uid_no || patient.uid_no || patient.uid || patient.uhid || "";
 
-    console.log("[DEBUG] OpdPrescriptionPrintView data fetched:", patientUid);
+    
 
     const assistantDoc = doctors.find(
       (doc) =>

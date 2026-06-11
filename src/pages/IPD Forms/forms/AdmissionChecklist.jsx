@@ -259,7 +259,7 @@ const AdmissionChecklist = ({ onSubmit, patientData }) => {
     };
 
     try {
-      console.log("final payload:", finalPayload);
+      
       Swal.fire({
         title: "Saving...",
         didOpen: () => Swal.showLoading(),

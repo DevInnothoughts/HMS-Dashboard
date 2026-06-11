@@ -48,7 +48,7 @@ const DailyOPDReport = () => {
           `${BASE_URL}/V1/daily-opd-report?location=${currentLocation}&date=${apiDate}`,
         );
         const result = await response.json();
-        console.log(result);
+        
         if (result.statusCode === 200) {
           const d = result.description;
           setReportData({
@@ -57,6 +57,7 @@ const DailyOPDReport = () => {
               { type: "Follow UP", count: d.dailyOPDReport[0][1] },
               { type: "PO", count: d.dailyOPDReport[0][2] },
               { type: "PROCTOSCOPY", count: d.dailyOPDReport[0][3] },
+              { type: "MCDPA", count: d.dailyOPDReport[0][5] || 0 },
               { type: "TOTAL", count: d.dailyOPDReport[0][4] },
             ],
             opdDetails: d.detailedData.map((row, index) => {

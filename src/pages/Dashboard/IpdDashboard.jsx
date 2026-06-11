@@ -161,9 +161,9 @@ export default function IpdDashboard() {
 
       if (response.ok) {
         const result = await response.json();
-        console.log("RESult:", result);
+        
         const formattedEvents = formatSurgeries(result);
-        console.log("Formatted events:", formattedEvents);
+        
         setSurgeries(formattedEvents);
       }
     } catch (error) {
@@ -214,7 +214,7 @@ export default function IpdDashboard() {
 
           if (response.ok) {
             const data = await response.json();
-            console.log(data);
+            
             Swal.fire(
               "Confirmed!",
               `Admission No: ${data.admissionNo} generated.`,
@@ -283,7 +283,7 @@ export default function IpdDashboard() {
           );
 
           const data = await response.json();
-          console.log(data);
+          
           if (response.ok) {
             setShowCancelModal(false);
             setCancelComment("");

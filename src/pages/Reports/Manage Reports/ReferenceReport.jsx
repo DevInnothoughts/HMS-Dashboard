@@ -79,7 +79,7 @@ const ReferenceReport = () => {
 
       if (!response.ok) throw new Error("Failed to fetch data");
       const result = await response.json();
-      console.log(result);
+      
       const formattedData = result.map((item) => ({
         type: getFriendlyName(item.reference_type),
         count: parseInt(item.referencecount) || 0,

@@ -155,7 +155,7 @@ export default function DoctorDashboard() {
           acc[event.patientType] = (acc[event.patientType] || 0) + 1;
           return acc;
         },
-        { NEW: 0, FOLLOW: 0, POSTOPERATIVE: 0, OTHER: 0, IPD: 0 },
+        { NEW: 0, FOLLOW: 0, POSTOPERATIVE: 0, MCDPA: 0, OTHER: 0, IPD: 0 },
       );
   }, [appointments, selectedDate]);
 
@@ -176,6 +176,7 @@ export default function DoctorDashboard() {
       else if (rawType.includes("FOLLOW")) standardizedType = "FOLLOW";
       else if (rawType.includes("POST") || rawType.includes("OPERATIVE"))
         standardizedType = "POSTOPERATIVE";
+      else if (rawType.includes("MCDPA")) standardizedType = "MCDPA";
       // ------------------------------
 
       const appointmentTime24 = startTime.isValid()
@@ -407,6 +408,7 @@ export default function DoctorDashboard() {
       NEW: "#0284c7", // Premium Sky Blue
       FOLLOW: "#10b981", // Clinical Emerald Green
       POSTOPERATIVE: "#8b5cf6", // Soft Violet
+      MCDPA: "#475569", // Slate Grey for MCDPA
       OTHER: "#f59e0b", // Warm Amber
       IPD: "#d946ef", // Vibrant Fuchsia
     };
@@ -623,7 +625,7 @@ export default function DoctorDashboard() {
 
     const getDetailedStatus = () => {
       if (!isConfirmed) return null;
-      const isExistingPatient = ["FOLLOW", "POSTOPERATIVE", "OTHER"].includes(
+      const isExistingPatient = ["FOLLOW", "POSTOPERATIVE", "MCDPA", "OTHER"].includes(
         selectedEvent.patientType?.toUpperCase(),
       );
       const hasHistory =
@@ -1219,6 +1221,12 @@ margin-left: 1px;
                     bgColor="#8b5cf6"
                   />
                   <ColorLegend
+                    name="MCDPA Patient"
+                    type="MCDPA"
+                    count={counts.MCDPA}
+                    bgColor="#475569"
+                  />
+                  <ColorLegend
                     name="Other Patient"
                     type="OTHER"
                     count={counts.OTHER}
@@ -1487,6 +1495,7 @@ margin-left: 1px;
                               const isExistingPatient = [
                                 "FOLLOW",
                                 "POSTOPERATIVE",
+                                "MCDPA",
                                 "OTHER",
                               ].includes(app.patientType?.toUpperCase());
                               const hasHistory =

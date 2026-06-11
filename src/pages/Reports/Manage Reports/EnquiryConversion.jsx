@@ -63,7 +63,7 @@ const EnquiryConversion = () => {
       // 1. Format dates for the API (DD/MM/YYYY)
       // const formattedFromDate = fromDate.split("-").reverse().join("-");
       // const formattedToDate = toDate.split("-").reverse().join("-");
-      console.log(fromDate, toDate);
+      
       // 2. Fetch both datasets concurrently using Promise.all
       const [appointmentResponse, callBackResponse] = await Promise.all([
         fetch(

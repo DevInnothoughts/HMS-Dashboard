@@ -142,7 +142,7 @@ export default function Surgery() {
   );
 
   const handleForms = (patientData) => {
-    console.log("admission number", patientData);
+    
     navigate(`/surgery/forms`, { state: { patientData: patientData } });
   };
 

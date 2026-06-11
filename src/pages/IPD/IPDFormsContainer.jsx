@@ -153,7 +153,7 @@ export default function IPDFormsContainer() {
     );
 
     const handleFormSubmit = (data) => {
-        console.log(`Submitted ${activeForm} for ${admissionNo}:`, data);
+        
         Swal.fire("Success", `${activeForm} submitted successfully!`, "success").then(() => {
             setActiveForm(null); // Go back to list
         });

@@ -63,7 +63,7 @@ const BirthdayAlert = () => {
 
       if (response.ok) {
         const result = await response.json();
-        console.log("BIRTHDAY ALERT: ", result);
+        
         // Extracting data from your controller's structure: result.reportsdetails.data
         const birthdayData = result.reportsdetails?.data || [];
         setPatients(birthdayData);

@@ -112,26 +112,26 @@ export default function DoctorIpdPatientList() {
       const result = await response.json();
       const normalizedPatients = Array.isArray(result)
         ? result.map((patient) => ({
-            ...patient,
-            surgeryDate: buildSurgeryValue(
-              patient.surgery_date,
-              patient.surgery_time,
-            ),
-            admissionNo: patient.adm_no || "",
-            patientName: patient.patient_name || "",
-            name: patient.patient_name || "",
-            ageGender: formatAgeGender(patient.age, patient.sex),
-            roomType: patient.room_type || "N/A",
-            roomNo: patient.room_no || "N/A",
-            surgeonName: patient.surgeon_name || "N/A",
-            sxPlan: patient.sx_plan || "N/A",
-            Uid_no: patient.uid_no || "",
-            patient_type: patient.patient_type ?? 0,
-            phone: patient.phone || "",
-            age: patient.age || "",
-            sex: patient.sex || "",
-            address: patient.address || "",
-          }))
+          ...patient,
+          surgeryDate: buildSurgeryValue(
+            patient.surgery_date,
+            patient.surgery_time,
+          ),
+          admissionNo: patient.adm_no || "",
+          patientName: patient.patient_name || "",
+          name: patient.patient_name || "",
+          ageGender: formatAgeGender(patient.age, patient.sex),
+          roomType: patient.room_type || "N/A",
+          roomNo: patient.room_no || "N/A",
+          surgeonName: patient.surgeon_name || "N/A",
+          sxPlan: patient.sx_plan || "N/A",
+          Uid_no: patient.uid_no || "",
+          patient_type: patient.patient_type ?? 0,
+          phone: patient.phone || "",
+          age: patient.age || "",
+          sex: patient.sex || "",
+          address: patient.address || "",
+        }))
         : [];
 
       setPatients(normalizedPatients);
@@ -367,7 +367,6 @@ export default function DoctorIpdPatientList() {
               onChange={(date) => setFromDate(date)}
               dateFormat="dd-MM-yyyy"
               placeholderText="Select from date"
-              maxDate={new Date()}
               customInput={
                 <Form.Control
                   style={{ padding: "5px 8px", fontSize: "12px" }}
@@ -392,7 +391,6 @@ export default function DoctorIpdPatientList() {
               onChange={(date) => setToDate(date)}
               dateFormat="dd-MM-yyyy"
               placeholderText="Select to date"
-              minDate={fromDate}
               customInput={
                 <Form.Control
                   style={{ padding: "5px 8px", fontSize: "12px" }}

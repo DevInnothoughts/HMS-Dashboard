@@ -336,17 +336,20 @@ const InvoiceList = () => {
         deductionamt: parseFloat(cashlessData.deductionamt) || 0,
       };
 
-      const res = await fetch(`${BASE_URL}/invoice/insuranceSettlement`, {
+      const token = localStorage.getItem("token");
+      const headers = { "Content-Type": "application/json" };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const res = await fetch(`${BASE_URL}/V1/invoice/insuranceSettlement?location=${currentLocation}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(payload),
       });
       const data = await res.json();
-      if (data.status) {
-        Toast.fire({
-          icon: "success",
-          title: "Cashless amounts updated successfully.",
-        });
+      if (res.ok && (data.statusCode === 200 || data.description?.status || data.status)) {
+        Toast.fire({ icon: "success", title: "Cashless amounts updated successfully." });
         setShowCashlessModal(false);
         fetchInvoices();
       } else {
@@ -443,7 +446,7 @@ const InvoiceList = () => {
         }
       });
 
-      console.log("Fetching URL:", url.toString());
+      
 
       const response = await fetch(url.toString(), {
         method: "GET",
@@ -860,7 +863,7 @@ const InvoiceList = () => {
   // };
 
   const handleEditInvoice = (invoice) => {
-    console.log("Editing Invoice:", invoice);
+    
     setOriginalInvoiceId(invoice.invoice_id);
     const { dynamicRows, Sub_Total } = getDynamicRowsFromInvoice(invoice);
 
@@ -1042,7 +1045,6 @@ const InvoiceList = () => {
       ...modalInvoiceData,
       status: status, // Sync backend status column
       package: titleString,
-      title: titleString,
       location: currentLocation,
       totalamt: Math.round(parseFloat(modalInvoiceData.Sub_Total || 0)),
       payable_amt: Math.round(parseFloat(modalInvoiceData.payableAmount || 0)),
@@ -1052,10 +1054,7 @@ const InvoiceList = () => {
       dischargetime: convertTo12Hour(selectedInvoice.dischargetime),
     };
 
-    console.log(
-      "Attempting to save invoice changes for ID:",
-      selectedInvoice.invoice_id,
-    );
+    
 
     try {
       const response = await fetch(
@@ -1121,7 +1120,7 @@ const InvoiceList = () => {
       });
       return;
     }
-    console.log("printing invoice:", invoice);
+    
     const trimmedLocation = currentLocation ? currentLocation.trim() : "";
     const clinicAddr = clinincLoc[trimmedLocation] ||
       clinincLoc[currentLocation] || {
@@ -1369,8 +1368,8 @@ const InvoiceList = () => {
       <div class="footer">
         <table class="footer-table">
           <tr>
-            <td>For Queries Call: <b>${clinicAddr.invoiceHelplineNo}</b></td>
-            ${clinicAddr.EmergencySMS ? `<td style="text-align:right;">For Emergency SMS: <b>${clinicAddr.EmergencySMS}</b></td>` : ""}
+            <td>For Queries Call: <b>${clinicAddr.invoiceHelplineNo || ""}</b></td>
+            <td style="text-align:right;">For Emergency SMS: <b>${clinicAddr.EmergencySMS || ""}</b></td>
           </tr>
         </table>
       </div>
@@ -1532,7 +1531,6 @@ const InvoiceList = () => {
               selected={fromDate}
               onChange={(date) => setFromDate(date)}
               dateFormat="dd-MM-yyyy"
-              maxDate={new Date()}
               customInput={
                 <Form.Control
                   style={{ padding: "5px 8px", fontSize: "12px" }}
@@ -1555,7 +1553,6 @@ const InvoiceList = () => {
               selected={toDate}
               onChange={(date) => setToDate(date)}
               dateFormat="dd-MM-yyyy"
-              minDate={fromDate}
               customInput={
                 <Form.Control
                   style={{ padding: "5px 8px", fontSize: "12px" }}
@@ -1636,13 +1633,7 @@ const InvoiceList = () => {
               }}
             >
               <Card.Body style={{ margin: "4px" }}>
-                {/* <div className="d-flex justify-content-end">
-                  <Link to="/invoice/add">
-                    <Button variant="primary" style={{ padding: "12px", marginBottom: "7px", fontSize: "12px" }}>
-                      <FaPlus /> Add New Invoice
-                    </Button>
-                  </Link>
-                </div> */}
+
                 {renderHeader()}
                 {loading ? (
                   <div
@@ -1816,13 +1807,7 @@ const InvoiceList = () => {
                             variant="primary"
                             disabled={
                               parseFloat(rowData.payable_amt || 0) >
-                                parseFloat(
-                                  rowData.totaldue !== undefined
-                                    ? rowData.totaldue
-                                    : rowData.due_amt !== undefined
-                                      ? rowData.due_amt
-                                      : rowData.payable_amt || 0,
-                                ) ||
+                              parseFloat(rowData.totaldue !== undefined ? rowData.totaldue : rowData.due_amt !== undefined ? rowData.due_amt : rowData.payable_amt || 0) ||
                               parseFloat(rowData.receivedamt || 0) > 0 ||
                               parseFloat(rowData.received_amt || 0) > 0
                             }
@@ -2373,7 +2358,6 @@ const InvoiceList = () => {
                           setSelectedInvoice({
                             ...selectedInvoice,
                             bed_no: e.target.value,
-                            bed_desc: e.target.value,
                           })
                         }
                       />

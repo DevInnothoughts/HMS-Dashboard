@@ -107,7 +107,7 @@ export default function DoctorOpdDashboard() {
           acc[event.patientType] = (acc[event.patientType] || 0) + 1;
           return acc;
         },
-        { NEW: 0, FOLLOW: 0, POSTOPERATIVE: 0, OTHER: 0 },
+        { NEW: 0, FOLLOW: 0, POSTOPERATIVE: 0, MCDPA: 0, OTHER: 0 },
       );
   }, [appointments, selectedDate]);
 
@@ -128,6 +128,7 @@ export default function DoctorOpdDashboard() {
       else if (rawType.includes("FOLLOW")) standardizedType = "FOLLOW";
       else if (rawType.includes("POST") || rawType.includes("OPERATIVE"))
         standardizedType = "POSTOPERATIVE";
+      else if (rawType.includes("MCDPA")) standardizedType = "MCDPA";
       // ------------------------------
 
       return {
@@ -191,7 +192,7 @@ export default function DoctorOpdDashboard() {
 
         const response = await fetch(url);
         const data = await response.json();
-        console.log(data);
+        
         if (data.statusCode === 200 && Array.isArray(data.data)) {
           let filteredData = data.data;
           if (doctorId) {
@@ -251,6 +252,7 @@ export default function DoctorOpdDashboard() {
       NEW: "#000000",
       FOLLOW: "#ff8000",
       POSTOPERATIVE: "#8000ff",
+      MCDPA: "#475569", // Slate Grey for MCDPA
       OTHER: "#ff0080",
     };
 
@@ -586,6 +588,14 @@ margin-left: 1px;
                     ></span>
                     Postoperative Patient{" "}
                     <span className="cnt">({counts.POSTOPERATIVE || 0})</span>
+                  </div>
+                  <div className="legend-item">
+                    <span
+                      className="dot"
+                      style={{ background: "#475569" }}
+                    ></span>
+                    MCDPA Patient{" "}
+                    <span className="cnt">({counts.MCDPA || 0})</span>
                   </div>
                   <div className="legend-item">
                     <span

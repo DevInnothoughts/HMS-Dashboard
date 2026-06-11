@@ -111,7 +111,7 @@ export default function Call_logs({ isTab = false }) {
   }, []);
 
   const handleAddAppointmentClick = async (rowData) => {
-    console.log("OPening add appointment modal:");
+    
     const today = new Date();
     const patient_phone = rowData.caller_no || "";
 
@@ -140,14 +140,14 @@ export default function Call_logs({ isTab = false }) {
       });
 
       if (!response.ok || response.statusCode === 404) {
-        console.log("res:", response);
+        
         setFormData((prev) => ({ ...prev, patient_type: "" }));
         setShowAddModal(true);
         return;
       }
 
       const data = await response.json();
-      console.log("res:", response);
+      
       if (data.statusCode === 200 && data.data) {
         try {
           const confirmUrl = `${BASE_URL}/V1/appointment/getPatientByApptConfirm?patient_phone=${patient_phone}&location=${currentLocation}`;
@@ -287,7 +287,7 @@ export default function Call_logs({ isTab = false }) {
   }, [filters1.global.value, CallLogs]);
 
   const fetchCallLogsData = async () => {
-    console.log(currentLocation, fromDate, toDate);
+    
     setLoading(true);
     try {
       const url = new URL(`${BASE_URL}/V1/ivrdata/listIvrdata`);
@@ -296,7 +296,7 @@ export default function Call_logs({ isTab = false }) {
         to: formatToApiDate(toDate),
         location: currentLocation,
       };
-      console.log(params);
+      
 
       Object.keys(params).forEach((key) => {
         if (params[key]) url.searchParams.append(key, params[key]);
@@ -431,7 +431,7 @@ export default function Call_logs({ isTab = false }) {
   };
 
   const handleEnquiryClick = (callLog) => {
-    console.log("Opening Enquiry Modal for IVR ID:", callLog.ivr_id);
+    
 
     const today = new Date();
     setSelectedCallLog(callLog);
@@ -446,7 +446,7 @@ export default function Call_logs({ isTab = false }) {
   };
 
   const handleNoteClick = (note, rowData) => {
-    console.log("Opening note modal for IVR ID:", rowData.ivr_id);
+    
     setSelectedCallLog(rowData);
     setFormData((prev) => ({
       ...prev,
@@ -473,10 +473,7 @@ export default function Call_logs({ isTab = false }) {
         note: formData.note.trim(),
       };
 
-      console.log(
-        "Sending note update request for IVR ID:",
-        selectedCallLog.ivr_id,
-      );
+      
 
       const response = await fetch(
         `${BASE_URL}/V1/ivrdata/editNote/${selectedCallLog.ivr_id}?location=${currentLocation}`,
@@ -759,7 +756,6 @@ export default function Call_logs({ isTab = false }) {
               }}
               dateFormat="dd-MM-yyyy"
               placeholderText="Select from date"
-              maxDate={new Date()}
               customInput={
                 <Form.Control
                   style={{
@@ -793,7 +789,6 @@ export default function Call_logs({ isTab = false }) {
               }}
               dateFormat="dd-MM-yyyy"
               placeholderText="Select to date"
-              minDate={fromDate ? new Date(fromDate) : null}
               popperPlacement="bottom-start"
               customInput={
                 <Form.Control
@@ -921,7 +916,7 @@ export default function Call_logs({ isTab = false }) {
     };
 
     try {
-      console.log("Sending appointment booking request.");
+      
       // console.log(payload);
       const response = await fetch(
         `${BASE_URL}/V1/appointment/addAppointment?location=${currentLocation}`,
@@ -989,7 +984,7 @@ export default function Call_logs({ isTab = false }) {
     };
 
     try {
-      console.log("Sending Enquiry Request.");
+      
 
       const response = await fetch(
         `${BASE_URL}/V1/enquiry/addEnquiry?location=${currentLocation}`,

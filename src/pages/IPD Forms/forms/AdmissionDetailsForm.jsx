@@ -589,7 +589,7 @@ const AdmissionDetailsForm = ({ onSubmit, patientData }) => {
           },
         );
         const result = await response.json();
-        console.log("result.data: ", result.data);
+        
         if (response.ok && result.data) {
           const existing = result.data;
           if (existing) {
@@ -762,7 +762,7 @@ const AdmissionDetailsForm = ({ onSubmit, patientData }) => {
     };
 
     try {
-      console.log("FINAL:", finalPayload);
+      
       Swal.fire({
         title: "Saving...",
         didOpen: () => Swal.showLoading(),

@@ -48,7 +48,7 @@ export default function NavbarIpdBills() {
                 }`}
             >
               <span className="nav-icon">➕</span>
-              Add New Invoice
+              Add New IPD Bill
             </Link>
             <span className="separator">•</span>
             <Link

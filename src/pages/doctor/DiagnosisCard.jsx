@@ -76,7 +76,7 @@ const DiagnosisCard = ({
           `${BASE_URL}/V1/invoice/insurance_co_dropdown?location=${loc}`,
         );
         const data = await res.json();
-        console.log("Insurance Companies Fetched:", data);
+        
         if (data.statusCode === 200) {
           setInsuranceCompanies(data.data || []);
         }

@@ -264,7 +264,7 @@ const SxConversionReport = () => {
       );
 
       const result = await response.json();
-      console.log(result);
+      
       if (result.success) {
         const { data } = result;
 

@@ -67,7 +67,7 @@ export default function ReceiptList() {
       const payload = decodeJwt(token);
       if (payload && payload.jobLocation) {
         setCurrentLocation(payload.jobLocation);
-        console.log(`Location set from JWT: ${payload.jobLocation}`);
+        
       }
     } else {
       console.warn("JWT Token not found in localStorage.");
@@ -161,9 +161,9 @@ export default function ReceiptList() {
 
       const data = await response.json();
       if (response.ok && Array.isArray(data.data)) {
-        console.log(data.data);
+        
         setReceipts(data.data);
-        console.log("📥 Fetched Receipts:", data.data.length);
+        
       } else {
         Toast.fire({
           icon: "error",
@@ -294,7 +294,7 @@ export default function ReceiptList() {
 
   const handlePrintReceipt = (selectedReceipt) => {
     if (!selectedReceipt) return;
-    console.log(" printing  RECEPT: ", selectedReceipt);
+    
 
     const trimmedLocation = currentLocation ? currentLocation.trim() : "";
     const clinicAddr = receiptlocations[trimmedLocation] ||
@@ -303,7 +303,7 @@ export default function ReceiptList() {
           "Healing Hands Clinic Pvt Ltd, DP Road, Ground Floor, Millenium Star Extension, Adjacent to Ruby Hall Clinic, Pune 411001",
         phone: "8888288884 | 020-26164488/99",
       };
-    console.log(clinicAddr);
+    
     const getBase64Image = (imgUrl) => {
       return new Promise((resolve) => {
         const img = new Image();
@@ -758,7 +758,6 @@ export default function ReceiptList() {
               selected={toDate}
               onChange={setToDate}
               dateFormat="dd-MM-yyyy"
-              minDate={fromDate}
               placeholderText="Select to date"
               customInput={
                 <Form.Control
@@ -1012,6 +1011,23 @@ export default function ReceiptList() {
                         body={(rowData) =>
                           `₹ ${parseFloat(rowData.discountamt || 0).toFixed(2)}`
                         }
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "120px",
+                        }}
+                      />
+                      <Column
+                        header="Payable Amount"
+                        headerClassName="datatable-header-center"
+                        body={(rowData) => {
+                          const payable = (
+                            parseFloat(rowData.totalamt || 0) -
+                            parseFloat(rowData.discountamt || 0)
+                          );
+                          return `₹ ${payable.toFixed(2)}`;
+                        }}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",

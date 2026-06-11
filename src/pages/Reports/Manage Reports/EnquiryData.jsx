@@ -56,7 +56,7 @@ const EnquiryData = () => {
 
     setLoading(true);
     try {
-      console.log(fromDate, toDate);
+      
       // Your controller expects Fromdate and Todate in the body via POST
       const response = await fetch(
         `${BASE_URL}/V1/managereports/getEnquiryReport`,
@@ -80,7 +80,7 @@ const EnquiryData = () => {
       }
 
       const data = await response.json();
-      console.log(data);
+      
       const formattedData = data.map((item, index) => {
         let displayDate = "N/A";
 

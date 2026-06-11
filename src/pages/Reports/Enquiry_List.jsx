@@ -344,7 +344,7 @@ export default function EnquiryList({ isTab = false }) {
         to: finalToDate,
         location: currentLocation,
       };
-      console.log(params);
+      
 
       Object.keys(params).forEach((key) =>
         url.searchParams.append(key, params[key]),
@@ -658,7 +658,6 @@ export default function EnquiryList({ isTab = false }) {
               onChange={setToDate}
               dateFormat="dd-MM-yyyy"
               placeholderText="Select to date"
-              minDate={fromDate}
               customInput={
                 <Form.Control
                   style={{ padding: "5px 8px", fontSize: "12px" }}

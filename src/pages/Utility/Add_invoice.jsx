@@ -151,7 +151,7 @@ const AddInvoice = () => {
         ]);
 
         if (cRes.ok) setConsultants(c.data ?? []);
-        console.log(c);
+        
         if (sRes.ok) setSurgeons(s.data ?? []);
         if (iRes.ok) setInsurance(i.data ?? []);
         if (tRes.ok) setTpa(t.data ?? []);
@@ -270,7 +270,12 @@ const AddInvoice = () => {
         );
         const data = await response.json();
         if (response.ok) {
-          setPatientResults(data.data || []);
+          const filtered = (data.data || []).filter(
+            (p) =>
+              (p.is_deleted === 0 || p.is_deleted === "0" || p.is_deleted === null || p.is_deleted === undefined) &&
+              (p.ConfirmPatient === 1 || p.ConfirmPatient === "1")
+          );
+          setPatientResults(filtered);
           setShowPatientDropdown(true);
         }
       } catch (err) {
@@ -386,7 +391,7 @@ const AddInvoice = () => {
       return;
     }
 
-    console.log(formData);
+    
     const validationErrors = validate();
     setErrors(validationErrors);
 
@@ -443,7 +448,7 @@ const AddInvoice = () => {
         );
 
         const data = await response.json();
-        console.log(data);
+        
         if (response.ok) {
           Swal.fire({
             title: "Success!",
@@ -522,7 +527,7 @@ const AddInvoice = () => {
         fontFamily: "'Poppins', Arial, sans-serif",
       }}
     >
-      <PageBreadcrumb pagename="Add New Invoice Form" />
+      <PageBreadcrumb pagename="Add New IPD Bill" />
       <NavbarIpdBills />
       <Container className="p-0">
         <Form onSubmit={handleSubmit}>

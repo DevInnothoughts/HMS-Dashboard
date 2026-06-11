@@ -243,7 +243,7 @@ const IpdPaymentData = () => {
         PatientId: originalPayload.PatientId,
         apidata: apidata,
       };
-      console.log(cancelPayload);
+      
       const response = await fetch(
         `${BASE_URL}/V1/invoice/cancelIPDPaymentStatus?location=${currentLocation}`,
         {
@@ -293,9 +293,9 @@ const IpdPaymentData = () => {
             PatientId: originalPayload.PatientId,
             Totalinvoiceamt: originalPayload.Totalinvoiceamt,
           };
-          console.log("INITITATION DATA IN PENDING POPUP: ", apidata);
+          
           2;
-          console.log(statusPayload);
+          
           const response = await fetch(
             `${BASE_URL}/V1/invoice/checkIPDPaymentStatus?location=${currentLocation}`,
             {
@@ -424,15 +424,15 @@ const IpdPaymentData = () => {
         PosMachine: selectedTerminal,
         location: currentLocation,
       };
-      console.log(endpoint);
-      console.log(payload);
+      
+      
       const response = await fetch(`${BASE_URL}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       const result = await response.json();
-      console.log("INITIATION RESULT: ", result);
+      
       if (
         result.statusCode === 201 ||
         result.statusCode === 200 ||

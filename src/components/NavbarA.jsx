@@ -65,6 +65,15 @@ export default function NavBarA() {
               <span className="nav-icon">🧾</span>
               OPD Receipt List
             </Link>
+            <span className="separator">•</span>
+            <Link
+              to="/reports/receipts/add"
+              className={`nav-link ${location.pathname === "/reports/receipts/add" ? "active" : ""
+                }`}
+            >
+              <span className="nav-icon">➕</span>
+              Add Lab Receipt
+            </Link>
           </nav>
         </div>
       </Container>

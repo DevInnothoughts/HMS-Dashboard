@@ -678,9 +678,7 @@ const FollowUpPrintView = React.forwardRef(
                 >
                   <p>
                     <b>Diagnosis :</b>{" "}
-                    {followUpData?.diagnosis_text ||
-                      followUpData?.diagnosis ||
-                      ""}
+                    {" "}
                   </p>
                 </div>
               </div>
@@ -690,7 +688,7 @@ const FollowUpPrintView = React.forwardRef(
                   style={{ width: "100%", height: "40px" }}
                 >
                   <p>
-                    <b>Advice :</b> {followUpData?.advice || ""}
+                    <b>Advice :</b> {" "}
                   </p>
                 </div>
               </div>

@@ -723,7 +723,6 @@ export default function ChatbotLeadsTab() {
               onChange={(date) => setFromDate(date)}
               dateFormat="dd-MM-yyyy"
               placeholderText="Select from date"
-              maxDate={new Date()}
               portalId="root"
               customInput={
                 <Form.Control
@@ -752,7 +751,6 @@ export default function ChatbotLeadsTab() {
               onChange={(date) => setToDate(date)}
               dateFormat="dd-MM-yyyy"
               placeholderText="Select to date"
-              minDate={fromDate}
               portalId="root"
               customInput={
                 <Form.Control

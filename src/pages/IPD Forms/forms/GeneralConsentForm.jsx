@@ -227,7 +227,7 @@ const GeneralConsentForm = ({ onSubmit, patientData = {} }) => {
           },
         );
         const result = await response.json();
-        console.log(result.data);
+        
         if (response.ok && result.data) {
           const existing = result.data;
           setFormData((prev) => ({
