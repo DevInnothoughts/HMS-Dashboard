@@ -18,11 +18,28 @@ const BASE_URL = "http://194.195.117.79:5100/api";
 const initialReportState = {
   opdCounts: [],
   opdDetails: [],
-  opdCollectionDetails: [],
   overallCollectionDetails: [],
   labCollectionDetails: [],
   pharmacyCollectionDetails: [],
   testDetails: [],
+};
+
+const formatDateIST = (date) => {
+  const istOffsetMs = 5.5 * 60 * 60 * 1000;
+  const istTime = new Date(date.getTime() + istOffsetMs);
+  const year = istTime.getUTCFullYear();
+  const month = String(istTime.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(istTime.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const formatDisplayDateIST = (date) => {
+  const istOffsetMs = 5.5 * 60 * 60 * 1000;
+  const istTime = new Date(date.getTime() + istOffsetMs);
+  const day = String(istTime.getUTCDate()).padStart(2, '0');
+  const month = String(istTime.getUTCMonth() + 1).padStart(2, '0');
+  const year = istTime.getUTCFullYear();
+  return `${day}-${month}-${year}`;
 };
 
 const DailyOPDReport = () => {
@@ -32,7 +49,7 @@ const DailyOPDReport = () => {
 
   // 1. Memoize or format the date only once, or handle it inside the fetch
   const today = new Date();
-  const formattedDate = `${String(today.getDate()).padStart(2, "0")}-${String(today.getMonth() + 1).padStart(2, "0")}-${today.getFullYear()}`;
+  const formattedDate = formatDisplayDateIST(today);
 
   // 2. Remove 'selectedDate' from the useCallback dependencies
   const fetchDailyReport = useCallback(
@@ -42,7 +59,7 @@ const DailyOPDReport = () => {
 
         // Define the static date string here so it doesn't trigger re-renders
         const today = new Date();
-        const apiDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+        const apiDate = formatDateIST(today);
 
         const response = await fetch(
           `${BASE_URL}/V1/daily-opd-report?location=${currentLocation}&date=${apiDate}`,
@@ -77,10 +94,6 @@ const DailyOPDReport = () => {
                 total: row[3],
               };
             }),
-            opdCollectionDetails: d.opdCollection.map((item) => ({
-              method: item[0],
-              amount: item[1],
-            })),
             overallCollectionDetails: d.overallCollection.map((item) => ({
               method: item[0],
               amount: item[1],
@@ -157,11 +170,11 @@ const DailyOPDReport = () => {
               <tr>
                 <td style="text-align:left;padding-left:10px;width:70%;
                     font-weight:bold;
-                    color:${item.method === "TOTAL" ? "inherit" : "#343030ff"} !important;">
+                    color:${item.method?.toUpperCase() === "TOTAL" ? "inherit" : "#343030ff"} !important;">
                   ${item.method}
                 </td>
                 <td style="width:30%;
-                    font-weight:${item.method === "TOTAL" ? "bold" : "normal"};">
+                    font-weight:${item.method?.toUpperCase() === "TOTAL" ? "bold" : "normal"};">
                   ${item.amount}
                 </td>
               </tr>
@@ -256,8 +269,8 @@ const DailyOPDReport = () => {
                     .map(
                       (i) => `
                     <tr>
-                      <td class="fw-bold" style="color:#000 !important;">${i.type}</td>
-                      <td>${i.count}</td>
+                      <td class="fw-bold" style="color:${i.type === "TOTAL" ? "#000" : "#343030ff"} !important;">${i.type}</td>
+                      <td style="font-weight:${i.type === "TOTAL" ? "bold" : "normal"};">${i.count}</td>
                     </tr>
                   `,
                     )
@@ -329,12 +342,9 @@ const DailyOPDReport = () => {
   
           <!-- COLLECTIONS -->
           <div class="row justify-content-center">
-            ${buildCollectionTable("OPD Collection Details(Rs)", reportData.opdCollectionDetails)}
+            ${buildCollectionTable("Overall Collection Details(Rs)", reportData.overallCollectionDetails)}
             ${buildCollectionTable("LAB Collection Details(Rs)", reportData.labCollectionDetails)}
             ${buildCollectionTable("Pharmacy Collection Details(Rs)", reportData.pharmacyCollectionDetails)}
-          </div>
-          <div class="row justify-content-center">
-            ${buildCollectionTable("Overall Collection Details(Rs)", reportData.overallCollectionDetails)}
           </div>
   
         </div>
@@ -486,10 +496,12 @@ const DailyOPDReport = () => {
                       <tbody style={{ fontSize: "12px" }}>
                         {reportData.opdCounts.map((item, index) => (
                           <tr key={index}>
-                            <td className="fw-bold text-secondary">
+                            <td className={`fw-bold ${item.type === "TOTAL" ? "text-dark" : "text-secondary"}`}>
                               {item.type}
                             </td>
-                            <td>{item.count}</td>
+                            <td className={item.type === "TOTAL" ? "fw-bold" : ""}>
+                              {item.count}
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -623,8 +635,8 @@ const DailyOPDReport = () => {
                 <Row className="justify-content-center">
                   {[
                     {
-                      title: "OPD Collection Details(Rs)",
-                      data: reportData.opdCollectionDetails,
+                      title: "Overall Collection Details(Rs)",
+                      data: reportData.overallCollectionDetails,
                     },
                     {
                       title: "LAB Collection Details(Rs)",
@@ -666,7 +678,7 @@ const DailyOPDReport = () => {
                           {section.data.map((item, index) => (
                             <tr key={index}>
                               <td
-                                className={`fw-bold ${item.method === "TOTAL" ? "" : "text-secondary"}`}
+                                className={`fw-bold ${item.method?.toUpperCase() === "TOTAL" ? "" : "text-secondary"}`}
                                 style={{
                                   textAlign: "left",
                                   paddingLeft: "10px",
@@ -679,7 +691,7 @@ const DailyOPDReport = () => {
                                 style={{
                                   width: "30%",
                                   fontWeight:
-                                    item.method === "TOTAL" ? "bold" : "normal",
+                                    item.method?.toUpperCase() === "TOTAL" ? "bold" : "normal",
                                 }}
                               >
                                 {item.amount}
@@ -691,69 +703,7 @@ const DailyOPDReport = () => {
                     </Col>
                   ))}
                 </Row>
-                <Row className="justify-content-center">
-                  {[
-                    {
-                      title: "Overall Collection Details(Rs)",
-                      data: reportData.overallCollectionDetails,
-                    },
-                  ].map((section, idx) => (
-                    <Col key={idx} xs={12} lg={4} className="mb-4">
-                      <Table
-                        bordered
-                        responsive
-                        className="table-sm table-striped mx-auto"
-                        style={{
-                          border: "1px solid #00bcd4",
-                          textAlign: "center",
-                          fontSize: "13px",
-                          backgroundColor: "white",
-                        }}
-                      >
-                        <thead>
-                          <tr style={{ backgroundColor: "#e3f2fd" }}>
-                            <th
-                              colSpan="2"
-                              style={{
-                                textAlign: "left",
-                                paddingLeft: "10px",
-                                borderRight: "1px solid #00bcd4",
-                                borderLeft: "1px solid #00bcd4",
-                              }}
-                            >
-                              {section.title}
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {section.data.map((item, index) => (
-                            <tr key={index}>
-                              <td
-                                className={`fw-bold ${item.method === "TOTAL" ? "" : "text-secondary"}`}
-                                style={{
-                                  textAlign: "left",
-                                  paddingLeft: "10px",
-                                  width: "70%",
-                                }}
-                              >
-                                {item.method}
-                              </td>
-                              <td
-                                style={{
-                                  width: "30%",
-                                  fontWeight:
-                                    item.method === "TOTAL" ? "bold" : "normal",
-                                }}
-                              >
-                                {item.amount}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </Table>
-                    </Col>
-                  ))}
-                </Row>
+
               </Card.Body>
               <Card.Footer
                 className="text-center"

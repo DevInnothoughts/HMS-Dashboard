@@ -261,6 +261,7 @@ export default function All_patient() {
   const [state, setState] = useState(null);
   const [city, setCity] = useState(null);
   const [errors, setErrors] = useState({});
+  const [noPendingAppt, setNoPendingAppt] = useState(true);
   const [formData, setFormData] = useState({
     doctor_id: "",
     name: "",
@@ -1166,6 +1167,7 @@ export default function All_patient() {
 
   const handleSubmit = async (e, saveType) => {
     if (e) e.preventDefault();
+    setLoading(true);
     const selectedFDE = fdeList.find((fde) => fde.FDEID === formData.FDE_Name);
     const fdeName = selectedFDE ? selectedFDE.FDEName : "";
     const formattedDate = moment(formData.date).format("YYYY-MM-DD");
@@ -1228,7 +1230,7 @@ export default function All_patient() {
     }
   };
 
-  const handleAddAppointmentClick = (patient) => {
+  const handleAddAppointmentClick = async (patient) => {
     const patientId = patient.patient_id || "";
 
     const today = new Date();
@@ -1249,7 +1251,32 @@ export default function All_patient() {
     };
 
     setFormData(formDataToSet);
+    setNoPendingAppt(true);
     setShowAddModal(true);
+
+    if (patient.phone && currentLocation && currentLocation !== "default") {
+      try {
+        const confirmUrl = `${BASE_URL}/V1/appointment/getPatientByApptConfirm?patient_phone=${patient.phone}&location=${currentLocation}`;
+        const confirmResponse = await fetch(confirmUrl, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+
+        if (confirmResponse.status === 400) {
+          Swal.fire({
+            icon: "warning",
+            title: "Pending Appointment",
+            text: "Pending appointment, close that appointment first.",
+            confirmButtonColor: "#f39c12",
+          });
+          setNoPendingAppt(false);
+        } else {
+          setNoPendingAppt(true);
+        }
+      } catch (innerError) {
+        console.error("Error in confirmation check API call:", innerError);
+      }
+    }
   };
 
   const handlePrint = (patient) => {
@@ -3331,6 +3358,7 @@ export default function All_patient() {
                 variant="primary"
                 type="submit"
                 className="px-3"
+                disabled={loading || !noPendingAppt}
                 style={{
                   borderRadius: "10px",
                   fontSize: "12px",
@@ -3339,7 +3367,7 @@ export default function All_patient() {
                   padding: "10px",
                 }}
               >
-                Add Appointment
+                {loading ? "Booking..." : "Add Appointment"}
               </Button>
             </div>
           </Form>

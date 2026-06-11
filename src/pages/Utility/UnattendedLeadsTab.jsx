@@ -259,7 +259,9 @@ export default function UnattendedLeadsTab() {
         processedIvr = ivrData.data
           .filter(
             (log) =>
-              log.call_status && log.call_status.toLowerCase() === "missed",
+              log.call_status &&
+              log.call_status.toLowerCase() === "missed" &&
+              (!log.note || log.note.trim() === ""),
           )
           .map((log) => ({
             ...log,
@@ -484,19 +486,9 @@ export default function UnattendedLeadsTab() {
 
       const resData = await response.json();
       if (response.ok && resData.statusCode === 200) {
-        if (selectedLead.source === "IVR") {
-          setUnattendedLeads((prev) =>
-            prev.map((lead) =>
-              lead.id === selectedLead.id
-                ? { ...lead, note: trimmedNote }
-                : lead,
-            ),
-          );
-        } else {
-          setUnattendedLeads((prev) =>
-            prev.filter((lead) => lead.id !== selectedLead.id),
-          );
-        }
+        setUnattendedLeads((prev) =>
+          prev.filter((lead) => lead.id !== selectedLead.id),
+        );
 
         setShowNoteModal(false);
         Swal.fire({

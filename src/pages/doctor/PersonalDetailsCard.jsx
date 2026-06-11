@@ -732,9 +732,9 @@ const PersonalDetailsCard = () => {
         const toArray = (str) =>
           str
             ? str
-                .split(",")
-                .map((s) => s.trim())
-                .filter(Boolean)
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean)
             : [];
         const symptomsArr = toArray(d.symptoms);
 
@@ -812,7 +812,7 @@ const PersonalDetailsCard = () => {
               parsedOdsBowelHabits = arr[0] || "";
               parsedOdsDuration = arr[1] || "";
             }
-          } catch (e) {}
+          } catch (e) { }
         }
 
         const investigationTypes = [
@@ -1032,7 +1032,7 @@ const PersonalDetailsCard = () => {
 
         setHistoryData(loadedState);
         setIsEditingHistory(false);
-        
+
         toast.success(`Loaded history from ${selected.date}`);
       } else {
         toast.error("Could not fetch history record data");
@@ -1916,7 +1916,7 @@ const PersonalDetailsCard = () => {
           const d = result.data;
           // Slice to YYYY-MM-DD only — avoids moment() timezone shifts on already-formatted strings
           const safeDate = (val) => (val ? String(val).substring(0, 10) : "");
-          
+
           const toArray = (val) => {
             if (!val) return [];
             if (Array.isArray(val)) return val;
@@ -2056,7 +2056,7 @@ const PersonalDetailsCard = () => {
       setLoading(true);
       const apiDate = moment(selected.date, "DD-MM-YYYY").format("YYYY-MM-DD");
       const url = `${BASE_URL}/V1/doctor/get-surgery-details/${formData.patient_id}?date=${apiDate}&location=${currentLocation}`;
-      
+
 
       const response = await fetch(url, {
         headers: {
@@ -3678,7 +3678,7 @@ const PersonalDetailsCard = () => {
             } else {
               toast.error(
                 addDoctorData.message ||
-                  "Failed to add manual doctor reference.",
+                "Failed to add manual doctor reference.",
               );
               return;
             }
@@ -3709,9 +3709,8 @@ const PersonalDetailsCard = () => {
         break;
       case "family_friends":
         reference_type = "family_friends";
-        ref = `${referenceDetails.friendname || ""},${
-          referenceDetails.friendno || ""
-        }`;
+        ref = `${referenceDetails.friendname || ""},${referenceDetails.friendno || ""
+          }`;
         break;
       case "hhc_board":
         reference_type = "hhc_board";
@@ -3839,7 +3838,7 @@ const PersonalDetailsCard = () => {
         ? current.filter((item) => item !== value)
         : [...current, value];
 
-      
+
 
       let nextState = { ...prev, [field]: updated };
 
@@ -3860,7 +3859,7 @@ const PersonalDetailsCard = () => {
         ? currentSpecialityData.filter((item) => item !== value)
         : [...currentSpecialityData, value];
 
-      
+
 
       return {
         ...prev,
@@ -4080,7 +4079,7 @@ const PersonalDetailsCard = () => {
     }
 
     if (missingFields.length > 0) {
-      
+
       Swal.fire({
         icon: "warning",
         title: "Missing Required Fields",
@@ -4089,7 +4088,7 @@ const PersonalDetailsCard = () => {
       return;
     }
 
-    
+
     setLoading(true);
     try {
       const response = await fetch(
@@ -5061,13 +5060,15 @@ const PersonalDetailsCard = () => {
                       <h4 className="fw-bold mb-1" style={{ color: "#2c3e50" }}>
                         Patient Medical Records
                       </h4>
-                      <p
-                        className="text-muted m-0"
-                        style={{ fontSize: "14px" }}
-                      >
-                        Manage and review clinical documentation across all
-                        categories.
-                      </p>
+                      {formData.name && (
+                        <div className="d-flex flex-wrap gap-2 align-items-center" style={{ fontSize: "13px" }}>
+                          <span><strong>UID No:</strong> {formData.Uid_no || "N/A"}</span>
+                          <span className="opacity-50">|</span>
+                          <span><strong>Patient Name:</strong> {formData.prefix ? `${formData.prefix} ` : ""}{formData.name}</span>
+                          <span className="opacity-50">|</span>
+                          <span><strong>Contact No:</strong> {formData.phone || "N/A"}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="mt-3 mt-md-0">
@@ -5243,9 +5244,15 @@ const PersonalDetailsCard = () => {
                     <h4 className="fw-bold m-0" style={{ color: "#2c3e50" }}>
                       {tabs.find((t) => t.id === activeTab)?.label}
                     </h4>
-                    <p className="text-muted m-0" style={{ fontSize: "13px" }}>
-                      Manage patient records
-                    </p>
+                    {formData.name && (
+                      <div className="d-flex flex-wrap gap-2 align-items-center text-muted" style={{ fontSize: "12px", marginTop: "2px" }}>
+                        <span><strong>UID:</strong> {formData.Uid_no || "N/A"}</span>
+                        <span className="opacity-50">|</span>
+                        <span><strong>Patient:</strong> {formData.prefix ? `${formData.prefix} ` : ""}{formData.name}</span>
+                        <span className="opacity-50">|</span>
+                        <span><strong>Contact:</strong> {formData.phone || "N/A"}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -5445,24 +5452,24 @@ const PersonalDetailsCard = () => {
                   "surgery-details",
                   "discharge-card",
                 ].includes(activeTab) && (
-                  <div className="text-center py-5 animate__animated animate__fadeIn">
-                    <div
-                      className="d-inline-flex p-4 rounded-circle mb-4"
-                      style={{ backgroundColor: "#f0f4f8" }}
-                    >
-                      <FeatherIcon
-                        icon="clock"
-                        size="48"
-                        className="text-muted"
-                      />
+                    <div className="text-center py-5 animate__animated animate__fadeIn">
+                      <div
+                        className="d-inline-flex p-4 rounded-circle mb-4"
+                        style={{ backgroundColor: "#f0f4f8" }}
+                      >
+                        <FeatherIcon
+                          icon="clock"
+                          size="48"
+                          className="text-muted"
+                        />
+                      </div>
+                      <h4 className="text-muted fw-bold">Coming Soon</h4>
+                      <p className="text-muted">
+                        The {tabs.find((t) => t.id === activeTab).label} section
+                        is under development.
+                      </p>
                     </div>
-                    <h4 className="text-muted fw-bold">Coming Soon</h4>
-                    <p className="text-muted">
-                      The {tabs.find((t) => t.id === activeTab).label} section
-                      is under development.
-                    </p>
-                  </div>
-                )}
+                  )}
               </Card.Body>
             </Card>
           )}
