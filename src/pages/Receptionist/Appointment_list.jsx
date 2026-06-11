@@ -389,8 +389,8 @@ export default function Appointment_list() {
       ) {
         // showPaymentPendingPopup(result.data.transaction_id, payload, result.data.pos_tid);
         showPaymentPendingPopup(
-          result.data.transaction_id,
-          payload,
+          result.data.reference_id, // ← gateway reference (Plutus ref for Pinelabs), NOT transaction_id
+          { ...payload, transaction_id: result.data.transaction_id }, // keep txn id for status billNumber
           result.data,
         );
       } else {
@@ -418,11 +418,11 @@ export default function Appointment_list() {
             transaction_id: originalPayload.transaction_id,
             PosMachine: originalPayload.PosMachine,
             MachineType: originalPayload.MachineType,
+            receiptData: originalPayload, // ← add: carries consultations + discountamt for amount calc
             apidata: apidata,
           }),
         },
       );
-
       return await response.json();
     } catch (err) {
       throw new Error(err.message);
