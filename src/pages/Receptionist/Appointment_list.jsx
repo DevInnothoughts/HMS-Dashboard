@@ -104,19 +104,18 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
     padding: "1px 3px",
     minWidth: "33px",
     borderRadius: "4px",
-    border: `1px solid ${
-      disabled
-        ? "#ddd"
-        : isDanger
-          ? "#dc3545"
-          : isEdit
-            ? "#007bff"
-            : isConfirm
-              ? "#28a745"
-              : isBlueAction
-                ? "#0babb9ff"
-                : defaultBorder
-    }`,
+    border: `1px solid ${disabled
+      ? "#ddd"
+      : isDanger
+        ? "#dc3545"
+        : isEdit
+          ? "#007bff"
+          : isConfirm
+            ? "#28a745"
+            : isBlueAction
+              ? "#0babb9ff"
+              : defaultBorder
+      }`,
     backgroundColor: disabled ? "#f8f9fa" : defaultBg,
     color: disabled
       ? "#aaa"
@@ -170,17 +169,16 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
               ? "#15cbd8ff"
               : "#e0e0e0";
 
-      e.currentTarget.style.border = `1px solid ${
-        isDanger
-          ? "#c82333"
-          : isEdit
-            ? "#007bff"
-            : isConfirm
-              ? "#218838"
-              : isBlueAction
-                ? "#007bff"
-                : "#b0b0b0"
-      }`;
+      e.currentTarget.style.border = `1px solid ${isDanger
+        ? "#c82333"
+        : isEdit
+          ? "#007bff"
+          : isConfirm
+            ? "#218838"
+            : isBlueAction
+              ? "#007bff"
+              : "#b0b0b0"
+        }`;
 
       e.currentTarget.style.color = "white";
       if (e.currentTarget.children[0]) {
@@ -202,17 +200,16 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
               ? "#23adb2ff"
               : defaultColor;
 
-      e.currentTarget.style.border = `1px solid ${
-        isDanger
-          ? "#dc3545"
-          : isEdit
-            ? "#007bff"
-            : isConfirm
-              ? "#28a745"
-              : isBlueAction
-                ? "#007bff"
-                : defaultBorder
-      }`;
+      e.currentTarget.style.border = `1px solid ${isDanger
+        ? "#dc3545"
+        : isEdit
+          ? "#007bff"
+          : isConfirm
+            ? "#28a745"
+            : isBlueAction
+              ? "#007bff"
+              : defaultBorder
+        }`;
 
       if (e.currentTarget.children[0]) {
         e.currentTarget.children[0].style.stroke = iconColor;
@@ -249,6 +246,7 @@ export default function Appointment_list() {
   const [currentLocation, setCurrentLocation] = useState("default");
   const [fromDate, setFromDate] = useState(new Date());
   const [toDate, setToDate] = useState(new Date());
+  const [showPendingPast, setShowPendingPast] = useState(true);
   const [posTerminalList, setPosTerminalList] = useState([]);
 
   useEffect(() => {
@@ -326,7 +324,7 @@ export default function Appointment_list() {
 
   const handleGenerateReceipt = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
-    
+
 
     try {
       if (!selectedAppointment) {
@@ -364,7 +362,7 @@ export default function Appointment_list() {
         MachineType: "OPD",
       };
 
-      
+
 
       const response = await fetch(
         `${BASE_URL}/V1/appointment/saveReceipt?location=${currentLocation}`,
@@ -451,7 +449,7 @@ export default function Appointment_list() {
       showLoaderOnConfirm: true,
       preConfirm: async () => {
         try {
-          
+
           const response = await fetch(
             `${BASE_URL}/V1/appointment/checkPaymentStatus?location=${currentLocation}`,
             {
@@ -522,7 +520,7 @@ export default function Appointment_list() {
               Swal.fire(
                 "Error",
                 cancelResult?.message ||
-                  "Remote cancel failed. Please cancel manually on machine.",
+                "Remote cancel failed. Please cancel manually on machine.",
                 "error",
               );
             }
@@ -576,13 +574,13 @@ export default function Appointment_list() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    
+
     if (token) {
       const payload = decodeJwt(token);
       if (payload && payload.jobLocation) {
         setCurrentLocation(payload.jobLocation);
       }
-      
+
     }
   }, []);
 
@@ -627,9 +625,50 @@ export default function Appointment_list() {
       if (response.ok) {
         const data = await response.json();
         if (data.data && data.data.length > 0) {
+          const mappedNewApps = data.data.map((app) => {
+            const isConfirmed = app.confirm_time != 0;
+            const hasHistory = Number(app.historychk) === 3;
+            const hasExecution =
+              Number(app.executivechk) === 1 || Number(app.executivechk) === 2;
+            const hasConsultation = Number(app.consultationchk) === 4;
+            const hasReceipt = Number(app.executivechk) === 2;
+
+            const isExistingPatient =
+              isConfirmed &&
+              ["Follow", "Postoperative", "Post Operative", "MCDPA", "Other"].includes(
+                app.patient_type,
+              );
+
+            const isHistoryDone = hasHistory || isExistingPatient;
+            const isExecutionDone =
+              (hasHistory && hasExecution) || isExistingPatient;
+            const isConsultationDone =
+              (hasHistory && hasExecution && hasConsultation) ||
+              isExistingPatient;
+            const isReceiptDone = hasReceipt;
+
+            let computedStatus = "Appointment Confirmed";
+            if (isReceiptDone) computedStatus = "Receipt Generated";
+            else if (isConsultationDone)
+              computedStatus = "Prescription Checked";
+            else if (isExecutionDone) computedStatus = "Diagnosis Checked";
+            else if (isHistoryDone) computedStatus = "History Checked";
+            else if (!isConfirmed) computedStatus = "Pending Appointment";
+
+            return {
+              ...app,
+              patient_phone: app.patient_phone ? String(app.patient_phone) : "",
+              patient_type:
+                app.patient_type === "Postoperative"
+                  ? "Post Operative"
+                  : app.patient_type || "",
+              computedStatus,
+            };
+          });
+
           setAppointmentData((prev) => {
             const existingIds = new Set(prev.map((app) => app.appointment_id));
-            const newUniqueApps = data.data.filter(
+            const newUniqueApps = mappedNewApps.filter(
               (app) => !existingIds.has(app.appointment_id),
             );
             return [...prev, ...newUniqueApps];
@@ -647,24 +686,12 @@ export default function Appointment_list() {
     const searchValue = filters.global.value;
     if (!searchValue || searchValue.length < 3) return;
 
-    const hasLocalMatches = appointmentData.some((app) => {
-      const lowerSearch = searchValue.toLowerCase();
-      return (
-        (app.patient_phone && app.patient_phone.includes(searchValue)) ||
-        (app.patient_name &&
-          app.patient_name.toLowerCase().includes(lowerSearch)) ||
-        (app.Uid_no && app.Uid_no.toLowerCase().includes(lowerSearch))
-      );
-    });
+    const delayDebounceFn = setTimeout(() => {
+      searchFromDatabase(searchValue);
+    }, 800);
 
-    if (!hasLocalMatches) {
-      const delayDebounceFn = setTimeout(() => {
-        searchFromDatabase(searchValue);
-      }, 800);
-
-      return () => clearTimeout(delayDebounceFn);
-    }
-  }, [filters.global.value, appointmentData]);
+    return () => clearTimeout(delayDebounceFn);
+  }, [filters.global.value]);
 
   const fetchAppointmentData = useCallback(
     async (manualShowPending = null) => {
@@ -684,17 +711,17 @@ export default function Appointment_list() {
         // 2. Otherwise, if it's the 'Today' view, we want to show pending records from the past (as previously requested).
         // 3. If it's a specific date range (not today), we want strict filtering (showPending = false).
         const showPending =
-          manualShowPending !== null ? manualShowPending : isToday;
+          manualShowPending !== null ? manualShowPending : (isToday && showPendingPast);
 
         const url = `${BASE_URL}/V1/appointment/listAppointments?from=${formattedFromDate}&to=${formattedToDate}&location=${currentLocation}&showPending=${showPending}&_t=${Date.now()}`;
 
-        
+
 
         const response = await fetch(url, { method: "GET" });
         const data = await response.json();
 
         if (response.ok && data.data) {
-          
+
           const sortedData = data.data.sort((a, b) => {
             const timeA = a.appointment_time
               ? moment(a.appointment_time, ["HH:mm:ss", "hh:mm A"]).valueOf()
@@ -757,7 +784,7 @@ export default function Appointment_list() {
         setLoading(false);
       }
     },
-    [fromDate, toDate, currentLocation],
+    [fromDate, toDate, currentLocation, showPendingPast],
   );
 
   const fetchDropdownData = useCallback(async () => {
@@ -780,9 +807,9 @@ export default function Appointment_list() {
         endpoints.map((url) => fetch(url).then((res) => res.json())),
       );
 
-      
-      
-      
+
+
+
 
       setConsultationList(
         Array.isArray(consultationResponse.data)
@@ -853,12 +880,12 @@ export default function Appointment_list() {
     const dateOnly = moment(selectedAppointment.appointment_timestamp).format(
       "YYYY-MM-DD",
     );
-    
+
     const finalAppointmentTime = selectedAppointment.appointment_time
       ? moment(selectedAppointment.appointment_time, [
-          "HH:mm:ss",
-          "hh:mm A",
-        ]).format("HH:mm")
+        "HH:mm:ss",
+        "hh:mm A",
+      ]).format("HH:mm")
       : null;
 
     const updatePayload = {
@@ -871,7 +898,7 @@ export default function Appointment_list() {
       appointment_time: finalAppointmentTime,
       patient_location: currentLocation,
     };
-    
+
     try {
       const response = await fetch(
         `${BASE_URL}/V1/appointment/editAppointment/${selectedAppointment.appointment_id}?location=${currentLocation}`,
@@ -971,14 +998,14 @@ export default function Appointment_list() {
     successMessage = "Confirmed!",
   ) => {
     try {
-      
+
       let response = "";
       if (!patient_phone && !patient_type) {
         response = await fetch(
           `${BASE_URL}/V1/appointment/${endpoint}?appId=${appId}&location=${currentLocation}`,
           { method: "PUT", headers: { "Content-Type": "application/json" } },
         );
-        
+
       } else {
         const mappedPatientType =
           patient_type === "Post Operative" ? "Postoperative" : patient_type;
@@ -986,7 +1013,7 @@ export default function Appointment_list() {
           `${BASE_URL}/V1/appointment/${endpoint}?appId=${appId}&location=${currentLocation}&patientType=${mappedPatientType}&patientPhone=${patient_phone}`,
           { method: "PUT", headers: { "Content-Type": "application/json" } },
         );
-        
+
       }
       const data = await response.json();
 
@@ -1224,7 +1251,7 @@ export default function Appointment_list() {
           <>
             <ActionButton
               title="History"
-              onClick={() => {}}
+              onClick={() => { }}
               disabled={isHistoryDone || isReceiptDone}
               icon="book-open"
               style={{ cursor: "not-allowed" }}
@@ -1232,7 +1259,7 @@ export default function Appointment_list() {
 
             <ActionButton
               title="Diagnosis"
-              onClick={() => {}}
+              onClick={() => { }}
               disabled={!isHistoryDone || isExecutionDone || isReceiptDone}
               icon="activity"
               style={{ cursor: "not-allowed" }}
@@ -1240,7 +1267,7 @@ export default function Appointment_list() {
 
             <ActionButton
               title="Prescription"
-              onClick={() => {}}
+              onClick={() => { }}
               disabled={!isExecutionDone || isConsultationDone || isReceiptDone}
               icon="clipboard"
               style={{ cursor: "not-allowed" }}
@@ -1284,12 +1311,12 @@ export default function Appointment_list() {
           "--status-hover-bg": `${bgColor}15`,
           ...(isSelected
             ? {
-                borderColor: bgColor,
-                backgroundColor: `${bgColor}25`,
-                transform: "translateY(-1.5px)",
-                boxShadow:
-                  "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
-              }
+              borderColor: bgColor,
+              backgroundColor: `${bgColor}25`,
+              transform: "translateY(-1.5px)",
+              boxShadow:
+                "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
+            }
             : {}),
         }}
       >
@@ -1418,6 +1445,38 @@ export default function Appointment_list() {
               )}
             </InputGroup>
           </Form.Group>
+          <Button
+            variant={!showPendingPast ? "primary" : "outline-primary"}
+            onClick={() => {
+              const today = new Date();
+              setShowPendingPast((prev) => !prev);
+              setFromDate(today);
+              setToDate(today);
+              setFilters((prev) => ({
+                ...prev,
+                global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+                patient_type: {
+                  value: null,
+                  matchMode: FilterMatchMode.EQUALS,
+                },
+                computedStatus: {
+                  value: null,
+                  matchMode: FilterMatchMode.EQUALS,
+                },
+              }));
+            }}
+            style={{
+              borderRadius: "6px",
+              padding: "5px 10px",
+              fontSize: "12px",
+              fontWeight: "500",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              marginLeft: "5px",
+            }}
+          >
+            <FeatherIcon icon="calendar" size={12} className="me-1" />
+            Today's Appointments
+          </Button>
         </div>
 
         <div
@@ -1444,7 +1503,10 @@ export default function Appointment_list() {
             </div>
             <DatePicker
               selected={fromDate}
-              onChange={(date) => setFromDate(date)}
+              onChange={(date) => {
+                setFromDate(date);
+                setShowPendingPast(true);
+              }}
               dateFormat="dd-MM-yyyy"
               placeholderText="Select from date"
               customInput={
@@ -1467,7 +1529,10 @@ export default function Appointment_list() {
             </div>
             <DatePicker
               selected={toDate}
-              onChange={setToDate}
+              onChange={(date) => {
+                setToDate(date);
+                setShowPendingPast(true);
+              }}
               dateFormat="dd-MM-yyyy"
               customInput={
                 <Form.Control
@@ -1506,6 +1571,7 @@ export default function Appointment_list() {
             onClick={() => {
               setFromDate(null);
               setToDate(null);
+              setShowPendingPast(true);
               setFilters((prev) => ({
                 ...prev,
                 global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -1718,9 +1784,9 @@ export default function Appointment_list() {
                       value={
                         selectedAppointment.appointment_time
                           ? moment(selectedAppointment.appointment_time, [
-                              "HH:mm:ss",
-                              "hh:mm A",
-                            ]).format("hh:mm A")
+                            "HH:mm:ss",
+                            "hh:mm A",
+                          ]).format("hh:mm A")
                           : ""
                       }
                       onChange={handleEditModalInputChange}
@@ -2085,8 +2151,8 @@ export default function Appointment_list() {
                         body={(rowData) =>
                           rowData.appointment_timestamp
                             ? moment(rowData.appointment_timestamp).format(
-                                "DD-MM-YYYY",
-                              )
+                              "DD-MM-YYYY",
+                            )
                             : "-"
                         }
                         headerClassName="datatable-header-center"
@@ -2102,9 +2168,9 @@ export default function Appointment_list() {
                         body={(rowData) =>
                           rowData.appointment_time
                             ? moment(rowData.appointment_time, [
-                                "hh:mm A",
-                                "HH:mm",
-                              ]).format("HH:mm")
+                              "hh:mm A",
+                              "HH:mm",
+                            ]).format("HH:mm")
                             : "-"
                         }
                         headerClassName="datatable-header-center"
@@ -2483,7 +2549,7 @@ export default function Appointment_list() {
                         }}
                         value={
                           receiptForm.registrationType &&
-                          receiptForm.registrationType !== "Only Registration"
+                            receiptForm.registrationType !== "Only Registration"
                             ? 0
                             : item.amount
                         }
@@ -2571,7 +2637,7 @@ export default function Appointment_list() {
                       }}
                       value={
                         receiptForm.registrationType &&
-                        receiptForm.registrationType !== "Only Registration"
+                          receiptForm.registrationType !== "Only Registration"
                           ? 0
                           : receiptForm.discountAmt
                       }

@@ -310,6 +310,12 @@ export default function All_patient() {
   const [currentLocation, setCurrentLocation] = useState("default");
   const [isManualEntry, setIsManualEntry] = useState(false);
 
+  const isTodayActive =
+    fromDate &&
+    toDate &&
+    moment(fromDate).isSame(moment(), "day") &&
+    moment(toDate).isSame(moment(), "day");
+
   const formatToApiDate = (date) => {
     const validDate = date instanceof Date ? date : new Date(date);
     if (isNaN(validDate)) return null;
@@ -2796,22 +2802,26 @@ export default function All_patient() {
           </Form.Group>
 
           <Button
-            variant="info"
+            variant={isTodayActive ? "primary" : "outline-primary"}
             onClick={() => {
-              const today = new Date();
-              setFromDate(today);
-              setToDate(today);
+              if (isTodayActive) {
+                setFromDate(null);
+                setToDate(null);
+              } else {
+                const today = new Date();
+                setFromDate(today);
+                setToDate(today);
+                setFilters1((prev) => ({
+                  ...prev,
+                  global: { value: null, matchMode: FilterMatchMode.EQUALS },
+                }));
+              }
             }}
             style={{
-              backgroundColor: "#29b6f6",
-              border: "none",
               borderRadius: "6px",
               padding: "5px 10px",
               fontSize: "12px",
               fontWeight: "500",
-              color: "white",
-              cursor: "pointer",
-              transition: "all 0.3s ease",
               boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
               marginLeft: "5px",
             }}

@@ -254,6 +254,12 @@ const InvoiceList = () => {
   const [first, setFirst] = useState(0);
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
+
+  const isTodayActive =
+    fromDate &&
+    toDate &&
+    moment(fromDate).isSame(moment(), "day") &&
+    moment(toDate).isSame(moment(), "day");
   const [invoices, setInvoices] = useState([]);
   const [consultants, setConsultants] = useState([]);
   const [surgeons, setSurgeons] = useState([]);
@@ -1502,8 +1508,35 @@ const InvoiceList = () => {
                   />
                 </div>
               )}
-            </InputGroup>
+             </InputGroup>
           </Form.Group>
+          <Button
+            variant={isTodayActive ? "primary" : "outline-primary"}
+            onClick={() => {
+              if (isTodayActive) {
+                setFromDate(null);
+                setToDate(null);
+              } else {
+                const today = new Date();
+                setFromDate(today);
+                setToDate(today);
+                setFilters1({
+                  global: { value: null, matchMode: FilterMatchMode.EQUALS },
+                });
+              }
+            }}
+            style={{
+              borderRadius: "6px",
+              padding: "5px 10px",
+              fontSize: "12px",
+              fontWeight: "500",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              marginLeft: "5px",
+            }}
+          >
+            <FeatherIcon icon="calendar" size={12} className="me-1" />
+            Today's Invoices
+          </Button>
         </div>
         <div
           style={{

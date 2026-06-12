@@ -24,7 +24,7 @@ const OpdPrescriptionPrintView = React.forwardRef(
     const patientUid =
       patient.Uid_no || patient.uid_no || patient.uid || patient.uhid || "";
 
-    
+
 
     const assistantDoc = doctors.find(
       (doc) =>
@@ -143,6 +143,7 @@ const OpdPrescriptionPrintView = React.forwardRef(
         `}</style>
 
         <div style={{ padding: "20px" }}>
+          <br /><br /><br /><br /><br /><br /><br /><br /><br /><br />
           <div
             className="row-flex"
             style={{
