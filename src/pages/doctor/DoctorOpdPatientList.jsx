@@ -42,6 +42,8 @@ const formatDate = (dateString) => {
   return `${day}-${month}-${year}`;
 };
 
+
+
 export default function DoctorOpdPatientList() {
   const location = "demo";
   const [first, setFirst] = useState(0);
@@ -120,7 +122,7 @@ export default function DoctorOpdPatientList() {
 
       if (doctorResponse.ok) {
         const doctorData = await doctorResponse.json();
-        
+
         setDoctors(Array.isArray(doctorData.data) ? doctorData.data : []);
       } else {
         console.error("Failed to fetch doctors:", doctorResponse.statusText);
@@ -2101,7 +2103,7 @@ export default function DoctorOpdPatientList() {
                     >
                       <Column
                         header="Sr No"
-                        body={(rowData, { rowIndex }) => rowIndex + 1}
+                        body={(rowData, { rowIndex }) => <span className="selectable-text">{rowIndex + 1}</span>}
                         headerClassName="datatable-header-center"
                         style={{
                           border: "1px solid #90caf9",
@@ -2114,13 +2116,13 @@ export default function DoctorOpdPatientList() {
                       <Column
                         field="date"
                         header="Date"
-                        body={(rowData) => formatDate(rowData.date)}
+                        body={(rowData) => <span className="selectable-text">{formatDate(rowData.date) || "-"}</span>}
                         headerClassName="datatable-header-center"
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
                           padding: "0.75rem",
-                          width: "90px",
+                          width: "100px",
                         }}
                       />
 
@@ -2128,7 +2130,7 @@ export default function DoctorOpdPatientList() {
                         field="Uid_no"
                         header="UID No"
                         body={(rowData) =>
-                          rowData.Uid_no ? rowData.Uid_no : "-"
+                          <span className="selectable-text">{rowData.Uid_no || "-"}</span>
                         }
                         headerClassName="datatable-header-center"
                         style={{
@@ -2143,12 +2145,10 @@ export default function DoctorOpdPatientList() {
                         field="name"
                         header="Patient Name"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => (
-                          <span>
-                            {rowData.prefix ? `${rowData.prefix} ` : ""}
-                            {rowData.name || "-"}
-                          </span>
-                        )}
+                        body={(rowData) => {
+                          const patientNameStr = `${rowData.prefix ? `${rowData.prefix} ` : ""}${rowData.name || "-"}`;
+                          return <span className="selectable-text">{patientNameStr}</span>;
+                        }}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -2162,7 +2162,7 @@ export default function DoctorOpdPatientList() {
                         field="phone"
                         header="Contact No"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => rowData.phone || "-"}
+                        body={(rowData) => <span className="selectable-text">{rowData.phone || "-"}</span>}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -2176,7 +2176,7 @@ export default function DoctorOpdPatientList() {
                         field="mobile_2"
                         header="Alternate Contact No"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => rowData.mobile_2 || "-"}
+                        body={(rowData) => <span className="selectable-text">{rowData.mobile_2 || "-"}</span>}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -2190,12 +2190,12 @@ export default function DoctorOpdPatientList() {
                         field="sex"
                         header="Gender"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => rowData.sex || "-"}
+                        body={(rowData) => <span className="selectable-text">{rowData.sex || "-"}</span>}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
                           padding: "0.75rem",
-                          width: "60px",
+                          width: "80px",
                         }}
                       />
 
@@ -2204,19 +2204,20 @@ export default function DoctorOpdPatientList() {
                         header="Age"
                         headerClassName="datatable-header-center"
                         body={(rowData) => {
+                          let ageStr = "-";
                           if (
                             rowData.age &&
                             !isNaN(rowData.age) &&
                             rowData.age < 150
                           ) {
-                            return rowData.age;
+                            ageStr = String(rowData.age);
+                          } else {
+                            const calculated = calculateAge(rowData.birth_date);
+                            if (calculated !== null && calculated !== undefined && calculated !== "") {
+                              ageStr = String(calculated);
+                            }
                           }
-                          const calculated = calculateAge(rowData.birth_date);
-                          return calculated !== null &&
-                            calculated !== undefined &&
-                            calculated !== ""
-                            ? calculated
-                            : "-";
+                          return <span className="selectable-text">{ageStr}</span>;
                         }}
                         style={{
                           border: "1px solid #90caf9",
@@ -2230,7 +2231,7 @@ export default function DoctorOpdPatientList() {
                         field="diagnosis"
                         header="Condition"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => getConditionLabel(rowData)}
+                        body={(rowData) => <span className="selectable-text">{getConditionLabel(rowData)}</span>}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -2243,7 +2244,7 @@ export default function DoctorOpdPatientList() {
                         field="diagnosisAdvice"
                         header={renderAdviceHeader()}
                         headerClassName="datatable-header-center"
-                        body={(rowData) => rowData.diagnosisAdvice || "-"}
+                        body={(rowData) => <span className="selectable-text">{rowData.diagnosisAdvice || "-"}</span>}
                         style={{
                           border: "1px solid #90caf9",
                           padding: "0.75rem",

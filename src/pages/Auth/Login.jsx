@@ -13,52 +13,50 @@ const BASE_URL = "http://194.195.117.79:5100/api";
 const MySwal = withReactContent(Swal);
 
 const LOCATIONS_LIST = [
-  "Hyderabad",
-  "DP Road",
-  "Surat",
-  "Ludhiana",
-  "Indiranagar",
-  "Dighi",
-  "Thane",
-  "Belagavi",
-  "HSR",
-  "JP Nagar",
-  "Navi Mumbai",
-  "Chinchwad",
-  "Nashik",
-  "Salunkhe Vihar",
-  "Chakan",
-  "Baner",
-  "Kolhapur",
-  "Secunderabad",
+  "Ahmedabad",
   "Andheri",
-  "Sahakar Nagar",
-  "Gurgaon Sector 14",
-  "Gurgaon Sector 49",
-  "Kemps Corner",
-  "Latur",
+  "Aurangabad",
+  "Baner",
+  "Belagavi",
+  "Bopal",
+  "Chakan",
+  "Dighi",
+  "DP Road",
+  "Gurgaon-14",
+  "Gurgaon-49",
+  "Hadapsar",
+  "Hinjewadi",
+  "HSR",
+  "Hyderabad",
+  "Indiranagar",
   "Indore",
+  { label: "JP Nagar", value: "Bangalore" },
+  "Kalaburagi",
+  "Kalyan",
+  "Katraj",
+  "Kemps-Corner",
+  "Kolhapur",
+  "Latur",
+  "Lucknow",
+  "Ludhiana",
+  "Mohali",
   "Mysore",
+  "Nashik",
+  "Navi-Mumbai",
+  "Pimpri-Chinchwad",
+  "Rajajinagar",
+  "Sahakarnagar",
+  "Salunkhe-Vihar",
+  "Sarjapura",
+  "Secunderabad",
+  "Surat",
+  "Thane",
   "Undri",
   "Vashi",
-  "Hinjewadi",
-  "Lucknow",
-  "Kalaburagi",
-  "Rajaji Nagar",
-  "Sarjapura",
-  "Katraj",
-  //"lead",
-  //"Pratiksha Local",
-  //"Demo Server",
-  "demo",
-  "Aurangabad",
-  "Ahmedabad",
-  "Mohali",
   "Whitefield",
-  "Hadapsar",
-  "Kalyan",
-  "Bopal",
-].sort();
+  "demo",
+  //"Demo Server",
+];
 
 export default function Login() {
   const navigate = useNavigate();
@@ -273,8 +271,8 @@ export default function Login() {
               >
                 <option value="">Select Location</option>
                 {LOCATIONS_LIST.map((loc, index) => (
-                  <option key={index} value={loc}>
-                    {loc}
+                  <option key={index} value={typeof loc === "object" ? loc.value : loc}>
+                    {typeof loc === "object" ? loc.label : loc}
                   </option>
                 ))}
               </Form.Select>

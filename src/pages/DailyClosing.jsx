@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from "react";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 import moment from "moment";
 import {
   Container,
@@ -42,6 +40,8 @@ const DailyClosing = () => {
   const [receiptsLoading, setReceiptsLoading] = useState(false);
   const [pharmacySystemCash, setPharmacySystemCash] = useState(0);
   const [ipdSystemCash, setIpdSystemCash] = useState(0);
+
+  const isPreviousDate = currentDate && currentDate !== moment().format("DD-MM-YYYY");
 
   const [cashDepositFile, setCashDepositFile] = useState(null);
   const [cardSettlementFile, setCardSettlementFile] = useState(null);
@@ -478,48 +478,6 @@ const DailyClosing = () => {
                     Collection Summary
                   </h5>
                 </div>
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  <style>{`
-                    .custom-datepicker-wrapper .react-datepicker__input-container input {
-                      border: 1px solid #4dd0e1 !important;
-                      border-radius: 5px !important;
-                      width: 130px !important;
-                      font-size: 13px !important;
-                      font-weight: 600 !important;
-                      color: #006064 !important;
-                      box-shadow: none !important;
-                    }
-                    .custom-datepicker-wrapper .react-datepicker__input-container input:focus {
-                      border-color: #00bcd4 !important;
-                    }
-                  `}</style>
-                  <span
-                    style={{
-                      marginRight: "10px",
-                      fontWeight: "bold",
-                      fontSize: "14px",
-                      color: "#00838f",
-                    }}
-                  >
-                    Date:
-                  </span>
-                  <div className="custom-datepicker-wrapper">
-                    <DatePicker
-                      selected={
-                        currentDate
-                          ? moment(currentDate, "DD-MM-YYYY").toDate()
-                          : new Date()
-                      }
-                      onChange={(date) => {
-                        if (date)
-                          setCurrentDate(moment(date).format("DD-MM-YYYY"));
-                      }}
-                      dateFormat="dd-MM-yyyy"
-                      maxDate={new Date()}
-                      className="form-control form-control-sm"
-                    />
-                  </div>
-                </div>
               </Card.Header>
               <Card.Body
                 style={{
@@ -528,7 +486,7 @@ const DailyClosing = () => {
                   borderRadius: "0 0 5px 5px",
                 }}
               >
-                {isYesterdayFilled !== null && (
+                {isYesterdayFilled !== null && (isYesterdayFilled || isPreviousDate) && (
                   <Alert
                     variant={isYesterdayFilled ? "success" : "warning"}
                     className="mb-3 d-flex align-items-center gap-2"
@@ -547,8 +505,8 @@ const DailyClosing = () => {
                     />
                     <div>
                       {isYesterdayFilled
-                        ? "Yesterday's daily closing has been submitted. Showing today's date for new entry."
-                        : "Yesterday's daily closing is pending submission! Defaulted to yesterday's date to fill."}
+                        ? "Yesterday's daily closing has been submitted. Showing today's date for entry."
+                        : "Yesterday's daily closing is pending submission! Defaulted to yesterday's date to fill. Please submit the closing data for this date."}
                     </div>
                   </Alert>
                 )}
@@ -679,17 +637,41 @@ const DailyClosing = () => {
                     <tr style={{ backgroundColor: "white" }}>
                       <td
                         style={{
-                          border: "1px solid #4dd0e1",
+                          border: isPreviousDate ? "2px solid #ff9800" : "2px solid #2e7d32",
+                          backgroundColor: isPreviousDate ? "#fff3cd" : "#e8f5e9",
+                          color: isPreviousDate ? "#d84315" : "#1b5e20",
                           verticalAlign: "middle",
                           textAlign: "center",
-                          fontWeight: "600",
-                          color: "#333",
+                          fontWeight: "700",
                           fontSize: "14px",
                           padding: "12px",
                           whiteSpace: "nowrap",
                         }}
                       >
                         {currentDate}
+                        {isPreviousDate ? (
+                          <div
+                            style={{
+                              fontSize: "9px",
+                              color: "#e65100",
+                              marginTop: "3px",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            (PREVIOUS DATE)
+                          </div>
+                        ) : (
+                          <div
+                            style={{
+                              fontSize: "9px",
+                              color: "#1b5e20",
+                              marginTop: "3px",
+                              fontWeight: "bold",
+                            }}
+                          >
+                            (TODAY'S DATE)
+                          </div>
+                        )}
                       </td>
                       <td
                         style={{
@@ -748,19 +730,19 @@ const DailyClosing = () => {
                           />
                         </InputGroup>
                         {isSumZero && (
-                            <div
-                              style={{
-                                color: "#d32f2f",
-                                fontSize: "11px",
-                                marginTop: "4px",
-                                textAlign: "center",
-                                fontWeight: "600",
-                              }}
-                            >
-                              <i className="fa fa-warning me-1"></i>0 has been
-                              entered
-                            </div>
-                          )}
+                          <div
+                            style={{
+                              color: "#d32f2f",
+                              fontSize: "11px",
+                              marginTop: "4px",
+                              textAlign: "center",
+                              fontWeight: "600",
+                            }}
+                          >
+                            <i className="fa fa-warning me-1"></i>0 has been
+                            entered
+                          </div>
+                        )}
                       </td>
                       <td
                         style={{
@@ -819,19 +801,19 @@ const DailyClosing = () => {
                           />
                         </InputGroup>
                         {isSumZero && (
-                            <div
-                              style={{
-                                color: "#d32f2f",
-                                fontSize: "11px",
-                                marginTop: "4px",
-                                textAlign: "center",
-                                fontWeight: "600",
-                              }}
-                            >
-                              <i className="fa fa-warning me-1"></i>0 has been
-                              entered
-                            </div>
-                          )}
+                          <div
+                            style={{
+                              color: "#d32f2f",
+                              fontSize: "11px",
+                              marginTop: "4px",
+                              textAlign: "center",
+                              fontWeight: "600",
+                            }}
+                          >
+                            <i className="fa fa-warning me-1"></i>0 has been
+                            entered
+                          </div>
+                        )}
                       </td>
                       <td
                         style={{
@@ -890,19 +872,19 @@ const DailyClosing = () => {
                           />
                         </InputGroup>
                         {isSumZero && (
-                            <div
-                              style={{
-                                color: "#d32f2f",
-                                fontSize: "11px",
-                                marginTop: "4px",
-                                textAlign: "center",
-                                fontWeight: "600",
-                              }}
-                            >
-                              <i className="fa fa-warning me-1"></i>0 has been
-                              entered
-                            </div>
-                          )}
+                          <div
+                            style={{
+                              color: "#d32f2f",
+                              fontSize: "11px",
+                              marginTop: "4px",
+                              textAlign: "center",
+                              fontWeight: "600",
+                            }}
+                          >
+                            <i className="fa fa-warning me-1"></i>0 has been
+                            entered
+                          </div>
+                        )}
                       </td>
                       <td
                         style={{
@@ -961,19 +943,19 @@ const DailyClosing = () => {
                           />
                         </InputGroup>
                         {isSumZero && (
-                            <div
-                              style={{
-                                color: "#d32f2f",
-                                fontSize: "11px",
-                                marginTop: "4px",
-                                textAlign: "center",
-                                fontWeight: "600",
-                              }}
-                            >
-                              <i className="fa fa-warning me-1"></i>0 has been
-                              entered
-                            </div>
-                          )}
+                          <div
+                            style={{
+                              color: "#d32f2f",
+                              fontSize: "11px",
+                              marginTop: "4px",
+                              textAlign: "center",
+                              fontWeight: "600",
+                            }}
+                          >
+                            <i className="fa fa-warning me-1"></i>0 has been
+                            entered
+                          </div>
+                        )}
                       </td>
                       <td
                         style={{
@@ -1032,19 +1014,19 @@ const DailyClosing = () => {
                           />
                         </InputGroup>
                         {isSumZero && (
-                            <div
-                              style={{
-                                color: "#d32f2f",
-                                fontSize: "11px",
-                                marginTop: "4px",
-                                textAlign: "center",
-                                fontWeight: "600",
-                              }}
-                            >
-                              <i className="fa fa-warning me-1"></i>0 has been
-                              entered
-                            </div>
-                          )}
+                          <div
+                            style={{
+                              color: "#d32f2f",
+                              fontSize: "11px",
+                              marginTop: "4px",
+                              textAlign: "center",
+                              fontWeight: "600",
+                            }}
+                          >
+                            <i className="fa fa-warning me-1"></i>0 has been
+                            entered
+                          </div>
+                        )}
                       </td>
                       <td
                         style={{
@@ -1103,19 +1085,19 @@ const DailyClosing = () => {
                           />
                         </InputGroup>
                         {isSumZero && (
-                            <div
-                              style={{
-                                color: "#d32f2f",
-                                fontSize: "11px",
-                                marginTop: "4px",
-                                textAlign: "center",
-                                fontWeight: "600",
-                              }}
-                            >
-                              <i className="fa fa-warning me-1"></i>0 has been
-                              entered
-                            </div>
-                          )}
+                          <div
+                            style={{
+                              color: "#d32f2f",
+                              fontSize: "11px",
+                              marginTop: "4px",
+                              textAlign: "center",
+                              fontWeight: "600",
+                            }}
+                          >
+                            <i className="fa fa-warning me-1"></i>0 has been
+                            entered
+                          </div>
+                        )}
                       </td>
                       <td
                         style={{

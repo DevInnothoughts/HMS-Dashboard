@@ -84,10 +84,10 @@
 .p-datatable .p-datatable-tbody>tr>td,
 .p-datatable .p-datatable-thead>tr>th {
   color: #000000 !important;
-  user-select: text !important;
-  -webkit-user-select: text !important;
-  -moz-user-select: text !important;
-  -ms-user-select: text !important;
+  user-select: all !important;
+  -webkit-user-select: all !important;
+  -moz-user-select: all !important;
+  -ms-user-select: all !important;
 }
 
 .datatable-compact-style .p-datatable-header,
@@ -97,10 +97,73 @@
   padding: 0.5rem 0rem;
   line-height: 1.2;
   color: #000000 !important;
-  user-select: text !important;
-  -webkit-user-select: text !important;
-  -moz-user-select: text !important;
-  -ms-user-select: text !important;
+  user-select: all !important;
+  -webkit-user-select: all !important;
+  -moz-user-select: all !important;
+  -ms-user-select: all !important;
+}
+
+.datatable-compact-style .p-datatable-tbody > tr {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+}
+
+.selectable-text {
+  user-select: all !important;
+  -webkit-user-select: all !important;
+  -moz-user-select: all !important;
+  -ms-user-select: all !important;
+  cursor: text;
+  display: inline-block;
+}
+
+.copyable-text-container {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  position: relative;
+  max-width: 100%;
+  
+  .copy-text-val {
+    user-select: text !important;
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    cursor: text;
+    word-break: break-all;
+  }
+  
+  .copy-btn-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    color: #00bcd4;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    padding: 3px;
+    border-radius: 4px;
+    background-color: rgba(0, 188, 212, 0.1);
+    vertical-align: middle;
+    line-height: 1;
+    
+    &:hover {
+      background-color: #00bcd4;
+      color: #ffffff;
+      transform: scale(1.1);
+    }
+  }
+  
+  &:hover {
+    .copy-btn-trigger {
+      opacity: 1;
+      visibility: visible;
+    }
+  }
 }
 
 .datatable-compact-style .p-datatable-tbody>tr>td .cart-action {

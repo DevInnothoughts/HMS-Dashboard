@@ -250,6 +250,8 @@ const formatDate = (dateString) => {
   return `${day}-${month}-${year}`;
 };
 
+
+
 export default function All_patient() {
   const location = useLocation();
   const [first, setFirst] = useState(0);
@@ -360,7 +362,7 @@ export default function All_patient() {
 
       if (doctorResponse.ok) {
         const doctorData = await doctorResponse.json();
-        
+
         setDoctors(Array.isArray(doctorData.data) ? doctorData.data : []);
       } else {
         console.error("Failed to fetch doctors:", doctorResponse.statusText);
@@ -378,7 +380,7 @@ export default function All_patient() {
 
       if (fdeResponse.ok) {
         const fdeData = await fdeResponse.json();
-        
+
         setFdeList(Array.isArray(fdeData.data) ? fdeData.data : []);
       } else {
         console.error("Failed to fetch FDE list:", fdeResponse.statusText);
@@ -445,7 +447,7 @@ export default function All_patient() {
 
     setIsSearchingPatient(true);
     try {
-      
+
 
       const response = await fetch(
         `${BASE_URL}/V1/Patients/listRefPatient?phone=${phone}&location=${currentLocation}`,
@@ -457,20 +459,20 @@ export default function All_patient() {
         },
       );
 
-      
+
 
       if (response.ok) {
         const data = await response.json();
-        
+
 
         if (data.statusCode === 200 && data.data.refPatientData) {
           const results = Array.isArray(data.data.refPatientData)
             ? data.data.refPatientData
             : [data.data.refPatientData];
           setPatientSearchResults(results);
-          
+
         } else {
-          
+
           setPatientSearchResults([]);
         }
       } else {
@@ -484,7 +486,7 @@ export default function All_patient() {
   };
 
   useEffect(() => {
-    
+
   }, [patientSearchResults]);
 
   const calculateAge = (birthDate) => {
@@ -524,7 +526,7 @@ export default function All_patient() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    
+
 
     setFormData((prev) => {
       let nextState = { ...prev };
@@ -566,7 +568,7 @@ export default function All_patient() {
 
   const handleAddAppointment = (e) => {
     e.preventDefault();
-    
+
     setShowAddModal(false);
   };
 
@@ -820,7 +822,7 @@ export default function All_patient() {
   };
 
   const handleEditPatient = (patient) => {
-    
+
 
     const formattedBirthDate = patient.birth_date || "";
     const workPatternsArray = (patient.specific_work || "")
@@ -866,13 +868,13 @@ export default function All_patient() {
         [patient.reference_type]: patient.ref || "",
         Other_Newspaper:
           patient.reference_type === "newspaper" &&
-          !standardNewspapers.includes(patient.ref)
+            !standardNewspapers.includes(patient.ref)
             ? patient.ref
             : "",
       }));
     }
 
-    
+
     setFormData({
       // Uid_no: patient.uid || "",
       Uid_no: patient.Uid_no || patient.uid || "",
@@ -963,7 +965,7 @@ export default function All_patient() {
             } else {
               toast.error(
                 addDoctorData.message ||
-                  "Failed to add manual doctor reference.",
+                "Failed to add manual doctor reference.",
               );
               return;
             }
@@ -994,9 +996,8 @@ export default function All_patient() {
         break;
       case "family_friends":
         reference_type = "family_friends";
-        ref = `${referenceDetails.friendname || ""},${
-          referenceDetails.friendno || ""
-        }`;
+        ref = `${referenceDetails.friendname || ""},${referenceDetails.friendno || ""
+          }`;
         break;
       case "hhc_board":
         reference_type = "hhc_board";
@@ -1035,8 +1036,8 @@ export default function All_patient() {
         ref = referenceDetails[selectedReference] || formData.ref;
     }
 
-    
-    
+
+
 
     const specificWork = Object.entries(workPatterns)
       .filter(([_, value]) => value)
@@ -1067,7 +1068,7 @@ export default function All_patient() {
       },
     };
 
-    
+
     try {
       const response = await fetch(
         `${BASE_URL}/V1/patient/editPatient?patient_id=${selectedPatient.patient_id}&location=${currentLocation}`,
@@ -1126,18 +1127,17 @@ export default function All_patient() {
 
   const statusBodyTemplate = (formData) => (
     <span
-      className={`badge ${
-        formData.status
-          ? ` status- ${formData.status.toLowerCase()}`
-          : "status-unknown"
-      }`}
+      className={`badge ${formData.status
+        ? ` status- ${formData.status.toLowerCase()}`
+        : "status-unknown"
+        }`}
     >
       {formData.status || "Unknown"}
     </span>
   );
 
   const handleViewPatient = async (patient) => {
-    
+
     if (!patient || !patient.phone) {
       console.error("Patient data or phone number is missing");
       return;
@@ -1198,9 +1198,9 @@ export default function All_patient() {
       note: formData.note,
       phone: formData.phone,
     };
-    
+
     try {
-      
+
 
       const response = await fetch(
         `${BASE_URL}/V1/appointment/addAppointment?location=${currentLocation}`,
@@ -1216,7 +1216,7 @@ export default function All_patient() {
       }
 
       const responseData = await response.json();
-      
+
       Swal.fire({
         icon: "success",
         title: "Booked!",
@@ -1352,7 +1352,7 @@ export default function All_patient() {
         "DP Road",
         "Baner",
         "Tilak Road",
-        "Salunkhe Vihar",
+        "Salunkhe-Vihar",
         "Chinchwad",
         "Chakan",
         "Dighi",
@@ -3185,6 +3185,7 @@ export default function All_patient() {
                     <option value="">Select Patient Type</option>
                     <option value="Follow">Follow </option>
                     <option value="Post Operative">Post Operative</option>
+                    <option value="MCDPA">MCDPA</option>
                     <option value="Other">Other</option>
                   </Form.Select>
                 </Form.Group>
@@ -4250,7 +4251,9 @@ export default function All_patient() {
                     >
                       <Column
                         header="Sr No"
-                        body={(rowData, { rowIndex }) => rowIndex + 1}
+                        body={(rowData, { rowIndex }) => (
+                          <span className="selectable-text">{rowIndex + 1}</span>
+                        )}
                         headerClassName="datatable-header-center"
                         style={{
                           border: "1px solid #90caf9",
@@ -4263,22 +4266,20 @@ export default function All_patient() {
                       <Column
                         field="date"
                         header="Date"
-                        body={(rowData) => formatDate(rowData.date)}
+                        body={(rowData) => <span className="selectable-text">{formatDate(rowData.date) || "-"}</span>}
                         headerClassName="datatable-header-center"
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
                           padding: "0.75rem",
-                          width: "90px",
+                          width: "100px",
                         }}
                       />
 
                       <Column
                         field="Uid_no"
                         header="UID No"
-                        body={(rowData) =>
-                          rowData.Uid_no ? rowData.Uid_no : "-"
-                        }
+                        body={(rowData) => <span className="selectable-text">{rowData.Uid_no || "-"}</span>}
                         headerClassName="datatable-header-center"
                         style={{
                           border: "1px solid #90caf9",
@@ -4292,22 +4293,24 @@ export default function All_patient() {
                         field="name"
                         header="Patient Name"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => (
-                          <span>
-                            {(rowData.patient_type === 1 ||
-                              rowData.patient_type === true) && (
-                              <span className="me-1" title="VIP Patient">
-                                <FeatherIcon
-                                  icon="star"
-                                  size="16"
-                                  style={{ color: "#ffc107", fill: "#ffc107" }}
-                                />
-                              </span>
-                            )}
-                            {rowData.prefix ? `${rowData.prefix} ` : ""}
-                            {rowData.name || "-"}
-                          </span>
-                        )}
+                        body={(rowData) => {
+                          const fullName = `${rowData.prefix ? `${rowData.prefix} ` : ""}${rowData.name || "-"}`;
+                          return (
+                            <span className="selectable-text">
+                              {(rowData.patient_type === 1 ||
+                                rowData.patient_type === true) && (
+                                  <span className="me-1" title="VIP Patient">
+                                    <FeatherIcon
+                                      icon="star"
+                                      size="16"
+                                      style={{ color: "#ffc107", fill: "#ffc107" }}
+                                    />
+                                  </span>
+                                )}
+                              {fullName}
+                            </span>
+                          );
+                        }}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -4321,7 +4324,7 @@ export default function All_patient() {
                         field="phone"
                         header="Contact No"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => rowData.phone || "-"}
+                        body={(rowData) => <span className="selectable-text">{rowData.phone || "-"}</span>}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -4335,7 +4338,7 @@ export default function All_patient() {
                         field="mobile_2"
                         header="Alternate Contact No"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => rowData.mobile_2 || "-"}
+                        body={(rowData) => <span className="selectable-text">{rowData.mobile_2 || "-"}</span>}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -4349,7 +4352,7 @@ export default function All_patient() {
                         field="address"
                         header="Patient Address"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => rowData.address || "-"}
+                        body={(rowData) => <span className="selectable-text">{rowData.address || "-"}</span>}
                         style={{
                           border: "1px solid #90caf9",
                           padding: "0.75rem",
@@ -4362,7 +4365,9 @@ export default function All_patient() {
                         field="sex"
                         header="Gender"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => rowData.sex || "-"}
+                        body={(rowData) => (
+                          <span className="selectable-text">{rowData.sex || "-"}</span>
+                        )}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -4375,7 +4380,7 @@ export default function All_patient() {
                         field="birth_date"
                         header="DOB"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => rowData.birth_date || "-"}
+                        body={(rowData) => <span className="selectable-text">{rowData.birth_date || "-"}</span>}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -4389,19 +4394,20 @@ export default function All_patient() {
                         header="Age"
                         headerClassName="datatable-header-center"
                         body={(rowData) => {
+                          let displayAge = "-";
                           if (
                             rowData.age &&
                             !isNaN(rowData.age) &&
                             rowData.age < 150
                           ) {
-                            return rowData.age;
+                            displayAge = rowData.age;
+                          } else {
+                            const calculated = calculateAge(rowData.birth_date);
+                            if (calculated !== null && calculated !== undefined && calculated !== "") {
+                              displayAge = calculated;
+                            }
                           }
-                          const calculated = calculateAge(rowData.birth_date);
-                          return calculated !== null &&
-                            calculated !== undefined &&
-                            calculated !== ""
-                            ? calculated
-                            : "-";
+                          return <span className="selectable-text">{displayAge}</span>;
                         }}
                         style={{
                           border: "1px solid #90caf9",

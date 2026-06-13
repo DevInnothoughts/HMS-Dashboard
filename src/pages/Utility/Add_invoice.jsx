@@ -433,6 +433,7 @@ const AddInvoice = () => {
         status: status, // Map to the backend 'status' column
         admissiontime: convertTo12Hour(formData.admissiontime),
         dischargetime: convertTo12Hour(formData.dischargetime),
+        patient_location: currentLocation, // Pass current branch location
       };
 
       try {

@@ -488,7 +488,7 @@ export default function Appointment_list() {
           timer: 2000,
         });
         setShowReceiptModal(false);
-        navigate("/receipt-list");
+        navigate("/reports/receipts");
       } else if (result.dismiss === Swal.DismissReason.cancel) {
         const confirmCancel = await Swal.fire({
           title: "Are you sure?",
@@ -877,6 +877,7 @@ export default function Appointment_list() {
       });
       return;
     }
+
     const dateOnly = moment(selectedAppointment.appointment_timestamp).format(
       "YYYY-MM-DD",
     );
@@ -1050,26 +1051,19 @@ export default function Appointment_list() {
     }
   };
 
-  const confirmAppointmentWithCheck = async (rowData) => {
-    const {
-      appointment_id,
-      patient_type,
-      patient_phone,
-      appointment_timestamp,
-    } = rowData;
-
-    if (!appointment_timestamp) {
+  const checkDailyClosing = async (appointmentTimestamp, actionVerb = "confirming") => {
+    if (!appointmentTimestamp) {
       Swal.fire({
         icon: "error",
         title: "Error",
         text: "Appointment date missing.",
       });
-      return;
+      return false;
     }
 
     try {
       // Calculate previous day
-      const aptDate = moment(appointment_timestamp);
+      const aptDate = moment(appointmentTimestamp);
       const prevDate = aptDate.clone().subtract(1, "days").format("YYYY-MM-DD");
 
       // Check daily closing status for prevDate
@@ -1086,22 +1080,16 @@ export default function Appointment_list() {
       const result = await response.json();
 
       if (response.ok && result.success && result.data) {
-        // Daily closing is filled
-        handleProcessUpdate(
-          appointment_id,
-          "confirmAppointment",
-          patient_type,
-          patient_phone,
-          "Appointment confirmed!",
-        );
+        return true;
       } else {
         // Daily closing is missing
         Swal.fire({
           icon: "warning",
           title: "Daily Closing Pending",
-          text: `Please fill the daily closing for ${moment(prevDate).format("DD-MM-YYYY")} before confirming appointments for this day.`,
+          text: `Please fill the daily closing for ${moment(prevDate).format("DD-MM-YYYY")} before ${actionVerb} appointments for this day.`,
           confirmButtonColor: "#00bcd4",
         });
+        return false;
       }
     } catch (error) {
       console.error("Error checking daily closing status:", error);
@@ -1110,7 +1098,28 @@ export default function Appointment_list() {
         title: "Error",
         text: "Failed to verify daily closing status.",
       });
+      return false;
     }
+  };
+
+  const confirmAppointmentWithCheck = async (rowData) => {
+    const {
+      appointment_id,
+      patient_type,
+      patient_phone,
+      appointment_timestamp,
+    } = rowData;
+
+    const checkPassed = await checkDailyClosing(appointment_timestamp, "confirming");
+    if (!checkPassed) return;
+
+    handleProcessUpdate(
+      appointment_id,
+      "confirmAppointment",
+      patient_type,
+      patient_phone,
+      "Appointment confirmed!",
+    );
   };
 
   const getRowClassName = (rowData) => {
@@ -1215,10 +1224,10 @@ export default function Appointment_list() {
             />
             <ActionButton
               title="Cancel"
-              onClick={() =>
-                setAppointmentIdToDelete(appointment_id) ||
-                setShowDeleteModal(true)
-              }
+              onClick={() => {
+                setAppointmentIdToDelete(appointment_id);
+                setShowDeleteModal(true);
+              }}
               disabled={isConfirmed}
               icon="trash-2"
             />
@@ -2148,13 +2157,15 @@ export default function Appointment_list() {
                           ...getColumnStyle("85px"),
                           border: "1px solid #90caf9",
                         }}
-                        body={(rowData) =>
-                          rowData.appointment_timestamp
-                            ? moment(rowData.appointment_timestamp).format(
-                              "DD-MM-YYYY",
-                            )
-                            : "-"
-                        }
+                        body={(rowData) => (
+                          <span className="selectable-text">
+                            {rowData.appointment_timestamp
+                              ? moment(rowData.appointment_timestamp).format(
+                                "DD-MM-YYYY",
+                              )
+                              : "-"}
+                          </span>
+                        )}
                         headerClassName="datatable-header-center"
                       />
 
@@ -2165,14 +2176,16 @@ export default function Appointment_list() {
                           ...getColumnStyle("83px"),
                           border: "1px solid #90caf9",
                         }}
-                        body={(rowData) =>
-                          rowData.appointment_time
-                            ? moment(rowData.appointment_time, [
-                              "hh:mm A",
-                              "HH:mm",
-                            ]).format("HH:mm")
-                            : "-"
-                        }
+                        body={(rowData) => (
+                          <span className="selectable-text">
+                            {rowData.appointment_time
+                              ? moment(rowData.appointment_time, [
+                                "hh:mm A",
+                                "HH:mm",
+                              ]).format("HH:mm")
+                              : "-"}
+                          </span>
+                        )}
                         headerClassName="datatable-header-center"
                       />
 
@@ -2183,7 +2196,7 @@ export default function Appointment_list() {
                           ...getColumnStyle("65px"),
                           border: "1px solid #90caf9",
                         }}
-                        body={(rowData) => rowData.confirm_time || "-"}
+                        body={(rowData) => <span className="selectable-text">{rowData.confirm_time || "-"}</span>}
                         headerClassName="datatable-header-center"
                       />
 
@@ -2225,7 +2238,7 @@ export default function Appointment_list() {
                           border: "1px solid #90caf9",
                           padding: "0",
                         }}
-                        body={(rowData) => rowData.patient_type || "-"}
+                        body={(rowData) => <span className="selectable-text">{rowData.patient_type || "-"}</span>}
                         headerClassName="datatable-header-center"
                       />
 
@@ -2242,7 +2255,7 @@ export default function Appointment_list() {
                           border: "1px solid #90caf9",
                         }}
                         body={(rowData) => (
-                          <span>
+                          <span className="selectable-text">
                             {rowData.prefix ? `${rowData.prefix} ` : ""}
                             {rowData.patient_name || "-"}
                           </span>
@@ -2257,7 +2270,7 @@ export default function Appointment_list() {
                           ...getColumnStyle("110px"),
                           border: "1px solid #90caf9",
                         }}
-                        body={(rowData) => rowData.patient_phone || "-"}
+                        body={(rowData) => <span className="selectable-text">{rowData.patient_phone || "-"}</span>}
                         headerClassName="datatable-header-center"
                       />
 
@@ -2268,7 +2281,7 @@ export default function Appointment_list() {
                           ...getColumnStyle("110px"),
                           border: "1px solid #90caf9",
                         }}
-                        body={(rowData) => rowData.doctor_name || "-"}
+                        body={(rowData) => <span className="selectable-text">{rowData.doctor_name || "-"}</span>}
                         headerClassName="datatable-header-center"
                       />
 
@@ -2279,7 +2292,7 @@ export default function Appointment_list() {
                           ...getColumnStyle("90px"),
                           border: "1px solid #90caf9",
                         }}
-                        body={(rowData) => rowData.FDE_Name || "-"}
+                        body={(rowData) => <span className="selectable-text">{rowData.FDE_Name || "-"}</span>}
                         headerClassName="datatable-header-center"
                       />
                       <Column
@@ -2411,7 +2424,6 @@ export default function Appointment_list() {
                     className="d-flex flex-wrap gap-3"
                     style={{
                       border: "2px solid rgb(77, 208, 225)",
-                      borderRadius: "6px",
                       backgroundColor: "#94e2eeff",
                       borderRadius: "10px",
                     }}

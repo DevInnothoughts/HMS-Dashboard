@@ -26,6 +26,12 @@ const BASE_URL = "http://194.195.117.79:5100/api";
 const BirthdayAlert = () => {
   const currentDate = moment().format("DD-MM-YYYY");
   const [patients, setPatients] = useState([]);
+
+  const formatBirthDate = (birthDate) => {
+    if (!birthDate || birthDate === "-" || birthDate === "--") return "-";
+    const m = moment(birthDate, ["DD-MM-YYYY", "DD/MM/YYYY", "DDMMYYYY", "YYYY-MM-DD"]);
+    return m.isValid() ? m.format("DD-MM-YYYY") : birthDate;
+  };
   const [loading, setLoading] = useState(false);
   const [currentLocation, setCurrentLocation] = useState("default");
   const [rows, setRows] = useState(10);
@@ -63,10 +69,14 @@ const BirthdayAlert = () => {
 
       if (response.ok) {
         const result = await response.json();
-        
+        console.log("Birthday API raw response:", result);
+
         // Extracting data from your controller's structure: result.reportsdetails.data
         const birthdayData = result.reportsdetails?.data || [];
+        console.log("Extracted birthday patients list:", birthdayData);
         setPatients(birthdayData);
+      } else {
+        console.error("Birthday API error response:", response.status, response.statusText);
       }
     } catch (error) {
       console.error("Error fetching birthdays:", error);
@@ -111,16 +121,14 @@ const BirthdayAlert = () => {
       "Address",
     ];
     const tableRows = [...patients]
-      .sort((a, b) =>
-        moment(a.birth_date, "DD-MM-YYYY").diff(
-          moment(b.birth_date, "DD-MM-YYYY"),
-        ),
-      )
+      .sort((a, b) => {
+        const dateA = moment(a.birth_date, ["DD-MM-YYYY", "DD/MM/YYYY", "DDMMYYYY", "YYYY-MM-DD"]);
+        const dateB = moment(b.birth_date, ["DD-MM-YYYY", "DD/MM/YYYY", "DDMMYYYY", "YYYY-MM-DD"]);
+        return dateA.diff(dateB);
+      })
       .map((item, index) => [
         index + 1,
-        moment(item.birth_date).isValid()
-          ? moment(item.birth_date).format("DD-MM-YYYY")
-          : item.birth_date, //
+        formatBirthDate(item.birth_date),
         item.name,
         item.phone,
         item.address,
@@ -307,11 +315,11 @@ const BirthdayAlert = () => {
                 <Card.Body style={{ padding: "5px" }}>
                   {renderHeader()}
                   <DataTable
-                    value={[...patients].sort((a, b) =>
-                      moment(a.birth_date, "DD-MM-YYYY").diff(
-                        moment(b.birth_date, "DD-MM-YYYY"),
-                      ),
-                    )}
+                    value={[...patients].sort((a, b) => {
+                      const dateA = moment(a.birth_date, ["DD-MM-YYYY", "DD/MM/YYYY", "DDMMYYYY", "YYYY-MM-DD"]);
+                      const dateB = moment(b.birth_date, ["DD-MM-YYYY", "DD/MM/YYYY", "DDMMYYYY", "YYYY-MM-DD"]);
+                      return dateA.diff(dateB);
+                    })}
                     paginator
                     rows={rows}
                     first={first}
@@ -337,11 +345,7 @@ const BirthdayAlert = () => {
                     <Column
                       field="birth_date"
                       header="Birth Date"
-                      body={(rowData) =>
-                        rowData.birth_date
-                          ? moment(rowData.birth_date).format("DD-MM-YYYY")
-                          : "-"
-                      }
+                      body={(rowData) => formatBirthDate(rowData.birth_date)}
                     />
                     <Column field="name" header="Patient Name" />
                     <Column field="phone" header="Contact Number" />

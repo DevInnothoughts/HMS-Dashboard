@@ -22,8 +22,11 @@ import "react-datepicker/dist/react-datepicker.css";
 import Swal from "sweetalert2";
 import MuiDateTimePicker from "../IPD Forms/inputs/MuiDateTimePicker";
 import moment from "moment";
+import { toast } from "react-hot-toast";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
+
+
 
 export default function DoctorManageAdmission() {
   const navigate = useNavigate();
@@ -911,11 +914,9 @@ export default function DoctorManageAdmission() {
                         field="verifiedDate"
                         header="Admission Date & Time"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => (
-                          <span style={{ fontSize: "11px" }}>
-                            {formatDisplayDateTime(rowData.verifiedDate)}
-                          </span>
-                        )}
+                        body={(rowData) =>
+                          <span className="selectable-text">{formatDisplayDateTime(rowData.verifiedDate)}</span>
+                        }
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -928,11 +929,9 @@ export default function DoctorManageAdmission() {
                         field="surgeryDate"
                         header="Surgery Date & Time"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => (
-                          <span style={{ fontSize: "11px" }}>
-                            {formatDisplayDateTime(rowData.surgeryDate)}
-                          </span>
-                        )}
+                        body={(rowData) =>
+                          <span className="selectable-text">{formatDisplayDateTime(rowData.surgeryDate)}</span>
+                        }
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -945,14 +944,7 @@ export default function DoctorManageAdmission() {
                         field="uhid"
                         header="UHID No"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => (
-                          <span
-                            className="fw-bold"
-                            style={{ color: "#178aaeff" }}
-                          >
-                            {rowData.uhid}
-                          </span>
-                        )}
+                        body={(rowData) => <span className="selectable-text">{rowData.uhid || "-"}</span>}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -965,20 +957,7 @@ export default function DoctorManageAdmission() {
                         field="admissionNo"
                         header="Admission No"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => (
-                          <span
-                            className={
-                              rowData.admissionNo ? "fw-bold" : "text-muted"
-                            }
-                            style={{
-                              color: rowData.admissionNo
-                                ? "#178aaeff"
-                                : "inherit",
-                            }}
-                          >
-                            {rowData.admissionNo || "N/A"}
-                          </span>
-                        )}
+                        body={(rowData) => <span className="selectable-text">{rowData.admissionNo || "-"}</span>}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -991,6 +970,7 @@ export default function DoctorManageAdmission() {
                         field="name"
                         header="Patient Name"
                         headerClassName="datatable-header-center"
+                        body={(rowData) => <span className="selectable-text">{rowData.name || "-"}</span>}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -1003,6 +983,7 @@ export default function DoctorManageAdmission() {
                         field="contact"
                         header="Contact No"
                         headerClassName="datatable-header-center"
+                        body={(rowData) => <span className="selectable-text">{rowData.contact || "-"}</span>}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -1015,7 +996,7 @@ export default function DoctorManageAdmission() {
                         header="Age/Gender"
                         headerClassName="datatable-header-center"
                         body={(rowData) =>
-                          `${rowData.age} yrs / ${rowData.gender}`
+                          <span className="selectable-text">{`${rowData.age} yrs / ${rowData.gender}`}</span>
                         }
                         style={{
                           border: "1px solid #90caf9",
@@ -1029,6 +1010,7 @@ export default function DoctorManageAdmission() {
                         field="roomType"
                         header="Room Type"
                         headerClassName="datatable-header-center"
+                        body={(rowData) => <span className="selectable-text">{rowData.roomType || "-"}</span>}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -1041,6 +1023,7 @@ export default function DoctorManageAdmission() {
                         field="roomNo"
                         header="Room No"
                         headerClassName="datatable-header-center"
+                        body={(rowData) => <span className="selectable-text">{rowData.roomNo || "-"}</span>}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -1053,6 +1036,7 @@ export default function DoctorManageAdmission() {
                         field="surgeonName"
                         header="Surgeon Name"
                         headerClassName="datatable-header-center"
+                        body={(rowData) => <span className="selectable-text">{rowData.surgeonName || "-"}</span>}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",

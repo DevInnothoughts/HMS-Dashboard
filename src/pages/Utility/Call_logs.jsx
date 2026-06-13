@@ -111,7 +111,7 @@ export default function Call_logs({ isTab = false }) {
   }, []);
 
   const handleAddAppointmentClick = async (rowData) => {
-    
+
     const today = new Date();
     const patient_phone = rowData.caller_no || "";
 
@@ -140,14 +140,14 @@ export default function Call_logs({ isTab = false }) {
       });
 
       if (!response.ok || response.statusCode === 404) {
-        
+
         setFormData((prev) => ({ ...prev, patient_type: "" }));
         setShowAddModal(true);
         return;
       }
 
       const data = await response.json();
-      
+
       if (data.statusCode === 200 && data.data) {
         try {
           const confirmUrl = `${BASE_URL}/V1/appointment/getPatientByApptConfirm?patient_phone=${patient_phone}&location=${currentLocation}`;
@@ -287,7 +287,7 @@ export default function Call_logs({ isTab = false }) {
   }, [filters1.global.value, CallLogs]);
 
   const fetchCallLogsData = async () => {
-    
+
     setLoading(true);
     try {
       const url = new URL(`${BASE_URL}/V1/ivrdata/listIvrdata`);
@@ -296,7 +296,7 @@ export default function Call_logs({ isTab = false }) {
         to: formatToApiDate(toDate),
         location: currentLocation,
       };
-      
+
 
       Object.keys(params).forEach((key) => {
         if (params[key]) url.searchParams.append(key, params[key]);
@@ -431,7 +431,7 @@ export default function Call_logs({ isTab = false }) {
   };
 
   const handleEnquiryClick = (callLog) => {
-    
+
 
     const today = new Date();
     setSelectedCallLog(callLog);
@@ -446,7 +446,7 @@ export default function Call_logs({ isTab = false }) {
   };
 
   const handleNoteClick = (note, rowData) => {
-    
+
     setSelectedCallLog(rowData);
     setFormData((prev) => ({
       ...prev,
@@ -473,7 +473,7 @@ export default function Call_logs({ isTab = false }) {
         note: formData.note.trim(),
       };
 
-      
+
 
       const response = await fetch(
         `${BASE_URL}/V1/ivrdata/editNote/${selectedCallLog.ivr_id}?location=${currentLocation}`,
@@ -916,7 +916,7 @@ export default function Call_logs({ isTab = false }) {
     };
 
     try {
-      
+
       // console.log(payload);
       const response = await fetch(
         `${BASE_URL}/V1/appointment/addAppointment?location=${currentLocation}`,
@@ -984,7 +984,7 @@ export default function Call_logs({ isTab = false }) {
     };
 
     try {
-      
+
 
       const response = await fetch(
         `${BASE_URL}/V1/enquiry/addEnquiry?location=${currentLocation}`,
@@ -1448,12 +1448,13 @@ export default function Call_logs({ isTab = false }) {
                     <option value="">Select Type</option>
 
                     {formData.patient_type === "New" ||
-                    formData.patient_id === undefined ? (
+                      formData.patient_id === undefined ? (
                       <option value="New">NEW</option>
                     ) : (
                       <>
                         <option value="Follow">Follow</option>
                         <option value="Post Operative">Post Operative</option>
+                        <option value="MCDPA">MCDPA</option>
                         <option value="Other">Other</option>
                       </>
                     )}

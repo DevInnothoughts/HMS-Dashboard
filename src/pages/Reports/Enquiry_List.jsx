@@ -24,7 +24,6 @@ import { FilterMatchMode } from "primereact/api";
 import moment from "moment";
 import Swal from "sweetalert2";
 
-// const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
 const BASE_URL = "http://194.195.117.79:5100/api";
 
 const Toast = Swal.mixin({
@@ -166,14 +165,14 @@ export default function EnquiryList({ isTab = false }) {
         // Patient exists
         setAppointmentFormData((prev) => ({
           ...prev,
-          patient_type: "Followup", // Default to Followup for existing patients
+          patient_type: "", // Default to Select Type (empty string) for existing patients
           patient_id: result.data.patient_id,
         }));
       } else {
         // Patient doesn't exist
         setAppointmentFormData((prev) => ({
           ...prev,
-          patient_type: "New",
+          patient_type: "",
         }));
       }
     } catch (error) {
@@ -344,7 +343,7 @@ export default function EnquiryList({ isTab = false }) {
         to: finalToDate,
         location: currentLocation,
       };
-      
+
 
       Object.keys(params).forEach((key) =>
         url.searchParams.append(key, params[key]),
@@ -727,11 +726,11 @@ export default function EnquiryList({ isTab = false }) {
         isTab
           ? { fontFamily: "'Poppins', Arial, sans-serif" }
           : {
-              background: "linear-gradient(to right, #e0f7fa, #80deea)",
-              fontFamily: "'Poppins', Arial, sans-serif",
-              minHeight: "100vh",
-              padding: "10px",
-            }
+            background: "linear-gradient(to right, #e0f7fa, #80deea)",
+            fontFamily: "'Poppins', Arial, sans-serif",
+            minHeight: "100vh",
+            padding: "10px",
+          }
       }
     >
       {!isTab && <PageBreadcrumb pagename="Enquiry List" />}
@@ -1101,10 +1100,12 @@ export default function EnquiryList({ isTab = false }) {
                     }}
                     required
                   >
+                    <option value="">Select Type</option>
                     {appointmentFormData.patient_id ? (
                       <>
                         <option value="Followup">Followup</option>
                         <option value="Post Operative">Post Operative</option>
+                        <option value="MCDPA">MCDPA</option>
                         <option value="Other">Other</option>
                       </>
                     ) : (

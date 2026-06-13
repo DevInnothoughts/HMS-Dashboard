@@ -16,6 +16,7 @@ import FeatherIcon from "feather-icons-react";
 import DatePicker from "react-datepicker";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import { decodeJwt } from "../../utils/decode-jwt";
+import { toast } from "react-hot-toast";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
 
@@ -59,6 +60,8 @@ const formatAgeGender = (age, sex) => {
   const sexText = sex ? sex : "N/A";
   return `${ageText} / ${sexText}`;
 };
+
+
 
 export default function DoctorIpdPatientList() {
   const navigate = useNavigate();
@@ -498,10 +501,10 @@ export default function DoctorIpdPatientList() {
                     responsiveLayout="scroll"
                     className="datatable-compact-style datatable-medium-small"
                   >
-                    <Column
+                     <Column
                       field="surgeryDate"
                       header="Surgery Date & Time"
-                      body={(rowData) => formatSurgeryDate(rowData.surgeryDate)}
+                      body={(rowData) => <span className="selectable-text">{formatSurgeryDate(rowData.surgeryDate)}</span>}
                       headerClassName="datatable-header-center"
                       style={{
                         border: "1px solid #90caf9",
@@ -514,6 +517,7 @@ export default function DoctorIpdPatientList() {
                     <Column
                       field="admissionNo"
                       header="Admission No"
+                      body={(rowData) => <span className="selectable-text">{rowData.admissionNo || "-"}</span>}
                       headerClassName="datatable-header-center"
                       style={{
                         border: "1px solid #90caf9",
@@ -526,6 +530,7 @@ export default function DoctorIpdPatientList() {
                     <Column
                       field="patientName"
                       header="Patient Name"
+                      body={(rowData) => <span className="selectable-text">{rowData.patientName || "-"}</span>}
                       headerClassName="datatable-header-center"
                       style={{
                         border: "1px solid #90caf9",
@@ -538,6 +543,7 @@ export default function DoctorIpdPatientList() {
                     <Column
                       field="ageGender"
                       header="Age/Gender"
+                      body={(rowData) => <span className="selectable-text">{rowData.ageGender || "-"}</span>}
                       headerClassName="datatable-header-center"
                       style={{
                         border: "1px solid #90caf9",
@@ -550,6 +556,7 @@ export default function DoctorIpdPatientList() {
                     <Column
                       field="roomType"
                       header="Room type"
+                      body={(rowData) => <span className="selectable-text">{rowData.roomType || "-"}</span>}
                       headerClassName="datatable-header-center"
                       style={{
                         border: "1px solid #90caf9",
@@ -562,6 +569,7 @@ export default function DoctorIpdPatientList() {
                     <Column
                       field="roomNo"
                       header="Room No"
+                      body={(rowData) => <span className="selectable-text">{rowData.roomNo || "-"}</span>}
                       headerClassName="datatable-header-center"
                       style={{
                         border: "1px solid #90caf9",
@@ -574,6 +582,7 @@ export default function DoctorIpdPatientList() {
                     <Column
                       field="surgeonName"
                       header="Surgeon Name"
+                      body={(rowData) => <span className="selectable-text">{rowData.surgeonName || "-"}</span>}
                       headerClassName="datatable-header-center"
                       style={{
                         border: "1px solid #90caf9",
@@ -586,6 +595,7 @@ export default function DoctorIpdPatientList() {
                     <Column
                       field="sxPlan"
                       header="SX Plan"
+                      body={(rowData) => <span className="selectable-text">{rowData.sxPlan || "-"}</span>}
                       headerClassName="datatable-header-center"
                       style={{
                         border: "1px solid #90caf9",
