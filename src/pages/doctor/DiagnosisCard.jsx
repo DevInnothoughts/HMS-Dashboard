@@ -1916,11 +1916,17 @@ const DiagnosisCard = ({
                 }}
               >
                 <option value="">Select Consultant Doctor</option>
-                {doctors.map((doc) => (
-                  <option key={doc.doctor_id} value={doc.doctor_id}>
-                    {doc.name}
-                  </option>
-                ))}
+                {doctors
+                  .filter(
+                    (doc) =>
+                      doc.doctor_type &&
+                      doc.doctor_type.toLowerCase().includes("main"),
+                  )
+                  .map((doc) => (
+                    <option key={doc.doctor_id} value={doc.doctor_id}>
+                      {doc.name}
+                    </option>
+                  ))}
               </Form.Select>
             </Col>
             <Col md={6}>

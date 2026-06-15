@@ -900,6 +900,7 @@ export default function Appointment_list() {
       patient_location: currentLocation,
     };
 
+    setLoading(true);
     try {
       const response = await fetch(
         `${BASE_URL}/V1/appointment/editAppointment/${selectedAppointment.appointment_id}?location=${currentLocation}`,
@@ -935,6 +936,8 @@ export default function Appointment_list() {
         title: "Error",
         text: error.message,
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -952,6 +955,7 @@ export default function Appointment_list() {
       return;
     }
 
+    setLoading(true);
     try {
       const response = await fetch(
         `${BASE_URL}/V1/appointment/delete/${appointmentIdToDelete}?location=${currentLocation}`,
@@ -988,6 +992,8 @@ export default function Appointment_list() {
         text: "An error occurred while deleting the appointment.",
       });
       console.error("Network Error:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1618,7 +1624,7 @@ export default function Appointment_list() {
           <div className="d-flex flex-wrap justify-content-start align-items-center">
             <ColorLegend name="Pending Appointment" bgColor="#ffffff" />
             <ColorLegend name="Appointment Confirmed" bgColor="#3b82f6" />
-            <ColorLegend name="History Checked" bgColor="#cd5c5c" />
+            <ColorLegend name="History Checked" bgColor="#d946ef" />
             <ColorLegend name="Diagnosis Checked" bgColor="#e67e22" />
             <ColorLegend name="Prescription Checked" bgColor="#8e44ad" />
             <ColorLegend name="Receipt Generated" bgColor="#10b981" />
@@ -1705,6 +1711,7 @@ export default function Appointment_list() {
               variant="danger"
               size="sm"
               type="submit"
+              disabled={loading}
               className="me-2 px-3 mb-5"
               style={{
                 borderRadius: "10px",
@@ -1712,7 +1719,7 @@ export default function Appointment_list() {
                 padding: "10px",
               }}
             >
-              Submit & Cancel
+              {loading ? "Cancelling..." : "Submit & Cancel"}
             </Button>
           </div>
         </Form>
@@ -1899,13 +1906,19 @@ export default function Appointment_list() {
                     <Form.Control
                       type="text"
                       value={selectedAppointment.patient_name || ""}
-                      readOnly
+                      onChange={(e) =>
+                        setSelectedAppointment((prev) => ({
+                          ...prev,
+                          patient_name: e.target.value,
+                        }))
+                      }
+                      readOnly={!!selectedAppointment.patient_id}
                       style={{
                         fontSize: "12px",
                         borderRadius: "9px",
                         border: "2px solid rgb(77, 208, 225)",
-                        backgroundColor: "#e7ebebff",
-                        cursor: "not-allowed",
+                        backgroundColor: selectedAppointment.patient_id ? "#e7ebebff" : undefined,
+                        cursor: selectedAppointment.patient_id ? "not-allowed" : "default",
                       }}
                     />
                   </Form.Group>
@@ -2066,6 +2079,7 @@ export default function Appointment_list() {
                 <Button
                   variant="primary"
                   onClick={handleSaveChanges}
+                  disabled={loading}
                   style={{
                     backgroundColor: "#00bcd4",
                     border: "none",
@@ -2074,7 +2088,7 @@ export default function Appointment_list() {
                     padding: "10px 20px",
                   }}
                 >
-                  Save Changes
+                  {loading ? "Saving..." : "Save Changes"}
                 </Button>
               </div>
             </Form>

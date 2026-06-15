@@ -92,6 +92,7 @@ export default function Call_logs({ isTab = false }) {
   const [currentLocation, setCurrentLocation] = useState("");
   const [rows, setRows] = useState(10);
   const [first, setFirst] = useState(0);
+  const [noPendingAppt, setNoPendingAppt] = useState(true);
 
   function formatDate(date) {
     return new Date(date);
@@ -114,6 +115,7 @@ export default function Call_logs({ isTab = false }) {
 
     const today = new Date();
     const patient_phone = rowData.caller_no || "";
+    setNoPendingAppt(true);
 
     setFormData((prev) => ({
       ...prev,
@@ -125,11 +127,36 @@ export default function Call_logs({ isTab = false }) {
       doctor_id: "",
       FDE_Name: "",
       patient_type: "",
+      patient_id: undefined,
     }));
 
     if (!patient_phone) {
       setShowAddModal(true);
       return;
+    }
+
+    let hasPendingAppt = false;
+    try {
+      const confirmUrl = `${BASE_URL}/V1/appointment/getPatientByApptConfirm?patient_phone=${patient_phone}&location=${currentLocation}`;
+      const confirmResponse = await fetch(confirmUrl, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (confirmResponse.status === 400) {
+        Swal.fire({
+          icon: "warning",
+          title: "Pending Appointment",
+          text: "Pending appointment, close that appointment first.",
+          confirmButtonColor: "#f39c12",
+        });
+        setNoPendingAppt(false);
+        hasPendingAppt = true;
+      } else {
+        setNoPendingAppt(true);
+      }
+    } catch (innerError) {
+      console.error("Error in confirmation check API call:", innerError);
     }
 
     try {
@@ -139,55 +166,28 @@ export default function Call_logs({ isTab = false }) {
         headers: { "Content-Type": "application/json" },
       });
 
-      if (!response.ok || response.statusCode === 404) {
-
-        setFormData((prev) => ({ ...prev, patient_type: "" }));
-        setShowAddModal(true);
-        return;
-      }
-
-      const data = await response.json();
-
-      if (data.statusCode === 200 && data.data) {
-        try {
-          const confirmUrl = `${BASE_URL}/V1/appointment/getPatientByApptConfirm?patient_phone=${patient_phone}&location=${currentLocation}`;
-          const confirmResponse = await fetch(confirmUrl, {
-            method: "GET",
-            headers: { "Content-Type": "application/json" },
-          });
-
-          const confirmData = await confirmResponse.json();
-
-          if (confirmResponse.status === 400) {
+      if (response.ok) {
+        const data = await response.json();
+        if (data.statusCode === 200 && data.data) {
+          if (!hasPendingAppt) {
             Swal.fire({
               icon: "warning",
-              title: "Duplicate Appointment",
-              text:
-                confirmData.message ||
-                "This patient already has a pending appointment. Please complete it first.",
-              confirmButtonColor: "#f39c12",
+              title: "Patient Found",
+              text: `${data.data.name} is already registered.`,
+              confirmButtonColor: "#00bcd4",
+              timer: 2000,
             });
-            return;
           }
-        } catch (innerError) {
-          console.error("Error in confirmation check API call:", innerError);
+
+          setFormData((prev) => ({
+            ...prev,
+            patient_id: data.data.patient_id,
+            patientName: data.data.name || "",
+            patient_type: "",
+          }));
+        } else {
+          setFormData((prev) => ({ ...prev, patient_type: "New" }));
         }
-
-        Swal.fire({
-          icon: "warning",
-          title: "Patient Found",
-          text: `${data.data.name} is already registered.`,
-          confirmButtonColor: "#00bcd4",
-          timer: 2000,
-        });
-
-        setFormData((prev) => ({
-          ...prev,
-          patient_id: data.data.patient_id,
-          patientName: data.data.name || "",
-          patient_id: data.data.patient_id,
-          patient_type: "",
-        }));
       } else {
         setFormData((prev) => ({ ...prev, patient_type: "New" }));
       }
@@ -467,6 +467,7 @@ export default function Call_logs({ isTab = false }) {
       return;
     }
 
+    setLoading(true);
     try {
       const payload = {
         ivr_id: selectedCallLog.ivr_id,
@@ -508,6 +509,8 @@ export default function Call_logs({ isTab = false }) {
     } catch (error) {
       console.error("Error updating note:", error);
       Toast.fire({ icon: "error", title: "An error occurred while updating" });
+    } finally {
+      setLoading(false);
     }
   };
   const handleStatusFilterChange = (e) => {
@@ -983,6 +986,7 @@ export default function Call_logs({ isTab = false }) {
       note: enquiryForm.note || "",
     };
 
+    setLoading(true);
     try {
 
 
@@ -1027,6 +1031,8 @@ export default function Call_logs({ isTab = false }) {
         title: "Error",
         text: "Failed to add enquiry.",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1481,10 +1487,13 @@ export default function Call_logs({ isTab = false }) {
                     placeholder="Enter full name"
                     value={formData.patientName}
                     onChange={handleInputChange}
+                    readOnly={!!formData.patient_id}
                     style={{
                       border: "2px solid rgb(77, 208, 225)",
                       fontSize: "12px",
                       borderRadius: "10px",
+                      cursor: formData.patient_id ? "not-allowed" : "default",
+                      backgroundColor: formData.patient_id ? "#e7ebebff" : undefined,
                     }}
                   />
                 </Form.Group>
@@ -1596,6 +1605,7 @@ export default function Call_logs({ isTab = false }) {
                 variant="primary"
                 size="sm"
                 type="submit"
+                disabled={loading || !noPendingAppt}
                 className="px-3"
                 style={{
                   borderRadius: "10px",
@@ -1678,6 +1688,7 @@ export default function Call_logs({ isTab = false }) {
                 size="sm"
                 className="px-4"
                 type="submit"
+                disabled={loading}
                 style={{
                   borderRadius: "10px",
                   fontSize: "12px",
@@ -1687,7 +1698,7 @@ export default function Call_logs({ isTab = false }) {
                 }}
                 variant="primary"
               >
-                Add Note
+                {loading ? "Saving..." : "Add Note"}
               </Button>
             </Modal.Footer>
           </Form>
@@ -1980,9 +1991,10 @@ export default function Call_logs({ isTab = false }) {
                     padding: "10px",
                   }}
                   type="submit"
+                  disabled={loading}
                   className="btn btn-primary btn-sm px-3"
                 >
-                  Add Enquiry
+                  {loading ? "Adding..." : "Add Enquiry"}
                 </button>
               </div>
             </Form>

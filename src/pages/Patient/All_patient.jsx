@@ -927,6 +927,7 @@ export default function All_patient() {
       return;
     }
 
+    setLoading(true);
     let reference_type = selectedPatient.ref;
     let ref = "";
 
@@ -940,6 +941,7 @@ export default function All_patient() {
         if (isManualEntry) {
           if (!referenceDetails.dr_name || !referenceDetails.dr_name.trim()) {
             toast.error("Please enter a doctor name.");
+            setLoading(false);
             return;
           }
           try {
@@ -967,11 +969,13 @@ export default function All_patient() {
                 addDoctorData.message ||
                 "Failed to add manual doctor reference.",
               );
+              setLoading(false);
               return;
             }
           } catch (err) {
             console.error(err);
             toast.error("Error adding manual doctor reference.");
+            setLoading(false);
             return;
           }
         } else {
@@ -1122,6 +1126,8 @@ export default function All_patient() {
         title: "Network Error",
         text: "Please check your connection and try again.",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1193,7 +1199,9 @@ export default function All_patient() {
         formData.patient_type === "Post Operative"
           ? "Postoperative"
           : formData.patient_type,
-      appointment_time: formData.appointmentTime,
+      appointment_time: formData.appointmentTime
+        ? moment(formData.appointmentTime, ["hh:mm A", "HH:mm"]).format("HH:mm")
+        : "",
       FDE_Name: formData.FDE_Name,
       note: formData.note,
       phone: formData.phone,
@@ -1319,6 +1327,7 @@ export default function All_patient() {
     } else if (
       [
         "Bangalore",
+        "Electronic City",
         "Indiranagar",
         "HSR",
         "Sahakarnagar",
@@ -3208,14 +3217,14 @@ export default function All_patient() {
                     name="patientName"
                     value={formData.name}
                     onChange={handleInputChange}
-                    readOnly
+                    readOnly={!!formData.patient_id}
                     placeholder="Enter Patient Name"
                     style={{
                       border: "2px solid rgb(77, 208, 225)",
                       fontSize: "11px",
                       borderRadius: "10px",
-                      cursor: "not-allowed",
-                      backgroundColor: "#e7ebebff",
+                      cursor: formData.patient_id ? "not-allowed" : "default",
+                      backgroundColor: formData.patient_id ? "#e7ebebff" : undefined,
                     }}
                     required
                   />
@@ -4187,6 +4196,7 @@ export default function All_patient() {
             className="px-4"
             type="submit"
             form="edit-patient-form"
+            disabled={loading}
             style={{
               borderColor: "rgb(77, 208, 225)",
               color: "white",
@@ -4195,7 +4205,7 @@ export default function All_patient() {
               padding: "10px",
             }}
           >
-            Save Changes
+            {loading ? "Saving..." : "Save Changes"}
           </Button>
         </Modal.Footer>
       </Modal>

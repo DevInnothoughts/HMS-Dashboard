@@ -349,6 +349,7 @@ const InvoiceList = () => {
       alert("Please Enter the details..");
       return;
     }
+    setLoading(true);
     try {
       const payload = {
         invoice_id: cashlessData.invoiceid,
@@ -379,6 +380,8 @@ const InvoiceList = () => {
     } catch (err) {
       console.error("Cashless submission error:", err);
       alert("Error saving cashless amounts.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1077,6 +1080,7 @@ const InvoiceList = () => {
 
 
 
+    setLoading(true);
     try {
       const response = await fetch(
         `${BASE_URL}/V1/invoice/${selectedInvoice.invoice_id}?location=${currentLocation}`,
@@ -1113,6 +1117,8 @@ const InvoiceList = () => {
         text: "An error occurred while saving changes.",
       });
       console.error("Network Error:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -3159,10 +3165,11 @@ const InvoiceList = () => {
             size="sm"
             variant="primary"
             type="submit"
+            disabled={loading}
             form="edit-invoice-form"
             style={{ borderRadius: "10px", fontSize: "13px", padding: "10px" }}
           >
-            Save Changes
+            {loading ? "Saving..." : "Save Changes"}
           </Button>
         </Modal.Footer>
       </Modal>
@@ -3288,6 +3295,7 @@ const InvoiceList = () => {
           <Button
             variant="primary"
             type="submit"
+            disabled={loading}
             form="cashless-form"
             style={{
               backgroundColor: "teal",
@@ -3295,7 +3303,7 @@ const InvoiceList = () => {
               borderRadius: "10px",
             }}
           >
-            Save
+            {loading ? "Saving..." : "Save"}
           </Button>
         </Modal.Footer>
       </Modal>

@@ -14,6 +14,8 @@ import {
   Form,
   Spinner,
   Modal,
+  OverlayTrigger,
+  Tooltip,
 } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 import PatientHistoryCard from "./PatientHistoryCard";
@@ -5173,7 +5175,24 @@ const PersonalDetailsCard = () => {
                             )}
                           </div>
                           <div className="ms-2">
-                            {completed ? (
+                            {!accessible ? (
+                              <OverlayTrigger
+                                placement="top"
+                                overlay={
+                                  <Tooltip id={`tooltip-locked-${tab.id}`}>
+                                    Fill history and diagnosis forms to be able to edit discharge card.
+                                  </Tooltip>
+                                }
+                              >
+                                <span>
+                                  <FeatherIcon
+                                    icon="lock"
+                                    size="20"
+                                    style={{ color: "#ef4444" }}
+                                  />
+                                </span>
+                              </OverlayTrigger>
+                            ) : completed ? (
                               <FeatherIcon
                                 icon="check-circle"
                                 size="20"
@@ -5403,6 +5422,7 @@ const PersonalDetailsCard = () => {
                     location={currentLocation}
                     isEditing={isEditingPrescription}
                     onEditPrescription={handleEditPrescription}
+                    loading={loading}
                   />
                 )}
                 {/* {activeTab === "surgery-details" && (

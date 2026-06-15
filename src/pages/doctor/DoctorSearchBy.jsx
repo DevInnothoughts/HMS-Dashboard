@@ -34,6 +34,7 @@ export default function DoctorSearchBy() {
   const [searchResults, setSearchResults] = useState([]);
   const [showSelectionModal, setShowSelectionModal] = useState(false);
   const [currentLocation, setCurrentLocation] = useState("default");
+  const [loading, setLoading] = useState(false);
 
   // Booking details state
   const [admissionDatetime, setAdmissionDatetime] = useState(null);
@@ -189,6 +190,7 @@ export default function DoctorSearchBy() {
       pre_planning: preplan,
     };
 
+    setLoading(true);
     try {
       Swal.fire({ title: "Processing...", didOpen: () => Swal.showLoading() });
       const response = await fetch(
@@ -224,6 +226,8 @@ export default function DoctorSearchBy() {
     } catch (error) {
       console.error("Booking Error:", error);
       Swal.fire("Error", "Server connection failed", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -649,6 +653,7 @@ export default function DoctorSearchBy() {
                       <Button
                         onClick={handleVerifyAndSubmit}
                         variant="success"
+                        disabled={loading}
                         className="px-4 py-7"
                         style={{
                           borderRadius: "8px",
@@ -662,7 +667,7 @@ export default function DoctorSearchBy() {
                           size={16}
                           className="me-2"
                         />
-                        Book For Admission
+                        {loading ? "Booking..." : "Book For Admission"}
                       </Button>
                       {/* <Button
                         onClick={handleViewDetails}

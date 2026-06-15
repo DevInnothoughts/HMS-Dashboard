@@ -251,4 +251,10 @@ export const clinincLoc = {
     invoiceHelplineNo: "8956430338",
     EmergencySMS: "",
   },
+  "Electronic City": {
+    invoiceAddress:
+      "<b>Healing Hands Clinic</b><br> 2nd Floor, No 31,32 & 105, Bettadasanapura Main Road, Thogur Cross, Begur Hobli, Electronic City, Bengaluru, Karnataka 560100.",
+    invoiceHelplineNo: " 8884884500",
+    EmergencySMS: "",
+  },
 };

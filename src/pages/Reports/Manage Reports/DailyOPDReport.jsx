@@ -21,6 +21,7 @@ const initialReportState = {
   overallCollectionDetails: [],
   labCollectionDetails: [],
   pharmacyCollectionDetails: [],
+  opdCollectionDetails: [],
   testDetails: [],
 };
 
@@ -65,7 +66,7 @@ const DailyOPDReport = () => {
           `${BASE_URL}/V1/daily-opd-report?location=${currentLocation}&date=${apiDate}`,
         );
         const result = await response.json();
-        
+
         if (result.statusCode === 200) {
           const d = result.description;
           setReportData({
@@ -106,7 +107,10 @@ const DailyOPDReport = () => {
               method: item[0],
               amount: item[1],
             })),
-
+            opdCollectionDetails: (d.opdCollection || []).map((item) => ({
+              method: item[0],
+              amount: item[1],
+            })),
             testDetails: d.testReport.map((test) => ({
               testName: test[0],
               amount: test[1],
@@ -152,38 +156,36 @@ const DailyOPDReport = () => {
   const handlePrint = () => {
     const printWindow = window.open("", "_blank", "width=1000,height=900");
 
-    const buildCollectionTable = (title, data) => `
-      <div class="col-4 mb-2">
-        <table class="table table-bordered table-sm table-striped mx-auto"
-          style="border:1px solid #00bcd4; background:white; font-size:13px; text-align:center; border-collapse: collapse; width: 100%;">
-          <thead>
-            <tr style="background-color:#e3f2fd !important;">
-              <th colspan="2" style="background-color:#e3f2fd !important; color:#000 !important; text-align:left; padding-left:10px; border-right:1px solid #00bcd4 !important; border-left:1px solid #00bcd4 !important;">
-                ${title}
-              </th>
+    const buildCollectionTableContent = (title, data) => `
+      <table class="table table-bordered table-sm table-striped mx-auto"
+        style="border:1px solid #00bcd4; background:white; font-size:13px; text-align:center; border-collapse: collapse; width: 100%;">
+        <thead>
+          <tr style="background-color:#e3f2fd !important;">
+            <th colspan="2" style="background-color:#e3f2fd !important; color:#000 !important; text-align:left; padding-left:10px; border-right:1px solid #00bcd4 !important; border-left:1px solid #00bcd4 !important;">
+              ${title}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data
+        .map(
+          (item) => `
+            <tr>
+              <td style="text-align:left;padding-left:10px;width:70%;
+                  font-weight:bold;
+                  color:${item.method?.toUpperCase() === "TOTAL" ? "inherit" : "#343030ff"} !important;">
+                ${item.method}
+              </td>
+              <td style="width:30%;
+                  font-weight:${item.method?.toUpperCase() === "TOTAL" ? "bold" : "normal"};">
+                ${item.amount}
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            ${data
-              .map(
-                (item) => `
-              <tr>
-                <td style="text-align:left;padding-left:10px;width:70%;
-                    font-weight:bold;
-                    color:${item.method?.toUpperCase() === "TOTAL" ? "inherit" : "#343030ff"} !important;">
-                  ${item.method}
-                </td>
-                <td style="width:30%;
-                    font-weight:${item.method?.toUpperCase() === "TOTAL" ? "bold" : "normal"};">
-                  ${item.amount}
-                </td>
-              </tr>
-            `,
-              )
-              .join("")}
-          </tbody>
-        </table>
-      </div>
+          `,
+        )
+        .join("")}
+        </tbody>
+      </table>
     `;
 
     const htmlContent = `
@@ -266,15 +268,15 @@ const DailyOPDReport = () => {
                 </thead>
                 <tbody style="font-size:12px;">
                   ${reportData.opdCounts
-                    .map(
-                      (i) => `
+        .map(
+          (i) => `
                     <tr>
                       <td class="fw-bold" style="color:${i.type === "TOTAL" ? "#000" : "#343030ff"} !important;">${i.type}</td>
                       <td style="font-weight:${i.type === "TOTAL" ? "bold" : "normal"};">${i.count}</td>
                     </tr>
                   `,
-                    )
-                    .join("")}
+        )
+        .join("")}
                 </tbody>
               </table>
             </div>
@@ -296,8 +298,8 @@ const DailyOPDReport = () => {
                 </thead>
                 <tbody style="font-size:12px;">
                   ${reportData.opdDetails
-                    .map(
-                      (i) => `
+        .map(
+          (i) => `
                     <tr>
                       <td class="fw-bold" style="color:#000 !important;">${i.type}</td>
                       <td>${i.new}</td>
@@ -306,8 +308,8 @@ const DailyOPDReport = () => {
                       <td>${i.total}</td>
                     </tr>
                   `,
-                    )
-                    .join("")}
+        )
+        .join("")}
                 </tbody>
               </table>
             </div>
@@ -326,15 +328,15 @@ const DailyOPDReport = () => {
                 </thead>
                 <tbody style="font-size:12px;">
                   ${reportData.testDetails
-                    .map(
-                      (i) => `
+        .map(
+          (i) => `
                     <tr>
                       <td class="fw-bold" style="color:#000 !important;">${i.testName}</td>
                       <td>₹ ${i.amount}</td>
                     </tr>
                   `,
-                    )
-                    .join("")}
+        )
+        .join("")}
                 </tbody>
               </table>
             </div>
@@ -342,9 +344,17 @@ const DailyOPDReport = () => {
   
           <!-- COLLECTIONS -->
           <div class="row justify-content-center">
-            ${buildCollectionTable("Overall Collection Details(Rs)", reportData.overallCollectionDetails)}
-            ${buildCollectionTable("LAB Collection Details(Rs)", reportData.labCollectionDetails)}
-            ${buildCollectionTable("Pharmacy Collection Details(Rs)", reportData.pharmacyCollectionDetails)}
+            <div class="col-4 mb-2">
+              ${buildCollectionTableContent("OPD Collection Details(Rs)", reportData.opdCollectionDetails)}
+            </div>
+            <div class="col-4 mb-2">
+              ${buildCollectionTableContent("LAB Collection Details(Rs)", reportData.labCollectionDetails)}
+              <div style="margin-top: 25px;"></div>  
+              ${buildCollectionTableContent("Overall Collection Details(Rs)", reportData.overallCollectionDetails)}
+            </div>
+            <div class="col-4 mb-2">
+              ${buildCollectionTableContent("Pharmacy Collection Details(Rs)", reportData.pharmacyCollectionDetails)}
+            </div>
           </div>
   
         </div>
@@ -633,75 +643,229 @@ const DailyOPDReport = () => {
                 </Row>
 
                 <Row className="justify-content-center">
-                  {[
-                    {
-                      title: "Overall Collection Details(Rs)",
-                      data: reportData.overallCollectionDetails,
-                    },
-                    {
-                      title: "LAB Collection Details(Rs)",
-                      data: reportData.labCollectionDetails,
-                    },
-                    {
-                      title: "Pharmacy Collection Details(Rs)",
-                      data: reportData.pharmacyCollectionDetails,
-                    },
-                  ].map((section, idx) => (
-                    <Col key={idx} xs={12} lg={4} className="mb-4">
-                      <Table
-                        bordered
-                        responsive
-                        className="table-sm table-striped mx-auto"
-                        style={{
-                          border: "1px solid #00bcd4",
-                          textAlign: "center",
-                          fontSize: "13px",
-                          backgroundColor: "white",
-                        }}
-                      >
-                        <thead>
-                          <tr style={{ backgroundColor: "#e3f2fd" }}>
-                            <th
-                              colSpan="2"
+                  {/* OPD Collection Details */}
+                  <Col xs={12} lg={4} className="mb-4">
+                    <Table
+                      bordered
+                      responsive
+                      className="table-sm table-striped mx-auto"
+                      style={{
+                        border: "1px solid #00bcd4",
+                        textAlign: "center",
+                        fontSize: "13px",
+                        backgroundColor: "white",
+                      }}
+                    >
+                      <thead>
+                        <tr style={{ backgroundColor: "#e3f2fd" }}>
+                          <th
+                            colSpan="2"
+                            style={{
+                              textAlign: "left",
+                              paddingLeft: "10px",
+                              borderRight: "1px solid #00bcd4",
+                              borderLeft: "1px solid #00bcd4",
+                            }}
+                          >
+                            OPD Collection Details(Rs)
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {reportData.opdCollectionDetails.map((item, index) => (
+                          <tr key={index}>
+                            <td
+                              className={`fw-bold ${item.method?.toUpperCase() === "TOTAL" ? "" : "text-secondary"}`}
                               style={{
                                 textAlign: "left",
                                 paddingLeft: "10px",
-                                borderRight: "1px solid #00bcd4",
-                                borderLeft: "1px solid #00bcd4",
+                                width: "70%",
                               }}
                             >
-                              {section.title}
-                            </th>
+                              {item.method}
+                            </td>
+                            <td
+                              style={{
+                                width: "30%",
+                                fontWeight:
+                                  item.method?.toUpperCase() === "TOTAL" ? "bold" : "normal",
+                              }}
+                            >
+                              {item.amount}
+                            </td>
                           </tr>
-                        </thead>
-                        <tbody>
-                          {section.data.map((item, index) => (
-                            <tr key={index}>
-                              <td
-                                className={`fw-bold ${item.method?.toUpperCase() === "TOTAL" ? "" : "text-secondary"}`}
-                                style={{
-                                  textAlign: "left",
-                                  paddingLeft: "10px",
-                                  width: "70%",
-                                }}
-                              >
-                                {item.method}
-                              </td>
-                              <td
-                                style={{
-                                  width: "30%",
-                                  fontWeight:
-                                    item.method?.toUpperCase() === "TOTAL" ? "bold" : "normal",
-                                }}
-                              >
-                                {item.amount}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </Table>
-                    </Col>
-                  ))}
+                        ))}
+                      </tbody>
+                    </Table>
+                  </Col>
+
+                  {/* LAB & Overall Collection Details */}
+                  <Col xs={12} lg={4} className="mb-4">
+                    {/* LAB Collection Details */}
+                    <Table
+                      bordered
+                      responsive
+                      className="table-sm table-striped mx-auto mb-3"
+                      style={{
+                        border: "1px solid #00bcd4",
+                        textAlign: "center",
+                        fontSize: "13px",
+                        backgroundColor: "white",
+                      }}
+                    >
+                      <thead>
+                        <tr style={{ backgroundColor: "#e3f2fd" }}>
+                          <th
+                            colSpan="2"
+                            style={{
+                              textAlign: "left",
+                              paddingLeft: "10px",
+                              borderRight: "1px solid #00bcd4",
+                              borderLeft: "1px solid #00bcd4",
+                            }}
+                          >
+                            LAB Collection Details(Rs)
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {reportData.labCollectionDetails.map((item, index) => (
+                          <tr key={index}>
+                            <td
+                              className={`fw-bold ${item.method?.toUpperCase() === "TOTAL" ? "" : "text-secondary"}`}
+                              style={{
+                                textAlign: "left",
+                                paddingLeft: "10px",
+                                width: "70%",
+                              }}
+                            >
+                              {item.method}
+                            </td>
+                            <td
+                              style={{
+                                width: "30%",
+                                fontWeight:
+                                  item.method?.toUpperCase() === "TOTAL" ? "bold" : "normal",
+                              }}
+                            >
+                              {item.amount}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+
+                    {/* Overall Collection Details */}
+                    <Table
+                      bordered
+                      responsive
+                      className="table-sm table-striped mx-auto"
+                      style={{
+                        border: "1px solid #00bcd4",
+                        textAlign: "center",
+                        fontSize: "13px",
+                        backgroundColor: "white",
+                        marginTop: "20px"
+                      }}
+                    >
+                      <thead>
+                        <tr style={{ backgroundColor: "#e3f2fd" }}>
+                          <th
+                            colSpan="2"
+                            style={{
+                              textAlign: "left",
+                              paddingLeft: "10px",
+                              borderRight: "1px solid #00bcd4",
+                              borderLeft: "1px solid #00bcd4",
+                            }}
+                          >
+                            Overall Collection Details(Rs)
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {reportData.overallCollectionDetails.map((item, index) => (
+                          <tr key={index}>
+                            <td
+                              className={`fw-bold ${item.method?.toUpperCase() === "TOTAL" ? "" : "text-secondary"}`}
+                              style={{
+                                textAlign: "left",
+                                paddingLeft: "10px",
+                                width: "70%",
+                              }}
+                            >
+                              {item.method}
+                            </td>
+                            <td
+                              style={{
+                                width: "30%",
+                                fontWeight:
+                                  item.method?.toUpperCase() === "TOTAL" ? "bold" : "normal",
+                              }}
+                            >
+                              {item.amount}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  </Col>
+
+                  {/* Pharmacy Collection Details */}
+                  <Col xs={12} lg={4} className="mb-4">
+                    <Table
+                      bordered
+                      responsive
+                      className="table-sm table-striped mx-auto"
+                      style={{
+                        border: "1px solid #00bcd4",
+                        textAlign: "center",
+                        fontSize: "13px",
+                        backgroundColor: "white",
+                      }}
+                    >
+                      <thead>
+                        <tr style={{ backgroundColor: "#e3f2fd" }}>
+                          <th
+                            colSpan="2"
+                            style={{
+                              textAlign: "left",
+                              paddingLeft: "10px",
+                              borderRight: "1px solid #00bcd4",
+                              borderLeft: "1px solid #00bcd4",
+                            }}
+                          >
+                            Pharmacy Collection Details(Rs)
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {reportData.pharmacyCollectionDetails.map((item, index) => (
+                          <tr key={index}>
+                            <td
+                              className={`fw-bold ${item.method?.toUpperCase() === "TOTAL" ? "" : "text-secondary"}`}
+                              style={{
+                                textAlign: "left",
+                                paddingLeft: "10px",
+                                width: "70%",
+                              }}
+                            >
+                              {item.method}
+                            </td>
+                            <td
+                              style={{
+                                width: "30%",
+                                fontWeight:
+                                  item.method?.toUpperCase() === "TOTAL" ? "bold" : "normal",
+                              }}
+                            >
+                              {item.amount}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  </Col>
                 </Row>
 
               </Card.Body>

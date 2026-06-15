@@ -670,8 +670,8 @@ export default function DoctorDashboard() {
         return {
           text: "History Checked",
           icon: "book-open",
-          color: "#cd5c5c",
-          bg: "#cd5c5c15",
+          color: "#d946ef",
+          bg: "#d946ef15",
           time: selectedEvent.historyTime || selectedEvent.confirmTime,
           label: "Completed at:",
         };
@@ -1530,8 +1530,8 @@ margin-left: 1px;
                               } else if (hasHistory) {
                                 listStatus = {
                                   text: "History Checked",
-                                  color: "#cd5c5c",
-                                  bg: "#cd5c5c15",
+                                  color: "#d946ef",
+                                  bg: "#d946ef15",
                                 };
                               } else {
                                 listStatus = {

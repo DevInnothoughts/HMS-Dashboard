@@ -79,6 +79,7 @@ export default function ReceptionistDashboard() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelComment, setCancelComment] = useState("");
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [cancelling, setCancelling] = useState(false);
   const [viewMode, setViewMode] = useState("list"); // "calendar" or "list"
   const [daySearchTerm, setDaySearchTerm] = useState("");
   const [activePatientTypeFilter, setActivePatientTypeFilter] = useState(null);
@@ -366,6 +367,7 @@ export default function ReceptionistDashboard() {
   const handleCancelSubmit = async (e) => {
     e.preventDefault();
     if (!cancelComment) return;
+    setCancelling(true);
     try {
       const url = `${BASE_URL}/V1/appointment/delete/${selectedEvent.appointmentid}?location=${currentLocation}`;
       const response = await fetch(url, {
@@ -383,6 +385,8 @@ export default function ReceptionistDashboard() {
       }
     } catch (error) {
       console.error(error);
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -477,8 +481,8 @@ export default function ReceptionistDashboard() {
         return {
           text: "History Checked",
           icon: "book-open",
-          color: "#cd5c5c",
-          bg: "#cd5c5c15",
+          color: "#d946ef",
+          bg: "#d946ef15",
           time: selectedEvent.historyTime || selectedEvent.confirmTime,
           label: "Completed at:",
         };
@@ -1357,8 +1361,8 @@ margin-left: 1px;
                               } else if (hasHistory) {
                                 listStatus = {
                                   text: "History Checked",
-                                  color: "#cd5c5c",
-                                  bg: "#cd5c5c15",
+                                  color: "#d946ef",
+                                  bg: "#d946ef15",
                                 };
                               } else {
                                 listStatus = {
@@ -1577,9 +1581,10 @@ margin-left: 1px;
                 variant="danger"
                 type="submit"
                 className="fw-bold px-4"
+                disabled={cancelling}
                 style={{ borderRadius: "10px", padding: "10px 0" }}
               >
-                Confirm & Cancel
+                {cancelling ? "Cancelling..." : "Confirm & Cancel"}
               </Button>
             </div>
           </Form>

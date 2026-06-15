@@ -22,6 +22,7 @@ const LOCATIONS_LIST = [
   "Chakan",
   "Dighi",
   "DP Road",
+  "Electronic City",
   "Gurgaon-14",
   "Gurgaon-49",
   "Hadapsar",

@@ -53,6 +53,7 @@ const NoteCell = ({ note }) => {
 
 export default function UnattendedLeadsTab() {
     const [unattendedLeads, setUnattendedLeads] = useState([]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [doctors, setDoctors] = useState([]);
     const [fdeList, setFdeList] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -74,6 +75,7 @@ export default function UnattendedLeadsTab() {
     const [showEnquiryModal, setShowEnquiryModal] = useState(false);
     const [showNoteModal, setShowNoteModal] = useState(false);
     const [selectedLead, setSelectedLead] = useState(null);
+    const [noPendingAppt, setNoPendingAppt] = useState(true);
 
     // Forms state
     const [formData, setFormData] = useState({
@@ -357,6 +359,7 @@ export default function UnattendedLeadsTab() {
         setSelectedLead(rowData);
         const today = new Date();
         const patient_phone = rowData.phoneno || "";
+        setNoPendingAppt(true);
 
         setFormData((prev) => ({
             ...prev,
@@ -376,6 +379,30 @@ export default function UnattendedLeadsTab() {
             return;
         }
 
+        let hasPendingAppt = false;
+        try {
+            const confirmUrl = `${BASE_URL}/V1/appointment/getPatientByApptConfirm?patient_phone=${patient_phone}&location=${currentLocation}`;
+            const confirmResponse = await fetch(confirmUrl, {
+                method: "GET",
+                headers: { "Content-Type": "application/json" },
+            });
+
+            if (confirmResponse.status === 400) {
+                Swal.fire({
+                    icon: "warning",
+                    title: "Pending Appointment",
+                    text: "Pending appointment, close that appointment first.",
+                    confirmButtonColor: "#f39c12",
+                });
+                setNoPendingAppt(false);
+                hasPendingAppt = true;
+            } else {
+                setNoPendingAppt(true);
+            }
+        } catch (innerError) {
+            console.error("Error in confirmation check API call:", innerError);
+        }
+
         try {
             const url = `${BASE_URL}/V1/appointment/getPatientByMobile?patient_phone=${patient_phone}&location=${currentLocation}`;
             const response = await fetch(url, {
@@ -383,52 +410,28 @@ export default function UnattendedLeadsTab() {
                 headers: { "Content-Type": "application/json" },
             });
 
-            if (!response.ok || response.statusCode === 404) {
-                setFormData((prev) => ({ ...prev, patient_type: "" }));
-                setShowAddModal(true);
-                return;
-            }
-
-            const data = await response.json();
-            if (data.statusCode === 200 && data.data) {
-                try {
-                    const confirmUrl = `${BASE_URL}/V1/appointment/getPatientByApptConfirm?patient_phone=${patient_phone}&location=${currentLocation}`;
-                    const confirmResponse = await fetch(confirmUrl, {
-                        method: "GET",
-                        headers: { "Content-Type": "application/json" },
-                    });
-
-                    const confirmData = await confirmResponse.json();
-
-                    if (confirmResponse.status === 400) {
+            if (response.ok) {
+                const data = await response.json();
+                if (data.statusCode === 200 && data.data) {
+                    if (!hasPendingAppt) {
                         Swal.fire({
                             icon: "warning",
-                            title: "Duplicate Appointment",
-                            text:
-                                confirmData.message ||
-                                "This patient already has a pending appointment. Please complete it first.",
-                            confirmButtonColor: "#f39c12",
+                            title: "Patient Found",
+                            text: `${data.data.name} is already registered.`,
+                            confirmButtonColor: "#00bcd4",
+                            timer: 2000,
                         });
-                        return;
                     }
-                } catch (innerError) {
-                    console.error("Error in confirmation check API call:", innerError);
+
+                    setFormData((prev) => ({
+                        ...prev,
+                        patient_id: data.data.patient_id,
+                        patientName: data.data.name || "",
+                        patient_type: "",
+                    }));
+                } else {
+                    setFormData((prev) => ({ ...prev, patient_type: "New" }));
                 }
-
-                Swal.fire({
-                    icon: "warning",
-                    title: "Patient Found",
-                    text: `${data.data.name} is already registered.`,
-                    confirmButtonColor: "#00bcd4",
-                    timer: 2000,
-                });
-
-                setFormData((prev) => ({
-                    ...prev,
-                    patient_id: data.data.patient_id,
-                    patientName: data.data.name || "",
-                    patient_type: "",
-                }));
             } else {
                 setFormData((prev) => ({ ...prev, patient_type: "New" }));
             }
@@ -452,6 +455,7 @@ export default function UnattendedLeadsTab() {
 
         const trimmedNote = formData.note.trim();
 
+        setIsSubmitting(true);
         try {
             let response;
             if (selectedLead.source === "IVR") {
@@ -506,6 +510,8 @@ export default function UnattendedLeadsTab() {
                 icon: "error",
                 title: "An error occurred while saving note",
             });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -536,6 +542,7 @@ export default function UnattendedLeadsTab() {
             note: enquiryForm.note || "",
         };
 
+        setIsSubmitting(true);
         try {
             const response = await fetch(
                 `${BASE_URL}/V1/enquiry/addEnquiry?location=${currentLocation}`,
@@ -576,6 +583,8 @@ export default function UnattendedLeadsTab() {
                 title: "Error",
                 text: "Failed to add enquiry.",
             });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -610,6 +619,7 @@ export default function UnattendedLeadsTab() {
             patient_id: formData.patient_id,
         };
 
+        setIsSubmitting(true);
         try {
             const response = await fetch(
                 `${BASE_URL}/V1/appointment/addAppointment?location=${currentLocation}`,
@@ -639,6 +649,8 @@ export default function UnattendedLeadsTab() {
                 title: "Booking Failed",
                 text: "Could not book the appointment. Please try again.",
             });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -1196,6 +1208,7 @@ export default function UnattendedLeadsTab() {
                                 size="sm"
                                 className="px-4"
                                 type="submit"
+                                disabled={isSubmitting}
                                 style={{
                                     borderRadius: "10px",
                                     fontSize: "12px",
@@ -1205,7 +1218,7 @@ export default function UnattendedLeadsTab() {
                                 }}
                                 variant="primary"
                             >
-                                Add Note
+                                {isSubmitting ? "Adding..." : "Add Note"}
                             </Button>
                         </Modal.Footer>
                     </Form>
@@ -1499,9 +1512,10 @@ export default function UnattendedLeadsTab() {
                                         padding: "10px",
                                     }}
                                     type="submit"
+                                    disabled={isSubmitting}
                                     className="btn btn-primary btn-sm px-3"
                                 >
-                                    Add Enquiry
+                                    {isSubmitting ? "Adding..." : "Add Enquiry"}
                                 </button>
                             </div>
                         </Form>
@@ -1691,10 +1705,13 @@ export default function UnattendedLeadsTab() {
                                         placeholder="Enter full name"
                                         value={formData.patientName}
                                         onChange={handleInputChange}
+                                        readOnly={!!formData.patient_id}
                                         style={{
                                             border: "2px solid rgb(77, 208, 225)",
                                             fontSize: "12px",
                                             borderRadius: "10px",
+                                            cursor: formData.patient_id ? "not-allowed" : "default",
+                                            backgroundColor: formData.patient_id ? "#e7ebebff" : undefined,
                                         }}
                                     />
                                 </Form.Group>
@@ -1806,6 +1823,7 @@ export default function UnattendedLeadsTab() {
                                 variant="primary"
                                 size="sm"
                                 type="submit"
+                                disabled={loading || !noPendingAppt || isSubmitting}
                                 className="px-3"
                                 style={{
                                     borderRadius: "10px",
@@ -1815,7 +1833,7 @@ export default function UnattendedLeadsTab() {
                                     padding: "10px",
                                 }}
                             >
-                                Add Appointment
+                                {isSubmitting ? "Booking..." : "Add Appointment"}
                             </Button>
                         </div>
                     </Form>

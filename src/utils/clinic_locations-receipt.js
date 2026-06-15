@@ -252,4 +252,10 @@ export const receiptlocations = {
     phone: "8956430338",
     hospitalcode: "BOP",
   },
-};
+  "Electronic City": {
+    address:
+      "<b>Electronic City:</b> <br>Healing Hands Clinic<br> 2nd Floor, No 31,32 & 105, Bettadasanapura Main Road, Thogur Cross, Begur Hobli, Electronic City, Bengaluru, Karnataka 560100.",
+    phone: "8884884500",
+    hospitalcode: "ELC",
+  },
+}; 

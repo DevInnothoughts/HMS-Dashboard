@@ -96,7 +96,7 @@ const DischargeCard = ({
 
   const saveUploadedMedicine = () => {
     // Implement save logic here or call a handler
-    
+
     setShowUploadModal(false);
     // Reset form
     setUploadMedicineData({
@@ -425,7 +425,7 @@ const DischargeCard = ({
                   className="fw-semibold small mb-1"
                   style={{ fontSize: "11px", color: "#006064" }}
                 >
-                  Date Of Admission
+                  DATE OF ADMISSION
                 </Form.Label>
                 <Form.Control
                   type="date"
@@ -445,7 +445,7 @@ const DischargeCard = ({
                   className="fw-semibold small mb-1"
                   style={{ fontSize: "11px", color: "#006064" }}
                 >
-                  Admission Time
+                  ADMISSION TIME
                 </Form.Label>
                 <Form.Control
                   type="time"
@@ -470,7 +470,7 @@ const DischargeCard = ({
                   className="fw-semibold small mb-1"
                   style={{ fontSize: "11px", color: "#006064" }}
                 >
-                  Date Of Discharge
+                  DATE OF DISCHARGE
                 </Form.Label>
                 <Form.Control
                   type="date"
@@ -490,7 +490,7 @@ const DischargeCard = ({
                   className="fw-semibold small mb-1"
                   style={{ fontSize: "11px", color: "#006064" }}
                 >
-                  Discharge Time
+                  DISCHARGE TIME
                 </Form.Label>
                 <Form.Control
                   type="time"
@@ -528,11 +528,17 @@ const DischargeCard = ({
               }}
             >
               <option value="">Select Consultant Doctor</option>
-              {doctors.map((doc) => (
-                <option key={doc.doctor_id} value={doc.doctor_id}>
-                  {doc.name}
-                </option>
-              ))}
+              {doctors
+                .filter(
+                  (doc) =>
+                    doc.doctor_type &&
+                    doc.doctor_type.toLowerCase().includes("main"),
+                )
+                .map((doc) => (
+                  <option key={doc.doctor_id} value={doc.doctor_id}>
+                    {doc.name}
+                  </option>
+                ))}
             </Form.Select>
           </Col>
         </Row>
@@ -626,7 +632,7 @@ const DischargeCard = ({
                           checked={(dischargeData.surgery_type || []).includes(
                             option,
                           )}
-                          onChange={() => {}} // Controlled by div click
+                          onChange={() => { }} // Controlled by div click
                           style={{ fontSize: "12px", pointerEvents: "none" }}
                         />
                       </div>
@@ -974,14 +980,12 @@ const DischargeCard = ({
             </Form.Label>
             <Form.Control
               as="textarea"
-              readOnly
               rows={6}
               value={dischargeData.local_care}
               onChange={(e) =>
                 handleDischargeChange("local_care", e.target.value)
               }
               style={{
-                cursor: "not-allowed",
                 borderRadius: "10px",
                 border: "2px solid #b2ebf2",
                 padding: "6px 12px",
@@ -1001,14 +1005,12 @@ const DischargeCard = ({
             </Form.Label>
             <Form.Control
               as="textarea"
-              readOnly
               rows={6}
               value={dischargeData.note_advice}
               onChange={(e) =>
                 handleDischargeChange("note_advice", e.target.value)
               }
               style={{
-                cursor: "not-allowed",
                 borderRadius: "10px",
                 border: "2px solid #b2ebf2",
                 padding: "6px 12px",
@@ -1242,14 +1244,14 @@ const DischargeCard = ({
                     let bottomText = med.content
                       ? med.content
                       : `${medType} ${strength} ${unit}`
-                          .replace(/\s+/g, " ")
-                          .trim() || "Local Medicine";
+                        .replace(/\s+/g, " ")
+                        .trim() || "Local Medicine";
 
                     const fullSearchValue = med.content
                       ? `${med.name}`
                       : `${med.name} ${medType} ${strength} ${unit}`
-                          .replace(/\s+/g, " ")
-                          .trim();
+                        .replace(/\s+/g, " ")
+                        .trim();
 
                     return (
                       <div
@@ -1524,14 +1526,14 @@ const DischargeCard = ({
                     let bottomText = med.content
                       ? med.content
                       : `${medType} ${strength} ${unit}`
-                          .replace(/\s+/g, " ")
-                          .trim() || "Local Medicine";
+                        .replace(/\s+/g, " ")
+                        .trim() || "Local Medicine";
 
                     const fullSearchValue = med.content
                       ? `${med.name}`
                       : `${med.name} ${medType} ${strength} ${unit}`
-                          .replace(/\s+/g, " ")
-                          .trim();
+                        .replace(/\s+/g, " ")
+                        .trim();
 
                     return (
                       <div
@@ -1698,7 +1700,7 @@ const DischargeCard = ({
                       checked={newTreatmentOnDischarge.medicine_time.includes(
                         time,
                       )}
-                      onChange={() => {}} // Controlled by outer div
+                      onChange={() => { }} // Controlled by outer div
                       className="me-2"
                     />
                     <label
@@ -2025,20 +2027,6 @@ const DischargeCard = ({
               ))}
             </Form.Select>
           </Col>
-          {/* <Col md={3}>
-            <Form.Label className="fw-semibold small mb-1" style={{ fontSize: "11px", color: "#006064" }}>CONSULTANT DOCTOR</Form.Label>
-            <Form.Select
-              value={dischargeData.consultant_doctor}
-              onChange={(e) => handleDischargeChange("consultant_doctor", e.target.value)}
-              style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }}
-            >
-              <option value="">Select Consultant Doctor</option>
-              {assistanceDoctors.map((doc) => (
-                <option key={doc.doctor_id} value={doc.doctor_id}>{doc.name}</option>
-              ))}
-            </Form.Select>
-          </Col> */}
-
           <Col md={2}>
             <Form.Label
               className="fw-semibold small mb-1"
@@ -2059,11 +2047,17 @@ const DischargeCard = ({
               }}
             >
               <option value="">Select Assistant Surgeon</option>
-              {assistanceDoctors.map((doc) => (
-                <option key={doc.doctor_id} value={doc.doctor_id}>
-                  {doc.name}
-                </option>
-              ))}
+              {doctors
+                .filter(
+                  (doc) =>
+                    doc.doctor_type &&
+                    doc.doctor_type.toLowerCase().includes("main"),
+                )
+                .map((doc) => (
+                  <option key={doc.doctor_id} value={doc.doctor_id}>
+                    {doc.name}
+                  </option>
+                ))}
             </Form.Select>
           </Col>
           {/* <Col md={6}>

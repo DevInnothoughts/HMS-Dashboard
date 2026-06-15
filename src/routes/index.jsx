@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { AuthRoutes } from "./AuthRoutes";
 import { DashboardRoutes } from "./DashboardRoutes";
 import { DoctorRoutes } from "./DoctorRoutes";
@@ -9,19 +9,25 @@ import { ReportRoutes } from "./ReportsRoutes";
 // import { SettingsRoutes } from "./SettingsRoutes";
 import { UtilityRoutes } from "./UtilityRoutes";
 import { IpdRoutes } from "./IpdRoutes";
+import ProtectedRoute from "./ProtectedRoute";
 
 export default function AppRoutes() {
   return (
     <Routes>
-      {ReportRoutes}
+      {/* Public Routes */}
       {AuthRoutes}
-      {DashboardRoutes}
-      {DoctorRoutes}
-      {IpdRoutes}
-      {PatientRoutes}
-      {ReceptionistRoutes}
-      {/* {SettingsRoutes} */}
-      {UtilityRoutes}
+
+      {/* Protected Routes */}
+      <Route element={<ProtectedRoute />}>
+        {ReportRoutes}
+        {DashboardRoutes}
+        {DoctorRoutes}
+        {IpdRoutes}
+        {PatientRoutes}
+        {ReceptionistRoutes}
+        {/* {SettingsRoutes} */}
+        {UtilityRoutes}
+      </Route>
     </Routes>
   );
 }

@@ -37,7 +37,9 @@ export default function DoctorCallingCalendar() {
   const [fromDate, setFromDate] = useState(moment().format("YYYY-MM-DD"));
   const [toDate, setToDate] = useState(moment().format("YYYY-MM-DD"));
   const [records, setRecords] = useState([]);
+  const [mcdpaData, setMcdpaData] = useState({});
   const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [liveTime, setLiveTime] = useState("");
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [showCallbackModal, setShowCallbackModal] = useState(false);
@@ -79,6 +81,39 @@ export default function DoctorCallingCalendar() {
     const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Fetch MCDPA Data from API
+  const fetchMCDPAData = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${BASE_URL}/V1/calling-calendar/mcdpa-patients`, {
+        method: "GET",
+        headers: {
+          "x-hms-location": currentLocation,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch MCDPA records");
+      }
+
+      const resData = await response.json();
+      if (resData.statusCode === 200 && resData.data) {
+        setMcdpaData(resData.data || {});
+      } else {
+        setMcdpaData({});
+      }
+    } catch (error) {
+      console.error("Error fetching MCDPA data:", error);
+      Toast.fire({
+        icon: "error",
+        title: "Error fetching MCDPA records",
+      });
+      setMcdpaData({});
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Fetch Advised Data from API
   const fetchAdvisedData = async (type, days, baseDateStr = toDate) => {
@@ -123,17 +158,24 @@ export default function DoctorCallingCalendar() {
     setSelectedType(type);
     setSelectedView("advised");
     setSelectedDays(3);
-    fetchAdvisedData(type, 3);
+    if (type === "MCDPA") {
+      fetchMCDPAData();
+    } else {
+      fetchAdvisedData(type, 3);
+    }
   };
 
   const handleDayFilterChange = (days) => {
     setSelectedDays(days);
-    fetchAdvisedData(selectedType, days);
+    if (selectedType !== "MCDPA") {
+      fetchAdvisedData(selectedType, days);
+    }
   };
 
   const handleGoBack = () => {
     setSelectedView("dashboard");
     setRecords([]);
+    setMcdpaData({});
   };
 
   // Open modals
@@ -159,6 +201,7 @@ export default function DoctorCallingCalendar() {
       return;
     }
 
+    setIsSubmitting(true);
     try {
       const response = await fetch(
         `${BASE_URL}/V1/calling-calendar/submitnote`,
@@ -188,13 +231,19 @@ export default function DoctorCallingCalendar() {
           title: "Note submitted successfully!",
         });
         // Refresh local data
-        fetchAdvisedData(selectedType, selectedDays);
+        if (selectedType === "MCDPA") {
+          fetchMCDPAData();
+        } else {
+          fetchAdvisedData(selectedType, selectedDays);
+        }
       } else {
         Swal.fire("Error", "Failed to save note.", "error");
       }
     } catch (error) {
       console.error("Error submitting note:", error);
       Swal.fire("Error", "Server error while saving note.", "error");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -206,6 +255,7 @@ export default function DoctorCallingCalendar() {
       return;
     }
 
+    setIsSubmitting(true);
     try {
       const response = await fetch(
         `${BASE_URL}/V1/calling-calendar/submitcallback`,
@@ -235,13 +285,19 @@ export default function DoctorCallingCalendar() {
           title: "Callback date updated successfully!",
         });
         // Refresh local data
-        fetchAdvisedData(selectedType, selectedDays);
+        if (selectedType === "MCDPA") {
+          fetchMCDPAData();
+        } else {
+          fetchAdvisedData(selectedType, selectedDays);
+        }
       } else {
         Swal.fire("Error", "Failed to save callback date.", "error");
       }
     } catch (error) {
       console.error("Error submitting callback:", error);
       Swal.fire("Error", "Server error while saving callback date.", "error");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -251,6 +307,10 @@ export default function DoctorCallingCalendar() {
     const downloadUrl = `${BASE_URL}/V1/calling-calendar/download-excel?Frdate=${fromDate}&date=${toDate}&days=${daysString}&type=${selectedType}&location=${currentLocation}`;
     window.location.href = downloadUrl;
   };
+
+  const displayedRecords = selectedType === "MCDPA"
+    ? (selectedDays === 0 ? (mcdpaData.callback || []) : (mcdpaData[selectedDays] || []))
+    : records;
 
   return (
     <>
@@ -751,7 +811,97 @@ export default function DoctorCallingCalendar() {
                     </Card>
                   </Col>
 
-                  {/* Card 5: Enquiry Calls */}
+                  {/* Card 5: MCDPA */}
+                  <Col xs={12} sm={6} md={4}>
+                    <Card
+                      onClick={() => handleOpenAdvised("MCDPA")}
+                      onMouseEnter={() => setHoveredCard("MCDPA")}
+                      onMouseLeave={() => setHoveredCard(null)}
+                      style={{
+                        borderRadius: "16px",
+                        border: "1.5px solid #d4e8e3",
+                        boxShadow: "0 2px 8px rgba(15,123,99,0.08)",
+                        cursor: "pointer",
+                        transition: "all 0.3s",
+                        borderTop: "4px solid #009688",
+                        position: "relative",
+                        overflow: "hidden",
+                      }}
+                      className="hover-card-elevate"
+                    >
+                      <Card.Body className="p-10 d-flex flex-column align-items-start gap-3">
+                        <div
+                          style={{
+                            width: "52px",
+                            height: "52px",
+                            borderRadius: "14px",
+                            backgroundColor: "#e0f2f1",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "#009688",
+                            fontSize: "22px",
+                            margin: "auto 0",
+                          }}
+                          className="d-flex align-items-center justify-content-center"
+                        >
+                          <i className="fa fa-user-md"></i>
+                        </div>
+                        <div>
+                          <h5
+                            style={{
+                              fontSize: "16px",
+                              fontWeight: "700",
+                              margin: "0 0 4px 0",
+                            }}
+                          >
+                            MCDPA
+                          </h5>
+                          <p
+                            style={{
+                              fontSize: "12px",
+                              color: "#6b8f85",
+                              margin: 0,
+                            }}
+                          >
+                            MCDPA Patients list
+                          </p>
+                        </div>
+                        <div
+                          style={{
+                            position: "absolute",
+                            bottom: "18px",
+                            right: "18px",
+                            width: "30px",
+                            height: "30px",
+                            borderRadius: "50%",
+                            backgroundColor:
+                              hoveredCard === "MCDPA" ? "#009688" : "#e0f2f1",
+                            color:
+                              hoveredCard === "MCDPA" ? "white" : "#009688",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "12px",
+                            transition:
+                              "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+                            transform:
+                              hoveredCard === "MCDPA"
+                                ? "translateX(4px)"
+                                : "none",
+                            boxShadow:
+                              hoveredCard === "MCDPA"
+                                ? "0 4px 10px rgba(0,150,136,0.3)"
+                                : "none",
+                          }}
+                        >
+                          <i className="fa fa-arrow-right"></i>
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+
+                  {/* Card 6: Enquiry Calls */}
                   {/* <Col xs={12} sm={6} md={4}>
                     <Card
                       onClick={() => handleOpenAdvised("Enquiry")}
@@ -1013,7 +1163,7 @@ export default function DoctorCallingCalendar() {
                       Fetching records...
                     </p>
                   </div>
-                ) : records.length === 0 ? (
+                ) : displayedRecords.length === 0 ? (
                   <div
                     style={{
                       backgroundColor: "white",
@@ -1100,7 +1250,7 @@ export default function DoctorCallingCalendar() {
                     </div>
 
                     {/* Grid Lists */}
-                    {records.map((row) => {
+                    {displayedRecords.map((row) => {
                       const recordId =
                         selectedType === "Dischargecard"
                           ? row.discharge_id
@@ -1116,7 +1266,7 @@ export default function DoctorCallingCalendar() {
                           } else {
                             try {
                               parsed = JSON.parse(parsed);
-                            } catch (e) {}
+                            } catch (e) { }
                           }
                         }
 
@@ -1199,6 +1349,20 @@ export default function DoctorCallingCalendar() {
                                   >
                                     {row.phone || "-"}
                                   </span>
+                                  {row.doctor_name && (
+                                    <>
+                                      <br />
+                                      <span
+                                        style={{
+                                          fontSize: "12px",
+                                          color: "#0f7b63",
+                                          fontWeight: "600",
+                                        }}
+                                      >
+                                        {row.doctor_name}
+                                      </span>
+                                    </>
+                                  )}
                                 </p>
                               </div>
 
@@ -1413,6 +1577,7 @@ export default function DoctorCallingCalendar() {
           <Modal.Footer style={{ borderTop: "none" }}>
             <Button
               type="submit"
+              disabled={isSubmitting}
               style={{
                 width: "100%",
                 background: "linear-gradient(135deg, #0f7b63, #1aab8a)",
@@ -1424,7 +1589,7 @@ export default function DoctorCallingCalendar() {
                 boxShadow: "0 4px 12px rgba(15,123,99,0.28)",
               }}
             >
-              Submit Note
+              {isSubmitting ? "Submitting Note..." : "Submit Note"}
             </Button>
           </Modal.Footer>
         </Form>
@@ -1468,6 +1633,7 @@ export default function DoctorCallingCalendar() {
           <Modal.Footer style={{ borderTop: "none" }}>
             <Button
               type="submit"
+              disabled={isSubmitting}
               style={{
                 width: "100%",
                 background: "linear-gradient(135deg, #0f7b63, #1aab8a)",
@@ -1479,7 +1645,7 @@ export default function DoctorCallingCalendar() {
                 boxShadow: "0 4px 12px rgba(15,123,99,0.28)",
               }}
             >
-              Submit Date
+              {isSubmitting ? "Submitting Date..." : "Submit Date"}
             </Button>
           </Modal.Footer>
         </Form>

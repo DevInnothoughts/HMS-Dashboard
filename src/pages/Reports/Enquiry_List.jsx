@@ -54,6 +54,7 @@ export default function EnquiryList({ isTab = false }) {
   const [statusFilter, setStatusFilter] = useState("");
 
   const [showAddModal, setShowAddModal] = useState(false);
+  const [noPendingAppt, setNoPendingAppt] = useState(true);
   const [showEditEnquiryModal, setShowEditEnquiryModal] = useState(false);
   const [selectedEnquiry, setSelectedEnquiry] = useState(null);
   const [editEnquiryStatus, setEditEnquiryStatus] = useState("");
@@ -139,6 +140,7 @@ export default function EnquiryList({ isTab = false }) {
   const handleAddAppointmentClick = async (enquiry) => {
     const phone = enquiry.patient_phone || "";
     const name = enquiry.patient_name || "";
+    setNoPendingAppt(true);
 
     // Set initial form data
     setAppointmentFormData({
@@ -154,14 +156,47 @@ export default function EnquiryList({ isTab = false }) {
       patient_id: "",
     });
 
+    let hasPendingAppt = false;
     try {
-      // Check if patient exists
+      const confirmUrl = `${BASE_URL}/V1/appointment/getPatientByApptConfirm?patient_phone=${phone}&location=${currentLocation}`;
+      const confirmResponse = await fetch(confirmUrl, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (confirmResponse.status === 400) {
+        Swal.fire({
+          icon: "warning",
+          title: "Pending Appointment",
+          text: "Pending appointment, close that appointment first.",
+          confirmButtonColor: "#f39c12",
+        });
+        setNoPendingAppt(false);
+        hasPendingAppt = true;
+      } else {
+        setNoPendingAppt(true);
+      }
+    } catch (innerError) {
+      console.error("Error in confirmation check API call:", innerError);
+    }
+
+    try {
       const response = await fetch(
         `${BASE_URL}/V1/appointment/getPatientByMobile?patient_phone=${phone}&location=${currentLocation}`,
       );
       const result = await response.json();
 
       if (response.ok && result.data) {
+        if (!hasPendingAppt) {
+          Swal.fire({
+            icon: "warning",
+            title: "Patient Found",
+            text: `${result.data.name} is already registered.`,
+            confirmButtonColor: "#00bcd4",
+            timer: 2000,
+          });
+        }
+
         // Patient exists
         setAppointmentFormData((prev) => ({
           ...prev,
@@ -254,7 +289,9 @@ export default function EnquiryList({ isTab = false }) {
         appointmentFormData.patient_type === "Post Operative"
           ? "Postoperative"
           : appointmentFormData.patient_type,
-      appointment_time: appointmentFormData.appointmentTime,
+      appointment_time: appointmentFormData.appointmentTime
+        ? moment(appointmentFormData.appointmentTime, ["hh:mm A", "HH:mm"]).format("HH:mm")
+        : "",
       FDE_Name: appointmentFormData.FDE_Name,
       note: appointmentFormData.note,
       phone: appointmentFormData.phone,
@@ -1129,12 +1166,19 @@ export default function EnquiryList({ isTab = false }) {
                     size="sm"
                     type="text"
                     value={appointmentFormData.name}
-                    readOnly
+                    onChange={(e) =>
+                      setAppointmentFormData({
+                        ...appointmentFormData,
+                        name: e.target.value,
+                      })
+                    }
+                    readOnly={!!appointmentFormData.patient_id}
                     style={{
                       border: "2px solid rgb(77, 208, 225)",
                       fontSize: "11px",
                       borderRadius: "10px",
-                      backgroundColor: "#e7ebebff",
+                      cursor: appointmentFormData.patient_id ? "not-allowed" : "default",
+                      backgroundColor: appointmentFormData.patient_id ? "#e7ebebff" : undefined,
                     }}
                   />
                 </Form.Group>
@@ -1287,6 +1331,7 @@ export default function EnquiryList({ isTab = false }) {
               <Button
                 variant="primary"
                 type="submit"
+                disabled={loading || !noPendingAppt}
                 className="px-4"
                 style={{
                   borderRadius: "10px",
@@ -1382,6 +1427,7 @@ export default function EnquiryList({ isTab = false }) {
               <Button
                 variant="primary"
                 type="submit"
+                disabled={loading}
                 className="px-4"
                 style={{
                   borderRadius: "10px",
@@ -1391,7 +1437,7 @@ export default function EnquiryList({ isTab = false }) {
                   height: "35px",
                 }}
               >
-                Confirm & Save
+                {loading ? "Saving..." : "Confirm & Save"}
               </Button>
             </div>
           </Form>

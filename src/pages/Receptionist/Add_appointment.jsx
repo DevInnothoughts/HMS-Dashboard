@@ -638,7 +638,12 @@ export default function Add_appointment() {
                       </Form.Label>
                       <Form.Control
                         required
-                        style={inputStyle}
+                        style={{
+                          ...inputStyle,
+                          cursor: isExistingPatient ? "not-allowed" : "default",
+                          backgroundColor: isExistingPatient ? "#e7ebebff" : undefined,
+                        }}
+                        readOnly={isExistingPatient}
                         type="text"
                         name="patientName"
                         value={formData.patientName}

@@ -32,6 +32,7 @@ export default function DoctorManageAdmission() {
   const navigate = useNavigate();
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDbSearching, setIsDbSearching] = useState(false);
   const [currentLocation, setCurrentLocation] = useState("default");
 
@@ -267,6 +268,7 @@ export default function DoctorManageAdmission() {
 
   const handleRescheduleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
       Swal.fire({ title: "Updating...", didOpen: () => Swal.showLoading() });
       const response = await fetch(
@@ -295,6 +297,8 @@ export default function DoctorManageAdmission() {
       }
     } catch (error) {
       Swal.fire("Error", error.message, "error");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -310,6 +314,7 @@ export default function DoctorManageAdmission() {
       Swal.fire("Required", "Please provide a reason", "warning");
       return;
     }
+    setIsSubmitting(true);
     try {
       Swal.fire({ title: "Cancelling...", didOpen: () => Swal.showLoading() });
       const response = await fetch(
@@ -339,6 +344,8 @@ export default function DoctorManageAdmission() {
       }
     } catch (error) {
       Swal.fire("Error", error.message, "error");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -450,6 +457,7 @@ export default function DoctorManageAdmission() {
       return;
     }
 
+    setIsSubmitting(true);
     try {
       Swal.fire({
         title: "Saving documents...",
@@ -533,6 +541,8 @@ export default function DoctorManageAdmission() {
       setShowDocModal(false);
     } catch (error) {
       Swal.fire("Error", error.message, "error");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -1097,8 +1107,8 @@ export default function DoctorManageAdmission() {
             >
               Cancel
             </Button>
-            <Button variant="primary" type="submit">
-              Reschedule
+            <Button variant="primary" type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Rescheduling..." : "Reschedule"}
             </Button>
           </Modal.Footer>
         </Form>
@@ -1132,8 +1142,8 @@ export default function DoctorManageAdmission() {
             <Button variant="primary" onClick={() => setShowCancelModal(false)}>
               Back
             </Button>
-            <Button variant="danger" type="submit">
-              Cancel Admission
+            <Button variant="danger" type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Cancelling..." : "Cancel Admission"}
             </Button>
           </Modal.Footer>
         </Form>
@@ -1493,6 +1503,7 @@ export default function DoctorManageAdmission() {
                 variant="primary"
                 size="sm"
                 type="submit"
+                disabled={isSubmitting}
                 className="px-3"
                 style={{
                   borderRadius: "10px",
@@ -1502,7 +1513,7 @@ export default function DoctorManageAdmission() {
                   padding: "10px",
                 }}
               >
-                Save Documents
+                {isSubmitting ? "Saving..." : "Save Documents"}
               </Button>
             </div>
           </Modal.Body>

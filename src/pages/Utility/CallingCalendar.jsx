@@ -38,6 +38,7 @@ export default function CallingCalendar() {
   const [toDate, setToDate] = useState(moment().format("YYYY-MM-DD"));
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [liveTime, setLiveTime] = useState("");
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [showCallbackModal, setShowCallbackModal] = useState(false);
@@ -159,6 +160,7 @@ export default function CallingCalendar() {
       return;
     }
 
+    setIsSubmitting(true);
     try {
       const response = await fetch(
         `${BASE_URL}/V1/calling-calendar/submitnote`,
@@ -195,6 +197,8 @@ export default function CallingCalendar() {
     } catch (error) {
       console.error("Error submitting note:", error);
       Swal.fire("Error", "Server error while saving note.", "error");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -206,6 +210,7 @@ export default function CallingCalendar() {
       return;
     }
 
+    setIsSubmitting(true);
     try {
       const response = await fetch(
         `${BASE_URL}/V1/calling-calendar/submitcallback`,
@@ -242,6 +247,8 @@ export default function CallingCalendar() {
     } catch (error) {
       console.error("Error submitting callback:", error);
       Swal.fire("Error", "Server error while saving callback date.", "error");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -1462,6 +1469,7 @@ export default function CallingCalendar() {
           <Modal.Footer style={{ borderTop: "none" }}>
             <Button
               type="submit"
+              disabled={isSubmitting}
               style={{
                 width: "100%",
                 background: "linear-gradient(135deg, #0f7b63, #1aab8a)",
@@ -1473,7 +1481,7 @@ export default function CallingCalendar() {
                 boxShadow: "0 4px 12px rgba(15,123,99,0.28)",
               }}
             >
-              Submit Note
+              {isSubmitting ? "Submitting Note..." : "Submit Note"}
             </Button>
           </Modal.Footer>
         </Form>
@@ -1517,6 +1525,7 @@ export default function CallingCalendar() {
           <Modal.Footer style={{ borderTop: "none" }}>
             <Button
               type="submit"
+              disabled={isSubmitting}
               style={{
                 width: "100%",
                 background: "linear-gradient(135deg, #0f7b63, #1aab8a)",
@@ -1528,7 +1537,7 @@ export default function CallingCalendar() {
                 boxShadow: "0 4px 12px rgba(15,123,99,0.28)",
               }}
             >
-              Submit Date
+              {isSubmitting ? "Submitting Date..." : "Submit Date"}
             </Button>
           </Modal.Footer>
         </Form>

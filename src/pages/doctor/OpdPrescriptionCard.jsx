@@ -40,6 +40,7 @@ const OpdPrescriptionCard = ({
   assistanceDoctors = [],
   location = "default",
   removedMedicines = [],
+  loading = false,
 }) => {
   const [testAdviceOptions, setTestAdviceOptions] = useState([]);
   const [preopInvestOptions, setPreopInvestOptions] = useState([]);
@@ -1357,6 +1358,7 @@ const OpdPrescriptionCard = ({
         ) : (
           <Button
             onClick={onSavePrescription}
+            disabled={loading}
             style={{
               backgroundColor: "#00796b",
               borderColor: "#00796b",
@@ -1370,7 +1372,7 @@ const OpdPrescriptionCard = ({
             }}
           >
             <FeatherIcon icon="save" size="18" className="me-2" />
-            {isEditing ? "UPDATE PRESCRIPTION" : "SAVE PRESCRIPTION DATA"}
+            {loading ? "SAVING..." : (isEditing ? "UPDATE PRESCRIPTION" : "SAVE PRESCRIPTION DATA")}
           </Button>
         )}
       </div>
