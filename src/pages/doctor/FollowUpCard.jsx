@@ -2,7 +2,7 @@ import React from "react";
 import { Row, Col, Form, Button } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 
-const FollowUpCard = ({ followUpData, formData, handleFollowUpChange, onSaveFollowUp, onPrintFollowUp, loading }) => {
+const FollowUpCard = ({ followUpData, formData, handleFollowUpChange, onSaveFollowUp, onPrintFollowUp, loading, validationErrors = {} }) => {
   return (
     <div className="animate__animated animate__fadeIn">
       <div className="p-3 bg-white rounded shadow-sm border mb-3" style={{ borderLeft: "5px solid #00acc1" }}>
@@ -68,7 +68,7 @@ const FollowUpCard = ({ followUpData, formData, handleFollowUpChange, onSaveFoll
           </Col>
           <Col md={4} className="mb-1">
             <Form.Label className="fw-bold mb-3" style={{ fontSize: "11px", color: "#006064" }}>Present Complaints <span className="text-danger">*</span></Form.Label>
-            <Form.Control as="textarea" rows={2} placeholder="Describe the present symptoms..." value={followUpData.present_complaints} onChange={(e) => handleFollowUpChange("present_complaints", e.target.value)} style={{ borderRadius: "10px", border: "2px solid #b2ebf2", fontSize: "12px", padding: "6px 12px" }} />
+            <Form.Control as="textarea" rows={2} placeholder="Describe the present symptoms..." value={followUpData.present_complaints} onChange={(e) => handleFollowUpChange("present_complaints", e.target.value)} style={{ borderRadius: "10px", border: validationErrors.present_complaints ? "2px solid red" : "2px solid #b2ebf2", fontSize: "12px", padding: "6px 12px" }} />
           </Col>
           <Col md={4} className="mb-1">
             <Form.Label className="fw-bold mb-3" style={{ fontSize: "11px", color: "#006064" }}>First Visit Date</Form.Label>

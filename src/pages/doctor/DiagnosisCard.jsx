@@ -43,6 +43,7 @@ const DiagnosisCard = ({
   onEditDiagnosis,
   doctors = [],
   assistanceDoctors = [],
+  validationErrors = {},
 }) => {
   const [aiLoading, setAiLoading] = React.useState(false);
   const lastGeneratedRef = React.useRef({ diag: "", surg: "" });
@@ -767,7 +768,7 @@ const DiagnosisCard = ({
               </div>
               <Card
                 className="shadow-sm border-0 overflow-hidden"
-                style={{ borderRadius: "15px", border: "2px solid #a7d4d2ff" }}
+                style={{ borderRadius: "15px", border: validationErrors.speciality_data ? "2px solid red" : "2px solid #a7d4d2ff" }}
               >
                 {/* Specialty Nav stays clickable even while locked (Nav.Link is an <a>),
                     so a saved record can still be browsed across specialties. */}
@@ -1515,7 +1516,7 @@ const DiagnosisCard = ({
                 required
                 style={{
                   borderRadius: "10px",
-                  border: "2px solid #eda6a6ff",
+                  border: validationErrors.diagnosis_text ? "2px solid red" : "2px solid #eda6a6ff",
                   fontSize: "12px",
                   padding: "6px 12px",
                 }}
@@ -1528,7 +1529,10 @@ const DiagnosisCard = ({
       {/* 2. Management Advice Types */}
       <div
         className="p-3 bg-white rounded shadow-sm border mb-3 d-flex flex-wrap align-items-center gap-3"
-        style={{ borderLeft: "5px solid #00838f" }}
+        style={{
+          borderLeft: "5px solid #00838f",
+          border: validationErrors.advice_types ? "2px solid red" : undefined,
+        }}
       >
         <fieldset disabled={isReadOnly} style={lockStyle}>
           <h5
@@ -1910,7 +1914,7 @@ const DiagnosisCard = ({
                 }
                 style={{
                   borderRadius: "10px",
-                  border: "2px solid #b2ebf2",
+                  border: validationErrors.consultant_doctor ? "2px solid red" : "2px solid #b2ebf2",
                   padding: "6px 12px",
                   fontSize: "12px",
                 }}
@@ -1941,7 +1945,7 @@ const DiagnosisCard = ({
                 }
                 style={{
                   borderRadius: "10px",
-                  border: "2px solid #b2ebf2",
+                  border: validationErrors.assistance_doctor ? "2px solid red" : "2px solid #b2ebf2",
                   padding: "6px 12px",
                   fontSize: "12px",
                 }}

@@ -259,6 +259,12 @@ const PersonalDetailsCard = () => {
   const [patient, setPatient] = useState(state?.patient);
 
   const [activeTab, setActiveTab] = useState("menu");
+  const [validationErrors, setValidationErrors] = useState({});
+
+  useEffect(() => {
+    setValidationErrors({});
+  }, [activeTab]);
+
   const [loading, setLoading] = useState(false);
   const [currentLocation, setCurrentLocation] = useState("default");
   const [hasFetchedPatient, setHasFetchedPatient] = useState(false);
@@ -551,40 +557,38 @@ const PersonalDetailsCard = () => {
       return !hasTextRecord && !hasArrayRecord && !hasSpecialRecord;
     };
 
-    if (isHistoryEmpty()) {
-      Swal.fire({
-        icon: "warning",
-        title: "Incomplete Details",
-        text: "Please fill in at least one history detail before saving.",
-      });
-      return;
-    }
-
-    const missingFields = [];
+    const errors = {};
     if (
       !historyData.height_feet ||
       String(historyData.height_feet).trim() === ""
     ) {
-      missingFields.push("Height");
+      errors.height_feet = true;
     }
     if (!historyData.weight_kg || String(historyData.weight_kg).trim() === "") {
-      missingFields.push("Weight");
+      errors.weight_kg = true;
     }
     if (
       !historyData.assistance_doctor ||
       String(historyData.assistance_doctor).trim() === ""
     ) {
-      missingFields.push("Assistant Doctor");
+      errors.assistance_doctor = true;
     }
 
-    if (missingFields.length > 0) {
-      Swal.fire({
+    if (isHistoryEmpty() || Object.keys(errors).length > 0) {
+      if (isHistoryEmpty()) {
+        errors.height_feet = true;
+        errors.weight_kg = true;
+        errors.assistance_doctor = true;
+      }
+      Toast.fire({
         icon: "warning",
-        title: "Missing Required Fields",
-        text: `Please fill the required fields: ${missingFields.join(", ")}`,
+        title: "Please fill all mandatory/required fields which are not filled yet",
       });
+      setValidationErrors(errors);
       return;
     }
+
+    setValidationErrors({});
 
     setLoading(true);
     try {
@@ -1202,7 +1206,6 @@ const PersonalDetailsCard = () => {
   };
 
   const handleSaveDiagnosis = async () => {
-    // Basic validation
     const hasData =
       diagnosisData.diagnosis_text?.trim() ||
       diagnosisData.investigation_orders?.trim() ||
@@ -1213,58 +1216,58 @@ const PersonalDetailsCard = () => {
         Array.isArray(v) ? v.length > 0 : v && v.trim() !== "",
       );
 
-    if (!hasData) {
-      Swal.fire({
-        icon: "warning",
-        title: "Incomplete Details",
-        text: "Please fill in diagnosis details before saving.",
-      });
-      return;
-    }
+    const errors = {};
 
-    const missingFields = [];
-
-    // Check if at least one specialty finding is selected
+    // Check Specialty Findings
     const hasSpecialityData = Object.values(
       diagnosisData.speciality_data || {},
     ).some((v) => (Array.isArray(v) ? v.length > 0 : v && v.trim() !== ""));
     if (!hasSpecialityData) {
-      missingFields.push("Specialty Findings");
+      errors.speciality_data = true;
     }
 
     if (
       !diagnosisData.diagnosis_text ||
       String(diagnosisData.diagnosis_text).trim() === ""
     ) {
-      missingFields.push("Diagnosis");
+      errors.diagnosis_text = true;
     }
     if (
       !diagnosisData.advice_types ||
       diagnosisData.advice_types.length === 0
     ) {
-      missingFields.push("Advice Type");
+      errors.advice_types = true;
     }
     if (
       !diagnosisData.consultant_doctor ||
       String(diagnosisData.consultant_doctor).trim() === ""
     ) {
-      missingFields.push("Consultant Doctor");
+      errors.consultant_doctor = true;
     }
     if (
       !diagnosisData.assistance_doctor ||
       String(diagnosisData.assistance_doctor).trim() === ""
     ) {
-      missingFields.push("Assistant Doctor");
+      errors.assistance_doctor = true;
     }
 
-    if (missingFields.length > 0) {
-      Swal.fire({
+    if (!hasData || Object.keys(errors).length > 0) {
+      if (!hasData) {
+        errors.speciality_data = true;
+        errors.diagnosis_text = true;
+        errors.advice_types = true;
+        errors.consultant_doctor = true;
+        errors.assistance_doctor = true;
+      }
+      Toast.fire({
         icon: "warning",
-        title: "Missing Required Fields",
-        text: `Please fill the required fields: ${missingFields.join(", ")}`,
+        title: "Please fill all mandatory/required fields which are not filled/selected yet",
       });
+      setValidationErrors(errors);
       return;
     }
+
+    setValidationErrors({});
 
     setLoading(true);
     try {
@@ -2192,6 +2195,7 @@ const PersonalDetailsCard = () => {
     diagnosis: "",
     surgery_note: "",
     surgery_type: [],
+    surgery_date: "",
     investigations: {
       HB: "",
       WBC: "",
@@ -2511,14 +2515,37 @@ const PersonalDetailsCard = () => {
       (dischargeData.treatment_on_discharge &&
         dischargeData.treatment_on_discharge.length > 0);
 
+    const errors = {};
+    if (
+      !dischargeData.discharge_type ||
+      String(dischargeData.discharge_type).trim() === ""
+    ) {
+      errors.discharge_type = true;
+    }
+
     if (!hasData) {
-      Swal.fire({
+      errors.reason_for_admission = true;
+      errors.diagnosis = true;
+      errors.plan_of_treatment = true;
+      errors.surgery_note = true;
+    }
+
+    if (Object.keys(errors).length > 0) {
+      if (!hasData) {
+        errors.reason_for_admission = true;
+        errors.diagnosis = true;
+        errors.plan_of_treatment = true;
+        errors.surgery_note = true;
+      }
+      Toast.fire({
         icon: "warning",
-        title: "Incomplete Details",
-        text: "Please fill in discharge details before saving.",
+        title: "Please fill all mandatory/required fields which are not filled/selected yet",
       });
+      setValidationErrors(errors);
       return;
     }
+
+    setValidationErrors({});
 
     try {
       setLoading(true);
@@ -3914,13 +3941,15 @@ const PersonalDetailsCard = () => {
     const hasPresentComplaints = followUpData.present_complaints?.trim();
 
     if (!hasPresentComplaints) {
-      Swal.fire({
+      setValidationErrors({ present_complaints: true });
+      Toast.fire({
         icon: "warning",
-        title: "Incomplete Details",
-        text: "Please fill in Present Complaints before saving.",
+        title: "Please fill all mandatory/required fields which are not filled/selected yet",
       });
       return;
     }
+
+    setValidationErrors({});
 
     setLoading(true);
     try {
@@ -4071,24 +4100,25 @@ const PersonalDetailsCard = () => {
       return;
     }
 
-    const missingFields = [];
+    const errors = {};
 
     if (
       !prescriptionData.no_medicines_prescribed &&
       (!prescriptionData.medicines || prescriptionData.medicines.length === 0)
     ) {
-      missingFields.push("Meditative Advice & Pharmacy Orders");
+      errors.medicines = true;
     }
 
-    if (missingFields.length > 0) {
-
-      Swal.fire({
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      Toast.fire({
         icon: "warning",
-        title: "Missing Required Fields",
-        text: `Please fill the required fields: ${missingFields.join(", ")}`,
+        title: "Please fill all mandatory/required fields which are not filled/selected yet",
       });
       return;
     }
+
+    setValidationErrors({});
 
 
     setLoading(true);
@@ -4164,31 +4194,54 @@ const PersonalDetailsCard = () => {
   const handleDischargeChange = (field, value) => {
     setDischargeData((prev) => ({ ...prev, [field]: value }));
 
-    // Auto-populate local care and note/advice when surgery type is selected
-    if (field === "surgery_type" && Array.isArray(value) && value.length > 0) {
-      // Find what was just added (compared to previous state)
+    // Auto-populate local care and note/advice when surgery type is selected/deselected
+    if (field === "surgery_type" && Array.isArray(value)) {
       const prevSurgeryTypes = dischargeData.surgery_type || [];
-      const newlyAdded = value.find((v) => !prevSurgeryTypes.includes(v));
 
-      if (newlyAdded) {
-        fetch(
-          `${BASE_URL}/V1/doctor/get-surgery-discharge-details?surgeryType=${encodeURIComponent(newlyAdded)}&location=${currentLocation}`,
-        )
-          .then((res) => res.json())
-          .then((result) => {
-            if (result.statusCode === 200 && result.data) {
-              const { local_care, note } = result.data;
-              setDischargeData((prev) => ({
-                ...prev,
-                local_care: local_care || prev.local_care,
-                note_advice: note || prev.note_advice,
-              }));
-              toast.success(`Loaded defaults for ${newlyAdded}`);
-            }
-          })
-          .catch((err) => {
-            console.error("Error fetching surgery discharge details:", err);
-          });
+      if (value.length === 0) {
+        // If all surgery types are deselected, clear the defaults
+        setDischargeData((prev) => ({
+          ...prev,
+          local_care: "",
+          note_advice: "",
+        }));
+      } else {
+        const newlyAdded = value.find((v) => !prevSurgeryTypes.includes(v));
+        const removed = prevSurgeryTypes.find((v) => !value.includes(v));
+
+        // If a surgery type was added, fetch defaults for it.
+        // If one was removed, fetch defaults for the first remaining selected surgery type.
+        const targetSurgeryType = newlyAdded || (removed ? value[0] : null);
+
+        if (targetSurgeryType) {
+          fetch(
+            `${BASE_URL}/V1/doctor/get-surgery-discharge-details?surgeryType=${encodeURIComponent(targetSurgeryType)}&location=${currentLocation}`,
+          )
+            .then((res) => res.json())
+            .then((result) => {
+              if (result.statusCode === 200 && result.data) {
+                const { local_care, note } = result.data;
+                setDischargeData((prev) => ({
+                  ...prev,
+                  local_care: local_care || "",
+                  note_advice: note || "",
+                }));
+                toast.success(`Loaded defaults for ${targetSurgeryType}`);
+              } else {
+                // If query succeeded but no defaults found, clear the fields if it was due to a removal
+                if (removed) {
+                  setDischargeData((prev) => ({
+                    ...prev,
+                    local_care: "",
+                    note_advice: "",
+                  }));
+                }
+              }
+            })
+            .catch((err) => {
+              console.error("Error fetching surgery discharge details:", err);
+            });
+        }
       }
     }
   };
@@ -5333,6 +5386,7 @@ const PersonalDetailsCard = () => {
                     uploadBaseUrl={UPLOAD_BASE_URL}
                     isEditing={isEditingHistory}
                     onEditHistory={handleEditHistory}
+                    validationErrors={validationErrors}
                   />
                 )}
                 {activeTab === "diagnosis" && (
@@ -5360,6 +5414,7 @@ const PersonalDetailsCard = () => {
                     assistanceDoctors={assistanceDoctors}
                     isEditing={isEditingDiagnosis}
                     onEditDiagnosis={handleEditDiagnosis}
+                    validationErrors={validationErrors}
                   />
                 )}
                 {activeTab === "follow-up" && (
@@ -5370,6 +5425,7 @@ const PersonalDetailsCard = () => {
                     onSaveFollowUp={handleSaveFollowUp}
                     onPrintFollowUp={handlePrintFollowUp}
                     loading={loading}
+                    validationErrors={validationErrors}
                   />
                 )}
                 {/* {activeTab === "other-tests" && (
@@ -5423,6 +5479,7 @@ const PersonalDetailsCard = () => {
                     isEditing={isEditingPrescription}
                     onEditPrescription={handleEditPrescription}
                     loading={loading}
+                    validationErrors={validationErrors}
                   />
                 )}
                 {/* {activeTab === "surgery-details" && (
@@ -5439,7 +5496,7 @@ const PersonalDetailsCard = () => {
                   assistanceDoctors={assistanceDoctors}
                   anaesthetists={anaesthetists}
                 />
-
+ 
               )} */}
                 {activeTab === "discharge-card" && (
                   <DischargeCard
@@ -5459,6 +5516,7 @@ const PersonalDetailsCard = () => {
                     onPrintDischarge={handlePrintDischarge}
                     loading={loading}
                     location={currentLocation}
+                    validationErrors={validationErrors}
                   />
                 )}
                 {![

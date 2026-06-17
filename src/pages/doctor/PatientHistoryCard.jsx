@@ -32,6 +32,7 @@ const PatientHistoryCard = ({
   onEditHistory,
   assistanceDoctors = [],
   uploadBaseUrl,
+  validationErrors = {},
 }) => {
   const [historyActiveSubTab, setHistoryActiveSubTab] = useState("piles");
 
@@ -838,7 +839,7 @@ const PatientHistoryCard = ({
                 placeholder="e.g. 160"
                 style={{
                   borderRadius: "10px",
-                  border: "2px solid #b2ebf2",
+                  border: validationErrors.height_feet ? "2px solid red" : "2px solid #b2ebf2",
                   padding: "6px 12px",
                   fontSize: "12px",
                 }}
@@ -862,7 +863,7 @@ const PatientHistoryCard = ({
                 placeholder="e.g. 70"
                 style={{
                   borderRadius: "10px",
-                  border: "2px solid #b2ebf2",
+                  border: validationErrors.weight_kg ? "2px solid red" : "2px solid #b2ebf2",
                   padding: "6px 12px",
                   fontSize: "12px",
                 }}
@@ -1769,7 +1770,7 @@ const PatientHistoryCard = ({
                 }
                 style={{
                   borderRadius: "10px",
-                  border: "2px solid #b2ebf2",
+                  border: validationErrors.assistance_doctor ? "2px solid red" : "2px solid #b2ebf2",
                   padding: "6px 12px",
                   fontSize: "12px",
                 }}

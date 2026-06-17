@@ -41,6 +41,7 @@ const OpdPrescriptionCard = ({
   location = "default",
   removedMedicines = [],
   loading = false,
+  validationErrors = {},
 }) => {
   const [testAdviceOptions, setTestAdviceOptions] = useState([]);
   const [preopInvestOptions, setPreopInvestOptions] = useState([]);
@@ -845,10 +846,16 @@ const OpdPrescriptionCard = ({
 
           <hr className="my-4" style={{ opacity: "0.1" }} />
 
-          <div className="d-flex justify-content-between align-items-center mb-3">
+          <div
+            className="d-flex justify-content-between align-items-center mb-3 p-2 rounded"
+            style={{
+              border: validationErrors.medicines ? "2px solid red" : "none",
+              backgroundColor: validationErrors.medicines ? "#ffebee" : "transparent"
+            }}
+          >
             <h6
               className="fw-bold m-0 d-flex align-items-center"
-              style={{ color: "#005979ff", fontSize: "14px", padding: "5px" }}
+              style={{ color: validationErrors.medicines ? "#d32f2f" : "#005979ff", fontSize: "14px", padding: "5px" }}
             >
               <FeatherIcon
                 icon="plus-circle"
@@ -857,6 +864,11 @@ const OpdPrescriptionCard = ({
               />{" "}
               Meditative Advice & Pharmacy Orders{" "}
               <span className="text-danger">*</span>
+              {validationErrors.medicines && (
+                <span className="text-danger fw-bold ms-3" style={{ fontSize: "12px" }}>
+                  (At least one medicine is required if 'No medicines prescribed' is unchecked)
+                </span>
+              )}
             </h6>
             <div className="d-flex gap-3">
               <div

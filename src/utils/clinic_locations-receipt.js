@@ -56,7 +56,7 @@ export const receiptlocations = {
   },
   "Salunkhe-Vihar": {
     address:
-      "<b>Salunkhe-Vihar : </b><br>Healing Hands Clinic<br>101/102 Girme Towers, Salunkhe Vihar Road,<br>Next to HDFC Bank, Opp. Kotak Mahindra Bank,<br>Oxford Village, Kedari Nagar, Wanowrie,<br>Pune, Maharashtra 411004.",
+      "<b>Salunkhe-Vihar : </b><br>Healing Hands Clinic<br>101/102 Girme Towers, Salunkhe Vihar Road, Next to HDFC Bank, Opp. Kotak Mahindra Bank, Oxford Village, Kedari Nagar, Wanowrie, Pune, Maharashtra 411004.",
     phone: "8888522226",
     hospitalcode: "SV",
   },

@@ -340,7 +340,9 @@ export default function Appointment_list() {
       const payload = {
         appointment_id: selectedAppointment.appointment_id,
         doctor_id: receiptForm.doctor_id,
-        appointment_date: moment(new Date()).format("DD-MM-YYYY"),
+        appointment_date: (selectedAppointment.appointment_timestamp && moment(selectedAppointment.appointment_timestamp).isValid())
+          ? moment(selectedAppointment.appointment_timestamp).format("DD-MM-YYYY")
+          : moment(new Date()).format("DD-MM-YYYY"),
         consultations: consultationData,
         paymentmode:
           receiptForm.paymentMode === "card"

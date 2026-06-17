@@ -858,7 +858,6 @@ export default function ChatbotLeadsTab() {
                 <option value="Visited">Visited</option>
                 <option value="Not Visited">Not Visited</option>
                 <option value="Surgery Done">Surgery Done</option>
-                <option value="No FU Done">No FU Done</option>
             </Form.Select>
         </div>
     );

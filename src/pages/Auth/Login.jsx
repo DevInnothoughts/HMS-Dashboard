@@ -138,6 +138,7 @@ export default function Login() {
         localStorage.setItem("token", data.data.token);
         localStorage.setItem("department", departmentVal);
         localStorage.setItem("jobLocation", formData.jobLocation);
+        localStorage.setItem("lastActiveTime", Date.now().toString());
 
         if (data.data.role === "doctor") {
           navigate("/doctor-dashboard", { replace: true });

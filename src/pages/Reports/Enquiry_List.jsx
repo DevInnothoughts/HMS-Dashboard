@@ -524,7 +524,6 @@ export default function EnquiryList({ isTab = false }) {
         <option value="Visited">Visited</option>
         <option value="Not Visited">Not Visited</option>
         <option value="Surgery Done">Surgery Done</option>
-        <option value="No FU done">No FU done</option>
       </Form.Select>
     </div>
   );
@@ -960,9 +959,6 @@ export default function EnquiryList({ isTab = false }) {
                           } else if (status === "Surgery Done") {
                             badgeBg = "#e8f5e9";
                             badgeColor = "#1b5e20";
-                          } else if (status === "No FU done") {
-                            badgeBg = "#ffebee";
-                            badgeColor = "#c62828";
                           } else if (status === "Not Visited") {
                             badgeBg = "#efebe9";
                             badgeColor = "#4e342e";
@@ -1404,7 +1400,6 @@ export default function EnquiryList({ isTab = false }) {
                 <option value="Visited">Visited</option>
                 <option value="Not Visited">Not Visited</option>
                 <option value="Surgery Done">Surgery Done</option>
-                <option value="No FU done">No FU done</option>
               </Form.Select>
             </Form.Group>
 

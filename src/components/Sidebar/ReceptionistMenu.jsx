@@ -127,6 +127,15 @@ const ReceptionistMenu = ({
                 </Link>
             </li>
 
+            <li className={`menu-item ${activeIndex === "/certificates" ? "active" : ""}`}>
+                <Link to="/certificates">
+                    <div className="icon-item">
+                        <i className="fa fa-certificate"></i>
+                    </div>
+                    {!isCollapsed && <span>Hospital Certificates</span>}
+                </Link>
+            </li>
+
             <li className={`menu-item ${activeIndex === "/bed-allotment" ? "active" : ""}`}>
                 <Link to="/bed-allotment">
                     <div className="icon-item">

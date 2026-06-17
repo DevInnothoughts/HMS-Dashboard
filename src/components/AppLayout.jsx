@@ -8,6 +8,7 @@ import Sidebar from "./Sidebar"; // Adjust path if needed
 // import Customizer from "./Customizer"; // Adjust path if needed
 import Taptotop from "./Taptotop"; // Adjust path if needed
 import { SidebarProvider } from "../pages/api/useSidebarContext"; // Adjust path if needed
+import ActiveSessionTracker from "./ActiveSessionTracker";
 
 
 // Routes that should *not* have the header/sidebar/customizer
@@ -36,6 +37,9 @@ const AppLayout = ({ children }) => {
 
   return (
     <SidebarProvider>
+      {/* Auto-logout tracker */}
+      <ActiveSessionTracker />
+
       {/* Conditionally render Header */}
       {shouldRenderExtras && headerEnabled && (
         localStorage.getItem("accountType") === "doctor" ? <DoctorHeader /> : <RecpHeader />

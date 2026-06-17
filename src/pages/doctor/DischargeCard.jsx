@@ -46,6 +46,7 @@ const DischargeCard = ({
   assistanceDoctors = [],
   fistulaCases = [],
   location = "default",
+  validationErrors = {},
 }) => {
   const [newTreatmentGiven, setNewTreatmentGiven] = useState({
     medicine_name: "",
@@ -353,7 +354,7 @@ const DischargeCard = ({
               }
               style={{
                 borderRadius: "10px",
-                border: "2px solid #b2ebf2",
+                border: validationErrors.discharge_type ? "2px solid red" : "2px solid #b2ebf2",
                 padding: "6px 12px",
                 fontSize: "12px",
               }}
@@ -543,25 +544,26 @@ const DischargeCard = ({
           </Col>
         </Row>
         <Row className="g-3 mb-4">
-          <Col md={12}>
+          <Col md={3}>
             <Form.Label
               className="fw-bold small mb-1"
               style={{ fontSize: "11px", color: "#006064" }}
             >
               SURGERY TYPE
             </Form.Label>
-            <Dropdown className="w-200 shadow-sm border-0">
+            <Dropdown className="shadow-sm border-0">
               <Dropdown.Toggle
                 variant="outline-info"
                 id="dropdown-surgery-type"
-                className="w-200 d-flex justify-content-between align-items-center bg-white text-dark"
+                className="d-flex justify-content-between align-items-center bg-white text-dark"
                 style={{
                   borderRadius: "12px",
                   border: "2px solid #b2ebf2",
                   padding: "5px 10px",
                   fontSize: "12px",
-                  minHeight: "48px",
+                  minHeight: "35px",
                   transition: "all 0.3s ease",
+                  width: "100%"
                 }}
               >
                 <div
@@ -579,12 +581,13 @@ const DischargeCard = ({
               </Dropdown.Toggle>
 
               <Dropdown.Menu
-                className="w-200 p-7 shadow-lg border-0 animate__animated animate__fadeIn animate__faster"
+                className="p-7 shadow-lg border-0 animate__animated animate__fadeIn animate__faster"
                 style={{
                   maxHeight: "250px",
                   overflowY: "auto",
                   borderRadius: "15px",
                   zIndex: 1050,
+                  minWidth: "1000px"
                 }}
               >
                 <div className="mb-2 pb-2 border-bottom d-flex justify-content-between align-items-center">
@@ -641,6 +644,26 @@ const DischargeCard = ({
                 </Row>
               </Dropdown.Menu>
             </Dropdown>
+          </Col>
+          <Col md={3}>
+            <Form.Label
+              className="fw-bold small mb-1"
+              style={{ fontSize: "11px", color: "#006064" }}
+            >
+              SURGERY DATE
+            </Form.Label>
+            <Form.Control
+              type="date"
+              value={dischargeData.surgery_date || ""}
+              onChange={(e) => handleDischargeChange("surgery_date", e.target.value)}
+              style={{
+                borderRadius: "12px",
+                border: "2px solid #b2ebf2",
+                padding: "6px 12px",
+                fontSize: "12px",
+                minHeight: "35px",
+              }}
+            />
           </Col>
         </Row>
       </div>
@@ -763,7 +786,7 @@ const DischargeCard = ({
               placeholder="Enter reason for admission..."
               style={{
                 borderRadius: "10px",
-                border: "2px solid #b2ebf2",
+                border: validationErrors.reason_for_admission ? "2px solid red" : "2px solid #b2ebf2",
                 padding: "6px 12px",
                 fontSize: "12px",
               }}
@@ -809,7 +832,7 @@ const DischargeCard = ({
               placeholder="Enter plan of treatment..."
               style={{
                 borderRadius: "10px",
-                border: "2px solid #b2ebf2",
+                border: validationErrors.plan_of_treatment ? "2px solid red" : "2px solid #b2ebf2",
                 padding: "6px 12px",
                 fontSize: "12px",
               }}
@@ -855,7 +878,7 @@ const DischargeCard = ({
               placeholder="Enter diagnosis..."
               style={{
                 borderRadius: "10px",
-                border: "2px solid #b2ebf2",
+                border: validationErrors.diagnosis ? "2px solid red" : "2px solid #b2ebf2",
                 padding: "6px 12px",
                 fontSize: "12px",
               }}
@@ -878,7 +901,7 @@ const DischargeCard = ({
               placeholder="Intraoperative findings, procedure details..."
               style={{
                 borderRadius: "10px",
-                border: "2px solid #b2ebf2",
+                border: validationErrors.surgery_note ? "2px solid red" : "2px solid #b2ebf2",
                 padding: "6px 12px",
                 fontSize: "12px",
               }}

@@ -7,8 +7,6 @@ import { InputText } from "primereact/inputtext";
 import { ColumnGroup } from "primereact/columngroup";
 import { saveAs } from "file-saver";
 import * as XLSX from "xlsx";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import PageBreadcrumb from "../../../components/PageBreadcrumb";
 import SimpleBar from "simplebar-react";
 import { decodeJwt } from "../../../utils/decode-jwt";
@@ -85,13 +83,13 @@ const OPDCollectionReports = () => {
       }
 
       const msg = await response.json();
-      
+
       // 1. Handle Backup/File Download logic from PHP
       if (msg.serachdata2?.success) {
         if (
           window.confirm(
             msg.serachdata2.message +
-              "\n\nDo you want to download the backup file?",
+            "\n\nDo you want to download the backup file?",
           )
         ) {
           window.location.href = msg.serachdata2.file_url;
@@ -256,64 +254,8 @@ const OPDCollectionReports = () => {
     return `${day}-${month}-${year}`;
   };
 
-  const downloadPDF = () => {
-    const doc = new jsPDF("l", "mm", "a4");
-    doc.text("OPD Collection Report", 14, 15);
-
-    const tableColumn = [
-      "Sr No",
-      "Patient Name",
-      "Receipt Date",
-      "Consultation",
-      "Cash",
-      "Card",
-      "Paytm",
-      "Online",
-      "Discount",
-      "UTR No",
-    ];
-    const tableRows = tableData.map((item, index) => [
-      index + 1,
-      item.patientName,
-      formatDateDisplay(item.receipt_date),
-      item.consultation,
-      item.cashamt,
-      item.cardamt,
-      item.paytmamt,
-      item.onlineamt,
-      item.discount,
-      item.utr,
-    ]);
-
-    // Add totals row
-    tableRows.push([
-      "Total",
-      "",
-      "",
-      "",
-      totals.cash,
-      totals.card,
-      totals.paytm,
-      totals.online,
-      totals.discount,
-      "",
-    ]);
-
-    autoTable(doc, {
-      head: [tableColumn],
-      body: tableRows,
-      startY: 20,
-      theme: "grid",
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [0, 172, 193] },
-      didParseCell: (data) => {
-        if (data.row.index === tableRows.length - 1) {
-          data.cell.styles.fontStyle = "bold";
-        }
-      },
-    });
-
-    doc.save("OPD_Collection_Report.pdf");
+  const handlePrint = () => {
+    window.print();
   };
 
   const renderHeader = () => {
@@ -382,7 +324,7 @@ const OPDCollectionReports = () => {
           </button>
           <button
             className="btn btn-danger btn-sm"
-            onClick={downloadPDF}
+            onClick={handlePrint}
             style={{
               display: "flex",
               alignItems: "center",
@@ -390,7 +332,7 @@ const OPDCollectionReports = () => {
               borderRadius: "8px",
             }}
           >
-            <i className="fa fa-file-pdf-o"></i> Download PDF
+            <i className="fa fa-print"></i> Print Report
           </button>
         </div>
       </div>
@@ -473,9 +415,14 @@ const OPDCollectionReports = () => {
                   }}
                 >
                   <h4 style={{ margin: 0 }}>OPD Collection Report</h4>
+                  {fromDate && toDate && (
+                    <div style={{ fontSize: "13px", fontWeight: "normal", marginTop: "5px" }}>
+                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b>
+                    </div>
+                  )}
                 </Card.Header>
                 <Card.Body style={{ padding: "5px" }}>
-                  <Form onSubmit={handleFind}>
+                  <Form onSubmit={handleFind} className="no-print">
                     <Row
                       className="align-items-end mb-4 flex-nowrap"
                       style={{ margin: "0 -5px" }}
@@ -641,6 +588,77 @@ const OPDCollectionReports = () => {
           border-bottom-left-radius: 8px;
           border-bottom-right-radius: 8px;
           padding: 5px;
+        }
+        @media print {
+          @page {
+            size: landscape;
+            margin: 10mm;
+          }
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .codex-sidebar,
+          .codex-header,
+          .codex-breadcrumb,
+          .scroll-top,
+          .no-print,
+          .p-datatable-header,
+          .p-paginator,
+          .simplebar-placeholder,
+          .simplebar-track,
+          .simplebar-scrollbar {
+            display: none !important;
+          }
+          body, html {
+            background: #fff !important;
+            color: #000 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            height: auto !important;
+            min-height: auto !important;
+          }
+          .themebody-wrap {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #fff !important;
+            min-height: auto !important;
+            height: auto !important;
+            page-break-after: avoid !important;
+          }
+          .theme-body,
+          .simplebar-content-wrapper,
+          .simplebar-mask,
+          .simplebar-wrapper,
+          .simplebar-offset,
+          .simplebar-content {
+            padding: 0 !important;
+            margin: 0 !important;
+            min-height: auto !important;
+            height: auto !important;
+            max-height: none !important;
+            overflow: visible !important;
+            position: relative !important;
+          }
+          .card {
+            border: none !important;
+            box-shadow: none !important;
+            page-break-inside: avoid !important;
+          }
+          .container-fluid {
+            padding: 0 !important;
+            width: 100% !important;
+          }
+          .custom-datatable {
+            border: 1px solid #ddd !important;
+            width: 100% !important;
+          }
+          .custom-datatable .p-datatable-thead > tr > th,
+          .custom-datatable .p-datatable-tbody > tr > td,
+          .custom-datatable .p-datatable-tfoot > tr > td {
+            font-size: 10px !important;
+            padding: 5px 3px !important;
+          }
         }
       `}</style>
     </div>

@@ -6,6 +6,14 @@ import painScoreChart from "../../assets/images/pain-score-chart.jpg";
 
 const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors, location: sitelocation, historyData = {} }, ref) => {
   const d = dischargeData || {};
+  const evitalLocations = [
+    'Ahmedabad', 'Lucknow', 'Secunderabad', 'Salunkhe-Vihar', 'Mohali', 'Katraj', 'Chakan',
+    'Ludhiana', 'Sarjapura', 'Rajajinagar', 'Pimpri-Chinchwad', 'Mysore', 'Aurangabad',
+    'Surat', 'Dighi', 'Baner', 'Bangalore', 'Nashik', 'Hadapsar', 'Indiranagar',
+    'Sahakarnagar', 'Thane', 'HSR', 'Vashi', 'Undri', 'Hyderabad', 'Gurgaon-14',
+    'Whitefield', 'Andheri', 'Navi-Mumbai', 'Kalyan'
+  ];
+  const isEvitalLocation = sitelocation && evitalLocations.map(loc => loc.toLowerCase().replace(/\s+/g, '')).includes(sitelocation.toLowerCase().replace(/\s+/g, ''));
   const consultantDoc = doctors.find(doc => String(doc.doctor_id) === String(d.consultant_doctor));
   const consultantName = consultantDoc ? consultantDoc.name : (d.consultant_doctor || '');
 
@@ -681,17 +689,31 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
             </thead>
             <tbody>
               {(d.treatment_given || []).length > 0 ? (
-                d.treatment_given.map((item, idx) => (
-                  <tr key={idx}>
-                    <td>{idx + 1}</td>
-                    <td>{item.medicine_type || ""}</td>
-                    <td>{item.medicine_name || item.name || ""}</td>
-                    <td>{item.medicine_strength ? (item.medicine_strength + (item.medicine_unit ? "/" + item.medicine_unit : "")) : (item.strength || "")}</td>
-                    <td>{item.medicine_time || item.times || ""}</td>
-                    <td>{item.medicine_route || item.route || ""}</td>
-                    <td>{item.medicine_duration || item.duration || ""}</td>
-                  </tr>
-                ))
+                d.treatment_given.map((item, idx) => {
+                  const frequency = isEvitalLocation
+                    ? ((item.medicine_time || item.times || "") + (item.medicine_quantity || item.qty ? ` (${item.medicine_quantity || item.qty})` : ""))
+                    : (item.medicine_time || item.times || "");
+
+                  const route = isEvitalLocation
+                    ? (item.route || item.medicine_days || "")
+                    : (item.medicine_route || item.route || "");
+
+                  const duration = isEvitalLocation
+                    ? (item.medicine_time || item.times || "")
+                    : (item.medicine_duration || item.duration || "");
+
+                  return (
+                    <tr key={idx}>
+                      <td>{idx + 1}</td>
+                      <td>{item.medicine_type || ""}</td>
+                      <td>{item.medicine_name || item.name || ""}</td>
+                      <td>{item.medicine_strength ? (item.medicine_strength + (item.medicine_unit ? "/" + item.medicine_unit : "")) : (item.strength || "")}</td>
+                      <td>{frequency}</td>
+                      <td>{route}</td>
+                      <td>{duration}</td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td colSpan="7" style={{ textAlign: "center" }}>No medication recorded</td>
@@ -784,10 +806,10 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
               <tr style={{ textAlign: "center", background: "#E7E9EB" }}>
                 <td style={{ width: "5%" }}><b>Sr. No</b></td>
                 <td style={{ width: "5%" }}><b>Type</b></td>
-                <td style={{ width: "25%" }}><b>Medicine Name</b></td>
+                <td style={{ width: "20%" }}><b>Medicine Name</b></td>
                 <td style={{ width: "15%" }}><b>Strength/Unit</b></td>
                 <td style={{ width: "30%" }}><b>Frequency<br />With special instructions</b></td>
-                <td style={{ width: "8%" }}><b>Route</b></td>
+                {/* <td style={{ width: "8%" }}><b>Route</b></td> */}
                 <td style={{ width: "9%" }}><b>Duration<br />(Days)</b></td>
                 <td style={{ width: "8%" }}><b>Total Qty</b></td>
               </tr>
@@ -797,7 +819,7 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
                 d.treatment_on_discharge.map((item, idx) => {
                   const name = (item.medicine_name || item.name || "").toUpperCase().trim();
                   const medTime = (item.medicine_time || item.times || []).join(", ");
-                  const dosageFreq = item.dosage_frequency || "";
+                  const dosageFreq = item.dosage_frequency || item.frequency || "";
 
                   let frequencyDisplay;
                   if (name === "PRILOX CREAM") {
@@ -820,16 +842,20 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
                     frequencyDisplay = displayTimes.join(" ....... ");
                   }
 
+                  const formattedType = item.medicine_type
+                    ? (item.medicine_type.charAt(0).toUpperCase() + item.medicine_type.slice(1))
+                    : "";
+
                   return (
                     <tr key={idx}>
-                      <td>{idx + 1}</td>
-                      <td>{item.medicine_type || ""}</td>
-                      <td>{item.medicine_name || item.name || ""}</td>
-                      <td>{item.strengthunit || item.strength_unit || ""}</td>
-                      <td>{frequencyDisplay}</td>
-                      <td>{item.medicine_route || item.route || ""}</td>
-                      <td>{item.medicine_days || item.days || ""}</td>
-                      <td>{item.medicine_quantity || item.qty || ""}</td>
+                      <td style={{ width: "5%" }}>{idx + 1}</td>
+                      <td style={{ width: "5%" }}>{formattedType}</td>
+                      <td style={{ width: "20%" }}>{item.medicine_name || item.name || ""}</td>
+                      <td style={{ width: "15%" }}>{item.strengthunit || item.strength_unit || ""}</td>
+                      <td style={{ width: "30%" }}>{frequencyDisplay}</td>
+                      {/* <td style={{ width: "8%" }}>{item.medicine_route || item.route || ""}</td> */}
+                      <td style={{ width: "9%" }}>{item.medicine_days || item.days || ""}</td>
+                      <td style={{ width: "8%" }}>{item.medicine_quantity || item.qty || ""}</td>
                     </tr>
                   );
                 })

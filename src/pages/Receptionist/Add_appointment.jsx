@@ -341,6 +341,10 @@ export default function Add_appointment() {
     if (currentLocation) fetchDropdownData();
   }, [currentLocation, fetchDropdownData]);
 
+  useEffect(() => {
+    console.log("Current Form Data (entering data):", formData);
+  }, [formData]);
+
   const handleInputChange = (e) => {
     const { name, value, tagName } = e.target;
     if (name === "doctorName") {
@@ -416,6 +420,7 @@ export default function Add_appointment() {
         saveType,
         countryCode: getCountryCode(formData.patient_phone),
       };
+      console.log("Submitting Appointment Payload:", payload);
       try {
         const response = await fetch(
           `${BASE_URL}/V1/appointment/addAppointment?location=${currentLocation}`,
@@ -454,7 +459,25 @@ export default function Add_appointment() {
         setLoading(false);
       }
     } else {
-      Toast.fire({ icon: "warning", title: "Fill all required fields" });
+      const fieldLabels = {
+        patient_phone: "Contact Number",
+        patient_type: "Patient Type",
+        date: "Appointment Date",
+        appointmentTime: "Appointment Time",
+        patientName: "Patient Name",
+        treatment: "Treatment",
+        patient_location: "Patient Address",
+        doctorName: "Doctor Name",
+        FDE_Name: "FDE Name",
+        reference: "Reference",
+      };
+      const missingFields = Object.keys(validationErrors)
+        .map((key) => fieldLabels[key] || key)
+        .join(", ");
+      Toast.fire({
+        icon: "warning",
+        title: `Missing fields: ${missingFields}`,
+      });
     }
   };
 
@@ -653,29 +676,29 @@ export default function Add_appointment() {
                     </Col>
                     {(formData.patient_type === "OTHER" ||
                       formData.treatment) && (
-                      <Col md={4}>
-                        <Form.Label style={labelStyle}>
-                          Treatment <span className="text-danger">*</span>
-                        </Form.Label>
-                        <Form.Select
-                          required
-                          style={inputStyle}
-                          name="treatment"
-                          value={formData.treatment}
-                          onChange={handleInputChange}
-                        >
-                          <option value="">Select Treatment</option>
-                          {treatmentList?.map((t) => (
-                            <option
-                              key={t.treatment_name}
-                              value={t.treatment_name}
-                            >
-                              {t.treatment_name}
-                            </option>
-                          ))}
-                        </Form.Select>
-                      </Col>
-                    )}
+                        <Col md={4}>
+                          <Form.Label style={labelStyle}>
+                            Treatment <span className="text-danger">*</span>
+                          </Form.Label>
+                          <Form.Select
+                            required
+                            style={inputStyle}
+                            name="treatment"
+                            value={formData.treatment}
+                            onChange={handleInputChange}
+                          >
+                            <option value="">Select Treatment</option>
+                            {treatmentList?.map((t) => (
+                              <option
+                                key={t.treatment_name}
+                                value={t.treatment_name}
+                              >
+                                {t.treatment_name}
+                              </option>
+                            ))}
+                          </Form.Select>
+                        </Col>
+                      )}
 
                     {formData.patient_type === "New" && (
                       <Col md={4}>
