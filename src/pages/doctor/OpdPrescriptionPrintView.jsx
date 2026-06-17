@@ -312,7 +312,7 @@ const OpdPrescriptionPrintView = React.forwardRef(
           <div className="row-flex">
             <div style={{ width: "100%" }}>
               {d.doctor_comment && (
-                <p>
+                <p style={{ marginBottom: "15px" }}>
                   <span className="fw-bold">Doctor Comment :</span> {d.doctor_comment}
                 </p>
               )}

@@ -1859,10 +1859,7 @@ const InvoiceList = () => {
                             }}
                             variant="primary"
                             disabled={
-                              parseFloat(rowData.payable_amt || 0) >
-                              parseFloat(rowData.totaldue !== undefined ? rowData.totaldue : rowData.due_amt !== undefined ? rowData.due_amt : rowData.payable_amt || 0) ||
-                              parseFloat(rowData.receivedamt || 0) > 0 ||
-                              parseFloat(rowData.received_amt || 0) > 0
+                              rowData.payment_count > 0
                             }
                             onClick={() => handleEditInvoice(rowData)}
                           >

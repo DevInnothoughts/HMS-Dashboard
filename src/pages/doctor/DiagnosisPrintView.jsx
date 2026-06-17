@@ -536,12 +536,26 @@ const DiagnosisPrintView = React.forwardRef(
                   "Urgency",
                   "Frequency",
                 ];
-                let odsData = [];
-                try {
-                  odsData = JSON.parse(row2.ODS_duration || "[]");
-                } catch (e) {
-                  odsData = [];
-                }
+                 let odsData = [];
+                 const rawOds = row2.ODS_duration || row2.ods_duration;
+                 if (rawOds) {
+                   if (Array.isArray(rawOds)) {
+                     odsData = rawOds;
+                   } else if (typeof rawOds === "string") {
+                     try {
+                       const parsed = JSON.parse(rawOds);
+                       if (Array.isArray(parsed)) {
+                         odsData = parsed;
+                       } else {
+                         odsData = ["", rawOds];
+                       }
+                     } catch (e) {
+                       odsData = ["", rawOds];
+                     }
+                   } else {
+                     odsData = ["", String(rawOds)];
+                   }
+                 }
                 const hasODS =
                   ODSSymptoms.some((s) => symptoms.includes(s)) ||
                   (odsData && odsData.length > 0 && (odsData[0] || odsData[1]));

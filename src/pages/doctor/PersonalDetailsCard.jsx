@@ -811,14 +811,26 @@ const PersonalDetailsCard = () => {
 
         let parsedOdsBowelHabits = "";
         let parsedOdsDuration = "";
-        if (d.ODS_duration) {
-          try {
-            const arr = JSON.parse(d.ODS_duration);
-            if (Array.isArray(arr)) {
-              parsedOdsBowelHabits = arr[0] || "";
-              parsedOdsDuration = arr[1] || "";
+        const odsRaw = d.ODS_duration || d.ods_duration;
+        if (odsRaw) {
+          if (Array.isArray(odsRaw)) {
+            parsedOdsBowelHabits = odsRaw[0] || "";
+            parsedOdsDuration = odsRaw[1] || "";
+          } else if (typeof odsRaw === "string") {
+            try {
+              const arr = JSON.parse(odsRaw);
+              if (Array.isArray(arr)) {
+                parsedOdsBowelHabits = arr[0] || "";
+                parsedOdsDuration = arr[1] || "";
+              } else {
+                parsedOdsDuration = odsRaw;
+              }
+            } catch (e) {
+              parsedOdsDuration = odsRaw;
             }
-          } catch (e) { }
+          } else {
+            parsedOdsDuration = String(odsRaw);
+          }
         }
 
         const investigationTypes = [
@@ -947,14 +959,14 @@ const PersonalDetailsCard = () => {
           height_feet: d.height || "",
           weight_kg: d.weight || "",
           painscale: d.painscale?.toString() || "1",
-          vital_bp: d.BP || "",
-          vital_pulse: d.Pulse || "",
-          vital_rr: d.RR || "",
-          rs: d.RS || "",
-          cvs: d.CVS || "",
-          cns: d.CNS || "",
+          vital_bp: d.BP || d.bp || "",
+          vital_pulse: d.Pulse || d.pulse || "",
+          vital_rr: d.RR || d.rr || "",
+          rs: d.RS || d.rs || "",
+          cvs: d.CVS || d.cvs || "",
+          cns: d.CNS || d.cns || "",
           pa: "",
-          "p/a": d.PA || "", // This is the one used by the UI
+          "p/a": d.PA || d.pa || d["p/a"] || d["P/A"] || "", // This is the one used by the UI
 
           piles_duration: d.piles_duration || "",
           fistula_duration: d.fistula_duration || "",
@@ -964,10 +976,10 @@ const PersonalDetailsCard = () => {
           pilonidal_comment: d.pilonidalsinus || "",
           circumcision_comment: d.circumcision || "",
 
-          urinary_duration: d.Urinary_incontinence_duration || "",
+          urinary_duration: d.Urinary_incontinence_duration || d.urinary_incontinence_duration || "",
           urinary_incontinence: symptomsArr.includes("Urinary Incontinence"),
 
-          fecal_duration: d.Fecal_incontinence_duration || "",
+          fecal_duration: d.Fecal_incontinence_duration || d.fecal_incontinence_duration || "",
           fecal_incontinence: symptomsArr.includes("Fecal Incontinence"),
 
           ods_bowel_habits: parsedOdsBowelHabits,
@@ -5643,6 +5655,7 @@ const PersonalDetailsCard = () => {
               dischargeData={dischargeData}
               formData={formData}
               doctors={doctors}
+              assistanceDoctors={assistanceDoctors}
               location={currentLocation}
               historyData={historyForPrint}
             />

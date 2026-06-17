@@ -134,7 +134,7 @@ export default function DoctorOpdPatientList() {
 
   useEffect(() => {
     fetchDropdownData();
-  }, []);
+  }, [currentLocation]);
 
   const calculateAge = (birthDate) => {
     if (!birthDate) return "";
@@ -2314,6 +2314,7 @@ export default function DoctorOpdPatientList() {
                 dischargeData={printData.discharge}
                 formData={printData.patient}
                 doctors={doctors}
+                assistanceDoctors={doctors}
                 location={currentLocation}
                 historyData={printData.history}
               />

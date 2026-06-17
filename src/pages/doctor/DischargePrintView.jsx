@@ -4,7 +4,7 @@ import nabhLogo from "../../assets/images/nabh-logo.png";
 import painScoreChart from "../../assets/images/pain-score-chart.jpg";
 
 
-const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors, location: sitelocation, historyData = {} }, ref) => {
+const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors = [], assistanceDoctors = [], location: sitelocation, historyData = {} }, ref) => {
   const d = dischargeData || {};
   const evitalLocations = [
     'Ahmedabad', 'Lucknow', 'Secunderabad', 'Salunkhe-Vihar', 'Mohali', 'Katraj', 'Chakan',
@@ -19,8 +19,8 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
 
   const madeByDoc = doctors.find(doc => String(doc.doctor_id) === String(d.made_by || d.madeby));
   const checkedByDoc = doctors.find(doc => String(doc.doctor_id) === String(d.checked_by || d.checkedby));
-  const assistantDoc = doctors.find(doc => String(doc.doctor_id) === String(d.assistance_doctor));
-  const prescriptionAssignDoc = doctors.find(doc => String(doc.doctor_id) === String(d.assistance_surgeon || d.prescriptionAssign));
+  const assistantDoc = (assistanceDoctors || []).find(doc => String(doc.doctor_id) === String(d.assistance_doctor)) || doctors.find(doc => String(doc.doctor_id) === String(d.assistance_doctor));
+  const prescriptionAssignDoc = doctors.find(doc => String(doc.doctor_id) === String(d.assistance_surgeon || d.prescriptionAssign)) || (assistanceDoctors || []).find(doc => String(doc.doctor_id) === String(d.assistance_surgeon || d.prescriptionAssign));
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '';
