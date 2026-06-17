@@ -836,9 +836,30 @@ const OpdPrescriptionCard = ({
                   fontSize: "12px",
                   backgroundColor:
                     prescriptionData.patient_type === "surgery_patient" ||
-                    prescriptionData.patient_type === "nofollowupappointment"
+                      prescriptionData.patient_type === "nofollowupappointment"
                       ? "#e9ecef"
                       : "white",
+                }}
+              />
+            </Col>
+            <Col md={3} className="mb-3">
+              <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>
+                Doctor Comment
+              </Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={1}
+                disabled={prescriptionData.no_medicines_prescribed}
+                value={prescriptionData.doctor_comment || ""}
+                onChange={(e) =>
+                  handlePrescriptionChange("doctor_comment", e.target.value)
+                }
+                placeholder="Doctor comment..."
+                style={{
+                  borderRadius: "10px",
+                  border: "2px solid #b2ebf2",
+                  padding: "6px 12px",
+                  fontSize: "12px",
                 }}
               />
             </Col>
@@ -1041,8 +1062,8 @@ const OpdPrescriptionCard = ({
                     const fullSearchValue = med.content
                       ? `${med.name}`
                       : `${med.name} ${medType} ${strength} ${unit}`
-                          .replace(/\s+/g, " ")
-                          .trim();
+                        .replace(/\s+/g, " ")
+                        .trim();
                     return (
                       <div
                         key={med.medicine_id}
@@ -1118,8 +1139,8 @@ const OpdPrescriptionCard = ({
                         const updated = e.target.checked
                           ? [...(currentMedicine.times || []), slot]
                           : (currentMedicine.times || []).filter(
-                              (t) => t !== slot,
-                            );
+                            (t) => t !== slot,
+                          );
                         setCurrentMedicine((prev) => ({
                           ...prev,
                           times: updated,
@@ -1187,173 +1208,173 @@ const OpdPrescriptionCard = ({
 
           {(prescriptionData.medicines?.length > 0 ||
             prescriptionData.no_medicines_prescribed) && (
-            <div className="mt-4 rounded overflow-hidden border">
-              <Table responsive hover className="mb-0">
-                <thead
-                  style={{
-                    backgroundColor: "#f1fcfd",
-                    borderBottom: "2px solid #b2ebf2",
-                  }}
-                >
-                  <tr>
-                    <th
-                      className="py-2 px-3 border-0"
-                      style={{ fontSize: "14px", width: "15%" }}
-                    >
-                      Medicine Name
-                    </th>
-                    <th
-                      className="py-2 px-3 border-0 text-center"
-                      style={{ fontSize: "14px", width: "25%" }}
-                    >
-                      Qty
-                    </th>
-                    <th
-                      className="py-2 px-3 border-0"
-                      style={{ fontSize: "14px", width: "30%" }}
-                    >
-                      Dosage Intervals
-                    </th>
-                    <th
-                      className="py-2 px-3 border-0 text-center"
-                      style={{ fontSize: "14px", width: "20%" }}
-                    >
-                      Duration
-                    </th>
-                    <th
-                      className="py-2 px-3 border-0 text-center"
-                      style={{ fontSize: "14px", width: "10%" }}
-                    >
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {prescriptionData.no_medicines_prescribed ? (
+              <div className="mt-4 rounded overflow-hidden border">
+                <Table responsive hover className="mb-0">
+                  <thead
+                    style={{
+                      backgroundColor: "#f1fcfd",
+                      borderBottom: "2px solid #b2ebf2",
+                    }}
+                  >
                     <tr>
-                      <td colSpan="5" className="text-center py-3">
-                        <i className="fw-bold">No Medicines Prescribed</i>
-                      </td>
+                      <th
+                        className="py-2 px-3 border-0"
+                        style={{ fontSize: "14px", width: "15%" }}
+                      >
+                        Medicine Name
+                      </th>
+                      <th
+                        className="py-2 px-3 border-0 text-center"
+                        style={{ fontSize: "14px", width: "25%" }}
+                      >
+                        Qty
+                      </th>
+                      <th
+                        className="py-2 px-3 border-0"
+                        style={{ fontSize: "14px", width: "30%" }}
+                      >
+                        Dosage Intervals
+                      </th>
+                      <th
+                        className="py-2 px-3 border-0 text-center"
+                        style={{ fontSize: "14px", width: "20%" }}
+                      >
+                        Duration
+                      </th>
+                      <th
+                        className="py-2 px-3 border-0 text-center"
+                        style={{ fontSize: "14px", width: "10%" }}
+                      >
+                        Action
+                      </th>
                     </tr>
-                  ) : (
-                    prescriptionData.medicines.map((m, idx) => (
-                      <tr key={idx} className="align-middle">
-                        <td
-                          className="py-2 px-3 fw-bold"
-                          style={{ fontSize: "14px" }}
-                        >
-                          {m.name}
-                        </td>
-                        <td className="py-2 px-3 fw-bold text-center">
-                          <span
-                            className="px-2 py-1"
-                            style={{ fontSize: "13px" }}
-                          >
-                            {m.qty} Units
-                          </span>
-                        </td>
-                        <td className="py-2 px-3 fw-bold">
-                          {editingMedicineIndex === idx ? (
-                            <div className="d-flex flex-wrap gap-1">
-                              {timeSlots.map((slot) => (
-                                <Form.Check
-                                  key={slot}
-                                  type="checkbox"
-                                  label={slot}
-                                  checked={m.times?.includes(slot)}
-                                  onChange={(e) => {
-                                    const newMedicines = [
-                                      ...prescriptionData.medicines,
-                                    ];
-                                    const updatedTimes = e.target.checked
-                                      ? [...(m.times || []), slot]
-                                      : (m.times || []).filter(
-                                          (t) => t !== slot,
-                                        );
-                                    newMedicines[idx] = {
-                                      ...m,
-                                      times: updatedTimes,
-                                    };
-                                    handlePrescriptionChange(
-                                      "medicines",
-                                      newMedicines,
-                                    );
-                                  }}
-                                  style={{
-                                    fontSize: "13px",
-                                    marginRight: "8px",
-                                  }}
-                                />
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="d-flex flex-wrap gap-1">
-                              {m.times?.map((t) => (
-                                <span
-                                  key={t}
-                                  className="py-1 px-2"
-                                  style={{
-                                    fontSize: "13px",
-                                    backgroundColor: "#e0f7fa",
-                                    borderRadius: "4px",
-                                  }}
-                                >
-                                  {t}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                        </td>
-                        <td
-                          className="py-2 px-3 fw-semibold fw-bold text-center"
-                          style={{ fontSize: "13px" }}
-                        >
-                          {m.days} Days
-                        </td>
-                        <td className="py-2 px-3 text-center">
-                          {m.name !== "Constac Powder" && (
-                            <Button
-                              variant={
-                                editingMedicineIndex === idx
-                                  ? "success"
-                                  : "info"
-                              }
-                              size="sm"
-                              className="p-5 px-4 me-2"
-                              onClick={() => {
-                                if (editingMedicineIndex === idx) {
-                                  setEditingMedicineIndex(null);
-                                } else {
-                                  setEditingMedicineIndex(idx);
-                                }
-                              }}
-                            >
-                              <FeatherIcon
-                                icon={
-                                  editingMedicineIndex === idx
-                                    ? "check"
-                                    : "edit-2"
-                                }
-                                size="14"
-                              />
-                            </Button>
-                          )}
-                          <Button
-                            variant="danger"
-                            size="sm"
-                            className="p-5 px-4"
-                            onClick={() => handleRemoveMedicine(idx)}
-                          >
-                            <FeatherIcon icon="trash" size="14" />
-                          </Button>
+                  </thead>
+                  <tbody>
+                    {prescriptionData.no_medicines_prescribed ? (
+                      <tr>
+                        <td colSpan="5" className="text-center py-3">
+                          <i className="fw-bold">No Medicines Prescribed</i>
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </Table>
-            </div>
-          )}
+                    ) : (
+                      prescriptionData.medicines.map((m, idx) => (
+                        <tr key={idx} className="align-middle">
+                          <td
+                            className="py-2 px-3 fw-bold"
+                            style={{ fontSize: "14px" }}
+                          >
+                            {m.name}
+                          </td>
+                          <td className="py-2 px-3 fw-bold text-center">
+                            <span
+                              className="px-2 py-1"
+                              style={{ fontSize: "13px" }}
+                            >
+                              {m.qty} Units
+                            </span>
+                          </td>
+                          <td className="py-2 px-3 fw-bold">
+                            {editingMedicineIndex === idx ? (
+                              <div className="d-flex flex-wrap gap-1">
+                                {timeSlots.map((slot) => (
+                                  <Form.Check
+                                    key={slot}
+                                    type="checkbox"
+                                    label={slot}
+                                    checked={m.times?.includes(slot)}
+                                    onChange={(e) => {
+                                      const newMedicines = [
+                                        ...prescriptionData.medicines,
+                                      ];
+                                      const updatedTimes = e.target.checked
+                                        ? [...(m.times || []), slot]
+                                        : (m.times || []).filter(
+                                          (t) => t !== slot,
+                                        );
+                                      newMedicines[idx] = {
+                                        ...m,
+                                        times: updatedTimes,
+                                      };
+                                      handlePrescriptionChange(
+                                        "medicines",
+                                        newMedicines,
+                                      );
+                                    }}
+                                    style={{
+                                      fontSize: "13px",
+                                      marginRight: "8px",
+                                    }}
+                                  />
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="d-flex flex-wrap gap-1">
+                                {m.times?.map((t) => (
+                                  <span
+                                    key={t}
+                                    className="py-1 px-2"
+                                    style={{
+                                      fontSize: "13px",
+                                      backgroundColor: "#e0f7fa",
+                                      borderRadius: "4px",
+                                    }}
+                                  >
+                                    {t}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </td>
+                          <td
+                            className="py-2 px-3 fw-semibold fw-bold text-center"
+                            style={{ fontSize: "13px" }}
+                          >
+                            {m.days} Days
+                          </td>
+                          <td className="py-2 px-3 text-center">
+                            {m.name !== "Constac Powder" && (
+                              <Button
+                                variant={
+                                  editingMedicineIndex === idx
+                                    ? "success"
+                                    : "info"
+                                }
+                                size="sm"
+                                className="p-5 px-4 me-2"
+                                onClick={() => {
+                                  if (editingMedicineIndex === idx) {
+                                    setEditingMedicineIndex(null);
+                                  } else {
+                                    setEditingMedicineIndex(idx);
+                                  }
+                                }}
+                              >
+                                <FeatherIcon
+                                  icon={
+                                    editingMedicineIndex === idx
+                                      ? "check"
+                                      : "edit-2"
+                                  }
+                                  size="14"
+                                />
+                              </Button>
+                            )}
+                            <Button
+                              variant="danger"
+                              size="sm"
+                              className="p-5 px-4"
+                              onClick={() => handleRemoveMedicine(idx)}
+                            >
+                              <FeatherIcon icon="trash" size="14" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </Table>
+              </div>
+            )}
         </fieldset>
       </div>
 

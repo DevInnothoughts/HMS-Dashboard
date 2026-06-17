@@ -1218,13 +1218,8 @@ const PersonalDetailsCard = () => {
 
     const errors = {};
 
-    // Check Specialty Findings
-    const hasSpecialityData = Object.values(
-      diagnosisData.speciality_data || {},
-    ).some((v) => (Array.isArray(v) ? v.length > 0 : v && v.trim() !== ""));
-    if (!hasSpecialityData) {
-      errors.speciality_data = true;
-    }
+    // Check Specialty Findings (No longer required)
+
 
     if (
       !diagnosisData.diagnosis_text ||
@@ -1253,7 +1248,6 @@ const PersonalDetailsCard = () => {
 
     if (!hasData || Object.keys(errors).length > 0) {
       if (!hasData) {
-        errors.speciality_data = true;
         errors.diagnosis_text = true;
         errors.advice_types = true;
         errors.consultant_doctor = true;
@@ -1883,6 +1877,7 @@ const PersonalDetailsCard = () => {
     "next-appo-date": new Date(Date.now() + 86400000)
       .toISOString()
       .split("T")[0],
+    doctor_comment: "",
     medicines: [],
     // Urology Fields
     udoctor_id: "",

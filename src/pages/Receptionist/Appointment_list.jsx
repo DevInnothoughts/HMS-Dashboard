@@ -238,6 +238,7 @@ export default function Appointment_list() {
   const [appointmentData, setAppointmentData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isDbSearching, setIsDbSearching] = useState(false);
+  const [refreshNeeded, setRefreshNeeded] = useState(false); // ← triggers re-fetch after receipt generation
   const [filters, setFilters] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
     patient_type: { value: null, matchMode: FilterMatchMode.EQUALS },
@@ -275,6 +276,12 @@ export default function Appointment_list() {
         newSet.add(location.state.registered_appointment_id);
         return newSet;
       });
+    }
+    // ↓ Triggered when returning from ReceiptList after generating a receipt
+    if (location.state?.receipt_generated) {
+      setRefreshNeeded(true); // ← handled by a separate useEffect that has fetchAppointmentData in scope
+      // Clear the flag so it doesn't re-fire on further navigation
+      window.history.replaceState({}, document.title);
     }
   }, [location.state]);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -381,7 +388,11 @@ export default function Appointment_list() {
         Swal.fire("Success", "Receipt Generated Successfully", "success");
         setShowReceiptModal(false);
         navigate("/reports/receipts", {
-          state: { printReceiptId: result.data?.receipt_id },
+          state: {
+            printReceiptId: result.data?.receipt_id,
+            receipt_generated: true,     // ← tells Appointment_list to refresh on back-nav
+            returnTo: "/appointments",
+          },
         });
       } else if (
         result.statusCode === 202 &&
@@ -490,7 +501,7 @@ export default function Appointment_list() {
           timer: 2000,
         });
         setShowReceiptModal(false);
-        navigate("/reports/receipts");
+        navigate("/reports/receipts", { state: { receipt_generated: true, returnTo: "/appointments" } });
       } else if (result.dismiss === Swal.DismissReason.cancel) {
         const confirmCancel = await Swal.fire({
           title: "Are you sure?",
@@ -846,6 +857,14 @@ export default function Appointment_list() {
     fetchAppointmentData,
     fetchDropdownData,
   ]);
+
+  // Refresh appointment data when returning from receipt generation
+  useEffect(() => {
+    if (refreshNeeded && currentLocation !== "default") {
+      fetchAppointmentData();
+      setRefreshNeeded(false);
+    }
+  }, [refreshNeeded, currentLocation, fetchAppointmentData]);
 
   useEffect(() => {
     if (selectedAppointment) {

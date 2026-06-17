@@ -567,6 +567,22 @@ const FollowUpPrintView = React.forwardRef(
                           </p>
                         </div>
                       </div>
+                      {(diag.advice_types?.length > 0 || diag.diagnosis_comment) && (
+                        <div className="row">
+                          <div className="col-md-12">
+                            <p>
+                              <b>Advice Type :</b>&nbsp;
+                              {diag.advice_types?.join(" , ")}
+                              {diag.advice_types?.length > 0 && diag.diagnosis_comment
+                                ? " , "
+                                : ""}
+                              {diag.diagnosis_comment
+                                ? `Comment: ${diag.diagnosis_comment}`
+                                : ""}
+                            </p>
+                          </div>
+                        </div>
+                      )}
                       <div className="row">
                         <div className="col-md-12">
                           <p>

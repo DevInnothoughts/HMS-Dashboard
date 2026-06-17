@@ -762,8 +762,7 @@ const DiagnosisCard = ({
                   className="fw-bold mb-0"
                   style={{ fontSize: "13px", color: "#006064" }}
                 >
-                  Select Specialty Type & Findings{" "}
-                  <span className="text-danger">*</span>
+                  Select Specialty Type & Findings
                 </Form.Label>
               </div>
               <Card

@@ -348,8 +348,8 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
     },
     "Mysore": {
       AssistantSurgeon: "8884884485",
-      Physiotherapist: "9066466113",
-      Insurance: "7259605091",
+      Physiotherapist: "8884884496",
+      Insurance: "8884884418",
       Nutritionist: "8884884496",
       QueriesSMS: "8884884496",
       Helpline: "8884884496",
@@ -540,6 +540,7 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
             width: 100%;
             display: flex;
             align-items: center;
+            justify-content: center;
             padding: 5px 0px;
             border-top: 2px solid #000;
             border-bottom: 2px solid #000;
@@ -557,6 +558,10 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
           .discharge-print-container b, .discharge-print-container strong {
             font-weight: 700;
           }
+          .discharge-print-container p {
+            color: #000 !important;
+            margin: 0;
+          }
           .discharge-print-container .NABH {
             display: none !important;
           }
@@ -564,8 +569,7 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
       `}</style>
 
       {sitelocation === "DP Road" ? (
-        <div className="row" style={{ display: "flex", alignItems: "center" }}>
-          <div style={{ width: "5%" }}></div>
+        <div className="row" style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
           <div style={{ width: "30%" }}>
             <img src="https://www.healinghandsclinic.co.in/images/LP/HHC-LOGO.webp" alt="Healing Hands Clinic" className="hhc-logo" />
           </div>
@@ -579,7 +583,6 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
         </div>
       ) : (
         <div className="dischargetitle">
-          <div style={{ width: "5%" }}></div>
           <div style={{ width: "25%" }}>
             <img src="https://www.healinghandsclinic.co.in/images/LP/HHC-LOGO.webp" alt="Healing Hands Clinic" className="hhc-logo" />
           </div>
@@ -592,8 +595,7 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
         </div>
       )}
 
-      <div style={{ display: "flex" }}>
-        <div style={{ width: "5%" }}></div>
+      <div style={{ display: "flex", justifyContent: "center" }}>
         <div style={{ width: "95%" }}>
           <table className="bordered FontAdjustment">
             <tbody>
@@ -642,8 +644,7 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
       </div>
       <br />
 
-      <div style={{ display: "flex" }}>
-        <div style={{ width: "5%" }}></div>
+      <div style={{ display: "flex", justifyContent: "center" }}>
         <div style={{ width: "95%" }}>
           <table className="bordered FontAdjustment">
             <tbody>
@@ -668,12 +669,10 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
       </div>
       <br />
 
-      <div className="FontAdjustment" style={{ display: "flex" }}>
-        <div style={{ width: "5%" }}></div>
+      <div className="FontAdjustment" style={{ display: "flex", justifyContent: "center" }}>
         <div style={{ width: "95%" }}><b>MEDICATION GIVEN DURING TREATMENT</b></div>
       </div>
-      <div style={{ display: "flex" }}>
-        <div style={{ width: "5%" }}></div>
+      <div style={{ display: "flex", justifyContent: "center" }}>
         <div style={{ width: "95%" }}>
           <table className="MedicineTable FontAdjustment">
             <thead>
@@ -702,12 +701,16 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
                     ? (item.medicine_time || item.times || "")
                     : (item.medicine_duration || item.duration || "");
 
+                  const strengthDisplay = (item.medicine_strength && item.medicine_unit)
+                    ? `${item.medicine_strength}/${item.medicine_unit}`
+                    : (item.medicine_strength || item.medicine_unit || item.strengthunit || item.strength_unit || item.strength || "");
+
                   return (
                     <tr key={idx}>
                       <td>{idx + 1}</td>
                       <td>{item.medicine_type || ""}</td>
                       <td>{item.medicine_name || item.name || ""}</td>
-                      <td>{item.medicine_strength ? (item.medicine_strength + (item.medicine_unit ? "/" + item.medicine_unit : "")) : (item.strength || "")}</td>
+                      <td>{strengthDisplay}</td>
                       <td>{frequency}</td>
                       <td>{route}</td>
                       <td>{duration}</td>
@@ -725,12 +728,10 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
       </div>
       <br />
 
-      <div className="FontAdjustment" style={{ display: "flex" }}>
-        <div style={{ width: "5%" }}></div>
+      <div className="FontAdjustment" style={{ display: "flex", justifyContent: "center" }}>
         <div style={{ width: "95%" }}><b>DETAILS OF TESTS CONDUCTED WITH RESULTS</b></div>
       </div>
-      <div style={{ display: "flex" }}>
-        <div style={{ width: "5%" }}></div>
+      <div style={{ display: "flex", justifyContent: "center" }}>
         <div style={{ width: "95%" }}>
           <table className="bordered FontAdjustment">
             <tbody>
@@ -748,12 +749,10 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
       </div>
       <br />
 
-      <div className="FontAdjustment" style={{ display: "flex" }}>
-        <div style={{ width: "5%" }}></div>
+      <div className="FontAdjustment" style={{ display: "flex", justifyContent: "center" }}>
         <div style={{ width: "95%" }}><b>DETAILS OF SURGERY PERFORMED</b></div>
       </div>
-      <div style={{ display: "flex" }}>
-        <div style={{ width: "5%" }}></div>
+      <div style={{ display: "flex", justifyContent: "center" }}>
         <div style={{ width: "95%" }}>
           <table className="bordered FontAdjustment">
             <tbody>
@@ -769,12 +768,10 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
       </div>
       <br />
 
-      <div className="FontAdjustment" style={{ display: "flex" }}>
-        <div style={{ width: "5%" }}></div>
+      <div className="FontAdjustment" style={{ display: "flex", justifyContent: "center" }}>
         <div style={{ width: "95%" }}><b>PATIENT'S CONDITION AT THE TIME OF DISCHARGE</b></div>
       </div>
-      <div style={{ display: "flex" }}>
-        <div style={{ width: "5%" }}></div>
+      <div style={{ display: "flex", justifyContent: "center" }}>
         <div style={{ width: "95%" }}>
           <table className="bordered FontAdjustment">
             <tbody>
@@ -794,12 +791,10 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
       </div>
       <br />
 
-      <div className="FontAdjustment" style={{ display: "flex" }}>
-        <div style={{ width: "5%" }}></div>
+      <div className="FontAdjustment" style={{ display: "flex", justifyContent: "center" }}>
         <div style={{ width: "95%" }}><b>MEDICINES ADVISED AT THE TIME OF DISCHARGE</b></div>
       </div>
-      <div style={{ display: "flex" }}>
-        <div style={{ width: "5%" }}></div>
+      <div style={{ display: "flex", justifyContent: "center" }}>
         <div style={{ width: "95%" }}>
           <table className="MedicineTable FontAdjustment">
             <thead>
@@ -870,13 +865,12 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors,
       </div>
       <br />
 
-      <div style={{ display: "flex" }}>
-        <div style={{ width: "5%" }}></div>
+      <div style={{ display: "flex", justifyContent: "center" }}>
         <div style={{ width: "95%" }}>
           <table className="bordered FontAdjustment">
             <tbody>
               <tr>
-                <td colSpan="4"><b>FOLLOW-UP ADVICE / LOCAL CARE</b> <br />{formatWithLineBreaks(d.local_care)}</td>
+                <td colSpan="4"><b>FOLLOW-UP ADVICE / LOCAL CARE :</b>{formatWithLineBreaks(d.local_care)}</td>
               </tr>
               <tr>
                 <td colSpan="4" style={{ verticalAlign: "top" }}><b>NOTE / INSTRUCTIONS :</b> {formatWithLineBreaks(d.note_advice || d.carenote)}</td>
