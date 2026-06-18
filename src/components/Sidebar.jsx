@@ -105,6 +105,9 @@ export default function Sidebar() {
     const [isHovered, setIsHovered] = useState(false);
     const accountType = localStorage.getItem("accountType");
     const department = localStorage.getItem("department");
+    const dashboardLink = accountType?.toLowerCase() === "doctor"
+        ? "/doctor-dashboard"
+        : (department === "IPD" ? "/ipd-dashboard" : "/reception-dashboard");
     const { toggleSidebar, isCompact } = useSidebarContext();
 
     // The sidebar should be collapsed if it's explicitly compact AND we are not hovering.
@@ -132,10 +135,10 @@ export default function Sidebar() {
             location
         };
 
-        if (department === "IPD" && accountType === "reception") {
+        if (department === "IPD" && accountType?.toLowerCase() === "reception") {
             return <IpdMenu {...props} />;
         }
-        if (accountType === "doctor") {
+        if (accountType?.toLowerCase() === "doctor") {
             return <DoctorMenu {...props} department={department} />;
         }
         return <ReceptionistMenu {...props} />;
@@ -150,7 +153,7 @@ export default function Sidebar() {
         >
             <SidebarLinesCSS />
             <div className="logo-gridwrap">
-                <Link className="lightlogo" to="/">
+                <Link className="lightlogo" to={dashboardLink}>
                     <img className="img-fluid" src={logo} alt="sidebar-lightlogo" />
                     {!effectivelyCollapsed && <span className="ms-2">HMS</span>}
                 </Link>

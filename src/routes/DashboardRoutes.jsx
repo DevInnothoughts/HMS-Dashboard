@@ -4,9 +4,14 @@ import { Route } from "react-router-dom";
 // import Dashboard3 from "../pages/Dashboard/Dashboard3";
 import ReceptionistDashboard from "../pages/Dashboard/RecpDashboard";
 import IpdDashboard from "../pages/Dashboard/IpdDashboard";
+import DoctorDashboard from "../pages/doctor/DoctorDashboard";
 
 const DashboardHome = () => {
+  const accountType = localStorage.getItem("accountType");
   const department = localStorage.getItem("department");
+  if (accountType?.toLowerCase() === "doctor") {
+    return <DoctorDashboard />;
+  }
   if (department === "IPD") {
     return <IpdDashboard />;
   }

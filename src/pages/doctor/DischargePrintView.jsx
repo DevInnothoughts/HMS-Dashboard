@@ -508,6 +508,11 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors 
   return (
     <div ref={ref} className="discharge-print-container">
       <style>{`
+        @page {
+          size: A4;
+          margin: 12mm 10mm;
+        }
+
         @media screen, print {
           .discharge-print-container {
             font-family: Arial, sans-serif;
@@ -515,15 +520,25 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors 
             margin: 0;
             padding: 10px;
             background-color: white;
-            color: black;
+            color: #000000 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .discharge-print-container * {
+            box-sizing: border-box;
+            color: #000000 !important;
           }
           .discharge-print-container table {
             width: 100%;
             border-collapse: collapse;
           }
+          .discharge-print-container table td,
+          .discharge-print-container table th {
+            vertical-align: top;
+          }
           .discharge-print-container table.bordered td, 
           .discharge-print-container table.bordered th {
-            border: 1px solid black;
+            border: 1px solid #000000 !important;
             padding: 5px 10px;
           }
           .discharge-print-container .MedicineTable {
@@ -533,7 +548,7 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors 
           }
           .discharge-print-container .MedicineTable td, 
           .discharge-print-container .MedicineTable th {
-            border: 1px solid black;
+            border: 1px solid #000000 !important;
             padding: 5px 10px;
           }
           .discharge-print-container .dischargetitle {
@@ -542,15 +557,15 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors 
             align-items: center;
             justify-content: center;
             padding: 5px 0px;
-            border-top: 2px solid #000;
-            border-bottom: 2px solid #000;
+            border-top: 2px solid #000000 !important;
+            border-bottom: 2px solid #000000 !important;
             margin-bottom: 20px;
           }
           .discharge-print-container .dischargetitle img.hhc-logo {
-            width: 80%;
+            width: 100%;
           }
           .discharge-print-container .dischargetitle img.nabh-logo {
-            width: 95px;
+            width: 100px;
           }
           .discharge-print-container .FontAdjustment {
             font-size: 14px;
@@ -559,11 +574,15 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors 
             font-weight: 700;
           }
           .discharge-print-container p {
-            color: #000 !important;
+            color: #000000 !important;
             margin: 0;
           }
           .discharge-print-container .NABH {
             display: none !important;
+          }
+          .discharge-print-container tr {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
           }
         }
       `}</style>
@@ -578,7 +597,9 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors 
             <p style={{ margin: 0 }}>(AAC-F-14.1-00)</p>
           </div>
           <div style={{ width: "15%" }}>
-            <img src={nabhLogo} alt="NABH" className="nabh-logo" />
+            {sitelocation && sitelocation.toLowerCase().replace(/\s+/g, '') === 'mysore' && (
+              <img src={nabhLogo} alt="NABH" className="nabh-logo" />
+            )}
           </div>
         </div>
       ) : (
@@ -586,11 +607,13 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors 
           <div style={{ width: "25%" }}>
             <img src="https://www.healinghandsclinic.co.in/images/LP/HHC-LOGO.webp" alt="Healing Hands Clinic" className="hhc-logo" />
           </div>
-          <div style={{ width: "55%", textAlign: "center" }}>
+          <div style={{ width: "50%", textAlign: "center" }}>
             <h4 style={{ margin: 0 }}><b>DISCHARGE CARD</b></h4>
           </div>
-          <div style={{ width: "15%" }}>
-            <img src={nabhLogo} alt="NABH" className="nabh-logo NABH" />
+          <div style={{ width: "25%", display: "flex", justifyContent: "flex-end" }}>
+            {sitelocation && sitelocation.toLowerCase().replace(/\s+/g, '') === 'mysore' && (
+              <img src={nabhLogo} alt="NABH" className="nabh-logo" />
+            )}
           </div>
         </div>
       )}
@@ -964,15 +987,15 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors 
           <table className="bordered FontAdjustment">
             <tbody>
               <tr>
-                <td colSpan="2" style={{ width: "50%", borderRight: "0px", borderBottom: "0px" }}>
+                <td colSpan="2" style={{ width: "50%", borderRight: "0px", borderBottom: "0px", verticalAlign: "top" }}>
                   <b>Assistant Surgeon :</b> {prescriptionAssignDoc ? `${prescriptionAssignDoc.name} ${prescriptionAssignDoc.phone ? `(${prescriptionAssignDoc.phone})` : ""}`.trim() : "NA"}<br />
                   <b>Assistant Doctor : </b>{assistantDoc ? `${assistantDoc.name} ${assistantDoc.phone ? `(${assistantDoc.phone})` : ""}`.trim() : "NA"}<br />
                   <b>Physiotherapist : </b>{loc.Physiotherapist}
                 </td>
-                <td colSpan="2" style={{ width: "50%", borderLeft: "0px", borderBottom: "0px" }}>
+                <td colSpan="2" style={{ width: "50%", borderLeft: "0px", borderBottom: "0px", verticalAlign: "top" }}>
                   <b>Insurance : </b>{loc.Insurance}<br />
                   <b>Nutritionist : </b>{loc.Nutritionist}<br />
-                  <b>Post operative follow-up appointment : </b>{loc.QueriesSMS}
+                  <b>Post operative or Follow-up appointment : </b>{loc.QueriesSMS}
                 </td>
               </tr>
               <tr>

@@ -636,16 +636,30 @@ const FollowUpPrintView = React.forwardRef(
                         </div>
                       </div>
                       {/* PHP mapping for follow up complaints on same date */}
-                      {followUpData?.followup_date === diag.date_diagnosis && (
-                        <div className="row">
-                          <div className="col-md-12">
-                            <p>
-                              <b>Present Complaints :&nbsp;&nbsp;</b>
-                              {followUpData?.present_complaints}
-                            </p>
-                          </div>
-                        </div>
-                      )}
+                      {(() => {
+                        const diagDate = diag.date_diagnosis ? diag.date_diagnosis.split("T")[0] : "";
+                        const matchingFollowup = (followUpData?.followupList || []).find((f) => {
+                          const fDate = f.followup_date ? f.followup_date.split("T")[0] : "";
+                          return fDate === diagDate;
+                        });
+                        const complaintText = matchingFollowup
+                          ? matchingFollowup.present_complaints
+                          : (followUpData?.followup_date === diag.date_diagnosis ? followUpData?.present_complaints : null);
+
+                        if (complaintText) {
+                          return (
+                            <div className="row">
+                              <div className="col-md-12">
+                                <p>
+                                  <b>Present Complaints :&nbsp;&nbsp;</b>
+                                  {complaintText}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
                       {idx < diagnosisList.length - 1 && (
                         <hr style={{ marginTop: "0", marginBottom: "10px" }} />
                       )}

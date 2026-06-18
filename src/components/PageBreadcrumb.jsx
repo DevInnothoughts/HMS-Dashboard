@@ -20,8 +20,11 @@ export default function PageBreadcrumb(props) {
         return () => clearInterval(timer);
     }, []);
 
+    const accountType = localStorage.getItem("accountType");
     const department = localStorage.getItem("department");
-    const dashboardLink = department === "IPD" ? "/ipd-dashboard" : "/reception-dashboard";
+    const dashboardLink = accountType?.toLowerCase() === "doctor"
+        ? "/doctor-dashboard"
+        : (department === "IPD" ? "/ipd-dashboard" : "/reception-dashboard");
 
     return (
 

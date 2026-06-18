@@ -13,7 +13,7 @@ import {
   InputGroup,
 } from "react-bootstrap";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
-import { FaPrint, FaPlus, FaListUl, FaTasks } from "react-icons/fa";
+import { FaPrint, FaPlus, FaListUl, FaTasks, FaFileInvoiceDollar } from "react-icons/fa";
 import { decodeJwt } from "../../utils/decode-jwt";
 import Swal from "sweetalert2";
 import logo from "../../assets/images/3.png";
@@ -74,13 +74,13 @@ const convertToWords = (number) => {
       } else {
         str.push(
           words[Math.floor(n / 10) * 10] +
-            " " +
-            words[n % 10] +
-            " " +
-            digits[counter] +
-            plural +
-            " " +
-            hundred,
+          " " +
+          words[n % 10] +
+          " " +
+          digits[counter] +
+          plural +
+          " " +
+          hundred,
         );
       }
     } else {
@@ -243,7 +243,7 @@ const IpdPaymentData = () => {
         PatientId: originalPayload.PatientId,
         apidata: apidata,
       };
-      
+
       const response = await fetch(
         `${BASE_URL}/V1/invoice/cancelIPDPaymentStatus?location=${currentLocation}`,
         {
@@ -293,9 +293,9 @@ const IpdPaymentData = () => {
             PatientId: originalPayload.PatientId,
             Totalinvoiceamt: originalPayload.Totalinvoiceamt,
           };
-          
+
           2;
-          
+
           const response = await fetch(
             `${BASE_URL}/V1/invoice/checkIPDPaymentStatus?location=${currentLocation}`,
             {
@@ -318,7 +318,7 @@ const IpdPaymentData = () => {
           } else {
             Swal.showValidationMessage(
               result.message ||
-                "Swipe not detected yet. Please try again after swiping.",
+              "Swipe not detected yet. Please try again after swiping.",
             );
             return false;
           }
@@ -372,7 +372,7 @@ const IpdPaymentData = () => {
               Swal.fire(
                 "Cancellation Error",
                 cancelResult?.message ||
-                  "Remote cancel failed. Please cancel manually on the POS machine.",
+                "Remote cancel failed. Please cancel manually on the POS machine.",
                 "error",
               );
             }
@@ -424,15 +424,15 @@ const IpdPaymentData = () => {
         PosMachine: selectedTerminal,
         location: currentLocation,
       };
-      
-      
+
+
       const response = await fetch(`${BASE_URL}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
       const result = await response.json();
-      
+
       if (
         result.statusCode === 201 ||
         result.statusCode === 200 ||
@@ -513,10 +513,10 @@ const IpdPaymentData = () => {
     const trimmedLocation = currentLocation ? currentLocation.trim() : "";
     const invoiceInfo = clinincLoc[trimmedLocation] ||
       clinincLoc[currentLocation] || {
-        invoiceAddress: "<b>Healing Hands Clinic</b>",
-        invoiceHelplineNo: "8888288884",
-        EmergencySMS: "",
-      };
+      invoiceAddress: "<b>Healing Hands Clinic</b>",
+      invoiceHelplineNo: "8888288884",
+      EmergencySMS: "",
+    };
     const receiptInfo = receiptlocations[currentLocation] || {
       hospitalcode: "HHC",
     };
@@ -795,126 +795,149 @@ const IpdPaymentData = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {payments.map((pay, idx) => (
-                        <tr key={pay.ipdpaymentid}>
-                          <td>
-                            <Form.Control
-                              className="table-input"
-                              style={{ width: "55px" }}
-                              readOnly
-                              value={idx + 1}
-                            />
-                          </td>
-                          <td>
-                            <Form.Control
-                              className="table-input"
-                              style={{ width: "110px" }}
-                              readOnly
-                              value={formatDate(pay.receipt_date)}
-                            />
-                          </td>
-                          <td>
-                            <InputGroup
-                              size="sm"
-                              style={{ width: "135px", flexWrap: "nowrap" }}
-                            >
-                              <InputGroup.Text className="table-input-group-text">
-                                ₹
-                              </InputGroup.Text>
+                      {payments.length > 0 ? (
+                        payments.map((pay, idx) => (
+                          <tr key={pay.ipdpaymentid}>
+                            <td>
                               <Form.Control
-                                className="table-input-group-control"
+                                className="table-input"
+                                style={{ width: "55px" }}
                                 readOnly
-                                value={pay.cashamt}
+                                value={idx + 1}
                               />
-                            </InputGroup>
-                          </td>
-                          <td>
-                            <InputGroup
-                              size="sm"
-                              style={{ width: "135px", flexWrap: "nowrap" }}
-                            >
-                              <InputGroup.Text className="table-input-group-text">
-                                ₹
-                              </InputGroup.Text>
+                            </td>
+                            <td>
                               <Form.Control
-                                className="table-input-group-control"
+                                className="table-input"
+                                style={{ width: "110px" }}
                                 readOnly
-                                value={pay.cardamt}
+                                value={formatDate(pay.receipt_date)}
                               />
-                            </InputGroup>
-                          </td>
-                          <td>
-                            <InputGroup
-                              size="sm"
-                              style={{ width: "135px", flexWrap: "nowrap" }}
+                            </td>
+                            <td>
+                              <InputGroup
+                                size="sm"
+                                style={{ width: "135px", flexWrap: "nowrap" }}
+                              >
+                                <InputGroup.Text className="table-input-group-text">
+                                  ₹
+                                </InputGroup.Text>
+                                <Form.Control
+                                  className="table-input-group-control"
+                                  readOnly
+                                  value={pay.cashamt}
+                                />
+                              </InputGroup>
+                            </td>
+                            <td>
+                              <InputGroup
+                                size="sm"
+                                style={{ width: "135px", flexWrap: "nowrap" }}
+                              >
+                                <InputGroup.Text className="table-input-group-text">
+                                  ₹
+                                </InputGroup.Text>
+                                <Form.Control
+                                  className="table-input-group-control"
+                                  readOnly
+                                  value={pay.cardamt}
+                                />
+                              </InputGroup>
+                            </td>
+                            <td>
+                              <InputGroup
+                                size="sm"
+                                style={{ width: "135px", flexWrap: "nowrap" }}
+                              >
+                                <InputGroup.Text className="table-input-group-text">
+                                  ₹
+                                </InputGroup.Text>
+                                <Form.Control
+                                  className="table-input-group-control"
+                                  readOnly
+                                  value={pay.chequeamt}
+                                />
+                              </InputGroup>
+                            </td>
+                            <td>
+                              <InputGroup
+                                size="sm"
+                                style={{ width: "135px", flexWrap: "nowrap" }}
+                              >
+                                <InputGroup.Text className="table-input-group-text">
+                                  ₹
+                                </InputGroup.Text>
+                                <Form.Control
+                                  className="table-input-group-control"
+                                  readOnly
+                                  value={pay.onlineamt}
+                                />
+                              </InputGroup>
+                            </td>
+                            <td>
+                              <InputGroup
+                                size="sm"
+                                style={{ width: "135px", flexWrap: "nowrap" }}
+                              >
+                                <InputGroup.Text className="table-input-group-text">
+                                  ₹
+                                </InputGroup.Text>
+                                <Form.Control
+                                  className="table-input-group-control"
+                                  readOnly
+                                  value={pay.discountamt}
+                                />
+                              </InputGroup>
+                            </td>
+                            <td>
+                              <InputGroup
+                                size="sm"
+                                style={{ width: "135px", flexWrap: "nowrap" }}
+                              >
+                                <InputGroup.Text className="table-input-group-text">
+                                  ₹
+                                </InputGroup.Text>
+                                <Form.Control
+                                  className="table-input-group-control"
+                                  readOnly
+                                  value={pay.tdsamt}
+                                />
+                              </InputGroup>
+                            </td>
+                            <td className="text-center">
+                              <Button
+                                title="Print Receipt"
+                                variant="outline-secondary"
+                                className="btn-print"
+                                onClick={() => handlePrintReceipt(pay)}
+                              >
+                                <FaPrint />
+                              </Button>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={9} className="text-center py-5">
+                            <div
+                              className="d-flex flex-column align-items-center justify-content-center p-4"
+                              style={{
+                                background: "rgba(255, 255, 255, 0.4)",
+                                borderRadius: "12px",
+                                border: "1px dashed #80deea",
+                                maxWidth: "500px",
+                                margin: "10px auto",
+                              }}
                             >
-                              <InputGroup.Text className="table-input-group-text">
-                                ₹
-                              </InputGroup.Text>
-                              <Form.Control
-                                className="table-input-group-control"
-                                readOnly
-                                value={pay.chequeamt}
-                              />
-                            </InputGroup>
-                          </td>
-                          <td>
-                            <InputGroup
-                              size="sm"
-                              style={{ width: "135px", flexWrap: "nowrap" }}
-                            >
-                              <InputGroup.Text className="table-input-group-text">
-                                ₹
-                              </InputGroup.Text>
-                              <Form.Control
-                                className="table-input-group-control"
-                                readOnly
-                                value={pay.onlineamt}
-                              />
-                            </InputGroup>
-                          </td>
-                          <td>
-                            <InputGroup
-                              size="sm"
-                              style={{ width: "135px", flexWrap: "nowrap" }}
-                            >
-                              <InputGroup.Text className="table-input-group-text">
-                                ₹
-                              </InputGroup.Text>
-                              <Form.Control
-                                className="table-input-group-control"
-                                readOnly
-                                value={pay.discountamt}
-                              />
-                            </InputGroup>
-                          </td>
-                          <td>
-                            <InputGroup
-                              size="sm"
-                              style={{ width: "135px", flexWrap: "nowrap" }}
-                            >
-                              <InputGroup.Text className="table-input-group-text">
-                                ₹
-                              </InputGroup.Text>
-                              <Form.Control
-                                className="table-input-group-control"
-                                readOnly
-                                value={pay.tdsamt}
-                              />
-                            </InputGroup>
-                          </td>
-                          <td className="text-center">
-                            <Button
-                              title="Print Receipt"
-                              variant="outline-secondary"
-                              className="btn-print"
-                              onClick={() => handlePrintReceipt(pay)}
-                            >
-                              <FaPrint />
-                            </Button>
+                              <div className="mb-3" style={{ fontSize: "2.5rem", color: "#00acc1" }}>
+                                <FaFileInvoiceDollar className="opacity-75" />
+                              </div>
+                              <h5 className="fw-bold text-cyan-dark mb-1">No Payments Found</h5>
+                              <p className="text-secondary small mb-0">No payment entries have been recorded for this invoice yet.</p>
+                            </div>
                           </td>
                         </tr>
-                      ))}
+                      )}
                     </tbody>
                   </Table>
 

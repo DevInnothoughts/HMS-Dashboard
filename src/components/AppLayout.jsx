@@ -42,7 +42,7 @@ const AppLayout = ({ children }) => {
 
       {/* Conditionally render Header */}
       {shouldRenderExtras && headerEnabled && (
-        localStorage.getItem("accountType") === "doctor" ? <DoctorHeader /> : <RecpHeader />
+        localStorage.getItem("accountType")?.toLowerCase() === "doctor" ? <DoctorHeader /> : <RecpHeader />
       )}
       {/* Conditionally render Sidebar */}
       {shouldRenderExtras && sidebarEnabled && <Sidebar />}
