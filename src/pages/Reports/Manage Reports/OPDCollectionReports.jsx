@@ -107,11 +107,22 @@ const OPDCollectionReports = () => {
         TotalOnline = 0,
         TotalDiscount = 0;
 
+      const seenReceipts = new Set();
+
       const processedData = rawData.map((row) => {
         const total = isNaN(Number(row.total)) ? 0 : Number(row.total);
-        const discount = isNaN(Number(row.discountamt))
-          ? 0
-          : Number(row.discountamt);
+        
+        let discount = 0;
+        if (row.receipt_id) {
+          if (!seenReceipts.has(row.receipt_id)) {
+            discount = isNaN(Number(row.discountamt)) ? 0 : Number(row.discountamt);
+            seenReceipts.add(row.receipt_id);
+          }
+        } else {
+          // Fallback if receipt_id is missing
+          discount = isNaN(Number(row.discountamt)) ? 0 : Number(row.discountamt);
+        }
+
         const paymentMode = row.payment_mode || "";
 
         let cash = 0,

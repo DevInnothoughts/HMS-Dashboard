@@ -556,7 +556,6 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors 
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 5px 0px;
             border-top: 2px solid #000000 !important;
             border-bottom: 2px solid #000000 !important;
             margin-bottom: 20px;
@@ -565,10 +564,11 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors 
             width: 100%;
           }
           .discharge-print-container .dischargetitle img.nabh-logo {
-            width: 100px;
-          }
+            width: 65%; 
+            padding: 10px 0px;
+          } 
           .discharge-print-container .FontAdjustment {
-            font-size: 14px;
+            font-size: 13px;
           }
           .discharge-print-container b, .discharge-print-container strong {
             font-weight: 700;
@@ -581,6 +581,11 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors 
             display: none !important;
           }
           .discharge-print-container tr {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          .discharge-print-container .print-section {
+            display: block;
             page-break-inside: avoid !important;
             break-inside: avoid !important;
           }
@@ -618,426 +623,465 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors 
         </div>
       )}
 
-      <div style={{ display: "flex", justifyContent: "center" }}>
-        <div style={{ width: "95%" }}>
-          <table className="bordered FontAdjustment">
-            <tbody>
-              <tr>
-                <td style={{ width: "50%", borderRight: "0px" }}>
-                  <b>PATIENT'S NAME : </b>
-                  {(() => {
-                    const prefix = (d.prefix || formData.prefix || "").trim();
-                    if (!prefix) return "";
-                    const clean = prefix.replace(/\.$/, "");
-                    return clean.charAt(0).toUpperCase() + clean.slice(1).toLowerCase() + ". ";
-                  })()}
-                  {d.patient_name || formData.name || ""}
-                </td>
-                <td style={{ width: "50%" }}><b>UHID. NO : </b>{d.Uid_no || formData.Uid_no || ""}</td>
-              </tr>
-              <tr>
-                <td style={{ width: "50%", borderRight: "0px" }}><b>SEX : </b>{d.patient_sex || formData.sex || ""}&nbsp;&nbsp;<b>Age : </b>{d.patient_age || formData.age || ""}&nbsp;&nbsp;<b>Height : </b>{d.height || historyData?.height_feet || ""}cm&nbsp;&nbsp;<b> Weight : </b>{d.weight || historyData?.weight_kg || ""}kg</td>
-                <td style={{ width: "50%" }}><b>PATIENT'S IPD NO. : </b>{d.ipd_no || d.IPDNo || ""}</td>
-              </tr>
-              <tr>
-                <td colSpan="2"><b>PATIENT ADDRESS : </b>{d.address || formData.address || ""}</td>
-              </tr>
-              <tr>
-                <td style={{ width: "50%", borderRight: "0px" }}><b>DATE OF ADMISSION : </b>{formatDate(d.doa || d.DOA)}</td>
-                <td style={{ width: "50%" }}><b> TIME OF ADMISSION : </b> {formatTime(d.admission_time || d.DOA_time)}</td>
-              </tr>
-              <tr>
-                <td style={{ width: "50%", borderRight: "0px" }}><b> DATE OF DISCHARGE : </b>{formatDate(d.dod || d.DOD)}</td>
-                <td style={{ width: "50%" }}><b>TIME OF DISCHARGE : </b> {formatTime(d.discharge_time || d.DOD_time)}</td>
-              </tr>
-              <tr>
-                <td style={{ width: "50%", borderRight: "0px" }}><b>ADMITTED UNDER </b>{formatDoctorName(consultantName)}</td>
-                <td style={{ width: "50%" }}>
-                  <b>REF.BY :</b> {(d.reference_type === "dr_ref" || formData.reference_type === "dr_ref") ? (
-                    <span>
-                      {d.ref_doctor_name || formData.ref_doctor_name || formData.ref || "NA"}
-                      {(d.ref_doctor_phone || formData.ref_doctor_phone) ? ` (${d.ref_doctor_phone || formData.ref_doctor_phone})` : ""}
-                    </span>
-                  ) : "NA"}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <br />
-
-      <div style={{ display: "flex", justifyContent: "center" }}>
-        <div style={{ width: "95%" }}>
-          <table className="bordered FontAdjustment">
-            <tbody>
-              <tr>
-                <td colSpan="4" style={{ verticalAlign: "top", height: "50px" }}><b>REASON FOR ADMISSION / CHIEF COMPLAINT : </b> {d.reason_for_admission || d.chife_complaints || ""}</td>
-              </tr>
-              <tr>
-                <td colSpan="4" style={{ verticalAlign: "top", height: "50px" }}><b>MEDICAL HISTORY / SURGICAL HISTORY / GYNAECOLOGY HISTORY : </b> {d.medical_history || d.surgical_history || ""}</td>
-              </tr>
-              <tr>
-                <td colSpan="4" style={{ verticalAlign: "top", height: "50px" }}><b>DIAGNOSIS : </b> {d.diagnosis || ""}</td>
-              </tr>
-              <tr>
-                <td colSpan="4" style={{ verticalAlign: "top", height: "50px" }}><b>PLAN OF TREATMENT : </b>{d.plan_of_treatment || d.surgical_procedure || ""}</td>
-              </tr>
-              <tr>
-                <td colSpan="4" style={{ verticalAlign: "top", height: "50px" }}><b>KNOWN ALLERGIES : </b>{d.allergies || ""}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <br />
-
-      <div className="FontAdjustment" style={{ display: "flex", justifyContent: "center" }}>
-        <div style={{ width: "95%" }}><b>MEDICATION GIVEN DURING TREATMENT</b></div>
-      </div>
-      <div style={{ display: "flex", justifyContent: "center" }}>
-        <div style={{ width: "95%" }}>
-          <table className="MedicineTable FontAdjustment">
-            <thead>
-              <tr style={{ textAlign: "center", background: "#E7E9EB" }}>
-                <td style={{ width: "5%" }}><b>Sr. No</b></td>
-                <td style={{ width: "5%" }}><b>Type</b></td>
-                <td style={{ width: "33%" }}><b>Medicine Name</b></td>
-                <td style={{ width: "10%" }}><b>Strength</b></td>
-                <td style={{ width: "30%" }}><b>Frequency<br />With special instructions</b></td>
-                <td style={{ width: "8%" }}><b>Route</b></td>
-                <td style={{ width: "9%" }}><b>Duration<br />(Days)</b></td>
-              </tr>
-            </thead>
-            <tbody>
-              {(d.treatment_given || []).length > 0 ? (
-                d.treatment_given.map((item, idx) => {
-                  const frequency = isEvitalLocation
-                    ? ((item.medicine_time || item.times || "") + (item.medicine_quantity || item.qty ? ` (${item.medicine_quantity || item.qty})` : ""))
-                    : (item.medicine_time || item.times || "");
-
-                  const route = isEvitalLocation
-                    ? (item.route || item.medicine_days || "")
-                    : (item.medicine_route || item.route || "");
-
-                  const duration = isEvitalLocation
-                    ? (item.medicine_time || item.times || "")
-                    : (item.medicine_duration || item.duration || "");
-
-                  const strengthDisplay = (item.medicine_strength && item.medicine_unit)
-                    ? `${item.medicine_strength}/${item.medicine_unit}`
-                    : (item.medicine_strength || item.medicine_unit || item.strengthunit || item.strength_unit || item.strength || "");
-
-                  return (
-                    <tr key={idx}>
-                      <td>{idx + 1}</td>
-                      <td>{item.medicine_type || ""}</td>
-                      <td>{item.medicine_name || item.name || ""}</td>
-                      <td>{strengthDisplay}</td>
-                      <td>{frequency}</td>
-                      <td>{route}</td>
-                      <td>{duration}</td>
-                    </tr>
-                  );
-                })
-              ) : (
+      <div className="print-section">
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <div style={{ width: "95%" }}>
+            <table className="bordered FontAdjustment">
+              <tbody>
                 <tr>
-                  <td colSpan="7" style={{ textAlign: "center" }}>No medication recorded</td>
+                  <td style={{ width: "50%", borderRight: "0px" }}>
+                    <b>PATIENT'S NAME : </b>
+                    {(() => {
+                      const prefix = (d.prefix || formData.prefix || "").trim();
+                      if (!prefix) return "";
+                      const clean = prefix.replace(/\.$/, "");
+                      return clean.charAt(0).toUpperCase() + clean.slice(1).toLowerCase() + ". ";
+                    })()}
+                    {d.patient_name || formData.name || ""}
+                  </td>
+                  <td style={{ width: "50%" }}><b>UHID. NO : </b>{d.Uid_no || formData.Uid_no || ""}</td>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <br />
-
-      <div className="FontAdjustment" style={{ display: "flex", justifyContent: "center" }}>
-        <div style={{ width: "95%" }}><b>DETAILS OF TESTS CONDUCTED WITH RESULTS</b></div>
-      </div>
-      <div style={{ display: "flex", justifyContent: "center" }}>
-        <div style={{ width: "95%" }}>
-          <table className="bordered FontAdjustment">
-            <tbody>
-              {invPairs.length > 0 ? renderInvestigationRows() : (
                 <tr>
-                  <td colSpan="4">No investigations recorded</td>
+                  <td style={{ width: "50%", borderRight: "0px" }}><b>SEX : </b>{d.patient_sex || formData.sex || ""}&nbsp;&nbsp;<b>Age : </b>{d.patient_age || formData.age || ""}&nbsp;&nbsp;<b>Height : </b>{d.height || historyData?.height_feet || ""}cm&nbsp;&nbsp;<b> Weight : </b>{d.weight || historyData?.weight_kg || ""}kg</td>
+                  <td style={{ width: "50%" }}><b>PATIENT'S IPD NO. : </b>{d.ipd_no || d.IPDNo || ""}</td>
                 </tr>
-              )}
-              <tr>
-                <td colSpan="4" style={{ verticalAlign: "top" }}><b>DETAILS OF OTHER TESTS CONDUCTED AND RESULTS </b> {d.other_investigations || d.extranote || ""}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <br />
-
-      <div className="FontAdjustment" style={{ display: "flex", justifyContent: "center" }}>
-        <div style={{ width: "95%" }}><b>DETAILS OF SURGERY PERFORMED</b></div>
-      </div>
-      <div style={{ display: "flex", justifyContent: "center" }}>
-        <div style={{ width: "95%" }}>
-          <table className="bordered FontAdjustment">
-            <tbody>
-              <tr>
-                <td colSpan="4" style={{ verticalAlign: "top" }}><b>DATE OF SURGERY :</b> {formatDate(d.surgery_date)}</td>
-              </tr>
-              <tr>
-                <td colSpan="4" style={{ verticalAlign: "top" }}><b>SURGERY NOTES : </b>{d.surgery_note || ""}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <br />
-
-      <div className="FontAdjustment" style={{ display: "flex", justifyContent: "center" }}>
-        <div style={{ width: "95%" }}><b>PATIENT'S CONDITION AT THE TIME OF DISCHARGE</b></div>
-      </div>
-      <div style={{ display: "flex", justifyContent: "center" }}>
-        <div style={{ width: "95%" }}>
-          <table className="bordered FontAdjustment">
-            <tbody>
-              <tr>
-                <td style={{ width: "33%" }}><b>B.P : </b>{d.bp || d.BP || ""} mm/Hg</td>
-                <td style={{ width: "33%" }}><b>Pulse Rate : </b>{d.pulse || ""} /min</td>
-                <td style={{ width: "33%" }}><b>Respiratory Rate : </b>{d.rr || d.RR || ""} /min</td>
-              </tr>
-              <tr>
-                <td style={{ width: "33%" }}><b>Temp : </b>{d.temp || d.Temp || ""} &deg;F</td>
-                <td style={{ width: "33%" }}><b>Pain Score : </b>{d.pain_score || d.painscore || ""}</td>
-                <td style={{ width: "33%" }}></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <br />
-
-      <div className="FontAdjustment" style={{ display: "flex", justifyContent: "center" }}>
-        <div style={{ width: "95%" }}><b>MEDICINES ADVISED AT THE TIME OF DISCHARGE</b></div>
-      </div>
-      <div style={{ display: "flex", justifyContent: "center" }}>
-        <div style={{ width: "95%" }}>
-          <table className="MedicineTable FontAdjustment">
-            <thead>
-              <tr style={{ textAlign: "center", background: "#E7E9EB" }}>
-                <td style={{ width: "5%" }}><b>Sr. No</b></td>
-                <td style={{ width: "5%" }}><b>Type</b></td>
-                <td style={{ width: "20%" }}><b>Medicine Name</b></td>
-                <td style={{ width: "15%" }}><b>Strength/Unit</b></td>
-                <td style={{ width: "30%" }}><b>Frequency<br />With special instructions</b></td>
-                {/* <td style={{ width: "8%" }}><b>Route</b></td> */}
-                <td style={{ width: "9%" }}><b>Duration<br />(Days)</b></td>
-                <td style={{ width: "8%" }}><b>Total Qty</b></td>
-              </tr>
-            </thead>
-            <tbody>
-              {(d.treatment_on_discharge || []).length > 0 ? (
-                d.treatment_on_discharge.map((item, idx) => {
-                  const name = (item.medicine_name || item.name || "").toUpperCase().trim();
-                  const medTime = (item.medicine_time || item.times || []).join(", ");
-                  const dosageFreq = item.dosage_frequency || item.frequency || "";
-
-                  let frequencyDisplay;
-                  if (name === "PRILOX CREAM") {
-                    frequencyDisplay = (
+                <tr>
+                  <td colSpan="2"><b>PATIENT ADDRESS : </b>{d.address || formData.address || ""}</td>
+                </tr>
+                <tr>
+                  <td style={{ width: "50%", borderRight: "0px" }}><b>DATE OF ADMISSION : </b>{formatDate(d.doa || d.DOA)}</td>
+                  <td style={{ width: "50%" }}><b> TIME OF ADMISSION : </b> {formatTime(d.admission_time || d.DOA_time)}</td>
+                </tr>
+                <tr>
+                  <td style={{ width: "50%", borderRight: "0px" }}><b> DATE OF DISCHARGE : </b>{formatDate(d.dod || d.DOD)}</td>
+                  <td style={{ width: "50%" }}><b>TIME OF DISCHARGE : </b> {formatTime(d.discharge_time || d.DOD_time)}</td>
+                </tr>
+                <tr>
+                  <td style={{ width: "50%", borderRight: "0px" }}><b>ADMITTED UNDER </b>{formatDoctorName(consultantName)}</td>
+                  <td style={{ width: "50%" }}>
+                    <b>REF.BY :</b> {(d.reference_type === "dr_ref" || formData.reference_type === "dr_ref") ? (
                       <span>
-                        {medTime}
-                        <span style={{ fontSize: "10px" }}>&nbsp;(1st thing in the morning..massage for 5 minutes. Repeat every 6 hours or SOS)</span>
+                        {d.ref_doctor_name || formData.ref_doctor_name || formData.ref || "NA"}
+                        {(d.ref_doctor_phone || formData.ref_doctor_phone) ? ` (${d.ref_doctor_phone || formData.ref_doctor_phone})` : ""}
                       </span>
-                    );
-                  } else if (name === "ANOSPRAY") {
-                    frequencyDisplay = (
-                      <span>
-                        {medTime}
-                        <span style={{ fontSize: "10px" }}>&nbsp;(For instant pain relief use 2-3 puffs before and after passing stools)</span>
-                      </span>
-                    );
-                  } else {
-                    const times = medTime.split(",").map(t => t.trim()).filter(t => t !== "");
-                    const displayTimes = times.map(t => `${t} (${dosageFreq})`);
-                    frequencyDisplay = displayTimes.join(" ....... ");
-                  }
-
-                  const formattedType = item.medicine_type
-                    ? (item.medicine_type.charAt(0).toUpperCase() + item.medicine_type.slice(1))
-                    : "";
-
-                  return (
-                    <tr key={idx}>
-                      <td style={{ width: "5%" }}>{idx + 1}</td>
-                      <td style={{ width: "5%" }}>{formattedType}</td>
-                      <td style={{ width: "20%" }}>{item.medicine_name || item.name || ""}</td>
-                      <td style={{ width: "15%" }}>{item.strengthunit || item.strength_unit || ""}</td>
-                      <td style={{ width: "30%" }}>{frequencyDisplay}</td>
-                      {/* <td style={{ width: "8%" }}>{item.medicine_route || item.route || ""}</td> */}
-                      <td style={{ width: "9%" }}>{item.medicine_days || item.days || ""}</td>
-                      <td style={{ width: "8%" }}>{item.medicine_quantity || item.qty || ""}</td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td colSpan="8" style={{ textAlign: "center" }}>No medication advised</td>
+                    ) : "NA"}
+                  </td>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          </div>
         </div>
+        <br />
       </div>
-      <br />
 
-      <div style={{ display: "flex", justifyContent: "center" }}>
-        <div style={{ width: "95%" }}>
-          <table className="bordered FontAdjustment">
-            <tbody>
-              <tr>
-                <td colSpan="4"><b>FOLLOW-UP ADVICE / LOCAL CARE :</b>{formatWithLineBreaks(d.local_care)}</td>
-              </tr>
-              <tr>
-                <td colSpan="4" style={{ verticalAlign: "top" }}><b>NOTE / INSTRUCTIONS :</b> {formatWithLineBreaks(d.note_advice || d.carenote)}</td>
-              </tr>
-              <tr>
-                <td colSpan="4" style={{ verticalAlign: "top" }}><b>CONSENT :</b> {formatWithLineBreaks(d.consent || `1. PATIENT HAEMODYNAMICALLY STABLE, VITALS NORMAL.
+      <div className="print-section">
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <div style={{ width: "95%" }}>
+            <table className="bordered FontAdjustment">
+              <tbody>
+                <tr>
+                  <td colSpan="4" style={{ verticalAlign: "top", height: "50px" }}><b>REASON FOR ADMISSION / CHIEF COMPLAINT : </b> {d.reason_for_admission || d.chife_complaints || ""}</td>
+                </tr>
+                <tr>
+                  <td colSpan="4" style={{ verticalAlign: "top", height: "50px" }}><b>MEDICAL HISTORY / SURGICAL HISTORY / GYNAECOLOGY HISTORY : </b> {d.medical_history || d.surgical_history || ""}</td>
+                </tr>
+                <tr>
+                  <td colSpan="4" style={{ verticalAlign: "top", height: "50px" }}><b>DIAGNOSIS : </b> {d.diagnosis || ""}</td>
+                </tr>
+                <tr>
+                  <td colSpan="4" style={{ verticalAlign: "top", height: "50px" }}><b>PLAN OF TREATMENT : </b>{d.plan_of_treatment || d.surgical_procedure || ""}</td>
+                </tr>
+                <tr>
+                  <td colSpan="4" style={{ verticalAlign: "top", height: "50px" }}><b>KNOWN ALLERGIES : </b>{d.allergies || ""}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <br />
+      </div>
+
+      <div className="print-section">
+        <div className="FontAdjustment" style={{ display: "flex", justifyContent: "center" }}>
+          <div style={{ width: "95%" }}><b>MEDICATION GIVEN DURING TREATMENT</b></div>
+        </div>
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <div style={{ width: "95%" }}>
+            <table className="MedicineTable FontAdjustment">
+              <thead>
+                <tr style={{ textAlign: "center", background: "#E7E9EB" }}>
+                  <td style={{ width: "5%" }}><b>Sr. No</b></td>
+                  <td style={{ width: "5%" }}><b>Type</b></td>
+                  <td style={{ width: "33%" }}><b>Medicine Name</b></td>
+                  <td style={{ width: "10%" }}><b>Strength</b></td>
+                  <td style={{ width: "30%" }}><b>Frequency<br />With special instructions</b></td>
+                  <td style={{ width: "8%" }}><b>Route</b></td>
+                  <td style={{ width: "9%" }}><b>Duration<br />(Days)</b></td>
+                </tr>
+              </thead>
+              <tbody>
+                {(d.treatment_given || []).length > 0 ? (
+                  d.treatment_given.map((item, idx) => {
+                    const frequency = isEvitalLocation
+                      ? ((item.medicine_time || item.times || "") + (item.medicine_quantity || item.qty ? ` (${item.medicine_quantity || item.qty})` : ""))
+                      : (item.medicine_time || item.times || "");
+
+                    const route = isEvitalLocation
+                      ? (item.route || item.medicine_days || "")
+                      : (item.medicine_route || item.route || "");
+
+                    const duration = isEvitalLocation
+                      ? (item.medicine_time || item.times || "")
+                      : (item.medicine_duration || item.duration || "");
+
+                    const strengthDisplay = (item.medicine_strength && item.medicine_unit)
+                      ? `${item.medicine_strength}/${item.medicine_unit}`
+                      : (item.medicine_strength || item.medicine_unit || item.strengthunit || item.strength_unit || item.strength || "");
+
+                    return (
+                      <tr key={idx}>
+                        <td>{idx + 1}</td>
+                        <td>{item.medicine_type || ""}</td>
+                        <td>{item.medicine_name || item.name || ""}</td>
+                        <td>{strengthDisplay}</td>
+                        <td>{frequency}</td>
+                        <td>{route}</td>
+                        <td>{duration}</td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan="7" style={{ textAlign: "center" }}>No medication recorded</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <br />
+      </div>
+
+      <div className="print-section">
+        <div className="FontAdjustment" style={{ display: "flex", justifyContent: "center" }}>
+          <div style={{ width: "95%" }}><b>DETAILS OF TESTS CONDUCTED WITH RESULTS</b></div>
+        </div>
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <div style={{ width: "95%" }}>
+            <table className="bordered FontAdjustment">
+              <tbody>
+                {invPairs.length > 0 ? renderInvestigationRows() : (
+                  <tr>
+                    <td colSpan="4">No investigations recorded</td>
+                  </tr>
+                )}
+                <tr>
+                  <td colSpan="4" style={{ verticalAlign: "top" }}><b>DETAILS OF OTHER TESTS CONDUCTED AND RESULTS </b> {d.other_investigations || d.extranote || ""}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <br />
+      </div>
+
+      <div className="print-section">
+        <div className="FontAdjustment" style={{ display: "flex", justifyContent: "center" }}>
+          <div style={{ width: "95%" }}><b>DETAILS OF SURGERY PERFORMED</b></div>
+        </div>
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <div style={{ width: "95%" }}>
+            <table className="bordered FontAdjustment">
+              <tbody>
+                <tr>
+                  <td colSpan="4" style={{ verticalAlign: "top" }}><b>DATE OF SURGERY :</b> {formatDate(d.surgery_date)}</td>
+                </tr>
+                <tr>
+                  <td colSpan="4" style={{ verticalAlign: "top" }}><b>SURGERY NOTES : </b>{d.surgery_note || ""}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <br />
+      </div>
+
+      <div className="print-section">
+        <div className="FontAdjustment" style={{ display: "flex", justifyContent: "center" }}>
+          <div style={{ width: "95%" }}><b>PATIENT'S CONDITION AT THE TIME OF DISCHARGE</b></div>
+        </div>
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <div style={{ width: "95%" }}>
+            <table className="bordered FontAdjustment">
+              <tbody>
+                <tr>
+                  <td style={{ width: "33%" }}><b>B.P : </b>{d.bp || d.BP || ""} mm/Hg</td>
+                  <td style={{ width: "33%" }}><b>Pulse Rate : </b>{d.pulse || ""} /min</td>
+                  <td style={{ width: "33%" }}><b>Respiratory Rate : </b>{d.rr || d.RR || ""} /min</td>
+                </tr>
+                <tr>
+                  <td style={{ width: "33%" }}><b>Temp : </b>{d.temp || d.Temp || ""} &deg;F</td>
+                  <td style={{ width: "33%" }}><b>Pain Score : </b>{d.pain_score || d.painscore || ""}</td>
+                  <td style={{ width: "33%" }}></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <br />
+      </div>
+
+      <div className="print-section">
+        <div className="FontAdjustment" style={{ display: "flex", justifyContent: "center" }}>
+          <div style={{ width: "95%" }}><b>MEDICINES ADVISED AT THE TIME OF DISCHARGE</b></div>
+        </div>
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <div style={{ width: "95%" }}>
+            <table className="MedicineTable FontAdjustment">
+              <thead>
+                <tr style={{ textAlign: "center", background: "#E7E9EB" }}>
+                  <td style={{ width: "5%" }}><b>Sr. No</b></td>
+                  <td style={{ width: "5%" }}><b>Type</b></td>
+                  <td style={{ width: "20%" }}><b>Medicine Name</b></td>
+                  <td style={{ width: "15%" }}><b>Strength/Unit</b></td>
+                  <td style={{ width: "30%" }}><b>Frequency<br />With special instructions</b></td>
+                  {/* <td style={{ width: "8%" }}><b>Route</b></td> */}
+                  <td style={{ width: "9%" }}><b>Duration<br />(Days)</b></td>
+                  <td style={{ width: "8%" }}><b>Total Qty</b></td>
+                </tr>
+              </thead>
+              <tbody>
+                {(d.treatment_on_discharge || []).length > 0 ? (
+                  d.treatment_on_discharge.map((item, idx) => {
+                    const name = (item.medicine_name || item.name || "").toUpperCase().trim();
+                    const medTime = (item.medicine_time || item.times || []).join(", ");
+                    const dosageFreq = item.dosage_frequency || item.frequency || "";
+
+                    let frequencyDisplay;
+                    if (name === "PRILOX CREAM") {
+                      frequencyDisplay = (
+                        <span>
+                          {medTime}
+                          <span style={{ fontSize: "10px" }}>&nbsp;(1st thing in the morning..massage for 5 minutes. Repeat every 6 hours or SOS)</span>
+                        </span>
+                      );
+                    } else if (name === "ANOSPRAY") {
+                      frequencyDisplay = (
+                        <span>
+                          {medTime}
+                          <span style={{ fontSize: "10px" }}>&nbsp;(For instant pain relief use 2-3 puffs before and after passing stools)</span>
+                        </span>
+                      );
+                    } else {
+                      const times = medTime.split(",").map(t => t.trim()).filter(t => t !== "");
+                      const displayTimes = times.map(t => `${t} (${dosageFreq})`);
+                      frequencyDisplay = displayTimes.join(" ....... ");
+                    }
+
+                    const formattedType = item.medicine_type
+                      ? (item.medicine_type.charAt(0).toUpperCase() + item.medicine_type.slice(1))
+                      : "";
+
+                    return (
+                      <tr key={idx}>
+                        <td style={{ width: "5%" }}>{idx + 1}</td>
+                        <td style={{ width: "5%" }}>{formattedType}</td>
+                        <td style={{ width: "20%" }}>{item.medicine_name || item.name || ""}</td>
+                        <td style={{ width: "15%" }}>{item.strengthunit || item.strength_unit || ""}</td>
+                        <td style={{ width: "30%" }}>{frequencyDisplay}</td>
+                        {/* <td style={{ width: "8%" }}>{item.medicine_route || item.route || ""}</td> */}
+                        <td style={{ width: "9%" }}>{item.medicine_days || item.days || ""}</td>
+                        <td style={{ width: "8%" }}>{item.medicine_quantity || item.qty || ""}</td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan="8" style={{ textAlign: "center" }}>No medication advised</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <br />
+      </div>
+
+      <div className="print-section">
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <div style={{ width: "95%" }}>
+            <table className="bordered FontAdjustment">
+              <tbody>
+                <tr>
+                  <td colSpan="4"><b>FOLLOW-UP ADVICE / LOCAL CARE :</b>{formatWithLineBreaks(d.local_care)}</td>
+                </tr>
+                <tr>
+                  <td colSpan="4" style={{ verticalAlign: "top" }}><b>NOTE / INSTRUCTIONS :</b> {formatWithLineBreaks(d.note_advice || d.carenote)}</td>
+                </tr>
+                <tr>
+                  <td colSpan="4" style={{ verticalAlign: "top" }}><b>CONSENT :</b> {formatWithLineBreaks(d.consent || `1. PATIENT HAEMODYNAMICALLY STABLE, VITALS NORMAL.
 2. PATIENT HAS BEEN ADVISED TO FOLLOW ALL POST OPERATIVE INSTRUCTIONS, INCLUDING MEDICINES, WOUND CARE, DIET PLAN, POST OP EXCERSISE AND SCHEDULED FOLLOW UPS UNTIL DECLARED HEALED BY THE SURGEON, NON COMPLIANCE WITH THESE INSTRUCTIONS MAY RESULT IN RELAPSE, RECURRENCE OR OTHER COMPLICATIONS FOR WHICH THE TREATING DOCTOR OR HOSPITAL SHALL NOT BE HELD RESPONSIBLE
 3. PATIENT IS COMFORTABLE AND IS WILLING TO GET DISCHARGED`)}</td>
-              </tr>
-              {(() => {
-                const casesList = Array.isArray(d.fistula_cases)
-                  ? d.fistula_cases
-                  : (d.fistula_cases ? String(d.fistula_cases).split(",") : []);
-                const activeCases = casesList.map(c => String(c).trim()).filter(c => c !== "");
-
-                if (activeCases.length === 0) return null;
-
-                return (
-                  <tr>
-                    <td colSpan="4" style={{ verticalAlign: "top" }}>
-                      <b>FISTULA IMAGE :</b><br />
-                      {activeCases.map((img, i) => {
-                        const url = new URL(`../../assets/images/fistulacases/${img}.jpg`, import.meta.url).href;
-                        return (
-                          <img
-                            key={i}
-                            src={url}
-                            alt={`Fistula ${img}`}
-                            style={{ width: "180px", margin: "10px 15px 10px 0px" }}
-                            onError={(e) => e.target.style.display = 'none'}
-                          />
-                        );
-                      })}
-                    </td>
-                  </tr>
-                );
-              })()}
-
-              {d.balloon_drain && (
-                <tr>
-                  <td colSpan="4" style={{ verticalAlign: "top" }}><b>BALLOON DRAIN :</b> {formatWithLineBreaks(d.balloon_drain)}</td>
                 </tr>
-              )}
-            </tbody>
-          </table>
-          <br />
+                {(() => {
+                  const casesList = Array.isArray(d.fistula_cases)
+                    ? d.fistula_cases
+                    : (d.fistula_cases ? String(d.fistula_cases).split(",") : []);
+                  const activeCases = casesList.map(c => String(c).trim()).filter(c => c !== "");
 
-          <table className="bordered FontAdjustment">
-            <tbody>
-              <tr>
-                <td colSpan="4" style={{ textAlign: "center" }}>
-                  <img src={painScoreChart} alt="Pain Score Chart" style={{ width: "70%", margin: "10px 0px" }} />
-                  <p style={{ textAlign: "left" }}>In case of Pain score ≥ 5 & / or unanswered queries SMS or Call your assistant surgeon. If it is unanswered, kindly call on {loc.QueriesSMS}. You can also contact the above number in case of emergency or if you notice any of the following symptoms.</p>
-                </td>
-              </tr>
-              <tr>
-                <td style={{ width: "70%", verticalAlign: "top" }}>
-                  1) Fever of 101 F or more<br />
-                  2) Bleeding from operation site <br />
-                  3) Worsening of any symptoms <br />
-                  4) Other significant concerns
-                </td>
-                <td style={{ width: "30%", textAlign: "center" }}>
-                  <b>Care Buddy App QR code</b><br />
-                  <div style={{ margin: "10px auto" }}>
-                    <QRCodeSVG
-                      value={qrString}
-                      size={180}
-                      level="H"
-                      includeMargin={false}
-                    />
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <br />
+                  if (activeCases.length === 0) return null;
 
-          <table className="bordered FontAdjustment">
-            <tbody>
-              <tr>
-                <td colSpan="2" style={{ width: "50%" }}><b>FOLLOW UP DATE :</b> {formatDate(d.follow_date || d.Follow_date)}</td>
-                <td colSpan="2" style={{ width: "50%", color: d.euapatient === 1 ? "red" : "inherit" }}>
-                  <b>FOLLOW UP DATE :</b> {d.euafollow_date ? String(d.euafollow_date).split(",").map(d => formatDate(d)).join(", ") : ""}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <br />
+                  return (
+                    <tr>
+                      <td colSpan="4" style={{ verticalAlign: "top" }}>
+                        <b>FISTULA IMAGE :</b><br />
+                        {activeCases.map((img, i) => {
+                          const url = new URL(`../../assets/images/fistulacases/${img}.jpg`, import.meta.url).href;
+                          return (
+                            <img
+                              key={i}
+                              src={url}
+                              alt={`Fistula ${img}`}
+                              style={{ width: "180px", margin: "10px 15px 10px 0px" }}
+                              onError={(e) => e.target.style.display = 'none'}
+                            />
+                          );
+                        })}
+                      </td>
+                    </tr>
+                  );
+                })()}
 
-          <table className="bordered FontAdjustment">
-            <tbody>
-              <tr>
-                <td colSpan="2" style={{ width: "50%", borderRight: "0px", borderBottom: "0px", verticalAlign: "top" }}>
-                  <b>Assistant Surgeon :</b> {prescriptionAssignDoc ? `${prescriptionAssignDoc.name} ${prescriptionAssignDoc.phone ? `(${prescriptionAssignDoc.phone})` : ""}`.trim() : "NA"}<br />
-                  <b>Assistant Doctor : </b>{assistantDoc ? `${assistantDoc.name} ${assistantDoc.phone ? `(${assistantDoc.phone})` : ""}`.trim() : "NA"}<br />
-                  <b>Physiotherapist : </b>{loc.Physiotherapist}
-                </td>
-                <td colSpan="2" style={{ width: "50%", borderLeft: "0px", borderBottom: "0px", verticalAlign: "top" }}>
-                  <b>Insurance : </b>{loc.Insurance}<br />
-                  <b>Nutritionist : </b>{loc.Nutritionist}<br />
-                  <b>Post operative or Follow-up appointment : </b>{loc.QueriesSMS}
-                </td>
-              </tr>
-              <tr>
-                <td colSpan="4" style={{ borderTop: "0px" }}>
-                  <p>If any of the above numbers are not answered, please reach out to your assistant doctor or call on our 24X7 helpline at <b>{loc.Helpline}</b>, and our executive will connect you with the respective department.</p>
-                </td>
-              </tr>
-              <tr>
-                <td colSpan="4" style={{ textAlign: "center" }}>Please bring this Discharge Summary for all your next follow-up visits with us.</td>
-              </tr>
-            </tbody>
-          </table>
-          <br />
+                {d.balloon_drain && (
+                  <tr>
+                    <td colSpan="4" style={{ verticalAlign: "top" }}><b>BALLOON DRAIN :</b> {formatWithLineBreaks(d.balloon_drain)}</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <br />
 
-          <table className="bordered FontAdjustment">
-            <tbody>
-              <tr>
-                <td style={{ width: "50%" }}><b>Made by : </b>{madeByDoc ? formatDoctorName(madeByDoc.name) : ""}</td>
-                <td style={{ width: "50%" }}><b>Checked by : </b>{checkedByDoc ? formatDoctorName(checkedByDoc.name) : ""}</td>
-              </tr>
-            </tbody>
-          </table>
-          <br />
+      <div className="print-section">
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <div style={{ width: "95%" }}>
+            <table className="bordered FontAdjustment">
+              <tbody>
+                <tr>
+                  <td colSpan="4" style={{ textAlign: "center" }}>
+                    <img src={painScoreChart} alt="Pain Score Chart" style={{ width: "70%", margin: "10px 0px" }} />
+                    <p style={{ textAlign: "left" }}>In case of Pain score ≥ 5 & / or unanswered queries SMS or Call your assistant surgeon. If it is unanswered, kindly call on {loc.QueriesSMS}. You can also contact the above number in case of emergency or if you notice any of the following symptoms.</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style={{ width: "70%", verticalAlign: "top" }}>
+                    1) Fever of 101 F or more<br />
+                    2) Bleeding from operation site <br />
+                    3) Worsening of any symptoms <br />
+                    4) Other significant concerns
+                  </td>
+                  <td style={{ width: "30%", textAlign: "center" }}>
+                    <b>Care Buddy App QR code</b><br />
+                    <div style={{ margin: "10px auto" }}>
+                      <QRCodeSVG
+                        value={qrString}
+                        size={180}
+                        level="H"
+                        includeMargin={false}
+                      />
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <br />
 
-          <table className="bordered FontAdjustment">
-            <tbody>
-              <tr>
-                <td style={{ width: "50%" }}>Name of Doctor: <br /><br /></td>
-                <td style={{ width: "50%" }}>Name of Patient / Relative receiving Discharge Summary:<br /><br /></td>
-              </tr>
-              <tr>
-                <td style={{ width: "50%" }}>Doctor’s Sign, Date & Time:<br /><br /></td>
-                <td style={{ width: "50%" }}>Patient / Relative’s Sign, Date and Time:<br /><br /></td>
-              </tr>
-              <tr>
-                <td colSpan="2" style={{ width: "100%" }}>
-                  <p><b>ADDRESS : </b></p>
-                  <div dangerouslySetInnerHTML={{ __html: loc.Address }} />
-                </td>
-              </tr>
-            </tbody>
-          </table>
+      <div className="print-section">
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <div style={{ width: "95%" }}>
+            <table className="bordered FontAdjustment">
+              <tbody>
+                <tr>
+                  <td colSpan="2" style={{ width: "50%" }}><b>FOLLOW UP DATE :</b> {formatDate(d.follow_date || d.Follow_date)}</td>
+                  <td colSpan="2" style={{ width: "50%", color: d.euapatient === 1 ? "red" : "inherit" }}>
+                    <b>FOLLOW UP DATE :</b> {d.euafollow_date ? String(d.euafollow_date).split(",").map(d => formatDate(d)).join(", ") : ""}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <br />
+
+      <div className="print-section">
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <div style={{ width: "95%" }}>
+            <table className="bordered FontAdjustment">
+              <tbody>
+                <tr>
+                  <td colSpan="2" style={{ width: "50%", borderRight: "0px", borderBottom: "0px", verticalAlign: "top" }}>
+                    <b>Assistant Surgeon :</b> {prescriptionAssignDoc ? `${prescriptionAssignDoc.name} ${prescriptionAssignDoc.phone ? `(${prescriptionAssignDoc.phone})` : ""}`.trim() : "NA"}<br />
+                    <b>Assistant Doctor : </b>{assistantDoc ? `${assistantDoc.name} ${assistantDoc.phone ? `(${assistantDoc.phone})` : ""}`.trim() : "NA"}<br />
+                    <b>Physiotherapist : </b>{loc.Physiotherapist}
+                  </td>
+                  <td colSpan="2" style={{ width: "50%", borderLeft: "0px", borderBottom: "0px", verticalAlign: "top" }}>
+                    <b>Insurance : </b>{loc.Insurance}<br />
+                    <b>Nutritionist : </b>{loc.Nutritionist}<br />
+                    <b>Post operative or Follow-up appointment : </b>{loc.QueriesSMS}
+                  </td>
+                </tr>
+                <tr>
+                  <td colSpan="4" style={{ borderTop: "0px" }}>
+                    <p>If any of the above numbers are not answered, please reach out to your assistant doctor or call on our 24X7 helpline at <b>{loc.Helpline}</b>, and our executive will connect you with the respective department.</p>
+                  </td>
+                </tr>
+                <tr>
+                  <td colSpan="4" style={{ textAlign: "center" }}>Please bring this Discharge Summary for all your next follow-up visits with us.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <br />
+
+      <div className="print-section">
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <div style={{ width: "95%" }}>
+            <table className="bordered FontAdjustment">
+              <tbody>
+                <tr>
+                  <td style={{ width: "50%" }}><b>Made by : </b>{madeByDoc ? formatDoctorName(madeByDoc.name) : ""}</td>
+                  <td style={{ width: "50%" }}><b>Checked by : </b>{checkedByDoc ? formatDoctorName(checkedByDoc.name) : ""}</td>
+                </tr>
+              </tbody>
+            </table>
+            <br />
+            <table className="bordered FontAdjustment">
+              <tbody>
+                <tr>
+                  <td style={{ width: "50%" }}>Name of Doctor: <br /><br /></td>
+                  <td style={{ width: "50%" }}>Name of Patient / Relative receiving Discharge Summary:<br /><br /></td>
+                </tr>
+                <tr>
+                  <td style={{ width: "50%" }}>Doctor’s Sign, Date & Time:<br /><br /></td>
+                  <td style={{ width: "50%" }}>Patient / Relative’s Sign, Date and Time:<br /><br /></td>
+                </tr>
+                <tr>
+                  <td colSpan="2" style={{ width: "100%" }}>
+                    <p><b>ADDRESS : </b></p>
+                    <div dangerouslySetInnerHTML={{ __html: loc.Address }} />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
