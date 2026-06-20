@@ -181,8 +181,8 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors 
       Nutritionist: "",
       Physiotherapist: "9156634201",
       QueriesSMS: "DR. AKASH BAGADE ON 9892780492",
-      Helpline: "9156634201",
-      Address: "<b>Healing Hands Clinic </b><br> Unit no 18 at Palm Beach Galleria, 1st Floor, Palm Beach Road, Vashi, New Mumbai - 400703"
+      Helpline: "8123922650",
+      Address: "<b>Healing Hands Clinic </b><br>B-3,C-4 1st floor, Mayfair Meridien HSG Society, Ceasar Rd, opp. St Blais Church, Amboli, Andheri West, Mumbai, Maharashtra 400058"
     },
     "Nashik": {
       AssistantSurgeon: "ASSISTANT SURGEON :",
@@ -425,7 +425,7 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors 
       Nutritionist: "",
       QueriesSMS: "",
       Helpline: "8575999994",
-      Address: "<b>Healing Hands Clinic </b><br> Plot No.5, Gahlot Majesty, Sector 46, Seawoods, Navi Mumbai-400706"
+      Address: "<b>Healing Hands Clinic </b><br>Cosmos Jewels, 3rd floor, Ghodbunder Rd, near Dmart,opp. Muchhala College, Parkwoods, Thane West, Thane, Maharashtra 400615"
     },
     "Katraj": {
       AssistantSurgeon: "",
