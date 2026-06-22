@@ -133,7 +133,7 @@ export const clinincLoc = {
   },
   "Rajajinagar": {
     invoiceAddress:
-      "Healing Hands Clinic <br> 2nd floor, 9th Cross, Dr MC Modi Hospital Rd, above HDFC Bank, West of Chord Road, Rajajinagar, Bengaluru, Karnataka 560079.",
+      "<b>Healing Hands Clinic<b> <br> 2nd floor, 9th Cross, Dr MC Modi Hospital Rd, above HDFC Bank, West of Chord Road, Rajajinagar, Bengaluru, Karnataka 560079.",
     invoiceHelplineNo: "7996126669",
     EmergencySMS: "",
   },
@@ -241,8 +241,10 @@ export const clinincLoc = {
   },
   Whitefield: {
     invoiceAddress:
-      "<b>Healing Hands Clinic</b><br>Zenya Signature, 4th Floor, ITPL Main Road, Beside BMW Showroom, Krishnarajapuram, Whitefield, Bengaluru, Karnataka - 560066.",
-    invoiceHelplineNo: "9271066070",
+      // "<b>Healing Hands Clinic</b><br>Zenya Signature, 4th Floor, ITPL Main Road, Beside BMW Showroom, Krishnarajapuram, Whitefield, Bengaluru, Karnataka - 560066.",
+      "<b>Healing Hands Clinic<b> <br> 2nd floor, 9th Cross, Dr MC Modi Hospital Rd, above HDFC Bank, West of Chord Road, Rajajinagar, Bengaluru, Karnataka 560079.",
+    // invoiceHelplineNo: "9271066070",
+    invoiceHelplineNo: "7996126669",
     EmergencySMS: "",
   },
   Bopal: {
