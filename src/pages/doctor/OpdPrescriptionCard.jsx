@@ -424,11 +424,12 @@ const OpdPrescriptionCard = ({
                   Select Tests...
                 </Dropdown.Toggle>
                 <Dropdown.Menu
-                  className="w-300 shadow-sm border-0"
+                  className="shadow-sm border-0"
                   style={{
                     maxHeight: "300px",
                     overflowY: "auto",
                     padding: "10px",
+                    width: "100%",
                     borderRadius: "12px",
                   }}
                 >
@@ -542,12 +543,13 @@ const OpdPrescriptionCard = ({
                     Select PREOP...
                   </Dropdown.Toggle>
                   <Dropdown.Menu
-                    className="w-200 shadow-sm border-0"
+                    className="shadow-sm border-0"
                     style={{
                       maxHeight: "300px",
                       overflowY: "auto",
                       padding: "10px",
                       borderRadius: "12px",
+                      width: "100%"
                     }}
                   >
                     {preopInvestOptions.length > 0 ? (

@@ -258,7 +258,9 @@ const OpdPrescriptionPrintView = React.forwardRef(
                   med.name?.toLowerCase().includes("cream") ||
                   med.name?.toLowerCase().includes("gel") ||
                   med.name?.toLowerCase().includes("ointment");
-                const isConstac = med.name?.toLowerCase().includes("constac");
+                const isConstac =
+                  med.name?.toLowerCase().includes("constac") &&
+                  !med.name?.toLowerCase().includes("tablet");
                 const isAnospray = med.name?.toLowerCase().includes("anospray");
 
                 let timeString = formatMedicineTime(med.times || []);

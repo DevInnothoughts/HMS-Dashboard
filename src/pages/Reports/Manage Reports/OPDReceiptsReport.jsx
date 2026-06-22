@@ -6,56 +6,68 @@ import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { FilterMatchMode } from "primereact/api";
 import { InputText } from "primereact/inputtext";
+import { ColumnGroup } from "primereact/columngroup";
 import { saveAs } from "file-saver";
 import * as XLSX from "xlsx";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import { decodeJwt } from "../../../utils/decode-jwt";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
 const BASE_URL = "http://194.195.117.79:5100/api"; // Updated to local API based on previous files
 
-const consultationOptions = [
-  "CONSULTATION",
-  "Follow-UP",
-  "PROCTOSCOPY",
-  "MCDPA",
-  "COLON HYDROTHERAPY",
-  "COLONOSCOPY",
-  "USG",
-  "USG ABDOMEN AND PELVIS",
-  "MANOMETRY",
-  "BIOFEEDBACK",
-  "ECHODEFECOGRAPHY",
-  "USG SCROTUM",
-  "UNILATERAL DOPPLER",
-  "BILATERAL DOPPLER",
-  "PROCEDURE",
-  "GASTROSCOPY",
-  "3D ENDO ANAL IMAGING",
-  "OTHERS",
-  "MRI FISTULOGRAM",
-  "2D SCAN",
-  "LAB",
-  "Postoperative",
-  "BLOOD TESTS + ECG",
-  "DIET",
-  "UROFLOWMETRY",
-  "DIET PLAN - 1 MONTH",
-  "DIET PLAN - 3 MONTH",
-  "DIET PLAN - 6 MONTH",
-  "ENEMA",
-  "MEDICINES",
-  "DRESSING",
-  "CYSTOSCOPY",
-  "POST OPERATIVE FOLLOW UP",
-  "POST OPERATIVE DRESSING + CONSULTATION",
-];
+const formatDateDisplay = (dateStr) => {
+  if (!dateStr) return "";
+  const datePart = dateStr.includes("T") ? dateStr.split("T")[0] : dateStr;
+  return datePart.split("-").reverse().join("-");
+};
+
+const formatValue = (val) => {
+  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+    return "-";
+  }
+  return val;
+};
 
 const OPDReceiptsReport = () => {
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
   const [consultation, setConsultation] = useState("");
   const [patientStatus, setPatientStatus] = useState("");
+  const [currentLocation, setCurrentLocation] = useState("default");
+  const [consultationOptions, setConsultationOptions] = useState([]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const payload = decodeJwt(token);
+      if (payload && payload.jobLocation) {
+        setCurrentLocation(payload.jobLocation);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchConsultations = async () => {
+      if (!currentLocation || currentLocation === "default") return;
+      try {
+        const response = await fetch(
+          `${BASE_URL}/V1/doctor/consultationDetailsDropdown?location=${currentLocation}`
+        );
+        const resData = await response.json();
+        if (response.ok && Array.isArray(resData.data)) {
+          const names = resData.data.map((c) => c.consultation_name);
+          if (!names.includes("Cleaning Agent")) {
+            names.push("Cleaning Agent");
+          }
+          // Sort alphabetically ascending (case-insensitive)
+          names.sort((a, b) => a.localeCompare(b));
+          setConsultationOptions(names);
+        }
+      } catch (err) {
+        console.error("Error fetching consultations:", err);
+      }
+    };
+    fetchConsultations();
+  }, [currentLocation]);
   const [paymentMode, setPaymentMode] = useState("");
   const [receipts, setReceipts] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -64,6 +76,60 @@ const OPDReceiptsReport = () => {
   const [filters, setFilters] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const getFilteredData = () => {
+    if (!searchText) return receipts;
+    const query = searchText.toLowerCase().trim();
+    return receipts.filter((item) => {
+      const displayDate = (item.item_date || "").toLowerCase();
+      const patientName = (item.patient || "").toLowerCase();
+      const consultation = (item.consultation || "").toLowerCase();
+      const patientStatus = (item.chargeCondition || "").toLowerCase();
+      // const sprayQty = String(item.sprayqty || "").toLowerCase();
+      const paymentMode = (item.payment_mode || "").toLowerCase();
+      const amount = String((Number(item.total || 0) - Number(item.discountamt || 0))).toLowerCase();
+
+      return (
+        displayDate.includes(query) ||
+        patientName.includes(query) ||
+        consultation.includes(query) ||
+        patientStatus.includes(query) ||
+        // sprayQty.includes(query) ||
+        paymentMode.includes(query) ||
+        amount.includes(query)
+      );
+    });
+  };
+
+  const filteredData = getFilteredData();
+
+  const printTotals = filteredData.reduce(
+    (acc, curr) => {
+      acc.amount += (Number(curr.total || 0) - Number(curr.discountamt || 0));
+      return acc;
+    },
+    { amount: 0 }
+  );
+
+  const footerGroup = (
+    <ColumnGroup>
+      <Row>
+        <Column
+          footer="Total"
+          colSpan={6}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={formatValue(printTotals.amount)}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+      </Row>
+    </ColumnGroup>
+  );
 
   const onGlobalFilterChange = (e) => {
     const value = e.target.value;
@@ -76,14 +142,14 @@ const OPDReceiptsReport = () => {
   const fetchReceiptsData = async () => {
     setLoading(true);
     try {
-      const url = new URL(`${BASE_URL}/V1/appointment/listReceipt`);
+      const url = new URL(`${BASE_URL}/V1/managereports/OpdCollectionReportDetails`);
       const today = new Date();
 
       const formatToDDMMYYYY = (date) => {
         let d = new Date(date);
-        return `${String(d.getDate()).padStart(2, "0")}/${String(
+        return `${String(d.getDate()).padStart(2, "0")}-${String(
           d.getMonth() + 1,
-        ).padStart(2, "0")}/${d.getFullYear()}`;
+        ).padStart(2, "0")}-${d.getFullYear()}`;
       };
 
       let finalFromDate = fromDate
@@ -94,11 +160,12 @@ const OPDReceiptsReport = () => {
         : formatToDDMMYYYY(today);
 
       const params = {
-        from: finalFromDate,
-        to: finalToDate,
-        consultation: consultation || undefined,
-        patientStatus: patientStatus || undefined,
-        paymentMode: paymentMode || undefined,
+        Fromdate: finalFromDate,
+        Todate: finalToDate,
+        location: currentLocation || undefined,
+        Consultation: consultation || undefined,
+        Patientstatus: patientStatus || undefined,
+        Paymentmode: paymentMode || undefined,
       };
 
       Object.keys(params).forEach((key) => {
@@ -114,7 +181,7 @@ const OPDReceiptsReport = () => {
 
       const data = await response.json();
       if (response.ok) {
-        setReceipts(Array.isArray(data.data) ? data.data : []);
+        setReceipts(Array.isArray(data.serachdata1) ? data.serachdata1 : []);
       } else {
         console.error(
           "Error fetching receipts:",
@@ -128,6 +195,12 @@ const OPDReceiptsReport = () => {
     }
   };
 
+  useEffect(() => {
+    if (currentLocation && currentLocation !== "default") {
+      fetchReceiptsData();
+    }
+  }, [currentLocation]);
+
   const exportToExcel = () => {
     const fileType =
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
@@ -135,13 +208,13 @@ const OPDReceiptsReport = () => {
 
     const excelData = receipts.map((receipt, index) => ({
       "Sr No": index + 1,
-      Date: receipt.date,
-      "Patient Name": receipt.patientName,
+      Date: formatDateDisplay(receipt.item_date),
+      "Patient Name": receipt.patient,
       Consultation: receipt.consultation,
-      "Patient Status": receipt.patientStatus,
-      "Spray Qty": receipt.sprayQty,
-      "Payment Mode": receipt.paymentMode,
-      Amount: receipt.amount,
+      "Patient Status": receipt.chargeCondition,
+      // "Spray Qty": receipt.sprayqty,
+      "Payment Mode": receipt.payment_mode,
+      Amount: Number(receipt.total || 0) - Number(receipt.discountamt || 0),
     }));
 
     const ws = XLSX.utils.json_to_sheet(excelData);
@@ -149,43 +222,6 @@ const OPDReceiptsReport = () => {
     const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
     const data = new Blob([excelBuffer], { type: fileType });
     saveAs(data, "OPD_Receipts_Report" + fileExtension);
-  };
-
-  const downloadPDF = () => {
-    const doc = new jsPDF();
-    doc.text("OPD Receipts Report", 14, 15);
-
-    const tableColumn = [
-      "Sr No",
-      "Date",
-      "Patient Name",
-      "Consultation",
-      "Patient Status",
-      "Spray Qty",
-      "Payment Mode",
-      "Amount",
-    ];
-    const tableRows = receipts.map((receipt, index) => [
-      index + 1,
-      receipt.date,
-      receipt.patientName,
-      receipt.consultation,
-      receipt.patientStatus,
-      receipt.sprayQty,
-      receipt.paymentMode,
-      receipt.amount,
-    ]);
-
-    autoTable(doc, {
-      head: [tableColumn],
-      body: tableRows,
-      startY: 20,
-      theme: "grid",
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [0, 172, 193] },
-    });
-
-    doc.save("OPD_Receipts_Report.pdf");
   };
 
   const renderHeader = () => {
@@ -254,7 +290,7 @@ const OPDReceiptsReport = () => {
           </button>
           <button
             className="btn btn-danger btn-sm"
-            onClick={downloadPDF}
+            onClick={handlePrint}
             style={{
               display: "flex",
               alignItems: "center",
@@ -262,7 +298,7 @@ const OPDReceiptsReport = () => {
               borderRadius: "8px",
             }}
           >
-            <i className="fa fa-file-pdf-o"></i> Download PDF
+            <i className="fa fa-print"></i> Print Report
           </button>
         </div>
       </div>
@@ -308,11 +344,16 @@ const OPDReceiptsReport = () => {
                     fontSize: "16px",
                   }}
                 >
-                  <h4>OPD Receipts Report</h4>
+                  <h4 style={{ margin: 0 }}>OPD Receipts Report</h4>
+                  {fromDate && toDate && (
+                    <div style={{ fontSize: "13px", fontWeight: "normal", marginTop: "5px" }}>
+                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b>
+                    </div>
+                  )}
                 </Card.Header>
                 <Card.Body style={{ padding: "5px" }}>
                   <Row
-                    className="align-items-end mb-4 flex-nowrap"
+                    className="align-items-end mb-4 flex-nowrap no-print"
                     style={{ margin: "0 -5px" }}
                   >
                     <Col style={{ padding: "0 5px", flex: "1" }}>
@@ -502,20 +543,58 @@ const OPDReceiptsReport = () => {
                     rowHover
                     stripedRows
                     responsiveLayout="scroll"
+                    footerColumnGroup={footerGroup}
                   >
                     <Column
                       header="Sr No"
                       body={(rowData, { rowIndex }) => rowIndex + 1}
                       style={{ width: "60px", textAlign: "center" }}
                     />
-                    <Column field="date" header="Date" />
-                    <Column field="patientName" header="Patient Name" />
-                    <Column field="consultation" header="Consultation" />
-                    <Column field="patientStatus" header="Patient Status" />
-                    <Column field="sprayQty" header="Spray Qty" />
-                    <Column field="paymentMode" header="Payment Mode" />
-                    <Column field="amount" header="Amount" />
+                    <Column field="item_date" header="Date" body={(rowData) => formatValue(formatDateDisplay(rowData.item_date))} />
+                    <Column field="patient" header="Patient Name" body={(rowData) => formatValue(rowData.patient)} />
+                    <Column field="consultation" header="Consultation" body={(rowData) => formatValue(rowData.consultation)} />
+                    <Column field="chargeCondition" header="Patient Status" body={(rowData) => formatValue(rowData.chargeCondition)} />
+                    {/* <Column field="sprayqty" header="Spray Qty" body={(rowData) => formatValue(rowData.sprayqty)} /> */}
+                    <Column field="payment_mode" header="Payment Mode" body={(rowData) => formatValue(rowData.payment_mode)} />
+                    <Column field="amount" header="Amount" body={(rowData) => formatValue(Number(rowData.total || 0) - Number(rowData.discountamt || 0))} />
                   </DataTable>
+
+                  {/* Print-only container displaying all rows */}
+                  <div className="print-table-container">
+                    <table className="print-table">
+                      <thead>
+                        <tr>
+                          <th>Sr No</th>
+                          <th>Date</th>
+                          <th>Patient Name</th>
+                          <th>Consultation</th>
+                          <th>Patient Status</th>
+                          {/* <th>Spray Qty</th> */}
+                          <th>Payment Mode</th>
+                          <th>Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredData.map((item, index) => (
+                          <tr key={index}>
+                            <td>{index + 1}</td>
+                            <td>{formatValue(formatDateDisplay(item.item_date))}</td>
+                            <td>{formatValue(item.patient)}</td>
+                            <td>{formatValue(item.consultation)}</td>
+                            <td>{formatValue(item.chargeCondition)}</td>
+                            {/* <td>{formatValue(item.sprayqty)}</td> */}
+                            <td>{formatValue(item.payment_mode)}</td>
+                            <td>{formatValue(Number(item.total || 0) - Number(item.discountamt || 0))}</td>
+                          </tr>
+                        ))}
+                        {/* Totals row inside tbody to avoid page repetition on multiple pages */}
+                        <tr className="print-totals-row">
+                          <td colSpan={6}>Total</td>
+                          <td>{formatValue(printTotals.amount)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </Card.Body>
               </Card>
             </Col>
@@ -523,6 +602,9 @@ const OPDReceiptsReport = () => {
         </Container>
       </SimpleBar>
       <style>{`
+        .print-table-container {
+          display: none;
+        }
         .custom-datatable .p-datatable-header {
           background: #e0f7fa;
           border: 1px solid #4dd0e1;
@@ -548,12 +630,109 @@ const OPDReceiptsReport = () => {
           border: 1px solid #90caf9;
           text-align: center !important;
         }
+        .custom-datatable .p-datatable-tfoot > tr > td { background-color: #e0f7fa !important; color: black !important; padding: 10px 8px; border: 1px solid #90caf9 !important; font-size: 12px; }
         .custom-datatable .p-paginator {
           background: #f8fdfe;
           border: 1px solid #4dd0e1;
           border-bottom-left-radius: 8px;
           border-bottom-right-radius: 8px;
           padding: 5px;
+        }
+        @media print {
+          @page {
+            size: landscape;
+            margin: 20mm 15mm;
+          }
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .codex-sidebar,
+          .codex-header,
+          .codex-breadcrumb,
+          .scroll-top,
+          .no-print,
+          .p-datatable-header,
+          .p-paginator,
+          .simplebar-placeholder,
+          .simplebar-track,
+          .simplebar-scrollbar {
+            display: none !important;
+          }
+          body, html {
+            background: #fff !important;
+            color: #000 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            height: auto !important;
+            min-height: auto !important;
+          }
+          .themebody-wrap {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #fff !important;
+            min-height: auto !important;
+            height: auto !important;
+            page-break-after: avoid !important;
+          }
+          .theme-body,
+          .simplebar-content-wrapper,
+          .simplebar-mask,
+          .simplebar-wrapper,
+          .simplebar-offset,
+          .simplebar-content {
+            padding: 0 !important;
+            margin: 0 !important;
+            min-height: auto !important;
+            height: auto !important;
+            max-height: none !important;
+            overflow: visible !important;
+            position: relative !important;
+          }
+          .card {
+            border: none !important;
+            box-shadow: none !important;
+          }
+          .container-fluid {
+            padding: 0 !important;
+            width: 100% !important;
+          }
+          .custom-datatable {
+            display: none !important;
+          }
+          .print-table-container {
+            display: block !important;
+            width: 100% !important;
+          }
+          .print-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            margin-top: 10px !important;
+          }
+          .print-table th, .print-table td {
+            border: 1px solid #90caf9 !important;
+            padding: 6px 4px !important;
+            font-size: 10px !important;
+            color: #000 !important;
+            text-align: center !important;
+          }
+          .print-table th {
+            background-color: #b2ebf2 !important;
+            font-weight: bold !important;
+          }
+          .print-table .print-totals-row td {
+            background-color: #e0f7fa !important;
+            font-weight: bold !important;
+          }
+          .print-table thead {
+            display: table-header-group !important;
+          }
+          .print-table tbody {
+            display: table-row-group !important;
+          }
+          .print-table tr {
+            page-break-inside: avoid !important;
+          }
         }
       `}</style>
     </div>
