@@ -2,9 +2,10 @@
 
 import React from "react";
 import { useLocation } from "react-router-dom";
-import RecpHeader from "./RecpHeader";
-import DoctorHeader from "./DoctorHeader";
-import Sidebar from "./Sidebar"; // Adjust path if needed
+import ReceptionHeader from "./Header/ReceptionHeader";
+import DoctorHeader from "./Header/DoctorHeader";
+import IpdHeader from "./Header/IpdHeader";
+import SidebarSetting from "./Sidebar/SidebarSetting"; // Adjust path if needed
 // import Customizer from "./Customizer"; // Adjust path if needed
 import Taptotop from "./Taptotop"; // Adjust path if needed
 import { SidebarProvider } from "../pages/api/useSidebarContext"; // Adjust path if needed
@@ -42,10 +43,12 @@ const AppLayout = ({ children }) => {
 
       {/* Conditionally render Header */}
       {shouldRenderExtras && headerEnabled && (
-        localStorage.getItem("accountType")?.toLowerCase() === "doctor" ? <DoctorHeader /> : <RecpHeader />
+        localStorage.getItem("accountType")?.toLowerCase() === "doctor"
+          ? <DoctorHeader />
+          : (localStorage.getItem("accountType")?.toLowerCase() === "ipd" ? <IpdHeader /> : <ReceptionHeader />)
       )}
       {/* Conditionally render Sidebar */}
-      {shouldRenderExtras && sidebarEnabled && <Sidebar />}
+      {shouldRenderExtras && sidebarEnabled && <SidebarSetting />}
 
       {/* The main content/Routes will be rendered here */}
       {children}

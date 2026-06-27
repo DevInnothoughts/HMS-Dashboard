@@ -3,13 +3,10 @@ import { Routes, Route } from "react-router-dom";
 import { AuthRoutes } from "./AuthRoutes";
 import { DashboardRoutes } from "./DashboardRoutes";
 import { DoctorRoutes } from "./DoctorRoutes";
-import { PatientRoutes } from "./PatientRoutes";
-import { ReceptionistRoutes } from "./ReceptionistRoutes";
-import { ReportRoutes } from "./ReportsRoutes";
-// import { SettingsRoutes } from "./SettingsRoutes";
-import { UtilityRoutes } from "./UtilityRoutes";
+import { ReceptionRoutes } from "./ReceptionRoutes";
 import { IpdRoutes } from "./IpdRoutes";
 import ProtectedRoute from "./ProtectedRoute";
+import ErrorPage from "../pages/Utility/Errorpage";
 
 export default function AppRoutes() {
   return (
@@ -19,14 +16,11 @@ export default function AppRoutes() {
 
       {/* Protected Routes */}
       <Route element={<ProtectedRoute />}>
-        {ReportRoutes}
         {DashboardRoutes}
+        {ReceptionRoutes}
         {DoctorRoutes}
         {IpdRoutes}
-        {PatientRoutes}
-        {ReceptionistRoutes}
-        {/* {SettingsRoutes} */}
-        {UtilityRoutes}
+        <Route path="*" element={<ErrorPage />} />
       </Route>
     </Routes>
   );

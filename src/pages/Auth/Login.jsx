@@ -14,7 +14,7 @@ const MySwal = withReactContent(Swal);
 
 const LOCATIONS_LIST = [
   "Ahmedabad",
-  "Andheri",
+  "Andheri", 
   "Aurangabad",
   "Baner",
   "Belagavi",

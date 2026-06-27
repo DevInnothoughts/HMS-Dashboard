@@ -1,24 +1,13 @@
 import React from "react";
 import { Route } from "react-router-dom";
-import DoctorOpdDashboard from "../pages/doctor/DoctorOpdDashboard";
-import DoctorDashboard from "../pages/doctor/DoctorDashboard";
-import DoctorOpdPatientList from "../pages/doctor/DoctorOpdPatientList";
-import DoctorIpdPatientList from "../pages/doctor/DoctorIpdPatientList";
-import PersonalDetailsCard from "../pages/doctor/PersonalDetailsCard";
-import DoctorManageAdmission from "../pages/doctor/DoctorManageAdmission";
-import DoctorSearchBy from "../pages/doctor/DoctorSearchBy";
-import DoctorCallingCalendar from "../pages/doctor/DoctorCallingCalendar";
+import DoctorOpdPatientList from "../pages/Doctor/DoctorOpdPatientList";
+import OpdPatientMedicalRecords from "../pages/Doctor/OpdPatientMedicalRecords";
+import DoctorCallingCalendar from "../pages/Doctor/DoctorCallingCalendar";
 
 export const DoctorRoutes = (
   <>
-    <Route path="/doctor-opd-dashboard" element={<DoctorOpdDashboard />} />
-    <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
-    <Route path="/doctor-patients" element={<DoctorOpdPatientList />} />
-    <Route path="/doctor-ipd-patients" element={<DoctorIpdPatientList />} />
-    <Route path="/doctor-patient-details" element={<PersonalDetailsCard />} />
-    <Route path="/doctor-manage-admission" element={<DoctorManageAdmission />} />
-    <Route path="/doctor-search-by" element={<DoctorSearchBy />} />
+    <Route path="/doctor-opd-patient-list" element={<DoctorOpdPatientList />} />
+    <Route path="/personal-details-card" element={<OpdPatientMedicalRecords />} />
     <Route path="/doctor-calling-calendar" element={<DoctorCallingCalendar />} />
-
   </>
 );

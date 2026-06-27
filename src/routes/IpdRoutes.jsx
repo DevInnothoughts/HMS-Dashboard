@@ -1,15 +1,23 @@
 import React from "react";
 import { Route } from "react-router-dom";
-import SearchBy from "../pages/IPD/SearchBy";
-import ManageAdmission from "../pages/IPD/ManageAdmission";
-import IPDFormsContainer from "../pages/IPD/IPDFormsContainer";
-import IpdDashboard from "../pages/Dashboard/IpdDashboard";
+import IpdPatientList from "../pages/Ipd/IpdPatientList";
+import AddAdmission from "../pages/Ipd/AddAdmission";
+import IpdAdmissionList from "../pages/Ipd/IpdAdmissionList";
+import IpdBillList from "../pages/Ipd/IpdBillList";
+import AddIpdBill from "../pages/Ipd/AddIpdBill";
+import IpdCollection from "../pages/Ipd/IpdCollection";
+import AddBedAllotment from "../pages/Ipd/AddBedAllotment";
+import BedAllotmentList from "../pages/Ipd/BedAllotmentList";
 
 export const IpdRoutes = (
-    <>
-        <Route path="/ipd-dashboard" element={<IpdDashboard />} />
-        <Route path="/search-by" element={<SearchBy />} />
-        <Route path="/manage-admission" element={<ManageAdmission />} />
-        <Route path="/surgery/forms" element={<IPDFormsContainer />} />
-    </>
-)
+  <>
+    <Route path="/ipd-patient-list" element={<IpdPatientList />} />
+    <Route path="/ipd-admission-list" element={<IpdAdmissionList />} />
+    <Route path="/add-admission" element={<AddAdmission />} />
+    <Route path="/ipd-bill-list" element={<IpdBillList />} />
+    <Route path="/add-ipd-bill" element={<AddIpdBill />} />
+    <Route path="/ipd-collection" element={<IpdCollection />} />
+    <Route path="/bed-allotment-list" element={<BedAllotmentList />} />
+    <Route path="/add-bed-allotment" element={<AddBedAllotment />} />
+  </>
+);
