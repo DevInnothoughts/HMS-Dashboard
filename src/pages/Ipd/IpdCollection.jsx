@@ -207,6 +207,18 @@ const IpdCollection = () => {
       const financialInfo = Array.isArray(totalData) ? totalData[0] : totalData;
 
       if (financialInfo) {
+        if ((financialInfo.status || "").trim().toLowerCase() === "interbranch-bill") {
+          Swal.fire({
+            icon: "warning",
+            title: "Payment Not Allowed",
+            text: "Payment collection is not allowed at the selected clinic location for Interbranch bills. Please collect the payment at the origin clinic location.",
+            confirmButtonColor: "#00acc1",
+          });
+          setLoading(false);
+          setShowBillDetails(false);
+          return;
+        }
+
         const isPdc = (financialInfo.status || "").toLowerCase() === "pdc";
         const isCashlessNotSettled = (financialInfo.status || "").toLowerCase() === "cashless" && (parseFloat(financialInfo.receivedamt) || 0) === 0;
         setSummary({
