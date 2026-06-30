@@ -207,11 +207,18 @@ const IpdCollection = () => {
       const financialInfo = Array.isArray(totalData) ? totalData[0] : totalData;
 
       if (financialInfo) {
-        if ((financialInfo.status || "").trim().toLowerCase() === "interbranch-bill") {
+        if (
+          (financialInfo.status || "").trim().toLowerCase() === "interbranch-bill" ||
+          (financialInfo.interbranch_id !== null &&
+            financialInfo.interbranch_id !== undefined &&
+            financialInfo.interbranch_id !== "" &&
+            financialInfo.interbranch_id !== 0 &&
+            financialInfo.interbranch_id !== "0")
+        ) {
           Swal.fire({
             icon: "warning",
-            title: "Payment Not Allowed",
-            text: "Payment collection is not allowed at the selected clinic location for Interbranch bills. Please collect the payment at the origin clinic location.",
+            title: "Payment Restricted",
+            text: "Payments for interbranch bills must be collected at the origin clinic location.",
             confirmButtonColor: "#00acc1",
           });
           setLoading(false);

@@ -37,8 +37,7 @@ export default function AddAdmission() {
   const [showSelectionModal, setShowSelectionModal] = useState(false);
   const [currentLocation, setCurrentLocation] = useState("default");
   const [loading, setLoading] = useState(false);
-
-  // Booking details state
+  const [isPendingAdmission, setIsPendingAdmission] = useState(false);
   const [admissionDatetime, setAdmissionDatetime] = useState(null);
   const [surgeryDatetime, setSurgeryDatetime] = useState(null);
   const [roomNumber, setRoomNumber] = useState("");
@@ -124,6 +123,22 @@ export default function AddAdmission() {
   };
 
   const selectPatient = (patient) => {
+    const isPending =
+      patient.has_pending_admission === 1 ||
+      patient.has_pending_admission === "1" ||
+      patient.has_pending_admission === true;
+
+    setIsPendingAdmission(isPending);
+
+    if (isPending) {
+      Swal.fire({
+        icon: "warning",
+        title: "Pending Admission",
+        text: `This patient (${patient.name}) already has a pending admission in the list.`,
+        confirmButtonColor: "#dc3545",
+      });
+    }
+
     const patData = {
       uhid: patient.Uid_no,
       Uid_no: patient.Uid_no,
@@ -162,6 +177,10 @@ export default function AddAdmission() {
   };
 
   const handleVerifyAndSubmit = async () => {
+    if (isPendingAdmission) {
+      Swal.fire("Blocked", "Cannot book admission. This patient already has a pending admission.", "error");
+      return;
+    }
     const hasTime = (val) => {
       if (!val) return false;
       return /\d{2}-\d{2}-\d{4}\s\d{2}:\d{2}/.test(val);
@@ -275,6 +294,7 @@ export default function AddAdmission() {
     setSxPlan("");
     setNmbTime(null);
     setMainDoctorId("");
+    setIsPendingAdmission(false);
   };
 
   const labelStyle = "fw-bold uppercase mb-2";
@@ -349,6 +369,7 @@ export default function AddAdmission() {
                             setUhid(val);
                             if (!val.trim()) {
                               setPatientData(null);
+                              setIsPendingAdmission(false);
                             }
                           }}
                           style={{
@@ -416,6 +437,11 @@ export default function AddAdmission() {
                     </h4>
                   </div>
                   <Card.Body className="p-3">
+                    {isPendingAdmission && (
+                      <div className="alert alert-danger p-2 mb-3 text-center small fw-bold">
+                        Warning: This patient already has a pending admission in the list. Admission booking is blocked.
+                      </div>
+                    )}
                     <Row>
                       {[
                         { label: "UHID No.", value: patientData.uhid },
@@ -728,12 +754,12 @@ export default function AddAdmission() {
                       <Button
                         onClick={handleVerifyAndSubmit}
                         variant="success"
-                        disabled={loading}
+                        disabled={loading || isPendingAdmission}
                         className="px-4 py-7"
                         style={{
                           borderRadius: "8px",
                           fontWeight: "600",
-                          backgroundColor: "#28a745",
+                          backgroundColor: isPendingAdmission ? "#6c757d" : "#28a745",
                           border: "none",
                         }}
                       >

@@ -384,6 +384,9 @@ const IpdBillList = () => {
     global: { value: null, matchMode: FilterMatchMode.EQUALS },
   });
   const [paymentCategoryFilter, setPaymentCategoryFilter] = useState("All");
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewContent, setPreviewContent] = useState("");
+  const [previewInvoice, setPreviewInvoice] = useState(null);
 
   const [showCashlessModal, setShowCashlessModal] = useState(false);
   const [cashlessData, setCashlessData] = useState({
@@ -765,18 +768,19 @@ const IpdBillList = () => {
       if (!currentLocation) return;
 
       try {
+        const targetDate = selectedInvoice ? selectedInvoice.creation_date : "";
+        const dateQuery = targetDate ? `&date=${targetDate}` : "";
+
         const endpoints = [
-          { url: "consultant_dropdown", setter: setConsultants },
-          { url: "surgeon_dropdown", setter: setSurgeons },
-          { url: "insurance_co_dropdown", setter: setInsurance },
-          { url: "tpa_dropdown", setter: setTpa },
+          { url: `consultant_dropdown?location=${encodeURIComponent(currentLocation)}`, setter: setConsultants },
+          { url: `surgeon_dropdown?location=${encodeURIComponent(currentLocation)}`, setter: setSurgeons },
+          { url: `insurance_co_dropdown?location=${encodeURIComponent(currentLocation)}${dateQuery}`, setter: setInsurance },
+          { url: `tpa_dropdown?location=${encodeURIComponent(currentLocation)}${dateQuery}`, setter: setTpa },
         ];
 
         for (const { url, setter } of endpoints) {
           const response = await fetch(
-            `${BASE_URL}/V1/invoice/${url}?location=${encodeURIComponent(
-              currentLocation,
-            )}`,
+            `${BASE_URL}/V1/invoice/${url}`,
           );
 
           const data = await response.json();
@@ -791,7 +795,7 @@ const IpdBillList = () => {
     };
 
     fetchDropdowns();
-  }, [currentLocation]);
+  }, [currentLocation, selectedInvoice ? selectedInvoice.creation_date : null]);
 
   useEffect(() => {
     const subTotal = parseFloat(formData.Sub_Total || 0);
@@ -816,7 +820,8 @@ const IpdBillList = () => {
   useEffect(() => {
     if (
       !selectedInvoice ||
-      selectedInvoice.bill_Type !== "interbranch" ||
+      !selectedInvoice.isInterbranch ||
+      selectedInvoice.interbranchLocation === "DP Road" ||
       !selectedInvoice.interbranchLocation ||
       !selectedInvoice.selectedClinicUid
     ) {
@@ -1167,6 +1172,13 @@ const IpdBillList = () => {
     const pdc =
       invoice.pdc || (bill_method === "PDC" ? invoice.advance_amt : "0.00");
 
+    const isInterbranch =
+      invoice.patient_location !== null &&
+      invoice.patient_location !== undefined &&
+      invoice.patient_location !== "" &&
+      invoice.patient_location !== "NULL" &&
+      invoice.patient_location !== currentLocation;
+
     setSelectedInvoice({
       ...invoice,
       // Explicitly format dates and times for the modal inputs
@@ -1178,15 +1190,17 @@ const IpdBillList = () => {
       bill_Type,
       chequeno,
       pdc,
+      isInterbranch,
       // Ensure we have fallback for bed category from existing fields
       bed_no: invoice.bed_no || invoice.bed_desc || "",
-      interbranchLocation: (statusVal === "interbranch" || statusVal === "interbranch-bill") ? invoice.patient_location : "",
+      interbranchLocation: isInterbranch ? invoice.patient_location : "",
+      selectedClinicUid: isInterbranch ? (invoice.patient_location === "DP Road" ? "N/A" : (invoice.selectedClinicUid || "")) : "",
     });
 
     setSelectedClinicPatient(null);
     setErrors({});
 
-    if (bill_Type === "interbranch") {
+    if (isInterbranch && invoice.patient_location !== "DP Road") {
       if (statusVal === "interbranch") {
         const targetLocation = invoice.patient_location;
         if (targetLocation) {
@@ -1200,6 +1214,7 @@ const IpdBillList = () => {
                   return {
                     ...prev,
                     selectedClinicUid: matched.Uid_no,
+                    selectedClinicInvoiceId: matched.invoice_id,
                   };
                 });
                 setSelectedClinicPatient(matched);
@@ -1273,15 +1288,6 @@ const IpdBillList = () => {
         });
         return;
       }
-      if (!selectedInvoice.tpa) {
-        Swal.fire({
-          icon: "error",
-          title: "Validation Error",
-          text: "TPA is required.",
-          confirmButtonColor: "#00acc1",
-        });
-        return;
-      }
       if (!selectedInvoice.bill_method) {
         Swal.fire({
           icon: "error",
@@ -1293,7 +1299,7 @@ const IpdBillList = () => {
       }
     }
 
-    if (selectedInvoice.bill_Type === "interbranch") {
+    if (selectedInvoice.isInterbranch) {
       if (!selectedInvoice.interbranchLocation) {
         Swal.fire({
           icon: "error",
@@ -1303,23 +1309,25 @@ const IpdBillList = () => {
         });
         return;
       }
-      if (!selectedInvoice.selectedClinicUid) {
-        Swal.fire({
-          icon: "error",
-          title: "Validation Error",
-          text: "Selected Clinic Location UID No is required.",
-          confirmButtonColor: "#00acc1",
-        });
-        return;
-      }
-      if (!selectedClinicPatient) {
-        Swal.fire({
-          icon: "error",
-          title: "Validation Error",
-          text: "Please verify and enter a valid UID No at the selected clinic location.",
-          confirmButtonColor: "#00acc1",
-        });
-        return;
+      if (selectedInvoice.interbranchLocation !== "DP Road") {
+        if (!selectedInvoice.selectedClinicUid) {
+          Swal.fire({
+            icon: "error",
+            title: "Validation Error",
+            text: "Selected Clinic Location UID No is required.",
+            confirmButtonColor: "#00acc1",
+          });
+          return;
+        }
+        if (!selectedClinicPatient) {
+          Swal.fire({
+            icon: "error",
+            title: "Validation Error",
+            text: "Please verify and enter a valid UID No at the selected clinic location.",
+            confirmButtonColor: "#00acc1",
+          });
+          return;
+        }
       }
     }
 
@@ -1352,8 +1360,6 @@ const IpdBillList = () => {
       status = modalInvoiceData.bill_method; // E.g., cashless, pdc, reimbursement
     } else if (modalInvoiceData.bill_Type === "charity") {
       status = "Charity";
-    } else if (modalInvoiceData.bill_Type === "interbranch") {
-      status = "Interbranch";
     }
 
     const convertTo12Hour = (time24) => {
@@ -1379,7 +1385,7 @@ const IpdBillList = () => {
       status: status, // Sync backend status column
       package: titleString,
       location: currentLocation,
-      patient_location: modalInvoiceData.bill_Type === "interbranch" ? selectedInvoice.interbranchLocation : currentLocation,
+      patient_location: selectedInvoice.interbranchLocation || currentLocation,
       totalamt: Math.round(parseFloat(modalInvoiceData.Sub_Total || 0)),
       payable_amt: Math.round(parseFloat(modalInvoiceData.payableAmount || 0)),
       discount: Math.round(parseFloat(modalInvoiceData.discount || 0)),
@@ -1392,7 +1398,45 @@ const IpdBillList = () => {
 
     setLoading(true);
     try {
-      if (modalInvoiceData.bill_Type === "interbranch") {
+      if (selectedInvoice.interbranchLocation === "DP Road") {
+        const localPayload = {
+          ...payload,
+          interbranch_id: 1,
+          consultantName: null,
+          surgeonName: null,
+        };
+        const responseLoggedIn = await fetch(
+          `${BASE_URL}/V1/invoice/${selectedInvoice.invoice_id}?location=${currentLocation}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(localPayload),
+          },
+        );
+        const resultLoggedIn = await responseLoggedIn.json();
+
+        if (!responseLoggedIn.ok) {
+          Toast.fire({
+            icon: "error",
+            title: resultLoggedIn.message || `Failed to update invoice at current clinic (${currentLocation})`,
+          });
+          setLoading(false);
+          return;
+        }
+
+        Swal.fire({
+          icon: "success",
+          title: "Saved!",
+          text: "Changes saved successfully",
+          confirmButtonColor: "#00acc1",
+        });
+        setShowModal(false);
+        fetchInvoices();
+        setLoading(false);
+        return;
+      }
+
+      if (selectedInvoice.interbranchLocation) {
         const responseLoggedIn = await fetch(
           `${BASE_URL}/V1/invoice/${selectedInvoice.invoice_id}?location=${currentLocation}`,
           {
@@ -1412,18 +1456,23 @@ const IpdBillList = () => {
           return;
         }
 
-        const payloadSelected = { ...payload };
-        const statusVal = (selectedInvoice.status || "").trim().toLowerCase();
-        if (statusVal === "interbranch" && selectedClinicPatient) {
+        const payloadSelected = {
+          ...payload,
+          invoice_id: selectedInvoice.selectedClinicInvoiceId,
+          consultantName: null,
+          surgeonName: null,
+          interbranch_id: selectedInvoice.invoice_id,
+          status: status,
+          patient_location: currentLocation,
+        };
+        if (selectedClinicPatient) {
           payloadSelected.patient_id = selectedClinicPatient.patient_id;
         } else {
           delete payloadSelected.patient_id;
         }
-        payloadSelected.status = "Interbranch-Bill";
-        payloadSelected.patient_location = currentLocation;
 
         const responseSelected = await fetch(
-          `${BASE_URL}/V1/invoice/${selectedInvoice.invoice_id}?location=${selectedInvoice.interbranchLocation}`,
+          `${BASE_URL}/V1/invoice/${selectedInvoice.selectedClinicInvoiceId}?location=${selectedInvoice.interbranchLocation}`,
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
@@ -1513,16 +1562,7 @@ const IpdBillList = () => {
     setShowSuccessPopup(false);
   };
 
-  const handlePrint = (invoice) => {
-    if (!invoice || typeof invoice !== "object" || !invoice.invoice_id) {
-      Toast.fire({
-        icon: "info",
-        title: "Preparing invoice for print...",
-        timer: 1500,
-      });
-      return;
-    }
-
+  const buildInvoiceHtml = (invoice, mainLogo, showPrintBtn = true) => {
     const trimmedLocation = currentLocation ? currentLocation.trim() : "";
     const clinicAddr = clinincLoc[trimmedLocation] ||
       clinincLoc[currentLocation] || {
@@ -1531,26 +1571,8 @@ const IpdBillList = () => {
     };
 
     const { dynamicRows, Sub_Total } = getDynamicRowsFromInvoice(invoice);
-    const printWindow = window.open("", "_blank", "width=900,height=900");
 
-    const getBase64Image = (imgUrl) => {
-      return new Promise((resolve) => {
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          canvas.width = img.width;
-          canvas.height = img.height;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0);
-          resolve(canvas.toDataURL("image/png"));
-        };
-        img.src = imgUrl;
-      });
-    };
-
-    getBase64Image(logo).then((mainLogo) => {
-      const printContent = `
+    const printContent = `
   <html>
     <head>
       <title>Invoice - ${invoice.invoice_id}</title>
@@ -1693,15 +1715,15 @@ const IpdBillList = () => {
                 <td>Amount (INR)</td>
               </tr>
               ${dynamicRows
-          .map(
-            (row) => `
+        .map(
+          (row) => `
                 <tr>
                   <td>${row.label}</td>
                   <td>${Math.round(parseFloat(row.value))}</td>
                 </tr>
               `,
-          )
-          .join("")}
+        )
+        .join("")}
             </table>
           </td>
       <td style="width: 50%; vertical-align: top; padding-left: 10px;">
@@ -1715,14 +1737,14 @@ const IpdBillList = () => {
       <td>${(Math.round(parseFloat(invoice.totalamt || Sub_Total)) || 0).toLocaleString()}</td>
     </tr>
     ${(Math.round(parseFloat(invoice.discount)) || 0) > 0
-          ? `
+        ? `
     <tr>
       <td>Discount</td>
       <td>${(Math.round(parseFloat(invoice.discount)) || 0).toLocaleString()}</td>
     </tr>
     `
-          : ""
-        }
+        : ""
+      }
   </table>
 </td>
         </tr>
@@ -1754,7 +1776,7 @@ const IpdBillList = () => {
       </div>
     </td>
      <td style="text-align: center; vertical-align: bottom;">
-     <div style="border-top: 1px solid #000; padding-top: 5px; margin: 0 10px;">
+      <div style="border-top: 1px solid #000; padding-top: 5px; margin: 0 10px;">
         For Healing Hands Clinic
       </div>
     </td>
@@ -1775,15 +1797,78 @@ const IpdBillList = () => {
         </table>
       </div>
 
-      <div class="btn-container">
+      <div class="btn-container" style="${showPrintBtn ? '' : 'display: none;'}">
         <button class="print-btn" onclick="window.print()">Print Invoice</button>
       </div>
     </body>
   </html>
   `;
-      printWindow.document.write(printContent);
+    return printContent;
+  };
+
+  const handlePrint = (invoice) => {
+    if (!invoice || typeof invoice !== "object" || !invoice.invoice_id) {
+      Toast.fire({
+        icon: "info",
+        title: "Preparing invoice for print...",
+        timer: 1500,
+      });
+      return;
+    }
+
+    const printWindow = window.open("", "_blank", "width=900,height=900");
+
+    const getBase64Image = (imgUrl) => {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL("image/png"));
+        };
+        img.src = imgUrl;
+      });
+    };
+
+    getBase64Image(logo).then((mainLogo) => {
+      const html = buildInvoiceHtml(invoice, mainLogo, true);
+      printWindow.document.write(html);
       printWindow.document.close();
-      setTimeout(() => { }, 1000);
+    });
+  };
+
+  const handleViewInvoice = (invoice) => {
+    if (!invoice || typeof invoice !== "object" || !invoice.invoice_id) {
+      return;
+    }
+    setLoading(true);
+
+    const getBase64Image = (imgUrl) => {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL("image/png"));
+        };
+        img.src = imgUrl;
+      });
+    };
+
+    getBase64Image(logo).then((mainLogo) => {
+      const html = buildInvoiceHtml(invoice, mainLogo, false);
+      setPreviewContent(html);
+      setPreviewInvoice(invoice);
+      setShowPreviewModal(true);
+      setLoading(false);
     });
   };
 
@@ -2147,12 +2232,24 @@ const IpdBillList = () => {
                       headerClassName="datatable-header-center"
                       field="patient_name"
                       header="Patient Name"
-                      body={(rowData) => (
-                        <span>
-                          {rowData.prefix ? `${rowData.prefix} ` : ""}
-                          {rowData.patient_name || "-"}
-                        </span>
-                      )}
+                      body={(rowData) => {
+                        const hasPatientLocation =
+                          rowData.patient_location !== null &&
+                          rowData.patient_location !== undefined &&
+                          rowData.patient_location !== "" &&
+                          rowData.patient_location !== "NULL";
+                        return (
+                          <span>
+                            {hasPatientLocation && (
+                              <small style={{ color: "red", fontWeight: "900", marginRight: "5px" }}>
+                                (Interbranch)
+                              </small>
+                            )}
+                            {rowData.prefix ? `${rowData.prefix} ` : ""}
+                            {rowData.patient_name || "-"}
+                          </span>
+                        );
+                      }}
                       style={{
                         width: "200px",
                         border: "1px solid #4dd0e1",
@@ -2252,7 +2349,7 @@ const IpdBillList = () => {
                       header="Actions"
                       style={{ width: "100px", border: "1px solid #4dd0e1" }}
                       body={(rowData) => {
-                        const isMirror = rowData.status === "Interbranch-Bill";
+                        const isMirror = rowData.status === "Interbranch-Bill" || (rowData.interbranch_id !== null && rowData.interbranch_id !== undefined && rowData.interbranch_id !== "" && rowData.interbranch_id !== 0 && rowData.interbranch_id !== "0");
                         return (
                           <div className="d-flex justify-content-center gap-2">
                             {!isMirror && (
@@ -2267,26 +2364,44 @@ const IpdBillList = () => {
                                 variant="primary"
                                 disabled={
                                   rowData.payment_count > 0 ||
-                                  !moment(rowData.creation_date).isSame(moment(), "day")
+                                  !moment(rowData.creation_date).isSame(moment(), "month")
                                 }
                                 onClick={() => handleEditInvoice(rowData)}
                               >
                                 <FeatherIcon icon="edit" size="15" />
                               </Button>
                             )}
-                            <Button
-                              style={{
-                                variant: "primary",
-                                borderRadius: "8px",
-                                padding: "7px 11px",
-                                fontSize: "14px",
-                                alignItems: "center",
-                                justifyContent: "center",
-                              }}
-                              onClick={() => handlePrint(rowData)}
-                            >
-                              <FeatherIcon icon="printer" size="15" />
-                            </Button>
+                            {isMirror ? (
+                              <Button
+                                style={{
+                                  borderRadius: "8px",
+                                  padding: "7px 11px",
+                                  fontSize: "14px",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  backgroundColor: "#00acc1",
+                                  borderColor: "#00acc1",
+                                  color: "#fff",
+                                }}
+                                onClick={() => handleViewInvoice(rowData)}
+                              >
+                                <FeatherIcon icon="eye" size="15" />
+                              </Button>
+                            ) : (
+                              <Button
+                                style={{
+                                  variant: "primary",
+                                  borderRadius: "8px",
+                                  padding: "7px 11px",
+                                  fontSize: "14px",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                }}
+                                onClick={() => handlePrint(rowData)}
+                              >
+                                <FeatherIcon icon="printer" size="15" />
+                              </Button>
+                            )}
                           </div>
                         );
                       }}
@@ -2325,6 +2440,44 @@ const IpdBillList = () => {
           </Col>
         </Row>
       </Container>
+
+      {/* Invoice Print Preview Modal */}
+      <Modal
+        show={showPreviewModal}
+        onHide={() => setShowPreviewModal(false)}
+        size="xl"
+        centered
+      >
+        <Modal.Header closeButton style={{ backgroundColor: "#e0f7fa", borderBottom: "1px solid #00bcd4" }}>
+          <Modal.Title style={{ color: "#00838f", fontWeight: "bold", fontSize: "1.1rem" }}>
+            <FeatherIcon icon="eye" className="me-2" size={18} />
+            Invoice Preview
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-0 bg-light" style={{ maxHeight: "80vh", overflowY: "auto" }}>
+          <div className="p-4 bg-white shadow-sm mx-auto" style={{ width: "210mm", minHeight: "297mm" }}>
+            {previewContent ? (
+              <iframe
+                id="invoice-preview-iframe"
+                title="Invoice Preview"
+                srcDoc={previewContent}
+                style={{ width: "100%", height: "75vh", border: "none" }}
+              />
+            ) : (
+              <div className="text-center p-5">Loading Preview...</div>
+            )}
+          </div>
+        </Modal.Body>
+        <Modal.Footer className="bg-white border-top shadow-sm justify-content-center">
+          <Button
+            variant="secondary"
+            onClick={() => setShowPreviewModal(false)}
+            style={{ borderRadius: "20px", padding: "8px 30px", fontWeight: "bold" }}
+          >
+            CANCEL
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       <Modal show={showModal} onHide={handleCloseModal} size="lg" centered>
         <Modal.Header
@@ -3021,6 +3174,67 @@ const IpdBillList = () => {
                       <Col md={4}>
                         <Form.Label
                           style={{
+                            fontSize: "11px",
+                            fontWeight: "600",
+                            marginBottom: "4px",
+                            color: "#e53935",
+                          }}
+                        >
+                          *Please select the checkbox if it is an Interbranch bill
+                        </Form.Label>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            height: "30px",
+                          }}
+                        >
+                          <style>
+                            {`
+                              #edit-interbranch-checkbox {
+                                border: 1.5px solid #000000 !important;
+                                cursor: pointer;
+                              }
+                              #edit-interbranch-checkbox:checked {
+                                background-color: #00bcd4 !important;
+                                border-color: #00bcd4 !important;
+                              }
+                            `}
+                          </style>
+                          <Form.Check
+                            type="checkbox"
+                            id="edit-interbranch-checkbox"
+                            label="Interbranch Bill"
+                            checked={!!selectedInvoice.isInterbranch}
+                            onChange={(e) => {
+                              const checked = e.target.checked;
+                              setSelectedClinicPatient(null);
+                              setErrors((prev) => ({ ...prev, selectedClinicUid: null }));
+                              setSelectedInvoice((prev) => {
+                                if (!prev) return null;
+                                return {
+                                  ...prev,
+                                  isInterbranch: checked,
+                                  interbranchLocation: checked ? prev.interbranchLocation : "",
+                                  selectedClinicUid: checked ? prev.selectedClinicUid : "",
+                                  selectedClinicInvoiceId: checked ? prev.selectedClinicInvoiceId : null,
+                                };
+                              });
+                            }}
+                            style={{
+                              fontSize: "12px",
+                              fontWeight: "600",
+                              color: "#333",
+                              cursor: "pointer",
+                              margin: 0,
+                            }}
+                          />
+                        </div>
+                      </Col>
+
+                      <Col md={4}>
+                        <Form.Label
+                          style={{
                             fontSize: "12px",
                             fontWeight: "600",
                             marginBottom: "2px",
@@ -3045,8 +3259,6 @@ const IpdBillList = () => {
                           }
                           onChange={(e) => {
                             const type = e.target.value;
-                            setSelectedClinicPatient(null);
-                            setErrors((prev) => ({ ...prev, selectedClinicUid: null }));
                             setSelectedInvoice((prev) => {
                               if (!prev) return null;
                               return {
@@ -3057,11 +3269,6 @@ const IpdBillList = () => {
                                   insurancecompany: null,
                                   tpa: null,
                                   bill_method: "non_insurance",
-                                }),
-                                // Reset interbranch details if switching away from interbranch
-                                ...(type !== "interbranch" && {
-                                  interbranchLocation: "",
-                                  selectedClinicUid: "",
                                 }),
                               };
                             });
@@ -3096,11 +3303,10 @@ const IpdBillList = () => {
                           <option value="non_insurance">Non-Insurance</option>
                           <option value="insurance">Insurance</option>
                           <option value="charity">Charity</option>
-                          <option value="interbranch">Interbranch</option>
                         </Form.Select>
                       </Col>
 
-                      {selectedInvoice.bill_Type === "interbranch" && (
+                      {selectedInvoice.isInterbranch && (
                         <>
                           <Col md={4}>
                             <Form.Label
@@ -3111,7 +3317,7 @@ const IpdBillList = () => {
                               }}
                               className="text-muted"
                             >
-                              Clinic Location <span className="text-danger">*</span>
+                              Patient Origin Clinic <span className="text-danger">*</span>
                             </Form.Label>
                             <Form.Select
                               required
@@ -3123,12 +3329,14 @@ const IpdBillList = () => {
                               }}
                               name="interbranchLocation"
                               value={selectedInvoice.interbranchLocation || ""}
-                              onChange={(e) =>
+                              onChange={(e) => {
+                                const val = e.target.value;
                                 setSelectedInvoice({
                                   ...selectedInvoice,
-                                  interbranchLocation: e.target.value,
-                                })
-                              }
+                                  interbranchLocation: val,
+                                  selectedClinicUid: val === "DP Road" ? "N/A" : "",
+                                });
+                              }}
                             >
                               <option value="">SELECT LOCATION</option>
                               {clinicLocations
@@ -3151,16 +3359,24 @@ const IpdBillList = () => {
                                 }}
                                 className="text-muted"
                               >
-                                Selected Clinic Location UID No <span className="text-danger">*</span>
+                                Patient UID at Origin Clinic{" "}
+                                {selectedInvoice.interbranchLocation !== "DP Road" && (
+                                  <span className="text-danger">*</span>
+                                )}
                               </Form.Label>
                               <Form.Control
-                                required
+                                required={selectedInvoice.interbranchLocation !== "DP Road"}
+                                disabled={selectedInvoice.interbranchLocation === "DP Road"}
                                 size="sm"
                                 name="selectedClinicUid"
                                 style={{
                                   borderRadius: "10px",
                                   fontSize: "12px",
-                                  border: !!errors.selectedClinicUid ? "1px solid red" : "1px solid #4dd0e1",
+                                  border:
+                                    selectedInvoice.interbranchLocation !== "DP Road" &&
+                                      !!errors.selectedClinicUid
+                                      ? "1px solid red"
+                                      : "1px solid #4dd0e1",
                                 }}
                                 value={selectedInvoice.selectedClinicUid || ""}
                                 onChange={(e) =>
@@ -3265,10 +3481,9 @@ const IpdBillList = () => {
                               }}
                               className="text-muted"
                             >
-                              TPA <span style={{ color: "red" }} className="required">*</span>
+                              TPA
                             </Form.Label>
                             <Form.Select
-                              required
                               size="sm"
                               style={{
                                 borderRadius: "10px",
@@ -3536,7 +3751,7 @@ const IpdBillList = () => {
                         )}
 
                       {/* Note Area */}
-                      <Col md={12}>
+                      <Col md={4}>
                         <Form.Label
                           style={{
                             fontSize: "12px",
@@ -3586,6 +3801,22 @@ const IpdBillList = () => {
                       flexDirection: "column",
                     }}
                   >
+                    {selectedInvoice.interbranchLocation === "DP Road" && (
+                      <div
+                        className="alert alert-warning mb-3 text-start"
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: "500",
+                          backgroundColor: "#fff3e0",
+                          borderColor: "#ffe0b2",
+                          color: "#e65100",
+                          borderRadius: "10px",
+                          padding: "10px 15px",
+                        }}
+                      >
+                        <strong>Note:</strong> For surgeries performed at DP Road, editing, payment collection, and direct printing are disabled. A view-only preview will be provided in the bill list.
+                      </div>
+                    )}
                     <div
                       style={{
                         flexGrow: 1,

@@ -1192,7 +1192,7 @@ export default function IpdAdmissionList() {
             style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}
           >
             <FeatherIcon icon="file-text" className="me-2" size="18" />
-            Patients Documents
+            Patient Documents
           </Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleDocSubmit}>

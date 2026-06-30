@@ -118,6 +118,7 @@ const AddIpdBill = () => {
   const [formData, setFormData] = useState(initialFormData);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [isInterbranch, setIsInterbranch] = useState(false);
   const [consultants, setConsultants] = useState([]);
   const [surgeons, setSurgeons] = useState([]);
   const [insurance, setInsurance] = useState([]);
@@ -193,19 +194,6 @@ const AddIpdBill = () => {
           return;
         }
 
-        if (formData.bill_Type === "interbranch" && formData.interbranchLocation) {
-          const responseSelected = await fetch(
-            `${BASE_URL}/V1/invoice/checkInvoiceId?invoice_id=${formData.invoice_id}&location=${formData.interbranchLocation}`,
-          );
-          const resultSelected = await responseSelected.json();
-          if (resultSelected.data?.exists) {
-            setInvoiceWarning(
-              `Invoice ID already exists at selected clinic location (${formData.interbranchLocation}) for patient: ${resultSelected.data.patient_name}`,
-            );
-            return;
-          }
-        }
-
         setInvoiceWarning("");
       } catch (err) {
         console.error("Invoice ID check failed:", err);
@@ -213,10 +201,10 @@ const AddIpdBill = () => {
     }, 500);
 
     return () => clearTimeout(checkTimeout);
-  }, [formData.invoice_id, currentLocation, formData.bill_Type, formData.interbranchLocation]);
+  }, [formData.invoice_id, currentLocation]);
 
   useEffect(() => {
-    if (formData.bill_Type !== "interbranch" || !formData.interbranchLocation || !formData.selectedClinicUid) {
+    if (!isInterbranch || !formData.interbranchLocation || formData.interbranchLocation === "DP Road" || !formData.selectedClinicUid) {
       setSelectedClinicPatient(null);
       return;
     }
@@ -267,13 +255,14 @@ const AddIpdBill = () => {
     }, 500);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [formData.selectedClinicUid, formData.interbranchLocation, formData.bill_Type]);
+  }, [formData.selectedClinicUid, formData.interbranchLocation, isInterbranch]);
 
   useEffect(() => {
     if (!currentLocation) return;
 
     const fetchDropdowns = async () => {
       try {
+        const dateQuery = formData.admission_date ? `&date=${formData.admission_date}` : "";
         const [cRes, sRes, iRes, tRes] = await Promise.all([
           fetch(
             `${BASE_URL}/V1/invoice/consultant_dropdown?location=${currentLocation}`,
@@ -282,10 +271,10 @@ const AddIpdBill = () => {
             `${BASE_URL}/V1/invoice/surgeon_dropdown?location=${currentLocation}`,
           ),
           fetch(
-            `${BASE_URL}/V1/invoice/insurance_co_dropdown?location=${currentLocation}`,
+            `${BASE_URL}/V1/invoice/insurance_co_dropdown?location=${currentLocation}${dateQuery}`,
           ),
           fetch(
-            `${BASE_URL}/V1/invoice/tpa_dropdown?location=${currentLocation}`,
+            `${BASE_URL}/V1/invoice/tpa_dropdown?location=${currentLocation}${dateQuery}`,
           ),
         ]);
 
@@ -307,7 +296,7 @@ const AddIpdBill = () => {
     };
 
     fetchDropdowns();
-  }, [currentLocation]);
+  }, [currentLocation, formData.admission_date]);
 
   const validate = () => {
     const newErrors = {};
@@ -336,22 +325,21 @@ const AddIpdBill = () => {
       if (!formData.insurance) {
         newErrors.insurance = "Insurance Company is required.";
       }
-      if (!formData.tpa) {
-        newErrors.tpa = "TPA is required.";
-      }
       if (!formData.bill_method) {
         newErrors.bill_method = "Bill Method is required.";
       }
     }
 
-    if (formData.bill_Type === "interbranch") {
+    if (isInterbranch) {
       if (!formData.interbranchLocation) {
         newErrors.interbranchLocation = "Clinic Location is required.";
       }
-      if (!formData.selectedClinicUid) {
-        newErrors.selectedClinicUid = "*Selected Clinic Location UID No is required.";
-      } else if (!selectedClinicPatient) {
-        newErrors.selectedClinicUid = "*Must match the correct UID No of the patient at the selected clinic location.";
+      if (formData.interbranchLocation !== "DP Road") {
+        if (!formData.selectedClinicUid) {
+          newErrors.selectedClinicUid = "*Selected Clinic Location UID No is required.";
+        } else if (!selectedClinicPatient) {
+          newErrors.selectedClinicUid = "*Must match the correct UID No of the patient at the selected clinic location.";
+        }
       }
     }
 
@@ -425,7 +413,7 @@ const AddIpdBill = () => {
     }
 
     if (name === "interbranchLocation") {
-      updatedFormData.selectedClinicUid = "";
+      updatedFormData.selectedClinicUid = value === "DP Road" ? "N/A" : "";
       setSelectedClinicPatient(null);
     }
 
@@ -448,6 +436,26 @@ const AddIpdBill = () => {
     }
 
     setFormData(updatedFormData);
+  };
+
+  const handleInterbranchCheckboxChange = (e) => {
+    const checked = e.target.checked;
+    setIsInterbranch(checked);
+    setFormData((prev) => {
+      const updated = {
+        ...prev,
+        interbranchLocation: "",
+        selectedClinicUid: "",
+      };
+      return updated;
+    });
+    setErrors((prev) => {
+      const updated = { ...prev };
+      delete updated.interbranchLocation;
+      delete updated.selectedClinicUid;
+      return updated;
+    });
+    setSelectedClinicPatient(null);
   };
 
   const handlePatientSearch = async (query) => {
@@ -549,6 +557,8 @@ const AddIpdBill = () => {
   const resetForm = () => {
     setFormData(initialFormData);
     setErrors({});
+    setIsInterbranch(false);
+    setSelectedClinicPatient(null);
   };
 
   const getChargeBreakdown = () => {
@@ -625,12 +635,71 @@ const AddIpdBill = () => {
         else status = method || "NonInsurance";
       } else if (formData.bill_Type === "charity") {
         status = "Charity";
-      } else if (formData.bill_Type === "interbranch") {
-        status = "Interbranch";
       }
 
-      if (formData.bill_Type === "interbranch") {
+      if (isInterbranch) {
         const payableAmountVal = parseFloat(formData.payableAmount || 0);
+
+        if (formData.interbranchLocation === "DP Road") {
+          const payloadLoggedIn = {
+            ...formData,
+            Sub_Total: formData.Sub_Total,
+            payableAmount: payableAmountVal.toFixed(2),
+            payable_amt: payableAmountVal.toFixed(2),
+            creation_date: formData.admission_date,
+            status: status,
+            admissiontime: convertTo12Hour(formData.admissiontime),
+            dischargetime: convertTo12Hour(formData.dischargetime),
+            consultantName: null,
+            surgeonName: null,
+            patient_location: "DP Road",
+            interbranch_id: 1, // Store 1 to signify local-only mirror/read-only copy
+          };
+
+          try {
+            const responseLoggedIn = await fetch(
+              `${BASE_URL}/V1/invoice/addInvoice?location=${currentLocation}`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payloadLoggedIn),
+              }
+            );
+            const dataLoggedIn = await responseLoggedIn.json();
+
+            if (!responseLoggedIn.ok) {
+              Swal.fire({
+                title: "Ops...",
+                text: dataLoggedIn.message || `Error adding invoice at logged-in clinic (${currentLocation}).`,
+                icon: "error",
+              });
+              setLoading(false);
+              return;
+            }
+
+            Swal.fire({
+              title: "Success!",
+              text: "Invoice registered successfully!",
+              icon: "success",
+              timer: 2000,
+              showConfirmButton: true,
+              confirmButtonText: "Okay",
+              confirmButtonColor: "#00acc1",
+            }).then(() => {
+              resetForm();
+              navigate("/ipd-bill-list");
+            });
+          } catch (error) {
+            Swal.fire({
+              title: "Network Error",
+              text: "Please check your connection and try again.",
+              icon: "warning",
+            });
+          } finally {
+            setLoading(false);
+          }
+          return;
+        }
 
         const payloadLoggedIn = {
           ...formData,
@@ -638,10 +707,11 @@ const AddIpdBill = () => {
           payableAmount: payableAmountVal.toFixed(2),
           payable_amt: payableAmountVal.toFixed(2),
           creation_date: formData.admission_date,
-          status: "Interbranch",
+          status: status,
           admissiontime: convertTo12Hour(formData.admissiontime),
           dischargetime: convertTo12Hour(formData.dischargetime),
           patient_location: formData.interbranchLocation,
+          interbranch_id: null,
         };
 
         const payloadSelected = {
@@ -652,9 +722,13 @@ const AddIpdBill = () => {
           payableAmount: payableAmountVal.toFixed(2),
           payable_amt: payableAmountVal.toFixed(2),
           creation_date: formData.admission_date,
-          status: "Interbranch-Bill",
+          status: status,
           admissiontime: convertTo12Hour(formData.admissiontime),
           dischargetime: convertTo12Hour(formData.dischargetime),
+          invoice_id: null,
+          consultantName: null,
+          surgeonName: null,
+          interbranch_id: formData.invoice_id,
         };
 
         try {
@@ -1219,8 +1293,55 @@ const AddIpdBill = () => {
 
           <Card style={cardStyle}>
             <Card.Body className="p-4">
-              <h5 style={sectionTitleStyle}>Payment Details & Config</h5>
+              <h5 className="mb-3" style={sectionTitleStyle}>Payment Details & Config</h5>
               <Row className="g-3">
+                <Col md={3}>
+                  <Form.Label
+                    style={{
+                      fontSize: "11px",
+                      fontWeight: "600",
+                      marginBottom: "4px",
+                      color: "#e53935", // A soft professional red to draw attention
+                    }}
+                  >
+                    *Please select the checkbox if it is an Interbranch bill
+                  </Form.Label>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      height: "30px",
+                    }}
+                  >
+                    <style>
+                      {`
+                        #interbranch-checkbox {
+                          border: 1.5px solid #000000 !important;
+                          cursor: pointer;
+                        }
+                        #interbranch-checkbox:checked {
+                          background-color: #00bcd4 !important;
+                          border-color: #00bcd4 !important;
+                        }
+                      `}
+                    </style>
+                    <Form.Check
+                      type="checkbox"
+                      id="interbranch-checkbox"
+                      label="Interbranch Bill"
+                      checked={isInterbranch}
+                      onChange={handleInterbranchCheckboxChange}
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        color: "#333", // Dark professional grey
+                        cursor: "pointer",
+                        margin: 0,
+                      }}
+                    />
+                  </div>
+                </Col>
+
                 <Col md={2}>
                   <Form.Label
                     style={{
@@ -1243,88 +1364,8 @@ const AddIpdBill = () => {
                     <option value="insurance">Insurance</option>
                     <option value="non_insurance">Non-Insurance</option>
                     <option value="charity">Charity</option>
-                    <option value="interbranch">Interbranch</option>
                   </Form.Select>
                 </Col>
-
-                {formData.bill_Type === "interbranch" && (
-                  <>
-                    <Col md={5}>
-                      <Form.Label
-                        style={{
-                          fontSize: "12px",
-                          fontWeight: "600",
-                          marginBottom: "2px",
-                        }}
-                      >
-                        Clinic Location <span className="text-danger">*</span>
-                      </Form.Label>
-                      <Form.Select
-                        required
-                        style={inputStyle}
-                        name="interbranchLocation"
-                        value={formData.interbranchLocation}
-                        onChange={handleInputChange}
-                        isInvalid={errors.interbranchLocation}
-                      >
-                        <option value="">SELECT LOCATION</option>
-                        {clinicLocations
-                          .filter((loc) => loc !== currentLocation)
-                          .map((loc, idx) => (
-                            <option key={idx} value={loc}>
-                              {loc}
-                            </option>
-                          ))}
-                      </Form.Select>
-                    </Col>
-                    {formData.interbranchLocation && (
-                      <Col md={5}>
-                        <Form.Label
-                          style={{
-                            fontSize: "12px",
-                            fontWeight: "600",
-                            marginBottom: "2px",
-                          }}
-                        >
-                          Selected Clinic Location UID No <span className="text-danger">*</span>
-                        </Form.Label>
-                        <Form.Control
-                          required
-                          name="selectedClinicUid"
-                          style={inputStyle}
-                          value={formData.selectedClinicUid || ""}
-                          onChange={handleInputChange}
-                          isInvalid={!!errors.selectedClinicUid}
-                          placeholder="Enter Patient UID No"
-                        />
-                        {errors.selectedClinicUid && (
-                          <div
-                            className="text-danger"
-                            style={{
-                              fontSize: "10px",
-                              marginTop: "4px",
-                              fontWeight: "600",
-                            }}
-                          >
-                            {errors.selectedClinicUid}
-                          </div>
-                        )}
-                        {selectedClinicPatient && (
-                          <div
-                            className="text-success"
-                            style={{
-                              fontSize: "13px",
-                              marginTop: "4px",
-                              fontWeight: "600",
-                            }}
-                          >
-                            <strong> *Patient Found: </strong> {selectedClinicPatient.name} - {selectedClinicPatient.phone || "N/A"} - {selectedClinicPatient.Uid_no || "N/A"}
-                          </div>
-                        )}
-                      </Col>
-                    )}
-                  </>
-                )}
 
                 {formData.bill_Type === "insurance" && (
                   <>
@@ -1354,7 +1395,7 @@ const AddIpdBill = () => {
                         ))}
                       </Form.Select>
                     </Col>
-                    <Col md={5}>
+                    <Col md={4}>
                       <Form.Label
                         style={{
                           fontSize: "12px",
@@ -1362,10 +1403,9 @@ const AddIpdBill = () => {
                           marginBottom: "2px",
                         }}
                       >
-                        TPA <span className="text-danger">*</span>
+                        TPA
                       </Form.Label>
                       <Form.Select
-                        required
                         style={inputStyle}
                         name="tpa"
                         value={formData.tpa}
@@ -1409,7 +1449,7 @@ const AddIpdBill = () => {
 
                 {formData.bill_method === "PDC" && (
                   <React.Fragment key="pdc-fields">
-                    <Col md={3}>
+                    <Col md={2}>
                       <Form.Label
                         style={{
                           fontSize: "12px",
@@ -1433,7 +1473,7 @@ const AddIpdBill = () => {
                         onChange={handleInputChange}
                       />
                     </Col>
-                    <Col md={3}>
+                    <Col md={2}>
                       <Form.Label
                         style={{
                           fontSize: "12px",
@@ -1574,7 +1614,93 @@ const AddIpdBill = () => {
                   </Col>
                 )}
 
-                <Col md={6}>
+                {isInterbranch && (
+                  <>
+                    <Col md={2}>
+                      <Form.Label
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: "600",
+                          marginBottom: "2px",
+                        }}
+                      >
+                        Patient Origin Clinic <span className="text-danger">*</span>
+                      </Form.Label>
+                      <Form.Select
+                        required
+                        style={inputStyle}
+                        name="interbranchLocation"
+                        value={formData.interbranchLocation}
+                        onChange={handleInputChange}
+                        isInvalid={errors.interbranchLocation}
+                      >
+                        <option value="">SELECT LOCATION</option>
+                        {clinicLocations
+                          .filter((loc) => loc !== currentLocation)
+                          .map((loc, idx) => (
+                            <option key={idx} value={loc}>
+                              {loc}
+                            </option>
+                          ))}
+                      </Form.Select>
+                    </Col>
+                    {formData.interbranchLocation && (
+                      <Col md={2}>
+                        <Form.Label
+                          style={{
+                            fontSize: "12px",
+                            fontWeight: "600",
+                            marginBottom: "2px",
+                          }}
+                        >
+                          Patient UID at Origin Clinic{" "}
+                          {formData.interbranchLocation !== "DP Road" && (
+                            <span className="text-danger">*</span>
+                          )}
+                        </Form.Label>
+                        <Form.Control
+                          required={formData.interbranchLocation !== "DP Road"}
+                          disabled={formData.interbranchLocation === "DP Road"}
+                          name="selectedClinicUid"
+                          style={inputStyle}
+                          value={formData.selectedClinicUid || ""}
+                          onChange={handleInputChange}
+                          isInvalid={
+                            formData.interbranchLocation !== "DP Road" &&
+                            !!errors.selectedClinicUid
+                          }
+                          placeholder="Enter Patient UID No"
+                        />
+                        {errors.selectedClinicUid && (
+                          <div
+                            className="text-danger"
+                            style={{
+                              fontSize: "10px",
+                              marginTop: "4px",
+                              fontWeight: "600",
+                            }}
+                          >
+                            {errors.selectedClinicUid}
+                          </div>
+                        )}
+                        {selectedClinicPatient && (
+                          <div
+                            className="text-success"
+                            style={{
+                              fontSize: "13px",
+                              marginTop: "4px",
+                              fontWeight: "600",
+                            }}
+                          >
+                            <strong> *Patient Found: </strong> {selectedClinicPatient.name} - {selectedClinicPatient.phone || "N/A"}
+                          </div>
+                        )}
+                      </Col>
+                    )}
+                  </>
+                )}
+
+                <Col md={3}>
                   <Form.Label
                     style={{
                       fontSize: "12px",
@@ -1606,6 +1732,22 @@ const AddIpdBill = () => {
               >
                 <Row>
                   <Col md={12} className="text-end ">
+                    {formData.interbranchLocation === "DP Road" && (
+                      <div
+                        className="alert alert-warning mb-3 text-start"
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: "500",
+                          backgroundColor: "#fff3e0",
+                          borderColor: "#ffe0b2",
+                          color: "#e65100",
+                          borderRadius: "10px",
+                          padding: "10px 15px",
+                        }}
+                      >
+                        <strong>Note:</strong> For surgeries performed at DP Road, editing, payment collection, and direct printing are disabled. A view-only preview will be provided in the bill list.
+                      </div>
+                    )}
                     <div
                       className="mb-5"
                       style={{
@@ -1653,19 +1795,18 @@ const AddIpdBill = () => {
                         Total Bill Amount:{" "}
                         <strong>₹ {getChargeBreakdown().subTotal}</strong>
                       </div>
-                      {formData.bill_Type === "interbranch" ? (
-                        <div style={{ color: "#00a619ff", fontStyle: "italic", fontSize: "13px", marginTop: "3px", textAlign: "right", fontWeight: "600" }}>
-                          * Interbranch bill will be synchronized across both clinic locations.
-                        </div>
-                      ) : (
-                        <div style={{ color: "#d32f2f" }}>
-                          {formData.bill_method === "PDC"
-                            ? "PDC Amount"
-                            : formData.bill_Type === "charity"
+                      <div style={{ color: "#d32f2f" }}>
+                        {formData.bill_method === "PDC"
+                          ? "PDC Amount"
+                          : formData.bill_Type === "charity"
                             ? "Charity Discount"
                             : "Discount"}{" "}
-                          (₹):{" "}
-                          <strong>- ₹ {getChargeBreakdown().discount}</strong>
+                        (₹):{" "}
+                        <strong>- ₹ {getChargeBreakdown().discount}</strong>
+                      </div>
+                      {isInterbranch && (
+                        <div style={{ color: "#00a619ff", fontStyle: "italic", fontSize: "13px", marginTop: "3px", textAlign: "right", fontWeight: "600" }}>
+                          *Interbranch bill will be synchronized across both clinic locations.
                         </div>
                       )}
                       <div
