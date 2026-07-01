@@ -80,12 +80,14 @@ export default function IpdAdmissionList() {
     panCard: null,
     cancelledCheque: null,
     pdcCheque: null,
+    policyCopy: null,
   });
   const [previews, setPreviews] = useState({
     aadharCard: null,
     panCard: null,
     cancelledCheque: null,
     pdcCheque: null,
+    policyCopy: null,
   });
   const [fullScreenImage, setFullScreenImage] = useState(null);
 
@@ -137,6 +139,7 @@ export default function IpdAdmissionList() {
           pancard: p.pancard || null,
           cancelled_cheque: p.cancelled_cheque || null,
           pdc_cheque: p.pdc_cheque || null,
+          policy_copy: p.policy_copy || null,
           admissionNo:
             p.admission_no === 0 || p.admission_no === "0"
               ? null
@@ -191,6 +194,7 @@ export default function IpdAdmissionList() {
             pancard: p.pancard || null,
             cancelled_cheque: p.cancelled_cheque || null,
             pdc_cheque: p.pdc_cheque || null,
+            policy_copy: p.policy_copy || null,
             admissionNo:
               p.admission_no === 0 || p.admission_no === "0"
                 ? null
@@ -411,6 +415,7 @@ export default function IpdAdmissionList() {
     panCard: patient.pancard || null,
     cancelledCheque: patient.cancelled_cheque || null,
     pdcCheque: patient.pdc_cheque || null,
+    policyCopy: patient.policy_copy || null,
   });
 
   const handleViewDocumentsClick = (patient) => {
@@ -421,6 +426,7 @@ export default function IpdAdmissionList() {
       panCard: null,
       cancelledCheque: null,
       pdcCheque: null,
+      policyCopy: null,
     });
     setPreviews(buildDocPreviewMap(patient));
   };
@@ -488,6 +494,9 @@ export default function IpdAdmissionList() {
       if (documents.pdcCheque) {
         formData.append("pdcCheque", documents.pdcCheque);
       }
+      if (documents.policyCopy) {
+        formData.append("policyCopy", documents.policyCopy);
+      }
 
       const response = await fetch(
         `${BASE_URL}/V1/doctor/manage-admission/documents`,
@@ -518,6 +527,7 @@ export default function IpdAdmissionList() {
               cancelled_cheque:
                 savedDocuments.cancelled_cheque || patient.cancelled_cheque,
               pdc_cheque: savedDocuments.pdc_cheque || patient.pdc_cheque,
+              policy_copy: savedDocuments.policy_copy || patient.policy_copy,
             }
             : patient,
         ),
@@ -532,6 +542,7 @@ export default function IpdAdmissionList() {
             cancelled_cheque:
               savedDocuments.cancelled_cheque || prev.cancelled_cheque,
             pdc_cheque: savedDocuments.pdc_cheque || prev.pdc_cheque,
+            policy_copy: savedDocuments.policy_copy || prev.policy_copy,
           }
           : prev,
       );
@@ -543,6 +554,7 @@ export default function IpdAdmissionList() {
           cancelled_cheque:
             savedDocuments.cancelled_cheque || docPatient.cancelled_cheque,
           pdc_cheque: savedDocuments.pdc_cheque || docPatient.pdc_cheque,
+          policy_copy: savedDocuments.policy_copy || docPatient.policy_copy,
         }),
       );
 
@@ -880,7 +892,7 @@ export default function IpdAdmissionList() {
       style={{
         background: "linear-gradient(to right, #e0f7fa, #80deea)",
         minHeight: "100vh",
-        padding: "15px",
+        padding: "10px",
         fontFamily: "'Poppins', Arial, sans-serif",
       }}
     >
@@ -1092,8 +1104,13 @@ export default function IpdAdmissionList() {
         onHide={() => setShowRescheduleModal(false)}
         centered
       >
-        <Modal.Header closeButton style={{ backgroundColor: "#67c5cfff" }}>
-          <Modal.Title style={{ color: "#1a5b61ff", fontSize: "1rem" }}>
+        <Modal.Header closeButton style={{
+          backgroundColor: "#e0f7fa",
+          borderBottom: "2px solid #00bcd4",
+          padding: "10px 15px",
+        }}>
+          <Modal.Title style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}>
+            <FeatherIcon icon="calendar" size={18} className="me-1" />
             Reschedule Surgery
           </Modal.Title>
         </Modal.Header>
@@ -1115,6 +1132,7 @@ export default function IpdAdmissionList() {
           </Modal.Body>
           <Modal.Footer>
             <Button
+              style={{ borderRadius: "8px" }}
               variant="secondary"
               onClick={() => setShowRescheduleModal(false)}
             >
@@ -1197,67 +1215,8 @@ export default function IpdAdmissionList() {
         </Modal.Header>
         <Form onSubmit={handleDocSubmit}>
           <Modal.Body style={{ fontSize: "13px", padding: "10px" }}>
-            {Object.values(previews).some(Boolean) && (
-              <div className="mb-3">
-                <div
-                  style={{
-                    fontSize: "12px",
-                    fontWeight: "700",
-                    color: "#00838f",
-                    marginBottom: "8px",
-                  }}
-                >
-                  Saved Documents
-                </div>
-                <Row>
-                  {[
-                    { key: "aadharCard", label: "Aadharcard" },
-                    { key: "panCard", label: "Pan Card" },
-                    { key: "cancelledCheque", label: "Cancelled Cheque" },
-                    { key: "pdcCheque", label: "PDC Cheque" },
-                  ].map((doc) =>
-                    previews[doc.key] ? (
-                      <Col md={3} key={doc.key} className="mb-2">
-                        <div
-                          style={{
-                            border: "1px solid #4dd0e1",
-                            borderRadius: "8px",
-                            overflow: "hidden",
-                            cursor: "pointer",
-                            height: "90px",
-                            backgroundColor: "#f8fdff",
-                          }}
-                          onClick={() => setFullScreenImage(previews[doc.key])}
-                          title={`Click to preview ${doc.label}`}
-                        >
-                          <img
-                            src={previews[doc.key]}
-                            alt={`${doc.label} Preview`}
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              objectFit: "cover",
-                            }}
-                          />
-                        </div>
-                        <div
-                          style={{
-                            fontSize: "10px",
-                            textAlign: "center",
-                            marginTop: "4px",
-                            color: "#006064",
-                          }}
-                        >
-                          {doc.label}
-                        </div>
-                      </Col>
-                    ) : null,
-                  )}
-                </Row>
-              </div>
-            )}
             <Row>
-              <Col md={6} className="mb-20">
+              <Col md={6} className="mb-15">
                 <Form.Group controlId="aadharCard">
                   <Form.Label
                     style={{
@@ -1385,7 +1344,7 @@ export default function IpdAdmissionList() {
                   )}
                 </Form.Group>
               </Col>
-              <Col md={6} className="mb-2">
+              <Col md={6} className="mb-15">
                 <Form.Group controlId="cancelledCheque">
                   <Form.Label
                     style={{
@@ -1487,6 +1446,66 @@ export default function IpdAdmissionList() {
                         <img
                           src={previews.pdcCheque}
                           alt="PDC Preview"
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
+                        />
+                      </div>
+                      <span
+                        style={{
+                          fontSize: "10px",
+                          color: "red",
+                          marginTop: "10px",
+                        }}
+                      >
+                        click to preview the image
+                      </span>
+                    </div>
+                  )}
+                </Form.Group>
+              </Col>
+              <Col md={6} className="mb-2">
+                <Form.Group controlId="policyCopy">
+                  <Form.Label
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: "600",
+                      marginBottom: "4px",
+                    }}
+                  >
+                    <FeatherIcon icon="file" size={14} className="me-1" />
+                    Policy Copy (Optional)
+                  </Form.Label>
+                  <Form.Control
+                    type="file"
+                    size="sm"
+                    onChange={(e) => handleFileChange(e, "policyCopy")}
+                    style={{
+                      border: "2px solid rgb(77, 208, 225)",
+                      fontSize: "12px",
+                      borderRadius: "10px",
+                    }}
+                  />
+                  {previews.policyCopy && (
+                    <div className="d-flex align-items-center gap-2">
+                      <div
+                        className="mt-2"
+                        style={{
+                          border: "1px solid #4dd0e1",
+                          borderRadius: "8px",
+                          overflow: "hidden",
+                          cursor: "pointer",
+                          width: "60px",
+                          height: "45px",
+                        }}
+                        onClick={() => setFullScreenImage(previews.policyCopy)}
+                        title="Click to view full image"
+                      >
+                        <img
+                          src={previews.policyCopy}
+                          alt="Policy Copy Preview"
                           style={{
                             width: "100%",
                             height: "100%",

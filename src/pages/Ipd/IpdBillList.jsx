@@ -396,6 +396,8 @@ const IpdBillList = () => {
     coopay: "",
     deductionamt: "0.00",
     payableamt: "0.00",
+    claimNo: "",
+    status: "",
   });
 
   const openCashlessModal = (rowData) => {
@@ -415,6 +417,8 @@ const IpdBillList = () => {
       coopay: coopay > 0 ? coopay.toString() : "",
       deductionamt: deduction.toFixed(2),
       payableamt: payable.toFixed(2),
+      claimNo: rowData.claim_no || "",
+      status: rowData.status || "",
     });
     setShowCashlessModal(true);
   };
@@ -449,6 +453,7 @@ const IpdBillList = () => {
         receivedamt: parseFloat(cashlessData.receivedamt) || 0,
         coopay: parseFloat(cashlessData.coopay) || 0,
         deductionamt: parseFloat(cashlessData.deductionamt) || 0,
+        claim_no: cashlessData.claimNo || "",
       };
 
       const token = localStorage.getItem("token");
@@ -1572,7 +1577,7 @@ const IpdBillList = () => {
 
     const { dynamicRows, Sub_Total } = getDynamicRowsFromInvoice(invoice);
 
-    const printContent = `
+    const printContent = ` 
   <html>
     <head>
       <title>Invoice - ${invoice.invoice_id}</title>
@@ -2242,9 +2247,9 @@ const IpdBillList = () => {
                           <span>
                             {hasPatientLocation && (
                               <small style={{ color: "red", fontWeight: "bold", marginRight: "5px" }}>
-                                (Interbranch: {rowData.patient_location})
+                                (Interbranch: {rowData.patient_location})<br></br>
                               </small>
-                            )}<br></br>
+                            )}
                             {rowData.prefix ? `${rowData.prefix} ` : ""}
                             {rowData.patient_name || "-"}
                           </span>
@@ -2277,7 +2282,6 @@ const IpdBillList = () => {
                           >
                             <option value="All">All</option>
                             <option value="Cashless">Cashless</option>
-                            <option value="Interbranch">Interbranch</option>
                             <option value="NonInsurance">NonInsurance</option>
                             <option value="Reimbursement">Reimbursement</option>
                           </select>
@@ -2286,21 +2290,25 @@ const IpdBillList = () => {
                       style={{ width: "130px", border: "1px solid #4dd0e1" }}
                       body={(rowData) => {
                         const status = rowData.status || "";
-                        const isCashless = status.toLowerCase() === "cashless";
+                        const statusLower = status.toLowerCase();
+                        const isInteractive =
+                          statusLower === "cashless" ||
+                          statusLower === "pdc" ||
+                          statusLower === "reimbursement";
+                        const isCashless = statusLower === "cashless";
                         return (
                           <div
                             className={isCashless ? "cashless-patient" : ""}
                             style={
-                              isCashless
+                              isInteractive
                                 ? {
                                   cursor: "pointer",
-                                  color: "red",
                                   fontWeight: "bold",
                                 }
                                 : {}
                             }
                             onClick={
-                              isCashless
+                              isInteractive
                                 ? () => openCashlessModal(rowData)
                                 : undefined
                             }
@@ -3728,7 +3736,7 @@ const IpdBillList = () => {
                               }}
                               className="text-muted"
                             >
-                              Cheque No
+                              Cheque Number
                             </Form.Label>
                             <Form.Control
                               size="sm"
@@ -3738,7 +3746,7 @@ const IpdBillList = () => {
                                 fontSize: "12px",
                                 border: "1px solid #4dd0e1",
                               }}
-                              placeholder="Enter cheque No"
+                              placeholder="Enter cheque number"
                               type="text"
                               onKeyDown={(e) => {
                                 if (["e", "E", "+", "-", "."].includes(e.key)) {
@@ -3952,14 +3960,44 @@ const IpdBillList = () => {
           <Modal.Title
             style={{ fontSize: "16px", fontWeight: "600", color: "#00838f" }}
           >
-            Add Cashless Amount
+            {String(cashlessData.status).toLowerCase() === "reimbursement"
+              ? "Add Reimbursement Amount"
+              : String(cashlessData.status).toLowerCase() === "pdc"
+                ? "Add PDC Amount"
+                : "Add Cashless Amount"}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form onSubmit={submitCashless} id="cashless-form">
             <Form.Group className="mb-10 d-flex align-items-center">
               <Form.Label
-                style={{ width: "35%", margin: 0, fontWeight: "500" }}
+                style={{ width: "35%", margin: 0, fontWeight: "600", fontSize: "13px" }}
+              >
+                Claim Number
+              </Form.Label>
+              <InputGroup style={{ width: "65%", flexWrap: "nowrap" }}>
+                <Form.Control
+                  type="text"
+                  placeholder="Enter Claim Number"
+                  value={cashlessData.claimNo}
+                  onChange={(e) =>
+                    setCashlessData((prev) => ({
+                      ...prev,
+                      claimNo: e.target.value,
+                    }))
+                  }
+                  style={{
+                    border: "1px solid rgb(77, 208, 225)",
+                    borderRadius: "10px",
+                    height: "32px",
+                    fontSize: "13px",
+                  }}
+                />
+              </InputGroup>
+            </Form.Group>
+            <Form.Group className="mb-10 d-flex align-items-center">
+              <Form.Label
+                style={{ width: "35%", margin: 0, fontWeight: "600", fontSize: "13px" }}
               >
                 Total Amount
               </Form.Label>
@@ -3974,6 +4012,8 @@ const IpdBillList = () => {
                     borderTopRightRadius: 0,
                     borderBottomRightRadius: 0,
                     fontWeight: "500",
+                    height: "32px",
+                    fontSize: "13px",
                   }}
                 >
                   ₹
@@ -3991,13 +4031,15 @@ const IpdBillList = () => {
                     borderBottomLeftRadius: 0,
                     borderTopRightRadius: "10px",
                     borderBottomRightRadius: "10px",
+                    height: "32px",
+                    fontSize: "13px",
                   }}
                 />
               </InputGroup>
             </Form.Group>
             <Form.Group className="mb-10 d-flex align-items-center">
               <Form.Label
-                style={{ width: "35%", margin: 0, fontWeight: "500" }}
+                style={{ width: "35%", margin: 0, fontWeight: "600", fontSize: "13px" }}
               >
                 Approved Amount <span className="text-danger">*</span>
               </Form.Label>
@@ -4012,6 +4054,8 @@ const IpdBillList = () => {
                     borderTopRightRadius: 0,
                     borderBottomRightRadius: 0,
                     fontWeight: "500",
+                    height: "32px",
+                    fontSize: "13px",
                   }}
                 >
                   ₹
@@ -4030,13 +4074,15 @@ const IpdBillList = () => {
                     borderBottomLeftRadius: 0,
                     borderTopRightRadius: "10px",
                     borderBottomRightRadius: "10px",
+                    height: "32px",
+                    fontSize: "13px",
                   }}
                 />
               </InputGroup>
             </Form.Group>
             <Form.Group className="mb-10 d-flex align-items-center">
               <Form.Label
-                style={{ width: "35%", margin: 0, fontWeight: "500" }}
+                style={{ width: "35%", margin: 0, fontWeight: "600", fontSize: "13px" }}
               >
                 CoPay <span className="text-danger">*</span>
               </Form.Label>
@@ -4051,6 +4097,8 @@ const IpdBillList = () => {
                     borderTopRightRadius: 0,
                     borderBottomRightRadius: 0,
                     fontWeight: "500",
+                    height: "32px",
+                    fontSize: "13px",
                   }}
                 >
                   ₹
@@ -4067,13 +4115,15 @@ const IpdBillList = () => {
                     borderBottomLeftRadius: 0,
                     borderTopRightRadius: "10px",
                     borderBottomRightRadius: "10px",
+                    height: "32px",
+                    fontSize: "13px",
                   }}
                 />
               </InputGroup>
             </Form.Group>
             <Form.Group className="mb-10 d-flex align-items-center">
               <Form.Label
-                style={{ width: "35%", margin: 0, fontWeight: "500" }}
+                style={{ width: "35%", margin: 0, fontWeight: "600", fontSize: "13px" }}
               >
                 Deduction Amount
               </Form.Label>
@@ -4088,6 +4138,8 @@ const IpdBillList = () => {
                     borderTopRightRadius: 0,
                     borderBottomRightRadius: 0,
                     fontWeight: "500",
+                    height: "32px",
+                    fontSize: "13px",
                   }}
                 >
                   ₹
@@ -4105,13 +4157,15 @@ const IpdBillList = () => {
                     borderBottomLeftRadius: 0,
                     borderTopRightRadius: "10px",
                     borderBottomRightRadius: "10px",
+                    height: "32px",
+                    fontSize: "13px",
                   }}
                 />
               </InputGroup>
             </Form.Group>
             <Form.Group className="mb-3 d-flex align-items-center">
               <Form.Label
-                style={{ width: "35%", margin: 0, fontWeight: "500" }}
+                style={{ width: "35%", margin: 0, fontWeight: "600", fontSize: "13px" }}
               >
                 Payable Amount
               </Form.Label>
@@ -4126,6 +4180,8 @@ const IpdBillList = () => {
                     borderTopRightRadius: 0,
                     borderBottomRightRadius: 0,
                     fontWeight: "500",
+                    height: "32px",
+                    fontSize: "13px",
                   }}
                 >
                   ₹
@@ -4143,6 +4199,8 @@ const IpdBillList = () => {
                     borderBottomLeftRadius: 0,
                     borderTopRightRadius: "10px",
                     borderBottomRightRadius: "10px",
+                    height: "32px",
+                    fontSize: "13px",
                   }}
                 />
               </InputGroup>

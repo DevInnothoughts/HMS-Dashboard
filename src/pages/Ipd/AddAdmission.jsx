@@ -195,7 +195,7 @@ export default function AddAdmission() {
       return;
     }
     if (!roomType) {
-      Swal.fire("Required", "Please select Room Type", "warning");
+      Swal.fire("Required", "Please select Bed Category", "warning");
       return;
     }
     if (!roomNumber || !roomNumber.trim()) {
@@ -582,7 +582,7 @@ export default function AddAdmission() {
                                 className={labelStyle}
                                 style={{ fontSize: "0.75rem" }}
                               >
-                                Room Type <span className="text-danger">*</span>
+                                Bed Category <span className="text-danger">*</span>
                               </Form.Label>
                               <Form.Select
                                 required
@@ -596,7 +596,7 @@ export default function AddAdmission() {
                                   height: "31px",
                                 }}
                               >
-                                <option value="">Select Room Type</option>
+                                <option value="">Select Bed Category</option>
                                 <option value="General Ward">
                                   General Ward
                                 </option>

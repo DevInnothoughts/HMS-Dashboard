@@ -1139,7 +1139,7 @@ const AddIpdBill = () => {
                 </Col>
                 <Col md={4}>
                   <Form.Label style={labelStyle}>
-                    Bed Type <span className="text-danger">*</span>
+                    Bed Category <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
                     required
@@ -1457,7 +1457,7 @@ const AddIpdBill = () => {
                           marginBottom: "2px",
                         }}
                       >
-                        Cheque No
+                        Cheque Number
                       </Form.Label>
                       <Form.Control
                         style={inputStyle}
@@ -1466,7 +1466,7 @@ const AddIpdBill = () => {
                           ["e", "E", "+", "-"].includes(e.key) &&
                           e.preventDefault()
                         }
-                        placeholder="Enter cheque No"
+                        placeholder="Enter cheque number"
                         type="number"
                         name="chequeno"
                         value={formData.chequeno}
