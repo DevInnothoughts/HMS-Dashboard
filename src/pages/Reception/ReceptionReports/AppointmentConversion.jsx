@@ -11,12 +11,13 @@ import { InputText } from "primereact/inputtext";
 import ReactApexChart from "react-apexcharts";
 import { decodeJwt } from "../../../utils/decode-jwt";
 
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 const appointmentTypes = [
   { value: "New", label: "New" },
-  { value: "Post Operative", label: "Post Operative" },
-  { value: "Follow Up", label: "Follow Up" },
+  { value: "Postoperative", label: "Post Operative" },
+  { value: "Follow", label: "Follow Up" },
+  { value: "MCDPA", label: "MCDPA" },
   { value: "Other", label: "Other" },
 ];
 
@@ -34,6 +35,17 @@ const formatValue = (val) => {
 
 const formatDateDisplay = (dateStr) => {
   if (!dateStr) return "";
+  try {
+    const date = new Date(dateStr);
+    if (!isNaN(date.getTime())) {
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      return `${day}-${month}-${year}`;
+    }
+  } catch (e) {
+    // Fallback if parsing fails
+  }
   const datePart = dateStr.includes("T") ? dateStr.split("T")[0] : dateStr;
   return datePart.split("-").reverse().join("-");
 };
@@ -198,7 +210,9 @@ const AppointmentConversion = () => {
         patient_type:
           app.patient_type === "Postoperative"
             ? "Post Operative"
-            : app.patient_type,
+            : app.patient_type === "Follow"
+              ? "Follow Up"
+              : app.patient_type,
       }));
       setAppointments(mappedList);
 
@@ -340,7 +354,7 @@ const AppointmentConversion = () => {
 
     const excelData = filteredData.map((app, index) => ({
       "Sr No": index + 1,
-      Date: app.appointment_timestamp || app.date || app.appointment_date,
+      Date: formatDateDisplay(app.appointment_timestamp || app.date || app.appointment_date),
       "UID no": app.UidNo || app.appointment_uid || app._id,
       "Patient Name": app.patient || app.patientName,
       "Patient Type": app.patient_type || app.appointmentType,
@@ -661,16 +675,18 @@ const AppointmentConversion = () => {
                       style={{ width: "60px", textAlign: "center" }}
                     />
                     <Column
-                      field="date"
-                      header="Date"
-                      body={(row) =>
-                        formatValue(
-                          row.appointment_timestamp ||
-                            row.date ||
-                            row.appointment_date,
-                        )
-                      }
-                    />
+                       field="date"
+                       header="Date"
+                       body={(row) =>
+                         formatValue(
+                           formatDateDisplay(
+                             row.appointment_timestamp ||
+                               row.date ||
+                               row.appointment_date,
+                           )
+                         )
+                       }
+                     />
                     <Column
                       field="appointment_uid"
                       header="UID no"
@@ -734,9 +750,9 @@ const AppointmentConversion = () => {
                       </thead>
                       <tbody>
                         {filteredData.map((item, index) => (
-                          <tr key={index}>
-                            <td>{index + 1}</td>
-                            <td>{formatValue(item.appointment_timestamp || item.date || item.appointment_date)}</td>
+                           <tr key={index}>
+                             <td>{index + 1}</td>
+                             <td>{formatValue(formatDateDisplay(item.appointment_timestamp || item.date || item.appointment_date))}</td>
                             <td>{formatValue(item.UidNo || item.appointment_uid || item._id)}</td>
                             <td>{formatValue(item.patient || item.patientName)}</td>
                             <td>{formatValue(item.patient_type || item.appointmentType)}</td>

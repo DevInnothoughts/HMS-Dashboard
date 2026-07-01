@@ -7,7 +7,7 @@ export const generateDiagnosisStream = async ({
 }) => {
   try {
     const response = await fetch(
-      "http://194.195.117.79:5100/api/V1/doctor/generate-ai-diagnosis",
+      "http://localhost:5100/api/V1/doctor/generate-ai-diagnosis",
       {
         method: "POST",
         headers: {

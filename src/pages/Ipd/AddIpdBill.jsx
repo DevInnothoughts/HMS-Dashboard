@@ -15,7 +15,7 @@ import { decodeJwt } from "../../utils/decode-jwt";
 import Swal from "sweetalert2";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 const Toast = Swal.mixin({
   toast: true,
@@ -653,7 +653,7 @@ const AddIpdBill = () => {
             consultantName: null,
             surgeonName: null,
             patient_location: "DP Road",
-            interbranch_id: 1, // Store 1 to signify local-only mirror/read-only copy
+            interbranch_id: 0, // Store 0 to allow full print, edit, and collection permissions at origin clinic
           };
 
           try {
@@ -1732,22 +1732,6 @@ const AddIpdBill = () => {
               >
                 <Row>
                   <Col md={12} className="text-end ">
-                    {formData.interbranchLocation === "DP Road" && (
-                      <div
-                        className="alert alert-warning mb-3 text-start"
-                        style={{
-                          fontSize: "12px",
-                          fontWeight: "500",
-                          backgroundColor: "#fff3e0",
-                          borderColor: "#ffe0b2",
-                          color: "#e65100",
-                          borderRadius: "10px",
-                          padding: "10px 15px",
-                        }}
-                      >
-                        <strong>Note:</strong> For surgeries performed at DP Road, editing, payment collection, and direct printing are disabled. A view-only preview will be provided in the bill list.
-                      </div>
-                    )}
                     <div
                       className="mb-5"
                       style={{

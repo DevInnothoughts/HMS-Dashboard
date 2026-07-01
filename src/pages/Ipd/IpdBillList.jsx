@@ -31,7 +31,7 @@ import FeatherIcon from "feather-icons-react";
 import "../../styles/styles.css";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 const today = new Date();
 const maxDate = today.toISOString().split("T")[0];
@@ -1401,7 +1401,7 @@ const IpdBillList = () => {
       if (selectedInvoice.interbranchLocation === "DP Road") {
         const localPayload = {
           ...payload,
-          interbranch_id: 1,
+          interbranch_id: 0,
           consultantName: null,
           surgeonName: null,
         };
@@ -2241,10 +2241,10 @@ const IpdBillList = () => {
                         return (
                           <span>
                             {hasPatientLocation && (
-                              <small style={{ color: "red", fontWeight: "900", marginRight: "5px" }}>
-                                (Interbranch)
+                              <small style={{ color: "red", fontWeight: "bold", marginRight: "5px" }}>
+                                (Interbranch: {rowData.patient_location})
                               </small>
-                            )}
+                            )}<br></br>
                             {rowData.prefix ? `${rowData.prefix} ` : ""}
                             {rowData.patient_name || "-"}
                           </span>
@@ -2364,6 +2364,7 @@ const IpdBillList = () => {
                                 variant="primary"
                                 disabled={
                                   rowData.payment_count > 0 ||
+                                  parseFloat(rowData.receivedamt) > 0 ||
                                   !moment(rowData.creation_date).isSame(moment(), "month")
                                 }
                                 onClick={() => handleEditInvoice(rowData)}
@@ -2461,7 +2462,7 @@ const IpdBillList = () => {
                 id="invoice-preview-iframe"
                 title="Invoice Preview"
                 srcDoc={previewContent}
-                style={{ width: "100%", height: "75vh", border: "none" }}
+                style={{ width: "100%", height: "120vh", border: "none" }}
               />
             ) : (
               <div className="text-center p-5">Loading Preview...</div>
@@ -3801,22 +3802,6 @@ const IpdBillList = () => {
                       flexDirection: "column",
                     }}
                   >
-                    {selectedInvoice.interbranchLocation === "DP Road" && (
-                      <div
-                        className="alert alert-warning mb-3 text-start"
-                        style={{
-                          fontSize: "12px",
-                          fontWeight: "500",
-                          backgroundColor: "#fff3e0",
-                          borderColor: "#ffe0b2",
-                          color: "#e65100",
-                          borderRadius: "10px",
-                          padding: "10px 15px",
-                        }}
-                      >
-                        <strong>Note:</strong> For surgeries performed at DP Road, editing, payment collection, and direct printing are disabled. A view-only preview will be provided in the bill list.
-                      </div>
-                    )}
                     <div
                       style={{
                         flexGrow: 1,
