@@ -8,8 +8,8 @@ import { decodeJwt } from "../../utils/decode-jwt";
 import moment from "moment";
 import Swal from "sweetalert2";
 
-const BASE_URL = "http://localhost:5100/api";
-const UPLOAD_BASE_URL = "http://localhost:5100/uploads";
+const BASE_URL = "http://194.195.117.79:5100/api";
+const UPLOAD_BASE_URL = "http://194.195.117.79:5100/uploads";
 
 const HospitalCertificates = () => {
   const [certificates, setCertificates] = useState([]);
@@ -174,7 +174,7 @@ const HospitalCertificates = () => {
       const url = new URL(BASE_URL);
       return `${url.origin}${dbPath}`;
     } catch (e) {
-      return `http://localhost:5100${dbPath}`;
+      return `http://194.195.117.79:5100${dbPath}`;
     }
   };
 

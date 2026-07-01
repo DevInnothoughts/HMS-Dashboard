@@ -21,8 +21,8 @@ import receiptLogo from "../../assets/images/4.png";
 import { clinincLoc } from "../../utils/clinic_locations-invoice.js";
 import { receiptlocations } from "../../utils/clinic_locations-receipt.js";
 
-const BASE_URL = "http://localhost:5100/api";
-const IMAGE_BASE_URL = "http://localhost:5100";
+const BASE_URL = "http://194.195.117.79:5100/api";
+const IMAGE_BASE_URL = "http://194.195.117.79:5100";
 
 const today = new Date();
 const maxDate = today.toISOString().split("T")[0];

@@ -3,7 +3,7 @@ import { Row, Col, Form, Button, Modal, Dropdown } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 import Select from "react-select";
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 const todayLocal = (() => {
   const d = new Date();
   const y = d.getFullYear();
