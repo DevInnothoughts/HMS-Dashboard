@@ -491,6 +491,10 @@ const PersonalDetailsCard = ({
         reference_type = "aggregators";
         ref = referenceDetails.aggregators || formData.ref || "";
         break;
+      case "dr_privilege_card":
+        reference_type = "dr_privilege_card";
+        ref = referenceDetails.dr_privilege_card || formData.ref || "Doctor's Privilege Card";
+        break;
       default:
         reference_type = selectedReference || null;
         ref = referenceDetails[selectedReference] || formData.ref || "";
@@ -1886,6 +1890,7 @@ const PersonalDetailsCard = ({
                       Healing Hands Clinic Branch
                     </option>
                     <option value="aggregators">Aggregators</option>
+                    <option value="dr_privilege_card">Doctor's Privilege Card</option>
                     <option value="other">Other</option>
                   </Form.Select>
                   <div className="flex-grow-1">{renderReferenceDetails()}</div>

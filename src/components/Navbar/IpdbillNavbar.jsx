@@ -42,14 +42,6 @@ export default function IpdbillNavbar() {
               <span className="nav-icon">➕</span>
               Add IPD Bill
             </Link>
-            <span className="separator">•</span>
-            <Link
-              to="/ipd-collection"
-              className={`nav-link ${location.pathname === "/ipd-collection" ? "active" : ""}`}
-            >
-              <span className="nav-icon">💳</span>
-              IPD Collection
-            </Link>
           </nav>
         </div>
       </Container>

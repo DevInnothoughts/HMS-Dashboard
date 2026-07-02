@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useLocation, Link } from "react-router-dom";
 import IpdbillNavbar from "../../components/Navbar/IpdbillNavbar";
 import {
   Container,
@@ -20,6 +21,7 @@ import logo from "../../assets/images/3.png";
 import receiptLogo from "../../assets/images/4.png";
 import { clinincLoc } from "../../utils/clinic_locations-invoice.js";
 import { receiptlocations } from "../../utils/clinic_locations-receipt.js";
+import FeatherIcon from "feather-icons-react";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
 const IMAGE_BASE_URL = "http://194.195.117.79:5100";
@@ -131,6 +133,8 @@ const IpdCollection = () => {
 
   const dropdownRef = useRef(null);
   const isManualSelection = useRef(false);
+  const location = useLocation();
+  const initialLoadDone = useRef(false);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -149,6 +153,23 @@ const IpdCollection = () => {
       if (payload?.jobLocation) setCurrentLocation(payload.jobLocation);
     }
   }, []);
+
+  useEffect(() => {
+    if (location.state?.invoiceId) {
+      isManualSelection.current = true;
+      setInvoiceId(location.state.invoiceId);
+      if (location.state.patientDetails) {
+        setPatientDetails(location.state.patientDetails);
+      }
+    }
+  }, [location.state]);
+
+  useEffect(() => {
+    if (location.state?.invoiceId && currentLocation && !initialLoadDone.current) {
+      initialLoadDone.current = true;
+      handleViewBillDetails(location.state.invoiceId, currentLocation);
+    }
+  }, [location.state, currentLocation]);
 
   useEffect(() => {
     if (isManualSelection.current) {
@@ -197,11 +218,11 @@ const IpdCollection = () => {
     setShowDropdown(false);
   };
 
-  const handleViewBillDetails = async () => {
+  const handleViewBillDetails = async (id = invoiceId, loc = currentLocation) => {
     setLoading(true);
     try {
       const resTotal = await fetch(
-        `${BASE_URL}/V1/invoice/searchInvoiceTotal?invoice_id=${invoiceId}&location=${currentLocation}`,
+        `${BASE_URL}/V1/invoice/searchInvoiceTotal?invoice_id=${id}&location=${loc}`,
       );
       const totalData = await resTotal.json();
       const financialInfo = Array.isArray(totalData) ? totalData[0] : totalData;
@@ -230,13 +251,13 @@ const IpdCollection = () => {
         const isCashlessNotSettled = (financialInfo.status || "").toLowerCase() === "cashless" && (parseFloat(financialInfo.receivedamt) || 0) === 0;
         setSummary({
           totalBill: financialInfo.totalamt || 0,
-          insuranceApproved: isPdc ? (financialInfo.advance_amt || 0) : (financialInfo.receivedamt || 0),
+          insuranceApproved: isPdc ? (financialInfo.receivedamt || financialInfo.advance_amt || 0) : (financialInfo.receivedamt || 0),
           patientPayable: financialInfo.payableamt || 0,
           totalDue: isCashlessNotSettled ? 0 : (financialInfo.totalduedamt || 0),
         });
 
         const resHistory = await fetch(
-          `${BASE_URL}/V1/invoice/searchInvoiceDetails?invoice_id=${invoiceId}&location=${currentLocation}`,
+          `${BASE_URL}/V1/invoice/searchInvoiceDetails?invoice_id=${id}&location=${loc}`,
         );
         const historyData = await resHistory.json();
         setPayments(Array.isArray(historyData) ? historyData : []);
@@ -701,93 +722,61 @@ const IpdCollection = () => {
       <Container fluid className="p-0">
         <Row>
           <Col>
-            <Card
-              className="shadow-sm border-cyan mb-20 mt-1 overflow-visible"
-              style={{ marginLeft: "17px", marginRight: "17px" }}
-            >
-              <Card.Body>
-                <Row className="align-items-end">
-                  <Col
-                    lg={3}
-                    md={6}
-                    className="mb-3 position-relative"
-                    ref={dropdownRef}
-                  >
-                    <Form.Label className="label-style">Invoice ID</Form.Label>
-                    <Form.Control
-                      type="text"
-                      value={invoiceId}
-                      onChange={(e) => {
-                        setInvoiceId(e.target.value);
-                        setPatientDetails({
-                          name: "",
-                          uhid: "",
-                          patient_id: "",
-                          phone: "",
-                        });
-                        setShowBillDetails(false);
-                      }}
-                      placeholder="Enter Invoice ID..."
-                      className="input-style"
-                    />
-                    {showDropdown && (
-                      <ListGroup className="position-absolute w-300 z-index-dropdown shadow custom-list">
-                        {Array.isArray(searchResults) &&
-                          searchResults.map((inv) => (
-                            <ListGroup.Item
-                              key={inv.invoice_id}
-                              action
-                              onClick={() => handleSelectInvoice(inv)}
-                            >
-                              {inv.invoice_id} - {inv.name}
-                            </ListGroup.Item>
-                          ))}
-                        {searchResults.length === 0 && (
-                          <ListGroup.Item className="text-danger">
-                            No Invoice Id Found
-                          </ListGroup.Item>
-                        )}
-                      </ListGroup>
-                    )}
-                  </Col>
-                  <Col lg={3} md={6} className="mb-3">
-                    <Form.Label className="label-style">
-                      Patient Name
-                    </Form.Label>
-                    <Form.Control
-                      readOnly
-                      value={patientDetails.name}
-                      className="input-style"
-                    />
-                  </Col>
-                  <Col lg={3} md={6} className="mb-3">
-                    <Form.Label className="label-style">UID Number</Form.Label>
-                    <Form.Control
-                      readOnly
-                      value={patientDetails.uhid}
-                      className="input-style"
-                    />
-                  </Col>
-                  <Col lg={3} md={6} className="mb-3">
-                    <Button
-                      variant="primary"
-                      className="w-200 text-white fw-bold btn-view"
-                      disabled={!patientDetails.patient_id || loading}
-                      onClick={handleViewBillDetails}
-                    >
-                      {loading ? <Spinner size="sm" /> : "View Bill Details"}
-                    </Button>
-                  </Col>
-                </Row>
-              </Card.Body>
-            </Card>
-
-            {showBillDetails && (
+            {!showBillDetails ? (
+              <Card
+                className="text-center p-5 shadow-sm border-cyan mb-20 mt-1"
+                style={{ marginLeft: "17px", marginRight: "17px" }}
+              >
+                <Card.Body>
+                  <div className="mb-3" style={{ fontSize: "40px", opacity: 0.5 }}>
+                    💳
+                  </div>
+                  <h5 style={{ color: "#00838f", fontWeight: "600" }}>No Invoice Loaded</h5>
+                  <p className="text-muted">
+                    Please select an invoice from the IPD Bill List to view and collect payments.
+                  </p>
+                  <Link to="/ipd-bill-list" className="btn btn-primary text-white fw-bold" style={{ backgroundColor: "#00acc1", borderColor: "#00acc1" }}>
+                    Go to IPD Bill List
+                  </Link>
+                </Card.Body>
+              </Card>
+            ) : (
               <Card
                 className="shadow-sm border-0 overflow-hidden"
                 style={{ marginLeft: "22px", marginRight: "20px" }}
               >
-                <div className="summary-header">
+                {/* Patient Metadata Header */}
+                <div
+                  className="patient-meta-header"
+                  style={{
+                    background: "#e0f7fa",
+                    color: "#006064",
+                    padding: "12px 18px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    borderBottom: "1px solid #b2ebf2"
+                  }}
+                >
+                  <Link
+                    to="/ipd-bill-list"
+                    className="btn btn-sm text-white"
+                    style={{ backgroundColor: "#00838f", border: "none", fontSize: "12px", padding: "8px 12px", borderRadius: "6px" }}
+                  >
+                    <FeatherIcon icon="arrow-left" size="15" className="me-1" />
+                    Back to IPD Patient's List
+                  </Link>
+                  <div className="d-flex gap-4 flex-wrap">
+                    <span><strong>Invoice ID:</strong> {invoiceId}</span>
+                    <span><strong>Patient Name:</strong> {patientDetails.name}</span>
+                    <span><strong>UID Number:</strong> {patientDetails.uhid}</span>
+                    {patientDetails.phone && <span><strong>Phone:</strong> {patientDetails.phone}</span>}
+                  </div>
+                </div>
+
+                <div className="summary-header" style={{ borderRadius: "0" }}>
                   <span>
                     <FaListUl className="me-1" />
                     Total Bill: ₹ {summary.totalBill}
@@ -1009,7 +998,7 @@ const IpdCollection = () => {
                       ))}
                     </div>
                     <Button
-                      variant="info"
+                      variant="secondary"
                       className="btn-add"
                       onClick={() => setShowAddRow(!showAddRow)}
                       disabled={summary.totalDue <= 0}

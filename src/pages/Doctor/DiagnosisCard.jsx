@@ -450,7 +450,7 @@ const DiagnosisCard = ({
             if (otherSpecMapping[item]) {
               diagParts.push(otherSpecMapping[item].diag);
               surgParts.push(otherSpecMapping[item].surg);
-            } else if (item === "OTHER") {
+            } else if (item === "Other") {
               if (
                 specialityData.other_text &&
                 specialityData.other_text.trim() !== ""
@@ -509,9 +509,9 @@ const DiagnosisCard = ({
 
     // Handle other_text separately at the end if it exists (for 'Other' tab custom text)
     if (specialityData.other_text && specialityData.other_text.trim() !== "") {
-      // Logic for other_text is already handled inside the 'other' array loop if "OTHER" is checked,
+      // Logic for other_text is already handled inside the 'other' array loop if "Other" is checked,
       // but if the user relies on old logic where it was standalone, we keep it here.
-      // Actually, since I updated the 'Other' logic to use other_text when 'OTHER' is checked,
+      // Actually, since I updated the 'Other' logic to use other_text when 'Other' is checked,
       // we don't need to double-add it.
     }
 
@@ -765,7 +765,7 @@ const DiagnosisCard = ({
                   className="fw-bold mb-0"
                   style={{ fontSize: "13px", color: "#006064" }}
                 >
-                  Select Specialty Type & Findings
+                  Select Specialty Type & Findings <span className="text-danger">*</span>
                 </Form.Label>
               </div>
               <Card
@@ -1419,14 +1419,14 @@ const DiagnosisCard = ({
                           ))}
                           <div className="d-flex align-items-center gap-2">
                             <Form.Check
-                              label="OTHER"
+                              label="Other"
                               checked={
                                 diagnosisData.speciality_data.other?.includes(
-                                  "OTHER",
+                                  "Other",
                                 ) || false
                               }
                               onChange={() =>
-                                onSpecialityClick("other", "OTHER")
+                                onSpecialityClick("other", "Other")
                               }
                               style={{
                                 fontSize: "14px",

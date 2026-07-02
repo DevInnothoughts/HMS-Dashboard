@@ -637,6 +637,8 @@ const AddIpdBill = () => {
         status = "Charity";
       }
 
+      const isPdc = formData.bill_method === "PDC";
+
       if (isInterbranch) {
         const payableAmountVal = parseFloat(formData.payableAmount || 0);
 
@@ -646,6 +648,7 @@ const AddIpdBill = () => {
             Sub_Total: formData.Sub_Total,
             payableAmount: payableAmountVal.toFixed(2),
             payable_amt: payableAmountVal.toFixed(2),
+            totaldue: isPdc ? Math.round(parseFloat(formData.Sub_Total || 0)) : Math.round(payableAmountVal),
             creation_date: formData.admission_date,
             status: status,
             admissiontime: convertTo12Hour(formData.admissiontime),
@@ -654,6 +657,8 @@ const AddIpdBill = () => {
             surgeonName: null,
             patient_location: "DP Road",
             interbranch_id: 0, // Store 0 to allow full print, edit, and collection permissions at origin clinic
+            receivedamt: Math.round(parseFloat(formData.pdc || 0)),
+            advance_amt: null,
           };
 
           try {
@@ -706,12 +711,15 @@ const AddIpdBill = () => {
           Sub_Total: formData.Sub_Total,
           payableAmount: payableAmountVal.toFixed(2),
           payable_amt: payableAmountVal.toFixed(2),
+          totaldue: isPdc ? Math.round(parseFloat(formData.Sub_Total || 0)) : Math.round(payableAmountVal),
           creation_date: formData.admission_date,
           status: status,
           admissiontime: convertTo12Hour(formData.admissiontime),
           dischargetime: convertTo12Hour(formData.dischargetime),
           patient_location: formData.interbranchLocation,
           interbranch_id: null,
+          receivedamt: Math.round(parseFloat(formData.pdc || 0)),
+          advance_amt: null,
         };
 
         const payloadSelected = {
@@ -721,6 +729,7 @@ const AddIpdBill = () => {
           Sub_Total: formData.Sub_Total,
           payableAmount: payableAmountVal.toFixed(2),
           payable_amt: payableAmountVal.toFixed(2),
+          totaldue: isPdc ? Math.round(parseFloat(formData.Sub_Total || 0)) : Math.round(payableAmountVal),
           creation_date: formData.admission_date,
           status: status,
           admissiontime: convertTo12Hour(formData.admissiontime),
@@ -729,6 +738,8 @@ const AddIpdBill = () => {
           consultantName: null,
           surgeonName: null,
           interbranch_id: formData.invoice_id,
+          receivedamt: Math.round(parseFloat(formData.pdc || 0)),
+          advance_amt: null,
         };
 
         try {
@@ -799,10 +810,13 @@ const AddIpdBill = () => {
           Sub_Total: formData.Sub_Total,
           payableAmount: formData.payableAmount,
           payable_amt: formData.payableAmount,
+          totaldue: isPdc ? Math.round(parseFloat(formData.Sub_Total || 0)) : Math.round(parseFloat(formData.payableAmount || 0)),
           creation_date: formData.admission_date,
           status: status,
           admissiontime: convertTo12Hour(formData.admissiontime),
           dischargetime: convertTo12Hour(formData.dischargetime),
+          receivedamt: Math.round(parseFloat(formData.pdc || 0)),
+          advance_amt: null,
         };
 
         try {
@@ -1529,7 +1543,7 @@ const AddIpdBill = () => {
                         marginBottom: "2px",
                       }}
                     >
-                      Discount Amount (₹)
+                      Non-Insurance Discount Amount (₹)
                     </Form.Label>
                     <InputGroup size="sm" style={{ flexWrap: "nowrap" }}>
                       <InputGroup.Text

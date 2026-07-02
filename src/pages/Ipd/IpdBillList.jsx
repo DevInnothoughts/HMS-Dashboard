@@ -259,7 +259,7 @@ const calculateActivePayableAmt = (
 const calculatePayableAmt = (invoice) => {
   const totalAmt = parseFloat(invoice.totalamt || invoice.total_amt || 0);
   const discount = parseFloat(invoice.discount || 0);
-  const pdc = parseFloat(invoice.pdc || invoice.advance_amt || 0);
+  const pdc = parseFloat(invoice.pdc || invoice.receivedamt || invoice.advance_amt || 0);
 
   const billMethod = (
     invoice.bill_method ||
@@ -614,7 +614,7 @@ const IpdBillList = () => {
           const receivedamt =
             parseFloat(invoice.receivedamt || invoice.received_amt || 0) || 0;
           const discount = parseFloat(invoice.discount || 0) || 0;
-          const pdc = parseFloat(invoice.pdc || invoice.advance_amt || 0) || 0;
+          const pdc = parseFloat(invoice.pdc || invoice.receivedamt || invoice.advance_amt || 0) || 0;
 
           const payable_amt =
             (invoice.payable_amt !== undefined && invoice.payable_amt !== null)
@@ -623,7 +623,7 @@ const IpdBillList = () => {
           const due_amt =
             invoice.totaldue !== undefined
               ? parseFloat(invoice.totaldue)
-              : payable_amt - receivedamt;
+              : (invoice.status === "PDC" || invoice.bill_method === "PDC" ? totalamt : payable_amt - receivedamt);
 
           return {
             ...invoice,
@@ -701,7 +701,7 @@ const IpdBillList = () => {
                   ) || 0;
                 const discount = parseFloat(invoice.discount || 0) || 0;
                 const pdc =
-                  parseFloat(invoice.pdc || invoice.advance_amt || 0) || 0;
+                  parseFloat(invoice.pdc || invoice.receivedamt || invoice.advance_amt || 0) || 0;
                 const payable_amt =
                   (invoice.payable_amt !== undefined && invoice.payable_amt !== null)
                     ? parseFloat(invoice.payable_amt)
@@ -709,7 +709,7 @@ const IpdBillList = () => {
                 const due_amt =
                   invoice.totaldue !== undefined
                     ? parseFloat(invoice.totaldue)
-                    : payable_amt - receivedamt;
+                    : (invoice.status === "PDC" || invoice.bill_method === "PDC" ? totalamt : payable_amt - receivedamt);
 
                 return {
                   ...invoice,
@@ -1175,7 +1175,7 @@ const IpdBillList = () => {
     const chequeno =
       invoice.chequeno === "NULL" || !invoice.chequeno ? "" : invoice.chequeno;
     const pdc =
-      invoice.pdc || (bill_method === "PDC" ? invoice.advance_amt : "0.00");
+      invoice.pdc || (bill_method === "PDC" ? (invoice.receivedamt || invoice.advance_amt) : "0.00");
 
     const isInterbranch =
       invoice.patient_location !== null &&
@@ -1394,7 +1394,11 @@ const IpdBillList = () => {
       totalamt: Math.round(parseFloat(modalInvoiceData.Sub_Total || 0)),
       payable_amt: Math.round(parseFloat(modalInvoiceData.payableAmount || 0)),
       discount: Math.round(parseFloat(modalInvoiceData.discount || 0)),
-      advance_amt: Math.round(parseFloat(modalInvoiceData.pdc || 0)), // Map PDC amount to advance_amt column
+      receivedamt: Math.round(parseFloat(modalInvoiceData.pdc || 0)), // Map PDC amount to receivedamt column
+      advance_amt: null,
+      totaldue: (status === "PDC" || status === "pdc")
+        ? Math.round(parseFloat(modalInvoiceData.Sub_Total || 0))
+        : Math.round(parseFloat(modalInvoiceData.payableAmount || 0)),
       admissiontime: convertTo12Hour(selectedInvoice.admissiontime),
       dischargetime: convertTo12Hour(selectedInvoice.dischargetime),
     };
@@ -2361,24 +2365,51 @@ const IpdBillList = () => {
                         return (
                           <div className="d-flex justify-content-center gap-2">
                             {!isMirror && (
-                              <Button
-                                style={{
-                                  borderRadius: "8px",
-                                  padding: "7px 11px",
-                                  fontSize: "14px",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                }}
-                                variant="primary"
-                                disabled={
-                                  rowData.payment_count > 0 ||
-                                  parseFloat(rowData.receivedamt) > 0 ||
-                                  !moment(rowData.creation_date).isSame(moment(), "month")
-                                }
-                                onClick={() => handleEditInvoice(rowData)}
-                              >
-                                <FeatherIcon icon="edit" size="15" />
-                              </Button>
+                              <>
+                                <Button
+                                  style={{
+                                    borderRadius: "8px",
+                                    padding: "7px 11px",
+                                    fontSize: "14px",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                  }}
+                                  variant="primary"
+                                  title="Edit Bill Details"
+                                  disabled={
+                                    rowData.payment_count > 0 ||
+                                    (rowData.bill_method !== "PDC" && rowData.status !== "PDC" && parseFloat(rowData.receivedamt) > 0) ||
+                                    !moment(rowData.creation_date).isSame(moment(), "month")
+                                  }
+                                  onClick={() => handleEditInvoice(rowData)}
+                                >
+                                  <FeatherIcon icon="edit" size="15" />
+                                </Button>
+                                <Link
+                                  to="/ipd-collection"
+                                  state={{
+                                    invoiceId: rowData.invoice_id,
+                                    patientDetails: {
+                                      name: rowData.patient_name || rowData.name || "",
+                                      uhid: rowData.patient_uid || rowData.Uid_no || "",
+                                      patient_id: rowData.patient_id || "",
+                                      phone: rowData.patient_phone || rowData.phone || "",
+                                    },
+                                  }}
+                                  className="btn btn-primary text-white"
+                                  title="IPD Collections"
+                                  style={{
+                                    borderRadius: "8px",
+                                    padding: "7px 11px",
+                                    fontSize: "14px",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                  }}
+                                >
+                                  <FeatherIcon icon="credit-card" size="15" />
+                                </Link>
+                              </>
                             )}
                             {isMirror ? (
                               <Button
@@ -2406,6 +2437,7 @@ const IpdBillList = () => {
                                   alignItems: "center",
                                   justifyContent: "center",
                                 }}
+                                title="Print IPD Bill"
                                 onClick={() => handlePrint(rowData)}
                               >
                                 <FeatherIcon icon="printer" size="15" />
@@ -3589,7 +3621,7 @@ const IpdBillList = () => {
                               }}
                               className="text-muted"
                             >
-                              {selectedInvoice.bill_Type === "charity" ? "Charity Discount Amount (₹)" : "Discount Amount (₹)"}
+                              {selectedInvoice.bill_Type === "charity" ? "Charity Discount Amount (₹)" : "Non-Insurance Discount Amount (₹)"}
                             </Form.Label>
                             <InputGroup size="sm" style={{ flexWrap: "nowrap" }}>
                               <InputGroup.Text

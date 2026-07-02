@@ -29,7 +29,7 @@ const Toast = Swal.mixin({
   timerProgressBar: true,
 });
 
-export default function AddAdmission() {
+export default function AddIpdAdmission() {
   const navigate = useNavigate();
   const [uhid, setUhid] = useState("");
   const [patientData, setPatientData] = useState(null);

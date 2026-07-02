@@ -23,7 +23,6 @@ import EnquiryConversion from "../pages/Reception/ReceptionReports/EnquiryConver
 import EnquiryData from "../pages/Reception/ReceptionReports/EnquiryData.jsx";
 import OPDReceiptsReport from "../pages/Reception/ReceptionReports/OPDReceiptsReport.jsx";
 import BillingReports from "../pages/Reception/ReceptionReports/BillingReports.jsx";
-import IPDCollectionReport from "../pages/Reception/ReceptionReports/IPDCollectionReport.jsx";
 import ReferenceReport from "../pages/Reception/ReceptionReports/ReferenceReport.jsx";
 import ConditionWiseReport from "../pages/Reception/ReceptionReports/ConditionWiseReport.jsx";
 import CashDepositReport from "../pages/Reception/ReceptionReports/CashDepositReport.jsx";
@@ -32,8 +31,6 @@ import PharmacyCollectionReport from "../pages/Reception/ReceptionReports/Pharma
 import SxConversionReport from "../pages/Reception/ReceptionReports/SxConversionReport.jsx";
 import OPDIPDCollection from "../pages/Reception/ReceptionReports/OPDIPDCollection.jsx";
 import OPDIPDCollGraph from "../pages/Reception/ReceptionReports/OPDIPDCollGraph.jsx";
-import IPDDueReport from "../pages/Reception/ReceptionReports/IPDDueReport.jsx";
-import InsuranceDueReport from "../pages/Reception/ReceptionReports/InsuranceDueReport.jsx";
 
 // Navbar for leads
 import RecpEnquiriesNavBar from "../components/Navbar/RecpEnquiriesNavBar";
@@ -58,8 +55,6 @@ export const ReceptionRoutes = (
     <Route path="/sx-conversion-report" element={<SxConversionReport />} />
     <Route path="/opd-ipd-collection" element={<OPDIPDCollection />} />
     <Route path="/opd-ipd-coll-graph" element={<OPDIPDCollGraph />} />
-    <Route path="/ipd-due-report" element={<IPDDueReport />} />
-    <Route path="/insurance-due-report" element={<InsuranceDueReport />} />
     <Route path="/daily-opd-report" element={<DailyOPDReport />} />
     <Route path="/birthday-alert" element={<BirthdayAlert />} />
     <Route path="/appointment-conversion" element={<AppointmentConversion />} />
@@ -67,7 +62,6 @@ export const ReceptionRoutes = (
     <Route path="/enquiry-data" element={<EnquiryData />} />
     <Route path="/opd-receipts-report" element={<OPDReceiptsReport />} />
     <Route path="/billing-reports" element={<BillingReports />} />
-    <Route path="/ipd-collection-report" element={<IPDCollectionReport />} />
     <Route path="/opd-collection-reports" element={<OPDCollectionReports />} />
     <Route path="/pharmacy-collection-report" element={<PharmacyCollectionReport />} />
     <Route path="/reference-report" element={<ReferenceReport />} />

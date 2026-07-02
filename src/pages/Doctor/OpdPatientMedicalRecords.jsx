@@ -1000,8 +1000,19 @@ const OpdPatientMedicalRecords = () => {
 
     const errors = {};
 
-    // Check Specialty Findings (No longer required)
-
+    // Check Specialty Findings (Required: active specialty must have at least one finding)
+    const activeSpec = diagnosisData.active_speciality;
+    if (!activeSpec) {
+      errors.speciality_data = true;
+    } else {
+      const activeFindings = diagnosisData.speciality_data?.[activeSpec];
+      const hasActiveFindings = Array.isArray(activeFindings)
+        ? activeFindings.length > 0
+        : activeFindings && String(activeFindings).trim() !== "";
+      if (!hasActiveFindings) {
+        errors.speciality_data = true;
+      }
+    }
 
     if (
       !diagnosisData.diagnosis_text ||
@@ -1034,6 +1045,7 @@ const OpdPatientMedicalRecords = () => {
         errors.advice_types = true;
         errors.consultant_doctor = true;
         errors.assistance_doctor = true;
+        errors.speciality_data = true;
       }
       Toast.fire({
         icon: "warning",

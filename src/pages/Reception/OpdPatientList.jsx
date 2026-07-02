@@ -1032,6 +1032,10 @@ export default function OpdPatientList() {
         reference_type = "aggregators";
         ref = referenceDetails.aggregators || formData.ref || "";
         break;
+      case "dr_privilege_card":
+        reference_type = "dr_privilege_card";
+        ref = referenceDetails.dr_privilege_card || formData.ref || "Doctor's Privilege Card";
+        break;
       default:
         reference_type = null;
         ref = referenceDetails[selectedReference] || formData.ref;
@@ -4140,6 +4144,7 @@ export default function OpdPatientList() {
                         Healing Hands Clinic Branch
                       </option>
                       <option value="aggregators">Aggregators</option>
+                      <option value="dr_privilege_card">Doctor's Privilege Card</option>
                       <option value="other">Other</option>
                     </Form.Select>
                   </div>

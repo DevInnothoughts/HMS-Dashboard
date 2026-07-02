@@ -32,11 +32,11 @@ export default function IpdAdmissionNavbar() {
             </Link>
             <span className="separator">•</span>
             <Link
-              to="/add-admission"
-              className={`nav-link ${location.pathname === "/add-admission" ? "active" : ""}`}
+              to="/add-ipd-admission"
+              className={`nav-link ${location.pathname === "/add-ipd-admission" ? "active" : ""}`}
             >
               <span className="nav-icon">➕</span>
-              Add Admission
+              Add IPD Admission
             </Link>
           </nav>
         </div>

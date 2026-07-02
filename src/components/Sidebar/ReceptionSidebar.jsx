@@ -11,7 +11,6 @@ const ReceptionSidebar = ({
     const reportRoutes = [
         "/appointment-conversion", "/billing-reports", "/birthday-alert", "/cash-deposit-report",
         "/condition-wise-report", "/daily-opd-report", "/enquiry-conversion", "/enquiry-data",
-        "/insurance-due-report", "/ipd-collection-report", "/ipd-due-report",
         "/opd-ipd-coll-graph", "/opd-ipd-collection", "/opd-collection-reports",
         "/opd-receipts-report", "/pharmacy-collection-report", "/reference-report",
         "/sx-conversion-report"
@@ -137,9 +136,6 @@ const ReceptionSidebar = ({
                     <li><Link to="/daily-opd-report" className={location.pathname === "/daily-opd-report" ? "active" : ""}>Daily OPD Report</Link></li>
                     <li><Link to="/enquiry-conversion" className={location.pathname === "/enquiry-conversion" ? "active" : ""}>Enquiry Conversion</Link></li>
                     <li><Link to="/enquiry-data" className={location.pathname === "/enquiry-data" ? "active" : ""}>Enquiry Data</Link></li>
-                    <li><Link to="/insurance-due-report" className={location.pathname === "/insurance-due-report" ? "active" : ""}>Insurance Due Report</Link></li>
-                    <li><Link to="/ipd-collection-report" className={location.pathname === "/ipd-collection-report" ? "active" : ""}>IPD Collection Report</Link></li>
-                    <li><Link to="/ipd-due-report" className={location.pathname === "/ipd-due-report" ? "active" : ""}>IPD Due Report</Link></li>
                     <li><Link to="/opd-ipd-coll-graph" className={location.pathname === "/opd-ipd-coll-graph" ? "active" : ""}>OPD + IPD Collection Graph</Link></li>
                     <li><Link to="/opd-ipd-collection" className={location.pathname === "/opd-ipd-collection" ? "active" : ""}>OPD + IPD Collection Report</Link></li>
                     <li><Link to="/opd-collection-reports" className={location.pathname === "/opd-collection-reports" ? "active" : ""}>OPD Collection Report</Link></li>

@@ -93,6 +93,7 @@ const referralSources = [
   { id: "self_old_pt", label: "I was treated here in past" },
   { id: "hhc_branch", label: "Healing Hands Clinic Branch" },
   { id: "aggregators", label: "Aggregators" },
+  { id: "dr_privilege_card", label: "Doctor's Privilege Card" },
   { id: "other", label: "Other" },
 ];
 

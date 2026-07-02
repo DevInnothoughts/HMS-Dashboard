@@ -983,7 +983,7 @@ export default function IpdHeader() {
                 Quick Actions :
               </span>
               <button
-                onClick={() => navigate("/add-admission")}
+                onClick={() => navigate("/add-ipd-admission")}
                 style={{
                   display: "flex",
                   alignItems: "center",

@@ -4,7 +4,8 @@ import FeatherIcon from "feather-icons-react";
 
 const IpdSidebar = ({ activeIndex, handleMenuClick, isCollapsed, location }) => {
     const reportRoutes = [
-        "/ipd-collection-report", "/opd-ipd-coll-graph", "/opd-ipd-collection"
+        "/insurance-due-report", "/ipd-collection-report", "/ipd-due-report",
+        "/opd-ipd-coll-graph", "/opd-ipd-collection"
     ];
     const isReportActive = location
         ? (reportRoutes.includes(location.pathname) || activeIndex === "/manage-reports")
@@ -60,13 +61,7 @@ const IpdSidebar = ({ activeIndex, handleMenuClick, isCollapsed, location }) => 
                 </Link>
             </li>
 
-            {/* IPD Collection */}
-            <li className={`menu-item ${activeIndex === "/ipd-collection" ? "active" : ""}`}>
-                <Link to="/ipd-collection" data-label="IPD Collection">
-                    <div className="icon-wrap"><FeatherIcon icon="credit-card" /></div>
-                    {!isCollapsed && <span>IPD Collection</span>}
-                </Link>
-            </li>
+
 
             {/* Bed Allotment */}
             <li className={`menu-item ${activeIndex === "/bed-allotment-list" ? "active" : ""}`}>
@@ -93,10 +88,26 @@ const IpdSidebar = ({ activeIndex, handleMenuClick, isCollapsed, location }) => 
                 >
                     <li>
                         <Link
+                            to="/insurance-due-report"
+                            className={location?.pathname === "/insurance-due-report" ? "active" : ""}
+                        >
+                            Insurance Due Report
+                        </Link>
+                    </li>
+                    <li>
+                        <Link
                             to="/ipd-collection-report"
                             className={location?.pathname === "/ipd-collection-report" ? "active" : ""}
                         >
                             IPD Collection Report
+                        </Link>
+                    </li>
+                    <li>
+                        <Link
+                            to="/ipd-due-report"
+                            className={location?.pathname === "/ipd-due-report" ? "active" : ""}
+                        >
+                            IPD Due Report
                         </Link>
                     </li>
                     <li>
