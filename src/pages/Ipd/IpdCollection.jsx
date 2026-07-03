@@ -26,8 +26,14 @@ import FeatherIcon from "feather-icons-react";
 const BASE_URL = "http://194.195.117.79:5100/api";
 const IMAGE_BASE_URL = "http://194.195.117.79:5100";
 
+const getLocalDateString = (date) => {
+  const offset = date.getTimezoneOffset();
+  const localDate = new Date(date.getTime() - (offset * 60 * 1000));
+  return localDate.toISOString().split("T")[0];
+};
+
 const today = new Date();
-const maxDate = today.toISOString().split("T")[0];
+const maxDate = getLocalDateString(today);
 
 const convertToWords = (number) => {
   if (number === 0) return "Zero";
@@ -122,7 +128,7 @@ const IpdCollection = () => {
   });
   const [payments, setPayments] = useState([]);
   const [newPayment, setNewPayment] = useState({
-    date: new Date().toISOString().split("T")[0],
+    date: maxDate,
     cash: 0,
     card: 0,
     cheque: 0,
@@ -498,7 +504,7 @@ const IpdCollection = () => {
         );
         setShowAddRow(false);
         setNewPayment({
-          date: new Date().toISOString().split("T")[0],
+          date: maxDate,
           cash: 0,
           card: 0,
           cheque: 0,
@@ -1047,15 +1053,13 @@ const IpdCollection = () => {
                                   type="date"
                                   className="input-style"
                                   value={newPayment.date}
-                                  min="2026-06-01"
+                                  max={maxDate}
                                   onChange={(e) =>
                                     setNewPayment({
                                       ...newPayment,
                                       date: e.target.value,
                                     })
                                   }
-                                  // min={maxDate}
-                                  // max={maxDate}
                                   onKeyDown={(e) => e.preventDefault()}
                                   onPaste={(e) => e.preventDefault()}
                                   onWheel={(e) => e.target.blur()}

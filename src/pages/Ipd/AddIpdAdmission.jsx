@@ -305,7 +305,7 @@ export default function AddIpdAdmission() {
       style={{
         background: "linear-gradient(to right, #e0f7fa, #80deea)",
         minHeight: "100vh",
-        padding: "15px",
+        padding: "10px",
         fontFamily: "'Poppins', Arial, sans-serif",
       }}
     >

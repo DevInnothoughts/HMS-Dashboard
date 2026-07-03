@@ -205,7 +205,7 @@ export default function CallingCalendar() {
   // Submit Callback
   const handleSubmitCallback = async (e) => {
     e.preventDefault();
-    if (!callbackDate) {
+    if (!callbackDate || !callbackDate.trim()) {
       Swal.fire("Warning", "Please select callback date.", "warning");
       return;
     }
@@ -355,6 +355,27 @@ export default function CallingCalendar() {
                   }}
                 />
               </div>
+              {selectedView !== "dashboard" && (
+                <Button
+                  onClick={handleDownloadExcel}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "9px 18px",
+                    background: "linear-gradient(135deg, #0f7b63, #1aab8a)",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "10px",
+                    fontWeight: "600",
+                    fontSize: "13px",
+                    boxShadow: "0 4px 12px rgba(15,123,99,0.3)",
+                    marginLeft: "auto"
+                  }}
+                >
+                  <i className="fa fa-file-excel"></i> Download Excel
+                </Button>
+              )}
             </div>
 
             {/* Views */}
@@ -911,24 +932,6 @@ export default function CallingCalendar() {
                         ? "Enquiry Follow-up Calls"
                         : `${selectedType} Advised (OPD)`}
                   </h3>
-                  <Button
-                    onClick={handleDownloadExcel}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      padding: "9px 18px",
-                      background: "linear-gradient(135deg, #0f7b63, #1aab8a)",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "10px",
-                      fontWeight: "600",
-                      fontSize: "13px",
-                      boxShadow: "0 4px 12px rgba(15,123,99,0.3)",
-                    }}
-                  >
-                    <i className="fa fa-file-excel"></i> Download Excel
-                  </Button>
                 </div>
 
                 {/* Days Filter Tabs */}
@@ -1172,7 +1175,7 @@ export default function CallingCalendar() {
                           } else {
                             try {
                               parsed = JSON.parse(parsed);
-                            } catch (e) {}
+                            } catch (e) { }
                           }
                         }
 
@@ -1443,7 +1446,7 @@ export default function CallingCalendar() {
               fontWeight: "700",
             }}
           >
-            Add Note
+            Add Note <span className="text-danger">*</span>
           </Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleSubmitNote}>
@@ -1501,7 +1504,7 @@ export default function CallingCalendar() {
               fontWeight: "700",
             }}
           >
-            Add CallBack Date
+            Add CallBack Date <span className="text-danger">*</span>
           </Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleSubmitCallback}>

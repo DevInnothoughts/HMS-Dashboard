@@ -46,9 +46,7 @@ export default function DoctorCallingCalendar() {
   const [selectedRecordId, setSelectedRecordId] = useState(null);
   const [selectedRecordType, setSelectedRecordType] = useState("");
   const [noteComment, setNoteComment] = useState("");
-  const [callbackDate, setCallbackDate] = useState(
-    moment().format("YYYY-MM-DD"),
-  );
+  const [callbackDate, setCallbackDate] = useState("");
   const [hoveredCard, setHoveredCard] = useState(null);
 
   // Fetch Location from JWT
@@ -189,7 +187,7 @@ export default function DoctorCallingCalendar() {
   const handleOpenCallbackModal = (recordId, type) => {
     setSelectedRecordId(recordId);
     setSelectedRecordType(type);
-    setCallbackDate(moment().format("YYYY-MM-DD"));
+    setCallbackDate("");
     setShowCallbackModal(true);
   };
 
@@ -250,7 +248,7 @@ export default function DoctorCallingCalendar() {
   // Submit Callback
   const handleSubmitCallback = async (e) => {
     e.preventDefault();
-    if (!callbackDate) {
+    if (!callbackDate || !callbackDate.trim()) {
       Swal.fire("Warning", "Please select callback date.", "warning");
       return;
     }
@@ -408,6 +406,27 @@ export default function DoctorCallingCalendar() {
                   }}
                 />
               </div>
+              {selectedView !== "dashboard" && (
+                <Button
+                  onClick={handleDownloadExcel}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "9px 18px",
+                    background: "linear-gradient(135deg, #0f7b63, #1aab8a)",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "10px",
+                    fontWeight: "600",
+                    fontSize: "13px",
+                    boxShadow: "0 4px 12px rgba(15,123,99,0.3)",
+                    marginLeft: "auto"
+                  }}
+                >
+                  <i className="fa fa-file-excel"></i> Download Excel
+                </Button>
+              )}
             </div>
 
             {/* Views */}
@@ -1005,24 +1024,6 @@ export default function DoctorCallingCalendar() {
                         ? "Enquiry Follow-up Calls"
                         : `${selectedType} Advised (OPD)`}
                   </h3>
-                  <Button
-                    onClick={handleDownloadExcel}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      padding: "9px 18px",
-                      background: "linear-gradient(135deg, #0f7b63, #1aab8a)",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "10px",
-                      fontWeight: "600",
-                      fontSize: "13px",
-                      boxShadow: "0 4px 12px rgba(15,123,99,0.3)",
-                    }}
-                  >
-                    <i className="fa fa-file-excel"></i> Download Excel
-                  </Button>
                 </div>
 
                 {/* Days Filter Tabs */}
@@ -1551,12 +1552,12 @@ export default function DoctorCallingCalendar() {
               fontWeight: "700",
             }}
           >
-            Add Note
+            Add Note <span className="text-danger">*</span>
           </Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleSubmitNote}>
           <Modal.Body className="pt-0">
-            <Form.Group className="mb-3">
+            <Form.Group>
               <Form.Control
                 as="textarea"
                 rows={4}
@@ -1609,7 +1610,7 @@ export default function DoctorCallingCalendar() {
               fontWeight: "700",
             }}
           >
-            Add CallBack Date
+            Add CallBack Date <span className="text-danger">*</span>
           </Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleSubmitCallback}>

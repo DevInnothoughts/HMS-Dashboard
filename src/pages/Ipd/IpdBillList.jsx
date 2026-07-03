@@ -33,12 +33,18 @@ import "../../styles/styles.css";
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
 const BASE_URL = "http://194.195.117.79:5100/api";
 
+const getLocalDateString = (date) => {
+  const offset = date.getTimezoneOffset();
+  const localDate = new Date(date.getTime() - (offset * 60 * 1000));
+  return localDate.toISOString().split("T")[0];
+};
+
 const today = new Date();
-const maxDate = today.toISOString().split("T")[0];
+const maxDate = getLocalDateString(today);
 
 const minDateObj = new Date();
-minDateObj.setDate(today.getDate() - 3);
-const minDate = minDateObj.toISOString().split("T")[0];
+minDateObj.setDate(today.getDate() - 1);
+const minDate = getLocalDateString(minDateObj);
 
 const Toast = Swal.mixin({
   toast: true,
@@ -2379,7 +2385,8 @@ const IpdBillList = () => {
                                   disabled={
                                     rowData.payment_count > 0 ||
                                     (rowData.bill_method !== "PDC" && rowData.status !== "PDC" && parseFloat(rowData.receivedamt) > 0) ||
-                                    !moment(rowData.creation_date).isSame(moment(), "month")
+                                    (moment().startOf("day").diff(moment(rowData.creation_date).startOf("day"), "days") > 2) ||
+                                    (moment().startOf("day").diff(moment(rowData.creation_date).startOf("day"), "days") < 0)
                                   }
                                   onClick={() => handleEditInvoice(rowData)}
                                 >
@@ -2765,15 +2772,14 @@ const IpdBillList = () => {
                           border: "1px solid #4dd0e1",
                         }}
                         value={selectedInvoice.creation_date}
-                        min="2026-06-01"
+                        min={minDate}
+                        max={maxDate}
                         onChange={(e) =>
                           setSelectedInvoice({
                             ...selectedInvoice,
                             creation_date: e.target.value,
                           })
                         }
-                        // min={maxDate}
-                        // max={maxDate}
                         onKeyDown={(e) => e.preventDefault()}   // ⛔ block typing
                         onPaste={(e) => e.preventDefault()}     // ⛔ block paste
                         onWheel={(e) => e.target.blur()}        // ⛔ prevent scroll change
@@ -2849,13 +2855,16 @@ const IpdBillList = () => {
                           border: "1px solid #4dd0e1",
                         }}
                         value={selectedInvoice.due_date}
-                        min={selectedInvoice.creation_date}
+                        min={maxDate}
                         onChange={(e) =>
                           setSelectedInvoice({
                             ...selectedInvoice,
                             due_date: e.target.value,
                           })
                         }
+                        onKeyDown={(e) => e.preventDefault()}   // ⛔ block typing
+                        onPaste={(e) => e.preventDefault()}     // ⛔ block paste
+                        onWheel={(e) => e.target.blur()}        // ⛔ prevent scroll change
                       />
                     </Col>
                     <Col md={4}>

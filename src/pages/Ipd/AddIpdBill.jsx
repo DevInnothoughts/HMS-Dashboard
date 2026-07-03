@@ -29,12 +29,18 @@ const Toast = Swal.mixin({
   },
 });
 
+const getLocalDateString = (date) => {
+  const offset = date.getTimezoneOffset();
+  const localDate = new Date(date.getTime() - (offset * 60 * 1000));
+  return localDate.toISOString().split("T")[0];
+};
+
 const today = new Date();
-const maxDate = today.toISOString().split("T")[0];
+const maxDate = getLocalDateString(today);
 
 const minDateObj = new Date();
-minDateObj.setDate(today.getDate() - 3);
-const minDate = minDateObj.toISOString().split("T")[0];
+minDateObj.setDate(today.getDate() - 1);
+const minDate = getLocalDateString(minDateObj);
 
 const FALLBACK_LOCATIONS = [
   "Ahmedabad",
@@ -1062,7 +1068,8 @@ const AddIpdBill = () => {
                     type="date"
                     style={inputStyle}
                     name="admission_date"
-                    min="2026-06-01"
+                    min={minDate}
+                    max={maxDate}
                     value={formData.admission_date}
                     onChange={handleInputChange}
                     isInvalid={errors.admission_date}
@@ -1113,10 +1120,13 @@ const AddIpdBill = () => {
                     type="date"
                     style={inputStyle}
                     name="discharge_date"
-                    min={formData.admission_date}
+                    min={maxDate}
                     value={formData.discharge_date}
                     onChange={handleInputChange}
                     isInvalid={errors.discharge_date}
+                    onKeyDown={(e) => e.preventDefault()}
+                    onPaste={(e) => e.preventDefault()}
+                    onWheel={(e) => e.target.blur()}
                   />
                 </Col>
                 <Col md={2}>
