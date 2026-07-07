@@ -1396,7 +1396,7 @@ const IpdBillList = () => {
       status: status, // Sync backend status column
       package: titleString,
       location: currentLocation,
-      patient_location: selectedInvoice.interbranchLocation || currentLocation,
+      patient_location: selectedInvoice.interbranchLocation || null,
       totalamt: Math.round(parseFloat(modalInvoiceData.Sub_Total || 0)),
       payable_amt: Math.round(parseFloat(modalInvoiceData.payableAmount || 0)),
       discount: Math.round(parseFloat(modalInvoiceData.discount || 0)),
@@ -1587,6 +1587,17 @@ const IpdBillList = () => {
 
     const { dynamicRows, Sub_Total } = getDynamicRowsFromInvoice(invoice);
 
+    const totAmt = parseFloat(invoice.totalamt || Sub_Total) || 0;
+    const discAmt = parseFloat(invoice.discount) || 0;
+    const isInsurance =
+      (invoice.bill_Type || "").toLowerCase() === "insurance" ||
+      (invoice.bill_type || "").toLowerCase() === "insurance" ||
+      ["cashless", "reimbursement", "pdc"].includes((invoice.status || "").toLowerCase()) ||
+      !!invoice.insurancecompany ||
+      !!invoice.insurance_company_name;
+
+    const pleasePayAmt = isInsurance ? totAmt : Math.max(0, totAmt - discAmt);
+
     const printContent = ` 
   <html>
     <head>
@@ -1773,7 +1784,7 @@ const IpdBillList = () => {
           <td class="right_align" style="border-left:0; font-weight:bold;">₹ ${(Math.round(parseFloat(invoice.totalamt || Sub_Total)) || 0).toLocaleString()}</td>
           <td class="left_align" style="border-right:0;">Please Pay:</td>
           <td class="right_align" style="border-left:0; font-weight:bold;">
-            ₹ ${(Math.round(parseFloat(invoice.payable_amt || calculatePayableAmt(invoice))) || 0).toLocaleString()}
+            ₹ ${Math.round(pleasePayAmt).toLocaleString()}
           </td>
         </tr>
       </table>
@@ -3291,7 +3302,7 @@ const IpdBillList = () => {
                           }}
                           className="text-muted"
                         >
-                          Bill Type <span className="text-danger">*</span>
+                          Payment Category <span className="text-danger">*</span>
                         </Form.Label>
                         <Form.Select
                           required

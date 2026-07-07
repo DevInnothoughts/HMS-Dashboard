@@ -71,7 +71,7 @@ export default function AddLabReceipt() {
     try {
       const endpoints = [
         `${BASE_URL}/V1/doctor/doctorDropdown?location=${currentLocation}`,
-        `${BASE_URL}/V1/doctor/consultationDropdown?location=${currentLocation}`,
+        `${BASE_URL}/V1/doctor/consultationLabDropdown?location=${currentLocation}`,
         `${BASE_URL}/V1/appointment/posTerminalDropdown?location=${currentLocation}`,
       ];
 

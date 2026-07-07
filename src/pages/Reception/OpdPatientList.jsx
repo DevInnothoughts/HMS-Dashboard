@@ -1281,7 +1281,15 @@ export default function OpdPatientList() {
           Swal.fire({
             icon: "warning",
             title: "Pending Appointment",
-            text: "Pending appointment, close that appointment first.",
+            html: `
+            <div style="font-family: inherit;">
+                    <p style="margin-bottom: 12px; text-align:center !important;">There is already a pending appointment of this patient. Close that appointment first.</p>
+                    <p style="margin-bottom: 4px; font-weight: bold; font-size:14px; color: #e67e22; text-align:center !important;">How to check?</p>
+                    <p style="margin: 0; line-height: 1.5; font-size:13px !important; text-align:center !important;">
+                      Go to <strong>Appointment List</strong> &rarr; Search by <strong>Contact Number</strong> in <strong>Global Search</strong> &rarr; If found, <strong>Delete or Edit</strong> the pending appointment.
+                    </p>
+                  </div>
+            `,
             confirmButtonColor: "#f39c12",
           });
           setNoPendingAppt(false);
