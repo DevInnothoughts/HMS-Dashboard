@@ -94,6 +94,7 @@ const referralSources = [
   { id: "hhc_branch", label: "Healing Hands Clinic Branch" },
   { id: "aggregators", label: "Aggregators" },
   { id: "dr_privilege_card", label: "Doctor's Privilege Card" },
+  { id: "campaign", label: "Campaign" },
   { id: "other", label: "Other" },
 ];
 
@@ -512,6 +513,10 @@ export default function AddOpdAppointment() {
 
   const handlePhoneNumberChange = (e) => {
     const val = e.target.value.replace(/\D/g, "");
+    if (val.length === 0) {
+      handleReset();
+      return;
+    }
     if (val.length <= 10) {
       setFormData((prev) => ({ ...prev, patient_phone: val }));
       if (val.length === 10 && currentLocation) fetchPatientDetails(val);
@@ -663,7 +668,7 @@ export default function AddOpdAppointment() {
                   </Row>
 
                   <Row className="g-3">
-                    <Col md={4}>
+                    <Col md={3}>
                       <Form.Label style={labelStyle}>
                         Patient Name <span className="text-danger">*</span>
                       </Form.Label>
@@ -709,7 +714,7 @@ export default function AddOpdAppointment() {
                       )}
 
                     {formData.patient_type === "New" && (
-                      <Col md={4}>
+                      <Col md={3}>
                         <Form.Label style={labelStyle}>
                           Patient Address <span className="text-danger">*</span>
                         </Form.Label>
@@ -732,7 +737,7 @@ export default function AddOpdAppointment() {
                         )}
                       </Col>
                     )}
-                    <Col md={4}>
+                    <Col md={3}>
                       <Form.Label style={labelStyle}>
                         Doctor Name <span className="text-danger">*</span>
                       </Form.Label>
@@ -751,7 +756,7 @@ export default function AddOpdAppointment() {
                         ))}
                       </Form.Select>
                     </Col>
-                    <Col md={4}>
+                    <Col md={3}>
                       <Form.Label style={labelStyle}>
                         FDE Name <span className="text-danger">*</span>
                       </Form.Label>
@@ -772,7 +777,7 @@ export default function AddOpdAppointment() {
                     </Col>
 
                     {formData.patient_type === "New" && (
-                      <Col md={4}>
+                      <Col md={3}>
                         <Form.Label style={labelStyle}>
                           Reference <span className="text-danger">*</span>
                         </Form.Label>
@@ -800,7 +805,7 @@ export default function AddOpdAppointment() {
                         )}
                       </Col>
                     )}
-                    <Col md={4} className="mb-10">
+                    <Col md={3} className="mb-10">
                       <Form.Label style={labelStyle}>Note</Form.Label>
                       <Form.Control
                         as="textarea"

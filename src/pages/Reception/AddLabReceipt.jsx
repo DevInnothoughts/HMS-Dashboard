@@ -40,6 +40,7 @@ export default function AddLabReceipt() {
     patient_phone: "",
     patient_name: "",
     doctor_id: "",
+    madeby: "",
     regComment: "",
     paymentMode: "",
     posTerminal: "",
@@ -52,6 +53,7 @@ export default function AddLabReceipt() {
   const [doctors, setDoctors] = useState([]);
   const [consultationTypesList, setConsultationTypesList] = useState([]);
   const [posTerminalList, setPosTerminalList] = useState([]);
+  const [fdeList, setFdeList] = useState([]);
   const [billingItems, setBillingItems] = useState([{ label: "", amount: "" }]);
 
   // Get location from JWT Token
@@ -73,9 +75,10 @@ export default function AddLabReceipt() {
         `${BASE_URL}/V1/doctor/doctorDropdown?location=${currentLocation}`,
         `${BASE_URL}/V1/appointment/consultationLabDropdown?location=${currentLocation}`,
         `${BASE_URL}/V1/appointment/posTerminalDropdown?location=${currentLocation}`,
+        `${BASE_URL}/V1/appointment/fdeDropdown?location=${currentLocation}`,
       ];
 
-      const [doctorRes, consultationRes, posRes] = await Promise.all(
+      const [doctorRes, consultationRes, posRes, fdeRes] = await Promise.all(
         endpoints.map((url) => fetch(url).then((res) => res.json()))
       );
 
@@ -84,6 +87,7 @@ export default function AddLabReceipt() {
         Array.isArray(consultationRes.data) ? consultationRes.data : []
       );
       setPosTerminalList(Array.isArray(posRes.data) ? posRes.data : []);
+      setFdeList(Array.isArray(fdeRes.data) ? fdeRes.data : []);
     } catch (error) {
       console.error("Error fetching dropdowns:", error);
     }
@@ -176,11 +180,14 @@ export default function AddLabReceipt() {
     if (!formData.doctor_id) {
       newErrors.doctor_id = "Consultant Doctor is required";
     }
+    if (!formData.madeby) {
+      newErrors.madeby = "Made By is required";
+    }
     if (!formData.paymentMode) {
       newErrors.paymentMode = "Payment mode is required";
     }
     if (formData.paymentMode && formData.paymentMode !== "Cash" && !formData.posTerminal) {
-      newErrors.posTerminal = "POS Terminal machine is required for card/UPI payments";
+      newErrors.posTerminal = "POS Terminal is required for payments";
     }
 
     // Validate billing items
@@ -197,6 +204,7 @@ export default function AddLabReceipt() {
       patient_phone: "",
       patient_name: "",
       doctor_id: "",
+      madeby: "",
       regComment: "",
       paymentMode: "",
       posTerminal: "",
@@ -397,6 +405,7 @@ export default function AddLabReceipt() {
         comment: formData.regComment || "",
         PosMachine: formData.posTerminal || "OFFLINE",
         MachineType: "OPD",
+        madeby: formData.madeby,
       };
 
       const receiptRes = await fetch(
@@ -532,10 +541,10 @@ export default function AddLabReceipt() {
                       fontWeight: "bold",
                     }}
                   >
-                    Patient Information
+                    Patient & Doctor Information
                   </h6>
                   <Row className="g-3 mb-4">
-                    <Col md={6}>
+                    <Col md={2}>
                       <Form.Group>
                         <Form.Label style={labelStyle}>
                           Contact Number <span className="text-danger">*</span>
@@ -560,6 +569,7 @@ export default function AddLabReceipt() {
                               setFormData((prev) => ({
                                 ...prev,
                                 patient_phone: val,
+                                ...(val === "" ? { patient_name: "" } : {}),
                               }));
                             }
                           }}
@@ -579,7 +589,7 @@ export default function AddLabReceipt() {
                       </Form.Group>
                     </Col>
 
-                    <Col md={6}>
+                    <Col md={3}>
                       <Form.Group>
                         <Form.Label style={labelStyle}>
                           Patient Name <span className="text-danger">*</span>
@@ -591,7 +601,11 @@ export default function AddLabReceipt() {
                           value={formData.patient_name}
                           onChange={handleInputChange}
                           placeholder="Enter Patient Name"
-                          style={inputStyle}
+                          style={
+                            !!registeredPatient
+                              ? { ...inputStyle, cursor: "not-allowed" }
+                              : inputStyle
+                          }
                           disabled={!!registeredPatient}
                         />
                         {errors.patient_name && (
@@ -601,24 +615,7 @@ export default function AddLabReceipt() {
                         )}
                       </Form.Group>
                     </Col>
-                  </Row>
-
-                  {/* Consultation Details */}
-                  <h6
-                    style={{
-                      color: "#05acc3",
-                      borderBottom: "1px solid #00bcd4",
-                      paddingBottom: "5px",
-                      marginTop: "20px",
-                      marginBottom: "5px",
-                      fontSize: "14px",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Consultation & Doctor
-                  </h6>
-                  <Row className="g-3 mb-4">
-                    <Col md={6}>
+                    <Col md={2}>
                       <Form.Group>
                         <Form.Label style={labelStyle}>
                           Consultant Doctor <span className="text-danger">*</span>
@@ -645,7 +642,34 @@ export default function AddLabReceipt() {
                       </Form.Group>
                     </Col>
 
-                    <Col md={6}>
+                    <Col md={2}>
+                      <Form.Group>
+                        <Form.Label style={labelStyle}>
+                          Made By <span className="text-danger">*</span>
+                        </Form.Label>
+                        <Form.Select
+                          required
+                          name="madeby"
+                          value={formData.madeby}
+                          onChange={handleInputChange}
+                          style={inputStyle}
+                        >
+                          <option value="">Select Made By</option>
+                          {fdeList.map((fde) => (
+                            <option key={fde.FDEID} value={fde.FDEID}>
+                              {fde.FDEName}
+                            </option>
+                          ))}
+                        </Form.Select>
+                        {errors.madeby && (
+                          <p className="text-danger mt-1" style={{ fontSize: "11px" }}>
+                            {errors.madeby}
+                          </p>
+                        )}
+                      </Form.Group>
+                    </Col>
+
+                    <Col md={3}>
                       <Form.Group>
                         <Form.Label style={labelStyle}>Comment</Form.Label>
                         <Form.Control
@@ -661,7 +685,6 @@ export default function AddLabReceipt() {
                     </Col>
                   </Row>
 
-                  {/* Billing Details */}
                   <h6
                     style={{
                       color: "#05acc3",
@@ -672,7 +695,7 @@ export default function AddLabReceipt() {
                       fontWeight: "bold",
                     }}
                   >
-                    Billing Particulars
+                    Billing Particulars & Payment Details
                   </h6>
                   {billingItems.map((item, index) => (
                     <Row key={index} className="g-3 mb-2 align-items-end">
@@ -751,7 +774,7 @@ export default function AddLabReceipt() {
                           onClick={() => removeBillingRow(index)}
                           style={{
                             borderRadius: "8px",
-                            padding: "10px 12px",
+                            padding: "10px 40px",
                             fontSize: "12px",
                             marginRight: "10px",
                           }}
@@ -759,18 +782,20 @@ export default function AddLabReceipt() {
                         >
                           - Delete
                         </Button>
-                        <Button
-                          variant="outline-success"
-                          size="sm"
-                          onClick={addBillingRow}
-                          style={{
-                            borderRadius: "8px",
-                            padding: "10px 12px",
-                            fontSize: "12px",
-                          }}
-                        >
-                          + Add Row
-                        </Button>
+                        {index === billingItems.length - 1 && (
+                          <Button
+                            variant="outline-success"
+                            size="sm"
+                            onClick={addBillingRow}
+                            style={{
+                              borderRadius: "8px",
+                              padding: "10px 40px",
+                              fontSize: "12px",
+                            }}
+                          >
+                            + Add Row
+                          </Button>
+                        )}
                       </Col>
                     </Row>
                   ))}
@@ -780,22 +805,9 @@ export default function AddLabReceipt() {
                     </p>
                   )}
 
-                  {/* Payment Details */}
-                  <h6
-                    style={{
-                      color: "#05acc3",
-                      borderBottom: "1px solid #00bcd4",
-                      paddingBottom: "5px",
-                      marginTop: "20px",
-                      marginBottom: "5px",
-                      fontSize: "14px",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    Payment Details
-                  </h6>
+
                   <Row className="g-3 mb-3">
-                    <Col md={12}>
+                    <Col md={2}>
                       <Form.Group>
                         <Form.Label style={labelStyle}>
                           Payment Mode <span className="text-danger">*</span>
@@ -819,46 +831,42 @@ export default function AddLabReceipt() {
                         )}
                       </Form.Group>
                     </Col>
-                  </Row>
 
-                  {/* POS Terminal radio box (visible if Card/UPI selected) */}
-                  {formData.paymentMode && formData.paymentMode !== "Cash" && (
-                    <Row className="g-3 mb-4">
-                      <Col>
-                        <Form.Label style={labelStyle}>
-                          POS Terminal machine <span className="text-danger">*</span>
-                        </Form.Label>
-                        <div
-                          className="p-3"
-                          style={{
-                            backgroundColor: "#94e2eeff",
-                            borderRadius: "10px",
-                          }}
-                        >
-                          {[...new Set([...posTerminalList, "OFFLINE"])].map((opt) => (
-                            <Form.Check
-                              required
-                              inline
-                              key={opt}
-                              label={opt}
-                              name="posTerminal"
-                              type="radio"
-                              id={`pos-${opt}`}
-                              value={opt}
-                              checked={formData.posTerminal === opt}
-                              onChange={handleInputChange}
-                              style={{ fontSize: "12px", margin: "5px" }}
-                            />
-                          ))}
-                        </div>
-                        {errors.posTerminal && (
-                          <p className="text-danger mt-1" style={{ fontSize: "11px" }}>
-                            {errors.posTerminal}
-                          </p>
-                        )}
-                      </Col>
-                    </Row>
-                  )}
+                    {/* POS Terminal radio box */}
+                    <Col md={3}>
+                      <Form.Label style={labelStyle}>
+                        POS Terminal <span className="text-danger">*</span>
+                      </Form.Label>
+                      <div
+                        className="p-3 d-flex flex-wrap gap-3"
+                        style={{
+                          backgroundColor: "#94e2eeff",
+                          borderRadius: "10px",
+                        }}
+                      >
+                        {[...new Set([...posTerminalList, "OFFLINE"])].map((opt) => (
+                          <Form.Check
+                            required
+                            inline
+                            key={opt}
+                            label={opt}
+                            name="posTerminal"
+                            type="radio"
+                            id={`pos-${opt}`}
+                            value={opt}
+                            checked={formData.posTerminal === opt}
+                            onChange={handleInputChange}
+                            style={{ fontSize: "12px", margin: "7px" }}
+                          />
+                        ))}
+                      </div>
+                      {errors.posTerminal && (
+                        <p className="text-danger mt-1" style={{ fontSize: "11px" }}>
+                          {errors.posTerminal}
+                        </p>
+                      )}
+                    </Col>
+                  </Row>
 
                   {/* Summary / Total details */}
                   <div
@@ -872,19 +880,19 @@ export default function AddLabReceipt() {
                     <Row className="text-end font-weight-bold">
                       <Col>
                         <h5 className="m-0" style={{ color: "#00838f", fontWeight: "700" }}>
-                          Total Net Amount: ₹ {payable.toFixed(2)}
+                          Total Amount: ₹ {payable.toFixed(2)}
                         </h5>
                       </Col>
                     </Row>
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="d-flex justify-content-end align-items-center">
+                  <div className="d-flex justify-content-end align-items-center mb-10">
                     <Button
                       style={{
                         borderRadius: "10px",
                         fontSize: "13px",
-                        padding: "8px 25px",
+                        padding: "9px 25px",
                         marginTop: "10px",
 
                       }}
@@ -896,12 +904,12 @@ export default function AddLabReceipt() {
                     </Button>
                     <Button
                       type="submit"
+                      variant="success"
                       style={{
                         borderRadius: "10px",
-                        backgroundColor: "#00bcd4",
                         border: "none",
                         fontSize: "13px",
-                        padding: "8px 30px",
+                        padding: "10px 30px",
                         marginTop: "10px",
                       }}
                       disabled={loading}

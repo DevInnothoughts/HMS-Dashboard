@@ -1630,7 +1630,7 @@ const IpdBillList = () => {
         </tr>
         <tr>
           <td>Patient Name:</td><td>${invoice.prefix || ""} ${invoice.patient_name || invoice.name}</td>
-          <td>Gender / Age:</td><td>${invoice.sex || invoice.gender || "N/A"} / ${invoice.age}</td>
+          <td>Gender / Age:</td><td>${invoice.sex || invoice.gender || "N/A"} / ${invoice.age} yrs </td>
         </tr>
         <tr>
           <td>Patient ID:</td><td>${invoice.patient_uid || "N/A"}</td>
@@ -2464,7 +2464,7 @@ const IpdBillList = () => {
         </Modal.Footer>
       </Modal>
 
-      <Modal show={showModal} onHide={handleCloseModal} size="lg" centered>
+      <Modal show={showModal} onHide={handleCloseModal} size="xl" centered >
         <Modal.Header
           closeButton
           style={{
@@ -2508,7 +2508,7 @@ const IpdBillList = () => {
                       color: "#00838f",
                     }}
                   >
-                    Patient & Admission Details
+                    Patient & Clinical Information
                   </h6>
                   <Row className="g-2">
                     <Col md={4}>
@@ -2819,30 +2819,43 @@ const IpdBillList = () => {
                         })}
                       </Form.Select>
                     </Col>
-                  </Row>
-                </Card.Body>
-              </Card>
+                    <Col md={4}>
+                      <Form.Label
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: "600",
+                          marginBottom: "2px",
+                        }}
+                        className="text-muted"
+                      >
+                        Bed Category{" "}
+                        <span style={{ color: "red" }} className="required">
+                          *
+                        </span>
+                      </Form.Label>
+                      <Form.Control
+                        required
+                        size="sm"
+                        style={{
+                          borderRadius: "10px",
+                          fontSize: "12px",
+                          border: "1px solid #4dd0e1",
+                        }}
+                        type="text"
+                        value={
+                          selectedInvoice.bed_no ||
+                          selectedInvoice.bed_desc ||
+                          ""
+                        }
+                        onChange={(e) =>
+                          setSelectedInvoice({
+                            ...selectedInvoice,
+                            bed_no: e.target.value,
+                          })
+                        }
+                      />
+                    </Col>
 
-              <Card
-                style={{
-                  border: "none",
-                  borderRadius: "10px",
-                  borderTop: "3px solid #00bcd4",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-                  marginBottom: "15px",
-                }}
-              >
-                <Card.Body style={{ padding: "10px" }}>
-                  <h6
-                    style={{
-                      fontSize: "0.95rem",
-                      fontWeight: "600",
-                      color: "#00838f",
-                    }}
-                  >
-                    Clinical Staff
-                  </h6>
-                  <Row className="g-2">
                     <Col md={4}>
                       <Form.Label
                         style={{
@@ -2978,42 +2991,6 @@ const IpdBillList = () => {
                           )}
                       </Form.Select>
                     </Col>
-                    <Col md={4}>
-                      <Form.Label
-                        style={{
-                          fontSize: "12px",
-                          fontWeight: "600",
-                          marginBottom: "2px",
-                        }}
-                        className="text-muted"
-                      >
-                        Bed Category{" "}
-                        <span style={{ color: "red" }} className="required">
-                          *
-                        </span>
-                      </Form.Label>
-                      <Form.Control
-                        required
-                        size="sm"
-                        style={{
-                          borderRadius: "10px",
-                          fontSize: "12px",
-                          border: "1px solid #4dd0e1",
-                        }}
-                        type="text"
-                        value={
-                          selectedInvoice.bed_no ||
-                          selectedInvoice.bed_desc ||
-                          ""
-                        }
-                        onChange={(e) =>
-                          setSelectedInvoice({
-                            ...selectedInvoice,
-                            bed_no: e.target.value,
-                          })
-                        }
-                      />
-                    </Col>
                   </Row>
                 </Card.Body>
               </Card>
@@ -3048,7 +3025,7 @@ const IpdBillList = () => {
                           }}
                           className="text-muted"
                         >
-                          Label Name
+                          Item/Procedure Name
                         </Form.Label>
                         <Form.Control
                           size="sm"
@@ -3168,7 +3145,7 @@ const IpdBillList = () => {
                         color: "#00838f",
                       }}
                     >
-                      Billing Settings
+                      Payment Details
                     </h6>
                     <Row className="g-2">
                       <Col md={4}>
@@ -3851,7 +3828,7 @@ const IpdBillList = () => {
                       }}
                     >
                       <div>
-                        Total Bill Amount:{" "}
+                        Total Amount:{" "}
                         <strong>
                           ₹ {parseFloat(modalInvoiceData.Sub_Total || 0).toLocaleString()}
                         </strong>
@@ -3921,7 +3898,7 @@ const IpdBillList = () => {
           </Button>
           <Button
             size="sm"
-            variant="primary"
+            variant="success"
             type="submit"
             disabled={loading}
             form="edit-invoice-form"

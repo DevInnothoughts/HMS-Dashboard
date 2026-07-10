@@ -848,6 +848,10 @@ export default function OpdPatientList() {
         reference_type = "dr_privilege_card";
         ref = referenceDetails.dr_privilege_card || formData.ref || "Doctor's Privilege Card";
         break;
+      case "campaign":
+        reference_type = "campaign";
+        ref = referenceDetails.campaign || formData.ref || "Campaign";
+        break;
       default:
         reference_type = null;
         ref = referenceDetails[selectedReference] || formData.ref;
@@ -1283,7 +1287,7 @@ export default function OpdPatientList() {
               <p><b>Email :-</b>&nbsp;&nbsp;${patient.email || "-"}</p>
               <p><b>Occupation :-</b>&nbsp;&nbsp;${patient.occupation || "-"}</p>
               ${patient.companyname ? `<p><b>Company Name :-</b>&nbsp;&nbsp;${patient.companyname}</p>` : ""}
-              ${patient.reference_type === "dr_ref" && (patient.ref_doctor_name || patient.ref) ? `<p><b>Reference :-</b>&nbsp;&nbsp;${patient.ref_doctor_name || patient.ref}${patient.ref_doctor_phone ? ` (${patient.ref_doctor_phone})` : ""}</p>` : patient.ref ? `<p><b>Reference :-</b>&nbsp;&nbsp;${patient.ref}</p>` : ""}
+              ${patient.reference_type === "dr_ref" && (patient.ref_doctor_name || patient.ref) ? `<p><b>Reference :-</b>&nbsp;&nbsp;${patient.ref_doctor_name || patient.ref}${patient.ref_doctor_phone ? ` (${patient.ref_doctor_phone})` : ""}</p>` : patient.ref ? `<p><b>Reference :-</b>&nbsp;&nbsp;${patient.reference_type ? `${patient.reference_type.replace(/_/g, ' ').replace(/\\b\\w/g, l => l.toUpperCase())} (${patient.ref})` : patient.ref}</p>` : ""}
             </td>
           </tr>
           </table>
@@ -1359,6 +1363,47 @@ export default function OpdPatientList() {
 
   const renderReferenceDetails = () => {
     switch (formData.reference_type) {
+      case "campaign":
+        return (
+          <div className="control-group">
+            <label
+              className="control-label"
+              style={{
+                marginTop: "20px",
+                fontSize: "12px",
+                fontWeight: "bold",
+                marginBottom: "5px",
+              }}
+            >
+              Campaign Name
+            </label>
+            <div className="controls">
+              <input
+                style={{
+                  border: "2px solid rgb(77, 208, 225)",
+                  fontSize: "12px",
+                  borderRadius: "10px",
+                }}
+                className="form-control"
+                type="text"
+                placeholder="Campaign Name"
+                value={referenceDetails.campaign || ""}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setReferenceDetails((prev) => ({
+                    ...prev,
+                    campaign: val,
+                  }));
+                  setFormData((prev) => ({
+                    ...prev,
+                    ref: val,
+                    reference_type: "campaign",
+                  }));
+                }}
+              />
+            </div>
+          </div>
+        );
       case "newspaper":
         return (
           <div className="control-group">
@@ -3965,6 +4010,7 @@ export default function OpdPatientList() {
                       </option>
                       <option value="aggregators">Aggregators</option>
                       <option value="dr_privilege_card">Doctor's Privilege Card</option>
+                      <option value="campaign">Campaign</option>
                       <option value="other">Other</option>
                     </Form.Select>
                   </div>

@@ -82,6 +82,7 @@ const REFERENCE_OPTIONS = [
   "Healing Hands Clinic Branch",
   "Aggregators",
   "Doctor's Privilege Card",
+  "Campaign",
   "Other",
 ];
 
@@ -99,6 +100,7 @@ const REFERENCE_MAP = {
   hhc_branch: "Healing Hands Clinic Branch",
   aggregators: "Aggregators",
   dr_privilege_card: "Doctor's Privilege Card",
+  campaign: "Campaign",
   other: "Other",
 };
 
@@ -2901,7 +2903,7 @@ export default function OpdAppointmentList() {
                         marginTop: "5px",
                       }}
                     >
-                      Subtotal: <strong>₹ {calculateTotals().subtotal}</strong>
+                      Total Amount: <strong>₹ {calculateTotals().subtotal}</strong>
                     </div>
                     <div
                       style={{
@@ -2956,12 +2958,13 @@ export default function OpdAppointmentList() {
               resetReceiptForm();
               setShowReceiptModal(false);
             }}
-            style={{ fontSize: "12px", borderRadius: "10px", padding: "9px" }}
+            style={{ fontSize: "12px", borderRadius: "10px", padding: "11px" }}
           >
             Cancel
           </Button>
 
           <Button
+            variant="success"
             type="submit"
             form="opd-receipt-form"
             //disabled={calculateTotals().subtotal > 10000}
@@ -2971,10 +2974,10 @@ export default function OpdAppointmentList() {
               border: "none",
               fontSize: "12px",
               borderRadius: "10px",
-              padding: "10px",
+              padding: "12px",
             }}
           >
-            Generate & Save Receipt
+            Generate Receipt
           </Button>
         </Modal.Footer>
       </Modal>

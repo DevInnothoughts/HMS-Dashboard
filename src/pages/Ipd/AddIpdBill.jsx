@@ -933,7 +933,7 @@ const AddIpdBill = () => {
         <Form onSubmit={handleSubmit}>
           <Card style={cardStyle}>
             <Card.Body className="p-4">
-              <h5 style={sectionTitleStyle}>Patient & Admission Information</h5>
+              <h5 style={sectionTitleStyle}>Patient & Clinical Information</h5>
               <Row className="g-3">
                 <Col md={2}>
                   <Form.Label style={labelStyle}>
@@ -1050,21 +1050,6 @@ const AddIpdBill = () => {
                     placeholder="Enter UID Number"
                   />
                 </Col>
-
-                {/* <Col md={2}>
-                  <Form.Label style={labelStyle}>
-                    Admission Date <span className="text-danger">*</span>
-                  </Form.Label>
-                  <Form.Control
-                    required
-                    type="date"
-                    style={inputStyle}
-                    name="admission_date"
-                    value={formData.admission_date}
-                    onChange={handleInputChange}
-                    isInvalid={errors.admission_date}
-                  />
-                </Col> */}
 
                 <Col md={2}>
                   <Form.Label style={labelStyle}>
@@ -1344,7 +1329,7 @@ const AddIpdBill = () => {
 
           <Card style={cardStyle}>
             <Card.Body className="p-4">
-              <h5 className="mb-3" style={sectionTitleStyle}>Payment Details & Config</h5>
+              <h5 className="mb-3" style={sectionTitleStyle}>Payment Details</h5>
               <Row className="g-3">
                 <Col md={3}>
                   <Form.Label
@@ -1827,7 +1812,7 @@ const AddIpdBill = () => {
                       }}
                     >
                       <div>
-                        Total Bill Amount:{" "}
+                        Total Amount:{" "}
                         <strong>₹ {getChargeBreakdown().subTotal}</strong>
                       </div>
                       <div style={{ color: "#d32f2f" }}>
@@ -1869,7 +1854,7 @@ const AddIpdBill = () => {
                   onClick={handleReset}
                   style={{
                     fontSize: "13px",
-                    padding: "10px 25px",
+                    padding: "10px 20px",
                     borderRadius: "10px",
                     border: "none",
                   }}
@@ -1877,17 +1862,17 @@ const AddIpdBill = () => {
                   Reset Form
                 </Button>
                 <Button
-                  variant="primary"
+                  variant="success"
                   type="submit"
                   disabled={loading}
                   style={{
                     fontSize: "13px",
-                    padding: "10px 35px",
+                    padding: "10px 45px",
                     borderRadius: "10px",
                     border: "none",
                   }}
                 >
-                  {loading ? "Adding..." : "Add Invoice"}
+                  {loading ? "Adding..." : "Add Ipd Bill"}
                 </Button>
               </div>
             </Card.Body>

@@ -68,15 +68,15 @@ const FollowUpCard = ({ followUpData, formData, handleFollowUpChange, onSaveFoll
           </Col>
           <Col md={4} className="mb-1">
             <Form.Label className="fw-bold mb-3" style={{ fontSize: "11px", color: "#006064" }}>Complaint History</Form.Label>
-            <div 
-              style={{ 
-                borderRadius: "10px", 
-                border: "2px solid #b2ebf2", 
-                fontSize: "12px", 
-                padding: "6px 12px", 
-                cursor: "not-allowed", 
+            <div
+              style={{
+                borderRadius: "10px",
+                border: "2px solid #b2ebf2",
+                fontSize: "12px",
+                padding: "6px 12px",
+                cursor: "not-allowed",
                 backgroundColor: "#ebeceeff",
-                minHeight: "58px",
+                minHeight: "100px",
                 maxHeight: "150px",
                 overflowY: "auto"
               }}
@@ -89,7 +89,7 @@ const FollowUpCard = ({ followUpData, formData, handleFollowUpChange, onSaveFoll
                   const y = today.getFullYear();
                   const today1 = `${d}-${m}-${y}`;
                   const today2 = `${y}-${m}-${d}`;
-                  
+
                   const filtered = followUpData.previous_complaints_text.split('\n\n').filter(line => {
                     const parts = line.split(" | ");
                     if (parts.length > 0) {

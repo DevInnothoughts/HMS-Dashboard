@@ -495,6 +495,10 @@ const PersonalDetailsCard = ({
         reference_type = "dr_privilege_card";
         ref = referenceDetails.dr_privilege_card || formData.ref || "Doctor's Privilege Card";
         break;
+      case "campaign":
+        reference_type = "campaign";
+        ref = referenceDetails.campaign || formData.ref || "Campaign";
+        break;
       default:
         reference_type = selectedReference || null;
         ref = referenceDetails[selectedReference] || formData.ref || "";
@@ -553,6 +557,37 @@ const PersonalDetailsCard = ({
 
   const renderReferenceDetails = () => {
     switch (selectedReference) {
+      case "campaign":
+        return (
+          <div className="mt-2">
+            <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>
+              Campaign Name
+            </Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Campaign Name"
+              value={referenceDetails.campaign || ""}
+              onChange={(e) => {
+                const val = e.target.value;
+                setReferenceDetails((prev) => ({
+                  ...prev,
+                  campaign: val,
+                }));
+                setFormData((prev) => ({
+                  ...prev,
+                  ref: val,
+                  reference_type: "campaign",
+                }));
+              }}
+              style={{
+                border: "2px solid #b2ebf2",
+                borderRadius: "8px",
+                padding: "4px 10px",
+                fontSize: "12px",
+              }}
+            />
+          </div>
+        );
       case "newspaper":
         return (
           <div className="mt-2">
@@ -1891,6 +1926,7 @@ const PersonalDetailsCard = ({
                     </option>
                     <option value="aggregators">Aggregators</option>
                     <option value="dr_privilege_card">Doctor's Privilege Card</option>
+                    <option value="campaign">Campaign</option>
                     <option value="other">Other</option>
                   </Form.Select>
                   <div className="flex-grow-1">{renderReferenceDetails()}</div>
