@@ -45,14 +45,6 @@ const HospitalCertificates = () => {
   const handleFileChange = (e) => {
     const file = e.target.files[0] || null;
     setNewCertFile(file);
-    if (file) {
-      const localUrl = URL.createObjectURL(file);
-      setPreviewUrl(localUrl);
-      setPreviewName(file.name);
-      const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
-      setPreviewType(isPdf ? "pdf" : "image");
-      setShowPreview(true);
-    }
   };
 
   const certificateOptions = [
@@ -234,7 +226,7 @@ const HospitalCertificates = () => {
 
   const statusBodyTemplate = (rowData) => {
     const status = getStatus(rowData.certificate_expiry);
-    let badgeStyle = { padding: "4px 8px", borderRadius: "12px", fontWeight: "bold", fontSize: "11px" };
+    let badgeStyle = { padding: "4px 8px", borderRadius: "12px", fontWeight: "bold", fontSize: "12px" };
 
     if (status === "Active") {
       badgeStyle = { ...badgeStyle, backgroundColor: "#e8f5e9", color: "#2e7d32" };

@@ -993,7 +993,7 @@ export default function ReceptionHeader() {
                   Quick Actions :
                 </span>
                 <button
-                  onClick={() => navigate("/add-appointment")}
+                  onClick={() => navigate("/add-opd-appointment")}
                   style={{
                     display: "flex",
                     alignItems: "center",

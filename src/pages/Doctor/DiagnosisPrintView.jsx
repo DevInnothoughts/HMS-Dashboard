@@ -8,6 +8,7 @@ const DiagnosisPrintView = React.forwardRef(
       diagnosisList = [],
       selectedDiagnosisId,
       onPrint,
+      doctors = [],
     },
     ref,
   ) => {
@@ -19,9 +20,9 @@ const DiagnosisPrintView = React.forwardRef(
       if (patient.reference_type === "dr_ref") {
         return patient.ref_doctor_name
           ? patient.ref_doctor_name +
-              (patient.ref_doctor_phone
-                ? ` ( ${patient.ref_doctor_phone} )`
-                : "")
+          (patient.ref_doctor_phone
+            ? ` ( ${patient.ref_doctor_phone} )`
+            : "")
           : patient.ref || "";
       }
       return patient.ref || "";
@@ -536,26 +537,26 @@ const DiagnosisPrintView = React.forwardRef(
                   "Urgency",
                   "Frequency",
                 ];
-                 let odsData = [];
-                 const rawOds = row2.ODS_duration || row2.ods_duration;
-                 if (rawOds) {
-                   if (Array.isArray(rawOds)) {
-                     odsData = rawOds;
-                   } else if (typeof rawOds === "string") {
-                     try {
-                       const parsed = JSON.parse(rawOds);
-                       if (Array.isArray(parsed)) {
-                         odsData = parsed;
-                       } else {
-                         odsData = ["", rawOds];
-                       }
-                     } catch (e) {
-                       odsData = ["", rawOds];
-                     }
-                   } else {
-                     odsData = ["", String(rawOds)];
-                   }
-                 }
+                let odsData = [];
+                const rawOds = row2.ODS_duration || row2.ods_duration;
+                if (rawOds) {
+                  if (Array.isArray(rawOds)) {
+                    odsData = rawOds;
+                  } else if (typeof rawOds === "string") {
+                    try {
+                      const parsed = JSON.parse(rawOds);
+                      if (Array.isArray(parsed)) {
+                        odsData = parsed;
+                      } else {
+                        odsData = ["", rawOds];
+                      }
+                    } catch (e) {
+                      odsData = ["", rawOds];
+                    }
+                  } else {
+                    odsData = ["", String(rawOds)];
+                  }
+                }
                 const hasODS =
                   ODSSymptoms.some((s) => symptoms.includes(s)) ||
                   (odsData && odsData.length > 0 && (odsData[0] || odsData[1]));
@@ -756,7 +757,26 @@ const DiagnosisPrintView = React.forwardRef(
                   <div className="symptom-label">
                     <b>Past Medical History :</b>
                   </div>
-                  <div className="symptom-values">{row2.past_history}</div>
+                  <div className="symptom-values">
+                    {row2.past_history.split(",").map(s => s.trim()).filter(Boolean).map((s, idx, arr) => {
+                      let dur = null;
+                      if (row2.pastmedicalduration) {
+                        let pmDur = row2.pastmedicalduration;
+                        if (typeof pmDur === 'string') {
+                          try { pmDur = JSON.parse(pmDur); } catch (e) { pmDur = {}; }
+                        }
+                        if (pmDur[s]) {
+                          dur = <><br /><b>Duration:</b> {pmDur[s]}</>;
+                        }
+                      }
+                      return (
+                        <span key={idx} style={{ display: "inline-block", verticalAlign: "top", marginRight: "20px", marginBottom: "4px" }}>
+                          {s}{idx < arr.length - 1 ? "," : ""}
+                          {dur}
+                        </span>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
 
@@ -993,24 +1013,76 @@ const DiagnosisPrintView = React.forwardRef(
                   )}
                   {(row3.advice_types?.length > 0 ||
                     row3.diagnosis_comment) && (
+                      <div className="row">
+                        <div className="symptom-label">
+                          <b>Advice Treatment: </b>
+                        </div>
+                        <div className="symptom-values">
+                          <p>
+                            {row3.advice_types?.join(" , ")}
+                            {row3.advice_types?.length > 0 &&
+                              row3.diagnosis_comment
+                              ? " , "
+                              : ""}
+                            {row3.diagnosis_comment
+                              ? `Comment: ${row3.diagnosis_comment}`
+                              : ""}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                  {row3.advice && (
                     <div className="row">
                       <div className="symptom-label">
-                        <b>Advice Type: </b>
+                        <b>Surgical Advice: </b>
                       </div>
                       <div className="symptom-values">
-                        <p>
-                          {row3.advice_types?.join(" , ")}
-                          {row3.advice_types?.length > 0 &&
-                          row3.diagnosis_comment
-                            ? " , "
-                            : ""}
-                          {row3.diagnosis_comment
-                            ? `Comment: ${row3.diagnosis_comment}`
-                            : ""}
-                        </p>
+                        <p>{row3.advice}</p>
                       </div>
                     </div>
                   )}
+                  {row3.surgical_advice && (
+                    <div className="row">
+                      <div className="symptom-label">
+                        <b> Advice Comment: </b>
+                      </div>
+                      <div className="symptom-values">
+                        <p>{row3.surgical_advice}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {(() => {
+                    const checksub = Array.isArray(row3.medical_advice)
+                      ? row3.medical_advice
+                      : typeof row3.medical_advice === "string"
+                        ? row3.medical_advice.split(",").map((s) => s.trim()).filter(Boolean)
+                        : [];
+                    if (checksub.length > 0) {
+                      return (
+                        <div className="row">
+                          <div className="symptom-label">
+                            <b>Test Adviced: </b>
+                          </div>
+                          <div className="symptom-values">
+                            <p>
+                              {checksub
+                                .map((adv) => {
+                                  const noteKey = Object.keys(row3.medical_advice_notes || {}).find(
+                                    (k) => k.toLowerCase() === adv.toLowerCase()
+                                  ) || adv;
+                                  const note = row3.medical_advice_notes?.[noteKey];
+                                  return note ? `${adv} (${note})` : adv;
+                                })
+                                .join(" , ")}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
 
                   {/* Medicines Prescribed */}
                   {(() => {
@@ -1059,27 +1131,6 @@ const DiagnosisPrintView = React.forwardRef(
                     }
                     return null;
                   })()}
-
-                  {row3.advice && (
-                    <div className="row">
-                      <div className="symptom-label">
-                        <b>Plan: </b>
-                      </div>
-                      <div className="symptom-values">
-                        <p>{row3.advice}</p>
-                      </div>
-                    </div>
-                  )}
-                  {row3.surgical_advice && (
-                    <div className="row">
-                      <div className="symptom-label">
-                        <b> Advice Comment: </b>
-                      </div>
-                      <div className="symptom-values">
-                        <p>{row3.surgical_advice}</p>
-                      </div>
-                    </div>
-                  )}
                   {row3.general_comment && (
                     <div className="row">
                       <div className="symptom-label">
@@ -1101,45 +1152,23 @@ const DiagnosisPrintView = React.forwardRef(
                     </div>
                   )}
 
-                  {/* Advice */}
-                  {(() => {
-                    const checksub = row3.medical_advice || [];
-                    const advice = [
-                      "MCDPA",
-                      "UROFLOWMETRY",
-                      "CHT",
-                      "BIOFEEDBACK",
-                      "MANOMETRY",
-                      "COLO",
-                      "GASTRO",
-                      "LAB INVESTIGATION",
-                      "DIET",
-                      "X-RAY",
-                      "CT",
-                      "ULTRASONOGRAPHY",
-                      "ECHO",
-                      "MRI",
-                      "DOPPLER",
-                      "3D ENDO ANAL IMAGING",
-                      "BUGSPEAKS",
-                    ];
-                    const filteredAdvice = advice.filter((a) =>
-                      checksub.includes(a),
-                    );
-                    if (filteredAdvice.length > 0) {
-                      return (
-                        <div className="row">
-                          <div className="symptom-label">
-                            <b>Advice : </b>
-                          </div>
-                          <div className="symptom-values">
-                            {filteredAdvice.join(" , ")}
-                          </div>
-                        </div>
-                      );
-                    }
-                    return null;
-                  })()}
+                  {row3.consultant_doctor && (
+                    <div className="row">
+                      <div className="symptom-label">
+                        <b>Consultant Doctor: </b>
+                      </div>
+                      <div className="symptom-values">
+                        <p>
+                          {(() => {
+                            const found = doctors.find((d) => String(d.doctor_id) === String(row3.consultant_doctor));
+                            return found ? found.name : row3.consultant_doctor;
+                          })()}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+
 
                   {/* Other */}
                   {(() => {

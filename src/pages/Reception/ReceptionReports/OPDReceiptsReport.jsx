@@ -50,7 +50,7 @@ const OPDReceiptsReport = () => {
       if (!currentLocation || currentLocation === "default") return;
       try {
         const response = await fetch(
-          `${BASE_URL}/V1/doctor/consultationDetailsDropdown?location=${currentLocation}`
+          `${BASE_URL}/V1/managereports/consultationDetailsDropdown?location=${currentLocation}`
         );
         const resData = await response.json();
         if (response.ok && Array.isArray(resData.data)) {

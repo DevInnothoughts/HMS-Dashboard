@@ -67,14 +67,72 @@ const FollowUpCard = ({ followUpData, formData, handleFollowUpChange, onSaveFoll
             <Form.Control as="textarea" readOnly rows={2} value={followUpData.plan} onChange={(e) => handleFollowUpChange("plan", e.target.value)} placeholder="Next steps in treatment..." style={{ borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px", cursor: "not-allowed", backgroundColor: "#ebeceeff" }} />
           </Col>
           <Col md={4} className="mb-1">
+            <Form.Label className="fw-bold mb-3" style={{ fontSize: "11px", color: "#006064" }}>Complaint History</Form.Label>
+            <div 
+              style={{ 
+                borderRadius: "10px", 
+                border: "2px solid #b2ebf2", 
+                fontSize: "12px", 
+                padding: "6px 12px", 
+                cursor: "not-allowed", 
+                backgroundColor: "#ebeceeff",
+                minHeight: "58px",
+                maxHeight: "150px",
+                overflowY: "auto"
+              }}
+            >
+              {followUpData.previous_complaints_text ? (
+                (() => {
+                  const today = new Date();
+                  const d = String(today.getDate()).padStart(2, "0");
+                  const m = String(today.getMonth() + 1).padStart(2, "0");
+                  const y = today.getFullYear();
+                  const today1 = `${d}-${m}-${y}`;
+                  const today2 = `${y}-${m}-${d}`;
+                  
+                  const filtered = followUpData.previous_complaints_text.split('\n\n').filter(line => {
+                    const parts = line.split(" | ");
+                    if (parts.length > 0) {
+                      return !parts[0].includes(today1) && !parts[0].includes(today2);
+                    }
+                    return true;
+                  });
+
+                  if (filtered.length === 0) return "No previous complaints recorded.";
+
+                  return filtered.map((line, i) => {
+                    const parts = line.split(" | ");
+                    if (parts.length >= 2) {
+                      const prefixMatch = parts[0].match(/^(\d+\.\s+)(.*)$/);
+                      if (prefixMatch) {
+                        return (
+                          <div key={i} style={{ marginBottom: i < filtered.length - 1 ? "10px" : "0", whiteSpace: "pre-line" }}>
+                            <b>{prefixMatch[1]}{prefixMatch[2]}</b> | {parts.slice(1).join(" | ")}
+                          </div>
+                        );
+                      }
+                    }
+                    return (
+                      <div key={i} style={{ marginBottom: i < filtered.length - 1 ? "10px" : "0", whiteSpace: "pre-line" }}>
+                        {line}
+                      </div>
+                    );
+                  });
+                })()
+              ) : (
+                "No previous complaints recorded."
+              )}
+            </div>
+          </Col>
+          <Col md={4} className="mb-1">
             <Form.Label className="fw-bold mb-3" style={{ fontSize: "11px", color: "#006064" }}>Present Complaints <span className="text-danger">*</span></Form.Label>
             <Form.Control as="textarea" rows={2} placeholder="Describe the present symptoms..." value={followUpData.present_complaints} onChange={(e) => handleFollowUpChange("present_complaints", e.target.value)} style={{ borderRadius: "10px", border: validationErrors.present_complaints ? "2px solid red" : "2px solid #b2ebf2", fontSize: "12px", padding: "6px 12px" }} />
           </Col>
-          <Col md={4} className="mb-1">
+          <Col md={2} className="mb-1">
             <Form.Label className="fw-bold mb-3" style={{ fontSize: "11px", color: "#006064" }}>First Visit Date</Form.Label>
             <Form.Control type="date" readOnly value={followUpData.first_visit_date} onChange={(e) => handleFollowUpChange("first_visit_date", e.target.value)} style={{ cursor: "not-allowed", backgroundColor: "#ebeceeff", borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
           </Col>
-          <Col md={4} className="mb-1">
+          <Col md={2} className="mb-1">
             <Form.Label className="fw-bold mb-3" style={{ fontSize: "11px", color: "#006064" }}>Visit Number</Form.Label>
             <Form.Control type="number" value={followUpData.visit_count} onChange={(e) => handleFollowUpChange("visit_count", e.target.value)} readOnly style={{ cursor: "not-allowed", backgroundColor: "#ebeceeff", borderRadius: "10px", border: "2px solid #b2ebf2", padding: "6px 12px", fontSize: "12px" }} />
           </Col>

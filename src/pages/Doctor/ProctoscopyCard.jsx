@@ -2,18 +2,8 @@ import React from "react";
 import { Row, Col, Form, Button, Dropdown } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 
-/**
- * ProctoscopyCard
- * The proctoscopy report is produced by the external AI tool, which saves the
- * PDF to Google Drive and writes its URL into the proctoscopy table. This card
- * only (a) opens that tool and (b) refreshes to fetch the saved report URL for
- * the chosen patient + date, then previews / opens it.
- */
-
 const AI_TOOL_BASE = "https://hdfstransformersjshmsintegration.vercel.app";
 
-// Turn a Google Drive share/view link into an embeddable preview URL.
-// Any non-Drive URL is returned untouched.
 const toPreviewUrl = (url) => {
   if (!url) return "";
   const m = url.match(/(?:\/file\/d\/|[?&]id=)([\w-]+)/);

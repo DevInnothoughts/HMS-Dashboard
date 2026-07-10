@@ -35,16 +35,8 @@ const PatientHistoryCard = ({
   validationErrors = {},
 }) => {
   const [historyActiveSubTab, setHistoryActiveSubTab] = useState("piles");
-
-  // A saved record is being viewed when an id is selected. It stays LOCKED
-  // until the doctor clicks EDIT (isEditing, owned by parent). A brand-new
-  // entry (no id selected) is always editable.
   const isViewingSaved = !!selectedHistoryId;
   const isReadOnly = isViewingSaved && !isEditing;
-
-  // Layout-transparent lock wrapper: `display: contents` removes the fieldset's
-  // own box from layout (so flex/grid lay out exactly as before), while the
-  // disabled attribute still cascades to every nested form control.
   const lockStyle = { display: "contents" };
 
   const subTabs = [
@@ -172,7 +164,7 @@ const PatientHistoryCard = ({
                   style={{
                     whiteSpace: "nowrap",
                     borderRadius: "30px",
-                    padding: "8px 19px",
+                    padding: "8px 36px",
                     margin: "5px 2px",
                     fontWeight: "700",
                     fontSize: "12px",
@@ -1158,15 +1150,39 @@ const PatientHistoryCard = ({
                   </h6>
                   <div className="d-flex flex-wrap gap-3 mb-2">
                     {sec.opts.map((opt) => (
-                      <Form.Check
-                        key={opt}
-                        label={renderLabelWithTooltip(opt)}
-                        checked={historyData[sec.key].includes(opt)}
-                        onChange={() =>
-                          handleHistoryCheckboxChange(sec.key, opt)
-                        }
-                        style={{ fontSize: "13px", fontWeight: "600" }}
-                      />
+                      <div key={opt} className="d-flex flex-column">
+                        <Form.Check
+                          label={renderLabelWithTooltip(opt)}
+                          checked={historyData[sec.key].includes(opt)}
+                          onChange={() =>
+                            handleHistoryCheckboxChange(sec.key, opt)
+                          }
+                          style={{ fontSize: "13px", fontWeight: "600" }}
+                        />
+                        {sec.key === "past_medical_history" && historyData[sec.key].includes(opt) && (
+                          <Form.Control
+                            size="sm"
+                            placeholder="Duration"
+                            value={(historyData.pastmedicalduration || {})[opt] || ""}
+                            onChange={(e) => {
+                              const currentDurations = historyData.pastmedicalduration || {};
+                              handleHistoryChange("pastmedicalduration", {
+                                ...currentDurations,
+                                [opt]: e.target.value
+                              });
+                            }}
+                            className="mt-1 animate__animated animate__fadeIn"
+                            style={{
+                              borderRadius: "8px",
+                              border: "1px solid #80deea",
+                              fontSize: "12px",
+                              padding: "4px 8px",
+                              width: "200px",
+                              marginBottom: "5px"
+                            }}
+                          />
+                        )}
+                      </div>
                     ))}
                   </div>
                   {sec.other && (

@@ -9,7 +9,7 @@ import AddEnquiry from "../pages/Reception/AddEnquiry";
 import UnattendedEnquiryList from "../pages/Reception/UnattendedEnquiryList";
 import CallingCalendar from "../pages/Reception/CallingCalendar";
 import OpdAppointmentList from "../pages/Reception/OpdAppointmentList";
-import AddAppointment from "../pages/Reception/AddAppointment";
+import AddOpdAppointment from "../pages/Reception/AddOpdAppointment";
 import OpdReceiptList from "../pages/Reception/OpdReceiptList";
 import AddLabReceipt from "../pages/Reception/AddLabReceipt";
 import DailyClosing from "../pages/Reception/DailyClosing";
@@ -44,7 +44,7 @@ export const ReceptionRoutes = (
     <Route path="/web-enquiry-list" element={<WebEnquiryList />} />
     <Route path="/unattended-enquiry-list" element={<UnattendedEnquiryList />} />
     <Route path="/opd-appointment-list" element={<OpdAppointmentList />} />
-    <Route path="/add-appointment" element={<AddAppointment />} />
+    <Route path="/add-opd-appointment" element={<AddOpdAppointment />} />
     <Route path="/opd-receipt-list" element={<OpdReceiptList />} />
     <Route path="/add-lab-receipt" element={<AddLabReceipt />} />
     <Route path="/daily-closing" element={<DailyClosing />} />

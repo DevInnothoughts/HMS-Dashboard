@@ -292,7 +292,7 @@ const OpdPrescriptionCard = ({
 
         {isViewingSaved && !isEditing && (
           <div
-            className="d-flex align-items-center mb-3 px-3 py-2 rounded"
+            className="d-flex align-items-center mb-3 px-3 py-5 rounded"
             style={{
               backgroundColor: "#f1fcfd",
               border: "1px solid #b2ebf2",
@@ -868,7 +868,7 @@ const OpdPrescriptionCard = ({
               />
             </Col>
             <Col md={3} className="mb-3">
-              <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>
+              <Form.Label className="fw-bold" style={{ fontSize: "12px" }}>
                 Doctor Comment
               </Form.Label>
               <Form.Control
@@ -998,18 +998,18 @@ const OpdPrescriptionCard = ({
             </div>
           </div>
 
-          <Row className="align-items-end g-2">
+          <Row className="align-items-start g-2">
             <Col
-              md={3}
+              md={2}
               className="position-relative"
               style={{ zIndex: showMedicineDropdown ? 1050 : 1 }}
             >
-              <div
-                className="fw-bold mb-4 pb-2"
+              <Form.Label
+                className="fw-bold"
                 style={{ fontSize: "12px", color: "#34495e" }}
               >
                 Prescribed Medicines
-              </div>
+              </Form.Label>
               <Form.Control
                 type="text"
                 value={currentMedicine.name || ""}
@@ -1120,17 +1120,17 @@ const OpdPrescriptionCard = ({
             </Col>
             <Col md={1}>
               <Form.Label className="fw-bold" style={{ fontSize: "12px" }}>
-                Qty
+                Dosage
               </Form.Label>
               <Form.Control
-                type="number"
-                placeholder="Qty"
-                value={currentMedicine.qty}
+                type="text"
+                placeholder="Dosage"
+                value={currentMedicine.dosage_frequency || ""}
                 disabled={prescriptionData.no_medicines_prescribed}
                 onChange={(e) =>
                   setCurrentMedicine((prev) => ({
                     ...prev,
-                    qty: e.target.value,
+                    dosage_frequency: e.target.value,
                   }))
                 }
                 style={{
@@ -1142,10 +1142,13 @@ const OpdPrescriptionCard = ({
               />
             </Col>
             <Col md={6}>
+              <Form.Label className="fw-bold" style={{ fontSize: "12px", marginLeft: "15px" }}>
+                Frequency
+              </Form.Label>
               <div
                 className="mb-1"
                 style={{
-                  marginLeft: "25px",
+                  marginLeft: "15px",
                   display: "grid",
                   gridTemplateColumns: "repeat(4, 1fr)",
                   gap: "10px",
@@ -1223,10 +1226,33 @@ const OpdPrescriptionCard = ({
               </Form.Select>
             </Col>
             <Col md={1}>
+              <Form.Label className="fw-bold" style={{ fontSize: "12px" }}>
+                Qty
+              </Form.Label>
+              <Form.Control
+                type="number"
+                placeholder="Qty"
+                value={currentMedicine.qty}
+                disabled={prescriptionData.no_medicines_prescribed}
+                onChange={(e) =>
+                  setCurrentMedicine((prev) => ({
+                    ...prev,
+                    qty: e.target.value,
+                  }))
+                }
+                style={{
+                  borderRadius: "10px",
+                  border: "2px solid #b2ebf2",
+                  padding: "6px 12px",
+                  fontSize: "12px",
+                }}
+              />
+            </Col>
+            <Col md={1}>
               <Button
                 onClick={handleAddMedicine}
                 className="w-100 py-6 btn-info shadow-sm"
-                style={{ borderRadius: "8px" }}
+                style={{ borderRadius: "8px", marginTop: "26px" }}
               >
                 <FeatherIcon icon="plus" size="18" />
               </Button>
@@ -1246,27 +1272,33 @@ const OpdPrescriptionCard = ({
                     <tr>
                       <th
                         className="py-2 px-3 border-0"
-                        style={{ fontSize: "14px", width: "15%" }}
+                        style={{ fontSize: "14px", width: "20%" }}
                       >
                         Medicine Name
                       </th>
                       <th
-                        className="py-2 px-3 border-0 text-center"
-                        style={{ fontSize: "14px", width: "25%" }}
+                        className="py-2 px-3 border-0"
+                        style={{ fontSize: "14px", width: "15%" }}
                       >
-                        Qty
+                        Dosage
                       </th>
                       <th
                         className="py-2 px-3 border-0"
-                        style={{ fontSize: "14px", width: "30%" }}
+                        style={{ fontSize: "14px", width: "35%" }}
                       >
-                        Dosage Intervals
+                        Frequency
                       </th>
                       <th
                         className="py-2 px-3 border-0 text-center"
-                        style={{ fontSize: "14px", width: "20%" }}
+                        style={{ fontSize: "14px", width: "10%" }}
                       >
-                        Duration
+                        Days
+                      </th>
+                      <th
+                        className="py-2 px-3 border-0 text-center"
+                        style={{ fontSize: "14px", width: "10%" }}
+                      >
+                        Qty
                       </th>
                       <th
                         className="py-2 px-3 border-0 text-center"
@@ -1279,7 +1311,7 @@ const OpdPrescriptionCard = ({
                   <tbody>
                     {prescriptionData.no_medicines_prescribed ? (
                       <tr>
-                        <td colSpan="5" className="text-center py-3">
+                        <td colSpan="6" className="text-center py-3">
                           <i className="fw-bold">No Medicines Prescribed</i>
                         </td>
                       </tr>
@@ -1292,13 +1324,33 @@ const OpdPrescriptionCard = ({
                           >
                             {m.name}
                           </td>
-                          <td className="py-2 px-3 fw-bold text-center">
-                            <span
-                              className="px-2 py-1"
-                              style={{ fontSize: "13px" }}
-                            >
-                              {m.qty} Units
-                            </span>
+                          <td className="py-2 px-3 fw-bold">
+                            {editingMedicineIndex === idx ? (
+                              <Form.Control
+                                size="sm"
+                                value={m.dosage_frequency || ""}
+                                onChange={(e) => {
+                                  const newMedicines = [
+                                    ...prescriptionData.medicines,
+                                  ];
+                                  newMedicines[idx] = {
+                                    ...m,
+                                    dosage_frequency: e.target.value,
+                                  };
+                                  handlePrescriptionChange(
+                                    "medicines",
+                                    newMedicines,
+                                  );
+                                }}
+                                style={{
+                                  borderRadius: "10px",
+                                  border: "2px solid #b2ebf2",
+                                  fontSize: "12px",
+                                }}
+                              />
+                            ) : (
+                              m.dosage_frequency || ""
+                            )}
                           </td>
                           <td className="py-2 px-3 fw-bold">
                             {editingMedicineIndex === idx ? (
@@ -1356,7 +1408,93 @@ const OpdPrescriptionCard = ({
                             className="py-2 px-3 fw-semibold fw-bold text-center"
                             style={{ fontSize: "13px" }}
                           >
-                            {m.days} Days
+                            {editingMedicineIndex === idx ? (
+                              <Form.Select
+                                size="sm"
+                                value={m.days}
+                                onChange={(e) => {
+                                  const newMedicines = [
+                                    ...prescriptionData.medicines,
+                                  ];
+                                  newMedicines[idx] = {
+                                    ...m,
+                                    days: e.target.value,
+                                  };
+                                  handlePrescriptionChange(
+                                    "medicines",
+                                    newMedicines,
+                                  );
+                                }}
+                                style={{
+                                  borderRadius: "10px",
+                                  border: "2px solid #b2ebf2",
+                                  fontSize: "12px",
+                                  padding: "4px 8px",
+                                  minWidth: "75px",
+                                  margin: "0 auto",
+                                }}
+                              >
+                                <option value="">Day</option>
+                                {[
+                                  "1",
+                                  "2",
+                                  "3",
+                                  "5",
+                                  "7",
+                                  "10",
+                                  "15",
+                                  "30",
+                                  "45",
+                                  "60",
+                                  "90",
+                                  "120",
+                                  "SOS",
+                                ].map((d) => (
+                                  <option key={d} value={d}>
+                                    {d}
+                                  </option>
+                                ))}
+                              </Form.Select>
+                            ) : (
+                              `${m.days} Days`
+                            )}
+                          </td>
+                          <td className="py-2 px-3 fw-bold text-center">
+                            {editingMedicineIndex === idx ? (
+                              <Form.Control
+                                type="number"
+                                size="sm"
+                                value={m.qty}
+                                onChange={(e) => {
+                                  const newMedicines = [
+                                    ...prescriptionData.medicines,
+                                  ];
+                                  newMedicines[idx] = {
+                                    ...m,
+                                    qty: e.target.value,
+                                  };
+                                  handlePrescriptionChange(
+                                    "medicines",
+                                    newMedicines,
+                                  );
+                                }}
+                                style={{
+                                  borderRadius: "10px",
+                                  border: "2px solid #b2ebf2",
+                                  fontSize: "12px",
+                                  padding: "4px 8px",
+                                  width: "70px",
+                                  margin: "0 auto",
+                                }}
+                              />
+                            ) : (
+                              <span
+                                className="px-2 py-1"
+                                style={{ fontSize: "13px" }}
+                              >
+                                {m.qty} Units
+                              </span>
+                            )}
                           </td>
                           <td className="py-2 px-3 text-center">
                             {m.name !== "Constac Powder" && (
@@ -1367,7 +1505,7 @@ const OpdPrescriptionCard = ({
                                     : "info"
                                 }
                                 size="sm"
-                                className="p-5 px-4 me-2"
+                                className="p-7 px-5 me-2"
                                 onClick={() => {
                                   if (editingMedicineIndex === idx) {
                                     setEditingMedicineIndex(null);
@@ -1389,7 +1527,7 @@ const OpdPrescriptionCard = ({
                             <Button
                               variant="danger"
                               size="sm"
-                              className="p-5 px-4"
+                              className="p-7 px-5"
                               onClick={() => handleRemoveMedicine(idx)}
                             >
                               <FeatherIcon icon="trash" size="14" />

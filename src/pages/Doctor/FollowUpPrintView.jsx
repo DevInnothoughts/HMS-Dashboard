@@ -55,6 +55,8 @@ const FollowUpPrintView = React.forwardRef(
   .followup-print-container .col-md-8-right { width: 50%; }
   .followup-print-container .col-md-4-33 { width: 33.33%; }
   .followup-print-container .col-md-4-50 { width: 50%; }
+  .followup-print-container .col-md-4-40 { width: 40%; }
+  .followup-print-container .col-md-4-60 { width: 60%; }
   .followup-print-container .col-md-4-30 { width: 30%; }
   .followup-print-container .col-md-4-20 { width: 20%; }
   .followup-print-container .col-md-12 { width: 100%; }
@@ -124,7 +126,7 @@ const FollowUpPrintView = React.forwardRef(
               {/* Patient Header Box */}
               <div className="inner-border-box" style={{ padding: "10px 5px" }}>
                 <div className="row">
-                  <div className="col-md-4-50">
+                  <div className="col-md-4-40">
                     <p>
                       <b>Patient Name :</b>&nbsp;
                       {(() => {
@@ -136,25 +138,25 @@ const FollowUpPrintView = React.forwardRef(
                       {patient?.name || "-"}
                     </p>
                   </div>
-                  <div className="col-md-4-30">
+                  <div className="col-md-4-40">
                     <p>
                       <b>UID No :</b>&nbsp;{patient?.Uid_no || "-"}
                     </p>
                   </div>
                   <div className="col-md-4-20">
-                    <p>
+                    <p className="text-right">
                       <b>Date :</b>&nbsp;{currentDate}
                     </p>
                   </div>
                 </div>
                 <div className="row">
-                  <div className="col-md-4-50">
+                  <div className="col-md-4-40">
                     <p>
                       <b>Age / Sex :</b>&nbsp;{patient?.age || "-"} yrs /{" "}
                       {patient?.sex || "-"}
                     </p>
                   </div>
-                  <div className="col-md-4-50">
+                  <div className="col-md-4-60">
                     <p>
                       <b>Contact No :</b>&nbsp;{patient?.phone || "-"}
                       {patient?.mobile_2 ? ` / ${patient?.mobile_2}` : ""}
@@ -162,24 +164,24 @@ const FollowUpPrintView = React.forwardRef(
                   </div>
                 </div>
                 <div className="row">
-                  <div className="col-md-4-50">
+                  <div className="col-md-4-40">
                     <p>
                       <b>Address :</b>&nbsp;{patient?.address || "-"}
                     </p>
                   </div>
-                  <div className="col-md-4-50">
+                  <div className="col-md-4-60">
                     <p>
                       <b>Occupation :</b>&nbsp;{patient?.occupation || "-"}
                     </p>
                   </div>
                 </div>
                 <div className="row">
-                  <div className="col-md-4-50">
+                  <div className="col-md-4-40">
                     <p>
                       <b>Email Id :</b>&nbsp;{patient?.email || "-"}
                     </p>
                   </div>
-                  <div className="col-md-4-50">
+                  <div className="col-md-4-60">
                     <p>
                       <b>Referred By :</b>&nbsp;
                       {patient?.reference_type === "dr_ref"
@@ -544,7 +546,7 @@ const FollowUpPrintView = React.forwardRef(
               <div className="inner-border-box" style={{ padding: "10px 5px" }}>
                 {diagnosisList.length > 0 ? (
                   diagnosisList.map((diag, idx) => (
-                    <div key={idx} style={{ marginBottom: "10px" }}>
+                    <div key={idx} style={{ marginBottom: "5px" }}>
                       <div className="row">
                         <div className="col-md-9" style={{ width: "75%" }}>
                           <p>
@@ -552,7 +554,7 @@ const FollowUpPrintView = React.forwardRef(
                             {diag.diagnosis_text || diag.diagnosis || "-"}
                           </p>
                         </div>
-                        <div className="col-md-3" style={{ width: "20%" }}>
+                        <div className="col-md-3">
                           <p className="text-right">
                             <b>Date : </b>
                             {formatDate(diag.date_diagnosis)}
@@ -583,33 +585,35 @@ const FollowUpPrintView = React.forwardRef(
                           </div>
                         </div>
                       )}
-                      <div className="row">
-                        <div className="col-md-12">
-                          <p>
-                            {diag.RF && (
-                              <span>
-                                <b>RF :</b>&nbsp;
-                                {(diag.RF || "").split(",").join(" / ")}{" "}
-                                &nbsp;&nbsp;&nbsp;
-                              </span>
-                            )}
-                            {diag.Laser && (
-                              <span>
-                                &nbsp;&nbsp;&nbsp;<b>Laser :</b>&nbsp;
-                                {(diag.Laser || "").split(",").join(" / ")}{" "}
-                                &nbsp;&nbsp;&nbsp;
-                              </span>
-                            )}
-                            {diag.MW && (
-                              <span>
-                                &nbsp;&nbsp;&nbsp;<b>MW :</b>&nbsp;
-                                {(diag.MW || "").split(",").join(" / ")}{" "}
-                                &nbsp;&nbsp;&nbsp;
-                              </span>
-                            )}
-                          </p>
+                      {(diag.RF || diag.Laser || diag.MW) && (
+                        <div className="row">
+                          <div className="col-md-12">
+                            <p>
+                              {diag.RF && (
+                                <span>
+                                  <b>RF :</b>&nbsp;
+                                  {(diag.RF || "").split(",").join(" / ")}{" "}
+                                  &nbsp;&nbsp;&nbsp;
+                                </span>
+                              )}
+                              {diag.Laser && (
+                                <span>
+                                  &nbsp;&nbsp;&nbsp;<b>Laser :</b>&nbsp;
+                                  {(diag.Laser || "").split(",").join(" / ")}{" "}
+                                  &nbsp;&nbsp;&nbsp;
+                                </span>
+                              )}
+                              {diag.MW && (
+                                <span>
+                                  &nbsp;&nbsp;&nbsp;<b>MW :</b>&nbsp;
+                                  {(diag.MW || "").split(",").join(" / ")}{" "}
+                                  &nbsp;&nbsp;&nbsp;
+                                </span>
+                              )}
+                            </p>
+                          </div>
                         </div>
-                      </div>
+                      )}
                       <div className="row">
                         <div className="col-md-6" style={{ width: "55%" }}>
                           <p>
@@ -635,31 +639,7 @@ const FollowUpPrintView = React.forwardRef(
                           </p>
                         </div>
                       </div>
-                      {/* PHP mapping for follow up complaints on same date */}
-                      {(() => {
-                        const diagDate = diag.date_diagnosis ? diag.date_diagnosis.split("T")[0] : "";
-                        const matchingFollowup = (followUpData?.followupList || []).find((f) => {
-                          const fDate = f.followup_date ? f.followup_date.split("T")[0] : "";
-                          return fDate === diagDate;
-                        });
-                        const complaintText = matchingFollowup
-                          ? matchingFollowup.present_complaints
-                          : (followUpData?.followup_date === diag.date_diagnosis ? followUpData?.present_complaints : null);
 
-                        if (complaintText) {
-                          return (
-                            <div className="row">
-                              <div className="col-md-12">
-                                <p>
-                                  <b>Present Complaints :&nbsp;&nbsp;</b>
-                                  {complaintText}
-                                </p>
-                              </div>
-                            </div>
-                          );
-                        }
-                        return null;
-                      })()}
                       {idx < diagnosisList.length - 1 && (
                         <hr style={{ marginTop: "0", marginBottom: "10px" }} />
                       )}
@@ -688,10 +668,60 @@ const FollowUpPrintView = React.forwardRef(
                     </p>
                   </div>
                 </div>
+                {followUpData?.previous_complaints_text && (
+                  (() => {
+                    const today = new Date();
+                    const d = String(today.getDate()).padStart(2, "0");
+                    const m = String(today.getMonth() + 1).padStart(2, "0");
+                    const y = today.getFullYear();
+                    const today1 = `${d}-${m}-${y}`;
+                    const today2 = `${y}-${m}-${d}`;
+                    
+                    const filtered = followUpData.previous_complaints_text.split('\n\n').filter(line => {
+                      const parts = line.split(" | ");
+                      if (parts.length > 0) {
+                        return !parts[0].includes(today1) && !parts[0].includes(today2);
+                      }
+                      return true;
+                    });
+                    
+                    if (filtered.length === 0) return null;
+                    
+                    return (
+                      <div className="row">
+                        <div className="col-md-12" style={{ width: "100%", marginBottom: "5px" }}>
+                          <div style={{ display: "flex", alignItems: "flex-start" }}>
+                            <b style={{ whiteSpace: "nowrap" }}>Complaint History :&nbsp;&nbsp;</b>
+                            <div style={{ margin: 0, width: "100%" }}>
+                              {filtered.map((line, i) => {
+                                const parts = line.split(" | ");
+                                if (parts.length >= 2) {
+                                  const prefixMatch = parts[0].match(/^(\d+\.\s+)(.*)$/);
+                                  if (prefixMatch) {
+                                    return (
+                                      <div key={i} style={{ marginBottom: "10px", whiteSpace: "pre-line" }}>
+                                        <b>{prefixMatch[1]}{prefixMatch[2]}</b> | {parts.slice(1).join(" | ")}
+                                      </div>
+                                    );
+                                  }
+                                }
+                                return (
+                                  <div key={i} style={{ marginBottom: "10px", whiteSpace: "pre-line" }}>
+                                    {line}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()
+                )}
                 <div className="row">
                   <div
                     className="col-md-12"
-                    style={{ width: "100%", height: "30px" }}
+                    style={{ width: "100%", minHeight: "30px" }}
                   >
                     <p>
                       <b>Present Complaints :</b>{" "}

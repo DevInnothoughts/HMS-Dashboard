@@ -55,8 +55,10 @@ export default function DoctorOpdPatientList() {
     // global: { value: null, matchMode: FilterMatchMode.CONTAINS },
     global: { value: null, matchMode: FilterMatchMode.EQUALS },
     diagnosisAdvice: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    diagnosis: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
   const [adviceFilter, setAdviceFilter] = useState("");
+  const [conditionFilter, setConditionFilter] = useState("");
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -532,14 +534,6 @@ export default function DoctorOpdPatientList() {
       >
         <FeatherIcon icon="eye" size="16" />
       </Button>
-      {/* <Button
-        variant="primary"
-        className="btn-primary btn-extra-small btn-icon"
-        title="Print All Forms"
-        onClick={() => handlePrintFollowUp(patient)}
-      >
-        <FeatherIcon icon="printer" size="16" />
-      </Button> */}
     </div>
   );
 
@@ -1766,6 +1760,70 @@ export default function DoctorOpdPatientList() {
     </div>
   );
 
+  const filterCondition = (value, filter) => {
+    if (!filter) return true;
+    const label = getConditionLabel({ diagnosis: value });
+    if (!label || label === "-") return false;
+    return label.toLowerCase().includes(filter.toLowerCase());
+  };
+
+  const handleConditionFilterChange = (e) => {
+    const value = e.target.value;
+    const updatedFilters = { ...filters1 };
+
+    if (value) {
+      updatedFilters.diagnosis = {
+        value,
+        matchMode: FilterMatchMode.CONTAINS,
+      };
+    } else {
+      updatedFilters.diagnosis = {
+        value: null,
+        matchMode: FilterMatchMode.CONTAINS,
+      };
+    }
+
+    setConditionFilter(value);
+    setFilters1(updatedFilters);
+  };
+
+  const renderConditionHeader = () => (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <span style={{ fontSize: "12px", fontWeight: 600, marginBottom: "4px" }}>
+        Condition
+      </span>
+      <Form.Select
+        size="sm"
+        value={conditionFilter}
+        onChange={handleConditionFilterChange}
+        style={{
+          width: "150px",
+          fontSize: "12px",
+          padding: "4px 6px",
+          borderRadius: "6px",
+          border: "1px solid #90caf9",
+        }}
+      >
+        <option value="">All</option>
+        <option value="piles">Piles</option>
+        <option value="fistula">Fistula</option>
+        <option value="hernia">Hernia</option>
+        <option value="varicose veins">Varicose Veins</option>
+        <option value="prolapse">Prolapse</option>
+        <option value="circumcision">Circumcision</option>
+        <option value="abscess">Abscess</option>
+        <option value="fissure">Fissure</option>
+        <option value="hydrocele">Hydrocele</option>
+        <option value="lipoma">Lipoma</option>
+        <option value="gynecomastia">Gynecomastia</option>
+        <option value="pilonidal sinus">Pilonidal Sinus</option>
+        <option value="cyst">Cyst</option>
+        <option value="urology">Urology</option>
+        <option value="other">Other</option>
+      </Form.Select>
+    </div>
+  );
+
   const renderHeader = () => (
     <div
       style={{
@@ -2005,9 +2063,11 @@ export default function DoctorOpdPatientList() {
               setToDate(null);
               setSearchTerm("");
               setAdviceFilter("");
+              setConditionFilter("");
               setFilters1({
                 global: { value: null, matchMode: FilterMatchMode.CONTAINS },
                 diagnosisAdvice: { value: null, matchMode: FilterMatchMode.CONTAINS },
+                diagnosis: { value: null, matchMode: FilterMatchMode.CONTAINS },
               });
             }}
             style={{
@@ -2227,7 +2287,8 @@ export default function DoctorOpdPatientList() {
 
                       <Column
                         field="diagnosis"
-                        header="Condition"
+                        header={renderConditionHeader()}
+                        filterFunction={filterCondition}
                         headerClassName="datatable-header-center"
                         body={(rowData) => <span className="selectable-text">{getConditionLabel(rowData)}</span>}
                         style={{

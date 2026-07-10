@@ -1483,7 +1483,7 @@ const DiagnosisCard = ({
                 </Card.Body>
               </Card>
             </Col>
-            <Col md={12}>
+            <Col md={6}>
               <div className="d-flex justify-content-between align-items-end mb-1">
                 <Form.Label
                   className="fw-bold mb-0"
@@ -1519,6 +1519,31 @@ const DiagnosisCard = ({
                 style={{
                   borderRadius: "10px",
                   border: validationErrors.diagnosis_text ? "2px solid red" : "2px solid #eda6a6ff",
+                  fontSize: "12px",
+                  padding: "6px 12px",
+                }}
+              />
+            </Col>
+            <Col md={6}>
+              <div className="d-flex justify-content-between align-items-end mb-1">
+                <Form.Label
+                  className="fw-bold mb-0"
+                  style={{ fontSize: "13px", color: "#006064" }}
+                >
+                  Per Rectal Findings
+                </Form.Label>
+              </div>
+              <Form.Control
+                as="textarea"
+                rows={1}
+                placeholder="Enter Per Rectal Findings..."
+                value={diagnosisData.rectalfindings || ""}
+                onChange={(e) =>
+                  handleDiagnosisChange("rectalfindings", e.target.value)
+                }
+                style={{
+                  borderRadius: "10px",
+                  border: "2px solid #b2ebf2",
                   fontSize: "12px",
                   padding: "6px 12px",
                 }}

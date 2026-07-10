@@ -16,9 +16,6 @@ const SurgeryDetailsCard = ({
   anaesthetists = []
 }) => {
 
-
-
-
   return (
     <div className="animate__animated animate__fadeIn">
       <style>{`

@@ -104,6 +104,7 @@ const AddIpdBill = () => {
     admissiontime: "",
     consultantName: "",
     surgeonName: "",
+    madeby: "",
     Sub_Total: "0.00",
     bill_Type: "",
     bill_method: "",
@@ -127,6 +128,7 @@ const AddIpdBill = () => {
   const [isInterbranch, setIsInterbranch] = useState(false);
   const [consultants, setConsultants] = useState([]);
   const [surgeons, setSurgeons] = useState([]);
+  const [fdeOptions, setFdeOptions] = useState([]);
   const [insurance, setInsurance] = useState([]);
   const [tpa, setTpa] = useState([]);
   const [currentLocation, setCurrentLocation] = useState(null);
@@ -269,7 +271,7 @@ const AddIpdBill = () => {
     const fetchDropdowns = async () => {
       try {
         const dateQuery = formData.admission_date ? `&date=${formData.admission_date}` : "";
-        const [cRes, sRes, iRes, tRes] = await Promise.all([
+        const [cRes, sRes, iRes, tRes, fRes] = await Promise.all([
           fetch(
             `${BASE_URL}/V1/invoice/consultant_dropdown?location=${currentLocation}`,
           ),
@@ -282,20 +284,24 @@ const AddIpdBill = () => {
           fetch(
             `${BASE_URL}/V1/invoice/tpa_dropdown?location=${currentLocation}${dateQuery}`,
           ),
+          fetch(
+            `${BASE_URL}/V1/appointment/fdeDropdown?location=${currentLocation}`,
+          ),
         ]);
 
-        const [c, s, i, t] = await Promise.all([
+        const [c, s, i, t, f] = await Promise.all([
           cRes.json(),
           sRes.json(),
           iRes.json(),
           tRes.json(),
+          fRes.json(),
         ]);
 
         if (cRes.ok) setConsultants(c.data ?? []);
-
         if (sRes.ok) setSurgeons(s.data ?? []);
         if (iRes.ok) setInsurance(i.data ?? []);
         if (tRes.ok) setTpa(t.data ?? []);
+        if (fRes.ok) setFdeOptions(f.data ?? []);
       } catch (err) {
         console.error("Dropdown fetch failed:", err);
       }
@@ -317,6 +323,7 @@ const AddIpdBill = () => {
       "admissiontime",
       "consultantName",
       "surgeonName",
+      "madeby",
       "Sub_Total",
       "bill_Type",
     ];
@@ -1208,6 +1215,26 @@ const AddIpdBill = () => {
                     {surgeons.map((surgeon) => (
                       <option key={surgeon.doctor_id} value={surgeon.doctor_id}>
                         {surgeon.name}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Col>
+                <Col md={3}>
+                  <Form.Label style={labelStyle}>
+                    Made By <span style={{ color: "red" }}>*</span>
+                  </Form.Label>
+                  <Form.Select
+                    required
+                    style={inputStyle}
+                    name="madeby"
+                    value={formData.madeby}
+                    onChange={handleInputChange}
+                    isInvalid={errors.madeby}
+                  >
+                    <option value="">SELECT MADE BY</option>
+                    {fdeOptions.map((fde) => (
+                      <option key={fde.FDEID} value={fde.FDEID}>
+                        {fde.FDEName}
                       </option>
                     ))}
                   </Form.Select>

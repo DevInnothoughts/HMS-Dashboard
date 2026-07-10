@@ -4,13 +4,9 @@ import { Container } from 'react-bootstrap';
 
 
 export default function PageBreadcrumb(props) {
-    // const [time, setTime] = useState(new Date().toLocaleTimeString());
-    // const today = new Date(); // Get the current date
-    // const formattedDate = today.toLocaleDateString(); // Format the date
     const [time, setTime] = useState(new Date().toLocaleTimeString());
     const today = new Date();
-    // Format the date as dd/mm/yyyy
-    const formattedDate = today.toLocaleDateString("en-GB"); // Use 'en-GB' for dd/mm/yyyy format
+    const formattedDate = today.toLocaleDateString("en-GB");
     useEffect(() => {
         const timer = setInterval(() => {
             setTime(new Date().toLocaleTimeString());

@@ -71,7 +71,7 @@ export default function AddLabReceipt() {
     try {
       const endpoints = [
         `${BASE_URL}/V1/doctor/doctorDropdown?location=${currentLocation}`,
-        `${BASE_URL}/V1/doctor/consultationLabDropdown?location=${currentLocation}`,
+        `${BASE_URL}/V1/appointment/consultationLabDropdown?location=${currentLocation}`,
         `${BASE_URL}/V1/appointment/posTerminalDropdown?location=${currentLocation}`,
       ];
 
@@ -184,7 +184,7 @@ export default function AddLabReceipt() {
     }
 
     // Validate billing items
-    const invalidItems = billingItems.some((item) => !item.label || !item.amount || parseFloat(item.amount) <= 0);
+    const invalidItems = billingItems.some((item) => !item.label || item.amount === "" || parseFloat(item.amount) < 0);
     if (invalidItems) {
       newErrors.billingItems = "Please select consultation type and enter valid amount for all rows";
     }

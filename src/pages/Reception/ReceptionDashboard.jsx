@@ -69,6 +69,16 @@ function decodeJwt(token) {
 
 export default function ReceptionDashboard() {
   const navigate = useNavigate();
+  const formatPatientType = (type) => {
+    if (!type) return "";
+    const upper = type.toUpperCase();
+    if (upper === "NEW") return "New";
+    if (upper === "FOLLOW") return "Follow";
+    if (upper === "POSTOPERATIVE") return "Postoperative";
+    if (upper === "MCDPA") return "MCDPA";
+    if (upper === "OTHER") return "Other";
+    return type;
+  };
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [doctors, setDoctors] = useState([]);
@@ -358,6 +368,16 @@ export default function ReceptionDashboard() {
         }));
         await fetchAppointmentsForRange(selectedDate, selectedDoctorId);
         window.dispatchEvent(new CustomEvent("refreshApptCounts"));
+
+        if (patientType && patientType.toUpperCase() === "NEW") {
+          navigate("/opd-patient-list", {
+            state: {
+              openEditForPhone: phone,
+              returnToAppointment: true,
+              appointment_id: appointmentId,
+            },
+          });
+        }
       }
     } catch (error) {
       console.error(error);
@@ -548,13 +568,12 @@ export default function ReceptionDashboard() {
                   display: "inline-block",
                   textAlign: "center",
                   fontWeight: "700",
-                  textTransform: "uppercase",
                   boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                   fontSize: "11px",
                   padding: "5px 5px",
                 }}
               >
-                {selectedEvent.patientType.toUpperCase()}
+                {formatPatientType(selectedEvent.patientType)}
               </span>
             </span>
           </div>
@@ -1429,10 +1448,9 @@ margin-left: 1px;
                                       display: "inline-block",
                                       textAlign: "center",
                                       fontWeight: "700",
-                                      textTransform: "uppercase",
                                     }}
                                   >
-                                    {app.patientType}
+                                    {formatPatientType(app.patientType)}
                                   </span>
                                 </div>
                                 {listStatus && (

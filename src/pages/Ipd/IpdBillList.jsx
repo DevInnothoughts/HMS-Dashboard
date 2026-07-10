@@ -5,7 +5,7 @@ import { Paginator } from "primereact/paginator";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { InputGroup } from "react-bootstrap";
-import { clinincLoc } from "../../utils/clinic_locations-invoice";
+import { clinincLoc } from "../../utils/IpdBill_ClinicLocations";
 import {
   Container,
   Row,
@@ -103,61 +103,6 @@ const FALLBACK_LOCATIONS = [
   "Whitefield",
   "demo",
 ];
-
-// const getDynamicRowsFromInvoice = (invoice) => {
-//   const dynamicRows = [];
-//   let titleCalculatedTotal = 0;
-
-//   if (!invoice) return { dynamicRows: [], Sub_Total: "0.00" };
-//   console.log(invoice.package);
-
-//   if (invoice.package && typeof invoice.package === "string") {
-//     invoice.package.split(",").forEach((entry) => {
-//       const parts = entry.split(":");
-//       if (parts.length === 2) {
-//         const label = parts[0].trim();
-//         const value = parseFloat(parts[1].trim()) || 0;
-
-//         if (label !== "") {
-//           dynamicRows.push({
-//             label: label,
-//             value: value.toFixed(2),
-//             field: "title_parsed",
-//           });
-//           titleCalculatedTotal += value;
-//         }
-//       }
-//     });
-
-//     console.log("Dynamic rows:", dynamicRows);
-//   }
-
-//   const itemMap = {
-//     surgeon_amt: invoice.surgeon_desc || "Surgeon Fee",
-//     assistant_amt: invoice.assistant_desc || "Assistant Fee",
-//     anaesthetists_amt: invoice.anaesthetists_desc || "Anaesthetist Fee",
-//     bed_amt: invoice.bed_desc || "Bed Charges",
-//     medico_amt: "Medication Charges",
-//     medico_ot_amt: "Medication OT Charges",
-//     visit_amt: invoice.visit_desc || "Doctor Visits",
-//     lab_amt: "Lab Charges",
-//     procedures_amt: "Other Procedures",
-//     diet_amt: "Diet Charges",
-//     consumables_amt: "Consumables",
-//     miscellaneous_amt: "Miscellaneous",
-//     admin_amt: invoice.admin_desc || "Admin Charges",
-//     nurse_amt: invoice.nurse_desc || "Nursing Charges",
-//     colonoscopy_amt: "Colonoscopy",
-//     colonhydrotherapy_amt: "Colon Hydrotherapy",
-//     ot_amt: "OT Charges",
-//   };
-
-//   const Sub_Total =
-//     titleCalculatedTotal > 0
-//       ? titleCalculatedTotal
-//       : parseFloat(invoice.totalamt) || 0;
-//   return { dynamicRows, Sub_Total: Sub_Total.toFixed(2) };
-// };
 
 const getDynamicRowsFromInvoice = (invoice) => {
   const dynamicRows = [];
@@ -364,6 +309,7 @@ const IpdBillList = () => {
   const [invoices, setInvoices] = useState([]);
   const [consultants, setConsultants] = useState([]);
   const [surgeons, setSurgeons] = useState([]);
+  const [fdeOptions, setFdeOptions] = useState([]);
   const [insurance, setInsurance] = useState([]);
   const [tpa, setTpa] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -799,6 +745,15 @@ const IpdBillList = () => {
             setter(data.data || []);
           }
         }
+
+        // Fetch FDE dropdown separately since its prefix is V1/appointment
+        const fdeResponse = await fetch(
+          `${BASE_URL}/V1/appointment/fdeDropdown?location=${encodeURIComponent(currentLocation)}`
+        );
+        const fdeData = await fdeResponse.json();
+        if (fdeResponse.ok) {
+          setFdeOptions(fdeData.data || []);
+        }
       } catch (err) {
         console.error(err);
         setError("Failed to fetch dropdown data.");
@@ -1078,30 +1033,6 @@ const IpdBillList = () => {
     setError("");
   };
 
-  // const handleEditInvoice = (invoice) => {
-  //   const { dynamicRows, Sub_Total } = getDynamicRowsFromInvoice(invoice);
-
-  //   const displayRows =
-  //     dynamicRows.length > 0
-  //       ? dynamicRows
-  //       : [{ label: "", value: "", field: "" }];
-
-  //   const payableAmount = calculatePayableAmt(invoice);
-
-  //   setSelectedInvoice(invoice);
-  //   setModalInvoiceData({
-  //     dynamicRows: displayRows,
-  //     Sub_Total: Sub_Total,
-  //     discount: invoice.discount || "0.00",
-  //     pdc: parseFloat(invoice.pdc) || "0.00",
-  //     payableAmount: payableAmount,
-  //     bill_method: invoice.bill_method || "non_insurance",
-  //     bill_Type: invoice.bill_Type || "non_insurance",
-  //   });
-
-  //   setShowModal(true);
-  // };
-
   const handleEditInvoice = (invoice) => {
 
     setOriginalInvoiceId(invoice.invoice_id);
@@ -1114,10 +1045,6 @@ const IpdBillList = () => {
 
     const payableAmount = calculatePayableAmt(invoice);
 
-    /**
-     * Helper to format dates specifically for <input type="date">
-     * Requires YYYY-MM-DD format
-     */
     const formatForInput = (dateValue) => {
       if (!dateValue) return "";
       const date = new Date(dateValue);
@@ -1130,9 +1057,6 @@ const IpdBillList = () => {
       return `${year}-${month}-${day}`;
     };
 
-    /**
-     * Helper to format time for <select> options which expect HH:mm (24h)
-     */
     const formatTimeForInput = (timeStr) => {
       if (!timeStr) return "";
       // If already in 24h format "00:00"
@@ -1288,6 +1212,16 @@ const IpdBillList = () => {
   const handleSaveChanges = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     if (!selectedInvoice) return;
+
+    if (!selectedInvoice.madeby) {
+      Swal.fire({
+        icon: "error",
+        title: "Validation Error",
+        text: "Made By is required.",
+        confirmButtonColor: "#00acc1",
+      });
+      return;
+    }
 
     if (selectedInvoice.bill_Type === "insurance") {
       if (!selectedInvoice.insurancecompany) {
@@ -2375,6 +2309,25 @@ const IpdBillList = () => {
                     />
                     <Column
                       headerClassName="datatable-header-center"
+                      field="madeby_name"
+                      header="Made By"
+                      body={(rowData) => {
+                        if (rowData.madeby_name) return rowData.madeby_name;
+                        if (rowData.madeby) {
+                          const found = fdeOptions.find((opt) => opt.FDEID == rowData.madeby);
+                          if (found) return found.FDEName;
+                          return rowData.madeby;
+                        }
+                        return "-";
+                      }}
+                      style={{
+                        width: "120px",
+                        border: "1px solid #4dd0e1",
+                        textAlign: "center",
+                      }}
+                    />
+                    <Column
+                      headerClassName="datatable-header-center"
                       header="Actions"
                       style={{ width: "100px", border: "1px solid #4dd0e1" }}
                       body={(rowData) => {
@@ -2467,33 +2420,6 @@ const IpdBillList = () => {
                     />
                   </DataTable>
                 )}
-                {/* {!loading && !error && filteredInvoices.length === 0 && (
-                  <div className="text-center p-5" style={{ color: "#00838f" }}>
-                    <FeatherIcon icon="search" size={40} className="mb-3" style={{ opacity: 0.5 }} />
-                    <h5>No invoices found matching your search.</h5>
-                    <p className="text-muted">Try a different name, invoice ID, or phone number.</p>
-                  </div>
-                )} */}
-                {!loading &&
-                  !error &&
-                  filteredInvoices.length === 0 &&
-                  filters1.global.value && (
-                    <div
-                      className="text-center p-5"
-                      style={{ color: "#00838f" }}
-                    >
-                      <FeatherIcon
-                        icon="search"
-                        size={40}
-                        className="mb-3"
-                        style={{ opacity: 0.5 }}
-                      />
-                      <h5>No invoices found matching your search.</h5>
-                      <p className="text-muted">
-                        Try a different name, invoice ID, or phone number.
-                      </p>
-                    </div>
-                  )}
               </Card.Body>
             </Card>
           </Col>
@@ -2726,38 +2652,7 @@ const IpdBillList = () => {
                         }}
                       />
                     </Col>
-                    {/* <Col md={4}>
-                      <Form.Label
-                        style={{
-                          fontSize: "12px",
-                          fontWeight: "600",
-                          marginBottom: "2px",
-                        }}
-                        className="text-muted"
-                      >
-                        Admission Date{" "}
-                        <span style={{ color: "red" }} className="required">
-                          *
-                        </span>
-                      </Form.Label>
-                      <Form.Control
-                        required
-                        size="sm"
-                        type="date"
-                        style={{
-                          borderRadius: "10px",
-                          fontSize: "12px",
-                          border: "1px solid #4dd0e1",
-                        }}
-                        value={selectedInvoice.creation_date}
-                        onChange={(e) =>
-                          setSelectedInvoice({
-                            ...selectedInvoice,
-                            creation_date: e.target.value,
-                          })
-                        }
-                      />
-                    </Col> */}
+
                     <Col md={4}>
                       <Form.Label
                         style={{
@@ -3035,6 +2930,50 @@ const IpdBillList = () => {
                             <option value={selectedInvoice.prepared_doctor}>
                               {selectedInvoice.surgeon_name ||
                                 selectedInvoice.prepared_doctor}
+                            </option>
+                          )}
+                      </Form.Select>
+                    </Col>
+                    <Col md={4}>
+                      <Form.Label
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: "600",
+                          marginBottom: "2px",
+                        }}
+                        className="text-muted"
+                      >
+                        Made By <span style={{ color: "red" }} className="required">*</span>
+                      </Form.Label>
+                      <Form.Select
+                        required
+                        size="sm"
+                        style={{
+                          borderRadius: "10px",
+                          fontSize: "12px",
+                          border: "1px solid #4dd0e1",
+                        }}
+                        value={selectedInvoice?.madeby || ""}
+                        onChange={(e) =>
+                          setSelectedInvoice({
+                            ...selectedInvoice,
+                            madeby: e.target.value,
+                          })
+                        }
+                      >
+                        <option value="">Select Made By</option>
+                        {fdeOptions.map((fde, i) => (
+                          <option key={i} value={fde.FDEID}>
+                            {fde.FDEName}
+                          </option>
+                        ))}
+                        {selectedInvoice?.madeby &&
+                          !fdeOptions.some(
+                            (fde) => fde.FDEID == selectedInvoice.madeby,
+                          ) && (
+                            <option value={selectedInvoice.madeby}>
+                              {selectedInvoice.madeby_name ||
+                                selectedInvoice.madeby}
                             </option>
                           )}
                       </Form.Select>

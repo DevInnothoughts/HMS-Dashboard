@@ -19,8 +19,8 @@ import { decodeJwt } from "../../utils/decode-jwt";
 import Swal from "sweetalert2";
 import logo from "../../assets/images/3.png";
 import receiptLogo from "../../assets/images/4.png";
-import { clinincLoc } from "../../utils/clinic_locations-invoice.js";
-import { receiptlocations } from "../../utils/clinic_locations-receipt.js";
+import { clinincLoc } from "../../utils/IpdBill_ClinicLocations.js";
+import { receiptlocations } from "../../utils/OpdReceipt_ClinicLocations.js";
 import FeatherIcon from "feather-icons-react";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
@@ -116,7 +116,6 @@ const IpdCollection = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showBillDetails, setShowBillDetails] = useState(false);
-  const [showAddRow, setShowAddRow] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedTerminal, setSelectedTerminal] = useState("");
   const [currentLocation, setCurrentLocation] = useState("");
@@ -385,7 +384,6 @@ const IpdCollection = () => {
           icon: "success",
           timer: 2000,
         });
-        setShowAddRow(false);
         handleViewBillDetails(); // Refresh the table and summary
       } else if (result.dismiss === Swal.DismissReason.cancel) {
         // Confirmation before calling the actual backend cancellation
@@ -418,7 +416,6 @@ const IpdCollection = () => {
                 "Transaction has been cancelled successfully.",
                 "success",
               );
-              setShowAddRow(false);
             } else {
               Swal.fire(
                 "Cancellation Error",
@@ -457,7 +454,7 @@ const IpdCollection = () => {
     if ((newPayment.card > 0 || newPayment.online > 0) && !selectedTerminal) {
       return Swal.fire(
         "Terminal Required",
-        "Please select a PoS Terminal for Card/Online payment.",
+        "Please select a PoS Terminal for payment.",
         "warning",
       );
     }
@@ -502,7 +499,7 @@ const IpdCollection = () => {
           result.message || "Receipt Generated Successfully",
           "success",
         );
-        setShowAddRow(false);
+        setSelectedTerminal("");
         setNewPayment({
           date: maxDate,
           cash: 0,
@@ -538,11 +535,11 @@ const IpdCollection = () => {
   };
 
   const terminalOptions = [
-    "HDFC",
-    "PineLabs",
+    // "HDFC",
+    // "PineLabs",
     "OFFLINE",
-    "BharatPe1",
-    "BharatPe2",
+    // "BharatPe1",
+    // "BharatPe2",
   ];
 
   const getBase64Image = (imgUrl) => {
@@ -965,56 +962,13 @@ const IpdCollection = () => {
                           </td>
                         </tr>
                       )}
-                    </tbody>
-                  </Table>
+                      {/* Separator row inside table body to act as border-top */}
+                      <tr>
+                        <td colSpan={9} style={{ padding: "10px 0" }}>
+                          <div style={{ borderTop: "2px solid #80deea" }}></div>
+                        </td>
+                      </tr>
 
-                  {summary.totalDue === 0 && (
-                    <div
-                      className="alert alert-success mx-3 mt-3 text-center fw-bold"
-                      style={{
-                        borderRadius: "10px",
-                        border: "2px solid #2b9163",
-                      }}
-                    >
-                      <i className="fa fa-check-circle me-2"></i>
-                      This bill is already fully paid. No further payments are
-                      required.
-                    </div>
-                  )}
-
-                  <div className="d-flex justify-content-between mt-4 pt-8 border-top align-items-center">
-                    <div className="pos-terminal-box">
-                      <span
-                        className="fw-bold text-cyan-dark"
-                        style={{ fontSize: "14px" }}
-                      >
-                        PoS Terminal<span className="text-danger">*</span> : {(newPayment.card > 0 || newPayment.online > 0)}
-                      </span>
-                      {terminalOptions.map((opt) => (
-                        <Form.Check
-                          key={opt}
-                          inline
-                          type="radio"
-                          label={opt}
-                          checked={selectedTerminal === opt}
-                          onChange={() => setSelectedTerminal(opt)}
-                          className="fw-bold text-secondary"
-                          style={{ cursor: "pointer", fontSize: "12px" }}
-                        />
-                      ))}
-                    </div>
-                    <Button
-                      variant="secondary"
-                      className="btn-add"
-                      onClick={() => setShowAddRow(!showAddRow)}
-                      disabled={summary.totalDue <= 0}
-                    >
-                      <FaPlus className="me-2" /> <span>Add Entry</span>
-                    </Button>
-                  </div>
-
-                  {showAddRow && (
-                    <div className="mt-3 p-3 border rounded bg-white add-payment-box">
                       {(() => {
                         const currentTotal =
                           (Number(newPayment.cash) || 0) +
@@ -1028,30 +982,31 @@ const IpdCollection = () => {
                         return (
                           <>
                             {isOverpaid && (
-                              <div className="alert alert-danger p-2 mb-3 text-center small fw-bold">
-                                Warning: Entered amount (₹{currentTotal})
-                                exceeds the remaining due (₹{summary.totalDue}).
-                                Please correct the values.
-                              </div>
+                              <tr>
+                                <td colSpan={9}>
+                                  <div className="alert alert-danger p-5 mb-2 text-center small fw-bold">
+                                    <FeatherIcon icon="alert-triangle" size="16" className="me-2 align-middle" />
+                                    Warning: Entered amount (₹ {currentTotal})
+                                    exceeds the remaining due (₹ {summary.totalDue}).
+                                    Please correct the values.
+                                  </div>
+                                </td>
+                              </tr>
                             )}
-                            <Row className="g-2">
-                              {/* <Col md={2}>
+                            <tr>
+                              <td>
+                                <span
+                                  className="fw-bold text-cyan-dark"
+                                  style={{ fontSize: "14px", display: "block", minWidth: "90px" }}
+                                >
+                                  Add Entry
+                                </span>
+                              </td>
+                              <td>
                                 <Form.Control
                                   type="date"
                                   className="input-style"
-                                  value={newPayment.date}
-                                  onChange={(e) =>
-                                    setNewPayment({
-                                      ...newPayment,
-                                      date: e.target.value,
-                                    })
-                                  }
-                                />
-                              </Col> */}
-                              <Col md={2}>
-                                <Form.Control
-                                  type="date"
-                                  className="input-style"
+                                  style={{ width: "110px", fontSize: "12px" }}
                                   value={newPayment.date}
                                   max={maxDate}
                                   onChange={(e) =>
@@ -1064,11 +1019,11 @@ const IpdCollection = () => {
                                   onPaste={(e) => e.preventDefault()}
                                   onWheel={(e) => e.target.blur()}
                                 />
-                              </Col>
-                              <Col>
+                              </td>
+                              <td>
                                 <InputGroup
                                   size="sm"
-                                  style={{ flexWrap: "nowrap" }}
+                                  style={{ width: "135px", flexWrap: "nowrap" }}
                                 >
                                   <InputGroup.Text className="input-group-text-rupee">
                                     ₹
@@ -1091,11 +1046,11 @@ const IpdCollection = () => {
                                     }
                                   />
                                 </InputGroup>
-                              </Col>
-                              <Col>
+                              </td>
+                              <td>
                                 <InputGroup
                                   size="sm"
-                                  style={{ flexWrap: "nowrap" }}
+                                  style={{ width: "135px", flexWrap: "nowrap" }}
                                 >
                                   <InputGroup.Text className="input-group-text-rupee">
                                     ₹
@@ -1119,11 +1074,11 @@ const IpdCollection = () => {
                                     }
                                   />
                                 </InputGroup>
-                              </Col>
-                              <Col>
+                              </td>
+                              <td>
                                 <InputGroup
                                   size="sm"
-                                  style={{ flexWrap: "nowrap" }}
+                                  style={{ width: "135px", flexWrap: "nowrap" }}
                                 >
                                   <InputGroup.Text className="input-group-text-rupee">
                                     ₹
@@ -1146,11 +1101,11 @@ const IpdCollection = () => {
                                     }
                                   />
                                 </InputGroup>
-                              </Col>
-                              <Col>
+                              </td>
+                              <td>
                                 <InputGroup
                                   size="sm"
-                                  style={{ flexWrap: "nowrap" }}
+                                  style={{ width: "135px", flexWrap: "nowrap" }}
                                 >
                                   <InputGroup.Text className="input-group-text-rupee">
                                     ₹
@@ -1174,11 +1129,11 @@ const IpdCollection = () => {
                                     }
                                   />
                                 </InputGroup>
-                              </Col>
-                              <Col>
+                              </td>
+                              <td>
                                 <InputGroup
                                   size="sm"
-                                  style={{ flexWrap: "nowrap" }}
+                                  style={{ width: "135px", flexWrap: "nowrap" }}
                                 >
                                   <InputGroup.Text className="input-group-text-rupee">
                                     ₹
@@ -1190,7 +1145,7 @@ const IpdCollection = () => {
                                       ["e", "E", "+", "-"].includes(e.key) &&
                                       e.preventDefault()
                                     }
-                                    placeholder="Internal Discount"
+                                    placeholder="Internal Disc"
                                     className="input-group-control-rupee"
                                     value={newPayment.internalDiscount || ""}
                                     onChange={(e) =>
@@ -1201,11 +1156,11 @@ const IpdCollection = () => {
                                     }
                                   />
                                 </InputGroup>
-                              </Col>
-                              <Col>
+                              </td>
+                              <td>
                                 <InputGroup
                                   size="sm"
-                                  style={{ flexWrap: "nowrap" }}
+                                  style={{ width: "135px", flexWrap: "nowrap" }}
                                 >
                                   <InputGroup.Text className="input-group-text-rupee">
                                     ₹
@@ -1217,7 +1172,7 @@ const IpdCollection = () => {
                                       ["e", "E", "+", "-"].includes(e.key) &&
                                       e.preventDefault()
                                     }
-                                    placeholder="Hospital Discount"
+                                    placeholder="Hospital Disc"
                                     className="input-group-control-rupee"
                                     value={newPayment.tds || ""}
                                     onChange={(e) =>
@@ -1228,23 +1183,60 @@ const IpdCollection = () => {
                                     }
                                   />
                                 </InputGroup>
-                              </Col>
-                              <Col md={1}>
+                              </td>
+                              <td className="text-center">
                                 <Button
                                   variant="primary"
                                   className="w-100 btn-save"
                                   onClick={handleSavePayment}
-                                  disabled={loading || isOverpaid}
+                                  disabled={loading || isOverpaid || summary.totalDue <= 0}
                                 >
                                   Save
                                 </Button>
-                              </Col>
-                            </Row>
+                              </td>
+                            </tr>
                           </>
                         );
                       })()}
+                    </tbody>
+                  </Table>
+
+                  {summary.totalDue === 0 && (
+                    <div
+                      className="alert alert-success mx-3 mt-3 text-center fw-bold"
+                      style={{
+                        borderRadius: "10px",
+                        border: "2px solid #2b9163",
+                      }}
+                    >
+                      <i className="fa fa-check-circle me-2"></i>
+                      This bill is already fully paid. No further payments are
+                      required.
                     </div>
                   )}
+
+                  <div className="mt-4 pt-4 border-top">
+                    <div className="pos-terminal-box">
+                      <span
+                        className="fw-bold text-cyan-dark"
+                        style={{ fontSize: "14px" }}
+                      >
+                        PoS Terminal<span className="text-danger">*</span> : {(newPayment.card > 0 || newPayment.online > 0)}
+                      </span>
+                      {terminalOptions.map((opt) => (
+                        <Form.Check
+                          key={opt}
+                          inline
+                          type="radio"
+                          label={opt}
+                          checked={selectedTerminal === opt}
+                          onChange={() => setSelectedTerminal(opt)}
+                          className="fw-bold text-secondary"
+                          style={{ cursor: "pointer", fontSize: "12px" }}
+                        />
+                      ))}
+                    </div>
+                  </div>
                 </Card.Body>
               </Card>
             )}

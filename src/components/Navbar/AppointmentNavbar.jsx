@@ -10,9 +10,6 @@ import {
 } from "react-icons/fa";
 
 export default function AppointmentNavbar() {
-  // const [time, setTime] = useState(new Date().toLocaleTimeString());
-  // const today = new Date();
-  // const formattedDate = today.toLocaleDateString();
   const [time, setTime] = useState(new Date().toLocaleTimeString());
   const today = new Date();
   const formattedDate = today.toLocaleDateString("en-GB");
@@ -49,8 +46,8 @@ export default function AppointmentNavbar() {
             </Link>
             <span className="separator">•</span>
             <Link
-              to="/add-appointment"
-              className={`nav-link ${location.pathname === "/add-appointment" ? "active" : ""
+              to="/add-opd-appointment"
+              className={`nav-link ${location.pathname === "/add-opd-appointment" ? "active" : ""
                 }`}
             >
               <span className="nav-icon">➕</span>

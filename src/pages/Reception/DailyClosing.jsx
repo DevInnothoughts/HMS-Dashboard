@@ -12,6 +12,7 @@ import {
   Tab,
   Alert,
   InputGroup,
+  Modal,
 } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
@@ -45,6 +46,36 @@ const DailyClosing = () => {
 
   const [cashDepositFile, setCashDepositFile] = useState(null);
   const [cardSettlementFile, setCardSettlementFile] = useState(null);
+
+  // Preview Modal States
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [previewName, setPreviewName] = useState("");
+  const [previewType, setPreviewType] = useState("");
+
+  // Local file previews
+  const [cashDepositPreviewUrl, setCashDepositPreviewUrl] = useState(null);
+  const [cardSettlementPreviewUrl, setCardSettlementPreviewUrl] = useState(null);
+
+  useEffect(() => {
+    if (!cashDepositFile) {
+      setCashDepositPreviewUrl(null);
+      return;
+    }
+    const objectUrl = URL.createObjectURL(cashDepositFile);
+    setCashDepositPreviewUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [cashDepositFile]);
+
+  useEffect(() => {
+    if (!cardSettlementFile) {
+      setCardSettlementPreviewUrl(null);
+      return;
+    }
+    const objectUrl = URL.createObjectURL(cardSettlementFile);
+    setCardSettlementPreviewUrl(objectUrl);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [cardSettlementFile]);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -1122,15 +1153,21 @@ const DailyClosing = () => {
                                 }}
                                 onClick={(e) => e.target.select()}
                               />
-                              <a
-                                href={`${BASE_URL.replace("/api", "")}${formData.cashDepositReceipt}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="btn btn-sm btn-outline-info py-5 px-2"
+                              <Button
+                                variant="outline-info"
+                                size="sm"
                                 style={{ fontSize: "11px" }}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  const url = `${BASE_URL.replace("/api", "")}${formData.cashDepositReceipt}`;
+                                  setPreviewUrl(url);
+                                  setPreviewName("Cash Deposit Receipt");
+                                  setPreviewType(url.toLowerCase().split("?")[0].endsWith(".pdf") ? "pdf" : "image");
+                                  setShowPreview(true);
+                                }}
                               >
-                                View
-                              </a>
+                                <i className="fa fa-eye me-1"></i>View
+                              </Button>
                             </div>
                           ) : (
                             <span
@@ -1144,11 +1181,11 @@ const DailyClosing = () => {
                           <div className="d-flex flex-column align-items-center gap-1">
                             <input
                               type="file"
-                              accept="image/*"
+                              accept="image/*,application/pdf"
                               id="cashDepositReceiptFile"
                               style={{ display: "none" }}
                               onChange={(e) => {
-                                const file = e.target.files[0];
+                                const file = e.target.files[0] || null;
                                 setCashDepositFile(file);
                               }}
                             />
@@ -1170,19 +1207,118 @@ const DailyClosing = () => {
                             >
                               {cashDepositFile ? "Change File" : "Choose File"}
                             </label>
-                            {cashDepositFile && (
-                              <span
+                            {cashDepositFile && cashDepositPreviewUrl && (
+                              <div
                                 style={{
-                                  fontSize: "11px",
-                                  maxWidth: "120px",
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                  whiteSpace: "nowrap",
+                                  marginTop: "8px",
+                                  padding: "6px",
+                                  borderRadius: "8px",
+                                  backgroundColor: "#f0fdfa",
+                                  border: "1px dashed #00acc1",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "8px",
+                                  width: "140px",
                                 }}
-                                title={cashDepositFile.name}
                               >
-                                {cashDepositFile.name}
-                              </span>
+                                {cashDepositFile.type === "application/pdf" || cashDepositFile.name.toLowerCase().endsWith(".pdf") ? (
+                                  <div
+                                    style={{
+                                      width: "30px",
+                                      height: "30px",
+                                      borderRadius: "4px",
+                                      backgroundColor: "#ffebee",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      color: "#c62828",
+                                      fontSize: "14px",
+                                      fontWeight: "bold",
+                                      boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
+                                    }}
+                                  >
+                                    <i className="fa fa-file-pdf-o"></i>
+                                  </div>
+                                ) : (
+                                  <img
+                                    src={cashDepositPreviewUrl}
+                                    alt="Selected preview"
+                                    style={{
+                                      width: "30px",
+                                      height: "30px",
+                                      objectFit: "cover",
+                                      borderRadius: "4px",
+                                      boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
+                                      border: "1px solid #e0e0e0",
+                                    }}
+                                  />
+                                )}
+                                <div style={{ flex: 1, textAlign: "left", minWidth: 0 }}>
+                                  <div
+                                    style={{
+                                      fontSize: "10px",
+                                      fontWeight: "600",
+                                      color: "#37474f",
+                                      overflow: "hidden",
+                                      textOverflow: "ellipsis",
+                                      whiteSpace: "nowrap",
+                                    }}
+                                    title={cashDepositFile.name}
+                                  >
+                                    {cashDepositFile.name}
+                                  </div>
+                                  <Button
+                                    variant="link"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      setPreviewUrl(cashDepositPreviewUrl);
+                                      setPreviewName(cashDepositFile.name);
+                                      setPreviewType(
+                                        cashDepositFile.type === "application/pdf" || cashDepositFile.name.toLowerCase().endsWith(".pdf")
+                                          ? "pdf"
+                                          : "image"
+                                      );
+                                      setShowPreview(true);
+                                    }}
+                                    style={{
+                                      color: "#00acc1",
+                                      fontWeight: "bold",
+                                      textDecoration: "underline",
+                                      padding: 0,
+                                      fontSize: "9px",
+                                      border: "none",
+                                      background: "none",
+                                      lineHeight: 1,
+                                      marginTop: "2px",
+                                    }}
+                                  >
+                                    Preview
+                                  </Button>
+                                </div>
+                                <Button
+                                  variant="link"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    setCashDepositFile(null);
+                                    const input = document.getElementById("cashDepositReceiptFile");
+                                    if (input) input.value = "";
+                                  }}
+                                  style={{
+                                    color: "#d32f2f",
+                                    padding: "2px",
+                                    fontSize: "13px",
+                                    border: "none",
+                                    background: "none",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    marginLeft: "auto",
+                                  }}
+                                  title="Remove file"
+                                >
+                                  <i className="fa fa-times-circle"></i>
+                                </Button>
+                              </div>
                             )}
                           </div>
                         )}
@@ -1210,15 +1346,21 @@ const DailyClosing = () => {
                                 }}
                                 onClick={(e) => e.target.select()}
                               />
-                              <a
-                                href={`${BASE_URL.replace("/api", "")}${formData.cardSettlementSlip}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="btn btn-sm btn-outline-info py-5 px-2"
+                              <Button
+                                variant="outline-info"
+                                size="sm"
                                 style={{ fontSize: "11px" }}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  const url = `${BASE_URL.replace("/api", "")}${formData.cardSettlementSlip}`;
+                                  setPreviewUrl(url);
+                                  setPreviewName("Card Settlement Slip");
+                                  setPreviewType(url.toLowerCase().split("?")[0].endsWith(".pdf") ? "pdf" : "image");
+                                  setShowPreview(true);
+                                }}
                               >
-                                View
-                              </a>
+                                <i className="fa fa-eye me-1"></i>View
+                              </Button>
                             </div>
                           ) : (
                             <span
@@ -1232,11 +1374,11 @@ const DailyClosing = () => {
                           <div className="d-flex flex-column align-items-center gap-1">
                             <input
                               type="file"
-                              accept="image/*"
+                              accept="image/*,application/pdf"
                               id="cardSettlementSlipFile"
                               style={{ display: "none" }}
                               onChange={(e) => {
-                                const file = e.target.files[0];
+                                const file = e.target.files[0] || null;
                                 setCardSettlementFile(file);
                               }}
                             />
@@ -1260,19 +1402,118 @@ const DailyClosing = () => {
                                 ? "Change File"
                                 : "Choose File"}
                             </label>
-                            {cardSettlementFile && (
-                              <span
+                            {cardSettlementFile && cardSettlementPreviewUrl && (
+                              <div
                                 style={{
-                                  fontSize: "11px",
-                                  maxWidth: "120px",
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                  whiteSpace: "nowrap",
+                                  marginTop: "8px",
+                                  padding: "6px",
+                                  borderRadius: "8px",
+                                  backgroundColor: "#f0fdfa",
+                                  border: "1px dashed #00acc1",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "8px",
+                                  width: "140px",
                                 }}
-                                title={cardSettlementFile.name}
                               >
-                                {cardSettlementFile.name}
-                              </span>
+                                {cardSettlementFile.type === "application/pdf" || cardSettlementFile.name.toLowerCase().endsWith(".pdf") ? (
+                                  <div
+                                    style={{
+                                      width: "30px",
+                                      height: "30px",
+                                      borderRadius: "4px",
+                                      backgroundColor: "#ffebee",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      color: "#c62828",
+                                      fontSize: "14px",
+                                      fontWeight: "bold",
+                                      boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
+                                    }}
+                                  >
+                                    <i className="fa fa-file-pdf-o"></i>
+                                  </div>
+                                ) : (
+                                  <img
+                                    src={cardSettlementPreviewUrl}
+                                    alt="Selected preview"
+                                    style={{
+                                      width: "30px",
+                                      height: "30px",
+                                      objectFit: "cover",
+                                      borderRadius: "4px",
+                                      boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
+                                      border: "1px solid #e0e0e0",
+                                    }}
+                                  />
+                                )}
+                                <div style={{ flex: 1, textAlign: "left", minWidth: 0 }}>
+                                  <div
+                                    style={{
+                                      fontSize: "10px",
+                                      fontWeight: "600",
+                                      color: "#37474f",
+                                      overflow: "hidden",
+                                      textOverflow: "ellipsis",
+                                      whiteSpace: "nowrap",
+                                    }}
+                                    title={cardSettlementFile.name}
+                                  >
+                                    {cardSettlementFile.name}
+                                  </div>
+                                  <Button
+                                    variant="link"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      setPreviewUrl(cardSettlementPreviewUrl);
+                                      setPreviewName(cardSettlementFile.name);
+                                      setPreviewType(
+                                        cardSettlementFile.type === "application/pdf" || cardSettlementFile.name.toLowerCase().endsWith(".pdf")
+                                          ? "pdf"
+                                          : "image"
+                                      );
+                                      setShowPreview(true);
+                                    }}
+                                    style={{
+                                      color: "#00acc1",
+                                      fontWeight: "bold",
+                                      textDecoration: "underline",
+                                      padding: 0,
+                                      fontSize: "9px",
+                                      border: "none",
+                                      background: "none",
+                                      lineHeight: 1,
+                                      marginTop: "2px",
+                                    }}
+                                  >
+                                    Preview
+                                  </Button>
+                                </div>
+                                <Button
+                                  variant="link"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    setCardSettlementFile(null);
+                                    const input = document.getElementById("cardSettlementSlipFile");
+                                    if (input) input.value = "";
+                                  }}
+                                  style={{
+                                    color: "#d32f2f",
+                                    padding: "2px",
+                                    fontSize: "13px",
+                                    border: "none",
+                                    background: "none",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    marginLeft: "auto",
+                                  }}
+                                  title="Remove file"
+                                >
+                                  <i className="fa fa-times-circle"></i>
+                                </Button>
+                              </div>
                             )}
                           </div>
                         )}
@@ -1380,6 +1621,47 @@ const DailyClosing = () => {
           </Col>
         </Row>
       </Container>
+      {/* Document Preview Modal Popup */}
+      <Modal
+        show={showPreview}
+        onHide={() => setShowPreview(false)}
+        size="lg"
+        centered
+      >
+        <Modal.Header closeButton style={{ background: "#e0f7fa", borderBottom: "2px solid #00bcd4" }}>
+          <Modal.Title style={{ color: "#006064", fontWeight: "bold", fontSize: "16px" }}>
+            <i className="fa fa-eye me-2"></i> {previewName} Preview
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ textAlign: "center", backgroundColor: "#f5fcfd", padding: "15px" }}>
+          {previewType === "pdf" ? (
+            <iframe
+              src={previewUrl}
+              title={previewName}
+              width="100%"
+              height="550px"
+              style={{ border: "none", borderRadius: "8px" }}
+            />
+          ) : (
+            <img
+              src={previewUrl}
+              alt={previewName}
+              style={{
+                maxWidth: "100%",
+                maxHeight: "550px",
+                objectFit: "contain",
+                borderRadius: "8px",
+                boxShadow: "0px 4px 10px rgba(0,0,0,0.15)",
+              }}
+            />
+          )}
+        </Modal.Body>
+        <Modal.Footer style={{ backgroundColor: "#e0f7fa", borderTop: "1px solid #4dd0e1", padding: "10px" }}>
+          <Button variant="secondary" onClick={() => setShowPreview(false)} style={{ borderRadius: "8px", fontWeight: "bold" }}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

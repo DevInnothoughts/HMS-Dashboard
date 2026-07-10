@@ -84,7 +84,7 @@ export default function DoctorCallingCalendar() {
   const fetchMCDPAData = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/V1/calling-calendar/mcdpa-patients`, {
+      const response = await fetch(`${BASE_URL}/V1/doctor/calling-calendar/mcdpa-patients`, {
         method: "GET",
         headers: {
           "x-hms-location": currentLocation,
@@ -117,7 +117,7 @@ export default function DoctorCallingCalendar() {
   const fetchAdvisedData = async (type, days, baseDateStr = toDate) => {
     setLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/V1/calling-calendar/filter`, {
+      const response = await fetch(`${BASE_URL}/V1/doctor/calling-calendar/filter`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -202,7 +202,7 @@ export default function DoctorCallingCalendar() {
     setIsSubmitting(true);
     try {
       const response = await fetch(
-        `${BASE_URL}/V1/calling-calendar/submitnote`,
+        `${BASE_URL}/V1/doctor/calling-calendar/submitnote`,
         {
           method: "POST",
           headers: {
@@ -256,7 +256,7 @@ export default function DoctorCallingCalendar() {
     setIsSubmitting(true);
     try {
       const response = await fetch(
-        `${BASE_URL}/V1/calling-calendar/submitcallback`,
+        `${BASE_URL}/V1/doctor/calling-calendar/submitcallback`,
         {
           method: "POST",
           headers: {
@@ -302,7 +302,7 @@ export default function DoctorCallingCalendar() {
   // Excel Download
   const handleDownloadExcel = () => {
     const daysString = "3,7,15,30,0";
-    const downloadUrl = `${BASE_URL}/V1/calling-calendar/download-excel?Frdate=${fromDate}&date=${toDate}&days=${daysString}&type=${selectedType}&location=${currentLocation}`;
+    const downloadUrl = `${BASE_URL}/V1/doctor/calling-calendar/download-excel?Frdate=${fromDate}&date=${toDate}&days=${daysString}&type=${selectedType}&location=${currentLocation}`;
     window.location.href = downloadUrl;
   };
 

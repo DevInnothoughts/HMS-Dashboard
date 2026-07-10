@@ -55,7 +55,18 @@ const NoteCell = ({ note }) => {
   );
 };
 
-const TYPE_LIST = ["New", "Follow", "Post Operative", "MCDPA", "Other"];
+const TYPE_LIST = ["New", "Follow", "Postoperative", "MCDPA", "Other"];
+
+const formatPatientType = (type) => {
+  if (!type) return "";
+  const upper = type.toUpperCase();
+  if (upper === "NEW") return "New";
+  if (upper === "FOLLOW") return "Follow";
+  if (upper === "POSTOPERATIVE" || upper === "POST OPERATIVE") return "Postoperative";
+  if (upper === "MCDPA") return "MCDPA";
+  if (upper === "OTHER") return "Other";
+  return type;
+};
 const REFERENCE_OPTIONS = [
   "Family / Friends",
   "Referred By Another Doctor",
@@ -70,8 +81,26 @@ const REFERENCE_OPTIONS = [
   "I was treated here in past ",
   "Healing Hands Clinic Branch",
   "Aggregators",
+  "Doctor's Privilege Card",
   "Other",
 ];
+
+const REFERENCE_MAP = {
+  family_friends: "Family / Friends",
+  dr_ref: "Referred By Another Doctor",
+  old_ref: "Referred By Another Patient",
+  internet: "Internet",
+  socialMedia: "Social Media",
+  MediaRef: "Entertainment Media",
+  newspaper: "Newspaper / Magazine",
+  awareness_lecture: "Awareness Lecture",
+  hhc_board: "HHC Board on building",
+  self_old_pt: "I was treated here in past ",
+  hhc_branch: "Healing Hands Clinic Branch",
+  aggregators: "Aggregators",
+  dr_privilege_card: "Doctor's Privilege Card",
+  other: "Other",
+};
 
 const Toast = Swal.mixin({
   toast: true,
@@ -309,6 +338,7 @@ export default function OpdAppointmentList() {
     discountNote: "",
     paymentMode: "",
     posTerminal: "",
+    madeby: "",
   });
 
   const calculateTotals = () => {
@@ -369,6 +399,7 @@ export default function OpdAppointmentList() {
         comment: receiptForm.regComment || "",
         PosMachine: receiptForm.posTerminal,
         MachineType: "OPD",
+        madeby: receiptForm.madeby || null,
       };
 
 
@@ -580,6 +611,7 @@ export default function OpdAppointmentList() {
       discountNote: "",
       paymentMode: "",
       posTerminal: "",
+      madeby: "",
     });
     setBillingItems([{ label: "", amount: "" }]);
     setSelectedAppointment(null);
@@ -803,10 +835,10 @@ export default function OpdAppointmentList() {
   const fetchDropdownData = useCallback(async () => {
     try {
       const endpoints = [
-        `${BASE_URL}/V1/doctor/consultationDropdown?location=${currentLocation}`,
+        `${BASE_URL}/V1/appointment/consultationDropdown?location=${currentLocation}`,
         `${BASE_URL}/V1/doctor/doctorDropdown?location=${currentLocation}`,
         `${BASE_URL}/V1/appointment/fdeDropdown?location=${currentLocation}`,
-        `${BASE_URL}/V1/doctor/consultationDetailsDropdown?location=${currentLocation}`,
+        `${BASE_URL}/V1/appointment/consultationDetailsDropdown?location=${currentLocation}`,
         `${BASE_URL}/V1/appointment/posTerminalDropdown?location=${currentLocation}`,
       ];
 
@@ -1053,7 +1085,7 @@ export default function OpdAppointmentList() {
         fetchAppointmentData();
         window.dispatchEvent(new CustomEvent("refreshApptCounts"));
 
-        if (endpoint === "confirmAppointment") {
+        if (endpoint === "confirmAppointment" && patient_type === "New") {
           navigate("/opd-patient-list", {
             state: {
               openEditForPhone: patient_phone,
@@ -1794,6 +1826,7 @@ export default function OpdAppointmentList() {
                           : null
                       }
                       onChange={handleDateChange}
+                      minDate={new Date()}
                       dateFormat="dd-MM-yyyy"
                       className="form-control custom-datepicker"
                       style={{
@@ -2080,6 +2113,12 @@ export default function OpdAppointmentList() {
                           {opt}
                         </option>
                       ))}
+                      {selectedAppointment.reference &&
+                        !REFERENCE_OPTIONS.includes(selectedAppointment.reference) && (
+                          <option value={selectedAppointment.reference}>
+                            {REFERENCE_MAP[selectedAppointment.reference] || selectedAppointment.reference}
+                          </option>
+                        )}
                     </Form.Select>
                   </Form.Group>
                 </Col>
@@ -2273,7 +2312,7 @@ export default function OpdAppointmentList() {
                           border: "1px solid #90caf9",
                           padding: "0",
                         }}
-                        body={(rowData) => <span className="selectable-text">{rowData.patient_type || "-"}</span>}
+                        body={(rowData) => <span className="selectable-text">{formatPatientType(rowData.patient_type) || "-"}</span>}
                         headerClassName="datatable-header-center"
                       />
 
@@ -2400,7 +2439,7 @@ export default function OpdAppointmentList() {
                 Basic Details
               </h6>
               <Row className="mb-3">
-                <Col md={6}>
+                <Col md={4}>
                   <Form.Label style={{ fontSize: "12px", fontWeight: "500" }}>
                     Patient Name <span className="text-danger">*</span>
                   </Form.Label>
@@ -2418,7 +2457,7 @@ export default function OpdAppointmentList() {
                   />
                 </Col>
 
-                <Col>
+                <Col md={4}>
                   <Form.Group>
                     <Form.Label style={{ fontSize: "12px", fontWeight: "500" }}>
                       Consultant Doctor <span className="text-danger">*</span>
@@ -2437,6 +2476,31 @@ export default function OpdAppointmentList() {
                       {doctors.map((doctor) => (
                         <option key={doctor.doctor_id} value={doctor.name}>
                           {doctor.name}
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+
+                <Col md={4}>
+                  <Form.Group>
+                    <Form.Label style={{ fontSize: "12px", fontWeight: "500" }}>
+                      Made By <span className="text-danger">*</span>
+                    </Form.Label>
+                    <Form.Select
+                      required
+                      name="madeby"
+                      style={{
+                        fontSize: "12px",
+                        border: "2px solid rgb(77, 208, 225)",
+                      }}
+                      value={receiptForm.madeby || ""}
+                      onChange={handleReceiptFormChange}
+                    >
+                      <option value="">Select Made By</option>
+                      {fdeList.map((fde) => (
+                        <option key={fde.FDEID} value={fde.FDEID}>
+                          {fde.FDEName}
                         </option>
                       ))}
                     </Form.Select>

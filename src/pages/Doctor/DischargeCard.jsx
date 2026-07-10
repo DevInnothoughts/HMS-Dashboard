@@ -2090,24 +2090,6 @@ const DischargeCard = ({
                 ))}
             </Form.Select>
           </Col>
-          {/* <Col md={6}>
-            <div className="p-2 border rounded-3 bg-white d-flex align-items-center h-100">
-              <span className="fw-bold text-muted me-2" style={{ fontSize: "14px" }}>EUA & FO DONE:</span>
-              <Form.Check
-                type="checkbox"
-                checked={dischargeData.eua_fo}
-                onChange={(e) => handleDischargeChange("eua_fo", e.target.checked)}
-                className="mb-0"
-              />
-              <Form.Control
-                type="date"
-                className="ms-3 border-0 border-bottom rounded-0 p-0"
-                value={dischargeData.eua_note}
-                onChange={(e) => handleDischargeChange("eua_note", e.target.value)}
-                style={{ fontSize: "12px", width: "150px" }}
-              />
-            </div>
-          </Col> */}
         </Row>
       </div>
 

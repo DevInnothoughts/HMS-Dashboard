@@ -1,7 +1,3 @@
-
-/*******************
-02 BASE CSS START
-********************/
 /* padding class */
 @for $paddingcls from 1 through 100 {
     .p-#{$paddingcls} {
@@ -46,12 +42,14 @@
 }
 
 /* margin class */
-.ml-auto{
+.ml-auto {
     margin-inline-start: auto;
 }
-.mr-auto{
+
+.mr-auto {
     margin-inline-end: auto;
 }
+
 @for $margincls from 1 through 100 {
     .m-#{$margincls} {
         margin: $margincls + px !important;
@@ -110,87 +108,88 @@
 
 /* font size */
 @for $font_size from 1 through 100 {
-  .fs-#{$font_size} {
-    font-size: $font_size + px !important;
-  }
+    .fs-#{$font_size} {
+        font-size: $font_size + px !important;
+    }
 }
 
 /* font weight */
-  $fwweights: 100, 200, 300,400,500,600,700,800,900;
-  @each $fwweight in $fwweights {
+$fwweights: 100, 200, 300, 400, 500, 600, 700, 800, 900;
+
+@each $fwweight in $fwweights {
     .fw-#{$fwweight} {
-      font-weight: $fwweight !important;      
+        font-weight: $fwweight !important;
     }
-  }
+}
 
 
 /* widht class*/
 @for $widthcls from 1 through 100 {
     .w-#{$widthcls} {
         width: $widthcls + px !important;
-        height: auto ;
+        height: auto;
     }
 }
 
 /*  bg color */
-$bg-colors:(
-    "primary":          $theme-primary,
-    "secondary":        $theme-secondary,
-    "success":          $theme-success,
-    "info":             $theme-info,
-    "warning":          $theme-warning,
-    "danger":           $theme-danger,
-    "light":            $font-light,
-    "black":            $black,
-    "white":            $white,
-    "fontlight":        $font-light,
-    "themebodycolor":   $bg-light,
-    "themefontcolor":   $codex-font-color,
-    "themeborder":      $theme-border,
-    "fb":               $fb-color,
-    "twt":              $twt-color,
-    "insta":            $insta-color,
-    "whp":              $whp-color,
-    "darkbody":         $dark-body,
-    "darkcard":         $dark-card,
-    "extradarkcard":    $extradark-card,
-    "darkfont":         $dark-font,
-    "darksmallfont":    $dark-small-font,
-    "darkborder":       $dark-border,
+$bg-colors: (
+    "primary": $theme-primary,
+    "secondary": $theme-secondary,
+    "success": $theme-success,
+    "info": $theme-info,
+    "warning": $theme-warning,
+    "danger": $theme-danger,
+    "light": $font-light,
+    "black": $black,
+    "white": $white,
+    "fontlight": $font-light,
+    "themebodycolor": $bg-light,
+    "themefontcolor": $codex-font-color,
+    "themeborder": $theme-border,
+    "fb": $fb-color,
+    "twt": $twt-color,
+    "insta": $insta-color,
+    "whp": $whp-color,
+    "darkbody": $dark-body,
+    "darkcard": $dark-card,
+    "extradarkcard": $extradark-card,
+    "darkfont": $dark-font,
+    "darksmallfont": $dark-small-font,
+    "darkborder": $dark-border,
 );
 
-@each  $bg-colorname , $bg-color  in $bg-colors {
-    .bg-#{$bg-colorname}{
-        background-color: $bg-color !important;      
+@each $bg-colorname , $bg-color in $bg-colors {
+    .bg-#{$bg-colorname} {
+        background-color: $bg-color !important;
     }
 }
 
 /* fill color */
-@each  $bg-colorname , $bg-color  in $bg-colors {
-    .fill-#{$bg-colorname}{
-        fill: $bg-color !important;      
+@each $bg-colorname , $bg-color in $bg-colors {
+    .fill-#{$bg-colorname} {
+        fill: $bg-color !important;
     }
 }
 
 
 /*  fonts color */
-$txt-colors:(
-    "primary":    $theme-primary,
-    "secondary":  $theme-secondary,
-    "success":    $theme-success,
-    "info":       $theme-info,
-    "warning":    $theme-warning,
-    "danger":     $theme-danger,
-    "light":      $font-light,
-    "fb":         $fb-color,
-    "twt":        $twt-color,
-    "insta":      $insta-color,
-    "whp":        $whp-color,
-    "default":    $codex-font-color,
+$txt-colors: (
+    "primary": $theme-primary,
+    "secondary": $theme-secondary,
+    "success": $theme-success,
+    "info": $theme-info,
+    "warning": $theme-warning,
+    "danger": $theme-danger,
+    "light": $font-light,
+    "fb": $fb-color,
+    "twt": $twt-color,
+    "insta": $insta-color,
+    "whp": $whp-color,
+    "default": $codex-font-color,
 );
 
-@each  $txt-colorname , $color  in $txt-colors {
-    .text-#{$txt-colorname}{
-        color: $color !important;      
+@each $txt-colorname , $color in $txt-colors {
+    .text-#{$txt-colorname} {
+        color: $color !important;
     }
 }

@@ -4,7 +4,7 @@ import { Column } from "primereact/column";
 import { decodeJwt } from "../../utils/decode-jwt";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import Swal from "sweetalert2";
-import { receiptlocations } from "../../utils/clinic_locations-receipt.js";
+import { receiptlocations } from "../../utils/OpdReceipt_ClinicLocations.js";
 import {
   Container,
   Row,
@@ -1027,6 +1027,18 @@ export default function OpdReceiptList() {
                           );
                           return `₹ ${payable.toFixed(2)}`;
                         }}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.75rem",
+                          width: "120px",
+                        }}
+                      />
+                      <Column
+                        field="madeby_name"
+                        header="Made By"
+                        headerClassName="datatable-header-center"
+                        body={(rowData) => rowData.madeby_name || "-"}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",

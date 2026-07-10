@@ -59,20 +59,7 @@ const OpdPrescriptionPrintView = React.forwardRef(
 
     const formatMedicineTime = (timesArr) => {
       if (!timesArr || timesArr.length === 0) return "";
-      if (timesArr.length > 1) {
-        return timesArr.join(".......");
-      }
-      const time = timesArr[0];
-      if (time === "Before Breakfast" || time === "After Breakfast") {
-        return `${time}.......`;
-      }
-      if (time === "Before Lunch" || time === "After Lunch") {
-        return `.......${time}.......`;
-      }
-      if (time === "Before Dinner" || time === "After Dinner") {
-        return `.......${time}`;
-      }
-      return time;
+      return timesArr.join(", ");
     };
 
     const isAhmedabadLocationClass = [
@@ -120,23 +107,31 @@ const OpdPrescriptionPrintView = React.forwardRef(
     border-collapse: collapse;
     table-layout: fixed;
     margin-top: 4px;
+    margin-bottom: 15px;
   }
   .opd-print-container .med-table th {
-    border-bottom: 2px solid #000;
-    padding: 4px 6px;
-    text-align: left;
+    background: #eeeeee;
+    padding: 6px;
+    border: 1px solid #bebebe;
+    text-align: center;
     font-weight: 700;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
   .opd-print-container .med-table td {
-    padding: 3px 6px;
-    vertical-align: top;
+    padding: 8px;
+    border: 1px solid #bebebe;
+    text-align: center;
+    vertical-align: middle;
     word-wrap: break-word;
     overflow-wrap: break-word;
   }
   .opd-print-container .med-note td {
-    padding-top: 0;
+    padding: 4px 8px 8px 8px;
     font-size: 12px;
     font-style: italic;
+    text-align: left;
+    border-top: none;
   }
   .opd-print-container .med-table tr { page-break-inside: avoid; }
 }
@@ -216,14 +211,11 @@ const OpdPrescriptionPrintView = React.forwardRef(
           </div>
 
           <div className="row-flex">
-            <div style={{ width: "50%" }}>
+            <div style={{ width: "100%" }}>
               <p>
                 <span className="fw-bold">Allergy :</span>{" "}
                 {d.allergy ? d.allergy : "Unknown"}
-              </p>
-            </div>
-            <div style={{ width: "50%" }}>
-              <p>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 <span className="fw-bold">Test Advice :</span> {testAdvice}
               </p>
             </div>
@@ -231,8 +223,9 @@ const OpdPrescriptionPrintView = React.forwardRef(
           <br />
           <table className="med-table">
             <colgroup>
-              <col style={{ width: "32%" }} />
-              <col style={{ width: "43%" }} />
+              <col style={{ width: "25%" }} />
+              <col style={{ width: "15%" }} />
+              <col style={{ width: "35%" }} />
               <col style={{ width: "15%" }} />
               <col style={{ width: "10%" }} />
             </colgroup>
@@ -240,14 +233,15 @@ const OpdPrescriptionPrintView = React.forwardRef(
               <tr>
                 <th>Medicine</th>
                 <th>Dosage</th>
+                <th>Frequency</th>
                 <th>Days</th>
-                <th style={{ textAlign: "right" }}>Qty</th>
+                <th>Qty</th>
               </tr>
             </thead>
             <tbody>
               {d.no_medicines_prescribed && (
                 <tr>
-                  <td colSpan={4} style={{ textAlign: "center" }}>
+                  <td colSpan={5} style={{ textAlign: "center" }}>
                     <i>No Medicines Prescribed</i>
                   </td>
                 </tr>
@@ -296,13 +290,14 @@ const OpdPrescriptionPrintView = React.forwardRef(
                       >
                         {medName}
                       </td>
+                      <td>{med.dosage_frequency || ""}</td>
                       <td>{timeString}</td>
                       <td>{daysText}</td>
-                      <td style={{ textAlign: "right" }}>{med.qty}</td>
+                      <td>{med.qty}</td>
                     </tr>
                     {noteText && (
                       <tr className="med-note">
-                        <td colSpan={4}>{noteText}</td>
+                        <td colSpan={5}>{noteText}</td>
                       </tr>
                     )}
                   </React.Fragment>
@@ -314,7 +309,7 @@ const OpdPrescriptionPrintView = React.forwardRef(
           <div className="row-flex">
             <div style={{ width: "100%" }}>
               {d.doctor_comment && (
-                <p style={{ marginBottom: "15px" }}>
+                <p style={{ marginBottom: "15px", marginRight: "-10px" }}>
                   <span className="fw-bold">Doctor Comment :</span> {d.doctor_comment}
                 </p>
               )}
@@ -323,28 +318,17 @@ const OpdPrescriptionPrintView = React.forwardRef(
                 {nextAppoDate}
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 <span className="fw-bold">Assistant Doctor :</span> {doctorName}{" "}
-                {doctorPhone}
+                ({doctorPhone})
               </p>
             </div>
-          </div>
-          <br />
-
+          </div><br />
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <tbody>
               <tr>
                 <td style={{ width: "100%" }}>
                   <p>
-                    <span className="fw-bold">Important Note :</span> In case
-                    there is no relief with medications in 2 weeks of time...
-                    Consult the surgeon immediately to evaluate the disease
-                    again.
+                    <span className="fw-bold">Important Note :</span> If there is no relief with medication within 2 weeks, consult the surgeon immediately for a re-evaluation of the condition.
                   </p>
-                  {/* Uncomment if footer images are needed */}
-                  {/* {sitelocation === 'Pimpri-Chinchwad' ? (
-                    <img src={prescriptionCh} alt="Footer" style={{width: '100%'}} />
-                  ) : (
-                    <img src={prescriptionBottom} alt="Footer" style={{width: '100%'}} />
-                  )} */}
                 </td>
               </tr>
             </tbody>

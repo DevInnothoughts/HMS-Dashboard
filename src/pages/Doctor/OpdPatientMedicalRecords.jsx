@@ -441,6 +441,7 @@ const OpdPatientMedicalRecords = () => {
     weightloss_comment: "",
     past_medical_history: [],
     past_medical_history_other: "",
+    pastmedicalduration: {},
     habits: [],
     drug_allergy: "",
     medication_history: [
@@ -763,6 +764,7 @@ const OpdPatientMedicalRecords = () => {
 
           past_medical_history: pastMedicalParsed.known,
           past_medical_history_other: pastMedicalParsed.otherStr,
+          pastmedicalduration: d.pastmedicalduration || {},
 
           habits: toArray(d.habits),
           drug_allergy: d.drugs_allery || "",
@@ -1772,6 +1774,7 @@ const OpdPatientMedicalRecords = () => {
     qty: "",
     times: [],
     days: "",
+    dosage_frequency: "",
   });
 
   const initialSurgeryState = {
@@ -2784,6 +2787,7 @@ const OpdPatientMedicalRecords = () => {
       medicine_id: null,
       mrp: "0",
       available_qty: 0,
+      dosage_frequency: "",
     });
   };
 
@@ -3689,6 +3693,7 @@ const OpdPatientMedicalRecords = () => {
               diagnosisList={allDiagnosisDataForPrint}
               selectedDiagnosisId={selectedDiagnosisId}
               onPrint={triggerPrintDiagnosis}
+              doctors={doctors}
             />
           </div>
         </Modal.Body>
