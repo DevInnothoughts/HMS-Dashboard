@@ -173,6 +173,46 @@ const DischargeCard = ({
   };
 
   const handleFinalize = () => {
+    if (!dischargeData.doa) {
+      alert("Please select Date of Admission");
+      return;
+    }
+    if (!dischargeData.admission_time) {
+      alert("Please select Admission Time");
+      return;
+    }
+    if (!dischargeData.dod) {
+      alert("Please select Date of Discharge");
+      return;
+    }
+    if (!dischargeData.discharge_time) {
+      alert("Please select Discharge Time");
+      return;
+    }
+    if (!dischargeData.treating_by) {
+      alert("Please select Treating Doctor");
+      return;
+    }
+    if (!dischargeData.made_by) {
+      alert("Please select Made By Doctor");
+      return;
+    }
+    if (!dischargeData.checked_by) {
+      alert("Please select Checked By Doctor");
+      return;
+    }
+    if (!dischargeData.assistance_doctor) {
+      alert("Please select Assistant Doctor");
+      return;
+    }
+    if (!dischargeData.assistance_surgeon) {
+      alert("Please select Assistant Surgeon");
+      return;
+    }
+    if (!dischargeData.consultant_doctor) {
+      alert("Please select Consultant Doctor");
+      return;
+    }
     handleDischargeChange("final_dc", true);
     onSaveDischarge();
   };
@@ -426,7 +466,7 @@ const DischargeCard = ({
                   className="fw-semibold small mb-1"
                   style={{ fontSize: "11px", color: "#006064" }}
                 >
-                  DATE OF ADMISSION
+                  DATE OF ADMISSION <span className="text-danger">*</span>
                 </Form.Label>
                 <Form.Control
                   type="date"
@@ -449,7 +489,7 @@ const DischargeCard = ({
                   className="fw-semibold small mb-1"
                   style={{ fontSize: "11px", color: "#006064" }}
                 >
-                  ADMISSION TIME
+                  ADMISSION TIME <span className="text-danger">*</span>
                 </Form.Label>
                 <Form.Control
                   type="time"
@@ -474,7 +514,7 @@ const DischargeCard = ({
                   className="fw-semibold small mb-1"
                   style={{ fontSize: "11px", color: "#006064" }}
                 >
-                  DATE OF DISCHARGE
+                  DATE OF DISCHARGE <span className="text-danger">*</span>
                 </Form.Label>
                 <Form.Control
                   type="date"
@@ -497,7 +537,7 @@ const DischargeCard = ({
                   className="fw-semibold small mb-1"
                   style={{ fontSize: "11px", color: "#006064" }}
                 >
-                  DISCHARGE TIME
+                  DISCHARGE TIME <span className="text-danger">*</span>
                 </Form.Label>
                 <Form.Control
                   type="time"
@@ -520,7 +560,7 @@ const DischargeCard = ({
               className="fw-bold small mb-1"
               style={{ fontSize: "11px", color: "#006064" }}
             >
-              CONSULTANT DOCTOR
+              CONSULTANT DOCTOR <span className="text-danger">*</span>
             </Form.Label>
             <Form.Select
               value={dischargeData.consultant_doctor}
@@ -1938,7 +1978,7 @@ const DischargeCard = ({
               className="fw-semibold small mb-1"
               style={{ fontSize: "11px", color: "#006064" }}
             >
-              TREATING BY
+              TREATING BY <span className="text-danger">*</span>
             </Form.Label>
             <Form.Select
               value={dischargeData.treating_by}
@@ -1965,7 +2005,7 @@ const DischargeCard = ({
               className="fw-semibold small mb-1"
               style={{ fontSize: "11px", color: "#006064" }}
             >
-              MADE BY
+              MADE BY <span className="text-danger">*</span>
             </Form.Label>
             <Form.Select
               value={dischargeData.made_by}
@@ -1999,7 +2039,7 @@ const DischargeCard = ({
               className="fw-semibold small mb-1"
               style={{ fontSize: "11px", color: "#006064" }}
             >
-              CHECKED BY
+              CHECKED BY <span className="text-danger">*</span>
             </Form.Label>
             <Form.Select
               value={dischargeData.checked_by}
@@ -2035,7 +2075,7 @@ const DischargeCard = ({
               className="fw-semibold small mb-1"
               style={{ fontSize: "11px", color: "#006064" }}
             >
-              ASSISTANT DOCTOR
+              ASSISTANT DOCTOR <span className="text-danger">*</span>
             </Form.Label>
             <Form.Select
               value={dischargeData.assistance_doctor}
@@ -2062,7 +2102,7 @@ const DischargeCard = ({
               className="fw-semibold small mb-1"
               style={{ fontSize: "11px", color: "#006064" }}
             >
-              ASSISTANT SURGEON
+              ASSISTANT SURGEON <span className="text-danger">*</span>
             </Form.Label>
             <Form.Select
               value={dischargeData.assistance_surgeon}

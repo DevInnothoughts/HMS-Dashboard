@@ -80,9 +80,11 @@ export default function WebEnquiryList({ isTab = false }) {
     const [selectedLead, setSelectedLead] = useState(null);
 
     // Forms state
+    const [treatmentList, setTreatmentList] = useState([]);
     const [formData, setFormData] = useState({
         date: moment().format("YYYY-MM-DD"),
         appointmentTime: "",
+        treatment: "",
         caller_no: "",
         patientName: "",
         patient_id: "",
@@ -212,19 +214,24 @@ export default function WebEnquiryList({ isTab = false }) {
     const fetchDropdowns = useCallback(async () => {
         if (!currentLocation) return;
         try {
-            const [fdeRes, docRes] = await Promise.all([
+            const [fdeRes, docRes, treatmentRes] = await Promise.all([
                 fetch(
                     `${BASE_URL}/V1/appointment/fdeDropdown?location=${currentLocation}`,
                 ),
                 fetch(
                     `${BASE_URL}/V1/doctor/doctorDropdown?location=${currentLocation}`,
                 ),
+                fetch(
+                    `${BASE_URL}/V1/appointment/treatmentDropdown?location=${currentLocation}`,
+                ),
             ]);
             const fdeData = await fdeRes.json();
             const docData = await docRes.json();
+            const treatmentData = await treatmentRes.json();
 
             if (fdeRes.ok && fdeData.data) setFdeList(fdeData.data);
             if (docRes.ok && docData.data) setDoctors(docData.data);
+            if (treatmentRes.ok && treatmentData.data) setTreatmentList(treatmentData.data);
         } catch (err) {
             console.error("Error fetching dropdowns:", err);
         }
@@ -335,6 +342,7 @@ export default function WebEnquiryList({ isTab = false }) {
             doctor_id: "",
             FDE_Name: "",
             patient_type: "",
+            treatment: "",
             patient_id: "",
         }));
 
@@ -564,6 +572,7 @@ export default function WebEnquiryList({ isTab = false }) {
             doctorName: doctorName,
             doctor_id: formData.doctor_id,
             note: formData.note,
+            treatment_name: formData.treatment,
             patientName: formData.patientName,
             patient_id: formData.patient_id,
         };
@@ -1694,9 +1703,41 @@ export default function WebEnquiryList({ isTab = false }) {
                                     </Form.Select>
                                 </Form.Group>
                             </Col>
-
-                            <Col md={6}>
-                                <Form.Group className="mb-2">
+                            {(formData.patient_type === "Other" || formData.treatment) && (
+                                <Col md={6}>
+                                    <Form.Group>
+                                        <Form.Label
+                                            style={{
+                                                fontSize: "12px",
+                                                fontWeight: "600",
+                                                marginBottom: "4px",
+                                            }}
+                                        >
+                                            Treatment <span className="text-danger">*</span>
+                                        </Form.Label>
+                                        <Form.Select
+                                            name="treatment"
+                                            value={formData.treatment}
+                                            onChange={handleInputChange}
+                                            required
+                                            style={{
+                                                border: "2px solid rgb(77, 208, 225)",
+                                                fontSize: "12px",
+                                                borderRadius: "10px",
+                                            }}
+                                        >
+                                            <option value="">Select Treatment</option>
+                                            {treatmentList.map((t) => (
+                                                <option key={t.treatment_name} value={t.treatment_name}>
+                                                    {t.treatment_name}
+                                                </option>
+                                            ))}
+                                        </Form.Select>
+                                    </Form.Group>
+                                </Col>
+                            )}
+                            <Col md={6} className={(formData.patient_type === "Other" || formData.treatment) ? "mt-2" : ""}>
+                                <Form.Group className="mb-10">
                                     <Form.Label
                                         style={{
                                             fontSize: "12px",

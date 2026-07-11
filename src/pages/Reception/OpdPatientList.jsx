@@ -73,6 +73,7 @@ export default function OpdPatientList() {
   const [city, setCity] = useState(null);
   const [errors, setErrors] = useState({});
   const [noPendingAppt, setNoPendingAppt] = useState(true);
+  const [treatmentList, setTreatmentList] = useState([]);
   const [formData, setFormData] = useState({
     doctor_id: "",
     name: "",
@@ -85,6 +86,7 @@ export default function OpdPatientList() {
     date: "",
     prefix: "",
     patient_type: "",
+    treatment: "",
     email: "",
     address: "",
     country: "",
@@ -193,6 +195,21 @@ export default function OpdPatientList() {
         setFdeList(Array.isArray(fdeData.data) ? fdeData.data : []);
       } else {
         console.error("Failed to fetch FDE list:", fdeResponse.statusText);
+      }
+
+      const treatmentResponse = await fetch(
+        `${BASE_URL}/V1/appointment/treatmentDropdown?location=${currentLocation}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (treatmentResponse.ok) {
+        const treatmentData = await treatmentResponse.json();
+        setTreatmentList(Array.isArray(treatmentData.data) ? treatmentData.data : []);
       }
     } catch (error) {
       console.error("Error fetching dropdown data:", error.message);
@@ -1019,6 +1036,7 @@ export default function OpdPatientList() {
       appointment_time: formData.appointmentTime
         ? moment(formData.appointmentTime, ["hh:mm A", "HH:mm"]).format("HH:mm")
         : "",
+      treatment_name: formData.treatment,
       FDE_Name: formData.FDE_Name,
       note: formData.note,
       phone: formData.phone,
@@ -1070,14 +1088,18 @@ export default function OpdPatientList() {
     const formDataToSet = {
       date: formattedDate,
       doctor_id: "",
-      doctorName: "",
+      doctorName: patient.doctor_name || "",
+      Uid_no: patient.Uid_no || "",
       name: patient.name || "",
       phone: patient.phone || "",
       appointmentTime: "",
       fdeId: "",
       FDE_Name: "",
       note: patient.note || "",
+      prefix: patient.prefix || "",
       patient_type: "",
+      treatment: "",
+      email: patient.email || "",
       patient_id: patientId,
     };
 
@@ -3035,7 +3057,7 @@ export default function OpdPatientList() {
             </Row>
 
             <Row>
-              <Col md={6}>
+              <Col md={6} className="mb-15">
                 <Form.Group controlId="patient_type">
                   <Form.Label
                     style={{
@@ -3065,8 +3087,40 @@ export default function OpdPatientList() {
                   </Form.Select>
                 </Form.Group>
               </Col>
-
-              <Col md={6}>
+              {(formData.patient_type === "Other" || formData.treatment) && (
+                <Col md={6}>
+                  <Form.Group>
+                    <Form.Label
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        marginBottom: "4px",
+                      }}
+                    >
+                      Treatment <span style={{ color: "red" }}>*</span>
+                    </Form.Label>
+                    <Form.Select
+                      name="treatment"
+                      value={formData.treatment}
+                      onChange={handleInputChange}
+                      required
+                      style={{
+                        border: "2px solid rgb(77, 208, 225)",
+                        fontSize: "12px",
+                        borderRadius: "10px",
+                      }}
+                    >
+                      <option value="">Select Treatment</option>
+                      {treatmentList.map((t) => (
+                        <option key={t.treatment_name} value={t.treatment_name}>
+                          {t.treatment_name}
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+              )}
+              <Col md={6} className={(formData.patient_type === "Other" || formData.treatment) ? "mt-3" : ""}>
                 <Form.Group>
                   <Form.Label
                     style={{
@@ -3096,10 +3150,7 @@ export default function OpdPatientList() {
                   />
                 </Form.Group>
               </Col>
-            </Row>
-
-            <Row>
-              <Col md={6}>
+              <Col md={6} className="mb-15">
                 <Form.Group>
                   <Form.Label
                     style={{
@@ -3160,10 +3211,7 @@ export default function OpdPatientList() {
                   </Form.Select>
                 </Form.Group>
               </Col>
-            </Row>
-
-            <Row>
-              <Col md={6}>
+              <Col md={6} className="mb-15">
                 <Form.Group>
                   <Form.Label
                     style={{

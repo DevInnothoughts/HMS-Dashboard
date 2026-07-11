@@ -650,6 +650,8 @@ export default function AddEnquiry({ isTab = false }) {
                             "I was treated here in past ",
                             "Healing Hands Clinic Branch",
                             "Aggregators",
+                            "Doctor's Privilege Card",
+                            "Campaign",
                             "Other",
                           ].map((ref) => (
                             <option key={ref} value={ref}>

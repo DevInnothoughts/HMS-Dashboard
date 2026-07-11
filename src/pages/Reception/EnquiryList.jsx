@@ -60,6 +60,7 @@ export default function EnquiryList({ isTab = false }) {
   const [editEnquiryStatus, setEditEnquiryStatus] = useState("");
   const [doctors, setDoctors] = useState([]);
   const [fdeList, setFdeList] = useState([]);
+  const [treatmentList, setTreatmentList] = useState([]);
   const [appointmentFormData, setAppointmentFormData] = useState({
     date: new Date(),
     doctor_id: "",
@@ -70,6 +71,7 @@ export default function EnquiryList({ isTab = false }) {
     FDE_Name: "",
     note: "",
     patient_type: "",
+    treatment: "",
     patient_id: "",
   });
 
@@ -128,6 +130,19 @@ export default function EnquiryList({ isTab = false }) {
         const fdeData = await fdeResponse.json();
         setFdeList(Array.isArray(fdeData.data) ? fdeData.data : []);
       }
+
+      const treatmentResponse = await fetch(
+        `${BASE_URL}/V1/appointment/treatmentDropdown?location=${currentLocation}`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      if (treatmentResponse.ok) {
+        const treatmentData = await treatmentResponse.json();
+        setTreatmentList(Array.isArray(treatmentData.data) ? treatmentData.data : []);
+      }
     } catch (error) {
       console.error("Error fetching dropdown data:", error.message);
     }
@@ -153,6 +168,7 @@ export default function EnquiryList({ isTab = false }) {
       FDE_Name: "",
       note: enquiry.calling_notes || "",
       patient_type: "New", // Default to New
+      treatment: "",
       patient_id: "",
     });
 
@@ -214,7 +230,9 @@ export default function EnquiryList({ isTab = false }) {
         // Patient doesn't exist
         setAppointmentFormData((prev) => ({
           ...prev,
-          patient_type: "",
+          patient_id: data.patient_id,
+          patient_type: "Followup",
+          treatment: "",
         }));
       }
     } catch (error) {
@@ -299,6 +317,7 @@ export default function EnquiryList({ isTab = false }) {
       appointment_time: appointmentFormData.appointmentTime
         ? moment(appointmentFormData.appointmentTime, ["hh:mm A", "HH:mm"]).format("HH:mm")
         : "",
+      treatment_name: appointmentFormData.treatment,
       FDE_Name: appointmentFormData.FDE_Name,
       note: appointmentFormData.note,
       phone: appointmentFormData.phone,
@@ -1154,7 +1173,45 @@ export default function EnquiryList({ isTab = false }) {
                   </Form.Select>
                 </Form.Group>
               </Col>
-              <Col md={6}>
+              {(appointmentFormData.patient_type === "Other" || appointmentFormData.treatment) && (
+                <Col md={6} className="mb-10">
+                  <Form.Group>
+                    <Form.Label
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        marginBottom: "4px",
+                      }}
+                    >
+                      Treatment <span style={{ color: "red" }}>*</span>
+                    </Form.Label>
+                    <Form.Select
+                      size="sm"
+                      value={appointmentFormData.treatment}
+                      onChange={(e) =>
+                        setAppointmentFormData({
+                          ...appointmentFormData,
+                          treatment: e.target.value,
+                        })
+                      }
+                      style={{
+                        border: "2px solid rgb(77, 208, 225)",
+                        fontSize: "12px",
+                        borderRadius: "10px",
+                      }}
+                      required
+                    >
+                      <option value="">Select Treatment</option>
+                      {treatmentList.map((t) => (
+                        <option key={t.treatment_name} value={t.treatment_name}>
+                          {t.treatment_name}
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+              )}
+              <Col md={6} className={(appointmentFormData.patient_type === "Other" || appointmentFormData.treatment) ? "mt-3" : ""}>
                 <Form.Group>
                   <Form.Label
                     style={{
@@ -1186,10 +1243,7 @@ export default function EnquiryList({ isTab = false }) {
                   />
                 </Form.Group>
               </Col>
-            </Row>
-
-            <Row>
-              <Col md={6}>
+              <Col md={6} className="mb-15">
                 <Form.Group>
                   <Form.Label
                     style={{
@@ -1250,10 +1304,7 @@ export default function EnquiryList({ isTab = false }) {
                   </Form.Select>
                 </Form.Group>
               </Col>
-            </Row>
-
-            <Row>
-              <Col md={6}>
+              <Col md={6} className="mb-15">
                 <Form.Group>
                   <Form.Label
                     style={{

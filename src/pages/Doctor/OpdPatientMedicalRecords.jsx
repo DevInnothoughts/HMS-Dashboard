@@ -2218,16 +2218,6 @@ const OpdPatientMedicalRecords = () => {
       return;
     }
 
-    const hasData =
-      dischargeData.reason_for_admission?.trim() ||
-      dischargeData.diagnosis?.trim() ||
-      dischargeData.plan_of_treatment?.trim() ||
-      dischargeData.surgery_note?.trim() ||
-      (dischargeData.treatment_given &&
-        dischargeData.treatment_given.length > 0) ||
-      (dischargeData.treatment_on_discharge &&
-        dischargeData.treatment_on_discharge.length > 0);
-
     const errors = {};
     if (
       !dischargeData.discharge_type ||
@@ -2236,20 +2226,7 @@ const OpdPatientMedicalRecords = () => {
       errors.discharge_type = true;
     }
 
-    if (!hasData) {
-      errors.reason_for_admission = true;
-      errors.diagnosis = true;
-      errors.plan_of_treatment = true;
-      errors.surgery_note = true;
-    }
-
     if (Object.keys(errors).length > 0) {
-      if (!hasData) {
-        errors.reason_for_admission = true;
-        errors.diagnosis = true;
-        errors.plan_of_treatment = true;
-        errors.surgery_note = true;
-      }
       Toast.fire({
         icon: "warning",
         title: "Please fill all mandatory/required fields which are not filled/selected yet",

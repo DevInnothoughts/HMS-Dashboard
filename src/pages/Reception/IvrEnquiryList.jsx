@@ -71,7 +71,9 @@ export default function IvrEnquiryList({ isTab = false }) {
     doctor_id: "",
     doctorName: "",
     date: new Date().toISOString().split("T")[0],
+    treatment: "",
   });
+  const [treatmentList, setTreatmentList] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [fdeList, setFdeList] = useState([]);
   const [enquiryTypes, setEnquiryTypes] = useState([]);
@@ -127,6 +129,7 @@ export default function IvrEnquiryList({ isTab = false }) {
       doctor_id: "",
       FDE_Name: "",
       patient_type: "",
+      treatment: "",
       patient_id: undefined,
     }));
 
@@ -348,22 +351,24 @@ export default function IvrEnquiryList({ isTab = false }) {
 
   const fetchDropdownData = useCallback(async () => {
     try {
-      const endpoints = [
-        `${BASE_URL}/V1/appointment/fdeDropdown?location=${currentLocation}`,
-        `${BASE_URL}/V1/doctor/doctorDropdown?location=${currentLocation}`,
-      ];
-
-      const [fdeResponse, doctorResponse] = await Promise.all(
-        endpoints.map((url) =>
-          fetch(url, {
-            method: "GET",
-            headers: { "Content-Type": "application/json" },
-          }).then((res) => res.json()),
-        ),
-      );
+      const [fdeResponse, doctorResponse, treatmentResponse] = await Promise.all([
+        fetch(`${BASE_URL}/V1/appointment/fdeDropdown?location=${currentLocation}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        }).then((res) => res.json()),
+        fetch(`${BASE_URL}/V1/doctor/doctorDropdown?location=${currentLocation}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        }).then((res) => res.json()),
+        fetch(`${BASE_URL}/V1/appointment/treatmentDropdown?location=${currentLocation}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        }).then((res) => res.json()),
+      ]);
 
       setFdeList(Array.isArray(fdeResponse.data) ? fdeResponse.data : []);
       setDoctors(Array.isArray(doctorResponse.data) ? doctorResponse.data : []);
+      setTreatmentList(Array.isArray(treatmentResponse.data) ? treatmentResponse.data : []);
     } catch (error) {
       console.error("Error fetching dropdown data:", error.message);
       toast.error("Failed to load selection data.");
@@ -920,6 +925,7 @@ export default function IvrEnquiryList({ isTab = false }) {
       doctorName: doctorName,
       doctor_id: formData.doctor_id,
       note: formData.note,
+      treatment_name: formData.treatment,
       patientName: formData.patientName,
       patient_id: formData.patient_id,
     };
@@ -1473,9 +1479,41 @@ export default function IvrEnquiryList({ isTab = false }) {
                   </Form.Select>
                 </Form.Group>
               </Col>
-
-              <Col md={6}>
-                <Form.Group className="mb-2">
+              {(formData.patient_type === "Other" || formData.treatment) && (
+                <Col md={6}>
+                  <Form.Group>
+                    <Form.Label
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        marginBottom: "4px",
+                      }}
+                    >
+                      Treatment <span className="text-danger">*</span>
+                    </Form.Label>
+                    <Form.Select
+                      name="treatment"
+                      value={formData.treatment}
+                      onChange={handleInputChange}
+                      required
+                      style={{
+                        border: "2px solid rgb(77, 208, 225)",
+                        fontSize: "12px",
+                        borderRadius: "10px",
+                      }}
+                    >
+                      <option value="">Select Treatment</option>
+                      {treatmentList.map((t) => (
+                        <option key={t.treatment_name} value={t.treatment_name}>
+                          {t.treatment_name}
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+              )}
+              <Col md={6} className={(formData.patient_type === "Other" || formData.treatment) ? "mt-2" : ""}>
+                <Form.Group className="mb-10">
                   <Form.Label
                     style={{
                       fontSize: "12px",

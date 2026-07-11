@@ -386,7 +386,7 @@ export default function AddOpdAppointment() {
       requiredFields.push("reference");
     }
 
-    if (formData.patient_type === "OTHER") {
+    if (formData.patient_type === "Other") {
       requiredFields.push("treatment");
     }
 
@@ -687,9 +687,9 @@ export default function AddOpdAppointment() {
                         placeholder="Enter Name"
                       />
                     </Col>
-                    {(formData.patient_type === "OTHER" ||
+                    {(formData.patient_type === "Other" ||
                       formData.treatment) && (
-                        <Col md={4}>
+                        <Col md={3}>
                           <Form.Label style={labelStyle}>
                             Treatment <span className="text-danger">*</span>
                           </Form.Label>
