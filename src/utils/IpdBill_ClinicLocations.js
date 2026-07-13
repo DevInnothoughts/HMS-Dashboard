@@ -49,8 +49,10 @@ export const clinincLoc = {
   },
   Vashi: {
     invoiceAddress:
-      "<b>Healing Hands Clinic</b><br>Unit no 18 at Palm Beach Galleria, 1st Floor, Palm Beach Road, Vashi, New Mumbai - 400703",
-    invoiceHelplineNo: "9175232308",
+      // "<b>Healing Hands Clinic</b><br>Unit no 18 at Palm Beach Galleria, 1st Floor, Palm Beach Road, Vashi, New Mumbai - 400703",
+      "<b>Healing Hands Clinic</b><br> Plot No.5, Gahlot Majesty, Sector 46, Seawoods, Navi Mumbai - 400706",
+    // invoiceHelplineNo: "9175232308",
+    invoiceHelplineNo: "8888166667",
     EmergencySMS: "",
   },
   "Salunkhe-Vihar": {
