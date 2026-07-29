@@ -379,7 +379,7 @@ export default function OpdAppointmentList() {
 
       const consultationData = billingItems
         .filter((item) => item.label)
-        .map((item) => [item.label, parseFloat(item.amount) || 0]);
+        .map((item) => [item.label, parseFloat(String(item.amount || "").replace(/,/g, "")) || 0]);
 
       const payload = {
         appointment_id: selectedAppointment.appointment_id,

@@ -339,8 +339,20 @@ export default function OpdReceiptList() {
         const receiptWindow = window.open("", "_blank", "width=800,height=850");
         if (!receiptWindow) return;
 
+        let calculatedSubtotal = 0;
+        if (selectedReceipt.item_details) {
+          selectedReceipt.item_details.split(",").forEach((itemGroup) => {
+            const parts = itemGroup.split(":");
+            const amount = parts[1] ? parseFloat(parts[1].trim()) : 0;
+            calculatedSubtotal += amount;
+          });
+        }
+        if (calculatedSubtotal === 0) {
+          calculatedSubtotal = parseFloat(selectedReceipt.totalamt) || 0;
+        }
+
         const rawNet = (
-          parseFloat(selectedReceipt.totalamt) -
+          calculatedSubtotal -
           parseFloat(selectedReceipt.discountamt || 0)
         );
         const netAmountVal = Math.round(rawNet);
@@ -536,7 +548,7 @@ export default function OpdReceiptList() {
                   </tbody>
                 </table>
                 <div class="summary-section">
-                  Sub Total : <b>₹ ${Math.round(parseFloat(selectedReceipt.totalamt)).toLocaleString("en-IN")}</b><br>
+                  Sub Total : <b>₹ ${Math.round(calculatedSubtotal).toLocaleString("en-IN")}</b><br>
                   Discount (If Any) : <b>₹ ${Math.round(parseFloat(selectedReceipt.discountamt || 0)).toLocaleString("en-IN")}</b><br>
                   Payable Amount : <b>₹ ${netAmount}</b>
                 </div>
