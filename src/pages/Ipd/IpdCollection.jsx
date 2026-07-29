@@ -133,6 +133,8 @@ const IpdCollection = () => {
     insuranceApproved: 0,
     patientPayable: 0,
     totalDue: 0,
+    status: "",
+    isCashless: false,
   });
   const [payments, setPayments] = useState([]);
   const [newPayment, setNewPayment] = useState({
@@ -263,12 +265,15 @@ const IpdCollection = () => {
         }
 
         const isPdc = (financialInfo.status || "").toLowerCase() === "pdc";
-        const isCashlessNotSettled = (financialInfo.status || "").toLowerCase() === "cashless" && (parseFloat(financialInfo.receivedamt) || 0) === 0;
+        const isCashless = (financialInfo.status || "").trim().toLowerCase() === "cashless";
+        const isCashlessNotSettled = isCashless && (parseFloat(financialInfo.receivedamt) || 0) === 0;
         setSummary({
           totalBill: financialInfo.totalamt || 0,
           insuranceApproved: isPdc ? (financialInfo.receivedamt || financialInfo.advance_amt || 0) : (financialInfo.receivedamt || 0),
           patientPayable: financialInfo.payableamt || 0,
           totalDue: isCashlessNotSettled ? 0 : (financialInfo.totalduedamt || 0),
+          status: financialInfo.status || "",
+          isCashless: isCashless,
         });
 
         const resHistory = await fetch(
@@ -1289,14 +1294,14 @@ const IpdCollection = () => {
                 </Table>
 
                 {summary.totalDue === 0 && (
-                  Number(summary.insuranceApproved || 0) === 0 ? (
+                  summary.isCashless && (parseFloat(summary.insuranceApproved || 0) === 0) ? (
                     <div
                       className="alert alert-warning mx-3 mt-3 text-center fw-bold"
                       style={{
                         borderRadius: "10px",
-                        border: "2px solid #f57c00",
-                        color: "#e65100",
-                        backgroundColor: "#fff3e0",
+                        border: "2px solid #f59e0b",
+                        color: "#92400e",
+                        backgroundColor: "#fef3c7"
                       }}
                     >
                       <FeatherIcon icon="alert-circle" size="18" className="me-2 align-middle" />
