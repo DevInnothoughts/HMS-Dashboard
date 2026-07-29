@@ -275,6 +275,9 @@ export default function UnattendedEnquiryList({ isTab = false }) {
             const webData = await webRes.json();
             const chatbotData = await chatbotRes.json();
 
+            const isVisited = (item) =>
+                String(item.dynamic_status || item.status || "").toLowerCase() === "visited";
+
             let processedIvr = [];
             if (ivrRes.ok && ivrData.data) {
                 processedIvr = ivrData.data
@@ -282,7 +285,8 @@ export default function UnattendedEnquiryList({ isTab = false }) {
                         (log) =>
                             log.call_status &&
                             log.call_status.toLowerCase() === "missed" &&
-                            (!log.note || log.note.trim() === ""),
+                            (!log.note || log.note.trim() === "") &&
+                            !isVisited(log),
                     )
                     .map((log) => ({
                         ...log,
@@ -305,7 +309,7 @@ export default function UnattendedEnquiryList({ isTab = false }) {
             let processedWeb = [];
             if (webRes.ok && webData.data) {
                 processedWeb = webData.data
-                    .filter((lead) => !lead.note || lead.note.trim() === "")
+                    .filter((lead) => (!lead.note || lead.note.trim() === "") && !isVisited(lead))
                     .map((lead) => ({
                         ...lead,
                         id: `web-${lead.appointment_id}`,
@@ -318,7 +322,7 @@ export default function UnattendedEnquiryList({ isTab = false }) {
             let processedChatbot = [];
             if (chatbotRes.ok && chatbotData.data) {
                 processedChatbot = chatbotData.data
-                    .filter((lead) => !lead.note || lead.note.trim() === "")
+                    .filter((lead) => (!lead.note || lead.note.trim() === "") && !isVisited(lead))
                     .map((lead) => ({
                         ...lead,
                         id: `chatbot-${lead.appointment_id}`,

@@ -191,7 +191,7 @@ export default function AddLabReceipt() {
     }
 
     // Validate billing items
-    const invalidItems = billingItems.some((item) => !item.label || item.amount === "" || parseFloat(item.amount) < 0);
+    const invalidItems = billingItems.some((item) => !item.label || item.amount === "" || parseFloat(String(item.amount || "").replace(/,/g, "")) < 0);
     if (invalidItems) {
       newErrors.billingItems = "Please select consultation type and enter valid amount for all rows";
     }
@@ -294,7 +294,7 @@ export default function AddLabReceipt() {
           icon: "success",
           timer: 2000,
         });
-        navigate("/opd-receipt-list");
+        navigate("/receipt-list");
       } else if (result.dismiss === Swal.DismissReason.cancel) {
         const confirmCancel = await Swal.fire({
           title: "Are you sure?",
@@ -426,7 +426,7 @@ export default function AddLabReceipt() {
           text: "Receipt Generated Successfully",
           confirmButtonColor: "#00bcd4",
         });
-        navigate("/opd-receipt-list", {
+        navigate("/receipt-list", {
           state: { printReceiptId: result.data?.receipt_id },
         });
       } else if (

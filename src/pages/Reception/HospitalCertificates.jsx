@@ -54,8 +54,7 @@ const HospitalCertificates = () => {
     "NABH Certificate",
     "ISO Certificate",
     "Bio Medical Certificate",
-    "Rent Agreement",
-    "Partner Agreement"
+    "Rent Agreement"
   ];
 
   useEffect(() => {

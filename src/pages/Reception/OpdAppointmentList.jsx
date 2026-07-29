@@ -377,6 +377,15 @@ export default function OpdAppointmentList() {
 
       const { subtotal, payable } = calculateTotals();
 
+      if (subtotal > 10000) {
+        Swal.fire({
+          icon: "error",
+          title: "Limit Exceeded",
+          text: "The subtotal exceeds the permissible limit of ₹10,000.",
+        });
+        return;
+      }
+
       const consultationData = billingItems
         .filter((item) => item.label)
         .map((item) => [item.label, parseFloat(String(item.amount || "").replace(/,/g, "")) || 0]);
@@ -425,7 +434,7 @@ export default function OpdAppointmentList() {
       if (result.statusCode === 201 || result.statusCode === 200) {
         Swal.fire("Success", "Receipt Generated Successfully", "success");
         setShowReceiptModal(false);
-        navigate("/opd-receipt-list", {
+        navigate("/receipt-list", {
           state: {
             printReceiptId: result.data?.receipt_id,
             receipt_generated: true,     // ← tells OpdAppointmentList to refresh on back-nav
@@ -539,7 +548,7 @@ export default function OpdAppointmentList() {
           timer: 2000,
         });
         setShowReceiptModal(false);
-        navigate("/opd-receipt-list", { state: { receipt_generated: true, returnTo: "/opd-appointment-list" } });
+        navigate("/receipt-list", { state: { receipt_generated: true, returnTo: "/opd-appointment-list" } });
       } else if (result.dismiss === Swal.DismissReason.cancel) {
         const confirmCancel = await Swal.fire({
           title: "Are you sure?",
@@ -3027,10 +3036,11 @@ export default function OpdAppointmentList() {
             variant="success"
             type="submit"
             form="opd-receipt-form"
-            //disabled={calculateTotals().subtotal > 10000}
+            disabled={calculateTotals().subtotal > 10000}
             style={{
               backgroundColor:
                 calculateTotals().subtotal > 10000 ? "#cccccc" : "#00bcd4",
+              cursor: calculateTotals().subtotal > 10000 ? "not-allowed" : "pointer",
               border: "none",
               fontSize: "12px",
               borderRadius: "10px",

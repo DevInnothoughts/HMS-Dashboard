@@ -33,8 +33,6 @@ const getLocalDateString = (date) => {
 
 const today = new Date();
 const maxDate = getLocalDateString(today);
-const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-const minDate = getLocalDateString(firstDayOfMonth);
 
 const convertToWords = (number) => {
   if (number === 0) return "Zero";
@@ -1066,11 +1064,10 @@ const IpdCollection = () => {
                                 className="input-style"
                                 style={{ width: "110px", fontSize: "12px" }}
                                 value={newPayment.date}
-                                min={minDate}
                                 max={maxDate}
                                 onChange={(e) => {
                                   const val = e.target.value;
-                                  if (val && (val < minDate || val > maxDate)) return;
+                                  if (val && val > maxDate) return;
                                   setNewPayment({
                                     ...newPayment,
                                     date: val,
@@ -1292,17 +1289,32 @@ const IpdCollection = () => {
                 </Table>
 
                 {summary.totalDue === 0 && (
-                  <div
-                    className="alert alert-success mx-3 mt-3 text-center fw-bold"
-                    style={{
-                      borderRadius: "10px",
-                      border: "2px solid #2b9163",
-                    }}
-                  >
-                    <i className="fa fa-check-circle me-2"></i>
-                    This bill is already fully paid. No further payments are
-                    required.
-                  </div>
+                  Number(summary.insuranceApproved || 0) === 0 ? (
+                    <div
+                      className="alert alert-warning mx-3 mt-3 text-center fw-bold"
+                      style={{
+                        borderRadius: "10px",
+                        border: "2px solid #f57c00",
+                        color: "#e65100",
+                        backgroundColor: "#fff3e0",
+                      }}
+                    >
+                      <FeatherIcon icon="alert-circle" size="18" className="me-2 align-middle" />
+                      To add entry to this bill, please first add approved amount.
+                    </div>
+                  ) : (
+                    <div
+                      className="alert alert-success mx-3 mt-3 text-center fw-bold"
+                      style={{
+                        borderRadius: "10px",
+                        border: "2px solid #2b9163",
+                      }}
+                    >
+                      <i className="fa fa-check-circle me-2"></i>
+                      This bill is already fully paid. No further payments are
+                      required.
+                    </div>
+                  )
                 )}
 
                 <div className="mt-4 pt-4 border-top">

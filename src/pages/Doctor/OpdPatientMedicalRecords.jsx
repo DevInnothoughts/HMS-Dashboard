@@ -3051,6 +3051,7 @@ const OpdPatientMedicalRecords = () => {
     { id: "proctoscopy", label: "Proctoscopy", icon: "search" },
     { id: "opd-prescription", label: "Prescription", icon: "edit-3" },
     // { id: "surgery-details", label: "Surgery Details", icon: "scissors" },
+    { id: "discharge-card", label: "Discharge Card", icon: "log-out" },
   ];
 
   const renderPersonalInfo = () => (
@@ -3561,6 +3562,27 @@ const OpdPatientMedicalRecords = () => {
                     validationErrors={validationErrors}
                   />
                 )}
+                {activeTab === "discharge-card" && (
+                  <DischargeCard
+                    dischargeData={dischargeData}
+                    doctors={doctors}
+                    assistanceDoctors={assistanceDoctors}
+                    fistulaCases={fistulaCases}
+                    handleDischargeChange={handleDischargeChange}
+                    handleDischargeInvestigationChange={
+                      handleDischargeInvestigationChange
+                    }
+                    previousDischargesList={previousDischargesList}
+                    selectedDischargeId={selectedDischargeId}
+                    onSelectDischarge={handleSelectDischarge}
+                    onNewDischarge={handleNewDischarge}
+                    onSaveDischarge={handleSaveDischarge}
+                    onPrintDischarge={handlePrintDischarge}
+                    loading={loading}
+                    location={currentLocation}
+                    validationErrors={validationErrors}
+                  />
+                )}
                 {/* {activeTab === "surgery-details" && (
                 <SurgeryDetailsCard
                   surgeryData={surgeryData}
@@ -3586,6 +3608,7 @@ const OpdPatientMedicalRecords = () => {
                   "proctoscopy",
                   "opd-prescription",
                   "surgery-details",
+                  "discharge-card",
                 ].includes(activeTab) && (
                     <div className="text-center py-5 animate__animated animate__fadeIn">
                       <div

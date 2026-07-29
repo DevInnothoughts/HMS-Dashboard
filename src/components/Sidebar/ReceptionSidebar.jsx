@@ -83,13 +83,13 @@ const ReceptionSidebar = ({
                 </Link>
             </li>
 
-            {/* OPD Receipts */}
-            <li className={`menu-item ${activeIndex === "/opd-receipt-list" ? "active" : ""}`}>
-                <Link to="/opd-receipt-list" data-label="OPD Receipts">
+            {/* Receipts */}
+            <li className={`menu-item ${activeIndex === "/receipt-list" ? "active" : ""}`}>
+                <Link to="/receipt-list" data-label="Receipts">
                     <div className="icon-wrap">
                         <FeatherIcon icon="file-text" />
                     </div>
-                    {!isCollapsed && <span>OPD Receipts</span>}
+                    {!isCollapsed && <span>Receipts</span>}
                 </Link>
             </li>
 

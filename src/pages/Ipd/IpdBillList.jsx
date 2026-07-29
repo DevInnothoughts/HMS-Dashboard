@@ -128,7 +128,7 @@ const getDynamicRowsFromInvoice = (invoice) => {
     // Legacy format: Label, Value, Label, Value
     for (let i = 0; i < entries.length; i += 2) {
       const label = entries[i];
-      const value = parseFloat(entries[i + 1]) || 0;
+      const value = parseFloat(String(entries[i + 1] || "").replace(/,/g, "")) || 0;
       if (label) {
         dynamicRows.push({
           label,
@@ -144,7 +144,7 @@ const getDynamicRowsFromInvoice = (invoice) => {
       const parts = entry.split(":");
       if (parts.length >= 2) {
         const label = parts[0].trim();
-        const value = parseFloat(parts[1].trim()) || 0;
+        const value = parseFloat(String(parts[1] || "").trim().replace(/,/g, "")) || 0;
         if (label) {
           dynamicRows.push({
             label,
@@ -166,7 +166,7 @@ const getDynamicRowsFromInvoice = (invoice) => {
   const Sub_Total =
     titleCalculatedTotal > 0
       ? titleCalculatedTotal
-      : parseFloat(invoice.totalamt || invoice.totalAmt || 0);
+      : parseFloat(String(invoice.totalamt || invoice.totalAmt || 0).replace(/,/g, "")) || 0;
 
   return {
     dynamicRows:
@@ -186,9 +186,9 @@ const calculateActivePayableAmt = (
   billType,
   billMethod,
 ) => {
-  const totalAmt = parseFloat(subtotal) || 0;
-  const disc = parseFloat(discount) || 0;
-  const p = parseFloat(pdc) || 0;
+  const totalAmt = parseFloat(String(subtotal || 0).replace(/,/g, "")) || 0;
+  const disc = parseFloat(String(discount || 0).replace(/,/g, "")) || 0;
+  const p = parseFloat(String(pdc || 0).replace(/,/g, "")) || 0;
 
   if ((billType || "").toLowerCase() === "interbranch") {
     return totalAmt.toFixed(0);
@@ -208,9 +208,9 @@ const calculateActivePayableAmt = (
 };
 
 const calculatePayableAmt = (invoice) => {
-  const totalAmt = parseFloat(invoice.totalamt || invoice.total_amt || 0);
-  const discount = parseFloat(invoice.discount || 0);
-  const pdc = parseFloat(invoice.pdc || invoice.receivedamt || invoice.advance_amt || 0);
+  const totalAmt = parseFloat(String(invoice.totalamt || invoice.total_amt || 0).replace(/,/g, "")) || 0;
+  const discount = parseFloat(String(invoice.discount || 0).replace(/,/g, "")) || 0;
+  const pdc = parseFloat(String(invoice.pdc || invoice.receivedamt || invoice.advance_amt || 0).replace(/,/g, "")) || 0;
 
   const billMethod = (
     invoice.bill_method ||

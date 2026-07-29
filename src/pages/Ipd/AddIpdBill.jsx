@@ -517,10 +517,10 @@ const AddIpdBill = () => {
   };
 
   const calculatePayableAmount = (data) => {
-    const subTotal = parseFloat(data.Sub_Total || 0);
-    const discountNonIns = parseFloat(data.discount || 0);
-    const discountCharity = parseFloat(data.discountAmount || 0);
-    const pdc = parseFloat(data.pdc || 0);
+    const subTotal = parseFloat(String(data.Sub_Total || 0).replace(/,/g, "")) || 0;
+    const discountNonIns = parseFloat(String(data.discount || 0).replace(/,/g, "")) || 0;
+    const discountCharity = parseFloat(String(data.discountAmount || 0).replace(/,/g, "")) || 0;
+    const pdc = parseFloat(String(data.pdc || 0).replace(/,/g, "")) || 0;
 
 
 
@@ -668,7 +668,7 @@ const AddIpdBill = () => {
       i === index ? { ...row, [field]: value } : row,
     );
     const newSubTotal = updatedRows.reduce(
-      (total, row) => total + (parseFloat(row.value) || 0),
+      (total, row) => total + (parseFloat(String(row.value || 0).replace(/,/g, "")) || 0),
       0,
     );
 
@@ -693,7 +693,7 @@ const AddIpdBill = () => {
 
     const updatedRows = formData.dynamicRows.filter((_, i) => i !== index);
     const newSubTotal = updatedRows.reduce(
-      (total, row) => total + (parseFloat(row.value) || 0),
+      (total, row) => total + (parseFloat(String(row.value || 0).replace(/,/g, "")) || 0),
       0,
     );
 

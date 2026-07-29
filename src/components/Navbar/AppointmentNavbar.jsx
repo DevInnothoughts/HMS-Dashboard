@@ -55,12 +55,12 @@ export default function AppointmentNavbar() {
             </Link>
             <span className="separator">•</span>
             <Link
-              to="/opd-receipt-list"
-              className={`nav-link ${location.pathname === "/opd-receipt-list" ? "active" : ""
+              to="/receipt-list"
+              className={`nav-link ${location.pathname === "/receipt-list" ? "active" : ""
                 }`}
             >
               <span className="nav-icon">🧾</span>
-              OPD Receipt List
+              Receipt List
             </Link>
             <span className="separator">•</span>
             <Link
