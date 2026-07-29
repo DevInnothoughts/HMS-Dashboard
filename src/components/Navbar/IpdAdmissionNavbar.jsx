@@ -50,7 +50,7 @@ export default function IpdAdmissionNavbar() {
             padding: 10px 12px;
             border-radius: 16px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            margin: 8px 0 22px 3px; 
+            margin: 8px 0 22px 0; 
             border: 1px solid rgba(255, 255, 255, 0.8);
           }
 

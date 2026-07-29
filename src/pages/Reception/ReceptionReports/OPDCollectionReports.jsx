@@ -360,6 +360,14 @@ const OPDCollectionReports = () => {
     return val;
   };
 
+  const formatAmount = (val) => {
+    if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+      return "-";
+    }
+    const parsed = parseFloat(val);
+    return isNaN(parsed) ? val : `₹ ${Math.round(parsed).toLocaleString("en-IN")}`;
+  };
+
   const footerGroup = (
     <ColumnGroup>
       <Row>
@@ -369,23 +377,23 @@ const OPDCollectionReports = () => {
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
-          footer={totals.cash || 0}
+          footer={formatAmount(totals.cash || 0)}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
-          footer={totals.card || 0}
+          footer={formatAmount(totals.card || 0)}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
-          footer={totals.paytm || 0}
+          footer={formatAmount(totals.paytm || 0)}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
-          footer={totals.online || 0}
+          footer={formatAmount(totals.online || 0)}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
-          footer={totals.discount || 0}
+          footer={formatAmount(totals.discount || 0)}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
@@ -605,27 +613,27 @@ const OPDCollectionReports = () => {
                     <Column
                       field="cashamt"
                       header="Cash"
-                      body={(rowData) => formatValue(rowData.cashamt)}
+                      body={(rowData) => formatAmount(rowData.cashamt)}
                     />
                     <Column
                       field="cardamt"
                       header="Card"
-                      body={(rowData) => formatValue(rowData.cardamt)}
+                      body={(rowData) => formatAmount(rowData.cardamt)}
                     />
                     <Column
                       field="paytmamt"
                       header="Paytm"
-                      body={(rowData) => formatValue(rowData.paytmamt)}
+                      body={(rowData) => formatAmount(rowData.paytmamt)}
                     />
                     <Column
                       field="onlineamt"
                       header="Online"
-                      body={(rowData) => formatValue(rowData.onlineamt)}
+                      body={(rowData) => formatAmount(rowData.onlineamt)}
                     />
                     <Column
                       field="discount"
                       header="Discount"
-                      body={(rowData) => formatValue(rowData.discount)}
+                      body={(rowData) => formatAmount(rowData.discount)}
                     />
                     <Column
                       field="utr"

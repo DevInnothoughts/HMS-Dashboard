@@ -95,6 +95,7 @@ const referralSources = [
   { id: "aggregators", label: "Aggregators" },
   { id: "dr_privilege_card", label: "Doctor's Privilege Card" },
   { id: "campaign", label: "Campaign" },
+  { id: "brand_ambassador", label: "Brand Ambassador" },
   { id: "other", label: "Other" },
 ];
 
@@ -131,6 +132,7 @@ export default function AddOpdAppointment() {
     patient_id: "",
   });
   const [errors, setErrors] = useState({});
+  const latestPhoneRef = React.useRef("");
   const newPatientTypes = ["New"];
   const existingPatientTypes = ["Follow", "Postoperative", "MCDPA", "Other"];
 
@@ -176,21 +178,29 @@ export default function AddOpdAppointment() {
           headers: { "Content-Type": "application/json" },
         });
 
+        if (latestPhoneRef.current !== patient_phone) return;
+
         if (!response.ok) {
-          setIsExistingPatient(false);
+          setIsExistingPatient((prev) => {
+            if (prev) {
+              setFormData((prevForm) => ({
+                ...prevForm,
+                patientName: "",
+                patient_id: "",
+                patient_location: "",
+                patient_type: "New",
+                doctor_id: "",
+              }));
+            }
+            return false;
+          });
           setNoPendingAppt(true);
-          setFormData((prev) => ({
-            ...prev,
-            patientName: "",
-            patient_id: "",
-            patient_location: "",
-            patient_type: "New",
-            doctor_id: "",
-          }));
           return;
         }
 
         const data = await response.json();
+        if (latestPhoneRef.current !== patient_phone) return;
+
         if (data.statusCode === 200 && data.data) {
           setIsExistingPatient(true);
 
@@ -201,6 +211,8 @@ export default function AddOpdAppointment() {
               method: "GET",
               headers: { "Content-Type": "application/json" },
             });
+
+            if (latestPhoneRef.current !== patient_phone) return;
 
             const confirmData = await confirmResponse.json();
 
@@ -227,6 +239,8 @@ export default function AddOpdAppointment() {
             console.error("Error in confirmation check API call:", innerError);
           }
 
+          if (latestPhoneRef.current !== patient_phone) return;
+
           if (!hasPendingAppt) {
             Swal.fire({
               icon: "info",
@@ -251,19 +265,35 @@ export default function AddOpdAppointment() {
             doctor_id: data.data.doctor_id || "",
           }));
         } else {
-          setIsExistingPatient(false);
+          setIsExistingPatient((prev) => {
+            if (prev) {
+              setFormData((prevForm) => ({
+                ...prevForm,
+                patientName: "",
+                patient_id: "",
+                patient_type: "New",
+                doctor_id: "",
+              }));
+            }
+            return false;
+          });
           setNoPendingAppt(true);
-          setFormData((prev) => ({
-            ...prev,
-            patientName: "",
-            patient_id: "",
-            patient_type: "New",
-            doctor_id: "",
-          }));
         }
       } catch (error) {
         console.error("Error fetching patient details:", error);
-        setIsExistingPatient(false);
+        if (latestPhoneRef.current !== patient_phone) return;
+        setIsExistingPatient((prev) => {
+          if (prev) {
+            setFormData((prevForm) => ({
+              ...prevForm,
+              patientName: "",
+              patient_id: "",
+              patient_type: "New",
+              doctor_id: "",
+            }));
+          }
+          return false;
+        });
       }
     },
     [currentLocation],
@@ -302,6 +332,7 @@ export default function AddOpdAppointment() {
   };
 
   const handleReset = () => {
+    latestPhoneRef.current = "";
     setFormData({
       treatment: "",
       date: new Date().toISOString().split("T")[0],
@@ -333,6 +364,7 @@ export default function AddOpdAppointment() {
 
   useEffect(() => {
     if (phone && currentLocation) {
+      latestPhoneRef.current = phone;
       fetchPatientDetails(phone);
     }
   }, [phone, currentLocation, fetchPatientDetails]);
@@ -518,8 +550,9 @@ export default function AddOpdAppointment() {
       return;
     }
     if (val.length <= 10) {
+      latestPhoneRef.current = val;
       setFormData((prev) => ({ ...prev, patient_phone: val }));
-      if (val.length === 10 && currentLocation) fetchPatientDetails(val);
+      if (currentLocation) fetchPatientDetails(val);
     }
   };
 

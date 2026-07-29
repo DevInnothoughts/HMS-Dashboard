@@ -10,4 +10,11 @@ export default defineConfig({
       "@src": path.resolve(__dirname, "src"), // Ensure this path is correct
     },
   },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        silenceDeprecations: ["legacy-js-api", "mixed-decls", "color-functions"],
+      },
+    },
+  },
 });

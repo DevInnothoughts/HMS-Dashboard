@@ -22,6 +22,8 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "../../styles/styles.css";
 import { toast } from "react-hot-toast";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
 
@@ -64,8 +66,8 @@ export default function WebEnquiryList({ isTab = false }) {
     // Table state
     const [rows, setRows] = useState(10);
     const [first, setFirst] = useState(0);
-    const [fromDate, setFromDate] = useState(new Date());
-    const [toDate, setToDate] = useState(new Date());
+    const [fromDate, setFromDate] = useState(moment().startOf("day").toDate());
+    const [toDate, setToDate] = useState(moment().endOf("day").toDate());
     const [noPendingAppt, setNoPendingAppt] = useState(true);
 
     const [filters1, setFilters1] = useState({
@@ -241,18 +243,27 @@ export default function WebEnquiryList({ isTab = false }) {
         fetchDropdowns();
     }, [fetchDropdowns]);
 
+    const formatToDDMMYYYY = (date) => {
+        if (!date) return null;
+        return moment(date).format("DD-MM-YYYY");
+    };
+
     // Main Listing Fetch
     const fetchWebLeads = useCallback(async () => {
         if (!currentLocation) return;
         setLoading(true);
         try {
-            const formattedFrom = fromDate
-                ? moment(fromDate).format("DD-MM-YYYY")
-                : "";
-            const formattedTo = toDate ? moment(toDate).format("DD-MM-YYYY") : "";
+            let finalFromDate = formatToDDMMYYYY(fromDate);
+            let finalToDate = formatToDDMMYYYY(toDate);
+
+            if (!finalFromDate || !finalToDate) {
+                const today = moment().format("DD-MM-YYYY");
+                finalFromDate = today;
+                finalToDate = today;
+            }
 
             const res = await fetch(
-                `${BASE_URL}/V1/webleads/listWebleads?location=${currentLocation}&from=${formattedFrom}&to=${formattedTo}`,
+                `${BASE_URL}/V1/webleads/listWebleads?location=${currentLocation}&from=${finalFromDate}&to=${finalToDate}`,
                 { method: "GET", headers: { "Content-Type": "application/json" } },
             );
             const resData = await res.json();
@@ -612,6 +623,69 @@ export default function WebEnquiryList({ isTab = false }) {
         }
     };
 
+    const exportToExcel = () => {
+        let dataToExport = webLeads;
+
+        if (statusFilter) {
+            dataToExport = dataToExport.filter((item) => {
+                const status = item.dynamic_status || "Not Visited";
+                return status === statusFilter;
+            });
+        }
+
+        const globalSearch = filters1?.global?.value;
+        if (globalSearch && globalSearch.trim() !== "") {
+            const searchLower = globalSearch.toLowerCase().trim();
+            dataToExport = dataToExport.filter((item) => {
+                const dateStr = item.date ? moment(item.date).format("DD-MM-YYYY") : "";
+                const timeStr = item.date ? moment(item.date).format("hh:mm A") : "";
+                const name = (item.name || "").toLowerCase();
+                const phone = String(item.phoneno || "").toLowerCase();
+                const email = (item.email_id || "").toLowerCase();
+                const source = (item.utmsource || "Direct Website").toLowerCase();
+                const msg = (item.message || "").toLowerCase();
+                const note = (item.note || "").toLowerCase();
+                return (
+                    dateStr.includes(searchLower) ||
+                    timeStr.toLowerCase().includes(searchLower) ||
+                    name.includes(searchLower) ||
+                    phone.includes(searchLower) ||
+                    email.includes(searchLower) ||
+                    source.includes(searchLower) ||
+                    msg.includes(searchLower) ||
+                    note.includes(searchLower)
+                );
+            });
+        }
+
+        const excelData = dataToExport.map((item) => ({
+            Date: item.date ? moment(item.date).format("DD-MM-YYYY") : "",
+            Time: item.date ? moment(item.date).format("hh:mm A") : "",
+            "Full Name": item.name || "",
+            "Contact Number": item.phoneno || "",
+            Email: item.email_id || "",
+            Source: item.utmsource || "Direct Website",
+            Message: item.message || "",
+            Note: item.note || "",
+            "Enquiry Status": item.dynamic_status || "Not Visited",
+        }));
+
+        const fileType =
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
+        const fileExtension = ".xlsx";
+
+        const ws = XLSX.utils.json_to_sheet(excelData);
+        const wb = { Sheets: { data: ws }, SheetNames: ["data"] };
+        const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+        const data = new Blob([excelBuffer], { type: fileType });
+
+        const formattedFromDate = fromDate ? moment(fromDate).format("DD-MM-YYYY") : "";
+        const formattedToDate = toDate ? moment(toDate).format("DD-MM-YYYY") : "";
+        const fileName = `Web_Enquiry_List_${formattedFromDate}_to_${formattedToDate}${fileExtension}`;
+
+        saveAs(data, fileName);
+    };
+
     // Header Builder (Same styling as Call logs)
     const renderHeader = () => (
         <div
@@ -723,6 +797,29 @@ export default function WebEnquiryList({ isTab = false }) {
                             )}
                         </InputGroup>
                     </Form.Group>
+                    <Button
+                        variant="outline-success"
+                        onClick={exportToExcel}
+                        style={{
+                            backgroundColor: "#28a745",
+                            border: "none",
+                            borderRadius: "6px",
+                            padding: "5px 10px",
+                            fontSize: "12px",
+                            fontWeight: "500",
+                            color: "white",
+                            cursor: "pointer",
+                            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                            height: "26px",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "5px",
+                            whiteSpace: "nowrap",
+                        }}
+                    >
+                        <FeatherIcon icon="download" size={13} />
+                        Download Excel
+                    </Button>
                 </div>
 
                 <div
@@ -749,10 +846,9 @@ export default function WebEnquiryList({ isTab = false }) {
                         </div>
                         <DatePicker
                             selected={fromDate}
-                            onChange={(date) => setFromDate(date)}
+                            onChange={setFromDate}
                             dateFormat="dd-MM-yyyy"
                             placeholderText="Select from date"
-                            portalId="root"
                             customInput={
                                 <Form.Control
                                     style={{
@@ -777,10 +873,9 @@ export default function WebEnquiryList({ isTab = false }) {
                         </div>
                         <DatePicker
                             selected={toDate}
-                            onChange={(date) => setToDate(date)}
+                            onChange={setToDate}
                             dateFormat="dd-MM-yyyy"
                             placeholderText="Select to date"
-                            portalId="root"
                             customInput={
                                 <Form.Control
                                     style={{ padding: "5px 8px", fontSize: "12px" }}
@@ -789,29 +884,12 @@ export default function WebEnquiryList({ isTab = false }) {
                         />
                     </div>
 
-                    <Button
-                        variant="primary"
-                        onClick={fetchWebLeads}
-                        style={{
-                            backgroundColor: "#00bcd4",
-                            border: "none",
-                            borderRadius: "8px",
-                            padding: "6px 12px",
-                            fontSize: "12px",
-                            fontWeight: "500",
-                            color: "white",
-                            marginTop: "16px",
-                        }}
-                    >
-                        <FeatherIcon icon="refresh-ccw" size={12} className="me-1" />
-                        Refresh
-                    </Button>
 
                     <Button
                         variant="secondary"
                         onClick={() => {
-                            setFromDate(moment().subtract(30, "days").toDate());
-                            setToDate(new Date());
+                            setFromDate(null);
+                            setToDate(null);
                             setStatusFilter("");
                             setFilters1({
                                 global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -1004,6 +1082,7 @@ export default function WebEnquiryList({ isTab = false }) {
                                 "name",
                                 "phoneno",
                                 "email_id",
+                                "utmsource",
                                 "message",
                                 "note",
                             ]}
@@ -1072,7 +1151,7 @@ export default function WebEnquiryList({ isTab = false }) {
                                     fontSize: "12px",
                                 }}
                             />
-                            <Column
+                            {/* <Column
                                 field="selected_area"
                                 header="Region"
                                 headerClassName="datatable-header-center"
@@ -1082,7 +1161,7 @@ export default function WebEnquiryList({ isTab = false }) {
                                     padding: "0.75rem",
                                     fontSize: "12px",
                                 }}
-                            />
+                            /> */}
                             <Column
                                 field="utmsource"
                                 header="Source"

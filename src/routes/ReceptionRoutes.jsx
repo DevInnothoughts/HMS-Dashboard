@@ -13,6 +13,7 @@ import AddOpdAppointment from "../pages/Reception/AddOpdAppointment";
 import OpdReceiptList from "../pages/Reception/OpdReceiptList";
 import AddLabReceipt from "../pages/Reception/AddLabReceipt";
 import DailyClosing from "../pages/Reception/DailyClosing";
+import DailyExpense from "../pages/Reception/DailyExpense";
 import HospitalCertificates from "../pages/Reception/HospitalCertificates";
 
 // Reports from ReceptionReports
@@ -31,6 +32,8 @@ import PharmacyCollectionReport from "../pages/Reception/ReceptionReports/Pharma
 import SxConversionReport from "../pages/Reception/ReceptionReports/SxConversionReport.jsx";
 import OPDIPDCollection from "../pages/Reception/ReceptionReports/OPDIPDCollection.jsx";
 import OPDIPDCollGraph from "../pages/Reception/ReceptionReports/OPDIPDCollGraph.jsx";
+import DailyExpenseReport from "../pages/Reception/ReceptionReports/DailyExpenseReport.jsx";
+import LostLeadReport from "../pages/Reception/ReceptionReports/LostLeadReport.jsx";
 
 // Navbar for leads
 import RecpEnquiriesNavBar from "../components/Navbar/RecpEnquiriesNavBar";
@@ -48,6 +51,7 @@ export const ReceptionRoutes = (
     <Route path="/opd-receipt-list" element={<OpdReceiptList />} />
     <Route path="/add-lab-receipt" element={<AddLabReceipt />} />
     <Route path="/daily-closing" element={<DailyClosing />} />
+    <Route path="/daily-expense" element={<DailyExpense />} />
     <Route path="/hospital-certificates" element={<HospitalCertificates />} />
     <Route path="/enquiry-list" element={<EnquiryList />} />
     <Route path="/add-enquiry" element={<AddEnquiry />} />
@@ -67,5 +71,7 @@ export const ReceptionRoutes = (
     <Route path="/reference-report" element={<ReferenceReport />} />
     <Route path="/condition-wise-report" element={<ConditionWiseReport />} />
     <Route path="/cash-deposit-report" element={<CashDepositReport />} />
+    <Route path="/daily-expense-report" element={<DailyExpenseReport />} />
+    <Route path="/lost-lead-report" element={<LostLeadReport />} />
   </>
 );

@@ -27,6 +27,14 @@ const formatValue = (val) => {
   return val;
 };
 
+const formatAmount = (val) => {
+  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+    return "-";
+  }
+  const parsed = parseFloat(val);
+  return isNaN(parsed) ? val : `₹ ${Math.round(parsed).toLocaleString("en-IN")}`;
+};
+
 const OPDReceiptsReport = () => {
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
@@ -124,7 +132,7 @@ const OPDReceiptsReport = () => {
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
-          footer={formatValue(printTotals.amount)}
+          footer={formatAmount(printTotals.amount)}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
       </Row>
@@ -556,7 +564,7 @@ const OPDReceiptsReport = () => {
                     <Column field="chargeCondition" header="Patient Status" body={(rowData) => formatValue(rowData.chargeCondition)} />
                     {/* <Column field="sprayqty" header="Spray Qty" body={(rowData) => formatValue(rowData.sprayqty)} /> */}
                     <Column field="payment_mode" header="Payment Mode" body={(rowData) => formatValue(rowData.payment_mode)} />
-                    <Column field="amount" header="Amount" body={(rowData) => formatValue(Number(rowData.total || 0) - Number(rowData.discountamt || 0))} />
+                    <Column field="amount" header="Amount" body={(rowData) => formatAmount(Number(rowData.total || 0) - Number(rowData.discountamt || 0))} />
                   </DataTable>
 
                   {/* Print-only container displaying all rows */}

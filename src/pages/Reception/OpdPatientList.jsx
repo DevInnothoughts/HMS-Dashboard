@@ -123,6 +123,28 @@ export default function OpdPatientList() {
   const [currentLocation, setCurrentLocation] = useState("default");
   const [isManualEntry, setIsManualEntry] = useState(false);
 
+  const sortedPatients = React.useMemo(() => {
+    return [...patients]
+      .map((p) => ({
+        ...p,
+        search_uid:
+          p.registration_id === 1
+            ? "Registered via Lab/Other Receipt Registered via Lab Other Receipt Registered via Lab Receipt"
+            : p.Uid_no || "",
+      }))
+      .sort((a, b) => {
+        const timeA = a.date ? new Date(a.date).getTime() : 0;
+        const timeB = b.date ? new Date(b.date).getTime() : 0;
+        const validTimeA = isNaN(timeA) ? 0 : timeA;
+        const validTimeB = isNaN(timeB) ? 0 : timeB;
+        if (validTimeB !== validTimeA) {
+          return validTimeB - validTimeA;
+        }
+        return (b.patient_id || 0) - (a.patient_id || 0);
+      });
+  }, [patients]);
+
+
   const isTodayActive =
     fromDate &&
     toDate &&
@@ -438,9 +460,15 @@ export default function OpdPatientList() {
     // Check if any patient in the current list matches the search criteria
     const hasLocalMatches = patients.some((p) => {
       const lowerSearch = searchValue.toLowerCase();
+      const isLabMatch =
+        p.registration_id === 1 &&
+        "registered via lab/other receipt registered via lab other receipt registered via lab receipt".includes(
+          lowerSearch
+        );
       return (
+        isLabMatch ||
         (p.name && p.name.toLowerCase().includes(lowerSearch)) ||
-        (p.phone && p.phone.includes(searchValue)) ||
+        (p.phone && String(p.phone).includes(searchValue)) ||
         (p.Uid_no && p.Uid_no.toLowerCase().includes(lowerSearch))
       );
     });
@@ -657,7 +685,7 @@ export default function OpdPatientList() {
 
     const age = patient.age || calculateAge(formattedBirthDate) || "";
 
-    if (patient.reference_type === "old_ref") {
+    if (patient.reference_type === "old_ref" || patient.reference_type === "brand_ambassador") {
       const parts = (patient.ref || "").split(",");
       setOldPatientDetails({
         patient_ref_no: parts[0] || "",
@@ -820,6 +848,10 @@ export default function OpdPatientList() {
         reference_type = "TVShow";
         ref = referenceDetails.TVShow || formData.ref || "";
         break;
+      case "brand_ambassador":
+        reference_type = "brand_ambassador";
+        ref = `${oldPatientDetails.patient_ref_no || ""},${oldPatientDetails.old_patient_name || ""}`;
+        break;
       case "old_ref":
         reference_type = "old_ref";
         ref = `${oldPatientDetails.patient_ref_no || ""},${oldPatientDetails.old_patient_name || ""}`;
@@ -940,7 +972,15 @@ export default function OpdPatientList() {
         setSelectedPatient(null);
         setFormData({});
 
-        handlePrint(updatedPatientData);
+        const apptPatientType = location.state?.appointment_patient_type;
+        const returnToAppointment = location.state?.returnToAppointment;
+        const isNewPatient = apptPatientType
+          ? (apptPatientType.toUpperCase() === "NEW")
+          : !!returnToAppointment;
+
+        if (isNewPatient) {
+          handlePrint(updatedPatientData);
+        }
 
         if (location.state?.returnToAppointment) {
           navigate("/opd-appointment-list", {
@@ -1174,6 +1214,7 @@ export default function OpdPatientList() {
     } else if (
       [
         "Bangalore",
+        "RRNagar",
         "Electronic City",
         "Indiranagar",
         "HSR",
@@ -1197,7 +1238,7 @@ export default function OpdPatientList() {
       regionalPatientSignature = `<p><b>Patients Signature:<br>(ਮਰੀਜ਼ ਦੇ ਦਸਤਖਤ)</b></p>`;
       regionalWitnessSignature = `<p><b>Witness Signature:<br>(ਗਵਾਹ ਦੇ ਦਸਤਖਤ)</b></p>`;
       regionalTimeDate = `Time & Date:<br>(ਸਮਾਂ ਅਤੇ ਮਿਤੀ)`;
-    } else if (["Surat", "Ahmedabad", "Bopal"].includes(location)) {
+    } else if (["Surat", "Ahmedabad", "Bopal", "Adajan"].includes(location)) {
       regionalConsent = `<p>હું, નીચે સહી કરનાર દર્દી અથવા જવાબદાર સંબંધી ..........................................................................................................<br> આથી હીલિંગ હેન્ડ્સ ક્લિનિકના ડોકટરો, સર્જનો અને તબીબી વ્યક્તિઓને તબીબી તપાસ, તપાસ, તબીબી સારવાર અને આઉટ-પેશન્ટ પ્રક્રિયા કરવા માટે સંમતિ અને અધિકાર આપું છું, જે તબીબી સંભાળ દરમિયાન આઉટ-પેશન્ટ તરીકે યોગ્ય અથવા જરૂરી માનવામાં આવે છે.<br>હું હીલિંગ હેન્ડ્સ ક્લિનિકની નીતિઓને સમજું છું અને સ્વીકારું છું અને તેનું પાલન કરવા સંમત થાઉં છું। એપોઇન્ટમેન્ટ અને ફોલો-અપ્સ અંગે જરૂર પડે તો ટેલિફોન દ્વારા મારો સંપર્ક કરવા માટે હું ક્લિનિકને સંમતિ પણ આપું છું। હું ક્લિનિક અને ડોકટરોને મારી તબીબી સમસ્યાઓ વિશે આપસમાં ચર્ચા કરવાની મંજૂરી આપું છું, એ જાણીને કે ગોપનીયતા જાળવવામાં આવશે।<br>હું, નીચે સહી કરનાર, મારી પરામર્શ/સારવાર દરમિયાન મળેલી કોઈપણ નવી માહિતીનો ભવિષ્યમાં અભ્યાસના હેતુઓ/સંશોધન માટે ઉપયોગ કરવાની પરવાનગી આપું છું।</p>`;
       regionalPatientNameLabel = `<p><b>Patients Name (દર્દીનું નામ):</b></p>`;
       regionalPatientSignature = `<p><b>Patients Signature:<br>(દર્દીની સહી)</b></p>`;
@@ -1354,34 +1395,43 @@ export default function OpdPatientList() {
     printWindow.document.close();
   };
 
-  const actionBodyTemplate = (patient) => (
-    <div className="d-flex align-items-center justify-content-center">
-      <Button
-        variant="primary"
-        onClick={() => handleAddAppointmentClick(patient)}
-        className="appointment-btn btn-primary btn-extra-small btn-icon me-2"
-        title="Add Appointment"
-      >
-        <FeatherIcon icon="plus-square" size="16" />
-      </Button>
+  const actionBodyTemplate = (patient) => {
+    const isLabPatient = patient.registration_id === 1;
+    return (
+      <div className="d-flex align-items-center justify-content-center">
+        <Button
+          variant="primary"
+          onClick={() => handleAddAppointmentClick(patient)}
+          disabled={isLabPatient}
+          className="appointment-btn btn-primary btn-extra-small btn-icon me-2"
+          title={isLabPatient ? "Add appointment disabled for lab patients" : "Add Appointment"}
+          style={isLabPatient ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+        >
+          <FeatherIcon icon="plus-square" size="16" />
+        </Button>
 
-      <Button
-        onClick={() => handleEditPatient(patient)}
-        className="edit-btn btn-primary btn-extra-small btn-icon me-2"
-        title="Edit Patient"
-      >
-        <FeatherIcon icon="edit" size="16" />
-      </Button>
-      <Link
-        onClick={() => handlePrint(patient)}
-        className="print btn btn-primary btn-extra-small btn-icon"
-        to=""
-        title="Print Registration Form"
-      >
-        <FeatherIcon icon="printer" size="16" />
-      </Link>
-    </div>
-  );
+        <Button
+          onClick={() => handleEditPatient(patient)}
+          disabled={isLabPatient}
+          className="edit-btn btn-primary btn-extra-small btn-icon me-2"
+          title={isLabPatient ? "Edit disabled for lab patients" : "Edit Patient"}
+          style={isLabPatient ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+        >
+          <FeatherIcon icon="edit" size="16" />
+        </Button>
+
+        <Button
+          onClick={() => handlePrint(patient)}
+          disabled={isLabPatient}
+          className="print btn-primary btn-extra-small btn-icon"
+          title={isLabPatient ? "Print disabled for lab patients" : "Print Registration Form"}
+          style={isLabPatient ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+        >
+          <FeatherIcon icon="printer" size="16" />
+        </Button>
+      </div>
+    );
+  };
 
   const renderReferenceDetails = () => {
     switch (formData.reference_type) {
@@ -1585,7 +1635,9 @@ export default function OpdPatientList() {
           </div>
         );
 
+      case "brand_ambassador":
       case "old_ref":
+        const currentRefType = formData.reference_type;
         return (
           <div className="control-group">
             <label
@@ -1624,7 +1676,7 @@ export default function OpdPatientList() {
                     }));
                     setFormData((prev) => ({
                       ...prev,
-                      reference_type: "old_ref",
+                      reference_type: currentRefType,
                     }));
                     searchPatientByPhone(value);
                   }
@@ -1677,7 +1729,7 @@ export default function OpdPatientList() {
                         setPatientSearchResults([]);
                         setFormData((prev) => ({
                           ...prev,
-                          reference_type: "old_ref",
+                          reference_type: currentRefType,
                           ref: `${patient.phone},${patient.name}`,
                         }));
                       }}
@@ -1702,7 +1754,7 @@ export default function OpdPatientList() {
                   }));
                   setFormData((prev) => ({
                     ...prev,
-                    reference_type: "old_ref",
+                    reference_type: currentRefType,
                   }));
                 }}
                 style={{
@@ -1744,7 +1796,6 @@ export default function OpdPatientList() {
                 className="checkbox-grid"
                 style={{
                   display: "flex",
-                  margin: 0,
                   padding: 0,
                   flexDirection: "row",
                   margin: "10px",
@@ -1901,7 +1952,6 @@ export default function OpdPatientList() {
                   display: "flex",
                   margin: 0,
                   padding: 0,
-                  fontSize: "17px",
                   gap: "20px",
                   whiteSpace: "nowrap",
                   fontSize: "12px",
@@ -2493,13 +2543,12 @@ export default function OpdPatientList() {
                   display: "flex",
                   padding: 5,
                   marginBottom: "5px",
-                  fontSize: "10px",
                   flexWrap: "wrap",
                   gap: "25px",
                   fontSize: "12px",
                 }}
               >
-                {["Mediend", "Hexa", "Practo", "Medibuddy", "Mykare"].map(
+                {["Mediend", "Hexa", "Practo", "Medibuddy", "Mykare", "Signaasat"].map(
                   (aggregator) => (
                     <li
                       key={aggregator}
@@ -2787,31 +2836,6 @@ export default function OpdPatientList() {
             />
           </div>
 
-          <Button
-            variant="primary"
-            onClick={() => fetchPatientsData()}
-            style={{
-              backgroundColor: "#00bcd4",
-              border: "none",
-              borderRadius: "8px",
-              padding: "6px 7px",
-              fontSize: "12px",
-              fontWeight: "500",
-              color: "white",
-              cursor: "pointer",
-              transition: "all 0.3s ease",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              marginTop: "15px",
-              ":hover": {
-                backgroundColor: "#00acc1",
-                transform: "translateY(-1px)",
-                boxShadow: "0 4px 8px rgba(0,0,0,0.15)",
-              },
-            }}
-          >
-            <FeatherIcon icon="refresh-ccw" size={12} className="me-1" />
-            Refresh
-          </Button>
           <Button
             variant="secondary"
             onClick={() => {
@@ -3400,7 +3424,7 @@ export default function OpdPatientList() {
                     />
                   </Form.Group>
                 </Col>
-                <Col md={2} className="mb-3">
+                <Col md={3} className="mb-3">
                   <Form.Group>
                     <Form.Label
                       className="small fw-bold mb-3"
@@ -3451,7 +3475,7 @@ export default function OpdPatientList() {
                     </Form.Select>
                   </Form.Group>
                 </Col>
-                <Col md={4} className="mb-3">
+                <Col md={3} className="mb-3">
                   <Form.Group>
                     <Form.Label
                       className="small fw-bold mb-3"
@@ -4059,6 +4083,7 @@ export default function OpdPatientList() {
                       <option value="aggregators">Aggregators</option>
                       <option value="dr_privilege_card">Doctor's Privilege Card</option>
                       <option value="campaign">Campaign</option>
+                      <option value="brand_ambassador">Brand Ambassador</option>
                       <option value="other">Other</option>
                     </Form.Select>
                   </div>
@@ -4159,7 +4184,7 @@ export default function OpdPatientList() {
                     </div>
                   ) : (
                     <DataTable
-                      value={patients}
+                      value={sortedPatients}
                       paginator
                       rows={rows}
                       first={first}
@@ -4169,7 +4194,7 @@ export default function OpdPatientList() {
                       }}
                       filters={filters1}
                       header={header}
-                      globalFilterFields={["Uid_no", "name", "phone"]}
+                      globalFilterFields={["search_uid", "name", "phone"]}
                       paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
                       currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
                       responsiveLayout="scroll"
@@ -4198,14 +4223,36 @@ export default function OpdPatientList() {
                           border: "1px solid #90caf9",
                           textAlign: "center",
                           padding: "0.75rem",
-                          width: "100px",
+                          width: "90px",
                         }}
                       />
 
                       <Column
                         field="Uid_no"
                         header="UID No"
-                        body={(rowData) => <span className="selectable-text">{rowData.Uid_no || "-"}</span>}
+                        body={(rowData) => {
+                          if (rowData.registration_id === 1) {
+                            return (
+                              <span
+                                className="badge"
+                                style={{
+                                  fontSize: '11px',
+                                  backgroundColor: '#fff3e0',
+                                  color: '#e65100',
+                                  padding: '4px 8px',
+                                  borderRadius: '4px',
+                                  border: '1px solid #ffe0b2',
+                                  fontWeight: '650',
+                                  whiteSpace: 'normal',
+                                  display: 'inline-block'
+                                }}
+                              >
+                                Other/Lab Receipt Entry
+                              </span>
+                            );
+                          }
+                          return <span className="selectable-text">{rowData.Uid_no || "-"}</span>;
+                        }}
                         headerClassName="datatable-header-center"
                         style={{
                           border: "1px solid #90caf9",

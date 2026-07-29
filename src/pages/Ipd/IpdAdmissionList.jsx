@@ -66,8 +66,24 @@ export default function IpdAdmissionList() {
   };
 
   const [showRescheduleModal, setShowRescheduleModal] = useState(false);
-  const [rescheduleDate, setRescheduleDate] = useState(null);
+  const [rescheduleDate, setRescheduleDate] = useState("");
+  const [rescheduleTime, setRescheduleTime] = useState("");
   const [reschedulePatient, setReschedulePatient] = useState(null);
+
+  const generateTimeOptions = () => {
+    const times = [];
+    for (let hour = 0; hour < 24; hour++) {
+      for (let min = 0; min < 60; min += 15) {
+        const h = hour.toString().padStart(2, "0");
+        const m = min.toString().padStart(2, "0");
+        times.push(`${h}:${m}`);
+      }
+    }
+    return times;
+  };
+
+  const timeOptions = generateTimeOptions();
+  const todayDateString = formatToApiDate(new Date());
 
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
@@ -263,10 +279,23 @@ export default function IpdAdmissionList() {
 
   const handleRescheduleClick = (patient) => {
     setReschedulePatient(patient);
-    // Initialize with current date if available, otherwise null
-    setRescheduleDate(
-      patient.surgeryDate !== "Not Scheduled" ? patient.surgeryDate : null,
-    );
+    let initDate = "";
+    let initTime = "";
+    if (patient.surgeryDate && patient.surgeryDate !== "Not Scheduled") {
+      const parsed = moment(patient.surgeryDate, [
+        "DD-MM-YYYY hh:mm A",
+        "DD-MM-YYYY HH:mm",
+        "YYYY-MM-DD HH:mm",
+        "YYYY-MM-DD hh:mm A",
+        "YYYY-MM-DDTHH:mm:ss.SSSZ",
+      ]);
+      if (parsed.isValid()) {
+        initDate = parsed.format("YYYY-MM-DD");
+        initTime = parsed.format("HH:mm");
+      }
+    }
+    setRescheduleDate(initDate);
+    setRescheduleTime(initTime);
     setShowRescheduleModal(true);
   };
 
@@ -277,7 +306,27 @@ export default function IpdAdmissionList() {
       return /\d{2}-\d{2}-\d{4}\s\d{2}:\d{2}/.test(val);
     };
 
-    if (!rescheduleDate || !hasTime(rescheduleDate)) {
+    const convertTo12Hour = (time24) => {
+      if (!time24) return "";
+      if (time24.includes("AM") || time24.includes("PM")) return time24;
+      let [hours, minutes] = time24.split(":");
+      let period = "AM";
+      hours = parseInt(hours);
+      if (hours === 0) {
+        hours = 12;
+      } else if (hours === 12) {
+        period = "PM";
+      } else if (hours > 12) {
+        hours -= 12;
+        period = "PM";
+      }
+      return `${hours.toString().padStart(2, "0")}:${minutes} ${period}`;
+    };
+
+    const formattedRescheduleTime = convertTo12Hour(rescheduleTime);
+    const combinedRescheduleDate = rescheduleDate && formattedRescheduleTime ? `${moment(rescheduleDate).format("DD-MM-YYYY")} ${formattedRescheduleTime}` : "";
+
+    if (!combinedRescheduleDate || !hasTime(combinedRescheduleDate)) {
       Swal.fire("Required", "Please select a valid New Surgery Date & Time (both Date and Time are required)", "warning");
       return;
     }
@@ -295,7 +344,7 @@ export default function IpdAdmissionList() {
           body: JSON.stringify({
             location: currentLocation,
             uidNo: reschedulePatient.uhid,
-            rescheduleDate: rescheduleDate,
+            rescheduleDate: combinedRescheduleDate,
           }),
         },
       );
@@ -365,7 +414,7 @@ export default function IpdAdmissionList() {
   const handleConfirm = (contact, uhid) => {
     Swal.fire({
       title: "Confirm Admission?",
-      text: "This will generate an official Admission Number.",
+      text: "This will confirm the patient's admission.",
       icon: "question",
       showCancelButton: true,
       confirmButtonText: "Confirm",
@@ -392,10 +441,9 @@ export default function IpdAdmissionList() {
           );
 
           if (response.ok) {
-            const data = await response.json();
             Swal.fire(
               "Confirmed!",
-              `Admission No: ${data.data.admissionNo} generated.`,
+              "Admission confirmed successfully. You can now add an IPD bill and set the Admission Number.",
               "success",
             );
             fetchVerifiedPatients();
@@ -755,26 +803,6 @@ export default function IpdAdmissionList() {
           </div>
 
           <Button
-            variant="primary"
-            onClick={() => fetchVerifiedPatients()}
-            style={{
-              backgroundColor: "#00bcd4",
-              border: "none",
-              borderRadius: "8px",
-              padding: "6px 7px",
-              fontSize: "12px",
-              fontWeight: "500",
-              color: "white",
-              cursor: "pointer",
-              transition: "all 0.3s ease",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              marginTop: "15px",
-            }}
-          >
-            <FeatherIcon icon="refresh-ccw" size={12} className="me-1" />
-            Refresh
-          </Button>
-          <Button
             variant="secondary"
             onClick={() => {
               setFromDate(null);
@@ -868,7 +896,7 @@ export default function IpdAdmissionList() {
         ) : (
           <>
             <Button
-              variant="info"
+              variant="outline-primary"
               className="btn-info btn-extra-small btn-icon me-1"
               title="View Documents"
               onClick={() => handleViewDocumentsClick(patient)}
@@ -879,6 +907,21 @@ export default function IpdAdmissionList() {
               }}
             >
               <FeatherIcon icon="file-text" size={16} />
+            </Button>
+            <Button
+              variant="outline-success"
+              className="btn-success btn-extra-small btn-icon me-1"
+              title="Add IPD Bill"
+              onClick={() => navigate("/add-ipd-bill", { state: { patient, fromAdmissionList: true } })}
+              style={{
+                borderRadius: "6px",
+                padding: "5px 8px",
+                color: "white",
+                backgroundColor: "#28a745",
+                borderColor: "#28a745",
+              }}
+            >
+              <FeatherIcon icon="file-plus" size={16} />
             </Button>
           </>
         )}
@@ -990,7 +1033,20 @@ export default function IpdAdmissionList() {
                         field="admissionNo"
                         header="Admission No"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => <span className="selectable-text">{rowData.admissionNo || "-"}</span>}
+                        body={(rowData) => {
+                          const isPending = !rowData.admissionNo || rowData.admissionNo === "PENDING";
+                          return isPending ? (
+                            <span
+                              className="selectable-text text-danger fw-bold"
+                              title="Confirm admission and create an IPD bill. The assigned admission number will reflect here."
+                              style={{ cursor: "help" }}
+                            >
+                              Pending
+                            </span>
+                          ) : (
+                            <span className="selectable-text">{rowData.admissionNo}</span>
+                          );
+                        }}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -1041,7 +1097,7 @@ export default function IpdAdmissionList() {
 
                       <Column
                         field="roomType"
-                        header="Room Type"
+                        header="Bed Category"
                         headerClassName="datatable-header-center"
                         body={(rowData) => <span className="selectable-text">{rowData.roomType || "-"}</span>}
                         style={{
@@ -1086,7 +1142,7 @@ export default function IpdAdmissionList() {
                           border: "1px solid #90caf9",
                           textAlign: "center",
                           padding: "0.75rem",
-                          width: "110px",
+                          width: "130px",
                         }}
                       />
                     </DataTable>
@@ -1116,19 +1172,68 @@ export default function IpdAdmissionList() {
         </Modal.Header>
         <Form onSubmit={handleRescheduleSubmit}>
           <Modal.Body>
-            <Form.Group>
-              <MuiDateTimePicker
-                label="New Surgery Date & Time"
-                value={rescheduleDate}
-                onChange={(e) => setRescheduleDate(e.target.value)}
-                required={true}
-                type="datetime"
-                ampm={false}
-                minDate={dayjs().startOf("day")}
-                minutesStep={15}
-                labelStyle={{ color: "#1a5b61ff", fontSize: "13px" }}
-              />
-            </Form.Group>
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label style={{ color: "#1a5b61ff", fontSize: "13px", fontWeight: "600" }}>
+                    New Surgery Date <span className="text-danger">*</span>
+                  </Form.Label>
+                  <Form.Control
+                    required
+                    type="date"
+                    style={{
+                      border: "2px solid rgb(77, 208, 225)",
+                      borderRadius: "10px",
+                      fontSize: "12px",
+                      padding: "6px 10px",
+                    }}
+                    name="reschedule_date"
+                    min={todayDateString}
+                    value={rescheduleDate}
+                    onChange={(e) => setRescheduleDate(e.target.value)}
+                    onKeyDown={(e) => e.preventDefault()}
+                    onPaste={(e) => e.preventDefault()}
+                    onWheel={(e) => e.target.blur()}
+                  />
+                </Form.Group>
+              </Col>
+
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label style={{ color: "#1a5b61ff", fontSize: "13px", fontWeight: "600" }}>
+                    New Surgery Time <span className="text-danger">*</span>
+                  </Form.Label>
+                  <Form.Select
+                    required
+                    style={{
+                      border: "2px solid rgb(77, 208, 225)",
+                      borderRadius: "10px",
+                      fontSize: "12px",
+                      padding: "6px 10px",
+                      height: "35px",
+                    }}
+                    value={rescheduleTime}
+                    name="reschedule_time"
+                    onChange={(e) => setRescheduleTime(e.target.value)}
+                  >
+                    <option value="">Select Time</option>
+                    {timeOptions.map((time) => {
+                      const [hour, minute] = time.split(":");
+                      const h = parseInt(hour);
+                      const ampm = h >= 12 ? "PM" : "AM";
+                      const displayHour = h % 12 || 12;
+                      const displayTime = `${displayHour}:${minute} ${ampm}`;
+
+                      return (
+                        <option key={time} value={time}>
+                          {displayTime}
+                        </option>
+                      );
+                    })}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+            </Row>
           </Modal.Body>
           <Modal.Footer>
             <Button

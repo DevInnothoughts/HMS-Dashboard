@@ -37,6 +37,7 @@ export default function DoctorCallingCalendar() {
   const [fromDate, setFromDate] = useState(moment().format("YYYY-MM-DD"));
   const [toDate, setToDate] = useState(moment().format("YYYY-MM-DD"));
   const [records, setRecords] = useState([]);
+  const [noNotesRecords, setNoNotesRecords] = useState([]);
   const [mcdpaData, setMcdpaData] = useState({});
   const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -137,8 +138,10 @@ export default function DoctorCallingCalendar() {
       const resData = await response.json();
       if (resData.statusCode === 200 && resData.data) {
         setRecords(resData.data.records || []);
+        setNoNotesRecords(resData.data.noNotesRecords || []);
       } else {
         setRecords([]);
+        setNoNotesRecords([]);
       }
     } catch (error) {
       console.error("Error fetching advised data:", error);
@@ -147,6 +150,7 @@ export default function DoctorCallingCalendar() {
         title: "Error fetching records",
       });
       setRecords([]);
+      setNoNotesRecords([]);
     } finally {
       setLoading(false);
     }
@@ -173,6 +177,7 @@ export default function DoctorCallingCalendar() {
   const handleGoBack = () => {
     setSelectedView("dashboard");
     setRecords([]);
+    setNoNotesRecords([]);
     setMcdpaData({});
   };
 
@@ -309,6 +314,186 @@ export default function DoctorCallingCalendar() {
   const displayedRecords = selectedType === "MCDPA"
     ? (selectedDays === 0 ? (mcdpaData.callback || []) : (mcdpaData[selectedDays] || []))
     : records;
+
+  const renderResultsHeader = () => (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        borderBottom: "1.5px solid #d4e8e3",
+        paddingBottom: "10px",
+        marginBottom: "5px",
+        paddingLeft: "15px",
+        paddingRight: "15px",
+      }}
+    >
+      <div style={{ width: "25%", color: "#0f7b63", fontSize: "15px", fontWeight: "700", letterSpacing: "1.2px", textTransform: "uppercase" }}>Patient Details</div>
+      <div style={{ width: "35%", color: "#0f7b63", fontSize: "15px", fontWeight: "700", letterSpacing: "1.2px", textTransform: "uppercase" }}>Diagnosis</div>
+      <div style={{ width: "30%", color: "#0f7b63", fontSize: "15px", fontWeight: "700", letterSpacing: "1.2px", textTransform: "uppercase" }}>Action Taken</div>
+      <div style={{ width: "10%", color: "#0f7b63", fontSize: "15px", fontWeight: "700", letterSpacing: "1.2px", textTransform: "uppercase", textAlign: "right" }}>Actions</div>
+    </div>
+  );
+
+  const renderRecordCard = (row) => {
+    const recordId = selectedType === "Dischargecard"
+      ? row.discharge_id
+      : selectedType === "Enquiry"
+        ? row.id
+        : row.diag_id;
+
+    let parsedNotes = [];
+    if (row.calling_notes) {
+      let parsed = row.calling_notes;
+      if (typeof parsed === "string") {
+        if (parsed === "{}" || parsed === "[]") {
+          parsed = [];
+        } else {
+          try {
+            parsed = JSON.parse(parsed);
+          } catch (e) { }
+        }
+      }
+
+      if (Array.isArray(parsed)) {
+        parsedNotes = parsed;
+      } else if (typeof parsed === "object" && parsed !== null && Object.keys(parsed).length > 0) {
+        parsedNotes = [parsed];
+      } else if (typeof parsed === "string" && parsed.trim() !== "") {
+        parsedNotes = [{ note: parsed }];
+      }
+
+      let flattened = [];
+      parsedNotes.forEach((item) => {
+        if (item && Array.isArray(item.note)) {
+          flattened.push(...item.note);
+        } else if (item && typeof item.note === "string") {
+          try {
+            const inner = JSON.parse(item.note);
+            if (Array.isArray(inner)) {
+              flattened.push(...inner);
+            } else {
+              flattened.push(item);
+            }
+          } catch (e) {
+            flattened.push(item);
+          }
+        } else if (item && typeof item === "string") {
+          flattened.push({ note: item });
+        } else if (item) {
+          flattened.push(item);
+        }
+      });
+      parsedNotes = flattened;
+    }
+
+    return (
+      <Card
+        key={recordId}
+        style={{
+          borderRadius: "16px",
+          border: "1.5px solid #d4e8e3",
+          boxShadow: "0 2px 8px rgba(15,123,99,0.08)",
+          marginBottom: "16px",
+        }}
+      >
+        <Card.Body className="p-4">
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start" }}>
+            {/* Patient Details */}
+            <div style={{ width: "25%", padding: "5px" }}>
+              {row.was_sunday === 1 && (
+                <div
+                  style={{
+                    fontSize: "10px",
+                    color: "#b26a00",
+                    backgroundColor: "#fff8e1",
+                    padding: "2px 6px",
+                    borderRadius: "6px",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    marginBottom: "6px",
+                    fontWeight: "600",
+                    border: "1px solid #ffe082",
+                    textTransform: "none"
+                  }}
+                >
+                  <span>⚠️ Scheduled Sunday (Moved to Saturday)</span>
+                </div>
+              )}
+              <p style={{ margin: "0 0 4px 0", fontSize: "15px", fontWeight: "700", color: "#1a2b26", textTransform: "uppercase" }}>
+                {row.name || "Unknown Patient"}
+                <br />
+                <span style={{ fontSize: "13px", color: "#4f6961ff" }}>{row.phone || "-"}</span>
+                {row.doctor_name && (
+                  <>
+                    <br />
+                    <span style={{ fontSize: "12px", color: "#0f7b63", fontWeight: "600" }}>{row.doctor_name}</span>
+                  </>
+                )}
+              </p>
+            </div>
+
+            {/* Diagnosis */}
+            <div style={{ width: "35%", paddingRight: "12px", fontSize: "14px", fontWeight: "600", color: "#1a2b26", textTransform: "uppercase" }}>
+              {row.diagnosis || "-"}
+            </div>
+
+            {/* Action Taken */}
+            <div style={{ width: "30%", paddingRight: "12px" }}>
+              {parsedNotes.length === 0 ? (
+                <span style={{ color: "#6b8f85", fontSize: "13px" }}>No calling notes added yet.</span>
+              ) : (
+                parsedNotes.map((note, index) => {
+                  const formattedNoteDate = note.date
+                    ? moment(note.date).format("YYYY-MM-DD")
+                    : "";
+                  return (
+                    <div key={index} style={{ marginBottom: "8px", paddingBottom: "8px", borderBottom: index < parsedNotes.length - 1 ? "1px dashed #d4e8e3" : "none" }}>
+                      <div style={{ fontSize: "13px", color: "#1a2b26", lineHeight: "1.4" }}>
+                        <span style={{ fontWeight: "700", color: "#0f7b63" }}>{index + 1}.</span>{" "}
+                        {formattedNoteDate && (
+                          <>
+                            <span style={{ fontWeight: "600", color: "#486f64ff" }}>{formattedNoteDate}</span>
+                            <span style={{ margin: "0 4px", color: "#6f988eff" }}>|</span>
+                          </>
+                        )}
+                        <span style={{ fontWeight: "600" }}>
+                          {typeof note === "string"
+                            ? note
+                            : typeof note.note === "object"
+                              ? JSON.stringify(note.note)
+                              : note.note || ""}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Actions */}
+            <div style={{ width: "10%", display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+              <Button
+                onClick={() => handleOpenNoteModal(recordId, selectedType)}
+                style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "36px", height: "36px", backgroundColor: "#0f7b63", border: "none", borderRadius: "8px", color: "white", padding: 0, boxShadow: "0 2px 6px rgba(15,123,99,0.15)" }}
+                title="Add Note"
+              >
+                <FeatherIcon icon="edit-3" size={14} stroke="white" style={{ color: "white", stroke: "white" }} />
+              </Button>
+              <Button
+                onClick={() => handleOpenCallbackModal(recordId, selectedType)}
+                style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "36px", height: "36px", backgroundColor: "#0f7b63", border: "none", borderRadius: "8px", color: "white", padding: 0, boxShadow: "0 2px 6px rgba(15,123,99,0.15)" }}
+                title="Add Callback Date"
+              >
+                <FeatherIcon icon="calendar" size={14} stroke="white" style={{ color: "white", stroke: "white" }} />
+              </Button>
+            </div>
+          </div>
+        </Card.Body>
+      </Card>
+    );
+  };
+
 
   return (
     <>
@@ -1164,6 +1349,80 @@ export default function DoctorCallingCalendar() {
                       Fetching records...
                     </p>
                   </div>
+                ) : selectedDays === 0 ? (
+                  <div>
+                    {/* Section 1: Today's Call Back Patients */}
+                    <div style={{ marginBottom: "40px" }}>
+                      <h4
+                        style={{
+                          fontWeight: "700",
+                          fontSize: "16px",
+                          color: "#0f7b63",
+                          marginBottom: "15px",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.5px",
+                        }}
+                      >
+                        Today's Call Back Patients ({displayedRecords.length})
+                      </h4>
+                      {displayedRecords.length === 0 ? (
+                        <div
+                          style={{
+                            backgroundColor: "white",
+                            borderRadius: "16px",
+                            padding: "30px 24px",
+                            textAlign: "center",
+                            border: "1.5px dashed #d4e8e3",
+                            color: "#6b8f85",
+                          }}
+                        >
+                          No callback scheduled for today
+                        </div>
+                      ) : (
+                        <div>
+                          {renderResultsHeader()}
+                          {displayedRecords.map((row) => renderRecordCard(row))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Section 2: Pending Outreach List */}
+                    {selectedType !== "MCDPA" && (
+                      <div style={{ marginTop: "40px" }}>
+                        <h4
+                          style={{
+                            fontWeight: "700",
+                            fontSize: "16px",
+                            color: "#0f7b63",
+                            marginBottom: "15px",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.5px",
+                          }}
+                        >
+                          Pending Outreach List ({noNotesRecords.length})
+                        </h4>
+                        {noNotesRecords.length === 0 ? (
+                          <div
+                            style={{
+                              backgroundColor: "white",
+                              borderRadius: "16px",
+                              padding: "30px 24px",
+                              textAlign: "center",
+                              border: "1.5px dashed #d4e8e3",
+                              color: "#6b8f85",
+                            }}
+                          >
+                            No patients pending outreach since 1st July 2026
+                          </div>
+                        ) : (
+                          <div>
+                            {renderResultsHeader()}
+                            {noNotesRecords.map((row) => renderRecordCard(row))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 ) : displayedRecords.length === 0 ? (
                   <div
                     style={{
@@ -1187,349 +1446,8 @@ export default function DoctorCallingCalendar() {
                   </div>
                 ) : (
                   <div>
-                    {/* Result Title Header */}
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        borderBottom: "1.5px solid #d4e8e3",
-                        paddingBottom: "10px",
-                        marginBottom: "5px",
-                        paddingLeft: "15px",
-                        paddingRight: "15px",
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: "25%",
-                          color: "#0f7b63",
-                          fontSize: "15px",
-                          fontWeight: "700",
-                          letterSpacing: "1.2px",
-                          textTransform: "uppercase",
-                        }}
-                      >
-                        Patient Details
-                      </div>
-                      <div
-                        style={{
-                          width: "35%",
-                          color: "#0f7b63",
-                          fontSize: "15px",
-                          fontWeight: "700",
-                          letterSpacing: "1.2px",
-                          textTransform: "uppercase",
-                        }}
-                      >
-                        Diagnosis
-                      </div>
-                      <div
-                        style={{
-                          width: "30%",
-                          color: "#0f7b63",
-                          fontSize: "15px",
-                          fontWeight: "700",
-                          letterSpacing: "1.2px",
-                          textTransform: "uppercase",
-                        }}
-                      >
-                        Action Taken
-                      </div>
-                      <div
-                        style={{
-                          width: "10%",
-                          color: "#0f7b63",
-                          fontSize: "15px",
-                          fontWeight: "700",
-                          letterSpacing: "1.2px",
-                          textTransform: "uppercase",
-                          textAlign: "right",
-                        }}
-                      >
-                        Actions
-                      </div>
-                    </div>
-
-                    {/* Grid Lists */}
-                    {displayedRecords.map((row) => {
-                      const recordId =
-                        selectedType === "Dischargecard"
-                          ? row.discharge_id
-                          : selectedType === "Enquiry"
-                            ? row.id
-                            : row.diag_id;
-                      let parsedNotes = [];
-                      if (row.calling_notes) {
-                        let parsed = row.calling_notes;
-                        if (typeof parsed === "string") {
-                          if (parsed === "{}" || parsed === "[]") {
-                            parsed = [];
-                          } else {
-                            try {
-                              parsed = JSON.parse(parsed);
-                            } catch (e) { }
-                          }
-                        }
-
-                        if (Array.isArray(parsed)) {
-                          parsedNotes = parsed;
-                        } else if (
-                          typeof parsed === "object" &&
-                          parsed !== null &&
-                          Object.keys(parsed).length > 0
-                        ) {
-                          parsedNotes = [parsed];
-                        } else if (
-                          typeof parsed === "string" &&
-                          parsed.trim() !== ""
-                        ) {
-                          parsedNotes = [{ note: parsed }];
-                        }
-
-                        // Flatten any nested arrays from previous bad saves
-                        let flattened = [];
-                        parsedNotes.forEach((item) => {
-                          if (item && Array.isArray(item.note)) {
-                            flattened.push(...item.note);
-                          } else if (item && typeof item.note === "string") {
-                            try {
-                              const inner = JSON.parse(item.note);
-                              if (Array.isArray(inner)) {
-                                flattened.push(...inner);
-                              } else {
-                                flattened.push(item);
-                              }
-                            } catch (e) {
-                              flattened.push(item);
-                            }
-                          } else if (item && typeof item === "string") {
-                            flattened.push({ note: item });
-                          } else if (item) {
-                            flattened.push(item);
-                          }
-                        });
-                        parsedNotes = flattened;
-                      }
-
-                      return (
-                        <Card
-                          key={recordId}
-                          style={{
-                            borderRadius: "16px",
-                            border: "1.5px solid #d4e8e3",
-                            boxShadow: "0 2px 8px rgba(15,123,99,0.08)",
-                            marginBottom: "16px",
-                          }}
-                        >
-                          <Card.Body className="p-4">
-                            <div
-                              style={{
-                                display: "flex",
-                                flexWrap: "wrap",
-                                alignItems: "flex-start",
-                              }}
-                            >
-                              {/* Patient Details */}
-                              <div style={{ width: "25%", padding: "5px" }}>
-                                <p
-                                  style={{
-                                    margin: "0 0 4px 0",
-                                    fontSize: "15px",
-                                    fontWeight: "700",
-                                    color: "#1a2b26",
-                                    textTransform: "uppercase",
-                                  }}
-                                >
-                                  {row.name || "Unknown Patient"}
-                                  <br />
-                                  <span
-                                    style={{
-                                      fontSize: "13px",
-                                      color: "#4f6961ff",
-                                    }}
-                                  >
-                                    {row.phone || "-"}
-                                  </span>
-                                  {row.doctor_name && (
-                                    <>
-                                      <br />
-                                      <span
-                                        style={{
-                                          fontSize: "12px",
-                                          color: "#0f7b63",
-                                          fontWeight: "600",
-                                        }}
-                                      >
-                                        {row.doctor_name}
-                                      </span>
-                                    </>
-                                  )}
-                                </p>
-                              </div>
-
-                              {/* Diagnosis */}
-                              <div
-                                style={{
-                                  width: "35%",
-                                  paddingRight: "12px",
-                                  fontSize: "14px",
-                                  fontWeight: "600",
-                                  color: "#1a2b26",
-                                  textTransform: "uppercase",
-                                }}
-                              >
-                                {row.diagnosis || "-"}
-                              </div>
-
-                              {/* Action Taken (Calling Notes) */}
-                              <div
-                                style={{ width: "30%", paddingRight: "12px" }}
-                              >
-                                {parsedNotes.length === 0 ? (
-                                  <span
-                                    style={{
-                                      color: "#6b8f85",
-                                      fontSize: "13px",
-                                    }}
-                                  >
-                                    No calling notes added yet.
-                                  </span>
-                                ) : (
-                                  parsedNotes.map((note, index) => {
-                                    const formattedNoteDate = note.date
-                                      ? moment(note.date).format("YYYY-MM-DD")
-                                      : "";
-                                    return (
-                                      <div
-                                        key={index}
-                                        style={{
-                                          marginBottom: "8px",
-                                          paddingBottom: "8px",
-                                          borderBottom:
-                                            index < parsedNotes.length - 1
-                                              ? "1px dashed #d4e8e3"
-                                              : "none",
-                                        }}
-                                      >
-                                        <div
-                                          style={{
-                                            fontSize: "13px",
-                                            color: "#1a2b26",
-                                            lineHeight: "1.4",
-                                          }}
-                                        >
-                                          <span
-                                            style={{
-                                              fontWeight: "700",
-                                              color: "#0f7b63",
-                                            }}
-                                          >
-                                            {index + 1}.
-                                          </span>{" "}
-                                          {formattedNoteDate && (
-                                            <>
-                                              <span
-                                                style={{
-                                                  fontWeight: "600",
-                                                  color: "#486f64ff",
-                                                }}
-                                              >
-                                                {formattedNoteDate}
-                                              </span>
-                                              <span
-                                                style={{
-                                                  margin: "0 4px",
-                                                  color: "#6f988eff",
-                                                }}
-                                              >
-                                                |
-                                              </span>
-                                            </>
-                                          )}
-                                          <span style={{ fontWeight: "600" }}>
-                                            {typeof note === "string"
-                                              ? note
-                                              : typeof note.note === "object"
-                                                ? JSON.stringify(note.note)
-                                                : note.note || ""}
-                                          </span>
-                                        </div>
-                                      </div>
-                                    );
-                                  })
-                                )}
-                              </div>
-
-                              {/* Actions */}
-                              <div
-                                style={{
-                                  width: "10%",
-                                  display: "flex",
-                                  justifyContent: "flex-end",
-                                  gap: "8px",
-                                }}
-                              >
-                                <Button
-                                  onClick={() =>
-                                    handleOpenNoteModal(recordId, selectedType)
-                                  }
-                                  style={{
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    width: "36px",
-                                    height: "36px",
-                                    backgroundColor: "#0f7b63",
-                                    border: "none",
-                                    borderRadius: "8px",
-                                    color: "white",
-                                    padding: 0,
-                                    boxShadow: "0 2px 6px rgba(15,123,99,0.15)",
-                                  }}
-                                  title="Add Note"
-                                >
-                                  <FeatherIcon
-                                    icon="edit-3"
-                                    size={14}
-                                    stroke="white"
-                                    style={{ color: "white", stroke: "white" }}
-                                  />
-                                </Button>
-                                <Button
-                                  onClick={() =>
-                                    handleOpenCallbackModal(
-                                      recordId,
-                                      selectedType,
-                                    )
-                                  }
-                                  style={{
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    width: "36px",
-                                    height: "36px",
-                                    backgroundColor: "#0f7b63",
-                                    border: "none",
-                                    borderRadius: "8px",
-                                    color: "white",
-                                    padding: 0,
-                                    boxShadow: "0 2px 6px rgba(15,123,99,0.15)",
-                                  }}
-                                  title="Add Callback Date"
-                                >
-                                  <FeatherIcon
-                                    icon="calendar"
-                                    size={14}
-                                    stroke="white"
-                                    style={{ color: "white", stroke: "white" }}
-                                  />
-                                </Button>
-                              </div>
-                            </div>
-                          </Card.Body>
-                        </Card>
-                      );
-                    })}
+                    {renderResultsHeader()}
+                    {displayedRecords.map((row) => renderRecordCard(row))}
                   </div>
                 )}
               </div>

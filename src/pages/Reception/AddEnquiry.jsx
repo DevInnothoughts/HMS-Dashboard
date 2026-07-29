@@ -652,6 +652,7 @@ export default function AddEnquiry({ isTab = false }) {
                             "Aggregators",
                             "Doctor's Privilege Card",
                             "Campaign",
+                            "Brand Ambassador",
                             "Other",
                           ].map((ref) => (
                             <option key={ref} value={ref}>

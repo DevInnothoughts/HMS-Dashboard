@@ -12,6 +12,7 @@ const BASE_URL = "http://194.195.117.79:5100/api";
 const MySwal = withReactContent(Swal);
 
 const LOCATIONS_LIST = [
+  "Adajan",
   "Ahmedabad",
   "Andheri",
   "Aurangabad",
@@ -45,6 +46,7 @@ const LOCATIONS_LIST = [
   "Navi-Mumbai",
   "Pimpri-Chinchwad",
   "Rajajinagar",
+  { label: "RR Nagar", value: "RRNagar" },
   "Sahakarnagar",
   "Salunkhe-Vihar",
   "Sarjapura",

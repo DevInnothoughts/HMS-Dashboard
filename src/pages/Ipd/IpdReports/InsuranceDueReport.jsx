@@ -20,6 +20,14 @@ const formatValue = (val) => {
   return val;
 };
 
+const formatAmountValue = (val) => {
+  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0") {
+    return "-";
+  }
+  const num = Math.round(parseFloat(String(val).replace(/,/g, "")) || 0);
+  return num.toLocaleString("en-IN");
+};
+
 const InsuranceDueReport = () => {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -301,19 +309,19 @@ const InsuranceDueReport = () => {
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
-          footer={formatValue(totals.totalAmt)}
+          footer={formatAmountValue(totals.totalAmt)}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
-          footer={formatValue(totals.approvedAmt)}
+          footer={formatAmountValue(totals.approvedAmt)}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
-          footer={formatValue(totals.receivedAmt)}
+          footer={formatAmountValue(totals.receivedAmt)}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
-          footer={formatValue(totals.dueAmt)}
+          footer={formatAmountValue(totals.dueAmt)}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
       </Row>
@@ -464,10 +472,10 @@ const InsuranceDueReport = () => {
                     <Column field="patientName" header="Patient Name" body={(rowData) => formatValue(rowData.patientName)} />
                     <Column field="companyName" header="Company Name" body={(rowData) => formatValue(rowData.companyName)} />
                     <Column field="invoiceNo" header="Invoice No" body={(rowData) => formatValue(rowData.invoiceNo)} />
-                    <Column field="totalAmt" header="Total Amt" body={(rowData) => formatValue(rowData.totalAmt)} />
-                    <Column field="approvedAmt" header="Approved Amt" body={(rowData) => formatValue(rowData.approvedAmt)} />
-                    <Column field="receivedAmt" header="Received Amt" body={(rowData) => formatValue(rowData.receivedAmt)} />
-                    <Column field="dueAmt" header="Due Amt" body={(rowData) => formatValue(rowData.dueAmt)} />
+                    <Column field="totalAmt" header="Total Amt" body={(rowData) => formatAmountValue(rowData.totalAmt)} />
+                    <Column field="approvedAmt" header="Approved Amt" body={(rowData) => formatAmountValue(rowData.approvedAmt)} />
+                    <Column field="receivedAmt" header="Received Amt" body={(rowData) => formatAmountValue(rowData.receivedAmt)} />
+                    <Column field="dueAmt" header="Due Amt" body={(rowData) => formatAmountValue(rowData.dueAmt)} />
                   </DataTable>
 
                   {/* Print-only container displaying all rows */}
@@ -494,19 +502,19 @@ const InsuranceDueReport = () => {
                             <td>{formatValue(item.patientName)}</td>
                             <td>{formatValue(item.companyName)}</td>
                             <td>{formatValue(item.invoiceNo)}</td>
-                            <td>{formatValue(item.totalAmt)}</td>
-                            <td>{formatValue(item.approvedAmt)}</td>
-                            <td>{formatValue(item.receivedAmt)}</td>
-                            <td>{formatValue(item.dueAmt)}</td>
+                            <td>{formatAmountValue(item.totalAmt)}</td>
+                            <td>{formatAmountValue(item.approvedAmt)}</td>
+                            <td>{formatAmountValue(item.receivedAmt)}</td>
+                            <td>{formatAmountValue(item.dueAmt)}</td>
                           </tr>
                         ))}
                         {/* Totals row inside tbody to avoid page repetition on multiple pages */}
                         <tr className="print-totals-row">
                           <td colSpan={5}>Total</td>
-                          <td>{formatValue(printTotals.totalAmt)}</td>
-                          <td>{formatValue(printTotals.approvedAmt)}</td>
-                          <td>{formatValue(printTotals.receivedAmt)}</td>
-                          <td>{formatValue(printTotals.dueAmt)}</td>
+                          <td>{formatAmountValue(printTotals.totalAmt)}</td>
+                          <td>{formatAmountValue(printTotals.approvedAmt)}</td>
+                          <td>{formatAmountValue(printTotals.receivedAmt)}</td>
+                          <td>{formatAmountValue(printTotals.dueAmt)}</td>
                         </tr>
                       </tbody>
                     </table>

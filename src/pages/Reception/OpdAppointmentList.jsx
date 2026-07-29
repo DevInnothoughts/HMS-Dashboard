@@ -56,6 +56,8 @@ const NoteCell = ({ note }) => {
 };
 
 const TYPE_LIST = ["New", "Follow", "Postoperative", "MCDPA", "Other"];
+const NEW_PATIENT_TYPES = ["New"];
+const EXISTING_PATIENT_TYPES = ["Follow", "Postoperative", "MCDPA", "Other"];
 
 const formatPatientType = (type) => {
   if (!type) return "";
@@ -83,6 +85,7 @@ const REFERENCE_OPTIONS = [
   "Aggregators",
   "Doctor's Privilege Card",
   "Campaign",
+  "Brand Ambassador",
   "Other",
 ];
 
@@ -101,6 +104,7 @@ const REFERENCE_MAP = {
   aggregators: "Aggregators",
   dr_privilege_card: "Doctor's Privilege Card",
   campaign: "Campaign",
+  brand_ambassador: "Brand Ambassador",
   other: "Other",
 };
 
@@ -328,6 +332,7 @@ export default function OpdAppointmentList() {
   const [fdeList, setFdeList] = useState([]);
   const [consultationList, setConsultationList] = useState([]);
   const [consultationTypesList, setConsultationTypesList] = useState([]);
+  const [treatmentList, setTreatmentList] = useState([]);
   const [timeSlots, setTimeSlots] = useState([]);
   const [billingItems, setBillingItems] = useState([{ label: "", amount: "" }]);
   const [rows, setRows] = useState(10);
@@ -345,10 +350,10 @@ export default function OpdAppointmentList() {
 
   const calculateTotals = () => {
     const subtotal = billingItems.reduce(
-      (acc, curr) => acc + (parseFloat(curr.amount) || 0),
+      (acc, curr) => acc + (parseFloat(String(curr.amount || "").replace(/,/g, "")) || 0),
       0,
     );
-    const payable = subtotal - (parseFloat(receiptForm.discountAmt) || 0);
+    const payable = subtotal - (parseFloat(String(receiptForm.discountAmt || "").replace(/,/g, "")) || 0);
     return { subtotal, payable };
   };
 
@@ -396,7 +401,7 @@ export default function OpdAppointmentList() {
             ? "Registration"
             : receiptForm.registrationType,
         expectedamt: parseFloat(payable) || 0,
-        discountamt: parseFloat(receiptForm.discountAmt) || 0,
+        discountamt: parseFloat(String(receiptForm.discountAmt || "").replace(/,/g, "")) || 0,
         discountnote: receiptForm.discountNote || "",
         comment: receiptForm.regComment || "",
         PosMachine: receiptForm.posTerminal,
@@ -599,6 +604,10 @@ export default function OpdAppointmentList() {
           ? { posTerminal: "OFFLINE" }
           : {}),
       }));
+    } else if (name === "discountAmt") {
+      const cleanValue = value.replace(/[^0-9]/g, "");
+      const formattedValue = cleanValue ? Number(cleanValue).toLocaleString("en-IN") : "";
+      setReceiptForm((prev) => ({ ...prev, discountAmt: formattedValue }));
     } else {
       setReceiptForm((prev) => ({ ...prev, [name]: value }));
     }
@@ -842,6 +851,7 @@ export default function OpdAppointmentList() {
         `${BASE_URL}/V1/appointment/fdeDropdown?location=${currentLocation}`,
         `${BASE_URL}/V1/appointment/consultationDetailsDropdown?location=${currentLocation}`,
         `${BASE_URL}/V1/appointment/posTerminalDropdown?location=${currentLocation}`,
+        `${BASE_URL}/V1/appointment/treatmentDropdown?location=${currentLocation}`,
       ];
 
       const [
@@ -850,13 +860,10 @@ export default function OpdAppointmentList() {
         fdeResponse,
         consultationDetailsResponse,
         posTerminalResponse,
+        treatmentResponse,
       ] = await Promise.all(
         endpoints.map((url) => fetch(url).then((res) => res.json())),
       );
-
-
-
-
 
       setConsultationList(
         Array.isArray(consultationResponse.data)
@@ -872,6 +879,9 @@ export default function OpdAppointmentList() {
       );
       setPosTerminalList(
         Array.isArray(posTerminalResponse.data) ? posTerminalResponse.data : [],
+      );
+      setTreatmentList(
+        Array.isArray(treatmentResponse.data) ? treatmentResponse.data : [],
       );
     } catch (error) {
       console.error("Error fetching dropdown data:", error.message);
@@ -1093,6 +1103,7 @@ export default function OpdAppointmentList() {
               openEditForPhone: patient_phone,
               returnToAppointment: true,
               appointment_id: appId,
+              appointment_patient_type: patient_type,
             },
           });
         }
@@ -1148,7 +1159,14 @@ export default function OpdAppointmentList() {
           icon: "warning",
           title: "Daily Closing Pending",
           text: `Please fill the daily closing for ${moment(prevDate).format("DD-MM-YYYY")} before ${actionVerb} appointments for this day.`,
-          confirmButtonColor: "#00bcd4",
+          showConfirmButton: false,
+          showCancelButton: true,
+          cancelButtonText: "Go to Daily Closing",
+          cancelButtonColor: "#e67e22",
+        }).then((res) => {
+          if (res.dismiss === Swal.DismissReason.cancel) {
+            navigate("/daily-closing");
+          }
         });
         return false;
       }
@@ -1310,6 +1328,7 @@ export default function OpdAppointmentList() {
                   openEditForPhone: patient_phone,
                   returnToAppointment: true,
                   appointment_id: appointment_id,
+                  appointment_patient_type: patient_type,
                 },
               });
             }}
@@ -1612,31 +1631,6 @@ export default function OpdAppointmentList() {
             />
           </div>
           <Button
-            variant="primary"
-            onClick={() => fetchAppointmentData()}
-            style={{
-              backgroundColor: "#00bcd4",
-              border: "none",
-              borderRadius: "8px",
-              padding: "6px 7px",
-              fontSize: "12px",
-              fontWeight: "500",
-              color: "white",
-              cursor: "pointer",
-              transition: "all 0.3s ease",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              marginTop: "15px",
-              ":hover": {
-                backgroundColor: "#00acc1",
-                transform: "translateY(-1px)",
-                boxShadow: "0 4px 8px rgba(0,0,0,0.15)",
-              },
-            }}
-          >
-            <FeatherIcon icon="refresh-ccw" size={12} className="me-1" />
-            Refresh
-          </Button>
-          <Button
             variant="secondary"
             onClick={() => {
               setFromDate(null);
@@ -1679,7 +1673,7 @@ export default function OpdAppointmentList() {
           <div className="d-flex flex-wrap justify-content-start align-items-center">
             <ColorLegend name="Pending Appointment" bgColor="#ffffff" />
             <ColorLegend name="Appointment Confirmed" bgColor="#3b82f6" />
-            <ColorLegend name="History Checked" bgColor="#d946ef" />
+            <ColorLegend name="History Checked" bgColor="#ec4899" />
             <ColorLegend name="Diagnosis Checked" bgColor="#e67e22" />
             <ColorLegend name="Prescription Checked" bgColor="#8e44ad" />
             <ColorLegend name="Receipt Generated" bgColor="#10b981" />
@@ -1931,7 +1925,11 @@ export default function OpdAppointmentList() {
                     </Form.Label>
                     <Form.Select
                       name="patient_type"
-                      value={selectedAppointment.patient_type || ""}
+                      value={
+                        selectedAppointment.patient_type === "Post Operative"
+                          ? "Postoperative"
+                          : selectedAppointment.patient_type || ""
+                      }
                       onChange={handleEditModalInputChange}
                       style={{
                         border: "2px solid rgb(77, 208, 225)",
@@ -1939,7 +1937,12 @@ export default function OpdAppointmentList() {
                       }}
                     >
                       <option value="">Select Type</option>
-                      {TYPE_LIST.map((type, index) => (
+                      {(
+                        (selectedAppointment.patient_type === "New" ||
+                          selectedAppointment.patient_type === "NEW")
+                          ? NEW_PATIENT_TYPES
+                          : EXISTING_PATIENT_TYPES
+                      ).map((type, index) => (
                         <option key={index} value={type}>
                           {type}
                         </option>
@@ -1947,6 +1950,55 @@ export default function OpdAppointmentList() {
                     </Form.Select>
                   </Form.Group>
                 </Col>
+
+                {(selectedAppointment.patient_type === "Other" ||
+                  selectedAppointment.treatment ||
+                  selectedAppointment.treatment_name) && (
+                    <Col md={4}>
+                      <Form.Group className="mb-2">
+                        <Form.Label
+                          style={{
+                            fontSize: "12px",
+                            fontWeight: "600",
+                            marginBottom: "4px",
+                          }}
+                        >
+                          Treatment <span className="text-danger">*</span>
+                        </Form.Label>
+                        <Form.Select
+                          required
+                          name="treatment"
+                          value={
+                            selectedAppointment.treatment ||
+                            selectedAppointment.treatment_name ||
+                            ""
+                          }
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setSelectedAppointment((prev) => ({
+                              ...prev,
+                              treatment: val,
+                              treatment_name: val,
+                            }));
+                          }}
+                          style={{
+                            border: "2px solid rgb(77, 208, 225)",
+                            fontSize: "12px",
+                          }}
+                        >
+                          <option value="">Select Treatment</option>
+                          {treatmentList?.map((t) => (
+                            <option
+                              key={t.treatment_name}
+                              value={t.treatment_name}
+                            >
+                              {t.treatment_name}
+                            </option>
+                          ))}
+                        </Form.Select>
+                      </Form.Group>
+                    </Col>
+                  )}
 
                 <Col md={4}>
                   <Form.Group className="mb-2">
@@ -1996,16 +2048,34 @@ export default function OpdAppointmentList() {
                       name="patient_phone"
                       value={selectedAppointment.patient_phone || ""}
                       onChange={handleEditModalInputChange}
+                      readOnly={
+                        !(
+                          selectedAppointment.patient_type === "New" ||
+                          selectedAppointment.patient_type === "NEW"
+                        )
+                      }
                       style={{
                         fontSize: "12px",
                         borderRadius: "9px",
                         border: "2px solid rgb(77, 208, 225)",
+                        backgroundColor: !(
+                          selectedAppointment.patient_type === "New" ||
+                          selectedAppointment.patient_type === "NEW"
+                        )
+                          ? "#e7ebebff"
+                          : undefined,
+                        cursor: !(
+                          selectedAppointment.patient_type === "New" ||
+                          selectedAppointment.patient_type === "NEW"
+                        )
+                          ? "not-allowed"
+                          : "default",
                       }}
                     />
                   </Form.Group>
                 </Col>
 
-                <Col md={6}>
+                <Col md={4}>
                   <Form.Group className="mb-10">
                     <Form.Label
                       style={{
@@ -2030,7 +2100,7 @@ export default function OpdAppointmentList() {
                   </Form.Group>
                 </Col>
 
-                <Col md={6}>
+                <Col md={4}>
                   <Form.Group className="mb-10">
                     <Form.Label
                       style={{
@@ -2057,7 +2127,7 @@ export default function OpdAppointmentList() {
                   </Form.Group>
                 </Col>
 
-                <Col md={6}>
+                <Col md={4}>
                   <Form.Group className="mb-2">
                     <Form.Label
                       style={{
@@ -2088,7 +2158,7 @@ export default function OpdAppointmentList() {
                   </Form.Group>
                 </Col>
 
-                <Col md={6}>
+                <Col md={4}>
                   <Form.Group className="mb-10">
                     <Form.Label
                       style={{
@@ -2652,7 +2722,7 @@ export default function OpdAppointmentList() {
                         ₹
                       </InputGroup.Text>
                       <Form.Control
-                        type="number"
+                        type="text"
                         placeholder="E.g. 1000"
                         style={{
                           fontSize: "11px",
@@ -2670,15 +2740,11 @@ export default function OpdAppointmentList() {
                           !!receiptForm.registrationType &&
                           receiptForm.registrationType !== "Only Registration"
                         }
-                        onWheel={(e) => e.target.blur()}
-                        onKeyDown={(e) => {
-                          if (["e", "E", "+", "-", "."].includes(e.key)) {
-                            e.preventDefault();
-                          }
-                        }}
                         onChange={(e) => {
+                          const cleanValue = e.target.value.replace(/[^0-9]/g, "");
+                          const formattedValue = cleanValue ? Number(cleanValue).toLocaleString("en-IN") : "";
                           const newItems = [...billingItems];
-                          newItems[index].amount = e.target.value;
+                          newItems[index].amount = formattedValue;
                           setBillingItems(newItems);
                         }}
                       />
@@ -2739,7 +2805,7 @@ export default function OpdAppointmentList() {
                       ₹
                     </InputGroup.Text>
                     <Form.Control
-                      type="number"
+                      type="text"
                       name="discountAmt"
                       placeholder="E.g. 1000"
                       style={{
@@ -2758,12 +2824,6 @@ export default function OpdAppointmentList() {
                         !!receiptForm.registrationType &&
                         receiptForm.registrationType !== "Only Registration"
                       }
-                      onWheel={(e) => e.target.blur()}
-                      onKeyDown={(e) => {
-                        if (["e", "E", "+", "-", "."].includes(e.key)) {
-                          e.preventDefault();
-                        }
-                      }}
                       onChange={handleReceiptFormChange}
                     />
                   </InputGroup>
@@ -2903,7 +2963,7 @@ export default function OpdAppointmentList() {
                         marginTop: "5px",
                       }}
                     >
-                      Total Amount: <strong>₹ {calculateTotals().subtotal}</strong>
+                      Total Amount: <strong>₹ {Math.round(calculateTotals().subtotal).toLocaleString("en-IN")}</strong>
                     </div>
                     <div
                       style={{
@@ -2923,7 +2983,7 @@ export default function OpdAppointmentList() {
                         marginTop: "5px",
                       }}
                     >
-                      Payable Amount: ₹ {calculateTotals().payable}
+                      Payable Amount: ₹ {Math.round(calculateTotals().payable).toLocaleString("en-IN")}
                     </div>
                   </Col>
                 </Row>

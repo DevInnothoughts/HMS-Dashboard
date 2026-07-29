@@ -19,7 +19,6 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import Swal from "sweetalert2";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
-import BedallotmentNavbar from "../../components/Navbar/BedallotmentNavbar";
 import MuiDateTimePicker from "../Utility/inputs/MuiDateTimePicker";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
@@ -39,23 +38,9 @@ const BedAllotmentList = () => {
   const [toDate, setToDate] = useState(new Date());
   const [bedAllotments, setBedAllotments] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [selectedAllotment, setSelectedAllotment] = useState(null);
-  const [modalAdmissionDate, setModalAdmissionDate] = useState("");
-  const [modalDischargeDate, setModalDischargeDate] = useState("");
   const [filters, setFilters] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
-
-  const bedOptions = [
-    { value: "W1", label: "W1 - General Ward" },
-    { value: "W2", label: "W2 - Semi AC" },
-    { value: "I1", label: "I1 - Private AC" },
-    { value: "SEMI 1", label: "SEMI 1 - DELUXE" },
-    { value: "SEMIZ", label: "SEMIZ - Twin Sharing" },
-    { value: "SEMI3", label: "SEMI3 - Super Deluxe" },
-    { value: "SEMI4", label: "SEMI4 - Suite" },
-  ];
 
   // Show under development alert
   useEffect(() => {
@@ -68,32 +53,7 @@ const BedAllotmentList = () => {
     setBedAllotments([]); // Ensure it's empty as requested
   }, []);
 
-  const handleEdit = (allotment) => {
-    setSelectedAllotment(allotment);
-    setModalAdmissionDate(allotment.allotment_datetime || "");
-    setModalDischargeDate(allotment.discharge_datetime || "");
-    setShowModal(true);
-  };
 
-  const handleDelete = async (id) => {
-    const result = await Swal.fire({
-      title: "Are you sure?",
-      text: "You won't be able to revert this!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!",
-    });
-
-    if (result.isConfirmed) {
-      setBedAllotments(bedAllotments.filter((item) => item.id !== id));
-      Toast.fire({
-        icon: "success",
-        title: "Bed allotment deleted successfully",
-      });
-    }
-  };
 
   const renderHeader = () => (
     <div
@@ -238,21 +198,6 @@ const BedAllotmentList = () => {
               }
             />
           </div>
-          <Button
-            variant="primary"
-            onClick={() => { }}
-            style={{
-              backgroundColor: "#00bcd4",
-              border: "none",
-              borderRadius: "8px",
-              padding: "6px 7px",
-              fontSize: "12px",
-              marginTop: "18px",
-            }}
-          >
-            <FeatherIcon icon="refresh-ccw" size={12} className="me-1" />
-            Refresh
-          </Button>
         </div>
       </div>
     </div>
@@ -272,7 +217,6 @@ const BedAllotmentList = () => {
       <Container fluid>
         <Row>
           <Col>
-            <BedallotmentNavbar />
             <Card
               style={{
                 borderRadius: "12px",
@@ -323,10 +267,10 @@ const BedAllotmentList = () => {
                   className="custom-datatable-centered datatable-medium-small"
                 >
                   <Column
-                    header="#"
+                    header="Sr No"
                     headerClassName="datatable-header-center"
                     body={(rowData, options) => options.rowIndex + 1}
-                    style={{ width: "50px", border: "1px solid #4dd0e1" }}
+                    style={{ width: "80px", border: "1px solid #4dd0e1" }}
                   />
                   <Column
                     field="bed_number"
@@ -335,8 +279,8 @@ const BedAllotmentList = () => {
                     style={{ border: "1px solid #4dd0e1" }}
                   />
                   <Column
-                    field="bed_type"
-                    header="Bed type"
+                    field="roomcategory"
+                    header="Room Category"
                     headerClassName="datatable-header-center"
                     style={{ border: "1px solid #4dd0e1" }}
                   />
@@ -347,52 +291,25 @@ const BedAllotmentList = () => {
                     style={{ border: "1px solid #4dd0e1" }}
                   />
                   <Column
-                    field="allotment_datetime"
-                    header="Admitted On"
+                    field="contact_number"
+                    header="Contact number"
+                    headerClassName="datatable-header-center"
+                    body={(rowData) => rowData.contact_number || rowData.contact || rowData.phone || rowData.patient_phone || "-"}
+                    style={{ border: "1px solid #4dd0e1" }}
+                  />
+                  <Column
+                    field="admission_datetime"
+                    header="Admission Date & Time"
                     headerClassName="datatable-header-center"
                     style={{ border: "1px solid #4dd0e1" }}
                   />
                   <Column
                     field="discharge_datetime"
-                    header="Discharged On"
+                    header="Discharge Date & Time"
                     headerClassName="datatable-header-center"
                     style={{ border: "1px solid #4dd0e1" }}
                   />
-                  <Column
-                    header="Action"
-                    headerClassName="datatable-header-center"
-                    style={{ width: "120px", border: "1px solid #4dd0e1" }}
-                    body={(rowData) => (
-                      <div className="d-flex justify-content-center gap-2">
-                        <Button
-                          style={{
-                            borderRadius: "8px",
-                            padding: "7px 11px",
-                            fontSize: "14px",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                          variant="primary"
-                          onClick={() => handleEdit(rowData)}
-                        >
-                          <FeatherIcon icon="edit" size="15" />
-                        </Button>
-                        <Button
-                          style={{
-                            borderRadius: "8px",
-                            padding: "7px 11px",
-                            fontSize: "14px",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                          variant="danger"
-                          onClick={() => handleDelete(rowData.id)}
-                        >
-                          <FeatherIcon icon="trash" size="15" />
-                        </Button>
-                      </div>
-                    )}
-                  />
+
                 </DataTable>
               </Card.Body>
             </Card>
@@ -400,214 +317,7 @@ const BedAllotmentList = () => {
         </Row>
       </Container>
 
-      <Modal
-        show={showModal}
-        onHide={() => setShowModal(false)}
-        size="lg"
-        centered
-        backdrop="static"
-      >
-        <Modal.Header
-          closeButton
-          style={{
-            backgroundColor: "#e0f7fa",
-            borderBottom: "2px solid #00bcd4",
-            padding: "10px 15px",
-          }}
-        >
-          <Modal.Title
-            style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}
-          >
-            <FeatherIcon icon="edit" className="me-2" size="16" />
-            Edit Bed Allotment Details
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body
-          style={{
-            backgroundColor: "#f8fbfc",
-            fontSize: "13px",
-            padding: "5px",
-          }}
-        >
-          <Form>
-            <div className="mb-4">
-              <Row>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label
-                      style={{
-                        fontSize: "12px",
-                        fontWeight: "600",
-                        marginBottom: "4px",
-                      }}
-                    >
-                      Bed Number
-                    </Form.Label>
-                    <Form.Select
-                      defaultValue={selectedAllotment?.bed_number}
-                      style={{
-                        border: "2px solid rgb(77, 208, 225)",
-                        fontSize: "12px",
-                        borderRadius: "10px",
-                      }}
-                    >
-                      <option value="">Select Bed</option>
-                      {bedOptions.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </Form.Select>
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label
-                      style={{
-                        fontSize: "12px",
-                        fontWeight: "600",
-                        marginBottom: "4px",
-                      }}
-                    >
-                      Bed Type
-                    </Form.Label>
-                    <Form.Control
-                      type="text"
-                      defaultValue={selectedAllotment?.bed_type}
-                      style={{
-                        border: "2px solid rgb(77, 208, 225)",
-                        fontSize: "12px",
-                        borderRadius: "10px",
-                      }}
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
-              <Row>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label
-                      style={{
-                        fontSize: "12px",
-                        fontWeight: "600",
-                        marginBottom: "4px",
-                      }}
-                    >
-                      Patient Name
-                    </Form.Label>
-                    <Form.Control
-                      type="text"
-                      defaultValue={selectedAllotment?.patient_name}
-                      readOnly
-                      style={{
-                        border: "2px solid rgb(77, 208, 225)",
-                        backgroundColor: "#e7ebebff",
-                        cursor: "not-allowed",
-                        fontSize: "12px",
-                        borderRadius: "10px",
-                      }}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col md={6}>
-                  <MuiDateTimePicker
-                    label="Allotment Date & Time"
-                    value={modalAdmissionDate}
-                    onChange={(e) => setModalAdmissionDate(e.target.value)}
-                    name="allotment_datetime"
-                    type="datetime"
-                    required={true}
-                    placeholder="Select Allotment Date & Time"
-                    style={{ marginBottom: "0px" }}
-                    labelStyle={{
-                      fontSize: "12px",
-                      fontWeight: "600",
-                      marginBottom: "4px",
-                    }}
-                    inputSx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: "10px",
-                        height: "35px",
-                        "& fieldset": {
-                          borderWidth: "2px !important",
-                          borderColor: "rgb(77, 208, 225) !important",
-                        },
-                      },
-                      "& .MuiInputBase-input": {
-                        padding: "5px 10px !important",
-                        fontSize: "12px !important",
-                      },
-                    }}
-                  />
-                </Col>
-              </Row>
-              <Row>
-                <Col md={6}>
-                  <MuiDateTimePicker
-                    label="Discharge Date & Time"
-                    value={modalDischargeDate}
-                    onChange={(e) => setModalDischargeDate(e.target.value)}
-                    name="discharge_datetime"
-                    type="datetime"
-                    required={true}
-                    placeholder="Select Discharge Date & Time"
-                    style={{ marginBottom: "0px" }}
-                    labelStyle={{
-                      fontSize: "12px",
-                      fontWeight: "600",
-                      marginBottom: "4px",
-                    }}
-                    inputSx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: "10px",
-                        height: "35px",
-                        "& fieldset": {
-                          borderWidth: "2px !important",
-                          borderColor: "rgb(77, 208, 225) !important",
-                        },
-                      },
-                      "& .MuiInputBase-input": {
-                        padding: "5px 10px !important",
-                        fontSize: "12px !important",
-                      },
-                    }}
-                  />
-                </Col>
-              </Row>
-            </div>
-            <div className="d-flex justify-content-end pt-2">
-              <Button
-                size="sm"
-                variant="danger"
-                className="me-2 px-4"
-                style={{
-                  borderRadius: "10px",
-                  fontSize: "12px",
-                  padding: "10px",
-                }}
-                onClick={() => setShowModal(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                variant="primary"
-                className="px-4"
-                style={{
-                  borderRadius: "10px",
-                  fontSize: "12px",
-                  backgroundColor: "#00bcd4",
-                  borderColor: "#00bcd4",
-                  padding: "10px",
-                }}
-                onClick={() => setShowModal(false)}
-              >
-                Save Changes
-              </Button>
-            </div>
-          </Form>
-        </Modal.Body>
-      </Modal>
+
     </div>
   );
 };

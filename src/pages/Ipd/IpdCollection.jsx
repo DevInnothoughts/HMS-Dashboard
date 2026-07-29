@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation, Link } from "react-router-dom";
-import IpdbillNavbar from "../../components/Navbar/IpdbillNavbar";
 import {
   Container,
   Card,
@@ -14,7 +13,7 @@ import {
   InputGroup,
 } from "react-bootstrap";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
-import { FaPrint, FaPlus, FaListUl, FaTasks, FaFileInvoiceDollar } from "react-icons/fa";
+import { FaPrint, FaPlus, FaListUl, FaTasks, FaFileInvoiceDollar, FaInfoCircle, FaPlusCircle, FaSave } from "react-icons/fa";
 import { decodeJwt } from "../../utils/decode-jwt";
 import Swal from "sweetalert2";
 import logo from "../../assets/images/3.png";
@@ -34,6 +33,8 @@ const getLocalDateString = (date) => {
 
 const today = new Date();
 const maxDate = getLocalDateString(today);
+const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+const minDate = getLocalDateString(firstDayOfMonth);
 
 const convertToWords = (number) => {
   if (number === 0) return "Zero";
@@ -106,19 +107,29 @@ const convertToWords = (number) => {
 };
 
 const IpdCollection = () => {
-  const [invoiceId, setInvoiceId] = useState("");
-  const [patientDetails, setPatientDetails] = useState({
-    name: "",
-    uhid: "",
-    patient_id: "",
-    phone: "",
-  });
+  const location = useLocation();
+  const [invoiceId, setInvoiceId] = useState(
+    () => location.state?.invoiceId || ""
+  );
+  const [patientDetails, setPatientDetails] = useState(() => ({
+    name: location.state?.patientDetails?.name || "",
+    uhid: location.state?.patientDetails?.uhid || "",
+    patient_id: location.state?.patientDetails?.patient_id || "",
+    phone: location.state?.patientDetails?.phone || "",
+  }));
   const [searchResults, setSearchResults] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showBillDetails, setShowBillDetails] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(() => Boolean(location.state?.invoiceId));
   const [selectedTerminal, setSelectedTerminal] = useState("");
-  const [currentLocation, setCurrentLocation] = useState("");
+  const [currentLocation, setCurrentLocation] = useState(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const payload = decodeJwt(token);
+      return payload?.jobLocation || "";
+    }
+    return "";
+  });
   const [summary, setSummary] = useState({
     totalBill: 0,
     insuranceApproved: 0,
@@ -134,11 +145,12 @@ const IpdCollection = () => {
     online: 0,
     internalDiscount: 0,
     tds: 0,
+    pdcCheque: 0,
   });
+  const [showPdcInfo, setShowPdcInfo] = useState(false);
 
   const dropdownRef = useRef(null);
   const isManualSelection = useRef(false);
-  const location = useLocation();
   const initialLoadDone = useRef(false);
 
   useEffect(() => {
@@ -476,6 +488,7 @@ const IpdCollection = () => {
         OnlineAmt: newPayment.online,
         DiscountAmt: newPayment.internalDiscount,
         TdsAmt: newPayment.tds,
+        PdcCheque: newPayment.pdcCheque,
         Totalinvoiceamt: summary.totalDue,
         PosMachine: selectedTerminal,
         location: currentLocation,
@@ -508,6 +521,7 @@ const IpdCollection = () => {
           online: 0,
           internalDiscount: 0,
           tds: 0,
+          pdcCheque: 0,
         });
         handleViewBillDetails();
       } else if (
@@ -680,7 +694,7 @@ const IpdCollection = () => {
                                                     Payment Mode :&nbsp;<b>${cashPayment}${cardPayment}${onlinePayment}${chequePayment}</b><br>
                                                     In Words :&nbsp;<b>${words} Rupees Only.</b>
                                                 </td>
-                                                <td style="width:30%;"><p style="padding:10px; border:1px solid grey; border-radius:10px; font-weight:600;">Rs.&nbsp;${totalAmt} /-</p></td>
+                                                <td style="width:30%;"><p style="padding:10px; border:1px solid grey; border-radius:10px; font-weight:600;">Rs.&nbsp;${Math.round(totalAmt).toLocaleString("en-IN")} /-</p></td>
                                                 <td style="width:10%"></td>
                                             </tr>
                                         </table>
@@ -721,121 +735,350 @@ const IpdCollection = () => {
   return (
     <div className="themebody-wrap custom-ipd-styles">
       <PageBreadcrumb pagename="IPD Collection" />
-      <IpdbillNavbar />
       <Container fluid className="p-0">
         <Row>
           <Col>
-            {!showBillDetails ? (
-              <Card
-                className="text-center p-5 shadow-sm border-cyan mb-20 mt-1"
-                style={{ marginLeft: "17px", marginRight: "17px" }}
+            <Card
+              className="shadow-sm border-0 overflow-hidden"
+              style={{ marginLeft: "22px", marginRight: "20px" }}
+            >
+              {/* Patient Metadata Header */}
+              <div
+                className="patient-meta-header"
+                style={{
+                  background: "#e0f7fa",
+                  color: "#006064",
+                  padding: "12px 18px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  borderBottom: "1px solid #b2ebf2"
+                }}
               >
-                <Card.Body>
-                  <div className="mb-3" style={{ fontSize: "40px", opacity: 0.5 }}>
-                    💳
-                  </div>
-                  <h5 style={{ color: "#00838f", fontWeight: "600" }}>No Invoice Loaded</h5>
-                  <p className="text-muted">
-                    Please select an invoice from the IPD Bill List to view and collect payments.
-                  </p>
-                  <Link to="/ipd-bill-list" className="btn btn-primary text-white fw-bold" style={{ backgroundColor: "#00acc1", borderColor: "#00acc1" }}>
-                    Go to IPD Bill List
-                  </Link>
-                </Card.Body>
-              </Card>
-            ) : (
-              <Card
-                className="shadow-sm border-0 overflow-hidden"
-                style={{ marginLeft: "22px", marginRight: "20px" }}
-              >
-                {/* Patient Metadata Header */}
-                <div
-                  className="patient-meta-header"
-                  style={{
-                    background: "#e0f7fa",
-                    color: "#006064",
-                    padding: "12px 18px",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    fontSize: "14px",
-                    fontWeight: "600",
-                    borderBottom: "1px solid #b2ebf2"
-                  }}
+                <Link
+                  to="/ipd-bill-list"
+                  className="btn btn-sm text-white"
+                  style={{ backgroundColor: "#00838f", border: "none", fontSize: "12px", padding: "8px 12px", borderRadius: "6px" }}
                 >
-                  <Link
-                    to="/ipd-bill-list"
-                    className="btn btn-sm text-white"
-                    style={{ backgroundColor: "#00838f", border: "none", fontSize: "12px", padding: "8px 12px", borderRadius: "6px" }}
-                  >
-                    <FeatherIcon icon="arrow-left" size="15" className="me-1" />
-                    Back to IPD Patient's List
-                  </Link>
-                  <div className="d-flex gap-4 flex-wrap">
-                    <span><strong>Invoice ID:</strong> {invoiceId}</span>
-                    <span><strong>Patient Name:</strong> {patientDetails.name}</span>
-                    <span><strong>UID Number:</strong> {patientDetails.uhid}</span>
-                    {patientDetails.phone && <span><strong>Phone:</strong> {patientDetails.phone}</span>}
-                  </div>
+                  <FeatherIcon icon="arrow-left" size="15" className="me-1" />
+                  Back to IPD Bill List
+                </Link>
+                <div className="d-flex gap-4 flex-wrap">
+                  <span><strong>Invoice ID:</strong> {invoiceId}</span>
+                  <span><strong>UID Number:</strong> {patientDetails.uhid}</span>
+                  <span><strong>Patient Name:</strong> {patientDetails.name}</span>
+                  {patientDetails.phone && <span><strong>Contact No:</strong> {patientDetails.phone}</span>}
                 </div>
+              </div>
 
-                <div className="summary-header" style={{ borderRadius: "0" }}>
-                  <span>
-                    <FaListUl className="me-1" />
-                    Total Bill: ₹ {summary.totalBill}
-                  </span>
-                  <span>
-                    <FaTasks className="me-1" />
-                    Insurance Approved: ₹ {summary.insuranceApproved}
-                  </span>
-                  <span>
-                    <FaListUl className="me-1" />
-                    Patient Payable: ₹ {summary.patientPayable}
-                  </span>
-                  <span>
-                    <FaListUl className="me-1" />
-                    Total Due: ₹ {summary.totalDue}
-                  </span>
-                </div>
-                <Card.Body>
-                  <Table
-                    responsive
-                    borderless
-                    className="align-middle custom-table"
-                  >
-                    <thead>
+              <div className="summary-header" style={{ borderRadius: "0" }}>
+                <span>
+                  <FaListUl className="me-1" />
+                  Total Bill: ₹ {Math.round(parseFloat(summary.totalBill || 0)).toLocaleString("en-IN")}
+                </span>
+                <span>
+                  <FaTasks className="me-1" />
+                  Insurance Approved: ₹ {Math.round(parseFloat(summary.insuranceApproved || 0)).toLocaleString("en-IN")}
+                </span>
+                <span>
+                  <FaListUl className="me-1" />
+                  Patient Payable: ₹ {Math.round(parseFloat(summary.patientPayable || 0)).toLocaleString("en-IN")}
+                </span>
+                <span>
+                  <FaListUl className="me-1" />
+                  Total Due: ₹ {Math.round(parseFloat(summary.totalDue || 0)).toLocaleString("en-IN")}
+                </span>
+              </div>
+              <Card.Body>
+                <Table
+                  responsive
+                  borderless
+                  className="align-middle custom-table"
+                >
+                  <thead>
+                    <tr>
+                      <th style={{ width: "6%" }}>Sr No</th>
+                      <th style={{ width: "10%" }}>Date</th>
+                      <th style={{ width: "11.5%" }}>Cash</th>
+                      <th style={{ width: "11.5%" }}>Card</th>
+                      <th style={{ width: "11.5%" }}>Cheque</th>
+                      <th style={{ width: "11.5%" }}>Online</th>
+                      <th style={{ width: "11.5%" }}>Internal Discount</th>
+                      <th style={{ width: "11.5%" }}>Hospital Discount</th>
+                      <th style={{ width: "11%", position: "relative" }}>
+                        PDC Cheque{" "}
+                        <span
+                          style={{ position: "relative", display: "inline-block", cursor: "pointer", verticalAlign: "middle" }}
+                          onMouseEnter={() => setShowPdcInfo(true)}
+                          onMouseLeave={() => setShowPdcInfo(false)}
+                        >
+                          <FaInfoCircle size={13} style={{ marginLeft: "2px", color: "#0f7b63" }} />
+                          {showPdcInfo && (
+                            <div style={{
+                              position: "absolute",
+                              top: "125%",
+                              left: "50%",
+                              transform: "translateX(-50%)",
+                              backgroundColor: "#ffffff",
+                              color: "#1a2b26",
+                              padding: "8px 12px",
+                              borderRadius: "8px",
+                              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                              border: "1px solid #d4e8e3",
+                              fontSize: "11px",
+                              whiteSpace: "normal",
+                              width: "200px",
+                              zIndex: 1050,
+                              textAlign: "center",
+                              fontWeight: "normal",
+                              textTransform: "none",
+                              lineHeight: "1.4"
+                            }}>
+                              Amount of PDC Cheque taken during admission
+                              {/* Arrow */}
+                              <div style={{
+                                position: "absolute",
+                                bottom: "100%",
+                                left: "50%",
+                                transform: "translateX(-50%)",
+                                borderWidth: "5px",
+                                borderStyle: "solid",
+                                borderColor: "transparent transparent #ffffff transparent"
+                              }}></div>
+                              <div style={{
+                                position: "absolute",
+                                bottom: "100%",
+                                left: "50%",
+                                transform: "translateX(-50%) translateY(1px)",
+                                borderWidth: "5px",
+                                borderStyle: "solid",
+                                borderColor: "transparent transparent #d4e8e3 transparent",
+                                zIndex: -1
+                              }}></div>
+                            </div>
+                          )}
+                        </span>
+                      </th>
+                      <th style={{ width: "4.5%" }} className="text-center">
+                        Action
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {payments.length > 0 ? (
+                      payments.map((pay, idx) => (
+                        <tr key={pay.ipdpaymentid}>
+                          <td>
+                            <Form.Control
+                              className="table-input"
+                              style={{ width: "55px" }}
+                              readOnly
+                              value={idx + 1}
+                            />
+                          </td>
+                          <td>
+                            <Form.Control
+                              className="table-input"
+                              style={{ width: "110px" }}
+                              readOnly
+                              value={formatDate(pay.receipt_date)}
+                            />
+                          </td>
+                          <td>
+                            <InputGroup
+                              size="sm"
+                              style={{ width: "135px", flexWrap: "nowrap" }}
+                            >
+                              <InputGroup.Text className="table-input-group-text">
+                                ₹
+                              </InputGroup.Text>
+                              <Form.Control
+                                className="table-input-group-control"
+                                readOnly
+                                value={Math.round(parseFloat(pay.cashamt || 0)).toLocaleString("en-IN")}
+                              />
+                            </InputGroup>
+                          </td>
+                          <td>
+                            <InputGroup
+                              size="sm"
+                              style={{ width: "135px", flexWrap: "nowrap" }}
+                            >
+                              <InputGroup.Text className="table-input-group-text">
+                                ₹
+                              </InputGroup.Text>
+                              <Form.Control
+                                className="table-input-group-control"
+                                readOnly
+                                value={Math.round(parseFloat(pay.cardamt || 0)).toLocaleString("en-IN")}
+                              />
+                            </InputGroup>
+                          </td>
+                          <td>
+                            <InputGroup
+                              size="sm"
+                              style={{ width: "135px", flexWrap: "nowrap" }}
+                            >
+                              <InputGroup.Text className="table-input-group-text">
+                                ₹
+                              </InputGroup.Text>
+                              <Form.Control
+                                className="table-input-group-control"
+                                readOnly
+                                value={Math.round(parseFloat(pay.chequeamt || 0)).toLocaleString("en-IN")}
+                              />
+                            </InputGroup>
+                          </td>
+                          <td>
+                            <InputGroup
+                              size="sm"
+                              style={{ width: "135px", flexWrap: "nowrap" }}
+                            >
+                              <InputGroup.Text className="table-input-group-text">
+                                ₹
+                              </InputGroup.Text>
+                              <Form.Control
+                                className="table-input-group-control"
+                                readOnly
+                                value={Math.round(parseFloat(pay.onlineamt || 0)).toLocaleString("en-IN")}
+                              />
+                            </InputGroup>
+                          </td>
+                          <td>
+                            <InputGroup
+                              size="sm"
+                              style={{ width: "135px", flexWrap: "nowrap" }}
+                            >
+                              <InputGroup.Text className="table-input-group-text">
+                                ₹
+                              </InputGroup.Text>
+                              <Form.Control
+                                className="table-input-group-control"
+                                readOnly
+                                value={Math.round(parseFloat(pay.discountamt || 0)).toLocaleString("en-IN")}
+                              />
+                            </InputGroup>
+                          </td>
+                          <td>
+                            <InputGroup
+                              size="sm"
+                              style={{ width: "135px", flexWrap: "nowrap" }}
+                            >
+                              <InputGroup.Text className="table-input-group-text">
+                                ₹
+                              </InputGroup.Text>
+                              <Form.Control
+                                className="table-input-group-control"
+                                readOnly
+                                value={Math.round(parseFloat(pay.tdsamt || 0)).toLocaleString("en-IN")}
+                              />
+                            </InputGroup>
+                          </td>
+                          <td>
+                            <InputGroup
+                              size="sm"
+                              style={{ width: "135px", flexWrap: "nowrap" }}
+                            >
+                              <InputGroup.Text className="table-input-group-text">
+                                ₹
+                              </InputGroup.Text>
+                              <Form.Control
+                                className="table-input-group-control"
+                                readOnly
+                                value={Math.round(parseFloat(pay.pdcCheque || 0)).toLocaleString("en-IN")}
+                              />
+                            </InputGroup>
+                          </td>
+                          <td className="text-center">
+                            <Button
+                              title="Print Receipt"
+                              variant="outline-secondary"
+                              className="btn-print"
+                              onClick={() => handlePrintReceipt(pay)}
+                            >
+                              <FaPrint />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
                       <tr>
-                        <th style={{ width: "5%" }}>Sr No</th>
-                        <th style={{ width: "9%" }}>Date</th>
-                        <th style={{ width: "10%" }}>Cash</th>
-                        <th style={{ width: "10%" }}>Card</th>
-                        <th style={{ width: "10%" }}>Cheque</th>
-                        <th style={{ width: "10%" }}>Online</th>
-                        <th style={{ width: "10%" }}>Internal Discount</th>
-                        <th style={{ width: "3%" }}>Hospital Discount</th>
-                        <th style={{ width: "1%" }} className="text-center">
-                          Action
-                        </th>
+                        <td colSpan={10} className="text-center py-5">
+                          <div
+                            className="d-flex flex-column align-items-center justify-content-center p-4"
+                            style={{
+                              background: "rgba(255, 255, 255, 0.4)",
+                              borderRadius: "12px",
+                              border: "1px dashed #80deea",
+                              maxWidth: "500px",
+                              margin: "10px auto",
+                            }}
+                          >
+                            <div className="mb-3" style={{ fontSize: "2.5rem", color: "#00acc1" }}>
+                              <FaFileInvoiceDollar className="opacity-75" />
+                            </div>
+                            <h5 className="fw-bold text-cyan-dark mb-1">No Payments Found</h5>
+                            <p className="text-secondary small mb-0">No payment entries have been recorded for this invoice yet.</p>
+                          </div>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {payments.length > 0 ? (
-                        payments.map((pay, idx) => (
-                          <tr key={pay.ipdpaymentid}>
-                            <td>
-                              <Form.Control
-                                className="table-input"
-                                style={{ width: "55px" }}
-                                readOnly
-                                value={idx + 1}
-                              />
+                    )}
+                    {/* Separator row inside table body to act as border-top */}
+                    <tr>
+                      <td colSpan={10} style={{ padding: "10px 0" }}>
+                        <div style={{ borderTop: "2px solid #80deea" }}></div>
+                      </td>
+                    </tr>
+
+                    {(() => {
+                      const currentTotal =
+                        (Number(newPayment.cash) || 0) +
+                        (Number(newPayment.card) || 0) +
+                        (Number(newPayment.cheque) || 0) +
+                        (Number(newPayment.online) || 0) +
+                        (Number(newPayment.internalDiscount) || 0) +
+                        (Number(newPayment.tds) || 0);
+                      const isOverpaid = currentTotal > summary.totalDue;
+
+                      return (
+                        <>
+                          {isOverpaid && (
+                            <tr>
+                              <td colSpan={10}>
+                                <div className="alert alert-danger p-5 mb-2 text-center small fw-bold">
+                                  <FeatherIcon icon="alert-triangle" size="16" className="me-2 align-middle" />
+                                  Warning: Entered amount (₹ {Math.round(currentTotal).toLocaleString("en-IN")})
+                                  exceeds the remaining due (₹ {Math.round(summary.totalDue).toLocaleString("en-IN")}).
+                                  Please correct the values.
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                          <tr>
+                            <td className="text-center">
+                              <FaPlusCircle size={22} color="#0f7b63" title="Add Entry" />
                             </td>
                             <td>
                               <Form.Control
-                                className="table-input"
-                                style={{ width: "110px" }}
-                                readOnly
-                                value={formatDate(pay.receipt_date)}
+                                type="date"
+                                className="input-style"
+                                style={{ width: "110px", fontSize: "12px" }}
+                                value={newPayment.date}
+                                min={minDate}
+                                max={maxDate}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  if (val && (val < minDate || val > maxDate)) return;
+                                  setNewPayment({
+                                    ...newPayment,
+                                    date: val,
+                                  });
+                                }}
+                                onKeyDown={(e) => e.preventDefault()}
+                                onPaste={(e) => e.preventDefault()}
+                                onWheel={(e) => e.target.blur()}
                               />
                             </td>
                             <td>
@@ -843,13 +1086,25 @@ const IpdCollection = () => {
                                 size="sm"
                                 style={{ width: "135px", flexWrap: "nowrap" }}
                               >
-                                <InputGroup.Text className="table-input-group-text">
+                                <InputGroup.Text className="input-group-text-rupee">
                                   ₹
                                 </InputGroup.Text>
                                 <Form.Control
-                                  className="table-input-group-control"
-                                  readOnly
-                                  value={pay.cashamt}
+                                  type="text"
+                                  onWheel={(e) => e.target.blur()}
+                                  onKeyDown={(e) =>
+                                    ["e", "E", "+", "-"].includes(e.key) &&
+                                    e.preventDefault()
+                                  }
+                                  placeholder="Cash"
+                                  className="input-group-control-rupee"
+                                  value={newPayment.cash ? Number(String(newPayment.cash).replace(/,/g, "")).toLocaleString("en-IN") : ""}
+                                  onChange={(e) =>
+                                    setNewPayment({
+                                      ...newPayment,
+                                      cash: +e.target.value.replace(/[^0-9]/g, ""),
+                                    })
+                                  }
                                 />
                               </InputGroup>
                             </td>
@@ -858,13 +1113,26 @@ const IpdCollection = () => {
                                 size="sm"
                                 style={{ width: "135px", flexWrap: "nowrap" }}
                               >
-                                <InputGroup.Text className="table-input-group-text">
+                                <InputGroup.Text className="input-group-text-rupee">
                                   ₹
                                 </InputGroup.Text>
                                 <Form.Control
-                                  className="table-input-group-control"
-                                  readOnly
-                                  value={pay.cardamt}
+                                  type="number"
+                                  onWheel={(e) => e.target.blur()}
+                                  onKeyDown={(e) =>
+                                    ["e", "E", "+", "-"].includes(e.key) &&
+                                    e.preventDefault()
+                                  }
+                                  placeholder="Card"
+                                  className="input-group-control-rupee"
+                                  value={newPayment.card || ""}
+                                  disabled={newPayment.online > 0}
+                                  onChange={(e) =>
+                                    setNewPayment({
+                                      ...newPayment,
+                                      card: +e.target.value,
+                                    })
+                                  }
                                 />
                               </InputGroup>
                             </td>
@@ -873,13 +1141,25 @@ const IpdCollection = () => {
                                 size="sm"
                                 style={{ width: "135px", flexWrap: "nowrap" }}
                               >
-                                <InputGroup.Text className="table-input-group-text">
+                                <InputGroup.Text className="input-group-text-rupee">
                                   ₹
                                 </InputGroup.Text>
                                 <Form.Control
-                                  className="table-input-group-control"
-                                  readOnly
-                                  value={pay.chequeamt}
+                                  type="number"
+                                  onWheel={(e) => e.target.blur()}
+                                  onKeyDown={(e) =>
+                                    ["e", "E", "+", "-"].includes(e.key) &&
+                                    e.preventDefault()
+                                  }
+                                  placeholder="Cheque"
+                                  className="input-group-control-rupee"
+                                  value={newPayment.cheque || ""}
+                                  onChange={(e) =>
+                                    setNewPayment({
+                                      ...newPayment,
+                                      cheque: +e.target.value,
+                                    })
+                                  }
                                 />
                               </InputGroup>
                             </td>
@@ -888,13 +1168,26 @@ const IpdCollection = () => {
                                 size="sm"
                                 style={{ width: "135px", flexWrap: "nowrap" }}
                               >
-                                <InputGroup.Text className="table-input-group-text">
+                                <InputGroup.Text className="input-group-text-rupee">
                                   ₹
                                 </InputGroup.Text>
                                 <Form.Control
-                                  className="table-input-group-control"
-                                  readOnly
-                                  value={pay.onlineamt}
+                                  type="number"
+                                  onWheel={(e) => e.target.blur()}
+                                  onKeyDown={(e) =>
+                                    ["e", "E", "+", "-"].includes(e.key) &&
+                                    e.preventDefault()
+                                  }
+                                  placeholder="Online"
+                                  className="input-group-control-rupee"
+                                  value={newPayment.online || ""}
+                                  disabled={newPayment.card > 0}
+                                  onChange={(e) =>
+                                    setNewPayment({
+                                      ...newPayment,
+                                      online: +e.target.value,
+                                    })
+                                  }
                                 />
                               </InputGroup>
                             </td>
@@ -903,13 +1196,25 @@ const IpdCollection = () => {
                                 size="sm"
                                 style={{ width: "135px", flexWrap: "nowrap" }}
                               >
-                                <InputGroup.Text className="table-input-group-text">
+                                <InputGroup.Text className="input-group-text-rupee">
                                   ₹
                                 </InputGroup.Text>
                                 <Form.Control
-                                  className="table-input-group-control"
-                                  readOnly
-                                  value={pay.discountamt}
+                                  type="text"
+                                  onWheel={(e) => e.target.blur()}
+                                  onKeyDown={(e) =>
+                                    ["e", "E", "+", "-"].includes(e.key) &&
+                                    e.preventDefault()
+                                  }
+                                  placeholder="Internal Disc"
+                                  className="input-group-control-rupee"
+                                  value={newPayment.internalDiscount ? Number(String(newPayment.internalDiscount).replace(/,/g, "")).toLocaleString("en-IN") : ""}
+                                  onChange={(e) =>
+                                    setNewPayment({
+                                      ...newPayment,
+                                      internalDiscount: +e.target.value.replace(/[^0-9]/g, ""),
+                                    })
+                                  }
                                 />
                               </InputGroup>
                             </td>
@@ -918,328 +1223,112 @@ const IpdCollection = () => {
                                 size="sm"
                                 style={{ width: "135px", flexWrap: "nowrap" }}
                               >
-                                <InputGroup.Text className="table-input-group-text">
+                                <InputGroup.Text className="input-group-text-rupee">
                                   ₹
                                 </InputGroup.Text>
                                 <Form.Control
-                                  className="table-input-group-control"
-                                  readOnly
-                                  value={pay.tdsamt}
+                                  type="text"
+                                  onWheel={(e) => e.target.blur()}
+                                  onKeyDown={(e) =>
+                                    ["e", "E", "+", "-"].includes(e.key) &&
+                                    e.preventDefault()
+                                  }
+                                  placeholder="Hospital Disc"
+                                  className="input-group-control-rupee"
+                                  value={newPayment.tds ? Number(String(newPayment.tds).replace(/,/g, "")).toLocaleString("en-IN") : ""}
+                                  onChange={(e) =>
+                                    setNewPayment({
+                                      ...newPayment,
+                                      tds: +e.target.value.replace(/[^0-9]/g, ""),
+                                    })
+                                  }
+                                />
+                              </InputGroup>
+                            </td>
+                            <td>
+                              <InputGroup
+                                size="sm"
+                                style={{ width: "135px", flexWrap: "nowrap" }}
+                              >
+                                <InputGroup.Text className="input-group-text-rupee">
+                                  ₹
+                                </InputGroup.Text>
+                                <Form.Control
+                                  type="number"
+                                  onWheel={(e) => e.target.blur()}
+                                  onKeyDown={(e) =>
+                                    ["e", "E", "+", "-"].includes(e.key) &&
+                                    e.preventDefault()
+                                  }
+                                  placeholder="PDC Cheque"
+                                  className="input-group-control-rupee"
+                                  value={newPayment.pdcCheque || ""}
+                                  disabled={payments.some((pay) => (parseFloat(pay.pdcCheque) || 0) > 0)}
+                                  onChange={(e) =>
+                                    setNewPayment({
+                                      ...newPayment,
+                                      pdcCheque: +e.target.value,
+                                    })
+                                  }
                                 />
                               </InputGroup>
                             </td>
                             <td className="text-center">
                               <Button
-                                title="Print Receipt"
-                                variant="outline-secondary"
-                                className="btn-print"
-                                onClick={() => handlePrintReceipt(pay)}
+                                variant="primary"
+                                className="btn-save"
+                                onClick={handleSavePayment}
+                                disabled={loading || isOverpaid || summary.totalDue <= 0}
+                                title="Save Payment"
                               >
-                                <FaPrint />
+                                <FaSave size={16} />
                               </Button>
                             </td>
                           </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={9} className="text-center py-5">
-                            <div
-                              className="d-flex flex-column align-items-center justify-content-center p-4"
-                              style={{
-                                background: "rgba(255, 255, 255, 0.4)",
-                                borderRadius: "12px",
-                                border: "1px dashed #80deea",
-                                maxWidth: "500px",
-                                margin: "10px auto",
-                              }}
-                            >
-                              <div className="mb-3" style={{ fontSize: "2.5rem", color: "#00acc1" }}>
-                                <FaFileInvoiceDollar className="opacity-75" />
-                              </div>
-                              <h5 className="fw-bold text-cyan-dark mb-1">No Payments Found</h5>
-                              <p className="text-secondary small mb-0">No payment entries have been recorded for this invoice yet.</p>
-                            </div>
-                          </td>
-                        </tr>
-                      )}
-                      {/* Separator row inside table body to act as border-top */}
-                      <tr>
-                        <td colSpan={9} style={{ padding: "10px 0" }}>
-                          <div style={{ borderTop: "2px solid #80deea" }}></div>
-                        </td>
-                      </tr>
+                        </>
+                      );
+                    })()}
+                  </tbody>
+                </Table>
 
-                      {(() => {
-                        const currentTotal =
-                          (Number(newPayment.cash) || 0) +
-                          (Number(newPayment.card) || 0) +
-                          (Number(newPayment.cheque) || 0) +
-                          (Number(newPayment.online) || 0) +
-                          (Number(newPayment.internalDiscount) || 0) +
-                          (Number(newPayment.tds) || 0);
-                        const isOverpaid = currentTotal > summary.totalDue;
-
-                        return (
-                          <>
-                            {isOverpaid && (
-                              <tr>
-                                <td colSpan={9}>
-                                  <div className="alert alert-danger p-5 mb-2 text-center small fw-bold">
-                                    <FeatherIcon icon="alert-triangle" size="16" className="me-2 align-middle" />
-                                    Warning: Entered amount (₹ {currentTotal})
-                                    exceeds the remaining due (₹ {summary.totalDue}).
-                                    Please correct the values.
-                                  </div>
-                                </td>
-                              </tr>
-                            )}
-                            <tr>
-                              <td>
-                                <span
-                                  className="fw-bold text-cyan-dark"
-                                  style={{ fontSize: "14px", display: "block", minWidth: "90px" }}
-                                >
-                                  Add Entry
-                                </span>
-                              </td>
-                              <td>
-                                <Form.Control
-                                  type="date"
-                                  className="input-style"
-                                  style={{ width: "110px", fontSize: "12px" }}
-                                  value={newPayment.date}
-                                  max={maxDate}
-                                  onChange={(e) =>
-                                    setNewPayment({
-                                      ...newPayment,
-                                      date: e.target.value,
-                                    })
-                                  }
-                                  onKeyDown={(e) => e.preventDefault()}
-                                  onPaste={(e) => e.preventDefault()}
-                                  onWheel={(e) => e.target.blur()}
-                                />
-                              </td>
-                              <td>
-                                <InputGroup
-                                  size="sm"
-                                  style={{ width: "135px", flexWrap: "nowrap" }}
-                                >
-                                  <InputGroup.Text className="input-group-text-rupee">
-                                    ₹
-                                  </InputGroup.Text>
-                                  <Form.Control
-                                    type="number"
-                                    onWheel={(e) => e.target.blur()}
-                                    onKeyDown={(e) =>
-                                      ["e", "E", "+", "-"].includes(e.key) &&
-                                      e.preventDefault()
-                                    }
-                                    placeholder="Cash"
-                                    className="input-group-control-rupee"
-                                    value={newPayment.cash || ""}
-                                    onChange={(e) =>
-                                      setNewPayment({
-                                        ...newPayment,
-                                        cash: +e.target.value,
-                                      })
-                                    }
-                                  />
-                                </InputGroup>
-                              </td>
-                              <td>
-                                <InputGroup
-                                  size="sm"
-                                  style={{ width: "135px", flexWrap: "nowrap" }}
-                                >
-                                  <InputGroup.Text className="input-group-text-rupee">
-                                    ₹
-                                  </InputGroup.Text>
-                                  <Form.Control
-                                    type="number"
-                                    onWheel={(e) => e.target.blur()}
-                                    onKeyDown={(e) =>
-                                      ["e", "E", "+", "-"].includes(e.key) &&
-                                      e.preventDefault()
-                                    }
-                                    placeholder="Card"
-                                    className="input-group-control-rupee"
-                                    value={newPayment.card || ""}
-                                    disabled={newPayment.online > 0}
-                                    onChange={(e) =>
-                                      setNewPayment({
-                                        ...newPayment,
-                                        card: +e.target.value,
-                                      })
-                                    }
-                                  />
-                                </InputGroup>
-                              </td>
-                              <td>
-                                <InputGroup
-                                  size="sm"
-                                  style={{ width: "135px", flexWrap: "nowrap" }}
-                                >
-                                  <InputGroup.Text className="input-group-text-rupee">
-                                    ₹
-                                  </InputGroup.Text>
-                                  <Form.Control
-                                    type="number"
-                                    onWheel={(e) => e.target.blur()}
-                                    onKeyDown={(e) =>
-                                      ["e", "E", "+", "-"].includes(e.key) &&
-                                      e.preventDefault()
-                                    }
-                                    placeholder="Cheque"
-                                    className="input-group-control-rupee"
-                                    value={newPayment.cheque || ""}
-                                    onChange={(e) =>
-                                      setNewPayment({
-                                        ...newPayment,
-                                        cheque: +e.target.value,
-                                      })
-                                    }
-                                  />
-                                </InputGroup>
-                              </td>
-                              <td>
-                                <InputGroup
-                                  size="sm"
-                                  style={{ width: "135px", flexWrap: "nowrap" }}
-                                >
-                                  <InputGroup.Text className="input-group-text-rupee">
-                                    ₹
-                                  </InputGroup.Text>
-                                  <Form.Control
-                                    type="number"
-                                    onWheel={(e) => e.target.blur()}
-                                    onKeyDown={(e) =>
-                                      ["e", "E", "+", "-"].includes(e.key) &&
-                                      e.preventDefault()
-                                    }
-                                    placeholder="Online"
-                                    className="input-group-control-rupee"
-                                    value={newPayment.online || ""}
-                                    disabled={newPayment.card > 0}
-                                    onChange={(e) =>
-                                      setNewPayment({
-                                        ...newPayment,
-                                        online: +e.target.value,
-                                      })
-                                    }
-                                  />
-                                </InputGroup>
-                              </td>
-                              <td>
-                                <InputGroup
-                                  size="sm"
-                                  style={{ width: "135px", flexWrap: "nowrap" }}
-                                >
-                                  <InputGroup.Text className="input-group-text-rupee">
-                                    ₹
-                                  </InputGroup.Text>
-                                  <Form.Control
-                                    type="number"
-                                    onWheel={(e) => e.target.blur()}
-                                    onKeyDown={(e) =>
-                                      ["e", "E", "+", "-"].includes(e.key) &&
-                                      e.preventDefault()
-                                    }
-                                    placeholder="Internal Disc"
-                                    className="input-group-control-rupee"
-                                    value={newPayment.internalDiscount || ""}
-                                    onChange={(e) =>
-                                      setNewPayment({
-                                        ...newPayment,
-                                        internalDiscount: +e.target.value,
-                                      })
-                                    }
-                                  />
-                                </InputGroup>
-                              </td>
-                              <td>
-                                <InputGroup
-                                  size="sm"
-                                  style={{ width: "135px", flexWrap: "nowrap" }}
-                                >
-                                  <InputGroup.Text className="input-group-text-rupee">
-                                    ₹
-                                  </InputGroup.Text>
-                                  <Form.Control
-                                    type="number"
-                                    onWheel={(e) => e.target.blur()}
-                                    onKeyDown={(e) =>
-                                      ["e", "E", "+", "-"].includes(e.key) &&
-                                      e.preventDefault()
-                                    }
-                                    placeholder="Hospital Disc"
-                                    className="input-group-control-rupee"
-                                    value={newPayment.tds || ""}
-                                    onChange={(e) =>
-                                      setNewPayment({
-                                        ...newPayment,
-                                        tds: +e.target.value,
-                                      })
-                                    }
-                                  />
-                                </InputGroup>
-                              </td>
-                              <td className="text-center">
-                                <Button
-                                  variant="primary"
-                                  className="w-100 btn-save"
-                                  onClick={handleSavePayment}
-                                  disabled={loading || isOverpaid || summary.totalDue <= 0}
-                                >
-                                  Save
-                                </Button>
-                              </td>
-                            </tr>
-                          </>
-                        );
-                      })()}
-                    </tbody>
-                  </Table>
-
-                  {summary.totalDue === 0 && (
-                    <div
-                      className="alert alert-success mx-3 mt-3 text-center fw-bold"
-                      style={{
-                        borderRadius: "10px",
-                        border: "2px solid #2b9163",
-                      }}
-                    >
-                      <i className="fa fa-check-circle me-2"></i>
-                      This bill is already fully paid. No further payments are
-                      required.
-                    </div>
-                  )}
-
-                  <div className="mt-4 pt-4 border-top">
-                    <div className="pos-terminal-box">
-                      <span
-                        className="fw-bold text-cyan-dark"
-                        style={{ fontSize: "14px" }}
-                      >
-                        PoS Terminal<span className="text-danger">*</span> : {(newPayment.card > 0 || newPayment.online > 0)}
-                      </span>
-                      {terminalOptions.map((opt) => (
-                        <Form.Check
-                          key={opt}
-                          inline
-                          type="radio"
-                          label={opt}
-                          checked={selectedTerminal === opt}
-                          onChange={() => setSelectedTerminal(opt)}
-                          className="fw-bold text-secondary"
-                          style={{ cursor: "pointer", fontSize: "12px" }}
-                        />
-                      ))}
-                    </div>
+                {summary.totalDue === 0 && (
+                  <div
+                    className="alert alert-success mx-3 mt-3 text-center fw-bold"
+                    style={{
+                      borderRadius: "10px",
+                      border: "2px solid #2b9163",
+                    }}
+                  >
+                    <i className="fa fa-check-circle me-2"></i>
+                    This bill is already fully paid. No further payments are
+                    required.
                   </div>
-                </Card.Body>
-              </Card>
-            )}
+                )}
+
+                <div className="mt-4 pt-4 border-top">
+                  <div className="pos-terminal-box">
+                    <span
+                      className="fw-bold text-cyan-dark"
+                      style={{ fontSize: "14px" }}
+                    >
+                      PoS Terminal<span className="text-danger">*</span> : {(newPayment.card > 0 || newPayment.online > 0)}
+                    </span>
+                    {terminalOptions.map((opt) => (
+                      <Form.Check
+                        key={opt}
+                        inline
+                        type="radio"
+                        label={opt}
+                        checked={selectedTerminal === opt}
+                        onChange={() => setSelectedTerminal(opt)}
+                        className="fw-bold text-secondary"
+                        style={{ cursor: "pointer", fontSize: "12px" }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </Card.Body>
+            </Card>
           </Col>
         </Row>
       </Container>

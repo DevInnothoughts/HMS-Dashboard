@@ -107,7 +107,7 @@ const FollowUpCard = ({ followUpData, formData, handleFollowUpChange, onSaveFoll
                       if (prefixMatch) {
                         return (
                           <div key={i} style={{ marginBottom: i < filtered.length - 1 ? "10px" : "0", whiteSpace: "pre-line" }}>
-                            <b>{prefixMatch[1]}{prefixMatch[2]}</b> | {parts.slice(1).join(" | ")}
+                            <b>{prefixMatch[1]}{prefixMatch[2]} :</b> {parts.slice(1).join(" | ")}
                           </div>
                         );
                       }

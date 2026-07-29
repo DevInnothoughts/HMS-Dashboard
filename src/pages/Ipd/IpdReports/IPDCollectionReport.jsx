@@ -156,6 +156,14 @@ const IPDCollectionReport = () => {
     return val;
   };
 
+  const formatAmountValue = (val) => {
+    if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0") {
+      return "-";
+    }
+    const num = Math.round(parseFloat(String(val).replace(/,/g, "")) || 0);
+    return num.toLocaleString("en-IN");
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -169,23 +177,23 @@ const IPDCollectionReport = () => {
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
-          footer={totals.cash || 0}
+          footer={(totals.cash || 0).toLocaleString("en-IN")}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
-          footer={totals.card || 0}
+          footer={(totals.card || 0).toLocaleString("en-IN")}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
-          footer={totals.cheque || 0}
+          footer={(totals.cheque || 0).toLocaleString("en-IN")}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
-          footer={totals.online || 0}
+          footer={(totals.online || 0).toLocaleString("en-IN")}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
-          footer={totals.discount || 0}
+          footer={(totals.discount || 0).toLocaleString("en-IN")}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
       </Row>
@@ -468,27 +476,27 @@ const IPDCollectionReport = () => {
                     <Column
                       field="cashamt"
                       header="Cash"
-                      body={(rowData) => formatValue(rowData.cashamt)}
+                      body={(rowData) => formatAmountValue(rowData.cashamt)}
                     />
                     <Column
                       field="cardamt"
                       header="Card"
-                      body={(rowData) => formatValue(rowData.cardamt)}
+                      body={(rowData) => formatAmountValue(rowData.cardamt)}
                     />
                     <Column
                       field="chequeamt"
                       header="Cheque"
-                      body={(rowData) => formatValue(rowData.chequeamt)}
+                      body={(rowData) => formatAmountValue(rowData.chequeamt)}
                     />
                     <Column
                       field="onlineamt"
                       header="Online"
-                      body={(rowData) => formatValue(rowData.onlineamt)}
+                      body={(rowData) => formatAmountValue(rowData.onlineamt)}
                     />
                     <Column
                       field="discountamt"
                       header="Discount"
-                      body={(rowData) => formatValue(rowData.discountamt)}
+                      body={(rowData) => formatAmountValue(rowData.discountamt)}
                     />
                   </DataTable>
 
@@ -515,21 +523,21 @@ const IPDCollectionReport = () => {
                             <td>{formatValue(item.patient)}</td>
                             <td>{formatValue(formatDateDisplay(item.invoicedate))}</td>
                             <td>{formatValue(formatDateDisplay(item.receipt_date))}</td>
-                            <td>{formatValue(item.cashamt)}</td>
-                            <td>{formatValue(item.cardamt)}</td>
-                            <td>{formatValue(item.chequeamt)}</td>
-                            <td>{formatValue(item.onlineamt)}</td>
-                            <td>{formatValue(item.discountamt)}</td>
+                            <td>{formatAmountValue(item.cashamt)}</td>
+                            <td>{formatAmountValue(item.cardamt)}</td>
+                            <td>{formatAmountValue(item.chequeamt)}</td>
+                            <td>{formatAmountValue(item.onlineamt)}</td>
+                            <td>{formatAmountValue(item.discountamt)}</td>
                           </tr>
                         ))}
                         {/* Totals row inside tbody to avoid page repetition on multiple pages */}
                         <tr className="print-totals-row">
                           <td colSpan={4}>Total</td>
-                          <td>{printTotals.cash || 0}</td>
-                          <td>{printTotals.card || 0}</td>
-                          <td>{printTotals.cheque || 0}</td>
-                          <td>{printTotals.online || 0}</td>
-                          <td>{printTotals.discount || 0}</td>
+                          <td>{(printTotals.cash || 0).toLocaleString("en-IN")}</td>
+                          <td>{(printTotals.card || 0).toLocaleString("en-IN")}</td>
+                          <td>{(printTotals.cheque || 0).toLocaleString("en-IN")}</td>
+                          <td>{(printTotals.online || 0).toLocaleString("en-IN")}</td>
+                          <td>{(printTotals.discount || 0).toLocaleString("en-IN")}</td>
                         </tr>
                       </tbody>
                     </table>

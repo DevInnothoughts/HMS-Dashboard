@@ -3051,7 +3051,6 @@ const OpdPatientMedicalRecords = () => {
     { id: "proctoscopy", label: "Proctoscopy", icon: "search" },
     { id: "opd-prescription", label: "Prescription", icon: "edit-3" },
     // { id: "surgery-details", label: "Surgery Details", icon: "scissors" },
-    { id: "discharge-card", label: "Discharge Card", icon: "log-out" },
   ];
 
   const renderPersonalInfo = () => (
@@ -3193,7 +3192,7 @@ const OpdPatientMedicalRecords = () => {
                     </Button>
                     <div>
                       <h4 className="fw-bold mb-1" style={{ color: "#2c3e50" }}>
-                        Patient Medical Records
+                        OPD Patient Medical Records
                       </h4>
                       {formData.name && (
                         <div className="d-flex flex-wrap gap-2 align-items-center" style={{ fontSize: "13px" }}>
@@ -3578,27 +3577,6 @@ const OpdPatientMedicalRecords = () => {
                 />
  
               )} */}
-                {activeTab === "discharge-card" && (
-                  <DischargeCard
-                    dischargeData={dischargeData}
-                    doctors={doctors}
-                    assistanceDoctors={assistanceDoctors}
-                    fistulaCases={fistulaCases}
-                    handleDischargeChange={handleDischargeChange}
-                    handleDischargeInvestigationChange={
-                      handleDischargeInvestigationChange
-                    }
-                    previousDischargesList={previousDischargesList}
-                    selectedDischargeId={selectedDischargeId}
-                    onSelectDischarge={handleSelectDischarge}
-                    onNewDischarge={handleNewDischarge}
-                    onSaveDischarge={handleSaveDischarge}
-                    onPrintDischarge={handlePrintDischarge}
-                    loading={loading}
-                    location={currentLocation}
-                    validationErrors={validationErrors}
-                  />
-                )}
                 {![
                   "personal",
                   "patient-history",
@@ -3608,7 +3586,6 @@ const OpdPatientMedicalRecords = () => {
                   "proctoscopy",
                   "opd-prescription",
                   "surgery-details",
-                  "discharge-card",
                 ].includes(activeTab) && (
                     <div className="text-center py-5 animate__animated animate__fadeIn">
                       <div

@@ -21,6 +21,19 @@ import MuiDateTimePicker from "../Utility/inputs/MuiDateTimePicker";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
 
+const getLocalDateString = (date) => {
+  const offset = date.getTimezoneOffset();
+  const localDate = new Date(date.getTime() - (offset * 60 * 1000));
+  return localDate.toISOString().split("T")[0];
+};
+
+const today = new Date();
+const maxDate = getLocalDateString(today);
+
+const minDateObj = new Date();
+minDateObj.setDate(today.getDate() - 1);
+const minDate = getLocalDateString(minDateObj);
+
 const Toast = Swal.mixin({
   toast: true,
   position: "top-end",
@@ -35,11 +48,28 @@ export default function AddIpdAdmission() {
   const [patientData, setPatientData] = useState(null);
   const [searchResults, setSearchResults] = useState([]);
   const [showSelectionModal, setShowSelectionModal] = useState(false);
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const [currentLocation, setCurrentLocation] = useState("default");
   const [loading, setLoading] = useState(false);
   const [isPendingAdmission, setIsPendingAdmission] = useState(false);
-  const [admissionDatetime, setAdmissionDatetime] = useState(null);
-  const [surgeryDatetime, setSurgeryDatetime] = useState(null);
+  const [admissionDate, setAdmissionDate] = useState("");
+  const [admissionTime, setAdmissionTime] = useState("");
+  const [surgeryDate, setSurgeryDate] = useState("");
+  const [surgeryTime, setSurgeryTime] = useState("");
+
+  const generateTimeOptions = () => {
+    const times = [];
+    for (let hour = 0; hour < 24; hour++) {
+      for (let min = 0; min < 60; min += 15) {
+        const h = hour.toString().padStart(2, "0");
+        const m = min.toString().padStart(2, "0");
+        times.push(`${h}:${m}`);
+      }
+    }
+    return times;
+  };
+
+  const timeOptions = generateTimeOptions();
   const [roomNumber, setRoomNumber] = useState("");
   const [roomType, setRoomType] = useState("");
   const [sxPlan, setSxPlan] = useState("");
@@ -77,9 +107,51 @@ export default function AddIpdAdmission() {
     }
   };
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!uhid) return;
+  const handleSearchChange = async (val) => {
+    setUhid(val);
+    if (!val.trim()) {
+      setSearchResults([]);
+      setShowSearchDropdown(false);
+      setPatientData(null);
+      setIsPendingAdmission(false);
+      return;
+    }
+
+    if (currentLocation === "default") return;
+
+    try {
+      const response = await fetch(
+        `${BASE_URL}/V1/ipd/admin/checkPatientOPD?location=${currentLocation}&uidNo=${encodeURIComponent(val.trim())}`,
+      );
+      if (response.ok) {
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          setSearchResults(data);
+          setShowSearchDropdown(data.length > 0);
+        } else {
+          setSearchResults([]);
+          setShowSearchDropdown(false);
+        }
+      } else {
+        setSearchResults([]);
+        setShowSearchDropdown(false);
+      }
+    } catch (error) {
+      console.error("Realtime search error:", error);
+      setSearchResults([]);
+      setShowSearchDropdown(false);
+    }
+  };
+
+  const handleSearchBlur = () => {
+    setTimeout(() => {
+      setShowSearchDropdown(false);
+    }, 200);
+  };
+
+  const handleSearchSubmit = async (e) => {
+    if (e) e.preventDefault();
+    if (!uhid.trim()) return;
 
     if (currentLocation === "default") {
       Swal.fire(
@@ -92,17 +164,18 @@ export default function AddIpdAdmission() {
 
     try {
       const response = await fetch(
-        `${BASE_URL}/V1/ipd/admin/checkPatientOPD?location=${currentLocation}&uidNo=${uhid}`,
+        `${BASE_URL}/V1/ipd/admin/checkPatientOPD?location=${currentLocation}&uidNo=${encodeURIComponent(uhid.trim())}`,
       );
       if (response.ok) {
         const data = await response.json();
-
-        if (data && data.length > 1) {
+        if (data && data.length > 0) {
           setSearchResults(data);
-          setShowSelectionModal(true);
-        } else if (data && data.length === 1) {
-          selectPatient(data[0]);
-          Toast.fire({ icon: "success", title: "Patient Found" });
+          if (data.length === 1) {
+            selectPatient(data[0]);
+            Toast.fire({ icon: "success", title: "Patient Found" });
+          } else {
+            setShowSearchDropdown(true);
+          }
         } else {
           setPatientData(null);
           Swal.fire("Not Found", "No matches found.", "info");
@@ -133,8 +206,8 @@ export default function AddIpdAdmission() {
     if (isPending) {
       Swal.fire({
         icon: "warning",
-        title: "Pending Admission",
-        text: `This patient (${patient.name}) already has a pending admission in the list.`,
+        title: "Unconfirmed Pending Admission",
+        text: `This patient (${patient.name}) has an unconfirmed admission in the list. Please process the existing admission to allow adding a new admission.`,
         confirmButtonColor: "#dc3545",
       });
     }
@@ -165,10 +238,13 @@ export default function AddIpdAdmission() {
     setPatientData(patData);
     setSxPlan(patient.surgical_advice || "");
     setShowSelectionModal(false);
+    setShowSearchDropdown(false);
 
     // Reset booking details
-    setAdmissionDatetime(null);
-    setSurgeryDatetime(null);
+    setAdmissionDate("");
+    setAdmissionTime("");
+    setSurgeryDate("");
+    setSurgeryTime("");
     setRoomNumber("");
     setRoomType("");
     setSxPlan("");
@@ -186,11 +262,34 @@ export default function AddIpdAdmission() {
       return /\d{2}-\d{2}-\d{4}\s\d{2}:\d{2}/.test(val);
     };
 
-    if (!admissionDatetime || !hasTime(admissionDatetime)) {
+    const convertTo12Hour = (time24) => {
+      if (!time24) return "";
+      if (time24.includes("AM") || time24.includes("PM")) return time24;
+      let [hours, minutes] = time24.split(":");
+      let period = "AM";
+      hours = parseInt(hours);
+      if (hours === 0) {
+        hours = 12;
+      } else if (hours === 12) {
+        period = "PM";
+      } else if (hours > 12) {
+        hours -= 12;
+        period = "PM";
+      }
+      return `${hours.toString().padStart(2, "0")}:${minutes} ${period}`;
+    };
+
+    const formattedTime = convertTo12Hour(admissionTime);
+    const combinedAdmissionDatetime = admissionDate && formattedTime ? `${dayjs(admissionDate).format("DD-MM-YYYY")} ${formattedTime}` : "";
+
+    const formattedSurgeryTime = convertTo12Hour(surgeryTime);
+    const combinedSurgeryDatetime = surgeryDate && formattedSurgeryTime ? `${dayjs(surgeryDate).format("DD-MM-YYYY")} ${formattedSurgeryTime}` : "";
+
+    if (!combinedAdmissionDatetime || !hasTime(combinedAdmissionDatetime)) {
       Swal.fire("Required", "Please select a valid Admission Date & Time (both Date and Time are required)", "warning");
       return;
     }
-    if (!surgeryDatetime || !hasTime(surgeryDatetime)) {
+    if (!combinedSurgeryDatetime || !hasTime(combinedSurgeryDatetime)) {
       Swal.fire("Required", "Please select a valid Surgery Date & Time (both Date and Time are required)", "warning");
       return;
     }
@@ -217,12 +316,12 @@ export default function AddIpdAdmission() {
 
     const preplan = {
       pre_planning: {
-        admission_datetime: admissionDatetime,
-        surgery_datetime: surgeryDatetime,
+        admission_datetime: combinedAdmissionDatetime,
+        surgery_datetime: combinedSurgeryDatetime,
         room_no: roomNumber,
         room_type: roomType,
         sx_plan: sxPlan,
-        nmb_time: nmbTime,
+        nmb_time: convertTo12Hour(nmbTime),
         doctor_id: mainDoctorId,
       },
     };
@@ -287,8 +386,10 @@ export default function AddIpdAdmission() {
     setUhid("");
     setPatientData(null);
     setSearchResults([]);
-    setAdmissionDatetime(null);
-    setSurgeryDatetime(null);
+    setAdmissionDate("");
+    setAdmissionTime("");
+    setSurgeryDate("");
+    setSurgeryTime("");
     setRoomNumber("");
     setRoomType("");
     setSxPlan("");
@@ -322,7 +423,7 @@ export default function AddIpdAdmission() {
                   boxShadow: "0 10px 25px rgba(0, 0, 0, 0.08)",
                   border: "none",
                   background: "white",
-                  overflow: "hidden",
+                  overflow: "visible",
                 }}
               >
                 <div
@@ -332,6 +433,8 @@ export default function AddIpdAdmission() {
                     borderBottom: "2px solid #1a5b61ff",
                     display: "flex",
                     alignItems: "center",
+                    borderTopLeftRadius: "15px",
+                    borderTopRightRadius: "15px",
                   }}
                 >
                   <FeatherIcon
@@ -351,25 +454,24 @@ export default function AddIpdAdmission() {
                   </h4>
                 </div>
                 <Card.Body className="p-3" style={{ margin: "5px" }}>
-                  <Form onSubmit={handleSearch}>
-                    <Form.Group>
+                  <Form onSubmit={handleSearchSubmit}>
+                    <Form.Group style={{ position: "relative" }}>
                       <Form.Label
                         className="fw-bold uppercase mb-1"
                         style={{ fontSize: "0.8rem", color: "#1a5b61ff" }}
                       >
-                        Search by Patient Name / UID No / Contact No
+                        Search by Patient Name / UID Number / Contact Number
                       </Form.Label>
                       <InputGroup size="sm">
                         <Form.Control
                           type="text"
-                          placeholder="Enter Patient Name / UHID No / Patient Mobile No"
+                          placeholder="Enter Patient Details"
                           value={uhid}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            setUhid(val);
-                            if (!val.trim()) {
-                              setPatientData(null);
-                              setIsPendingAdmission(false);
+                          onChange={(e) => handleSearchChange(e.target.value)}
+                          onBlur={handleSearchBlur}
+                          onFocus={() => {
+                            if (searchResults.length > 0) {
+                              setShowSearchDropdown(true);
                             }
                           }}
                           style={{
@@ -392,6 +494,67 @@ export default function AddIpdAdmission() {
                           Search
                         </Button>
                       </InputGroup>
+
+                      {showSearchDropdown && searchResults.length > 0 && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: "100%",
+                            left: 0,
+                            right: 0,
+                            backgroundColor: "white",
+                            border: "1px solid #ced4da",
+                            borderRadius: "8px",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                            zIndex: 1000,
+                            maxHeight: "350px",
+                            overflowY: "auto",
+                            marginTop: "4px",
+                          }}
+                        >
+                          {searchResults.map((patient, index) => (
+                            <div
+                              key={index}
+                              onClick={() => selectPatient(patient)}
+                              style={{
+                                padding: "10px 15px",
+                                cursor: "pointer",
+                                borderBottom: index < searchResults.length - 1 ? "1px solid #f1f3f5" : "none",
+                                fontSize: "0.85rem",
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                transition: "background-color 0.2s",
+                              }}
+                              className="patient-search-item"
+                              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#e0f7fa")}
+                              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "white")}
+                            >
+                              <div>
+                                <strong>{patient.name}</strong> ({patient.sex}, {patient.age} yrs)
+                                <div style={{ fontSize: "0.75rem" }}>
+                                  <strong>UID:</strong> {patient.Uid_no} | <strong>Contact:</strong> {patient.phone}
+                                </div>
+                              </div>
+                              <Button
+                                variant="info"
+                                size="sm"
+                                style={{
+                                  fontSize: "0.85rem",
+                                  padding: "5px 15px",
+                                  backgroundColor: "#178aaeff",
+                                  border: "none",
+                                  color: "white",
+                                  borderRadius: "6px",
+                                  fontWeight: "600",
+                                }}
+                              >
+                                Select
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </Form.Group>
                   </Form>
                 </Card.Body>
@@ -439,19 +602,19 @@ export default function AddIpdAdmission() {
                   <Card.Body className="p-3">
                     {isPendingAdmission && (
                       <div className="alert alert-danger p-2 mb-3 text-center small fw-bold">
-                        Warning: This patient already has a pending admission in the list. Admission booking is blocked.
+                        Warning: This patient already has an unconfirmed pending admission in the list. Please confirm the existing entry in Manage Admission list to allow adding a new admission.
                       </div>
                     )}
                     <Row>
                       {[
-                        { label: "UHID No.", value: patientData.uhid },
+                        { label: "UID Number", value: patientData.uhid },
                         { label: "Patient Name", value: patientData.name },
                         { label: "Contact Number", value: patientData.contact },
                         { label: "Age", value: patientData.age },
                         { label: "Gender", value: patientData.gender },
                         { label: "Address", value: patientData.address },
                       ].map((field, idx) => (
-                        <Col md={4} key={idx} className="mb-3">
+                        <Col md={4} key={idx} className="mb-10">
                           <Form.Group>
                             <Form.Label
                               className={labelStyle}
@@ -493,90 +656,149 @@ export default function AddIpdAdmission() {
                                 marginBottom: "5px",
                               }}
                             >
-                              *Fill the below details to book the patient for
-                              admission
+                              *Fill The Below Details To Book The Patient For
+                              Ipd Admission
                             </p>
                           </Col>
 
-                          <Col md={4} className="mb-3">
-                            <MuiDateTimePicker
-                              label="Admission Date & Time"
-                              value={admissionDatetime}
-                              onChange={(e) =>
-                                setAdmissionDatetime(e.target.value)
-                              }
-                              type="datetime"
-                              labelClassName={labelStyle}
-                              labelStyle={{ fontSize: "0.75rem" }}
-                              required={true}
-                              disablePast={false}
-                              minDate={dayjs().subtract(1, "day").startOf("day")}
-                              minutesStep={15}
-                              ampm={false}
-                              inputSx={{
-                                "& .MuiOutlinedInput-root": {
+                          <Col md={2} className="mb-3">
+                            <Form.Group>
+                              <Form.Label
+                                className={labelStyle}
+                                style={{ fontSize: "0.75rem" }}
+                              >
+                                Admission Date <span className="text-danger">*</span>
+                              </Form.Label>
+                              <Form.Control
+                                required
+                                type="date"
+                                style={{
+                                  border: "1.5px solid rgb(77, 208, 225)",
                                   borderRadius: "8px",
+                                  padding: "3px 10px",
+                                  fontSize: "0.8rem",
                                   height: "31px",
-                                  "& fieldset": {
-                                    borderWidth: "1.5px !important",
-                                    borderColor: "rgb(77, 208, 225) !important",
-                                  },
-                                },
-                                "& .MuiInputBase-input": {
-                                  padding: "3px 10px !important",
-                                  fontSize: "0.8rem !important",
-                                },
-                                "& .MuiInputAdornment-root": {
-                                  marginLeft: "0",
-                                },
-                                "& .MuiIconButton-root": {
-                                  padding: "4px",
-                                  color: "#1a5b61ff",
-                                },
-                              }}
-                            />
+                                }}
+                                name="admission_date"
+                                min={minDate}
+                                max={maxDate}
+                                value={admissionDate}
+                                onChange={(e) => setAdmissionDate(e.target.value)}
+                                onKeyDown={(e) => e.preventDefault()}
+                                onPaste={(e) => e.preventDefault()}
+                                onWheel={(e) => e.target.blur()}
+                              />
+                            </Form.Group>
                           </Col>
 
-                          <Col md={4} className="mb-3">
-                            <MuiDateTimePicker
-                              label="Surgery Date & Time"
-                              value={surgeryDatetime}
-                              onChange={(e) =>
-                                setSurgeryDatetime(e.target.value)
-                              }
-                              type="datetime"
-                              labelClassName={labelStyle}
-                              labelStyle={{ fontSize: "0.75rem" }}
-                              required={true}
-                              disablePast={false}
-                              minDate={dayjs().startOf("day")}
-                              minutesStep={15}
-                              ampm={false}
-                              inputSx={{
-                                "& .MuiOutlinedInput-root": {
+                          <Col md={2} className="mb-3">
+                            <Form.Group>
+                              <Form.Label
+                                className={labelStyle}
+                                style={{ fontSize: "0.75rem" }}
+                              >
+                                Admission Time <span className="text-danger">*</span>
+                              </Form.Label>
+                              <Form.Select
+                                required
+                                style={{
+                                  border: "1.5px solid rgb(77, 208, 225)",
                                   borderRadius: "8px",
+                                  padding: "3px 10px",
+                                  fontSize: "0.8rem",
                                   height: "31px",
-                                  "& fieldset": {
-                                    borderWidth: "1.5px !important",
-                                    borderColor: "rgb(77, 208, 225) !important",
-                                  },
-                                },
-                                "& .MuiInputBase-input": {
-                                  padding: "3px 10px !important",
-                                  fontSize: "0.8rem !important",
-                                },
-                                "& .MuiInputAdornment-root": {
-                                  marginLeft: "0",
-                                },
-                                "& .MuiIconButton-root": {
-                                  padding: "4px",
-                                  color: "#1a5b61ff",
-                                },
-                              }}
-                            />
+                                }}
+                                value={admissionTime}
+                                name="admission_time"
+                                onChange={(e) => setAdmissionTime(e.target.value)}
+                              >
+                                <option value="">Select Time</option>
+                                {timeOptions.map((time) => {
+                                  const [hour, minute] = time.split(":");
+                                  const h = parseInt(hour);
+                                  const ampm = h >= 12 ? "PM" : "AM";
+                                  const displayHour = h % 12 || 12;
+                                  const displayTime = `${displayHour}:${minute} ${ampm}`;
+
+                                  return (
+                                    <option key={time} value={time}>
+                                      {displayTime}
+                                    </option>
+                                  );
+                                })}
+                              </Form.Select>
+                            </Form.Group>
                           </Col>
 
-                          <Col md={4} className="mb-3">
+                          <Col md={2} className="mb-3">
+                            <Form.Group>
+                              <Form.Label
+                                className={labelStyle}
+                                style={{ fontSize: "0.75rem" }}
+                              >
+                                Surgery Date <span className="text-danger">*</span>
+                              </Form.Label>
+                              <Form.Control
+                                required
+                                type="date"
+                                style={{
+                                  border: "1.5px solid rgb(77, 208, 225)",
+                                  borderRadius: "8px",
+                                  padding: "3px 10px",
+                                  fontSize: "0.8rem",
+                                  height: "31px",
+                                }}
+                                name="surgery_date"
+                                min={maxDate}
+                                value={surgeryDate}
+                                onChange={(e) => setSurgeryDate(e.target.value)}
+                                onKeyDown={(e) => e.preventDefault()}
+                                onPaste={(e) => e.preventDefault()}
+                                onWheel={(e) => e.target.blur()}
+                              />
+                            </Form.Group>
+                          </Col>
+
+                          <Col md={2} className="mb-3">
+                            <Form.Group>
+                              <Form.Label
+                                className={labelStyle}
+                                style={{ fontSize: "0.75rem" }}
+                              >
+                                Surgery Time <span className="text-danger">*</span>
+                              </Form.Label>
+                              <Form.Select
+                                required
+                                style={{
+                                  border: "1.5px solid rgb(77, 208, 225)",
+                                  borderRadius: "8px",
+                                  padding: "3px 10px",
+                                  fontSize: "0.8rem",
+                                  height: "31px",
+                                }}
+                                value={surgeryTime}
+                                name="surgery_time"
+                                onChange={(e) => setSurgeryTime(e.target.value)}
+                              >
+                                <option value="">Select Time</option>
+                                {timeOptions.map((time) => {
+                                  const [hour, minute] = time.split(":");
+                                  const h = parseInt(hour);
+                                  const ampm = h >= 12 ? "PM" : "AM";
+                                  const displayHour = h % 12 || 12;
+                                  const displayTime = `${displayHour}:${minute} ${ampm}`;
+
+                                  return (
+                                    <option key={time} value={time}>
+                                      {displayTime}
+                                    </option>
+                                  );
+                                })}
+                              </Form.Select>
+                            </Form.Group>
+                          </Col>
+
+                          <Col md={4} className="mb-10">
                             <Form.Group>
                               <Form.Label
                                 className={labelStyle}
@@ -611,7 +833,7 @@ export default function AddIpdAdmission() {
                             </Form.Group>
                           </Col>
 
-                          <Col md={4} className="mb-3">
+                          <Col md={2} className="mb-3">
                             <Form.Group>
                               <Form.Label
                                 className={labelStyle}
@@ -635,7 +857,7 @@ export default function AddIpdAdmission() {
                             </Form.Group>
                           </Col>
 
-                          <Col md={4} className="mb-3">
+                          <Col md={5} className="mb-3">
                             <Form.Group>
                               <Form.Label
                                 className={labelStyle}
@@ -659,42 +881,46 @@ export default function AddIpdAdmission() {
                             </Form.Group>
                           </Col>
 
-                          <Col md={4} className="mb-3">
-                            <MuiDateTimePicker
-                              label="NBM Time"
-                              value={nmbTime}
-                              onChange={(e) => setNmbTime(e.target.value)}
-                              type="time"
-                              minutesStep={15}
-                              ampm={false}
-                              labelClassName={labelStyle}
-                              labelStyle={{ fontSize: "0.75rem" }}
-                              required={true}
-                              inputSx={{
-                                "& .MuiOutlinedInput-root": {
+                          <Col md={2} className="mb-3">
+                            <Form.Group>
+                              <Form.Label
+                                className={labelStyle}
+                                style={{ fontSize: "0.75rem" }}
+                              >
+                                NBM Time <span className="text-danger">*</span>
+                              </Form.Label>
+                              <Form.Select
+                                required
+                                style={{
+                                  border: "1.5px solid rgb(77, 208, 225)",
                                   borderRadius: "8px",
+                                  padding: "3px 10px",
+                                  fontSize: "0.8rem",
                                   height: "31px",
-                                  "& fieldset": {
-                                    borderWidth: "1.5px !important",
-                                    borderColor: "rgb(77, 208, 225) !important",
-                                  },
-                                },
-                                "& .MuiInputBase-input": {
-                                  padding: "3px 10px !important",
-                                  fontSize: "0.8rem !important",
-                                },
-                                "& .MuiInputAdornment-root": {
-                                  marginLeft: "0",
-                                },
-                                "& .MuiIconButton-root": {
-                                  padding: "4px",
-                                  color: "#1a5b61ff",
-                                },
-                              }}
-                            />
+                                }}
+                                value={nmbTime || ""}
+                                name="nmb_time"
+                                onChange={(e) => setNmbTime(e.target.value)}
+                              >
+                                <option value="">Select Time</option>
+                                {timeOptions.map((time) => {
+                                  const [hour, minute] = time.split(":");
+                                  const h = parseInt(hour);
+                                  const ampm = h >= 12 ? "PM" : "AM";
+                                  const displayHour = h % 12 || 12;
+                                  const displayTime = `${displayHour}:${minute} ${ampm}`;
+
+                                  return (
+                                    <option key={time} value={time}>
+                                      {displayTime}
+                                    </option>
+                                  );
+                                })}
+                              </Form.Select>
+                            </Form.Group>
                           </Col>
 
-                          <Col md={4} className="mb-3">
+                          <Col md={3} className="mb-3">
                             <Form.Group>
                               <Form.Label
                                 className={labelStyle}
@@ -818,8 +1044,11 @@ export default function AddIpdAdmission() {
                           style={{
                             backgroundColor: "#178aaeff",
                             border: "none",
-                            borderRadius: "5px",
+                            borderRadius: "6px",
                             color: "white",
+                            fontSize: "0.85rem",
+                            padding: "5px 15px",
+                            fontWeight: "600",
                           }}
                         >
                           Select

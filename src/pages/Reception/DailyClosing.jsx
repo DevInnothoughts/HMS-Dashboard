@@ -30,6 +30,13 @@ const Toast = Swal.mixin({
 const BASE_URL = "http://194.195.117.79:5100/api";
 
 const DailyClosing = () => {
+  const formatToIndianCommas = (val) => {
+    if (val === null || val === undefined || val === "") return "";
+    const clean = String(val).replace(/[^0-9]/g, "");
+    if (!clean) return "";
+    return Number(clean).toLocaleString("en-IN");
+  };
+
   const [currentDate, setCurrentDate] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -92,6 +99,7 @@ const DailyClosing = () => {
     upiSettlement: "",
     cardSettlement: "",
     bankDeposit: "",
+    manualCIH: "",
     comment: "",
     cashDepositReceipt: "",
     cardSettlementSlip: "",
@@ -184,28 +192,34 @@ const DailyClosing = () => {
           const updatedData = {
             opdCash:
               dbData.opdcash !== null && dbData.opdcash !== undefined
-                ? String(dbData.opdcash)
+                ? formatToIndianCommas(dbData.opdcash)
                 : "",
             ipdCash:
               dbData.ipdcash !== null && dbData.ipdcash !== undefined
-                ? String(dbData.ipdcash)
+                ? formatToIndianCommas(dbData.ipdcash)
                 : "",
             pharmacyCash:
               dbData.pharmacycash !== null && dbData.pharmacycash !== undefined
-                ? String(dbData.pharmacycash)
+                ? formatToIndianCommas(dbData.pharmacycash)
                 : "",
             upiSettlement:
               dbData.upiamt !== null && dbData.upiamt !== undefined
-                ? String(dbData.upiamt)
+                ? formatToIndianCommas(dbData.upiamt)
                 : "",
             cardSettlement:
               dbData.cardamt !== null && dbData.cardamt !== undefined
-                ? String(dbData.cardamt)
+                ? formatToIndianCommas(dbData.cardamt)
                 : "",
             bankDeposit:
               dbData.bankdeposit !== null && dbData.bankdeposit !== undefined
-                ? String(dbData.bankdeposit)
+                ? formatToIndianCommas(dbData.bankdeposit)
                 : "",
+            manualCIH:
+              dbData.manualCIH !== null && dbData.manualCIH !== undefined
+                ? formatToIndianCommas(dbData.manualCIH)
+                : (dbData.manualcih !== null && dbData.manualcih !== undefined
+                  ? formatToIndianCommas(dbData.manualcih)
+                  : ""),
             comment: dbData.comment || "",
             cashDepositReceipt: dbData.cash_deposit_receipt || "",
             cardSettlementSlip: dbData.card_settlement_slip || "",
@@ -240,6 +254,7 @@ const DailyClosing = () => {
               upiSettlement: localParsed.upiSettlement || "",
               cardSettlement: localParsed.cardSettlement || "",
               bankDeposit: localParsed.bankDeposit || "",
+              manualCIH: localParsed.manualCIH || "",
               comment: localParsed.comment || "",
               cashDepositReceipt: localParsed.cashDepositReceipt || "",
               cardSettlementSlip: localParsed.cardSettlementSlip || "",
@@ -252,6 +267,7 @@ const DailyClosing = () => {
               upiSettlement: "",
               cardSettlement: "",
               bankDeposit: "",
+              manualCIH: "",
               comment: "",
               cashDepositReceipt: "",
               cardSettlementSlip: "",
@@ -348,12 +364,14 @@ const DailyClosing = () => {
       "upiSettlement",
       "cardSettlement",
       "bankDeposit",
+      "manualCIH",
     ];
     if (numericFields.includes(name)) {
       const cleanValue = value.replace(/\D/g, "");
+      const formattedValue = cleanValue ? Number(cleanValue).toLocaleString("en-IN") : "";
       setFormData((prev) => ({
         ...prev,
-        [name]: cleanValue,
+        [name]: formattedValue,
       }));
       return;
     }
@@ -372,7 +390,7 @@ const DailyClosing = () => {
     "bankDeposit",
   ];
   const allEntered = checkFields.every((key) => formData[key] !== "");
-  const totalSum = checkFields.reduce((sum, key) => sum + Number(formData[key] || 0), 0);
+  const totalSum = checkFields.reduce((sum, key) => sum + Number(String(formData[key] || "").replace(/,/g, "") || 0), 0);
   const isSumZero = allEntered && totalSum === 0;
 
   const isSaveDisabled =
@@ -382,9 +400,28 @@ const DailyClosing = () => {
 
   const handleSave = async () => {
     // Basic Validation
-    if (!formData.opdCash || !formData.bankDeposit) {
-      return Swal.fire("Required", "Please fill essential fields", "warning");
+    const requiredFields = [
+      { name: "opdCash", label: "OPD Cash" },
+      { name: "ipdCash", label: "IPD Cash" },
+      { name: "pharmacyCash", label: "Pharmacy Cash" },
+      { name: "upiSettlement", label: "UPI Settlement" },
+      { name: "cardSettlement", label: "Card Settlement" },
+      { name: "bankDeposit", label: "Bank Deposit" },
+      { name: "manualCIH", label: "Cash in Hand" }
+    ];
+
+    for (const field of requiredFields) {
+      const val = formData[field.name];
+      const cleanVal = val !== null && val !== undefined ? String(val).trim() : "";
+      if (cleanVal === "") {
+        return Swal.fire(
+          "Required Field Missing",
+          `Please fill the ${field.label} field (enter 0 if there is no amount)`,
+          "warning"
+        );
+      }
     }
+
     if (isSumZero && (!formData.comment || !formData.comment.trim())) {
       return Swal.fire(
         "Justification Required",
@@ -401,12 +438,13 @@ const DailyClosing = () => {
 
       const fd = new FormData();
       fd.append("entryDate", entryDate);
-      fd.append("opdCash", formData.opdCash);
-      fd.append("ipdCash", formData.ipdCash);
-      fd.append("pharmacyCash", formData.pharmacyCash);
-      fd.append("upiSettlement", formData.upiSettlement);
-      fd.append("cardSettlement", formData.cardSettlement);
-      fd.append("bankDeposit", formData.bankDeposit);
+      fd.append("opdCash", formData.opdCash.replace(/,/g, ""));
+      fd.append("ipdCash", formData.ipdCash.replace(/,/g, ""));
+      fd.append("pharmacyCash", formData.pharmacyCash.replace(/,/g, ""));
+      fd.append("upiSettlement", formData.upiSettlement.replace(/,/g, ""));
+      fd.append("cardSettlement", formData.cardSettlement.replace(/,/g, ""));
+      fd.append("bankDeposit", formData.bankDeposit.replace(/,/g, ""));
+      fd.append("manualCIH", formData.manualCIH.replace(/,/g, ""));
       fd.append("comment", formData.comment || "");
 
       if (cashDepositFile) {
@@ -482,39 +520,11 @@ const DailyClosing = () => {
                 margin: "10px 5px 12px 5px",
               }}
             >
-              <Card.Header
-                style={{
-                  backgroundColor: "#f8f9fa",
-                  borderBottom: "1px solid #4dd0e1",
-                  padding: "10px 15px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center" }}>
-                  <i
-                    className="fa fa-list"
-                    style={{ marginRight: "8px", color: "#333" }}
-                  ></i>
-                  <h5
-                    style={{
-                      margin: 0,
-                      fontSize: "17px",
-                      fontWeight: "bold",
-                      color: "#333",
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    Collection Summary
-                  </h5>
-                </div>
-              </Card.Header>
               <Card.Body
                 style={{
                   padding: "10px",
                   background: "#ffffff",
-                  borderRadius: "0 0 5px 5px",
+                  borderRadius: "5px",
                 }}
               >
                 {isYesterdayFilled !== null && (isYesterdayFilled || isPreviousDate) && (
@@ -541,622 +551,242 @@ const DailyClosing = () => {
                     </div>
                   </Alert>
                 )}
-                <Table
-                  striped
-                  bordered
-                  hover
-                  responsive
-                  style={{ margin: 0, fontSize: "14px" }}
-                >
-                  <thead>
-                    <tr style={{ backgroundColor: "#f8f9fa" }}>
-                      <th
+                <div style={{ display: "flex", flexDirection: "column", gap: "15px", padding: "10px" }}>
+                  {/* Date Banner */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "10px 15px",
+                      borderRadius: "10px",
+                      border: "1px solid #4dd0e1",
+                      backgroundColor: "#e0f7fa",
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <i className="fa fa-calendar" style={{ fontSize: "15px", color: "#006064" }}></i>
+                      <span style={{ fontWeight: "500", color: "#006064", fontSize: "13.5px" }}>Closing Date:</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <span style={{ fontSize: "14px", fontWeight: "700", color: isPreviousDate ? "#d84315" : "#2e7d32" }}>{currentDate}</span>
+                    </div>
+                  </div>
+
+                  {/* Form Grid / Card list */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    {[
+                      {
+                        label: "OPD Cash",
+                        icon: "fa fa-stethoscope",
+                        iconColor: "#0288d1",
+                        name: "opdCash",
+                        value: formData.opdCash,
+                        placeholder: "0.00",
+                        showWarning: isSumZero,
+                        required: true,
+                      },
+                      {
+                        label: "IPD Cash",
+                        icon: "fa fa-bed",
+                        iconColor: "#7b1fa2",
+                        name: "ipdCash",
+                        value: formData.ipdCash,
+                        placeholder: "0.00",
+                        showWarning: isSumZero,
+                        required: true,
+                      },
+                      {
+                        label: "Pharmacy Cash",
+                        icon: "fa fa-medkit",
+                        iconColor: "#388e3c",
+                        name: "pharmacyCash",
+                        value: formData.pharmacyCash,
+                        placeholder: "0.00",
+                        showWarning: isSumZero,
+                        required: true,
+                      },
+                      {
+                        label: "UPI Settlement",
+                        icon: "fa fa-qrcode",
+                        iconColor: "#f57c00",
+                        name: "upiSettlement",
+                        value: formData.upiSettlement,
+                        placeholder: "0.00",
+                        showWarning: isSumZero,
+                        required: true,
+                      },
+                      {
+                        label: "Card Settlement",
+                        icon: "fa fa-credit-card",
+                        iconColor: "#d32f2f",
+                        name: "cardSettlement",
+                        value: formData.cardSettlement,
+                        placeholder: "0.00",
+                        showWarning: isSumZero,
+                        required: true,
+                      },
+                      {
+                        label: "Bank Deposit",
+                        icon: "fa fa-university",
+                        iconColor: "#00796b",
+                        name: "bankDeposit",
+                        value: formData.bankDeposit,
+                        placeholder: "0.00",
+                        showWarning: isSumZero,
+                        required: true,
+                      },
+                      {
+                        label: "Cash in Hand",
+                        icon: "fa fa-money",
+                        iconColor: "#afb42b",
+                        name: "manualCIH",
+                        value: formData.manualCIH,
+                        placeholder: "0.00",
+                        showWarning: false,
+                        required: true,
+                      },
+                    ].map((field) => (
+                      <div
+                        key={field.name}
                         style={{
-                          border: "1px solid #4dd0e1",
-                          color: "#333",
-                          fontWeight: "bold",
-                          padding: "12px 10px",
-                          textAlign: "center",
-                          whiteSpace: "nowrap",
-                          minWidth: "100px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          padding: "6px 15px",
+                          borderRadius: "8px",
+                          border: "1px solid #d7d5d5ff",
+                          backgroundColor: "#f9fdfd",
+                          transition: "all 0.2s ease",
+                          boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
+                          flexWrap: "wrap",
+                          gap: "10px",
                         }}
                       >
-                        Date
-                      </th>
-                      <th
-                        style={{
-                          border: "1px solid #4dd0e1",
-                          color: "#333",
-                          fontWeight: "bold",
-                          padding: "12px 10px",
-                          textAlign: "center",
-                        }}
-                      >
-                        OPD Cash
-                      </th>
-                      <th
-                        style={{
-                          border: "1px solid #4dd0e1",
-                          color: "#333",
-                          fontWeight: "bold",
-                          padding: "12px 10px",
-                          textAlign: "center",
-                        }}
-                      >
-                        IPD Cash
-                      </th>
-                      <th
-                        style={{
-                          border: "1px solid #4dd0e1",
-                          color: "#333",
-                          fontWeight: "bold",
-                          padding: "12px 10px",
-                          textAlign: "center",
-                        }}
-                      >
-                        Pharmacy Cash
-                      </th>
-                      <th
-                        style={{
-                          border: "1px solid #4dd0e1",
-                          color: "#333",
-                          fontWeight: "bold",
-                          padding: "12px 10px",
-                          textAlign: "center",
-                        }}
-                      >
-                        UPI Settlement
-                      </th>
-                      <th
-                        style={{
-                          border: "1px solid #4dd0e1",
-                          color: "#333",
-                          fontWeight: "bold",
-                          padding: "12px 10px",
-                          textAlign: "center",
-                        }}
-                      >
-                        Card Settlement
-                      </th>
-                      <th
-                        style={{
-                          border: "1px solid #4dd0e1",
-                          color: "#333",
-                          fontWeight: "bold",
-                          padding: "12px 10px",
-                          textAlign: "center",
-                        }}
-                      >
-                        Bank Deposit
-                      </th>
-                      <th
-                        style={{
-                          border: "1px solid #4dd0e1",
-                          color: "#333",
-                          fontWeight: "bold",
-                          padding: "12px 10px",
-                          textAlign: "center",
-                        }}
-                      >
-                        Cash Deposit Receipt
-                      </th>
-                      <th
-                        style={{
-                          border: "1px solid #4dd0e1",
-                          color: "#333",
-                          fontWeight: "bold",
-                          padding: "12px 10px",
-                          textAlign: "center",
-                        }}
-                      >
-                        Card Settlement Slip
-                      </th>
-                      <th
-                        style={{
-                          border: "1px solid #4dd0e1",
-                          color: "#333",
-                          fontWeight: "bold",
-                          padding: "12px 10px",
-                          textAlign: "center",
-                        }}
-                      >
-                        Action
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr style={{ backgroundColor: "white" }}>
-                      <td
-                        style={{
-                          border: isPreviousDate ? "2px solid #ff9800" : "2px solid #2e7d32",
-                          backgroundColor: isPreviousDate ? "#fff3cd" : "#e8f5e9",
-                          color: isPreviousDate ? "#d84315" : "#1b5e20",
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                          fontWeight: "700",
-                          fontSize: "14px",
-                          padding: "12px",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {currentDate}
-                        {isPreviousDate ? (
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: "200px" }}>
                           <div
                             style={{
-                              fontSize: "9px",
-                              color: "#e65100",
-                              marginTop: "3px",
-                              fontWeight: "bold",
+                              width: "28px",
+                              height: "28px",
+                              borderRadius: "50%",
+                              backgroundColor: `${field.iconColor}12`,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              color: field.iconColor,
                             }}
                           >
-                            (PREVIOUS DATE)
+                            <i className={field.icon} style={{ fontSize: "13px" }}></i>
                           </div>
-                        ) : (
-                          <div
-                            style={{
-                              fontSize: "9px",
-                              color: "#1b5e20",
-                              marginTop: "3px",
-                              fontWeight: "bold",
-                            }}
-                          >
-                            (TODAY'S DATE)
-                          </div>
-                        )}
-                      </td>
-                      <td
-                        style={{
-                          border: "1px solid #4dd0e1",
-                          padding: "8px",
-                          verticalAlign: "middle",
-                        }}
-                      >
-                        <InputGroup style={{ minWidth: "120px" }}>
-                          <InputGroup.Text
-                            style={{
-                              border: "1px solid #4dd0e1",
-                              borderRight: "none",
-                              backgroundColor: "#f8f9fa",
-                              fontSize: "13px",
-                              borderTopLeftRadius: "8px",
-                              borderBottomLeftRadius: "8px",
-                            }}
-                          >
-                            ₹
-                          </InputGroup.Text>
-                          <Form.Control
-                            type="text"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            placeholder="0.00"
-                            name="opdCash"
-                            onWheel={(e) => e.target.blur()}
-                            value={formData.opdCash}
-                            onChange={handleChange}
-                            readOnly={isSubmitted}
-                            style={{
-                              border: "1px solid #4dd0e1",
-                              borderTopRightRadius: "8px",
-                              borderBottomRightRadius: "8px",
-                              borderTopLeftRadius: "0",
-                              borderBottomLeftRadius: "0",
-                              padding: "8px",
-                              fontSize: "13px",
-                              textAlign: "center",
-                              transition: "all 0.3s ease",
-                              boxShadow: "none",
-                              cursor: isSubmitted ? "not-allowed" : "text",
-                              backgroundColor: isSubmitted
-                                ? "#f8f9fa"
-                                : "white",
-                            }}
-                            onFocus={(e) =>
-                              !isSubmitted &&
-                              (e.target.style.borderColor = "#00bcd4")
-                            }
-                            onBlur={(e) =>
-                              !isSubmitted &&
-                              (e.target.style.borderColor = "#4dd0e1")
-                            }
-                          />
-                        </InputGroup>
-                        {isSumZero && (
-                          <div
-                            style={{
-                              color: "#d32f2f",
-                              fontSize: "11px",
-                              marginTop: "4px",
-                              textAlign: "center",
-                              fontWeight: "600",
-                            }}
-                          >
-                            <i className="fa fa-warning me-1"></i>0 has been
-                            entered
-                          </div>
-                        )}
-                      </td>
-                      <td
-                        style={{
-                          border: "1px solid #4dd0e1",
-                          padding: "8px",
-                          verticalAlign: "middle",
-                        }}
-                      >
-                        <InputGroup style={{ minWidth: "120px" }}>
-                          <InputGroup.Text
-                            style={{
-                              border: "1px solid #4dd0e1",
-                              borderRight: "none",
-                              backgroundColor: "#f8f9fa",
-                              fontSize: "13px",
-                              borderTopLeftRadius: "8px",
-                              borderBottomLeftRadius: "8px",
-                            }}
-                          >
-                            ₹
-                          </InputGroup.Text>
-                          <Form.Control
-                            type="text"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            placeholder="0.00"
-                            name="ipdCash"
-                            onWheel={(e) => e.target.blur()}
-                            value={formData.ipdCash}
-                            onChange={handleChange}
-                            readOnly={isSubmitted}
-                            style={{
-                              border: "1px solid #4dd0e1",
-                              borderTopRightRadius: "8px",
-                              borderBottomRightRadius: "8px",
-                              borderTopLeftRadius: "0",
-                              borderBottomLeftRadius: "0",
-                              padding: "8px",
-                              fontSize: "13px",
-                              textAlign: "center",
-                              transition: "all 0.3s ease",
-                              boxShadow: "none",
-                              cursor: isSubmitted ? "not-allowed" : "text",
-                              backgroundColor: isSubmitted
-                                ? "#f8f9fa"
-                                : "white",
-                            }}
-                            onFocus={(e) =>
-                              !isSubmitted &&
-                              (e.target.style.borderColor = "#00bcd4")
-                            }
-                            onBlur={(e) =>
-                              !isSubmitted &&
-                              (e.target.style.borderColor = "#4dd0e1")
-                            }
-                          />
-                        </InputGroup>
-                        {isSumZero && (
-                          <div
-                            style={{
-                              color: "#d32f2f",
-                              fontSize: "11px",
-                              marginTop: "4px",
-                              textAlign: "center",
-                              fontWeight: "600",
-                            }}
-                          >
-                            <i className="fa fa-warning me-1"></i>0 has been
-                            entered
-                          </div>
-                        )}
-                      </td>
-                      <td
-                        style={{
-                          border: "1px solid #4dd0e1",
-                          padding: "8px",
-                          verticalAlign: "middle",
-                        }}
-                      >
-                        <InputGroup style={{ minWidth: "120px" }}>
-                          <InputGroup.Text
-                            style={{
-                              border: "1px solid #4dd0e1",
-                              borderRight: "none",
-                              backgroundColor: "#f8f9fa",
-                              fontSize: "13px",
-                              borderTopLeftRadius: "8px",
-                              borderBottomLeftRadius: "8px",
-                            }}
-                          >
-                            ₹
-                          </InputGroup.Text>
-                          <Form.Control
-                            type="text"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            placeholder="0.00"
-                            name="pharmacyCash"
-                            onWheel={(e) => e.target.blur()}
-                            value={formData.pharmacyCash}
-                            onChange={handleChange}
-                            readOnly={isSubmitted}
-                            style={{
-                              border: "1px solid #4dd0e1",
-                              borderTopRightRadius: "8px",
-                              borderBottomRightRadius: "8px",
-                              borderTopLeftRadius: "0",
-                              borderBottomLeftRadius: "0",
-                              padding: "8px",
-                              fontSize: "13px",
-                              textAlign: "center",
-                              transition: "all 0.3s ease",
-                              boxShadow: "none",
-                              cursor: isSubmitted ? "not-allowed" : "text",
-                              backgroundColor: isSubmitted
-                                ? "#f8f9fa"
-                                : "white",
-                            }}
-                            onFocus={(e) =>
-                              !isSubmitted &&
-                              (e.target.style.borderColor = "#00bcd4")
-                            }
-                            onBlur={(e) =>
-                              !isSubmitted &&
-                              (e.target.style.borderColor = "#4dd0e1")
-                            }
-                          />
-                        </InputGroup>
-                        {isSumZero && (
-                          <div
-                            style={{
-                              color: "#d32f2f",
-                              fontSize: "11px",
-                              marginTop: "4px",
-                              textAlign: "center",
-                              fontWeight: "600",
-                            }}
-                          >
-                            <i className="fa fa-warning me-1"></i>0 has been
-                            entered
-                          </div>
-                        )}
-                      </td>
-                      <td
-                        style={{
-                          border: "1px solid #4dd0e1",
-                          padding: "8px",
-                          verticalAlign: "middle",
-                        }}
-                      >
-                        <InputGroup style={{ minWidth: "120px" }}>
-                          <InputGroup.Text
-                            style={{
-                              border: "1px solid #4dd0e1",
-                              borderRight: "none",
-                              backgroundColor: "#f8f9fa",
-                              fontSize: "13px",
-                              borderTopLeftRadius: "8px",
-                              borderBottomLeftRadius: "8px",
-                            }}
-                          >
-                            ₹
-                          </InputGroup.Text>
-                          <Form.Control
-                            type="text"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            placeholder="0.00"
-                            name="upiSettlement"
-                            onWheel={(e) => e.target.blur()}
-                            value={formData.upiSettlement}
-                            onChange={handleChange}
-                            readOnly={isSubmitted}
-                            style={{
-                              border: "1px solid #4dd0e1",
-                              borderTopRightRadius: "8px",
-                              borderBottomRightRadius: "8px",
-                              borderTopLeftRadius: "0",
-                              borderBottomLeftRadius: "0",
-                              padding: "8px",
-                              fontSize: "13px",
-                              textAlign: "center",
-                              transition: "all 0.3s ease",
-                              boxShadow: "none",
-                              cursor: isSubmitted ? "not-allowed" : "text",
-                              backgroundColor: isSubmitted
-                                ? "#f8f9fa"
-                                : "white",
-                            }}
-                            onFocus={(e) =>
-                              !isSubmitted &&
-                              (e.target.style.borderColor = "#00bcd4")
-                            }
-                            onBlur={(e) =>
-                              !isSubmitted &&
-                              (e.target.style.borderColor = "#4dd0e1")
-                            }
-                          />
-                        </InputGroup>
-                        {isSumZero && (
-                          <div
-                            style={{
-                              color: "#d32f2f",
-                              fontSize: "11px",
-                              marginTop: "4px",
-                              textAlign: "center",
-                              fontWeight: "600",
-                            }}
-                          >
-                            <i className="fa fa-warning me-1"></i>0 has been
-                            entered
-                          </div>
-                        )}
-                      </td>
-                      <td
-                        style={{
-                          border: "1px solid #4dd0e1",
-                          padding: "8px",
-                          verticalAlign: "middle",
-                        }}
-                      >
-                        <InputGroup style={{ minWidth: "120px" }}>
-                          <InputGroup.Text
-                            style={{
-                              border: "1px solid #4dd0e1",
-                              borderRight: "none",
-                              backgroundColor: "#f8f9fa",
-                              fontSize: "13px",
-                              borderTopLeftRadius: "8px",
-                              borderBottomLeftRadius: "8px",
-                            }}
-                          >
-                            ₹
-                          </InputGroup.Text>
-                          <Form.Control
-                            type="text"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            placeholder="0.00"
-                            name="cardSettlement"
-                            onWheel={(e) => e.target.blur()}
-                            value={formData.cardSettlement}
-                            onChange={handleChange}
-                            readOnly={isSubmitted}
-                            style={{
-                              border: "1px solid #4dd0e1",
-                              borderTopRightRadius: "8px",
-                              borderBottomRightRadius: "8px",
-                              borderTopLeftRadius: "0",
-                              borderBottomLeftRadius: "0",
-                              padding: "8px",
-                              fontSize: "13px",
-                              textAlign: "center",
-                              transition: "all 0.3s ease",
-                              boxShadow: "none",
-                              cursor: isSubmitted ? "not-allowed" : "text",
-                              backgroundColor: isSubmitted
-                                ? "#f8f9fa"
-                                : "white",
-                            }}
-                            onFocus={(e) =>
-                              !isSubmitted &&
-                              (e.target.style.borderColor = "#00bcd4")
-                            }
-                            onBlur={(e) =>
-                              !isSubmitted &&
-                              (e.target.style.borderColor = "#4dd0e1")
-                            }
-                          />
-                        </InputGroup>
-                        {isSumZero && (
-                          <div
-                            style={{
-                              color: "#d32f2f",
-                              fontSize: "11px",
-                              marginTop: "4px",
-                              textAlign: "center",
-                              fontWeight: "600",
-                            }}
-                          >
-                            <i className="fa fa-warning me-1"></i>0 has been
-                            entered
-                          </div>
-                        )}
-                      </td>
-                      <td
-                        style={{
-                          border: "1px solid #4dd0e1",
-                          padding: "8px",
-                          verticalAlign: "middle",
-                        }}
-                      >
-                        <InputGroup style={{ minWidth: "120px" }}>
-                          <InputGroup.Text
-                            style={{
-                              border: "1px solid #4dd0e1",
-                              borderRight: "none",
-                              backgroundColor: "#f8f9fa",
-                              fontSize: "13px",
-                              borderTopLeftRadius: "8px",
-                              borderBottomLeftRadius: "8px",
-                            }}
-                          >
-                            ₹
-                          </InputGroup.Text>
-                          <Form.Control
-                            type="text"
-                            inputMode="numeric"
-                            pattern="[0-9]*"
-                            placeholder="0.00"
-                            name="bankDeposit"
-                            onWheel={(e) => e.target.blur()}
-                            value={formData.bankDeposit}
-                            onChange={handleChange}
-                            readOnly={isSubmitted}
-                            style={{
-                              border: "1px solid #4dd0e1",
-                              borderTopRightRadius: "8px",
-                              borderBottomRightRadius: "8px",
-                              borderTopLeftRadius: "0",
-                              borderBottomLeftRadius: "0",
-                              padding: "8px",
-                              fontSize: "13px",
-                              textAlign: "center",
-                              transition: "all 0.3s ease",
-                              boxShadow: "none",
-                              cursor: isSubmitted ? "not-allowed" : "text",
-                              backgroundColor: isSubmitted
-                                ? "#f8f9fa"
-                                : "white",
-                            }}
-                            onFocus={(e) =>
-                              !isSubmitted &&
-                              (e.target.style.borderColor = "#00bcd4")
-                            }
-                            onBlur={(e) =>
-                              !isSubmitted &&
-                              (e.target.style.borderColor = "#4dd0e1")
-                            }
-                          />
-                        </InputGroup>
-                        {isSumZero && (
-                          <div
-                            style={{
-                              color: "#d32f2f",
-                              fontSize: "11px",
-                              marginTop: "4px",
-                              textAlign: "center",
-                              fontWeight: "600",
-                            }}
-                          >
-                            <i className="fa fa-warning me-1"></i>0 has been
-                            entered
-                          </div>
-                        )}
-                      </td>
-                      <td
-                        style={{
-                          border: "1px solid #4dd0e1",
-                          padding: "8px",
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                        }}
-                      >
+                          <span style={{ fontWeight: "700", color: "#37474f", fontSize: "12.5px" }}>
+                            {field.label}
+                          </span>
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
+                          <InputGroup style={{ width: "240px" }}>
+                            <InputGroup.Text
+                              style={{
+                                border: "1px solid #4dd0e1",
+                                borderRight: "none",
+                                backgroundColor: "#f8f9fa",
+                                fontSize: "12px",
+                                borderTopLeftRadius: "6px",
+                                borderBottomLeftRadius: "6px",
+                              }}
+                            >
+                              ₹
+                            </InputGroup.Text>
+                            <Form.Control
+                              type="text"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              placeholder={field.placeholder}
+                              name={field.name}
+                              onWheel={(e) => e.target.blur()}
+                              value={field.value}
+                              onChange={handleChange}
+                              readOnly={isSubmitted}
+                              style={{
+                                border: "1px solid #4dd0e1",
+                                borderTopRightRadius: "6px",
+                                borderBottomRightRadius: "6px",
+                                borderTopLeftRadius: "0",
+                                borderBottomLeftRadius: "0",
+                                padding: "5px 10px",
+                                fontSize: "12.5px",
+                                fontWeight: "600",
+                                transition: "all 0.3s ease",
+                                boxShadow: "none",
+                                cursor: isSubmitted ? "not-allowed" : "text",
+                                backgroundColor: isSubmitted ? "#f8f9fa" : "white",
+                              }}
+                              onFocus={(e) => !isSubmitted && (e.target.style.borderColor = "#00bcd4")}
+                              onBlur={(e) => !isSubmitted && (e.target.style.borderColor = "#4dd0e1")}
+                            />
+                          </InputGroup>
+                          {field.showWarning && (
+                            <div style={{ color: "#d32f2f", fontSize: "11px", fontWeight: "600", marginRight: "5px" }}>
+                              <i className="fa fa-warning me-1"></i>0 entered
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Cash Deposit Receipt */}
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "6px 15px",
+                        borderRadius: "8px",
+                        border: "1px solid #d7d5d5ff",
+                        backgroundColor: "#f9fdfd",
+                        flexWrap: "wrap",
+                        gap: "10px",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: "200px" }}>
+                        <div
+                          style={{
+                            width: "28px",
+                            height: "28px",
+                            borderRadius: "50%",
+                            backgroundColor: "#00bcd412",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "#00bcd4",
+                          }}
+                        >
+                          <i className="fa fa-file-image-o" style={{ fontSize: "13px" }}></i>
+                        </div>
+                        <span style={{ fontWeight: "700", color: "#37474f", fontSize: "12.5px" }}>Cash Deposit Receipt</span>
+                      </div>
+                      <div style={{ width: "240px", display: "flex", justifyContent: "flex-end" }}>
                         {isSubmitted ? (
                           formData.cashDepositReceipt ? (
-                            <div className="d-flex flex-column align-items-center gap-1">
+                            <div className="d-flex align-items-center justify-content-end gap-2" style={{ width: "100%" }}>
                               <Form.Control
                                 type="text"
                                 readOnly
                                 value={`${BASE_URL.replace("/api", "")}${formData.cashDepositReceipt}`}
                                 style={{
-                                  fontSize: "11px",
-                                  textAlign: "center",
-                                  width: "130px",
+                                  fontSize: "12.5px",
+                                  textAlign: "left",
+                                  flex: 1,
+                                  minWidth: 0,
                                   textOverflow: "ellipsis",
+                                  border: "1px solid #4dd0e1",
+                                  padding: "5px 10px",
                                 }}
                                 onClick={(e) => e.target.select()}
                               />
                               <Button
                                 variant="outline-info"
-                                size="sm"
-                                style={{ fontSize: "11px" }}
+                                style={{ fontSize: "12px", padding: "5px 12px", whiteSpace: "nowrap", display: "inline-flex", alignItems: "center" }}
                                 onClick={(e) => {
                                   e.preventDefault();
                                   const url = `${BASE_URL.replace("/api", "")}${formData.cashDepositReceipt}`;
@@ -1170,186 +800,205 @@ const DailyClosing = () => {
                               </Button>
                             </div>
                           ) : (
-                            <span
-                              className="text-muted"
-                              style={{ fontSize: "12px" }}
-                            >
-                              -
-                            </span>
+                            <span className="text-muted" style={{ fontSize: "12px" }}>-</span>
                           )
-                        ) : (
-                          <div className="d-flex flex-column align-items-center gap-1">
-                            <input
-                              type="file"
-                              accept="image/*,application/pdf"
-                              id="cashDepositReceiptFile"
-                              style={{ display: "none" }}
-                              onChange={(e) => {
-                                const file = e.target.files[0] || null;
-                                setCashDepositFile(file);
-                              }}
-                            />
-                            <label
-                              htmlFor="cashDepositReceiptFile"
-                              className="btn btn-sm btn-info text-white mb-0"
+                        ) : (<div className="d-flex align-items-center justify-content-end gap-2" style={{ width: "100%" }}>
+                          {cashDepositFile && cashDepositPreviewUrl && (
+                            <div
                               style={{
-                                cursor: "pointer",
-                                fontSize: "12px",
-                                padding: "6px 12px",
-                                borderRadius: "6px",
-                                backgroundColor: cashDepositFile
-                                  ? "#0097a7"
-                                  : "#00bcd4",
-                                borderColor: cashDepositFile
-                                  ? "#0097a7"
-                                  : "#00bcd4",
+                                padding: "6px",
+                                borderRadius: "8px",
+                                backgroundColor: "#f0fdfa",
+                                border: "1px dashed #00acc1",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                                flex: 1,
+                                minWidth: 0,
                               }}
                             >
-                              {cashDepositFile ? "Change File" : "Choose File"}
-                            </label>
-                            {cashDepositFile && cashDepositPreviewUrl && (
-                              <div
-                                style={{
-                                  marginTop: "8px",
-                                  padding: "6px",
-                                  borderRadius: "8px",
-                                  backgroundColor: "#f0fdfa",
-                                  border: "1px dashed #00acc1",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "8px",
-                                  width: "140px",
-                                }}
-                              >
-                                {cashDepositFile.type === "application/pdf" || cashDepositFile.name.toLowerCase().endsWith(".pdf") ? (
-                                  <div
-                                    style={{
-                                      width: "30px",
-                                      height: "30px",
-                                      borderRadius: "4px",
-                                      backgroundColor: "#ffebee",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                      color: "#c62828",
-                                      fontSize: "14px",
-                                      fontWeight: "bold",
-                                      boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
-                                    }}
-                                  >
-                                    <i className="fa fa-file-pdf-o"></i>
-                                  </div>
-                                ) : (
-                                  <img
-                                    src={cashDepositPreviewUrl}
-                                    alt="Selected preview"
-                                    style={{
-                                      width: "30px",
-                                      height: "30px",
-                                      objectFit: "cover",
-                                      borderRadius: "4px",
-                                      boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
-                                      border: "1px solid #e0e0e0",
-                                    }}
-                                  />
-                                )}
-                                <div style={{ flex: 1, textAlign: "left", minWidth: 0 }}>
-                                  <div
-                                    style={{
-                                      fontSize: "10px",
-                                      fontWeight: "600",
-                                      color: "#37474f",
-                                      overflow: "hidden",
-                                      textOverflow: "ellipsis",
-                                      whiteSpace: "nowrap",
-                                    }}
-                                    title={cashDepositFile.name}
-                                  >
-                                    {cashDepositFile.name}
-                                  </div>
-                                  <Button
-                                    variant="link"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      setPreviewUrl(cashDepositPreviewUrl);
-                                      setPreviewName(cashDepositFile.name);
-                                      setPreviewType(
-                                        cashDepositFile.type === "application/pdf" || cashDepositFile.name.toLowerCase().endsWith(".pdf")
-                                          ? "pdf"
-                                          : "image"
-                                      );
-                                      setShowPreview(true);
-                                    }}
-                                    style={{
-                                      color: "#00acc1",
-                                      fontWeight: "bold",
-                                      textDecoration: "underline",
-                                      padding: 0,
-                                      fontSize: "9px",
-                                      border: "none",
-                                      background: "none",
-                                      lineHeight: 1,
-                                      marginTop: "2px",
-                                    }}
-                                  >
-                                    Preview
-                                  </Button>
+                              {cashDepositFile.type === "application/pdf" || cashDepositFile.name.toLowerCase().endsWith(".pdf") ? (
+                                <div
+                                  style={{
+                                    width: "30px",
+                                    height: "30px",
+                                    borderRadius: "4px",
+                                    backgroundColor: "#ffebee",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    color: "#c62828",
+                                    fontSize: "14px",
+                                    fontWeight: "bold",
+                                    boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
+                                  }}
+                                >
+                                  <i className="fa fa-file-pdf-o"></i>
+                                </div>
+                              ) : (
+                                <img
+                                  src={cashDepositPreviewUrl}
+                                  alt="Selected preview"
+                                  style={{
+                                    width: "30px",
+                                    height: "30px",
+                                    objectFit: "cover",
+                                    borderRadius: "4px",
+                                    boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
+                                    border: "1px solid #e0e0e0",
+                                  }}
+                                />
+                              )}
+                              <div style={{ flex: 1, textAlign: "left", minWidth: 0 }}>
+                                <div
+                                  style={{
+                                    fontSize: "10px",
+                                    fontWeight: "600",
+                                    color: "#37474f",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                  title={cashDepositFile.name}
+                                >
+                                  {cashDepositFile.name}
                                 </div>
                                 <Button
                                   variant="link"
                                   onClick={(e) => {
                                     e.preventDefault();
-                                    setCashDepositFile(null);
-                                    const input = document.getElementById("cashDepositReceiptFile");
-                                    if (input) input.value = "";
+                                    setPreviewUrl(cashDepositPreviewUrl);
+                                    setPreviewName(cashDepositFile.name);
+                                    setPreviewType(
+                                      cashDepositFile.type === "application/pdf" || cashDepositFile.name.toLowerCase().endsWith(".pdf")
+                                        ? "pdf"
+                                        : "image"
+                                    );
+                                    setShowPreview(true);
                                   }}
                                   style={{
-                                    color: "#d32f2f",
-                                    padding: "2px",
-                                    fontSize: "13px",
+                                    color: "#00acc1",
+                                    fontWeight: "bold",
+                                    textDecoration: "underline",
+                                    padding: 0,
+                                    fontSize: "9px",
                                     border: "none",
                                     background: "none",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    marginLeft: "auto",
+                                    lineHeight: 1,
+                                    marginTop: "2px",
                                   }}
-                                  title="Remove file"
                                 >
-                                  <i className="fa fa-times-circle"></i>
+                                  Preview
                                 </Button>
                               </div>
-                            )}
-                          </div>
+                              <Button
+                                variant="link"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setCashDepositFile(null);
+                                  const input = document.getElementById("cashDepositReceiptFile");
+                                  if (input) input.value = "";
+                                }}
+                                style={{
+                                  color: "#d32f2f",
+                                  padding: "2px",
+                                  fontSize: "13px",
+                                  border: "none",
+                                  background: "none",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  marginLeft: "auto",
+                                }}
+                                title="Remove file"
+                              >
+                                <i className="fa fa-times-circle"></i>
+                              </Button>
+                            </div>
+                          )}
+                          <input
+                            type="file"
+                            accept="image/*,application/pdf"
+                            id="cashDepositReceiptFile"
+                            style={{ display: "none" }}
+                            onChange={(e) => {
+                              const file = e.target.files[0] || null;
+                              setCashDepositFile(file);
+                            }}
+                          />
+                          <label
+                            htmlFor="cashDepositReceiptFile"
+                            className="btn btn-sm btn-info text-white mb-0"
+                            style={{
+                              cursor: "pointer",
+                              fontSize: "11px",
+                              padding: "5px 10px",
+                              borderRadius: "6px",
+                              backgroundColor: cashDepositFile ? "#0097a7" : "#00bcd4",
+                              borderColor: cashDepositFile ? "#0097a7" : "#00bcd4",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {cashDepositFile ? "Change" : "Choose File"}
+                          </label>
+                        </div>
                         )}
-                      </td>
-                      <td
-                        style={{
-                          border: "1px solid #4dd0e1",
-                          padding: "8px",
-                          verticalAlign: "middle",
-                          textAlign: "center",
-                        }}
-                      >
+                      </div>
+                    </div>
+
+                    {/* Card Settlement Slip */}
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "6px 15px",
+                        borderRadius: "8px",
+                        border: "1px solid #d7d5d5ff",
+                        backgroundColor: "#f9fdfd",
+                        flexWrap: "wrap",
+                        gap: "10px",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: "200px" }}>
+                        <div
+                          style={{
+                            width: "28px",
+                            height: "28px",
+                            borderRadius: "50%",
+                            backgroundColor: "#00bcd412",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "#00bcd4",
+                          }}
+                        >
+                          <i className="fa fa-credit-card" style={{ fontSize: "13px" }}></i>
+                        </div>
+                        <span style={{ fontWeight: "700", color: "#37474f", fontSize: "12.5px" }}>Card Settlement Slip</span>
+                      </div>
+                      <div style={{ width: "240px", display: "flex", justifyContent: "flex-end" }}>
                         {isSubmitted ? (
                           formData.cardSettlementSlip ? (
-                            <div className="d-flex flex-column align-items-center gap-1">
+                            <div className="d-flex align-items-center justify-content-end gap-2" style={{ width: "100%" }}>
                               <Form.Control
                                 type="text"
                                 readOnly
                                 value={`${BASE_URL.replace("/api", "")}${formData.cardSettlementSlip}`}
                                 style={{
-                                  fontSize: "11px",
-                                  textAlign: "center",
-                                  width: "130px",
+                                  fontSize: "12.5px",
+                                  textAlign: "left",
+                                  flex: 1,
+                                  minWidth: 0,
                                   textOverflow: "ellipsis",
+                                  border: "1px solid #4dd0e1",
+                                  padding: "5px 10px",
                                 }}
                                 onClick={(e) => e.target.select()}
                               />
                               <Button
                                 variant="outline-info"
-                                size="sm"
-                                style={{ fontSize: "11px" }}
+                                style={{ fontSize: "12px", padding: "5px 12px", whiteSpace: "nowrap", display: "inline-flex", alignItems: "center" }}
                                 onClick={(e) => {
                                   e.preventDefault();
                                   const url = `${BASE_URL.replace("/api", "")}${formData.cardSettlementSlip}`;
@@ -1363,259 +1012,235 @@ const DailyClosing = () => {
                               </Button>
                             </div>
                           ) : (
-                            <span
-                              className="text-muted"
-                              style={{ fontSize: "12px" }}
-                            >
-                              -
-                            </span>
+                            <span className="text-muted" style={{ fontSize: "12px" }}>-</span>
                           )
-                        ) : (
-                          <div className="d-flex flex-column align-items-center gap-1">
-                            <input
-                              type="file"
-                              accept="image/*,application/pdf"
-                              id="cardSettlementSlipFile"
-                              style={{ display: "none" }}
-                              onChange={(e) => {
-                                const file = e.target.files[0] || null;
-                                setCardSettlementFile(file);
-                              }}
-                            />
-                            <label
-                              htmlFor="cardSettlementSlipFile"
-                              className="btn btn-sm btn-info text-white mb-0"
+                        ) : (<div className="d-flex align-items-center justify-content-end gap-2" style={{ width: "100%" }}>
+                          {cardSettlementFile && cardSettlementPreviewUrl && (
+                            <div
                               style={{
-                                cursor: "pointer",
-                                fontSize: "12px",
-                                padding: "6px 12px",
-                                borderRadius: "6px",
-                                backgroundColor: cardSettlementFile
-                                  ? "#0097a7"
-                                  : "#00bcd4",
-                                borderColor: cardSettlementFile
-                                  ? "#0097a7"
-                                  : "#00bcd4",
+                                padding: "6px",
+                                borderRadius: "8px",
+                                backgroundColor: "#f0fdfa",
+                                border: "1px dashed #00acc1",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                                flex: 1,
+                                minWidth: 0,
                               }}
                             >
-                              {cardSettlementFile
-                                ? "Change File"
-                                : "Choose File"}
-                            </label>
-                            {cardSettlementFile && cardSettlementPreviewUrl && (
-                              <div
-                                style={{
-                                  marginTop: "8px",
-                                  padding: "6px",
-                                  borderRadius: "8px",
-                                  backgroundColor: "#f0fdfa",
-                                  border: "1px dashed #00acc1",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: "8px",
-                                  width: "140px",
-                                }}
-                              >
-                                {cardSettlementFile.type === "application/pdf" || cardSettlementFile.name.toLowerCase().endsWith(".pdf") ? (
-                                  <div
-                                    style={{
-                                      width: "30px",
-                                      height: "30px",
-                                      borderRadius: "4px",
-                                      backgroundColor: "#ffebee",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                      color: "#c62828",
-                                      fontSize: "14px",
-                                      fontWeight: "bold",
-                                      boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
-                                    }}
-                                  >
-                                    <i className="fa fa-file-pdf-o"></i>
-                                  </div>
-                                ) : (
-                                  <img
-                                    src={cardSettlementPreviewUrl}
-                                    alt="Selected preview"
-                                    style={{
-                                      width: "30px",
-                                      height: "30px",
-                                      objectFit: "cover",
-                                      borderRadius: "4px",
-                                      boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
-                                      border: "1px solid #e0e0e0",
-                                    }}
-                                  />
-                                )}
-                                <div style={{ flex: 1, textAlign: "left", minWidth: 0 }}>
-                                  <div
-                                    style={{
-                                      fontSize: "10px",
-                                      fontWeight: "600",
-                                      color: "#37474f",
-                                      overflow: "hidden",
-                                      textOverflow: "ellipsis",
-                                      whiteSpace: "nowrap",
-                                    }}
-                                    title={cardSettlementFile.name}
-                                  >
-                                    {cardSettlementFile.name}
-                                  </div>
-                                  <Button
-                                    variant="link"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      setPreviewUrl(cardSettlementPreviewUrl);
-                                      setPreviewName(cardSettlementFile.name);
-                                      setPreviewType(
-                                        cardSettlementFile.type === "application/pdf" || cardSettlementFile.name.toLowerCase().endsWith(".pdf")
-                                          ? "pdf"
-                                          : "image"
-                                      );
-                                      setShowPreview(true);
-                                    }}
-                                    style={{
-                                      color: "#00acc1",
-                                      fontWeight: "bold",
-                                      textDecoration: "underline",
-                                      padding: 0,
-                                      fontSize: "9px",
-                                      border: "none",
-                                      background: "none",
-                                      lineHeight: 1,
-                                      marginTop: "2px",
-                                    }}
-                                  >
-                                    Preview
-                                  </Button>
+                              {cardSettlementFile.type === "application/pdf" || cardSettlementFile.name.toLowerCase().endsWith(".pdf") ? (
+                                <div
+                                  style={{
+                                    width: "30px",
+                                    height: "30px",
+                                    borderRadius: "4px",
+                                    backgroundColor: "#ffebee",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    color: "#c62828",
+                                    fontSize: "14px",
+                                    fontWeight: "bold",
+                                    boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
+                                  }}
+                                >
+                                  <i className="fa fa-file-pdf-o"></i>
+                                </div>
+                              ) : (
+                                <img
+                                  src={cardSettlementPreviewUrl}
+                                  alt="Selected preview"
+                                  style={{
+                                    width: "30px",
+                                    height: "30px",
+                                    objectFit: "cover",
+                                    borderRadius: "4px",
+                                    boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
+                                    border: "1px solid #e0e0e0",
+                                  }}
+                                />
+                              )}
+                              <div style={{ flex: 1, textAlign: "left", minWidth: 0 }}>
+                                <div
+                                  style={{
+                                    fontSize: "10px",
+                                    fontWeight: "600",
+                                    color: "#37474f",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                  title={cardSettlementFile.name}
+                                >
+                                  {cardSettlementFile.name}
                                 </div>
                                 <Button
                                   variant="link"
                                   onClick={(e) => {
                                     e.preventDefault();
-                                    setCardSettlementFile(null);
-                                    const input = document.getElementById("cardSettlementSlipFile");
-                                    if (input) input.value = "";
+                                    setPreviewUrl(cardSettlementPreviewUrl);
+                                    setPreviewName(cardSettlementFile.name);
+                                    setPreviewType(
+                                      cardSettlementFile.type === "application/pdf" || cardSettlementFile.name.toLowerCase().endsWith(".pdf")
+                                        ? "pdf"
+                                        : "image"
+                                    );
+                                    setShowPreview(true);
                                   }}
                                   style={{
-                                    color: "#d32f2f",
-                                    padding: "2px",
-                                    fontSize: "13px",
+                                    color: "#00acc1",
+                                    fontWeight: "bold",
+                                    textDecoration: "underline",
+                                    padding: 0,
+                                    fontSize: "9px",
                                     border: "none",
                                     background: "none",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    marginLeft: "auto",
+                                    lineHeight: 1,
+                                    marginTop: "2px",
                                   }}
-                                  title="Remove file"
                                 >
-                                  <i className="fa fa-times-circle"></i>
+                                  Preview
                                 </Button>
                               </div>
-                            )}
-                          </div>
-                        )}
-                      </td>
-                      <td
-                        style={{
-                          border: "1px solid #4dd0e1",
-                          textAlign: "center",
-                          verticalAlign: "middle",
-                          padding: "12px",
-                        }}
-                      >
-                        <Button
-                          variant="success"
-                          onClick={handleSave}
-                          disabled={isSaveDisabled}
-                          style={{
-                            borderRadius: "8px",
-                            padding: "8px 20px",
-                            fontSize: "13px",
-                            fontWeight: "bold",
-                            backgroundColor: isSaveDisabled
-                              ? "#ccc"
-                              : "#00bcd4",
-                            borderColor: isSaveDisabled ? "#ccc" : "#00bcd4",
-                            boxShadow: isSaveDisabled
-                              ? "none"
-                              : "0 2px 4px rgba(0,0,0,0.1)",
-                            transition: "all 0.3s ease",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            whiteSpace: "nowrap",
-                            justifyContent: "center",
-                            cursor: isSaveDisabled ? "not-allowed" : "pointer",
-                          }}
-                        >
-                          <FeatherIcon
-                            icon={isSubmitted ? "check-circle" : "save"}
-                            size="14"
-                            className="me-1"
+                              <Button
+                                variant="link"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setCardSettlementFile(null);
+                                  const input = document.getElementById("cardSettlementSlipFile");
+                                  if (input) input.value = "";
+                                }}
+                                style={{
+                                  color: "#d32f2f",
+                                  padding: "2px",
+                                  fontSize: "13px",
+                                  border: "none",
+                                  background: "none",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  marginLeft: "auto",
+                                }}
+                                title="Remove file"
+                              >
+                                <i className="fa fa-times-circle"></i>
+                              </Button>
+                            </div>
+                          )}
+                          <input
+                            type="file"
+                            accept="image/*,application/pdf"
+                            id="cardSettlementSlipFile"
+                            style={{ display: "none" }}
+                            onChange={(e) => {
+                              const file = e.target.files[0] || null;
+                              setCardSettlementFile(file);
+                            }}
                           />
-                          {isSubmitted ? "SUBMITTED" : "SAVE"}
-                        </Button>
-                      </td>
-                    </tr>
-                  </tbody>
-                </Table>
+                          <label
+                            htmlFor="cardSettlementSlipFile"
+                            className="btn btn-sm btn-info text-white mb-0"
+                            style={{
+                              cursor: "pointer",
+                              fontSize: "11px",
+                              padding: "5px 10px",
+                              borderRadius: "6px",
+                              backgroundColor: cardSettlementFile ? "#0097a7" : "#00bcd4",
+                              borderColor: cardSettlementFile ? "#0097a7" : "#00bcd4",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {cardSettlementFile ? "Change" : "Choose File"}
+                          </label>
+                        </div>
+                        )}
+                      </div>
+                    </div>
 
-                {(isSumZero || formData.comment) && (
-                  <div
-                    style={{
-                      marginTop: "20px",
-                      padding: "5px",
-                      backgroundColor: "#f8d7da",
-                      borderRadius: "5px",
-                      border: "1px solid #f5c6cb",
-                    }}
-                  >
-                    {isSumZero && !isSubmitted && (
+                    {/* Justification for Zero Balance / Remarks */}
+                    {(isSumZero || formData.comment) && (
                       <div
                         style={{
-                          color: "#721c24",
-                          fontSize: "13px",
-                          fontWeight: "bold",
-                          marginBottom: "10px",
+                          padding: "10px 10px",
+                          backgroundColor: "#fff5f5",
+                          borderRadius: "8px",
+                          border: "1px solid #ffe3e3",
+                          boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
+                          marginTop: "5px",
                         }}
                       >
-                        <i className="fa fa-exclamation-triangle me-2"></i>A
-                        zero balance is recorded in all fields. Please
-                        provide a justification below to proceed.
+                        {isSumZero && !isSubmitted && (
+                          <div
+                            style={{
+                              color: "#e53e3e",
+                              fontSize: "13px",
+                              fontWeight: "bold",
+                              marginBottom: "10px",
+                            }}
+                          >
+                            <i className="fa fa-exclamation-triangle me-2"></i>A
+                            zero balance is recorded in all fields. Please
+                            provide a justification below to save the daily closing.
+                          </div>
+                        )}
+                        <Form.Group>
+                          <Form.Control
+                            as="textarea"
+                            rows={2}
+                            name="comment"
+                            value={formData.comment}
+                            onChange={handleChange}
+                            readOnly={isSubmitted}
+                            placeholder="Enter justification or remarks..."
+                            style={{
+                              fontSize: "13px",
+                              border: "1px solid #cbd5e0",
+                              borderRadius: "6px",
+                              transition: "all 0.3s ease",
+                            }}
+                          />
+                        </Form.Group>
                       </div>
                     )}
-                    <Form.Group>
-                      <Form.Label
+
+                    {/* Action Button Panel */}
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "center",
+                        marginTop: "10px",
+                      }}
+                    >
+                      <Button
+                        variant="success"
+                        onClick={handleSave}
+                        disabled={isSaveDisabled}
                         style={{
+                          borderRadius: "8px",
+                          padding: "8px 15px",
                           fontSize: "13px",
                           fontWeight: "bold",
-                          color: "#721c24",
+                          backgroundColor: isSaveDisabled ? "#ccc" : "#00bcd4",
+                          borderColor: isSaveDisabled ? "#ccc" : "#00bcd4",
+                          boxShadow: isSaveDisabled ? "none" : "0 3px 6px rgba(0,0,0,0.12)",
+                          transition: "all 0.3s ease",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          cursor: isSaveDisabled ? "not-allowed" : "pointer",
                         }}
                       >
-                        {isSumZero ? "Justification for Zero Balance" : "Remarks"}{" "}
-                        {isSumZero && !isSubmitted && (
-                          <span className="text-danger">*</span>
-                        )}
-                      </Form.Label>
-                      <Form.Control
-                        as="textarea"
-                        rows={2}
-                        name="comment"
-                        value={formData.comment}
-                        onChange={handleChange}
-                        readOnly={isSubmitted}
-                        placeholder="Enter justification or remarks..."
-                        style={{
-                          fontSize: "13px",
-                          border: "1px solid #f5c6cb",
-                          borderRadius: "5px",
-                        }}
-                      />
-                    </Form.Group>
+                        <FeatherIcon
+                          icon={isSubmitted ? "check-circle" : "save"}
+                          size="15"
+                          className="me-2"
+                        />
+                        {isSubmitted ? "SUBMITTED TO DATABASE" : "SAVE DAILY CLOSING"}
+                      </Button>
+                    </div>
                   </div>
-                )}
+                </div>
               </Card.Body>
             </Card>
           </Col>
@@ -1656,11 +1281,6 @@ const DailyClosing = () => {
             />
           )}
         </Modal.Body>
-        <Modal.Footer style={{ backgroundColor: "#e0f7fa", borderTop: "1px solid #4dd0e1", padding: "10px" }}>
-          <Button variant="secondary" onClick={() => setShowPreview(false)} style={{ borderRadius: "8px", fontWeight: "bold" }}>
-            Close
-          </Button>
-        </Modal.Footer>
       </Modal>
     </div>
   );

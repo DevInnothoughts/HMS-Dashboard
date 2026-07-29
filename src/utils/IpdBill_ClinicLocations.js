@@ -261,4 +261,16 @@ export const clinincLoc = {
     invoiceHelplineNo: " 8884884500",
     EmergencySMS: "",
   },
+  "Adajan": {
+    invoiceAddress:
+      "<b>Healing Hands Clinic</b><br> F-2, First Floor, Vasupujya Complex, Near Madhuvan Circle, LP Savani Road, Adajan Gam, Adajan, Surat - 395009.",
+    invoiceHelplineNo: "8956748764",
+    EmergencySMS: "",
+  },
+  "RRNagar": {
+    invoiceAddress:
+      "<b>Healing Hands Clinic</b><br> Second Floor, No. 34/4, Bhoopalam Square, Opposite RNS College, Channasandra, Rajarajeshwari Nagar, Bengaluru, Karnataka - 560098.",
+    invoiceHelplineNo: "8884488016",
+    EmergencySMS: "",
+  },
 };

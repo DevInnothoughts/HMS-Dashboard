@@ -22,6 +22,8 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "../../styles/styles.css";
 import { toast } from "react-hot-toast";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
 const BASE_URL = "http://194.195.117.79:5100/api";
@@ -100,8 +102,8 @@ export default function IvrEnquiryList({ isTab = false }) {
     return new Date(date);
   }
 
-  const [fromDate, setFromDate] = useState(new Date());
-  const [toDate, setToDate] = useState(new Date());
+  const [fromDate, setFromDate] = useState(moment().startOf("day").toDate());
+  const [toDate, setToDate] = useState(moment().endOf("day").toDate());
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -300,10 +302,19 @@ export default function IvrEnquiryList({ isTab = false }) {
 
     setLoading(true);
     try {
+      let finalFromDate = formatToApiDate(fromDate);
+      let finalToDate = formatToApiDate(toDate);
+
+      if (!finalFromDate || !finalToDate) {
+        const today = moment().format("DD-MM-YYYY");
+        finalFromDate = today;
+        finalToDate = today;
+      }
+
       const url = new URL(`${BASE_URL}/V1/ivrdata/listIvrdata`);
       const params = {
-        from: formatToApiDate(fromDate),
-        to: formatToApiDate(toDate),
+        from: finalFromDate,
+        to: finalToDate,
         location: currentLocation,
       };
 
@@ -629,6 +640,80 @@ export default function IvrEnquiryList({ isTab = false }) {
     </div>
   );
 
+  const exportToExcel = () => {
+    let dataToExport = CallLogs;
+
+    if (statusFilter) {
+      dataToExport = dataToExport.filter((item) => {
+        const status = item.dynamic_status || "Not Visited";
+        return status === statusFilter;
+      });
+    }
+
+    const globalSearch = filters1?.global?.value;
+    if (globalSearch && globalSearch.trim() !== "") {
+      const searchLower = globalSearch.toLowerCase().trim();
+      dataToExport = dataToExport.filter((item) => {
+        const rawDate = item.call_date;
+        const dateObj = rawDate ? moment(rawDate, "YYYY-MM-DD") : null;
+        const dateStr = dateObj && dateObj.isValid() ? dateObj.format("DD-MM-YYYY") : (rawDate || "");
+        const timeStr = (item.call_time || "").toLowerCase();
+        const callerNo = String(item.caller_no || "").toLowerCase();
+        const patName = (item.patient_name || "").toLowerCase();
+        const destNo = String(item.destination_no || "").toLowerCase();
+        const callStatus = (item.call_status || "").toLowerCase();
+        const callDur = String(item.call_duration || "").toLowerCase();
+        const circle = (item.circle_name || "").toLowerCase();
+        const note = (item.note || "").toLowerCase();
+        return (
+          dateStr.includes(searchLower) ||
+          timeStr.includes(searchLower) ||
+          callerNo.includes(searchLower) ||
+          patName.includes(searchLower) ||
+          destNo.includes(searchLower) ||
+          callStatus.includes(searchLower) ||
+          callDur.includes(searchLower) ||
+          circle.includes(searchLower) ||
+          note.includes(searchLower)
+        );
+      });
+    }
+
+    const excelData = dataToExport.map((item, index) => {
+      const rawDate = item.call_date;
+      const dateObj = rawDate ? moment(rawDate, "YYYY-MM-DD") : null;
+      const formattedDate = dateObj && dateObj.isValid() ? dateObj.format("DD-MM-YYYY") : (rawDate || "");
+
+      return {
+        "Sr No": index + 1,
+        Date: formattedDate,
+        Time: item.call_time || "",
+        "Patient Contact No": item.caller_no || "",
+        "Patient Name": item.patient_name || "",
+        "HHC Contact No": item.destination_no || "",
+        "Call Status": item.call_status || "",
+        "Call Duration": item.call_duration || "",
+        Note: item.note || "",
+        "Enquiry Status": item.dynamic_status || "Not Visited",
+      };
+    });
+
+    const fileType =
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
+    const fileExtension = ".xlsx";
+
+    const ws = XLSX.utils.json_to_sheet(excelData);
+    const wb = { Sheets: { data: ws }, SheetNames: ["data"] };
+    const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const data = new Blob([excelBuffer], { type: fileType });
+
+    const formattedFromDate = fromDate ? moment(fromDate).format("DD-MM-YYYY") : "";
+    const formattedToDate = toDate ? moment(toDate).format("DD-MM-YYYY") : "";
+    const fileName = `IVR_Enquiry_List_${formattedFromDate}_to_${formattedToDate}${fileExtension}`;
+
+    saveAs(data, fileName);
+  };
+
   const renderHeader = () => (
     <div
       style={{
@@ -739,6 +824,29 @@ export default function IvrEnquiryList({ isTab = false }) {
               )}
             </InputGroup>
           </Form.Group>
+          <Button
+            variant="outline-success"
+            onClick={exportToExcel}
+            style={{
+              backgroundColor: "#28a745",
+              border: "none",
+              borderRadius: "6px",
+              padding: "5px 10px",
+              fontSize: "12px",
+              fontWeight: "500",
+              color: "white",
+              cursor: "pointer",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              height: "26px",
+              display: "flex",
+              alignItems: "center",
+              gap: "5px",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <FeatherIcon icon="download" size={13} />
+            Download Excel
+          </Button>
         </div>
 
         <div
@@ -793,17 +901,10 @@ export default function IvrEnquiryList({ isTab = false }) {
               To Date
             </div>
             <DatePicker
-              selected={toDate ? new Date(toDate) : null}
-              onChange={(date) => {
-                // FIX: Use moment to format local date instead of toISOString()
-                const formattedDate = date
-                  ? moment(date).format("YYYY-MM-DD")
-                  : "";
-                setToDate(formattedDate);
-              }}
+              selected={toDate}
+              onChange={setToDate}
               dateFormat="dd-MM-yyyy"
               placeholderText="Select to date"
-              popperPlacement="bottom-start"
               customInput={
                 <Form.Control
                   style={{ padding: "5px 8px", fontSize: "12px" }}
@@ -812,31 +913,6 @@ export default function IvrEnquiryList({ isTab = false }) {
             />
           </div>
 
-          <Button
-            variant="primary"
-            onClick={() => fetchCallLogsData(true)}
-            style={{
-              backgroundColor: "#00bcd4",
-              border: "none",
-              borderRadius: "8px",
-              padding: "6px 7px",
-              fontSize: "12px",
-              fontWeight: "500",
-              color: "white",
-              cursor: "pointer",
-              transition: "all 0.3s ease",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              marginTop: "16px",
-              ":hover": {
-                backgroundColor: "#00acc1",
-                transform: "translateY(-1px)",
-                boxShadow: "0 4px 8px rgba(0,0,0,0.15)",
-              },
-            }}
-          >
-            <FeatherIcon icon="refresh-ccw" size={12} className="me-1" />
-            Refresh
-          </Button>
           <Button
             variant="secondary"
             onClick={() => {
@@ -1189,7 +1265,7 @@ export default function IvrEnquiryList({ isTab = false }) {
                         }}
                       />
 
-                      <Column
+                      {/* <Column
                         field="call_type"
                         header="Call Type"
                         body={(rowData) => rowData.call_type || "-"}
@@ -1200,7 +1276,7 @@ export default function IvrEnquiryList({ isTab = false }) {
                           padding: "0.75rem",
                           width: "100px",
                         }}
-                      />
+                      /> */}
                       <Column
                         field="call_status"
                         header="Call Status"

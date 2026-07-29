@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import moment from "moment";
 import { FilterMatchMode } from "primereact/api";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
@@ -11,6 +12,7 @@ import {
   Form,
   InputGroup,
   Button,
+  Modal,
 } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 import DatePicker from "react-datepicker";
@@ -22,41 +24,59 @@ const BASE_URL = "http://194.195.117.79:5100/api";
 
 const formatOnlyDate = (value) => {
   if (!value) return "-";
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-
-  return date.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  const trimmed = value.trim();
+  const parsed = moment(trimmed, [
+    "YYYY-MM-DD HH:mm:ss",
+    "YYYY-MM-DD HH:mm",
+    "DD-MM-YYYY HH:mm",
+    "DD-MM-YYYY hh:mm A",
+    "YYYY-MM-DD hh:mm A",
+    "YYYY-MM-DD",
+    "DD-MM-YYYY",
+  ]);
+  if (parsed.isValid()) {
+    return parsed.format("DD-MM-YYYY");
+  }
+  return value;
 };
 
 const formatOnlyTime = (value) => {
   if (!value) return "-";
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-
-  return date.toLocaleTimeString("en-GB", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
+  const trimmed = value.trim();
+  // Check if there is a time component in the string
+  const hasTime = /\d{1,2}:\d{2}/.test(trimmed);
+  if (!hasTime) {
+    return "-";
+  }
+  const parsed = moment(trimmed, [
+    "YYYY-MM-DD HH:mm:ss",
+    "YYYY-MM-DD HH:mm",
+    "DD-MM-YYYY HH:mm",
+    "DD-MM-YYYY hh:mm A",
+    "YYYY-MM-DD hh:mm A",
+  ]);
+  if (parsed.isValid()) {
+    return parsed.format("HH:mm");
+  }
+  return "-";
 };
 
 const normalizeDate = (value) => {
   if (!value) return null;
-
   const trimmed = String(value).trim();
   if (!trimmed) return null;
-
-  const date = new Date(trimmed);
-  if (!Number.isNaN(date.getTime())) {
-    return date;
+  const parsed = moment(trimmed, [
+    "YYYY-MM-DD HH:mm:ss",
+    "YYYY-MM-DD HH:mm",
+    "DD-MM-YYYY HH:mm",
+    "DD-MM-YYYY hh:mm A",
+    "YYYY-MM-DD hh:mm A",
+    "YYYY-MM-DD",
+    "DD-MM-YYYY",
+  ]);
+  if (parsed.isValid()) {
+    return parsed.toDate();
   }
-
   return null;
 };
 
@@ -67,7 +87,7 @@ const buildSurgeryValue = (date, time) => {
 };
 
 const formatAgeGender = (age, sex) => {
-  const ageText = age === null || age === undefined || age === "" ? "N/A" : age;
+  const ageText = age === null || age === undefined || age === "" ? "N/A" : `${age} yrs`;
   const sexText = sex ? sex : "N/A";
   return `${ageText} / ${sexText}`;
 };
@@ -87,6 +107,8 @@ export default function IpdPatientList() {
   const [filters1] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
+
+  // Form state cleaned up
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -173,6 +195,7 @@ export default function IpdPatientList() {
           patient.surgeryDate,
           patient.admissionNo,
           patient.patientName,
+          patient.phone,
           patient.ageGender,
           patient.roomType,
           patient.roomNo,
@@ -184,8 +207,18 @@ export default function IpdPatientList() {
           .includes(searchValue);
 
       const patientDate = normalizeDate(patient.surgeryDate);
-      const matchesFrom = !fromDate || (patientDate && patientDate >= fromDate);
-      const matchesTo = !toDate || (patientDate && patientDate <= toDate);
+
+      let matchesFrom = true;
+      if (fromDate && patientDate) {
+        const startOfFrom = moment(fromDate).startOf("day").toDate();
+        matchesFrom = patientDate >= startOfFrom;
+      }
+
+      let matchesTo = true;
+      if (toDate && patientDate) {
+        const endOfTo = moment(toDate).endOf("day").toDate();
+        matchesTo = patientDate <= endOfTo;
+      }
 
       return matchesSearch && matchesFrom && matchesTo;
     });
@@ -219,24 +252,26 @@ export default function IpdPatientList() {
     loadPatients();
   };
 
-  const actionBodyTemplate = (patient) => (
-    <div className="d-flex align-items-center justify-content-center">
-      <Button
-        variant="primary"
-        className="btn-primary btn-extra-small btn-icon"
-        title="View"
-        onClick={() =>
-          navigate("/personal-details-card", { state: { patient } })
-        }
-        style={{
-          borderRadius: "6px",
-          padding: "5px 8px",
-        }}
-      >
-        <FeatherIcon icon="eye" size="16" />
-      </Button>
-    </div>
-  );
+  const actionsBodyTemplate = (rowData) => {
+    return (
+      <div className="d-flex align-items-center justify-content-center">
+        <Button
+          variant="primary"
+          className="btn-primary btn-extra-small btn-icon"
+          title="IPD Forms"
+          onClick={() =>
+            navigate("/ipd-patient-forms", { state: { patient: rowData } })
+          }
+          style={{
+            borderRadius: "6px",
+            padding: "5px 8px",
+          }}
+        >
+          <FeatherIcon icon="file-text" size="16" />
+        </Button>
+      </div>
+    );
+  };
 
   const renderHeader = () => (
     <div
@@ -321,9 +356,9 @@ export default function IpdPatientList() {
                 style={{
                   borderRadius: "6px",
                   border: "1px solid #4dd0e1",
-                  padding: "5px 8px",
+                  padding: "3px 8px",
                   width: "200px",
-                  height: "30px",
+                  height: "26px",
                   fontSize: "12px",
                   transition: "all 0.3s ease",
                 }}
@@ -412,27 +447,6 @@ export default function IpdPatientList() {
             />
           </div>
 
-          <Button
-            variant="primary"
-            onClick={handleRefresh}
-            disabled={loading}
-            style={{
-              backgroundColor: "#00bcd4",
-              border: "none",
-              borderRadius: "8px",
-              padding: "6px 7px",
-              fontSize: "12px",
-              fontWeight: "500",
-              color: "white",
-              cursor: loading ? "not-allowed" : "pointer",
-              transition: "all 0.3s ease",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              marginTop: "15px",
-            }}
-          >
-            <FeatherIcon icon="refresh-ccw" size={12} className="me-1" />
-            {loading ? "Loading..." : "Refresh"}
-          </Button>
 
           <Button
             variant="secondary"
@@ -539,8 +553,21 @@ export default function IpdPatientList() {
 
                     <Column
                       field="admissionNo"
-                      header="Admission No"
-                      body={(rowData) => <span className="selectable-text">{rowData.admissionNo || "-"}</span>}
+                      header="Admission Number"
+                      body={(rowData) => {
+                        const isPending = !rowData.admissionNo || rowData.admissionNo === "PENDING";
+                        return isPending ? (
+                          <span
+                            className="selectable-text text-danger fw-bold"
+                            title="Confirm admission and create an IPD bill. The assigned admission number will reflect here."
+                            style={{ cursor: "help" }}
+                          >
+                            Pending
+                          </span>
+                        ) : (
+                          <span className="selectable-text">{rowData.admissionNo}</span>
+                        );
+                      }}
                       headerClassName="datatable-header-center"
                       style={{
                         border: "1px solid #90caf9",
@@ -559,7 +586,20 @@ export default function IpdPatientList() {
                         border: "1px solid #90caf9",
                         textAlign: "center",
                         padding: "0.75rem",
-                        minWidth: "180px",
+                        minWidth: "160px",
+                      }}
+                    />
+
+                    <Column
+                      field="phone"
+                      header="Contact Number"
+                      body={(rowData) => <span className="selectable-text">{rowData.phone || "-"}</span>}
+                      headerClassName="datatable-header-center"
+                      style={{
+                        border: "1px solid #90caf9",
+                        textAlign: "center",
+                        padding: "0.75rem",
+                        width: "130px",
                       }}
                     />
 
@@ -576,9 +616,9 @@ export default function IpdPatientList() {
                       }}
                     />
 
-                    <Column
+                    {/* <Column
                       field="roomType"
-                      header="Room type"
+                      header="Bed Category"
                       body={(rowData) => <span className="selectable-text">{rowData.roomType || "-"}</span>}
                       headerClassName="datatable-header-center"
                       style={{
@@ -587,7 +627,7 @@ export default function IpdPatientList() {
                         padding: "0.75rem",
                         width: "140px",
                       }}
-                    />
+                    /> */}
 
                     <Column
                       field="surgeonName"
@@ -598,7 +638,7 @@ export default function IpdPatientList() {
                         border: "1px solid #90caf9",
                         textAlign: "center",
                         padding: "0.75rem",
-                        minWidth: "180px",
+                        minWidth: "160px",
                       }}
                     />
 
@@ -611,21 +651,21 @@ export default function IpdPatientList() {
                         border: "1px solid #90caf9",
                         textAlign: "center",
                         padding: "0.75rem",
-                        minWidth: "150px",
+                        minWidth: "200px",
                       }}
                     />
 
-                    {/* <Column
-                      header="Action"
-                      body={actionBodyTemplate}
+                    <Column
+                      header="Actions"
+                      body={actionsBodyTemplate}
                       headerClassName="datatable-header-center"
                       style={{
                         border: "1px solid #90caf9",
                         textAlign: "center",
                         padding: "0.75rem",
-                        width: "110px",
+                        width: "100px",
                       }}
-                    /> */}
+                    />
                   </DataTable>
                 </Card.Body>
               </Card>

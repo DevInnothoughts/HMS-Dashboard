@@ -193,6 +193,12 @@ export default function OpdReceiptList() {
   }, [fetchReceiptsData, currentLocation]);
 
   const numberToWords = (num) => {
+    if (num === null || num === undefined) return "Zero Rupees Only";
+    if (typeof num === "string") {
+      num = parseFloat(num.replace(/,/g, ""));
+    }
+    if (isNaN(num)) return "Zero Rupees Only";
+
     const ones = [
       "",
       "One",
@@ -231,7 +237,7 @@ export default function OpdReceiptList() {
     ];
 
     const toWords = (n) => {
-      if (n === 0) return "";
+      if (isNaN(n) || n === 0) return "";
       if (n < 10) return ones[n];
       if (n < 20) return teens[n - 10];
       if (n < 100) return tens[Math.floor(n / 10)] + " " + ones[n % 10];
@@ -240,11 +246,18 @@ export default function OpdReceiptList() {
       return toWords(Math.floor(n / 1000)) + " Thousand " + toWords(n % 1000);
     };
 
-    let result = toWords(Math.round(num));
-    if (num >= 100000) {
-      const lakhs = Math.floor(num / 100000);
-      const remainder = num % 100000;
+    const rounded = Math.round(num);
+    if (rounded === 0) {
+      return "Zero Rupees Only";
+    }
+
+    let result = "";
+    if (rounded >= 100000) {
+      const lakhs = Math.floor(rounded / 100000);
+      const remainder = rounded % 100000;
       result = toWords(lakhs) + " Lakh " + toWords(remainder);
+    } else {
+      result = toWords(rounded);
     }
     return result.trim() + " Rupees Only";
   };
@@ -326,11 +339,13 @@ export default function OpdReceiptList() {
         const receiptWindow = window.open("", "_blank", "width=800,height=850");
         if (!receiptWindow) return;
 
-        const netAmount = (
+        const rawNet = (
           parseFloat(selectedReceipt.totalamt) -
           parseFloat(selectedReceipt.discountamt || 0)
-        ).toFixed(2);
-        const amountInWords = numberToWords(netAmount);
+        );
+        const netAmountVal = Math.round(rawNet);
+        const netAmount = netAmountVal.toLocaleString("en-IN");
+        const amountInWords = numberToWords(netAmountVal);
 
         const htmlContent = `
       <!DOCTYPE html>
@@ -511,18 +526,18 @@ export default function OpdReceiptList() {
                         <tr>
                               <td class="col-sr">${index + 1}</td>
                               <td class="col-desc">${label}</td>
-                              <td class="col-amt">${amount.toFixed(2)}</td>
+                              <td class="col-amt">₹ ${Math.round(amount).toLocaleString("en-IN")}</td>
                             </tr>
                           `;
               })
               .join("")
-            : `<tr><td class="col-sr">1</td><td class="col-desc">-</td><td class="col-amt">0.00</td></tr>`
+            : `<tr><td class="col-sr">1</td><td class="col-desc">-</td><td class="col-amt">₹ 0</td></tr>`
           }
                   </tbody>
                 </table>
                 <div class="summary-section">
-                  Sub Total : <b>₹ ${parseFloat(selectedReceipt.totalamt).toFixed(2)}</b><br>
-                  Discount (If Any) : <b>₹ ${parseFloat(selectedReceipt.discountamt || 0).toFixed(2)}</b><br>
+                  Sub Total : <b>₹ ${Math.round(parseFloat(selectedReceipt.totalamt)).toLocaleString("en-IN")}</b><br>
+                  Discount (If Any) : <b>₹ ${Math.round(parseFloat(selectedReceipt.discountamt || 0)).toLocaleString("en-IN")}</b><br>
                   Payable Amount : <b>₹ ${netAmount}</b>
                 </div>
 
@@ -767,26 +782,6 @@ export default function OpdReceiptList() {
           </div>
 
           <Button
-            variant="primary"
-            onClick={fetchReceiptsData}
-            style={{
-              backgroundColor: "#00bcd4",
-              border: "none",
-              borderRadius: "6px",
-              padding: "6px 7px",
-              fontSize: "12px",
-              fontWeight: "500",
-              color: "white",
-              cursor: "pointer",
-              transition: "all 0.3s ease",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              marginTop: "15px",
-            }}
-          >
-            <FeatherIcon icon="refresh-ccw" size={13} className="me-2" />
-            Refresh
-          </Button>
-          <Button
             variant="secondary"
             onClick={() => {
               setFromDate(null);
@@ -994,7 +989,7 @@ export default function OpdReceiptList() {
                         header="Total Amount"
                         headerClassName="datatable-header-center"
                         body={(rowData) =>
-                          `₹ ${parseFloat(rowData.totalamt).toFixed(2)}`
+                          `₹ ${Math.round(parseFloat(rowData.totalamt)).toLocaleString("en-IN")}`
                         }
                         style={{
                           border: "1px solid #90caf9",
@@ -1008,7 +1003,7 @@ export default function OpdReceiptList() {
                         header="Discount Amount"
                         headerClassName="datatable-header-center"
                         body={(rowData) =>
-                          `₹ ${parseFloat(rowData.discountamt || 0).toFixed(2)}`
+                          `₹ ${Math.round(parseFloat(rowData.discountamt || 0)).toLocaleString("en-IN")}`
                         }
                         style={{
                           border: "1px solid #90caf9",
@@ -1025,7 +1020,7 @@ export default function OpdReceiptList() {
                             parseFloat(rowData.totalamt || 0) -
                             parseFloat(rowData.discountamt || 0)
                           );
-                          return `₹ ${payable.toFixed(2)}`;
+                          return `₹ ${Math.round(payable).toLocaleString("en-IN")}`;
                         }}
                         style={{
                           border: "1px solid #90caf9",

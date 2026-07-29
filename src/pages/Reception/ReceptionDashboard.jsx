@@ -67,6 +67,94 @@ function decodeJwt(token) {
   }
 }
 
+// Helper to get patient status object with color, background, and text
+const getPatientStatus = (app) => {
+  if (!app) return null;
+  const isConfirmed =
+    app.confirmTime && app.confirmTime !== "0" && app.confirmTime !== 0;
+  if (!isConfirmed) {
+    return {
+      key: "PENDING",
+      text: "Pending",
+      color: "#475569",
+      bg: "#f1f5f9",
+      rowBg: "#ffffff",
+      rowBorder: "#cbd5e1",
+      icon: "clock",
+    };
+  }
+  const isExistingPatient = [
+    "FOLLOW",
+    "POSTOPERATIVE",
+    "MCDPA",
+    "OTHER",
+  ].includes(app.patientType?.toUpperCase());
+  const hasHistory = Number(app.historychk) === 3;
+  const hasExecution = Number(app.executivechk) === 1 || Number(app.executivechk) === 2;
+  const hasConsultation = Number(app.consultationchk) === 4;
+  const hasReceipt = Number(app.executivechk) === 2;
+
+  const isHistoryDone = hasHistory || isExistingPatient;
+  const isExecutionDone = (hasHistory && hasExecution) || isExistingPatient;
+  const isConsultationDone =
+    (hasHistory && hasExecution && hasConsultation) || isExistingPatient;
+  const isReceiptDone = hasReceipt;
+
+  if (isReceiptDone) {
+    return {
+      key: "RECEIPT_GENERATED",
+      text: "Receipt Generated",
+      color: "#10b981",
+      bg: "#ecfdf5",
+      rowBg: "#ecfdf5",
+      rowBorder: "#10b981",
+      icon: "file-text",
+    };
+  }
+  if (isConsultationDone) {
+    return {
+      key: "PRESCRIPTION_CHECKED",
+      text: "Prescription Checked",
+      color: "#8e44ad",
+      bg: "#8e44ad15",
+      rowBg: "#f3e8ff",
+      rowBorder: "#8e44ad",
+      icon: "clipboard",
+    };
+  }
+  if (isExecutionDone) {
+    return {
+      key: "DIAGNOSIS_CHECKED",
+      text: "Diagnosis Checked",
+      color: "#e67e22",
+      bg: "#e67e2215",
+      rowBg: "#fff7ed",
+      rowBorder: "#e67e22",
+      icon: "activity",
+    };
+  }
+  if (isHistoryDone) {
+    return {
+      key: "HISTORY_CHECKED",
+      text: "History Checked",
+      color: "#ec4899",
+      bg: "#ec489915",
+      rowBg: "#fdf4ff",
+      rowBorder: "#ec4899",
+      icon: "book-open",
+    };
+  }
+  return {
+    key: "PATIENT_ARRIVED",
+    text: "Patient Arrived",
+    color: "#0ea5e9",
+    bg: "#f0f9ff",
+    rowBg: "#f0f9ff",
+    rowBorder: "#0ea5e9",
+    icon: "check-circle",
+  };
+};
+
 export default function ReceptionDashboard() {
   const navigate = useNavigate();
   const formatPatientType = (type) => {
@@ -375,6 +463,7 @@ export default function ReceptionDashboard() {
               openEditForPhone: phone,
               returnToAppointment: true,
               appointment_id: appointmentId,
+              appointment_patient_type: patientType,
             },
           });
         }
@@ -411,17 +500,10 @@ export default function ReceptionDashboard() {
   };
 
   const eventStyleGetter = useCallback((event) => {
-    const colorMap = {
-      NEW: "#0284c7", // Premium Sky Blue
-      FOLLOW: "#10b981", // Clinical Emerald Green
-      POSTOPERATIVE: "#8b5cf6", // Soft Violet
-      MCDPA: "#475569", // Slate Grey for MCDPA
-      OTHER: "#f59e0b", // Warm Amber
-    };
-
+    const st = getPatientStatus(event);
     return {
       style: {
-        backgroundColor: colorMap[event.patientType] || "#ff0080",
+        backgroundColor: st ? st.color : "#475569",
         borderRadius: "4px",
         border: "none",
         color: "white",
@@ -450,70 +532,41 @@ export default function ReceptionDashboard() {
       selectedEvent.confirmTime &&
       selectedEvent.confirmTime !== "0" &&
       selectedEvent.confirmTime !== 0;
-    const typeColor = eventStyleGetter({
-      patientType: selectedEvent.patientType,
-    }).style.backgroundColor;
+    const selectedSt = getPatientStatus(selectedEvent);
+    const indicatorColorMap = {
+      PENDING: "#334155",
+      PATIENT_ARRIVED: "#0284c7",
+      HISTORY_CHECKED: "#ec4899",
+      DIAGNOSIS_CHECKED: "#d35400",
+      PRESCRIPTION_CHECKED: "#7b1fa2",
+      RECEIPT_GENERATED: "#059669",
+    };
+    const typeColor = indicatorColorMap[selectedSt?.key] || "#475569";
 
     const getDetailedStatus = () => {
       if (!isConfirmed) return null;
-      const isExistingPatient = ["FOLLOW", "POSTOPERATIVE", "MCDPA", "OTHER"].includes(
-        selectedEvent.patientType?.toUpperCase(),
-      );
-      const hasHistory =
-        Number(selectedEvent.historychk) === 3 || isExistingPatient;
-      const hasExecution =
-        Number(selectedEvent.executivechk) === 1 || isExistingPatient;
-      const hasConsultation =
-        Number(selectedEvent.consultationchk) === 4 || isExistingPatient;
-      const hasReceipt = Number(selectedEvent.executivechk) === 2;
+      const st = getPatientStatus(selectedEvent);
+      let time = selectedEvent.confirmTime;
+      let label = "Checked in at:";
 
-      if (hasReceipt) {
-        return {
-          text: "Receipt Generated",
-          icon: "file-text",
-          color: "#10b981",
-          bg: "#ecfdf5",
-          time: selectedEvent.receiptTime || selectedEvent.confirmTime,
-          label: "Completed at:",
-        };
+      if (st.key === "RECEIPT_GENERATED") {
+        time = selectedEvent.receiptTime || selectedEvent.confirmTime;
+        label = "Completed at:";
+      } else if (st.key === "PRESCRIPTION_CHECKED") {
+        time = selectedEvent.consultationTime || selectedEvent.confirmTime;
+        label = "Completed at:";
+      } else if (st.key === "DIAGNOSIS_CHECKED") {
+        time = selectedEvent.executionTime || selectedEvent.confirmTime;
+        label = "Completed at:";
+      } else if (st.key === "HISTORY_CHECKED") {
+        time = selectedEvent.historyTime || selectedEvent.confirmTime;
+        label = "Completed at:";
       }
-      if (hasConsultation) {
-        return {
-          text: "Prescription Checked",
-          icon: "clipboard",
-          color: "#8e44ad",
-          bg: "#8e44ad15",
-          time: selectedEvent.consultationTime || selectedEvent.confirmTime,
-          label: "Completed at:",
-        };
-      }
-      if (hasExecution) {
-        return {
-          text: "Diagnosis Checked",
-          icon: "activity",
-          color: "#e67e22",
-          bg: "#e67e2215",
-          time: selectedEvent.executionTime || selectedEvent.confirmTime,
-          label: "Completed at:",
-        };
-      }
-      if (hasHistory) {
-        return {
-          text: "History Checked",
-          icon: "book-open",
-          color: "#d946ef",
-          bg: "#d946ef15",
-          time: selectedEvent.historyTime || selectedEvent.confirmTime,
-          label: "Completed at:",
-        };
-      }
+
       return {
-        text: "Patient Arrived",
-        icon: "check-circle",
-        color: "#0ea5e9",
-        bg: "#f0f9ff",
-        time: selectedEvent.confirmTime,
-        label: "Checked in at:",
+        ...st,
+        time,
+        label,
       };
     };
 
@@ -569,8 +622,6 @@ export default function ReceptionDashboard() {
                   textAlign: "center",
                   fontWeight: "700",
                   boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                  fontSize: "11px",
-                  padding: "5px 5px",
                 }}
               >
                 {formatPatientType(selectedEvent.patientType)}
@@ -716,24 +767,23 @@ export default function ReceptionDashboard() {
 
   const ColorLegend = ({ name, type, count, bgColor }) => {
     const isSelected = activePatientTypeFilter === type;
+    const dotColor = "#475569";
     return (
       <div
         onClick={() => togglePatientTypeFilter(type)}
         className={`color-legend-pill ${isSelected ? "selected" : ""}`}
         style={{
-          padding: "4px 8px",
+          padding: "4px 10px",
           minWidth: "fit-content",
-          "--status-hover-color": bgColor,
-          "--status-hover-bg": `${bgColor}15`,
-          ...(isSelected
-            ? {
-              borderColor: bgColor,
-              backgroundColor: `${bgColor}25`,
-              transform: "translateY(-1.5px)",
-              boxShadow:
-                "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
-            }
-            : {}),
+          cursor: "pointer",
+          border: isSelected ? "2px solid #0284c7" : "1.5px solid #009bad",
+          borderRadius: "50px",
+          backgroundColor: isSelected ? "#e0f2fe" : "#ffffff",
+          transform: isSelected ? "translateY(-1.5px)" : "none",
+          boxShadow: isSelected
+            ? "0 4px 6px -1px rgba(2, 132, 199, 0.2)"
+            : "0 1px 3px rgba(0, 0, 0, 0.05)",
+          transition: "all 0.2s ease-in-out",
         }}
       >
         <div
@@ -741,15 +791,16 @@ export default function ReceptionDashboard() {
           style={{
             width: "11px",
             height: "11px",
-            backgroundColor: bgColor,
+            backgroundColor: "#475569",
+            borderRadius: "50%",
             ...(isSelected
-              ? { transform: "scale(1.25)", boxShadow: `0 0 8px ${bgColor}` }
+              ? { transform: "scale(1.25)", boxShadow: "0 0 8px rgba(71,85,105,0.4)" }
               : {}),
           }}
         ></div>
         <p
           style={{
-            color: "#1e293b",
+            color: "#000000",
             fontWeight: isSelected ? "700" : "600",
             margin: 0,
             fontSize: "11px",
@@ -762,7 +813,7 @@ export default function ReceptionDashboard() {
           {name}{" "}
           <span
             className="cnt"
-            style={{ fontSize: "11px", color: "#2a3748ff" }}
+            style={{ fontSize: "11px", color: "#000000" }}
           >
             ({count || 0})
           </span>
@@ -837,9 +888,16 @@ export default function ReceptionDashboard() {
     overflow: visible !important; 
 }
 
+.rbc-toolbar .rbc-toolbar-label {
+    font-weight: 800 !important;
+    font-size: 20px !important;
+    color: #0f172a !important;
+    letter-spacing: 0.5px;
+}
+
 .rbc-header { 
     padding: 12px 0 !important; 
-    font-weight: 7000 !important; 
+    font-weight: 700 !important; 
     color: rgb(0, 0, 0) !important; 
     border-bottom: 2px solid #f1f5f9 !important; 
 }
@@ -855,10 +913,39 @@ export default function ReceptionDashboard() {
 
 .rbc-overlay { 
     position: absolute !important;
-    z-index: 10000 !important; 
-    background: #fff;
-    border: 1px solid #ccc;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    z-index: 100000 !important; 
+    background: #fff !important;
+    border: 1.5px solid #009bad !important;
+    border-radius: 10px !important;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
+    padding: 8px !important;
+    min-width: 230px !important;
+    width: max-content !important;
+    max-width: 320px !important;
+    max-height: 350px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+.rbc-overlay .rbc-event {
+    margin-bottom: 4px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.rbc-overlay-header {
+    border-bottom: 1px solid #cbd5e1 !important;
+    padding: 8px 10px 6px 10px !important;
+    margin: -8px -8px 6px -8px !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    color: #0f172a !important;
+    position: sticky !important;
+    top: -8px !important;
+    background: #ffffff !important;
+    z-index: 10 !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
 }
 
 .clinical-header-centered {
@@ -1048,8 +1135,8 @@ margin-left: 1px;
                       "Today's Appointment Overview"
                     ) : (
                       <>
-                        Patient Appointment Calendar for{" "}
-                        {moment(selectedDate).format("MMMM YYYY")}
+                        <span style={{ fontWeight: "700", fontSize: "20px", color: "#000000ff" }}>Patient Appointment Calendar for</span>{" "}
+                        <span style={{ fontWeight: "700", color: "#007e8bff" }}>{moment(selectedDate).format("MMMM YYYY")}</span>
                       </>
                     )}
                   </h4>
@@ -1062,31 +1149,26 @@ margin-left: 1px;
                     name="New Patient"
                     type="NEW"
                     count={counts.NEW}
-                    bgColor="#0284c7"
                   />
                   <ColorLegend
                     name="Follow Patient"
                     type="FOLLOW"
                     count={counts.FOLLOW}
-                    bgColor="#10b981"
                   />
                   <ColorLegend
                     name="Postoperative Patient"
                     type="POSTOPERATIVE"
                     count={counts.POSTOPERATIVE}
-                    bgColor="#8b5cf6"
                   />
                   <ColorLegend
                     name="MCDPA Patient"
                     type="MCDPA"
                     count={counts.MCDPA}
-                    bgColor="#475569"
                   />
                   <ColorLegend
                     name="Other Patient"
                     type="OTHER"
                     count={counts.OTHER}
-                    bgColor="#f59e0b"
                   />
                 </div>
               </Col>
@@ -1170,7 +1252,7 @@ margin-left: 1px;
             <Col xxl={8} xl={8} lg={12} className="mb-4">
               <Card
                 className="border-0 shadow-sm"
-                style={{ borderRadius: "10px" }}
+                style={{ borderRadius: "10px", overflow: "hidden" }}
               >
                 <Card.Header
                   className="bg-white py-2 px-3 d-flex justify-content-between align-items-center"
@@ -1216,6 +1298,7 @@ margin-left: 1px;
                       onClick={() => {
                         setViewMode("list");
                         setCurrentView("day");
+                        setSelectedDate(new Date());
                       }}
                       size="sm"
                       style={{
@@ -1235,6 +1318,7 @@ margin-left: 1px;
                     borderTop: "none",
                     borderBottomLeftRadius: "10px",
                     borderBottomRightRadius: "10px",
+                    overflow: "visible",
                   }}
                 >
                   {viewMode === "calendar" ? (
@@ -1249,7 +1333,7 @@ margin-left: 1px;
                       onView={handleCalendarView}
                       eventPropGetter={eventStyleGetter}
                       components={{ event: CalendarCustomEvent }}
-                      style={{ height: 770 }}
+                      style={{ height: 830 }}
                       popup={true}
                       views={{
                         month: true,
@@ -1297,7 +1381,7 @@ margin-left: 1px;
                               }}
                             />
                           </div>
-                          <Badge bg="info" className="p-6">
+                          <Badge bg="primary" className="p-6">
                             {
                               filteredAppointments.filter((a) =>
                                 moment(a.start).isSame(selectedDate, "day"),
@@ -1329,81 +1413,53 @@ margin-left: 1px;
                           })
                           .sort((a, b) => moment(a.start).diff(moment(b.start)))
                           .map((app, index) => {
-                            const typeColor = eventStyleGetter({
-                              patientType: app.patientType,
-                            }).style.backgroundColor;
+                            const typeColor = "#475569";
                             const isActive =
                               selectedEvent?.appointmentid ===
                               app.appointmentid;
 
-                            const isAppConfirmed =
-                              app.confirmTime &&
-                              app.confirmTime !== "0" &&
-                              app.confirmTime !== 0;
-                            let listStatus = null;
-                            if (isAppConfirmed) {
-                              const isExistingPatient = [
-                                "FOLLOW",
-                                "POSTOPERATIVE",
-                                "MCDPA",
-                                "OTHER",
-                              ].includes(app.patientType?.toUpperCase());
-                              const hasHistory =
-                                Number(app.historychk) === 3 ||
-                                isExistingPatient;
-                              const hasExecution =
-                                Number(app.executivechk) === 1 ||
-                                isExistingPatient;
-                              const hasConsultation =
-                                Number(app.consultationchk) === 4 ||
-                                isExistingPatient;
-                              const hasReceipt = Number(app.executivechk) === 2;
+                            const listStatus = getPatientStatus(app);
+                            const isPending = listStatus.key === "PENDING";
 
-                              if (hasReceipt) {
-                                listStatus = {
-                                  text: "Receipt Generated",
-                                  color: "#10b981",
-                                  bg: "#ecfdf5",
-                                };
-                              } else if (hasConsultation) {
-                                listStatus = {
-                                  text: "Prescription Checked",
-                                  color: "#8e44ad",
-                                  bg: "#8e44ad15",
-                                };
-                              } else if (hasExecution) {
-                                listStatus = {
-                                  text: "Diagnosis Checked",
-                                  color: "#e67e22",
-                                  bg: "#e67e2215",
-                                };
-                              } else if (hasHistory) {
-                                listStatus = {
-                                  text: "History Checked",
-                                  color: "#d946ef",
-                                  bg: "#d946ef15",
-                                };
-                              } else {
-                                listStatus = {
-                                  text: "Patient Arrived",
-                                  color: "#0ea5e9",
-                                  bg: "#f0f9ff",
-                                };
+                            const indicatorColorMap = {
+                              PENDING: "#334155",
+                              PATIENT_ARRIVED: "#0284c7",
+                              HISTORY_CHECKED: "#ec4899",
+                              DIAGNOSIS_CHECKED: "#d35400",
+                              PRESCRIPTION_CHECKED: "#7b1fa2",
+                              RECEIPT_GENERATED: "#059669",
+                            };
+                            const indicatorColor =
+                              indicatorColorMap[listStatus.key] || "#475569";
+
+                            const itemStyle = isPending
+                              ? {
+                                position: "relative",
+                                backgroundColor: isActive ? "#f0f9ff" : "#ffffff",
+                                border: isActive
+                                  ? "1.5px solid #0284c7"
+                                  : "1px solid #cbd5e1",
+                                boxShadow: isActive
+                                  ? "0 4px 6px -1px rgba(2, 132, 199, 0.15)"
+                                  : "0 1px 3px rgba(0,0,0,0.02)",
                               }
-                            } else {
-                              listStatus = {
-                                text: "Pending",
-                                color: "#d97706",
-                                bg: "#fef3c7",
+                              : {
+                                position: "relative",
+                                backgroundColor: listStatus.rowBg,
+                                border: isActive
+                                  ? `2px solid ${listStatus.rowBorder}`
+                                  : `1.5px solid ${listStatus.rowBorder}80`,
+                                boxShadow: isActive
+                                  ? `0 4px 8px -1px ${listStatus.color}40`
+                                  : `0 1px 3px ${listStatus.color}20`,
                               };
-                            }
 
                             return (
                               <div
                                 key={app.appointmentid || index}
                                 className={`appointment-item ${isActive ? "active" : ""}`}
                                 onClick={() => handleEventClick(app)}
-                                style={{ position: "relative" }}
+                                style={itemStyle}
                               >
                                 <div className="time-slot">{app.time}</div>
                                 <div
@@ -1411,7 +1467,7 @@ margin-left: 1px;
                                   style={{
                                     width: "4px",
                                     height: "35px",
-                                    backgroundColor: typeColor,
+                                    backgroundColor: indicatorColor,
                                     borderRadius: "2px",
                                   }}
                                 ></div>
@@ -1439,7 +1495,7 @@ margin-left: 1px;
                                 >
                                   <span
                                     style={{
-                                      backgroundColor: typeColor,
+                                      backgroundColor: indicatorColor,
                                       color: "white",
                                       fontSize: "10px",
                                       padding: "2px 8px",
@@ -1458,8 +1514,8 @@ margin-left: 1px;
                                     <span
                                       style={{
                                         backgroundColor: listStatus.bg,
-                                        color: listStatus.color,
-                                        border: `1px solid ${listStatus.color}40`,
+                                        color: indicatorColor,
+                                        border: `1px solid ${indicatorColor}60`,
                                         fontSize: "10px",
                                         padding: "2px 8px",
                                         borderRadius: "4px",

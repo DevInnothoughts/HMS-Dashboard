@@ -43,6 +43,14 @@ const formatDisplayDateIST = (date) => {
   return `${day}-${month}-${year}`;
 };
 
+const formatAmount = (val) => {
+  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+    return "-";
+  }
+  const parsed = parseFloat(val);
+  return isNaN(parsed) ? val : `₹ ${Math.round(parsed).toLocaleString("en-IN")}`;
+};
+
 const DailyOPDReport = () => {
   const [reportData, setReportData] = useState(initialReportState);
   const [loading, setLoading] = useState(true);
@@ -178,7 +186,7 @@ const DailyOPDReport = () => {
               </td>
               <td style="width:30%;
                   font-weight:${item.method?.toUpperCase() === "TOTAL" ? "bold" : "normal"};">
-                ${item.amount}
+                ${formatAmount(item.amount)}
               </td>
             </tr>
           `,
@@ -331,9 +339,9 @@ const DailyOPDReport = () => {
         .map(
           (i) => `
                     <tr>
-                      <td class="fw-bold" style="color:#000 !important;">${i.testName}</td>
-                      <td>₹ ${i.amount}</td>
-                    </tr>
+                       <td class="fw-bold" style="color:#000 !important;">${i.testName}</td>
+                       <td>${formatAmount(i.amount)}</td>
+                     </tr>
                   `,
         )
         .join("")}
@@ -447,18 +455,32 @@ const DailyOPDReport = () => {
               }}
             >
               <Card.Header
-                className="text-center"
+                className="d-flex justify-content-between align-items-center"
                 style={{
                   fontWeight: "bold",
                   backgroundColor: "#e3f2fd",
                   borderBottom: "2px solid #0288d1",
-                  padding: "0.8rem",
+                  padding: "0.5rem 1.2rem",
                   background: "#00acc1",
                   color: "white",
                   fontSize: "16px",
                 }}
               >
-                DAILY OPD REPORT
+                <div style={{ width: "120px" }}></div>
+                <div style={{ flexGrow: 1, textAlign: "center" }}>DAILY OPD REPORT</div>
+                <Button
+                  variant="warning"
+                  size="sm"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    fontWeight: "bold",
+                  }}
+                  onClick={handlePrint}
+                >
+                  <FaPrint /> Print Report
+                </Button>
               </Card.Header>
               <Card.Body style={{ padding: "15px" }}>
                 <div className="d-flex justify-content-end">
@@ -631,11 +653,11 @@ const DailyOPDReport = () => {
                       <tbody style={{ fontSize: "12px" }}>
                         {reportData.testDetails.map((item, index) => (
                           <tr key={index}>
-                            <td className="fw-bold text-secondary">
-                              {item.testName}
-                            </td>
-                            <td>₹ {item.amount}</td>
-                          </tr>
+                             <td className="fw-bold text-secondary">
+                               {item.testName}
+                             </td>
+                             <td>{formatAmount(item.amount)}</td>
+                           </tr>
                         ))}
                       </tbody>
                     </Table>
@@ -691,7 +713,7 @@ const DailyOPDReport = () => {
                                   item.method?.toUpperCase() === "TOTAL" ? "bold" : "normal",
                               }}
                             >
-                              {item.amount}
+                              {formatAmount(item.amount)}
                             </td>
                           </tr>
                         ))}
@@ -748,7 +770,7 @@ const DailyOPDReport = () => {
                                   item.method?.toUpperCase() === "TOTAL" ? "bold" : "normal",
                               }}
                             >
-                              {item.amount}
+                              {formatAmount(item.amount)}
                             </td>
                           </tr>
                         ))}
@@ -803,7 +825,7 @@ const DailyOPDReport = () => {
                                   item.method?.toUpperCase() === "TOTAL" ? "bold" : "normal",
                               }}
                             >
-                              {item.amount}
+                              {formatAmount(item.amount)}
                             </td>
                           </tr>
                         ))}
@@ -859,7 +881,7 @@ const DailyOPDReport = () => {
                                   item.method?.toUpperCase() === "TOTAL" ? "bold" : "normal",
                               }}
                             >
-                              {item.amount}
+                              {formatAmount(item.amount)}
                             </td>
                           </tr>
                         ))}
@@ -869,26 +891,6 @@ const DailyOPDReport = () => {
                 </Row>
 
               </Card.Body>
-              <Card.Footer
-                className="text-center"
-                style={{
-                  padding: "1rem",
-                  borderTop: "1px solid #0288d1",
-                }}
-              >
-                <Button
-                  variant="primary"
-                  style={{
-                    border: "none",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "8px",
-                  }}
-                  onClick={handlePrint}
-                >
-                  <FaPrint /> Print Report
-                </Button>
-              </Card.Footer>
             </Card>
           </Col>
         </Row>

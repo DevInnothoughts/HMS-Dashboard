@@ -25,7 +25,7 @@ const formatAmount = (val) => {
     return "-";
   }
   const parsed = parseFloat(val);
-  return isNaN(parsed) ? val : parsed.toFixed(2);
+  return isNaN(parsed) ? val : `₹ ${Math.round(parsed).toLocaleString("en-IN")}`;
 };
 
 const formatDateDisplay = (dateStr) => {

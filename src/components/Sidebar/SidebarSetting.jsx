@@ -48,8 +48,8 @@ const SidebarCSS = () => (
 
     /* ─── Role Badge ────────────────────────── */
     .role-badge {
-      margin: 0px 0px 14px;
-      padding: 5px 20px 5px 20px;
+      margin: 0px 0px 10px;
+      padding: 4px 15px;
       border-radius: 10px;
       background: rgba(0, 172, 193, 0.08);
       border: 1px solid rgba(0, 172, 193, 0.25);
@@ -60,9 +60,9 @@ const SidebarCSS = () => (
       width: fit-content;
     }
     .role-badge-icon {
-      width: 28px;
-      height: 25px;
-      border-radius: 8px;
+      width: 24px;
+      height: 22px;
+      border-radius: 6px;
       background: #00acc1;
       display: flex;
       align-items: center;
@@ -71,7 +71,7 @@ const SidebarCSS = () => (
     }
     .role-badge-icon i {
       color: #fff;
-      font-size: 13px;
+      font-size: 11px;
     }
     .role-badge-text {
       display: flex;
@@ -86,7 +86,7 @@ const SidebarCSS = () => (
       letter-spacing: 0.7px;
     }
     .role-badge-name {
-      font-size: 14px;
+      font-size: 12px;
       font-weight: 700;
       color: #197482ff;
       white-space: nowrap;
@@ -102,7 +102,7 @@ const SidebarCSS = () => (
       padding: 0 4px;
     }
     .menu-item {
-      margin-bottom: 6.5px;
+      margin-bottom: 4px;
       border-radius: 10px;
       list-style: none;
     }
@@ -110,9 +110,9 @@ const SidebarCSS = () => (
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 6px 10px;
+      padding: 5px 8px;
       border-radius: 10px;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 500;
       color: #5d7a7eff;
       text-decoration: none;
@@ -151,9 +151,9 @@ const SidebarCSS = () => (
 
     /* ─── Icon Wrap ─────────────────────────── */
     .icon-wrap {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
       background: rgba(0, 172, 193, 0.08);
       display: flex;
       align-items: center;
@@ -162,14 +162,14 @@ const SidebarCSS = () => (
       transition: background 0.18s ease;
     }
     .icon-wrap i {
-      font-size: 15px;
+      font-size: 13px;
       color: #197482ff;
       line-height: 1;
       transition: color 0.18s ease;
     }
     .icon-wrap svg {
-      width: 15px;
-      height: 15px;
+      width: 13px;
+      height: 13px;
       color: #0d7e90;
       transition: color 0.18s ease;
     }
@@ -177,7 +177,7 @@ const SidebarCSS = () => (
     /* ─── Chevron ───────────────────────────── */
     .chevron-icon {
       margin-left: auto;
-      font-size: 11px !important;
+      font-size: 10px !important;
       color: #1bb8cdff;
       transition: transform 0.22s ease;
     }
@@ -188,8 +188,8 @@ const SidebarCSS = () => (
     /* ─── Submenu ───────────────────────────── */
     .submenu-list {
       list-style: none !important;
-      margin: 3px 0 5px 18px !important;
-      padding: 3px 0 3px 12px !important;
+      margin: 2px 0 4px 15px !important;
+      padding: 2px 0 2px 10px !important;
       border-left: 2px solid rgba(0, 172, 193, 0.3) !important;
     }
     .submenu-list li {
@@ -209,10 +209,10 @@ const SidebarCSS = () => (
     .submenu-list li a {
       display: flex;
       align-items: center;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 500;
       color: #000000ff;
-      padding: 6px 8px;
+      padding: 4px 6px;
       border-radius: 7px;
       text-decoration: none;
       transition: all 0.16s ease;
@@ -332,14 +332,14 @@ const SidebarCSS = () => (
     .logout-btn {
       width: 100%;
       border: 1px solid rgba(226, 86, 42, 0.3);
-      border-radius: 9px;
-      padding: 9px 14px;
+      border-radius: 7px;
+      padding: 7px 12px;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 5px;
       cursor: pointer;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
       color: #e2562a;
       background: rgba(226, 86, 42, 0.05);

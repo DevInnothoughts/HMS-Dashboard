@@ -66,6 +66,19 @@ export default function DoctorOpdPatientList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentLocation, setCurrentLocation] = useState("default");
 
+  const sortedPatients = React.useMemo(() => {
+    return [...patients].sort((a, b) => {
+      const timeA = a.date ? new Date(a.date).getTime() : 0;
+      const timeB = b.date ? new Date(b.date).getTime() : 0;
+      const validTimeA = isNaN(timeA) ? 0 : timeA;
+      const validTimeB = isNaN(timeB) ? 0 : timeB;
+      if (validTimeB !== validTimeA) {
+        return validTimeB - validTimeA;
+      }
+      return (b.patient_id || 0) - (a.patient_id || 0);
+    });
+  }, [patients]);
+
   // Print related state
   const fupPrintRef = useRef();
   const [printData, setPrintData] = useState({
@@ -523,7 +536,7 @@ export default function DoctorOpdPatientList() {
       <Button
         variant="primary"
         className="btn-primary btn-extra-small btn-icon me-2"
-        title="View"
+        title="View OPD Forms"
         onClick={() =>
           navigate("/personal-details-card", { state: { patient } })
         }
@@ -1634,7 +1647,7 @@ export default function DoctorOpdPatientList() {
                   fontSize: "12px",
                 }}
               >
-                {["Mediend", "Hexa", "Practo", "Medibuddy", "Mykare"].map(
+                {["Mediend", "Hexa", "Practo", "Medibuddy", "Mykare", "Signaasat"].map(
                   (aggregator) => (
                     <li
                       key={aggregator}
@@ -2032,31 +2045,6 @@ export default function DoctorOpdPatientList() {
           </div>
 
           <Button
-            variant="primary"
-            onClick={() => fetchPatientsData()}
-            style={{
-              backgroundColor: "#00bcd4",
-              border: "none",
-              borderRadius: "8px",
-              padding: "6px 7px",
-              fontSize: "12px",
-              fontWeight: "500",
-              color: "white",
-              cursor: "pointer",
-              transition: "all 0.3s ease",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              marginTop: "15px",
-              ":hover": {
-                backgroundColor: "#00acc1",
-                transform: "translateY(-1px)",
-                boxShadow: "0 4px 8px rgba(0,0,0,0.15)",
-              },
-            }}
-          >
-            <FeatherIcon icon="refresh-ccw" size={12} className="me-1" />
-            Refresh
-          </Button>
-          <Button
             variant="secondary"
             onClick={() => {
               setFromDate(null);
@@ -2143,7 +2131,7 @@ export default function DoctorOpdPatientList() {
                     </div>
                   ) : (
                     <DataTable
-                      value={patients}
+                      value={sortedPatients}
                       paginator
                       rows={rows}
                       first={first}

@@ -144,6 +144,14 @@ const BillingReport = () => {
     return val;
   };
 
+  const formatAmount = (val) => {
+    if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+      return "-";
+    }
+    const parsed = parseFloat(val);
+    return isNaN(parsed) ? val : `₹ ${Math.round(parsed).toLocaleString("en-IN")}`;
+  };
+
   const handlePrint = () => {
     window.print();
   };
@@ -425,17 +433,17 @@ const BillingReport = () => {
                     <Column
                       field="packageAmount"
                       header="Package Amount"
-                      body={(rowData) => formatValue(rowData.packageAmount)}
+                      body={(rowData) => formatAmount(rowData.packageAmount)}
                     />
                     <Column
                       field="approvedAmount"
                       header="Approved Amount"
-                      body={(rowData) => formatValue(rowData.approvedAmount)}
+                      body={(rowData) => formatAmount(rowData.approvedAmount)}
                     />
                     <Column
                       field="payableAmount"
                       header="Payable Amount"
-                      body={(rowData) => formatValue(rowData.payableAmount)}
+                      body={(rowData) => formatAmount(rowData.payableAmount)}
                     />
                   </DataTable>
 
@@ -462,9 +470,9 @@ const BillingReport = () => {
                             <td>{formatValue(item.invoiceId)}</td>
                             <td>{formatValue(item.patientName)}</td>
                             <td>{formatValue(item.invoiceType)}</td>
-                            <td>{formatValue(item.packageAmount)}</td>
-                            <td>{formatValue(item.approvedAmount)}</td>
-                            <td>{formatValue(item.payableAmount)}</td>
+                            <td>{formatAmount(item.packageAmount)}</td>
+                            <td>{formatAmount(item.approvedAmount)}</td>
+                            <td>{formatAmount(item.payableAmount)}</td>
                           </tr>
                         ))}
                       </tbody>

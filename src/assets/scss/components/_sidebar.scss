@@ -214,12 +214,12 @@
     /* Icon wrap: background at rest */
     .icon-wrap {
       background: rgba(0, 172, 193, 0.08) !important;
-      width: 36px !important;
-      height: 36px !important;
+      width: 30px !important;
+      height: 30px !important;
       margin: 0 !important;
 
-      i { color: #0f9fb5 !important; font-size: 16px !important; }
-      svg { color: #0d7e90 !important; width: 16px !important; height: 16px !important; }
+      i { color: #0f9fb5 !important; font-size: 14px !important; }
+      svg { color: #0d7e90 !important; width: 14px !important; height: 14px !important; }
     }
 
     /* Hover: tinted icon box */
@@ -263,7 +263,7 @@
         transform: none !important;
         box-shadow: none !important;
       }
-      i { font-size: 18px !important; color: inherit !important; }
+      i { font-size: 15px !important; color: inherit !important; }
     }
   }
 }

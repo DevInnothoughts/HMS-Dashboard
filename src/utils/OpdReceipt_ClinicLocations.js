@@ -1,4 +1,11 @@
 export const receiptlocations = {
+  "Adajan": {
+    address:
+      "<b>Adajan : </b><br>Healing Hands Clinic<br>F-2, First Floor, Vasupujya Complex, Near Madhuvan Circle, LP Savani Road, Adajan Gam, Adajan, Surat - 395009",
+    phone: "8956748764",
+    telephone: "",
+    hospitalcode: "AJ",
+  },
   "DP Road": {
     address:
       "<b>Dhole Patil Road : </b><br>Healing Hands Clinic<br>DP Road, Ground Floor, Millenium Star Extension, Adjacent to Ruby Hall Clinic, Pune - 411001",
@@ -258,4 +265,10 @@ export const receiptlocations = {
     phone: "8884884500",
     hospitalcode: "ELC",
   },
-}; 
+  "RRNagar": {
+    address:
+      "<b>RR Nagar:</b> <br>Healing Hands Clinic<br> Second Floor, No. 34/4, Bhoopalam Square, Opposite RNS College, Channasandra, Rajarajeshwari Nagar, Bengaluru, Karnataka - 560098.",
+    phone: "8884488016",
+    hospitalcode: "RR",
+  },
+};

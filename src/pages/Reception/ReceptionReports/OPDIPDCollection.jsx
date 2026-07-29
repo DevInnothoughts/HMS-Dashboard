@@ -20,6 +20,14 @@ const formatValue = (val) => {
   return val;
 };
 
+const formatAmount = (val) => {
+  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+    return "-";
+  }
+  const parsed = parseFloat(val);
+  return isNaN(parsed) ? val : `₹ ${Math.round(parsed).toLocaleString("en-IN")}`;
+};
+
 const OPDIPDCollection = () => {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
@@ -266,35 +274,35 @@ const OPDIPDCollection = () => {
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
-          footer={formatValue(printTotals.opdCash)}
+          footer={formatAmount(printTotals.opdCash)}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
-          footer={formatValue(printTotals.ipdCash)}
+          footer={formatAmount(printTotals.ipdCash)}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
-          footer={formatValue(printTotals.opdCard)}
+          footer={formatAmount(printTotals.opdCard)}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
-          footer={formatValue(printTotals.ipdCard)}
+          footer={formatAmount(printTotals.ipdCard)}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
-          footer={formatValue(printTotals.opdCheque)}
+          footer={formatAmount(printTotals.opdCheque)}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
-          footer={formatValue(printTotals.ipdCheque)}
+          footer={formatAmount(printTotals.ipdCheque)}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
-          footer={formatValue(printTotals.opdOnline)}
+          footer={formatAmount(printTotals.opdOnline)}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
-          footer={formatValue(printTotals.ipdOnline)}
+          footer={formatAmount(printTotals.ipdOnline)}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
       </Row>
@@ -522,14 +530,14 @@ const OPDIPDCollection = () => {
                       header="Date"
                       body={(rowData) => formatValue(formatDateDisplay(rowData.receiptDate))}
                     />
-                    <Column field="opdCash" header="OPD Cash" body={(rowData) => formatValue(rowData.opdCash)} />
-                    <Column field="ipdCash" header="IPD Cash" body={(rowData) => formatValue(rowData.ipdCash)} />
-                    <Column field="opdCard" header="OPD Card" body={(rowData) => formatValue(rowData.opdCard)} />
-                    <Column field="ipdCard" header="IPD Card" body={(rowData) => formatValue(rowData.ipdCard)} />
-                    <Column field="opdCheque" header="OPD Chq" body={(rowData) => formatValue(rowData.opdCheque)} />
-                    <Column field="ipdCheque" header="IPD Chq" body={(rowData) => formatValue(rowData.ipdCheque)} />
-                    <Column field="opdOnline" header="OPD Onl" body={(rowData) => formatValue(rowData.opdOnline)} />
-                    <Column field="ipdOnline" header="IPD Onl" body={(rowData) => formatValue(rowData.ipdOnline)} />
+                    <Column field="opdCash" header="OPD Cash" body={(rowData) => formatAmount(rowData.opdCash)} />
+                    <Column field="ipdCash" header="IPD Cash" body={(rowData) => formatAmount(rowData.ipdCash)} />
+                    <Column field="opdCard" header="OPD Card" body={(rowData) => formatAmount(rowData.opdCard)} />
+                    <Column field="ipdCard" header="IPD Card" body={(rowData) => formatAmount(rowData.ipdCard)} />
+                    <Column field="opdCheque" header="OPD Chq" body={(rowData) => formatAmount(rowData.opdCheque)} />
+                    <Column field="ipdCheque" header="IPD Chq" body={(rowData) => formatAmount(rowData.ipdCheque)} />
+                    <Column field="opdOnline" header="OPD Onl" body={(rowData) => formatAmount(rowData.opdOnline)} />
+                    <Column field="ipdOnline" header="IPD Onl" body={(rowData) => formatAmount(rowData.ipdOnline)} />
                   </DataTable>
 
                   {/* Print-only container displaying all rows */}

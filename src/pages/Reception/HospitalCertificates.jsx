@@ -175,7 +175,7 @@ const HospitalCertificates = () => {
     const expiry = moment(expiryDate).startOf("day");
     const today = moment().startOf("day");
     const tomorrow = moment().startOf("day").add(1, "day");
-    const fourMonthsFromNow = moment().startOf("day").add(4, "months");
+    const sixMonthsFromNow = moment().startOf("day").add(6, "months");
 
     if (expiry.isBefore(today)) {
       return "Expired";
@@ -183,7 +183,7 @@ const HospitalCertificates = () => {
       return "Expiring today";
     } else if (expiry.isSame(tomorrow)) {
       return "Expiring tomorrow";
-    } else if (expiry.isSameOrBefore(fourMonthsFromNow)) {
+    } else if (expiry.isSameOrBefore(sixMonthsFromNow)) {
       return "Expires soon";
     } else {
       return "Active";
@@ -273,7 +273,7 @@ const HospitalCertificates = () => {
                   style={{
                     fontWeight: "bold",
                     borderBottom: "2px solid #0288d1",
-                    padding: "0.8rem",
+                    padding: "0.6rem",
                     background: "linear-gradient(to right, #00acc1, #007c91)",
                     color: "white",
                     fontSize: "16px",
@@ -485,7 +485,7 @@ const HospitalCertificates = () => {
                     fontWeight: "bold",
                     backgroundColor: "#e3f2fd",
                     borderBottom: "2px solid #0288d1",
-                    padding: "0.8rem",
+                    padding: "0.6rem",
                     background: "linear-gradient(to right, #00acc1, #007c91)",
                     color: "white",
                     fontSize: "16px",
@@ -557,7 +557,7 @@ const HospitalCertificates = () => {
         <Modal.Body style={{ textAlign: "center", backgroundColor: "#f5fcfd", padding: "15px" }}>
           {previewType === "pdf" ? (
             <iframe
-              src={previewUrl}
+              src={`${previewUrl}#toolbar=0`}
               title={previewName}
               width="100%"
               height="550px"
@@ -567,21 +567,19 @@ const HospitalCertificates = () => {
             <img
               src={previewUrl}
               alt={previewName}
+              onContextMenu={(e) => e.preventDefault()}
               style={{
                 maxWidth: "100%",
                 maxHeight: "550px",
                 objectFit: "contain",
                 borderRadius: "8px",
                 boxShadow: "0px 4px 10px rgba(0,0,0,0.15)",
+                userSelect: "none",
+                pointerEvents: "none",
               }}
             />
           )}
         </Modal.Body>
-        <Modal.Footer style={{ backgroundColor: "#e0f7fa", borderTop: "1px solid #4dd0e1", padding: "10px" }}>
-          <Button variant="secondary" onClick={() => setShowPreview(false)} style={{ borderRadius: "8px", fontWeight: "bold" }}>
-            Close
-          </Button>
-        </Modal.Footer>
       </Modal>
 
       <style>{`

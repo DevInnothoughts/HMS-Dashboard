@@ -22,8 +22,16 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "../../styles/styles.css";
 import { toast } from "react-hot-toast";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
+
+const formatPhoneTo10Digits = (phone) => {
+    if (!phone) return "";
+    const cleanDigits = String(phone).replace(/\D/g, "");
+    return cleanDigits.length > 10 ? cleanDigits.slice(-10) : cleanDigits;
+};
 
 const NoteCell = ({ note }) => {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -64,8 +72,8 @@ export default function ChatbotEnquiryList({ isTab = false }) {
     // Table state
     const [rows, setRows] = useState(10);
     const [first, setFirst] = useState(0);
-    const [fromDate, setFromDate] = useState(new Date());
-    const [toDate, setToDate] = useState(new Date());
+    const [fromDate, setFromDate] = useState(moment().startOf("day").toDate());
+    const [toDate, setToDate] = useState(moment().endOf("day").toDate());
     const [noPendingAppt, setNoPendingAppt] = useState(true);
 
     const [filters1, setFilters1] = useState({
@@ -241,18 +249,27 @@ export default function ChatbotEnquiryList({ isTab = false }) {
         fetchDropdowns();
     }, [fetchDropdowns]);
 
+    const formatToDDMMYYYY = (date) => {
+        if (!date) return null;
+        return moment(date).format("DD-MM-YYYY");
+    };
+
     // Main Listing Fetch
     const fetchChatbotLeads = useCallback(async () => {
         if (!currentLocation) return;
         setLoading(true);
         try {
-            const formattedFrom = fromDate
-                ? moment(fromDate).format("DD-MM-YYYY")
-                : "";
-            const formattedTo = toDate ? moment(toDate).format("DD-MM-YYYY") : "";
+            let finalFromDate = formatToDDMMYYYY(fromDate);
+            let finalToDate = formatToDDMMYYYY(toDate);
+
+            if (!finalFromDate || !finalToDate) {
+                const today = moment().format("DD-MM-YYYY");
+                finalFromDate = today;
+                finalToDate = today;
+            }
 
             const res = await fetch(
-                `${BASE_URL}/V1/chatbotleads/listChatbotLeads?location=${currentLocation}&from=${formattedFrom}&to=${formattedTo}`,
+                `${BASE_URL}/V1/chatbotleads/listChatbotLeads?location=${currentLocation}&from=${finalFromDate}&to=${finalToDate}`,
                 { method: "GET", headers: { "Content-Type": "application/json" } },
             );
             const resData = await res.json();
@@ -318,7 +335,7 @@ export default function ChatbotEnquiryList({ isTab = false }) {
             date: moment(today).format("YYYY-MM-DD"),
             enquirytype: "",
             patient_name: rowData.name || "",
-            caller_no: rowData.phoneno || "",
+            caller_no: formatPhoneTo10Digits(rowData.phoneno),
             FDE_Name: "",
             fdeName: "",
             note: rowData.note || "",
@@ -329,7 +346,7 @@ export default function ChatbotEnquiryList({ isTab = false }) {
     const handleAddAppointmentClick = async (rowData) => {
         setSelectedLead(rowData);
         const today = new Date();
-        const patient_phone = rowData.phoneno || "";
+        const patient_phone = formatPhoneTo10Digits(rowData.phoneno);
         setNoPendingAppt(true);
 
         setFormData((prev) => ({
@@ -491,7 +508,7 @@ export default function ChatbotEnquiryList({ isTab = false }) {
             time: "0",
             doctor_id: "0",
             patient_name: enquiryForm.patient_name,
-            patient_phone: enquiryForm.caller_no,
+            patient_phone: formatPhoneTo10Digits(enquiryForm.caller_no),
             enquirytype: enquiryForm.enquirytype,
             fdeId: enquiryForm.FDE_Name || null,
             FDE_Name: enquiryForm.fdeName || null,
@@ -563,7 +580,7 @@ export default function ChatbotEnquiryList({ isTab = false }) {
             appointment_time: formData.appointmentTime
                 ? moment(formData.appointmentTime, ["hh:mm A", "HH:mm"]).format("HH:mm")
                 : "",
-            patient_phone: formData.caller_no,
+            patient_phone: formatPhoneTo10Digits(formData.caller_no),
             patient_type:
                 formData.patient_type === "Post Operative"
                     ? "Postoperative"
@@ -610,6 +627,66 @@ export default function ChatbotEnquiryList({ isTab = false }) {
         } finally {
             setIsSubmitting(false);
         }
+    };
+
+    const exportToExcel = () => {
+        let dataToExport = chatbotLeads;
+
+        if (statusFilter) {
+            dataToExport = dataToExport.filter((item) => {
+                const status = item.dynamic_status || "Not Visited";
+                return status === statusFilter;
+            });
+        }
+
+        const globalSearch = filters1?.global?.value;
+        if (globalSearch && globalSearch.trim() !== "") {
+            const searchLower = globalSearch.toLowerCase().trim();
+            dataToExport = dataToExport.filter((item) => {
+                const dateStr = item.date ? moment(item.date).format("DD-MM-YYYY") : "";
+                const timeStr = item.date ? moment(item.date).format("hh:mm A") : "";
+                const name = (item.name || "").toLowerCase();
+                const phone = formatPhoneTo10Digits(item.phoneno).toLowerCase();
+                const disease = (item.disease || "").toLowerCase();
+                const msg = (item.message || "").toLowerCase();
+                const note = (item.note || "").toLowerCase();
+                return (
+                    dateStr.includes(searchLower) ||
+                    timeStr.toLowerCase().includes(searchLower) ||
+                    name.includes(searchLower) ||
+                    phone.includes(searchLower) ||
+                    disease.includes(searchLower) ||
+                    msg.includes(searchLower) ||
+                    note.includes(searchLower)
+                );
+            });
+        }
+
+        const excelData = dataToExport.map((item) => ({
+            Date: item.date ? moment(item.date).format("DD-MM-YYYY") : "",
+            Time: item.date ? moment(item.date).format("hh:mm A") : "",
+            "Full Name": item.name || "",
+            "Contact Number": formatPhoneTo10Digits(item.phoneno) || "",
+            Disease: item.disease || "",
+            Message: item.message || "",
+            Note: item.note || "",
+            "Enquiry Status": item.dynamic_status || "Not Visited",
+        }));
+
+        const fileType =
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
+        const fileExtension = ".xlsx";
+
+        const ws = XLSX.utils.json_to_sheet(excelData);
+        const wb = { Sheets: { data: ws }, SheetNames: ["data"] };
+        const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+        const data = new Blob([excelBuffer], { type: fileType });
+
+        const formattedFromDate = fromDate ? moment(fromDate).format("DD-MM-YYYY") : "";
+        const formattedToDate = toDate ? moment(toDate).format("DD-MM-YYYY") : "";
+        const fileName = `Chatbot_Enquiry_List_${formattedFromDate}_to_${formattedToDate}${fileExtension}`;
+
+        saveAs(data, fileName);
     };
 
     // Header Builder (Same styling as Call logs)
@@ -723,6 +800,29 @@ export default function ChatbotEnquiryList({ isTab = false }) {
                             )}
                         </InputGroup>
                     </Form.Group>
+                    <Button
+                        variant="outline-success"
+                        onClick={exportToExcel}
+                        style={{
+                            backgroundColor: "#28a745",
+                            border: "none",
+                            borderRadius: "6px",
+                            padding: "5px 10px",
+                            fontSize: "12px",
+                            fontWeight: "500",
+                            color: "white",
+                            cursor: "pointer",
+                            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                            height: "26px",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "5px",
+                            whiteSpace: "nowrap",
+                        }}
+                    >
+                        <FeatherIcon icon="download" size={13} />
+                        Download Excel
+                    </Button>
                 </div>
 
                 <div
@@ -749,10 +849,9 @@ export default function ChatbotEnquiryList({ isTab = false }) {
                         </div>
                         <DatePicker
                             selected={fromDate}
-                            onChange={(date) => setFromDate(date)}
+                            onChange={setFromDate}
                             dateFormat="dd-MM-yyyy"
                             placeholderText="Select from date"
-                            portalId="root"
                             customInput={
                                 <Form.Control
                                     style={{
@@ -777,10 +876,9 @@ export default function ChatbotEnquiryList({ isTab = false }) {
                         </div>
                         <DatePicker
                             selected={toDate}
-                            onChange={(date) => setToDate(date)}
+                            onChange={setToDate}
                             dateFormat="dd-MM-yyyy"
                             placeholderText="Select to date"
-                            portalId="root"
                             customInput={
                                 <Form.Control
                                     style={{ padding: "5px 8px", fontSize: "12px" }}
@@ -789,29 +887,12 @@ export default function ChatbotEnquiryList({ isTab = false }) {
                         />
                     </div>
 
-                    <Button
-                        variant="primary"
-                        onClick={fetchChatbotLeads}
-                        style={{
-                            backgroundColor: "#00bcd4",
-                            border: "none",
-                            borderRadius: "8px",
-                            padding: "6px 12px",
-                            fontSize: "12px",
-                            fontWeight: "500",
-                            color: "white",
-                            marginTop: "16px",
-                        }}
-                    >
-                        <FeatherIcon icon="refresh-ccw" size={12} className="me-1" />
-                        Refresh
-                    </Button>
 
                     <Button
                         variant="secondary"
                         onClick={() => {
-                            setFromDate(moment().subtract(30, "days").toDate());
-                            setToDate(new Date());
+                            setFromDate(null);
+                            setToDate(null);
                             setStatusFilter("");
                             setFilters1({
                                 global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -1030,18 +1111,20 @@ export default function ChatbotEnquiryList({ isTab = false }) {
                                     border: "1px solid #90caf9",
                                     textAlign: "center",
                                     padding: "0.75rem",
+                                    width: "200px",
                                     fontSize: "12px",
                                 }}
                             />
                             <Column
                                 field="phoneno"
                                 header="Contact Number"
-                                body={(rowData) => rowData.phoneno || "-"}
+                                body={(rowData) => formatPhoneTo10Digits(rowData.phoneno) || "-"}
                                 headerClassName="datatable-header-center"
                                 style={{
                                     border: "1px solid #90caf9",
                                     textAlign: "center",
                                     padding: "0.75rem",
+                                    width: "140px",
                                     fontSize: "12px",
                                 }}
                             />
@@ -1057,7 +1140,7 @@ export default function ChatbotEnquiryList({ isTab = false }) {
                                     fontSize: "12px",
                                 }}
                             />
-                            <Column
+                            {/* <Column
                                 field="branch"
                                 header="Branch/Src"
                                 body={(rowData) =>
@@ -1070,7 +1153,7 @@ export default function ChatbotEnquiryList({ isTab = false }) {
                                     padding: "0.75rem",
                                     fontSize: "12px",
                                 }}
-                            />
+                            /> */}
 
                             <Column
                                 field="message"
@@ -1932,6 +2015,7 @@ export default function ChatbotEnquiryList({ isTab = false }) {
                             <Column
                                 field="phoneno"
                                 header="Phone No"
+                                body={(rowData) => formatPhoneTo10Digits(rowData.phoneno) || "-"}
                                 headerClassName="datatable-header-center"
                                 style={{
                                     border: "1px solid #90caf9",

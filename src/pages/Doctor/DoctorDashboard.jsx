@@ -67,6 +67,115 @@ function decodeJwt(token) {
   }
 }
 
+const getPatientStatus = (app) => {
+  if (!app) return null;
+  if (app.isIpd) {
+    if (!app.isConfirmed) {
+      return {
+        key: "PENDING",
+        text: "Pending",
+        color: "#475569",
+        bg: "#f1f5f9",
+        rowBg: "#ffffff",
+        rowBorder: "#cbd5e1",
+        icon: "clock",
+      };
+    }
+    return {
+      key: "IPD",
+      text: "Admitted",
+      color: "#1e40af",
+      bg: "#eff6ff",
+      rowBg: "#eff6ff",
+      rowBorder: "#1e40af",
+      icon: "activity",
+    };
+  }
+  const isConfirmed =
+    app.confirmTime && app.confirmTime !== "0" && app.confirmTime !== 0;
+  if (!isConfirmed) {
+    return {
+      key: "PENDING",
+      text: "Pending",
+      color: "#475569",
+      bg: "#f1f5f9",
+      rowBg: "#ffffff",
+      rowBorder: "#cbd5e1",
+      icon: "clock",
+    };
+  }
+  const isExistingPatient = [
+    "FOLLOW",
+    "POSTOPERATIVE",
+    "MCDPA",
+    "OTHER",
+  ].includes(app.patientType?.toUpperCase());
+  const hasHistory = Number(app.historychk) === 3;
+  const hasExecution = Number(app.executivechk) === 1 || Number(app.executivechk) === 2;
+  const hasConsultation = Number(app.consultationchk) === 4;
+  const hasReceipt = Number(app.executivechk) === 2;
+
+  const isHistoryDone = hasHistory || isExistingPatient;
+  const isExecutionDone = (hasHistory && hasExecution) || isExistingPatient;
+  const isConsultationDone =
+    (hasHistory && hasExecution && hasConsultation) || isExistingPatient;
+  const isReceiptDone = hasReceipt;
+
+  if (isReceiptDone) {
+    return {
+      key: "RECEIPT_GENERATED",
+      text: "Receipt Generated",
+      color: "#10b981",
+      bg: "#ecfdf5",
+      rowBg: "#ecfdf5",
+      rowBorder: "#10b981",
+      icon: "file-text",
+    };
+  }
+  if (isConsultationDone) {
+    return {
+      key: "PRESCRIPTION_CHECKED",
+      text: "Prescription Checked",
+      color: "#8e44ad",
+      bg: "#8e44ad15",
+      rowBg: "#f3e8ff",
+      rowBorder: "#8e44ad",
+      icon: "clipboard",
+    };
+  }
+  if (isExecutionDone) {
+    return {
+      key: "DIAGNOSIS_CHECKED",
+      text: "Diagnosis Checked",
+      color: "#e67e22",
+      bg: "#e67e2215",
+      rowBg: "#fff7ed",
+      rowBorder: "#e67e22",
+      icon: "activity",
+    };
+  }
+  if (isHistoryDone) {
+    return {
+      key: "HISTORY_CHECKED",
+      text: "History Checked",
+      color: "#ec4899",
+      bg: "#ec489915",
+      rowBg: "#fdf4ff",
+      rowBorder: "#ec4899",
+      icon: "check-circle",
+    };
+  }
+  return {
+    key: "PATIENT_ARRIVED",
+    text: "Patient Arrived",
+    color: "#0ea5e9",
+    bg: "#f0f9ff",
+    rowBg: "#f0f9ff",
+    rowBorder: "#0ea5e9",
+    icon: "user-check",
+  };
+};
+
 export default function DoctorDashboard() {
   const navigate = useNavigate();
   const formatPatientType = (type) => {
@@ -91,6 +200,7 @@ export default function DoctorDashboard() {
   const [viewMode, setViewMode] = useState("list"); // "calendar" or "list"
   const [daySearchTerm, setDaySearchTerm] = useState("");
   const [activePatientTypeFilter, setActivePatientTypeFilter] = useState(null);
+  const [billedUhids, setBilledUhids] = useState(new Map()); // uid -> { createdAt, dischargeAt }
   const calendarRef = React.useRef(null);
 
   const togglePatientTypeFilter = (type) => {
@@ -223,7 +333,7 @@ export default function DoctorDashboard() {
 
   const formatIpdAppointments = useCallback((ipdData) => {
     return ipdData.map((ipd) => {
-      let admissionTime = "00:00";
+      let admissionTime = "12:00";
       let dateString = moment(ipd.created_at).format("DD-MM-YYYY");
       let start = new Date(ipd.created_at);
 
@@ -241,7 +351,13 @@ export default function DoctorDashboard() {
           admissionTime = parsed.format("HH:mm");
         } else {
           const parts = ipd.admission_datetime.split(" ");
-          admissionTime = parts[1] || "00:00";
+          if (parts.length >= 3) {
+            admissionTime = `${parts[1]}`;
+          } else if (parts.length === 2) {
+            admissionTime = parts[1];
+          } else {
+            admissionTime = parts[1] || "12:00";
+          }
         }
       }
 
@@ -257,7 +373,14 @@ export default function DoctorDashboard() {
         if (parsedSx.isValid()) {
           formattedSurgery = parsedSx.format("DD-MM-YYYY HH:mm");
         } else {
-          formattedSurgery = ipd.surgery_datetime;
+          const parts = ipd.surgery_datetime.split(" ");
+          if (parts.length >= 3) {
+            formattedSurgery = ipd.surgery_datetime;
+          } else if (parts.length === 2) {
+            formattedSurgery = `${parts[0]} ${parts[1]}`;
+          } else {
+            formattedSurgery = ipd.surgery_datetime;
+          }
         }
       }
 
@@ -274,18 +397,22 @@ export default function DoctorDashboard() {
         doctorName: ipd.surgeon_name || "N/A",
         patientType: "IPD",
         status:
-          ipd.admission_no && ipd.admission_no !== "0" ? "Admitted" : "Booked",
-        note: `Room Details: Room ${ipd.room_no || "N/A"} (${ipd.room_type || "N/A"})\nSurgery Plan: ${ipd.sx_plan || "No surgery plan filled"}`,
+          ipd.admission_no && ipd.admission_no !== "0" && ipd.admission_no !== "PENDING" ? "Admitted" : "Pending",
+        note: `Room Details: Room ${ipd.room_no || "N/A"} (${ipd.room_type || "N/A"})`,
         confirmTime:
-          ipd.admission_no && ipd.admission_no !== "0" ? ipd.created_at : "0",
+          ipd.admission_no && ipd.admission_no !== "0" && ipd.admission_no !== "PENDING" ? ipd.created_at : "0",
         patientid: ipd.patient_id,
         appointmentid: `ipd-${ipd.id}`,
         isConfirmed:
           ipd.admission_no &&
           ipd.admission_no !== "0" &&
-          ipd.admission_no !== 0,
+          ipd.admission_no !== 0 &&
+          ipd.admission_no !== "PENDING",
         isIpd: true,
         uid: ipd.uid,
+        uhid: ipd.uid,
+        age: ipd.age,
+        gender: ipd.sex,
         admissionNo: ipd.admission_no,
         surgeryDatetime: formattedSurgery,
         sxPlan: ipd.sx_plan,
@@ -404,6 +531,50 @@ export default function DoctorDashboard() {
     fetchDropdowns();
   }, [fetchDropdowns]);
 
+  // Fetch IPD bills to know which patients already have a bill
+  const fetchBilledUhids = useCallback(async () => {
+    if (currentLocation === "default" || !currentLocation) return;
+    try {
+      const response = await fetch(
+        `${BASE_URL}/V1/invoice/listInvoice?location=${currentLocation}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        },
+      );
+      if (response.ok) {
+        const result = await response.json();
+        const rawData = Array.isArray(result.data?.[0])
+          ? result.data[0]
+          : result.data || [];
+        const uidsMap = new Map();
+        rawData.forEach((inv) => {
+          const uid = String(inv.patient_uid || inv.Uid_no || inv.uid || "");
+          if (uid) {
+            if (!uidsMap.has(uid)) {
+              uidsMap.set(uid, {
+                createdAt: inv.creation_date || null,
+                admissionTime: inv.admissiontime || null,
+                dischargeAt: inv.due_date || null,
+                dischargeTime: inv.dischargetime || null,
+              });
+            }
+          }
+        });
+        setBilledUhids(uidsMap);
+      }
+    } catch (err) {
+      console.error("Error fetching IPD bills:", err);
+    }
+  }, [currentLocation]);
+
+  useEffect(() => {
+    fetchBilledUhids();
+  }, [fetchBilledUhids]);
+
   const handleCalendarNavigate = (newDate) => setSelectedDate(newDate);
   const handleCalendarView = (newView) => setCurrentView(newView);
   const handleDateChange = (e) =>
@@ -415,25 +586,34 @@ export default function DoctorDashboard() {
   };
 
   const eventStyleGetter = useCallback((event) => {
-    const colorMap = {
-      NEW: "#0284c7", // Premium Sky Blue
-      FOLLOW: "#10b981", // Clinical Emerald Green
-      POSTOPERATIVE: "#8b5cf6", // Soft Violet
-      MCDPA: "#475569", // Slate Grey for MCDPA
-      OTHER: "#f59e0b", // Warm Amber
-      IPD: "#d946ef", // Vibrant Fuchsia
-    };
-
+    if (event.isIpd) {
+      const hasBill = billedUhids.has(String(event.uid || event.uhid));
+      const bgColor = hasBill
+        ? "#16a34a"
+        : event.isConfirmed
+          ? "#1e40af"
+          : "#475569";
+      return {
+        style: {
+          backgroundColor: bgColor,
+          borderRadius: "4px",
+          border: "none",
+          color: "white",
+          display: "block",
+        },
+      };
+    }
+    const st = getPatientStatus(event);
     return {
       style: {
-        backgroundColor: colorMap[event.patientType] || "#ff0080",
+        backgroundColor: st ? st.color : "#475569",
         borderRadius: "4px",
         border: "none",
         color: "white",
         display: "block",
       },
     };
-  }, []);
+  }, [billedUhids]);
 
   const AppointmentDetailsCard = () => {
     if (!selectedEvent) {
@@ -452,71 +632,87 @@ export default function DoctorDashboard() {
     }
 
     if (selectedEvent.isIpd) {
+      const hasBill = billedUhids.has(String(selectedEvent.uid || selectedEvent.uhid));
       return (
         <div className="clinical-card" style={{ margin: "10px" }}>
           <div className="clinical-body">
-            <div className="data-item-inline">
-              <label>
-                <FeatherIcon icon="user" size={14} /> Name:
+            <div className="data-item-inline mt-4">
+              <label style={{ minWidth: "155px", marginBottom: "0", whiteSpace: "nowrap" }}>
+                <FeatherIcon icon="calendar" size={14} /> Surgery Date & Time:
               </label>
-              <span className="data-value fw-bold">
-                {selectedEvent.patientName}
+              <span className="data-value fw-bold" style={{ marginLeft: "10px" }}>
+                {selectedEvent.surgeryDatetime || "Not Scheduled"}
               </span>
             </div>
+
             <div className="data-item-inline">
-              <label>
-                <FeatherIcon icon="hash" size={14} /> UID No:
-              </label>
-              <span className="data-value fw-bold">
-                {selectedEvent.uid || selectedEvent.uhid}
-              </span>
-            </div>
-            <div className="data-item-inline">
-              <label>
-                <FeatherIcon icon="phone" size={14} /> Contact:
-              </label>
-              <span className="data-value fw-bold">{selectedEvent.phone}</span>
-            </div>
-            <div className="data-item-inline">
-              <label>
+              <label style={{ minWidth: "155px", marginBottom: "0" }}>
                 <FeatherIcon icon="clipboard" size={14} /> Admission No:
               </label>
-              <span className="data-value fw-bold">
+              <span className="data-value fw-bold" style={{ marginLeft: "10px" }}>
                 {selectedEvent.admissionNo &&
                   selectedEvent.admissionNo !== "0" &&
-                  selectedEvent.admissionNo !== 0 ? (
+                  selectedEvent.admissionNo !== 0 &&
+                  selectedEvent.admissionNo !== "PENDING" ? (
                   <span>{selectedEvent.admissionNo}</span>
                 ) : (
-                  <span style={{ fontStyle: "italic", color: "red" }}>
-                    Not generated yet
+                  <span
+                    className="selectable-text text-danger fw-bold"
+                    title="Confirm admission and create an IPD bill. The assigned admission number will reflect here."
+                    style={{ cursor: "help" }}
+                  >
+                    Pending
                   </span>
                 )}
               </span>
             </div>
+
             <div className="data-item-inline">
-              <label>
-                <FeatherIcon icon="calendar" size={14} /> Admit Date/Time:
+              <label style={{ minWidth: "155px", marginBottom: "0" }}>
+                <FeatherIcon icon="hash" size={14} /> UID No:
               </label>
-              <span className="data-value fw-bold">
-                {selectedEvent.date} {selectedEvent.time}
+              <span className="data-value fw-bold" style={{ marginLeft: "10px" }}>
+                {selectedEvent.uid || selectedEvent.uhid}
               </span>
             </div>
+
             <div className="data-item-inline">
-              <label>
-                <FeatherIcon icon="clock" size={14} /> Surgery Date/Time:
+              <label style={{ minWidth: "155px", marginBottom: "0" }}>
+                <FeatherIcon icon="user" size={14} /> Patient Name:
               </label>
-              <span className="data-value fw-bold">
-                {selectedEvent.surgeryDatetime || "Not Scheduled"}
+              <span className="data-value fw-bold" style={{ marginLeft: "10px" }}>
+                {selectedEvent.patientName}
               </span>
             </div>
+
             <div className="data-item-inline">
-              <label>
+              <label style={{ minWidth: "155px", marginBottom: "0" }}>
+                <FeatherIcon icon="phone" size={14} /> Contact No:
+              </label>
+              <span className="data-value fw-bold" style={{ marginLeft: "10px" }}>{selectedEvent.phone}</span>
+            </div>
+
+            <div className="data-item-inline">
+              <label style={{ minWidth: "155px", marginBottom: "0" }}>
+                <FeatherIcon icon="info" size={14} /> Age/Gender:
+              </label>
+              <span className="data-value fw-bold" style={{ marginLeft: "10px" }}>
+                {selectedEvent.age} yrs / {selectedEvent.gender || "N/A"}
+              </span>
+            </div>
+
+            <div className="data-item-inline">
+              <label style={{ minWidth: "155px", marginBottom: "0" }}>
                 <FeatherIcon icon="tag" size={14} /> Type:
               </label>
-              <span className="data-value">
+              <span className="data-value" style={{ marginLeft: "10px" }}>
                 <span
                   style={{
-                    backgroundColor: "#d946ef",
+                    backgroundColor: hasBill
+                      ? "#16a34a"
+                      : selectedEvent.isConfirmed
+                        ? "#1e40af"
+                        : "#475569",
                     color: "white",
                     fontSize: "11px",
                     padding: "4px 12px",
@@ -535,92 +731,144 @@ export default function DoctorDashboard() {
             </div>
 
             <div className="data-item-inline">
-              <label>
+              <label style={{ minWidth: "155px", marginBottom: "0" }}>
                 <FeatherIcon icon="activity" size={14} /> Surgeon:
               </label>
-              <span className="data-value fw-bold">
-                {selectedEvent.doctorName}
+              <span className="data-value fw-bold" style={{ marginLeft: "10px" }}>
+                {selectedEvent.doctorName || "N/A"}
               </span>
             </div>
 
-            <div className="data-item-inline mt-4 align-items-start">
-              <label>
-                <FeatherIcon icon="edit-3" size={14} /> Details:
+            <div className="data-item-inline">
+              <label style={{ minWidth: "155px", marginBottom: "0" }}>
+                <FeatherIcon icon="clipboard" size={14} /> SX Plan:
               </label>
-              <div
-                className="note-box-modern fw-bold flex-grow-1"
-                style={{ marginLeft: "5px" }}
-              >
-                {selectedEvent.note}
-              </div>
+              <span className="data-value fw-bold" style={{ marginLeft: "10px" }}>
+                {selectedEvent.sxPlan || "N/A"}
+              </span>
             </div>
+
+
           </div>
           <div
             className="mb-5"
             style={{ borderTop: "1px solid rgba(217, 70, 239, 0.25)" }}
           ></div>
           <div className="clinical-actions pt-5">
-            <div
-              className="d-flex align-items-center p-3 mb-2"
-              style={{
-                borderRadius: "8px",
-                backgroundColor: "#fdf4ff",
-                color: "#d946ef",
-                border: "1px solid rgba(217, 70, 239, 0.2)",
-              }}
-            >
-              <FeatherIcon
-                icon={selectedEvent.isConfirmed ? "check-circle" : "clock"}
-                size={20}
-                className="me-2"
-              />
-              <div className="d-flex align-items-center py-4 justify-content-between flex-grow-1">
-                <strong>
-                  {selectedEvent.isConfirmed
-                    ? "Admission Confirmed"
-                    : "Admission Pending"}
-                </strong>
+            {!selectedEvent.isConfirmed ? (
+              <div className="text-center py-3">
+                <p className="text-muted fw-bold mb-0">
+                  <FeatherIcon icon="lock" size={14} className="me-1" />
+                  Admission is not confirmed yet
+                </p>
+              </div>
+            ) : (
+              !billedUhids.has(String(selectedEvent.uid || selectedEvent.uhid)) && (
                 <div
+                  className="d-flex align-items-center p-3 mb-5"
                   style={{
-                    fontSize: "13px",
-                    opacity: 1.0,
-                    marginLeft: "10px",
-                    textAlign: "right",
+                    borderRadius: "8px",
+                    backgroundColor: "#eff6ff",
+                    color: "#1e40af",
+                    border: "1px solid rgba(30, 64, 175, 0.2)",
                   }}
                 >
-                  Status: {selectedEvent.status}
+                  <FeatherIcon
+                    icon="check-circle"
+                    size={20}
+                    className="me-2"
+                  />
+                  <div className="d-flex align-items-center py-4 justify-content-between flex-grow-1">
+                    <strong>Admission Confirmed</strong>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        opacity: 1.0,
+                        marginLeft: "10px",
+                        textAlign: "right",
+                      }}
+                    >
+                      {`Admitted at: ${selectedEvent.confirmTime && selectedEvent.confirmTime !== "0"
+                        ? moment(selectedEvent.confirmTime).format("HH:mm")
+                        : "N/A"
+                      }`}
+                    </div>
+                  </div>
                 </div>
+              )
+            )}
+            {selectedEvent.isConfirmed && (() => {
+              const uhid = String(selectedEvent.uid || selectedEvent.uhid);
+              if (!billedUhids.has(uhid)) return null;
+              const billInfo = billedUhids.get(uhid);
+              const dischargeAt = billInfo?.dischargeTime
+                ? billInfo.dischargeTime
+                : billInfo?.dischargeAt
+                  ? moment(billInfo.dischargeAt).format("DD-MM-YY")
+                  : "N/A";
+              return (
+                <div
+                  className="d-flex align-items-center p-3 mb-5"
+                  style={{
+                    borderRadius: "8px",
+                    backgroundColor: "#dcfce780",
+                    color: "#15803d",
+                    border: "1px solid rgba(22, 163, 74, 0.2)",
+                  }}
+                >
+                  <FeatherIcon
+                    icon="file-text"
+                    size={20}
+                    className="me-2"
+                    style={{ flexShrink: 0 }}
+                  />
+                  <div className="d-flex align-items-center py-2 justify-content-between flex-grow-1">
+                    <strong>IPD Bill Made</strong>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        opacity: 1.0,
+                        marginLeft: "10px",
+                        textAlign: "right",
+                      }}
+                    >
+                      <div>Made at: {dischargeAt}</div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+            {selectedEvent.isConfirmed && (
+              <div className="d-grid mt-2">
+                <Button
+                  className="d-flex align-items-center justify-content-center"
+                  onClick={() => {
+                    localStorage.setItem("autoSelectUhid", selectedEvent.uid || selectedEvent.uhid);
+                    navigate("/doctor-ipd-patient-list");
+                  }}
+                  style={{
+                    backgroundColor: "#178aaeff",
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: "10px",
+                    fontWeight: "600",
+                    fontSize: "13px",
+                    padding: "8px",
+                    transition: "all 0.2s ease-in-out",
+                    width: "100%",
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = "#1199bbff";
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = "#178aaeff";
+                  }}
+                >
+                  <FeatherIcon icon="eye" size={14} className="me-2" />
+                  View Patient Details
+                </Button>
               </div>
-            </div>
-            <Button
-              className="mt-10 d-flex align-items-center justify-content-center"
-              onClick={() => {
-                localStorage.setItem("autoSelectUhid", selectedEvent.uid);
-                navigate("/ipd-admission-list");
-              }}
-              style={{
-                backgroundColor: "transparent",
-                color: "#d946ef",
-                borderColor: "rgba(217, 70, 239, 0.4)",
-                borderRadius: "8px",
-                fontWeight: "600",
-                fontSize: "13px",
-                padding: "8px",
-                transition: "all 0.2s ease-in-out",
-                width: "100%",
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.backgroundColor = "#d946ef";
-                e.currentTarget.style.color = "#ffffff";
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.backgroundColor = "transparent";
-                e.currentTarget.style.color = "#d946ef";
-              }}
-            >
-              <FeatherIcon icon="eye" size={14} className="me-2" />
-              Manage IPD Admission
-            </Button>
+            )}
           </div>
         </div>
       );
@@ -630,24 +878,37 @@ export default function DoctorDashboard() {
       selectedEvent.confirmTime &&
       selectedEvent.confirmTime !== "0" &&
       selectedEvent.confirmTime !== 0;
-    const typeColor = eventStyleGetter({
-      patientType: selectedEvent.patientType,
-    }).style.backgroundColor;
+    const selectedSt = getPatientStatus(selectedEvent);
+    const indicatorColorMap = {
+      PENDING: "#334155",
+      PATIENT_ARRIVED: "#0284c7",
+      HISTORY_CHECKED: "#ec4899",
+      DIAGNOSIS_CHECKED: "#d35400",
+      PRESCRIPTION_CHECKED: "#7b1fa2",
+      RECEIPT_GENERATED: "#059669",
+      IPD: "#d946ef",
+    };
+    const typeColor = indicatorColorMap[selectedSt?.key] || "#475569";
 
     const getDetailedStatus = () => {
       if (!isConfirmed) return null;
       const isExistingPatient = ["FOLLOW", "POSTOPERATIVE", "MCDPA", "OTHER"].includes(
         selectedEvent.patientType?.toUpperCase(),
       );
-      const hasHistory =
-        Number(selectedEvent.historychk) === 3 || isExistingPatient;
+      const hasHistory = Number(selectedEvent.historychk) === 3;
       const hasExecution =
-        Number(selectedEvent.executivechk) === 1 || isExistingPatient;
+        Number(selectedEvent.executivechk) === 1 || Number(selectedEvent.executivechk) === 2;
       const hasConsultation =
-        Number(selectedEvent.consultationchk) === 4 || isExistingPatient;
+        Number(selectedEvent.consultationchk) === 4;
       const hasReceipt = Number(selectedEvent.executivechk) === 2;
 
-      if (hasReceipt) {
+      const isHistoryDone = hasHistory || isExistingPatient;
+      const isExecutionDone = (hasHistory && hasExecution) || isExistingPatient;
+      const isConsultationDone =
+        (hasHistory && hasExecution && hasConsultation) || isExistingPatient;
+      const isReceiptDone = hasReceipt;
+
+      if (isReceiptDone) {
         return {
           text: "Receipt Generated",
           icon: "file-text",
@@ -657,7 +918,7 @@ export default function DoctorDashboard() {
           label: "Completed at:",
         };
       }
-      if (hasConsultation) {
+      if (isConsultationDone) {
         return {
           text: "Prescription Checked",
           icon: "clipboard",
@@ -667,7 +928,7 @@ export default function DoctorDashboard() {
           label: "Completed at:",
         };
       }
-      if (hasExecution) {
+      if (isExecutionDone) {
         return {
           text: "Diagnosis Checked",
           icon: "activity",
@@ -677,12 +938,12 @@ export default function DoctorDashboard() {
           label: "Completed at:",
         };
       }
-      if (hasHistory) {
+      if (isHistoryDone) {
         return {
           text: "History Checked",
           icon: "book-open",
-          color: "#d946ef",
-          bg: "#d946ef15",
+          color: "#ec4899",
+          bg: "#ec489915",
           time: selectedEvent.historyTime || selectedEvent.confirmTime,
           label: "Completed at:",
         };
@@ -749,8 +1010,6 @@ export default function DoctorDashboard() {
                   textAlign: "center",
                   fontWeight: "700",
                   boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                  fontSize: "11px",
-                  padding: "5px 5px",
                 }}
               >
                 {formatPatientType(selectedEvent.patientType)}
@@ -832,9 +1091,9 @@ export default function DoctorDashboard() {
                   });
                 }}
                 style={{
-                  backgroundColor: "transparent",
-                  color: detailedStatus.color,
-                  borderColor: `${detailedStatus.color}60`,
+                  backgroundColor: "#178aaeff",
+                  color: "#ffffff",
+                  border: "none",
                   borderRadius: "8px",
                   fontWeight: "600",
                   fontSize: "13px",
@@ -843,12 +1102,10 @@ export default function DoctorDashboard() {
                   width: "100%",
                 }}
                 onMouseOver={(e) => {
-                  e.currentTarget.style.backgroundColor = detailedStatus.color;
-                  e.currentTarget.style.color = "#ffffff";
+                  e.currentTarget.style.backgroundColor = "#1199bbff";
                 }}
                 onMouseOut={(e) => {
-                  e.currentTarget.style.backgroundColor = "transparent";
-                  e.currentTarget.style.color = detailedStatus.color;
+                  e.currentTarget.style.backgroundColor = "#178aaeff";
                 }}
               >
                 <FeatherIcon icon="eye" size={14} className="me-2" />
@@ -859,7 +1116,7 @@ export default function DoctorDashboard() {
             <div className="text-center py-3">
               <p className="text-muted fw-bold mb-0">
                 <FeatherIcon icon="lock" size={14} className="me-1" />
-                appointment is not confirmed yet
+                Appointment is not confirmed yet
               </p>
             </div>
           )}
@@ -868,26 +1125,24 @@ export default function DoctorDashboard() {
     );
   };
 
-  const ColorLegend = ({ name, type, count, bgColor }) => {
+  const ColorLegend = ({ name, type, count }) => {
     const isSelected = activePatientTypeFilter === type;
     return (
       <div
         onClick={() => togglePatientTypeFilter(type)}
         className={`color-legend-pill ${isSelected ? "selected" : ""}`}
         style={{
-          padding: "4px 8px",
+          padding: "4px 10px",
           minWidth: "fit-content",
-          "--status-hover-color": bgColor,
-          "--status-hover-bg": `${bgColor}15`,
-          ...(isSelected
-            ? {
-              borderColor: bgColor,
-              backgroundColor: `${bgColor}25`,
-              transform: "translateY(-1.5px)",
-              boxShadow:
-                "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
-            }
-            : {}),
+          cursor: "pointer",
+          border: isSelected ? "2px solid #0284c7" : "1.5px solid #009bad",
+          borderRadius: "50px",
+          backgroundColor: isSelected ? "#e0f2fe" : "#ffffff",
+          transform: isSelected ? "translateY(-1.5px)" : "none",
+          boxShadow: isSelected
+            ? "0 4px 6px -1px rgba(2, 132, 199, 0.2)"
+            : "0 1px 3px rgba(0, 0, 0, 0.05)",
+          transition: "all 0.2s ease-in-out",
         }}
       >
         <div
@@ -895,15 +1150,16 @@ export default function DoctorDashboard() {
           style={{
             width: "11px",
             height: "11px",
-            backgroundColor: bgColor,
+            backgroundColor: "#475569",
+            borderRadius: "50%",
             ...(isSelected
-              ? { transform: "scale(1.25)", boxShadow: `0 0 8px ${bgColor}` }
+              ? { transform: "scale(1.25)", boxShadow: "0 0 8px rgba(71,85,105,0.4)" }
               : {}),
           }}
         ></div>
         <p
           style={{
-            color: "#1e293b",
+            color: "#000000",
             fontWeight: isSelected ? "700" : "600",
             margin: 0,
             fontSize: "11px",
@@ -916,7 +1172,7 @@ export default function DoctorDashboard() {
           {name}{" "}
           <span
             className="cnt"
-            style={{ fontSize: "11px", color: "#2a3748ff" }}
+            style={{ fontSize: "11px", color: "#000000" }}
           >
             ({count || 0})
           </span>
@@ -991,6 +1247,13 @@ export default function DoctorDashboard() {
     overflow: visible !important; 
 }
 
+.rbc-toolbar .rbc-toolbar-label {
+    font-weight: 800 !important;
+    font-size: 20px !important;
+    color: #0f172a !important;
+    letter-spacing: 0.5px;
+}
+
 .rbc-header { 
     padding: 12px 0 !important; 
     font-weight: 7000 !important; 
@@ -1009,10 +1272,39 @@ export default function DoctorDashboard() {
 
 .rbc-overlay { 
     position: absolute !important;
-    z-index: 10000 !important; 
-    background: #fff;
-    border: 1px solid #ccc;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    z-index: 100000 !important; 
+    background: #fff !important;
+    border: 1.5px solid #009bad !important;
+    border-radius: 10px !important;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
+    padding: 8px !important;
+    min-width: 230px !important;
+    width: max-content !important;
+    max-width: 320px !important;
+    max-height: 350px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+.rbc-overlay .rbc-event {
+    margin-bottom: 4px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.rbc-overlay-header {
+    border-bottom: 1px solid #cbd5e1 !important;
+    padding: 8px 10px 6px 10px !important;
+    margin: -8px -8px 6px -8px !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    color: #0f172a !important;
+    position: sticky !important;
+    top: -8px !important;
+    background: #ffffff !important;
+    z-index: 10 !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
 }
 
 .clinical-header-centered {
@@ -1078,7 +1370,7 @@ export default function DoctorDashboard() {
     font-size: 13px;
     line-height: 1.5;
     min-height: 60px;
-    white-space: pre-wrap;   
+    white-space: pre-wrap;        
     word-break: break-word; 
 }
 
@@ -1089,8 +1381,8 @@ export default function DoctorDashboard() {
 }
 
 .rbc-month-row {
-    overflow: visible !important;
-}
+    overflow: hidden;
+} 
 
 .cnt{
 font-size: 13px;
@@ -1123,7 +1415,6 @@ margin-left: 1px;
     background: #009bad;
     border-radius: 10px;
 }
-
 
 .appointment-item {
     display: flex;
@@ -1202,8 +1493,8 @@ margin-left: 1px;
                       "Today's Patient Overview"
                     ) : (
                       <>
-                        Patient Appointment Calendar for{" "}
-                        {moment(selectedDate).format("MMMM YYYY")}
+                        <span style={{ fontWeight: "700", fontSize: "20px", color: "#000000ff" }}>Patient Appointment & Surgery Calendar for</span>{" "}
+                        <span style={{ fontWeight: "700", color: "#007e8bff" }}> {moment(selectedDate).format("MMMM YYYY")} </span>
                       </>
                     )}
                   </h4>
@@ -1376,6 +1667,7 @@ margin-left: 1px;
                       onClick={() => {
                         setViewMode("list");
                         setCurrentView("day");
+                        setSelectedDate(new Date());
                       }}
                       size="sm"
                       style={{
@@ -1395,6 +1687,7 @@ margin-left: 1px;
                     borderTop: "none",
                     borderBottomLeftRadius: "10px",
                     borderBottomRightRadius: "10px",
+                    overflow: "visible",
                   }}
                 >
                   {viewMode === "calendar" ? (
@@ -1409,7 +1702,7 @@ margin-left: 1px;
                       onView={handleCalendarView}
                       eventPropGetter={eventStyleGetter}
                       components={{ event: CustomEvent }}
-                      style={{ height: 770 }}
+                      style={{ height: 830 }}
                       popup={true}
                       views={{
                         month: true,
@@ -1457,7 +1750,7 @@ margin-left: 1px;
                               }}
                             />
                           </div>
-                          <Badge bg="info" className="p-6">
+                          <Badge bg="primary" className="p-6">
                             {
                               filteredAppointments.filter((a) =>
                                 moment(a.start).isSame(selectedDate, "day"),
@@ -1489,81 +1782,66 @@ margin-left: 1px;
                           })
                           .sort((a, b) => moment(a.start).diff(moment(b.start)))
                           .map((app, index) => {
-                            const typeColor = eventStyleGetter({
-                              patientType: app.patientType,
-                            }).style.backgroundColor;
+                            const listStatus = getPatientStatus(app);
+
+                            const indicatorColorMap = {
+                              PENDING: "#334155",
+                              PATIENT_ARRIVED: "#0284c7",
+                              HISTORY_CHECKED: "#ec4899",
+                              DIAGNOSIS_CHECKED: "#d35400",
+                              PRESCRIPTION_CHECKED: "#7b1fa2",
+                              RECEIPT_GENERATED: "#059669",
+                              IPD: "#d946ef",
+                            };
+
+                            // Check if an IPD bill exists for this patient
+                            const patientUhid = app.isIpd ? (app.uid || app.uhid) : null;
+                            const hasBill = patientUhid ? billedUhids.has(String(patientUhid)) : false;
+
+                            const indicatorColor = hasBill
+                              ? "#16a34a"
+                              : app.isIpd
+                                ? (app.isConfirmed ? "#1e40af" : "#334155")
+                                : indicatorColorMap[listStatus.key] || "#475569";
+
+                            // Override listStatus for billed IPD patients to show green
+                            const effectiveListStatus = hasBill
+                              ? { ...listStatus, text: "Bill Made", color: "#16a34a", bg: "#dcfce7", rowBg: "#f0fdf4", rowBorder: "#16a34a" }
+                              : listStatus;
+
                             const isActive =
                               selectedEvent?.appointmentid ===
                               app.appointmentid;
 
-                            const isAppConfirmed =
-                              app.confirmTime &&
-                              app.confirmTime !== "0" &&
-                              app.confirmTime !== 0;
-                            let listStatus = null;
-                            if (isAppConfirmed) {
-                              const isExistingPatient = [
-                                "FOLLOW",
-                                "POSTOPERATIVE",
-                                "MCDPA",
-                                "OTHER",
-                              ].includes(app.patientType?.toUpperCase());
-                              const hasHistory =
-                                Number(app.historychk) === 3 ||
-                                isExistingPatient;
-                              const hasExecution =
-                                Number(app.executivechk) === 1 ||
-                                isExistingPatient;
-                              const hasConsultation =
-                                Number(app.consultationchk) === 4 ||
-                                isExistingPatient;
-                              const hasReceipt = Number(app.executivechk) === 2;
-
-                              if (hasReceipt) {
-                                listStatus = {
-                                  text: "Receipt Generated",
-                                  color: "#10b981",
-                                  bg: "#ecfdf5",
-                                };
-                              } else if (hasConsultation) {
-                                listStatus = {
-                                  text: "Prescription Checked",
-                                  color: "#8e44ad",
-                                  bg: "#8e44ad15",
-                                };
-                              } else if (hasExecution) {
-                                listStatus = {
-                                  text: "Diagnosis Checked",
-                                  color: "#e67e22",
-                                  bg: "#e67e2215",
-                                };
-                              } else if (hasHistory) {
-                                listStatus = {
-                                  text: "History Checked",
-                                  color: "#d946ef",
-                                  bg: "#d946ef15",
-                                };
-                              } else {
-                                listStatus = {
-                                  text: "Patient Arrived",
-                                  color: "#0ea5e9",
-                                  bg: "#f0f9ff",
-                                };
+                            const isPending = !hasBill && listStatus.key === "PENDING";
+                            const itemStyle = isPending
+                              ? {
+                                position: "relative",
+                                backgroundColor: isActive ? "#f0f9ff" : "#ffffff",
+                                border: isActive
+                                  ? "1.5px solid #0284c7"
+                                  : "1px solid #cbd5e1",
+                                boxShadow: isActive
+                                  ? "0 4px 6px -1px rgba(2, 132, 199, 0.15)"
+                                  : "0 1px 3px rgba(0,0,0,0.02)",
                               }
-                            } else {
-                              listStatus = {
-                                text: "Pending",
-                                color: "#d97706",
-                                bg: "#fef3c7",
+                              : {
+                                position: "relative",
+                                backgroundColor: effectiveListStatus.rowBg,
+                                border: isActive
+                                  ? `2px solid ${effectiveListStatus.rowBorder}`
+                                  : `1.5px solid ${effectiveListStatus.rowBorder}80`,
+                                boxShadow: isActive
+                                  ? `0 4px 8px -1px ${effectiveListStatus.color}40`
+                                  : `0 1px 3px ${effectiveListStatus.color}20`,
                               };
-                            }
 
                             return (
                               <div
                                 key={app.appointmentid || index}
                                 className={`appointment-item ${isActive ? "active" : ""}`}
                                 onClick={() => handleEventClick(app)}
-                                style={{ position: "relative" }}
+                                style={itemStyle}
                               >
                                 <div className="time-slot">{app.time}</div>
                                 <div
@@ -1571,7 +1849,7 @@ margin-left: 1px;
                                   style={{
                                     width: "4px",
                                     height: "35px",
-                                    backgroundColor: typeColor,
+                                    backgroundColor: indicatorColor,
                                     borderRadius: "2px",
                                   }}
                                 ></div>
@@ -1599,7 +1877,7 @@ margin-left: 1px;
                                 >
                                   <span
                                     style={{
-                                      backgroundColor: typeColor,
+                                      backgroundColor: indicatorColor,
                                       color: "white",
                                       fontSize: "10px",
                                       padding: "2px 8px",
@@ -1613,13 +1891,13 @@ margin-left: 1px;
                                     {formatPatientType(app.patientType)}
                                   </span>
                                 </div>
-                                {listStatus && (
+                                {effectiveListStatus && (
                                   <div className="d-flex align-items-center">
                                     <span
                                       style={{
-                                        backgroundColor: listStatus.bg,
-                                        color: listStatus.color,
-                                        border: `1px solid ${listStatus.color}40`,
+                                        backgroundColor: effectiveListStatus.bg,
+                                        color: indicatorColor,
+                                        border: `1px solid ${indicatorColor}60`,
                                         fontSize: "10px",
                                         padding: "2px 8px",
                                         borderRadius: "4px",
@@ -1630,7 +1908,7 @@ margin-left: 1px;
                                         textTransform: "uppercase",
                                       }}
                                     >
-                                      {listStatus.text}
+                                      {effectiveListStatus.text}
                                     </span>
                                   </div>
                                 )}
@@ -1704,7 +1982,7 @@ margin-left: 1px;
                         fontSize: "16px",
                       }}
                     >
-                      Appointment Details
+                      {selectedEvent?.isIpd ? "Surgery Details" : "Appointment Details"}
                     </h5>
                   </div>
                 </Card.Header>

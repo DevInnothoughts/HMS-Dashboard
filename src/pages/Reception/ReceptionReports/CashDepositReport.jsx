@@ -11,6 +11,14 @@ import { decodeJwt } from "../../../utils/decode-jwt";
 const BASE_URL = "http://194.195.117.79:5100/api";
 
 const CashDepositReport = () => {
+  const formatAmount = (val) => {
+    if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+      return "-";
+    }
+    const parsed = parseFloat(val);
+    return isNaN(parsed) ? val : `₹ ${Math.round(parsed).toLocaleString("en-IN")}`;
+  };
+
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [tableData, setTableData] = useState([]);
@@ -105,24 +113,41 @@ const CashDepositReport = () => {
     const value = e.target.value;
     const updatedData = tableData.map((item) => {
       if (item.id === rowData.id) {
-        const updatedItem = { ...item, [field]: value };
-        // Automatically calculate difference if cashDeposited is changed
         if (field === "cashDeposited") {
-          const deposited = parseFloat(value) || 0;
-          updatedItem.difference = (updatedItem.total - deposited).toFixed(2);
+          const cleanValue = value.replace(/[^0-9]/g, "");
+          const formattedValue = cleanValue ? Number(cleanValue).toLocaleString("en-IN") : "";
+          const deposited = parseFloat(cleanValue) || 0;
+          const diffVal = item.total - deposited;
+          return {
+            ...item,
+            cashDeposited: formattedValue,
+            difference: Math.round(diffVal).toLocaleString("en-IN"),
+          };
+        } else if (field === "difference") {
+          const cleanValue = value.replace(/[^0-9.-]/g, "");
+          let formattedValue = cleanValue;
+          if (cleanValue && !cleanValue.endsWith(".") && !cleanValue.endsWith("-")) {
+            const num = parseFloat(cleanValue);
+            formattedValue = isNaN(num) ? cleanValue : Math.round(num).toLocaleString("en-IN");
+          }
+          return { ...item, difference: formattedValue };
+        } else {
+          return { ...item, [field]: value };
         }
-        return updatedItem;
       }
       return item;
     });
     setTableData(updatedData);
   };
+
   const handleAddReceipt = async (rowData) => {
     const { date, opdCash, ipdCash, cashDeposited, receiptNo, difference } =
       rowData;
 
-    // Validation exactly like your AJAX: if(depositedcash== "" || receiptno == "" || cashdiffernce == "")
-    if (!cashDeposited || !receiptNo || !difference) {
+    const cleanCashDeposited = String(cashDeposited || "").replace(/,/g, "");
+    const cleanDifference = String(difference || "").replace(/,/g, "");
+
+    if (!cleanCashDeposited || !receiptNo || !cleanDifference) {
       alert("Please Enter the all fields details..");
       return;
     }
@@ -145,9 +170,9 @@ const CashDepositReport = () => {
             pharmacycash: 0, // Defaulting as per your PHP logic flow
             upiamt: 0,
             cardamt: 0,
-            bankdeposit: cashDeposited, // This maps to depositedamt in backend
+            bankdeposit: cleanCashDeposited, // This maps to depositedamt in backend
             receiptno: receiptNo,
-            cashdiffernce: difference,
+            cashdiffernce: cleanDifference,
           }),
         },
       );
@@ -369,17 +394,16 @@ const CashDepositReport = () => {
                       header="Date"
                       body={(rowData) => formatDateDisplay(rowData.date)}
                     />
-                    <Column field="opdCash" header="OPD Cash" />
-                    <Column field="ipdCash" header="IPD Cash" />
-                    <Column field="total" header="Total" />
+                    <Column field="opdCash" header="OPD Cash" body={(rowData) => formatAmount(rowData.opdCash)} />
+                    <Column field="ipdCash" header="IPD Cash" body={(rowData) => formatAmount(rowData.ipdCash)} />
+                    <Column field="total" header="Total" body={(rowData) => formatAmount(rowData.total)} />
                     <Column
                       header="Cash Deposited"
                       body={(rowData) => (
                         <Form.Control
-                          type="number"
+                          type="text"
                           size="sm"
                           value={rowData.cashDeposited}
-                          onWheel={(e) => e.target.blur()}
                           onChange={(e) =>
                             handleInputChange(e, rowData, "cashDeposited")
                           }
@@ -414,9 +438,8 @@ const CashDepositReport = () => {
                       header="Difference"
                       body={(rowData) => (
                         <Form.Control
-                          type="number"
+                          type="text"
                           size="sm"
-                          onWheel={(e) => e.target.blur()}
                           value={rowData.difference}
                           onChange={(e) =>
                             handleInputChange(e, rowData, "difference")

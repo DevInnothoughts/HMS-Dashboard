@@ -1,0 +1,328 @@
+/* Forms.css - Premium styling for IPD Forms */
+
+:root {
+  --primary-color: #00acc1;
+  --primary-hover: #0097a7;
+  --secondary-color: #64748b;
+  --bg-color: #f8fafc;
+  --card-bg: #ffffff;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --focus-ring: rgba(0, 172, 193, 0.15);
+  --error-color: #ef4444;
+  --success-color: #10b981;
+}
+
+.medical-form-container {
+  max-width: 2000px;
+  margin: 0.5rem auto;
+  padding: 1rem;
+  /* Compact padding */
+  background: var(--card-bg);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  font-size: 13px;
+  /* Medium small base size */
+}
+
+.form-title {
+  font-size: 1.15rem;
+  /* Reduced */
+  font-weight: 700;
+  color: var(--primary-color);
+  text-align: center;
+  margin-bottom: 1rem;
+  /* Reduced */
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--border-color);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  position: relative;
+}
+
+.form-title::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px;
+  height: 2px;
+  background: var(--primary-color);
+}
+
+.form-section-title {
+  font-size: 0.95rem;
+  /* Reduced */
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 1rem 0 0.5rem;
+  /* Reduced */
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Patient Header Styling */
+.patient-compact-header {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem;
+  /* Reduced */
+  background: #f1f5f9;
+  padding: 0.75rem;
+  /* Reduced */
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  /* Reduced */
+  border: 1px solid var(--border-color);
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.info-label {
+  font-size: 0.65rem;
+  /* Reduced */
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.info-value {
+  font-size: 0.8rem;
+  /* Reduced */
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+/* Form Fields */
+.form-field {
+  margin-bottom: 0.5rem;
+  /* Significantly reduced */
+}
+
+.field-label {
+  display: block;
+  font-size: 0.75rem;
+  /* Reduced */
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 0.25rem;
+}
+
+.required {
+  color: var(--error-color);
+  margin-left: 2px;
+}
+
+/* Input Overrides */
+.form-control,
+input[type="text"],
+input[type="number"],
+input[type="date"],
+textarea,
+select {
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  /* Compact padding */
+  font-size: 0.8rem;
+  /* Reduced */
+  border: 1.5px solid var(--border-color);
+  border-radius: 5px;
+  background-color: #ffffff;
+  transition: all 0.2s ease;
+  color: var(--text-main);
+  min-height: 2.2em;
+  /* Ensure feasible click area */
+}
+
+.form-control:focus,
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--focus-ring);
+}
+
+/* Checkbox & Radio Styling */
+.checkbox-group,
+.radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  /* Reduced */
+  margin-top: 0.25rem;
+}
+
+.checkbox-option,
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.6rem;
+  /* Reduced padding */
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.75rem;
+  /* Reduced */
+  font-weight: 500;
+}
+
+.checkbox-option:hover,
+.radio-option:hover {
+  border-color: var(--primary-color);
+  background: #f0fdfa;
+}
+
+.checkbox-option input,
+.radio-option input {
+  width: 0.9rem;
+  height: 0.9rem;
+  accent-color: var(--primary-color);
+  cursor: pointer;
+}
+
+.checkbox-option.selected,
+.radio-option.selected {
+  border-color: var(--primary-color);
+  background: #f0fdfa;
+  color: var(--primary-color);
+}
+
+/* Pain Score Grid */
+.pain-score-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.pain-option {
+  padding: 0.4rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+}
+
+.pain-label {
+  font-size: 0.65rem;
+}
+
+/* Grid Layouts */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 0.75rem;
+  /* Reduced */
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  /* Reduced */
+}
+
+.three-col {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  /* Reduced */
+}
+
+/* Split form into two halves */
+.form-body-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  /* Reduced */
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .form-body-split {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Buttons */
+.submit-btn {
+  width: auto;
+  min-width: 200px;
+  display: block;
+  margin: 1.5rem auto 0;
+  padding: 0.6rem 1.5rem;
+  /* Reduced padding */
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  /* Reduced */
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.secondary-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  border-radius: 5px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .medical-form-container {
+    padding: 0.75rem;
+    margin: 0.25rem;
+  }
+
+  .two-col,
+  .three-col {
+    grid-template-columns: 1fr;
+  }
+
+  .patient-compact-header {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.section-box {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 0.75rem;
+  /* Reduced */
+  margin-bottom: 0.75rem;
+  /* Reduced */
+}
+
+/* Custom classes for specific forms */
+.medical-history-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  /* Reduced */
+}
+
+@media (max-width: 600px) {
+  .medical-history-grid {
+    grid-template-columns: 1fr;
+  }
+}

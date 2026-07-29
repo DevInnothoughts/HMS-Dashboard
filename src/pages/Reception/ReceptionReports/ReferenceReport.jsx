@@ -58,6 +58,7 @@ const ReferenceReport = () => {
       TVShow: "TV Show",
       dr_privilege_card: "Doctor's Privilege Card",
       campaign: "Campaign",
+      brand_ambassador: "Brand Ambassador",
       "": "Not Visited",
     };
     return mapping[type] || type || "Other Reference";

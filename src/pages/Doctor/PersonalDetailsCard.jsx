@@ -1204,7 +1204,7 @@ const PersonalDetailsCard = ({
               Aggregators
             </Form.Label>
             <div className="d-flex flex-wrap gap-x-4 gap-y-1 mb-2">
-              {["Mediend", "Hexa", "Practo", "Medibuddy", "Mykare"].map(
+              {["Mediend", "Hexa", "Practo", "Medibuddy", "Mykare", "Signaasat"].map(
                 (aggregator) => (
                   <Form.Check
                     key={aggregator}

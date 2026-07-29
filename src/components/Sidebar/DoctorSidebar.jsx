@@ -10,7 +10,7 @@ const DoctorSidebar = ({
     department
 }) => {
     const dashboardPath = "/doctor-dashboard";
-    const doctorReportRoutes = ["/diagnosis-report", "/opd-surgery-report"];
+    const doctorReportRoutes = ["/diagnosis-report", "/doctor-performance-report", "/opd-surgery-report", "/doctor-pending-surgery-report"];
     const isDoctorReportActive = doctorReportRoutes.includes(location.pathname) || activeIndex === "/manage-doctor-reports";
 
     return (
@@ -39,6 +39,16 @@ const DoctorSidebar = ({
                 </Link>
             </li>
 
+            {/* Calling Calendar */}
+            <li className={`menu-item ${activeIndex === "/doctor-calling-calendar" ? "active" : ""}`}>
+                <Link to="/doctor-calling-calendar" data-label="Calling Calendar">
+                    <div className="icon-wrap">
+                        <i className="fa fa-calendar-check-o"></i>
+                    </div>
+                    {!isCollapsed && <span>Calling Calendar</span>}
+                </Link>
+            </li>
+
             {/* OPD Patients */}
             <li className={`menu-item ${activeIndex === "/doctor-opd-patient-list" ? "active" : ""}`}>
                 <Link to="/doctor-opd-patient-list" data-label="OPD Patients">
@@ -49,13 +59,13 @@ const DoctorSidebar = ({
                 </Link>
             </li>
 
-            {/* Calling Calendar */}
-            <li className={`menu-item ${activeIndex === "/doctor-calling-calendar" ? "active" : ""}`}>
-                <Link to="/doctor-calling-calendar" data-label="Calling Calendar">
+            {/* IPD Patients */}
+            <li className={`menu-item ${activeIndex === "/doctor-ipd-patient-list" ? "active" : ""}`}>
+                <Link to="/doctor-ipd-patient-list" data-label="IPD Patients">
                     <div className="icon-wrap">
-                        <i className="fa fa-calendar-check-o"></i>
+                        <i className="fa fa-user"></i>
                     </div>
-                    {!isCollapsed && <span>Calling Calendar</span>}
+                    <span>IPD Patients</span>
                 </Link>
             </li>
 
@@ -82,10 +92,26 @@ const DoctorSidebar = ({
                     </li>
                     <li>
                         <Link
+                            to="/doctor-performance-report"
+                            className={location.pathname === "/doctor-performance-report" ? "active" : ""}
+                        >
+                            Doctor Performance Report
+                        </Link>
+                    </li>
+                    <li>
+                        <Link
                             to="/opd-surgery-report"
                             className={location.pathname === "/opd-surgery-report" ? "active" : ""}
                         >
                             OPD Surgery Report
+                        </Link>
+                    </li>
+                    <li>
+                        <Link
+                            to="/doctor-pending-surgery-report"
+                            className={location.pathname === "/doctor-pending-surgery-report" ? "active" : ""}
+                        >
+                            Pending Surgery Report
                         </Link>
                     </li>
                 </ul>

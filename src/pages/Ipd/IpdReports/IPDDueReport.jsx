@@ -14,10 +14,18 @@ import { decodeJwt } from "../../../utils/decode-jwt";
 const BASE_URL = "http://194.195.117.79:5100/api";
 
 const formatValue = (val) => {
-  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0") {
     return "-";
   }
   return val;
+};
+
+const formatAmountValue = (val) => {
+  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0") {
+    return "-";
+  }
+  const num = Math.round(parseFloat(String(val).replace(/,/g, "")) || 0);
+  return num.toLocaleString("en-IN");
 };
 
 const IPDDueReport = () => {
@@ -91,7 +99,7 @@ const IPDDueReport = () => {
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
-          footer={formatValue(printTotals.totalPackage)}
+          footer={formatAmountValue(printTotals.totalPackage)}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
@@ -99,27 +107,27 @@ const IPDDueReport = () => {
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
-          footer={formatValue(printTotals.cash)}
+          footer={formatAmountValue(printTotals.cash)}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
-          footer={formatValue(printTotals.card)}
+          footer={formatAmountValue(printTotals.card)}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
-          footer={formatValue(printTotals.cheque)}
+          footer={formatAmountValue(printTotals.cheque)}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
-          footer={formatValue(printTotals.online)}
+          footer={formatAmountValue(printTotals.online)}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
-          footer={formatValue(printTotals.discount)}
+          footer={formatAmountValue(printTotals.discount)}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
-          footer={formatValue(printTotals.totalDue)}
+          footer={formatAmountValue(printTotals.totalDue)}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
       </Row>
@@ -463,7 +471,7 @@ const IPDDueReport = () => {
                     <Column
                       field="totalPackage"
                       header="Total Package"
-                      body={(r) => formatValue(r.totalPackage)}
+                      body={(r) => formatAmountValue(r.totalPackage)}
                       style={{ textAlign: "center" }}
                     />
                     <Column
@@ -475,37 +483,37 @@ const IPDDueReport = () => {
                     <Column
                       field="cash"
                       header="Cash"
-                      body={(r) => formatValue(r.cash)}
+                      body={(r) => formatAmountValue(r.cash)}
                       style={{ textAlign: "center" }}
                     />
                     <Column
                       field="card"
                       header="Card"
-                      body={(r) => formatValue(r.card)}
+                      body={(r) => formatAmountValue(r.card)}
                       style={{ textAlign: "center" }}
                     />
                     <Column
                       field="cheque"
                       header="Cheque"
-                      body={(r) => formatValue(r.cheque)}
+                      body={(r) => formatAmountValue(r.cheque)}
                       style={{ textAlign: "center" }}
                     />
                     <Column
                       field="online"
                       header="Online"
-                      body={(r) => formatValue(r.online)}
+                      body={(r) => formatAmountValue(r.online)}
                       style={{ textAlign: "center" }}
                     />
                     <Column
                       field="discount"
                       header="Discount"
-                      body={(r) => formatValue(r.discount)}
+                      body={(r) => formatAmountValue(r.discount)}
                       style={{ textAlign: "center" }}
                     />
                     <Column
                       field="totalDue"
                       header="Total Due"
-                      body={(r) => formatValue(r.totalDue)}
+                      body={(r) => formatAmountValue(r.totalDue)}
                       style={{
                         textAlign: "center",
                         fontWeight: "bold",
@@ -538,27 +546,27 @@ const IPDDueReport = () => {
                             <td>{index + 1}</td>
                             <td>{formatValue(formatDateDisplay(item.date))}</td>
                             <td>{formatValue(item.patientName)}</td>
-                            <td>{formatValue(item.totalPackage)}</td>
+                            <td>{formatAmountValue(item.totalPackage)}</td>
                             <td>{formatValue(item.invoiceType)}</td>
-                            <td>{formatValue(item.cash)}</td>
-                            <td>{formatValue(item.card)}</td>
-                            <td>{formatValue(item.cheque)}</td>
-                            <td>{formatValue(item.online)}</td>
-                            <td>{formatValue(item.discount)}</td>
-                            <td>{formatValue(item.totalDue)}</td>
+                            <td>{formatAmountValue(item.cash)}</td>
+                            <td>{formatAmountValue(item.card)}</td>
+                            <td>{formatAmountValue(item.cheque)}</td>
+                            <td>{formatAmountValue(item.online)}</td>
+                            <td>{formatAmountValue(item.discount)}</td>
+                            <td>{formatAmountValue(item.totalDue)}</td>
                           </tr>
                         ))}
                         {/* Totals row inside tbody to avoid page repetition on multiple pages */}
                         <tr className="print-totals-row">
                           <td colSpan={3}>Total</td>
-                          <td>{formatValue(printTotals.totalPackage)}</td>
+                          <td>{formatAmountValue(printTotals.totalPackage)}</td>
                           <td></td>
-                          <td>{formatValue(printTotals.cash)}</td>
-                          <td>{formatValue(printTotals.card)}</td>
-                          <td>{formatValue(printTotals.cheque)}</td>
-                          <td>{formatValue(printTotals.online)}</td>
-                          <td>{formatValue(printTotals.discount)}</td>
-                          <td>{formatValue(printTotals.totalDue)}</td>
+                          <td>{formatAmountValue(printTotals.cash)}</td>
+                          <td>{formatAmountValue(printTotals.card)}</td>
+                          <td>{formatAmountValue(printTotals.cheque)}</td>
+                          <td>{formatAmountValue(printTotals.online)}</td>
+                          <td>{formatAmountValue(printTotals.discount)}</td>
+                          <td>{formatAmountValue(printTotals.totalDue)}</td>
                         </tr>
                       </tbody>
                     </table>

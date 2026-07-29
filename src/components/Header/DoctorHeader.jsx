@@ -5,10 +5,19 @@ import { useNavigate } from "react-router-dom";
 import { useSidebarContext } from "../../pages/api/useSidebarContext";
 import "font-awesome/css/font-awesome.min.css";
 import { decodeJwt } from "../../utils/decode-jwt";
+import moment from "moment";
 
 export default function DoctorHeader() {
   const navigate = useNavigate();
   const [theme, setTheme] = useState("light");
+  const formatTime24 = (timeStr) => {
+    if (!timeStr) return "12:00";
+    const parsed = moment(timeStr.trim(), ["hh:mm A", "HH:mm", "hh:mm", "h:mm A", "H:mm"]);
+    if (parsed.isValid()) {
+      return parsed.format("HH:mm");
+    }
+    return timeStr;
+  };
   const [currentLocation, setCurrentLocation] = useState(null);
   const [doctorId, setDoctorId] = useState(null);
   const [accountType, setAccountType] = useState("");
@@ -423,7 +432,7 @@ export default function DoctorHeader() {
                                             fontWeight: "700",
                                           }}
                                         >
-                                          {app.appointment_time}
+                                          {formatTime24(app.appointment_time)}
                                         </span>
                                       </div>
                                     </div>
@@ -667,7 +676,7 @@ export default function DoctorHeader() {
                                             fontWeight: "700",
                                           }}
                                         >
-                                          {app.appointment_time}
+                                          {formatTime24(app.appointment_time)}
                                         </span>
                                       </div>
                                     </div>
@@ -911,7 +920,7 @@ export default function DoctorHeader() {
                                             fontWeight: "700",
                                           }}
                                         >
-                                          {app.appointment_time}
+                                          {formatTime24(app.appointment_time)}
                                         </span>
                                       </div>
                                     </div>
@@ -1155,7 +1164,7 @@ export default function DoctorHeader() {
                                             fontWeight: "700",
                                           }}
                                         >
-                                          {app.appointment_time}
+                                          {formatTime24(app.appointment_time)}
                                         </span>
                                       </div>
                                     </div>
@@ -1399,7 +1408,7 @@ export default function DoctorHeader() {
                                             fontWeight: "700",
                                           }}
                                         >
-                                          {app.appointment_time || "00:00"}
+                                          {formatTime24(app.appointment_time)}
                                         </span>
                                       </div>
                                     </div>
@@ -1429,7 +1438,7 @@ export default function DoctorHeader() {
                                           }}
                                         >
                                           <i
-                                            className="fa fa-bed"
+                                            className="fa fa-user-md"
                                             style={{
                                               fontSize: "10px",
                                               color: "#94a3b8",
@@ -1443,8 +1452,7 @@ export default function DoctorHeader() {
                                             fontWeight: "500",
                                           }}
                                         >
-                                          Room: {app.room_no || "N/A"} (
-                                          {app.room_type || "N/A"})
+                                          Surgeon: {app.doctor_name || "N/A"}
                                         </span>
                                       </div>
                                     </div>

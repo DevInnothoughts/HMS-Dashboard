@@ -676,7 +676,7 @@ const FollowUpPrintView = React.forwardRef(
                     const y = today.getFullYear();
                     const today1 = `${d}-${m}-${y}`;
                     const today2 = `${y}-${m}-${d}`;
-                    
+
                     const filtered = followUpData.previous_complaints_text.split('\n\n').filter(line => {
                       const parts = line.split(" | ");
                       if (parts.length > 0) {
@@ -684,9 +684,9 @@ const FollowUpPrintView = React.forwardRef(
                       }
                       return true;
                     });
-                    
+
                     if (filtered.length === 0) return null;
-                    
+
                     return (
                       <div className="row">
                         <div className="col-md-12" style={{ width: "100%", marginBottom: "5px" }}>
@@ -700,7 +700,7 @@ const FollowUpPrintView = React.forwardRef(
                                   if (prefixMatch) {
                                     return (
                                       <div key={i} style={{ marginBottom: "10px", whiteSpace: "pre-line" }}>
-                                        <b>{prefixMatch[1]}{prefixMatch[2]}</b> | {parts.slice(1).join(" | ")}
+                                        <b>{prefixMatch[1]}{prefixMatch[2]} :</b> {parts.slice(1).join(" | ")}
                                       </div>
                                     );
                                   }

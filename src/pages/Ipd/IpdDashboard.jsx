@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import FeatherIcon from "feather-icons-react";
 import {
   Row,
@@ -12,7 +13,6 @@ import {
   Modal,
 } from "react-bootstrap";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
-import IpdbillNavbar from "../../components/Navbar/IpdbillNavbar";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import Swal from "sweetalert2";
@@ -32,21 +32,10 @@ const CalendarCustomEvent = ({ event }) => (
         whiteSpace: "nowrap",
         overflow: "hidden",
         textOverflow: "ellipsis",
-        fontWeight: "bold"
+        fontWeight: "bold",
       }}
     >
       {event.patientName}
-    </div>
-    <div
-      style={{
-        whiteSpace: "nowrap",
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        fontSize: "10px",
-        opacity: 0.95
-      }}
-    >
-      {event.sxPlan || "Surgery"}
     </div>
   </div>
 );
@@ -64,6 +53,7 @@ const Toast = Swal.mixin({
 });
 
 export default function IpdDashboard() {
+  const navigate = useNavigate();
   const [surgeries, setSurgeries] = useState([]);
   const [loading, setLoading] = useState(false);
   const [currentLocation, setCurrentLocation] = useState("default");
@@ -78,6 +68,7 @@ export default function IpdDashboard() {
   const [doctors, setDoctors] = useState([]);
   const [selectedDoctorId, setSelectedDoctorId] = useState("");
   const [activeStatusFilter, setActiveStatusFilter] = useState(null); // null, "confirmed", "pending"
+  const [billedUhids, setBilledUhids] = useState(new Map()); // uid -> { createdAt, dischargeAt }
 
   const calendarRef = React.useRef(null);
 
@@ -125,10 +116,12 @@ export default function IpdDashboard() {
         isConfirmed:
           p.admission_no !== 0 &&
           p.admission_no !== "0" &&
-          p.admission_no !== null,
+          p.admission_no !== null &&
+          p.admission_no !== "PENDING",
         admissionNo: p.admission_no,
         doctorName: p.doctor_name || p.surgeon_name || "N/A",
         doctorId: p.doctor_id,
+        confirmTime: p.created_at,
       };
     });
   }, []);
@@ -180,6 +173,51 @@ export default function IpdDashboard() {
   useEffect(() => {
     fetchSurgeries();
   }, [fetchSurgeries]);
+
+  // Fetch IPD bills to know which patients already have a bill
+  const fetchBilledUhids = useCallback(async () => {
+    if (currentLocation === "default" || !currentLocation) return;
+    try {
+      const response = await fetch(
+        `${BASE_URL}/V1/invoice/listInvoice?location=${currentLocation}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        },
+      );
+      if (response.ok) {
+        const result = await response.json();
+        const rawData = Array.isArray(result.data?.[0])
+          ? result.data[0]
+          : result.data || [];
+        const uidsMap = new Map();
+        rawData.forEach((inv) => {
+          const uid = String(inv.patient_uid || inv.Uid_no || inv.uid || "");
+          if (uid) {
+            // Keep the most recent bill per UID if multiple exist
+            if (!uidsMap.has(uid)) {
+              uidsMap.set(uid, {
+                createdAt: inv.creation_date || null,
+                admissionTime: inv.admissiontime || null,
+                dischargeAt: inv.due_date || null,
+                dischargeTime: inv.dischargetime || null,
+              });
+            }
+          }
+        });
+        setBilledUhids(uidsMap);
+      }
+    } catch (err) {
+      console.error("Error fetching IPD bills:", err);
+    }
+  }, [currentLocation]);
+
+  useEffect(() => {
+    fetchBilledUhids();
+  }, [fetchBilledUhids]);
 
   const fetchDoctors = useCallback(async () => {
     if (currentLocation === "default" || !currentLocation) return;
@@ -258,6 +296,7 @@ export default function IpdDashboard() {
   const handleCalendarView = (newView) => setCurrentView(newView);
   const handleRefreshClick = () => {
     fetchSurgeries();
+    fetchBilledUhids();
     window.dispatchEvent(new CustomEvent("refreshIpdCount"));
   };
 
@@ -390,23 +429,24 @@ export default function IpdDashboard() {
   };
 
   const eventStyleGetter = useCallback((event) => {
-    const isConf = event.isConfirmed;
+    const hasBill = billedUhids.has(String(event.uhid));
+    const bgColor = hasBill ? "#16a34a" : event.isConfirmed ? "#1e40af" : "#475569";
     return {
       style: {
-        backgroundColor: isConf ? "#10b981" : "#f59e0b",
+        backgroundColor: bgColor,
         borderRadius: "4px",
         border: "none",
         color: "white",
         display: "block",
       },
     };
-  }, []);
+  }, [billedUhids]);
 
   const toggleStatusFilter = (status) => {
     setActiveStatusFilter((prev) => (prev === status ? null : status));
   };
 
-  const ColorLegend = ({ name, type, count, bgColor }) => {
+  const ColorLegend = ({ name, type, count }) => {
     const isSelected = activeStatusFilter === type;
     return (
       <div
@@ -415,16 +455,15 @@ export default function IpdDashboard() {
         style={{
           padding: "4px 10px",
           minWidth: "fit-content",
-          border: "1px solid #cbd5e1",
-          borderRadius: "50px",
-          display: "flex",
-          alignItems: "center",
-          gap: "6px",
-          backgroundColor: isSelected ? `${bgColor}25` : "#ffffff",
-          borderColor: isSelected ? bgColor : "#cbd5e1",
-          transition: "all 0.2s ease",
-          userSelect: "none",
           cursor: "pointer",
+          border: isSelected ? "2px solid #0284c7" : "1.5px solid #009bad",
+          borderRadius: "50px",
+          backgroundColor: isSelected ? "#e0f2fe" : "#ffffff",
+          transform: isSelected ? "translateY(-1.5px)" : "none",
+          boxShadow: isSelected
+            ? "0 4px 6px -1px rgba(2, 132, 199, 0.2)"
+            : "0 1px 3px rgba(0, 0, 0, 0.05)",
+          transition: "all 0.2s ease-in-out",
         }}
       >
         <div
@@ -432,13 +471,16 @@ export default function IpdDashboard() {
           style={{
             width: "11px",
             height: "11px",
+            backgroundColor: "#475569",
             borderRadius: "50%",
-            backgroundColor: bgColor,
+            ...(isSelected
+              ? { transform: "scale(1.25)", boxShadow: "0 0 8px rgba(71,85,105,0.4)" }
+              : {}),
           }}
         ></div>
         <p
           style={{
-            color: "#1e293b",
+            color: "#000000",
             fontWeight: isSelected ? "700" : "600",
             margin: 0,
             fontSize: "11px",
@@ -451,7 +493,7 @@ export default function IpdDashboard() {
           {name}{" "}
           <span
             className="cnt"
-            style={{ fontSize: "11px", color: "#2a3748ff" }}
+            style={{ fontSize: "11px", color: "#000000" }}
           >
             ({count || 0})
           </span>
@@ -491,9 +533,13 @@ export default function IpdDashboard() {
               <FeatherIcon icon="info" size={14} /> Admission No:
             </label>
             <span className="data-value fw-bold">
-              {!selectedEvent.admissionNo || selectedEvent.admissionNo === "0" || selectedEvent.admissionNo === 0 ? (
-                <span style={{ fontStyle: "italic", fontWeight: "normal", color: "red" }}>
-                  not generated yet
+              {!selectedEvent.admissionNo || selectedEvent.admissionNo === "0" || selectedEvent.admissionNo === 0 || selectedEvent.admissionNo === "PENDING" ? (
+                <span
+                  className="selectable-text text-danger fw-bold"
+                  title="Confirm admission and create an IPD bill. The assigned admission number will reflect here."
+                  style={{ cursor: "help" }}
+                >
+                  Pending
                 </span>
               ) : (
                 selectedEvent.admissionNo
@@ -529,7 +575,7 @@ export default function IpdDashboard() {
               <FeatherIcon icon="info" size={14} /> Age/Gender:
             </label>
             <span className="data-value fw-bold">
-              {selectedEvent.age} / {selectedEvent.gender}
+              {selectedEvent.age} yrs / {selectedEvent.gender}
             </span>
           </div>
           <div className="data-item-inline">
@@ -555,37 +601,144 @@ export default function IpdDashboard() {
           style={{ borderTop: "1px solid #a3b1b4ff" }}
         ></div>
 
+        {selectedEvent.isConfirmed && !billedUhids.has(String(selectedEvent.uhid)) && (
+          <div
+            className="d-flex align-items-center p-3 mb-3"
+            style={{
+              borderRadius: "8px",
+              backgroundColor: "#eff6ff",
+              color: "#1e40af",
+              border: "1px solid rgba(30, 64, 175, 0.2)",
+            }}
+          >
+            <FeatherIcon
+              icon="check-circle"
+              size={20}
+              className="me-2"
+            />
+            <div className="d-flex align-items-center py-2 justify-content-between flex-grow-1">
+              <strong>Admission Confirmed</strong>
+              <div
+                style={{
+                  fontSize: "13px",
+                  opacity: 1.0,
+                  marginLeft: "10px",
+                  textAlign: "right",
+                }}
+              >
+                {`Admitted at: ${selectedEvent.confirmTime && selectedEvent.confirmTime !== "0"
+                  ? moment(selectedEvent.confirmTime).format("HH:mm")
+                  : "N/A"
+                  }`}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="clinical-actions pt-2">
           <div className="d-grid gap-1">
-            <Button
-              variant={selectedEvent.isConfirmed ? "success" : "primary"}
-              className="confirm-btn"
-              style={{ borderRadius: "10px" }}
-              onClick={() =>
-                handleConfirmSurgery(selectedEvent.phone, selectedEvent.uhid)
-              }
-              disabled={selectedEvent.isConfirmed}
-            >
-              <FeatherIcon
-                icon={selectedEvent.isConfirmed ? "user-check" : "check-circle"}
-                size={16}
-                className="me-1"
-              />{" "}
-              {selectedEvent.isConfirmed
-                ? `Admitted (${selectedEvent.admissionNo})`
-                : "Confirm Admission"}
-            </Button>
+            {selectedEvent.isConfirmed ? (
+              <>
+                {billedUhids.has(String(selectedEvent.uhid)) && (() => {
+                  const billInfo = billedUhids.get(String(selectedEvent.uhid));
+                  const madeAt = billInfo?.admissionTime
+                    ? billInfo.admissionTime
+                    : billInfo?.createdAt
+                      ? moment(billInfo.createdAt).format("HH:mm")
+                      : "N/A";
+                  const dischargeAt = billInfo?.dischargeTime
+                    ? billInfo.dischargeTime
+                    : billInfo?.dischargeAt
+                      ? moment(billInfo.dischargeAt).format("DD-MM-YY")
+                      : "N/A";
+                  return (
+                    <div
+                      className="d-flex align-items-center p-3 mb-3"
+                      style={{
+                        borderRadius: "8px",
+                        backgroundColor: "#dcfce780",
+                        color: "#15803d",
+                        border: "1px solid rgba(22, 163, 74, 0.2)",
+                      }}
+                    >
+                      <FeatherIcon
+                        icon="file-text"
+                        size={20}
+                        className="me-2"
+                        style={{ flexShrink: 0 }}
+                      />
+                      <div className="d-flex align-items-center py-2 justify-content-between flex-grow-1">
+                        <strong>IPD Bill Made</strong>
+                        <div
+                          style={{
+                            fontSize: "13px",
+                            opacity: 1.0,
+                            marginLeft: "10px",
+                            textAlign: "right",
+                          }}
+                        >
+                          <div>Made at: {dischargeAt}</div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+                <Button
+                  className="d-flex align-items-center justify-content-center"
+                  onClick={() => {
+                    localStorage.setItem("autoSelectUhid", selectedEvent.uhid);
+                    navigate("/ipd-admission-list");
+                  }}
+                  style={{
+                    backgroundColor: "#178aaeff",
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: "10px",
+                    fontWeight: "600",
+                    fontSize: "13px",
+                    padding: "8px",
+                    transition: "all 0.2s ease-in-out",
+                    width: "100%",
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.backgroundColor = "#1199bbff";
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.backgroundColor = "#178aaeff";
+                  }}
+                >
+                  <FeatherIcon icon="eye" size={14} className="me-2" />
+                  View Patient Details
+                </Button>
+              </>
+            ) : (
+              <div className="d-flex gap-2">
+                <Button
+                  variant="primary"
+                  className="confirm-btn flex-grow-1"
+                  style={{ borderRadius: "10px", padding: "8px 12px", fontSize: "13px", fontWeight: "600" }}
+                  onClick={() =>
+                    handleConfirmSurgery(selectedEvent.phone, selectedEvent.uhid)
+                  }
+                >
+                  <FeatherIcon
+                    icon="check-circle"
+                    size={16}
+                    className="me-1"
+                  />
+                  Confirm Admission
+                </Button>
 
-            {!selectedEvent.isConfirmed && (
-              <Button
-                variant="danger"
-                className="btn-sm border-0 mt-1"
-                style={{ borderRadius: "10px" }}
-                onClick={handleCancelSurgery}
-              >
-                <FeatherIcon icon="x-circle" size={14} className="me-1" />{" "}
-                Cancel Admission
-              </Button>
+                <Button
+                  variant="danger"
+                  className="flex-grow-1"
+                  style={{ borderRadius: "10px", padding: "8px 12px", fontSize: "13px", fontWeight: "600" }}
+                  onClick={handleCancelSurgery}
+                >
+                  <FeatherIcon icon="x-circle" size={14} className="me-1" />
+                  Cancel Admission
+                </Button>
+              </div>
             )}
           </div>
         </div>
@@ -659,6 +812,13 @@ export default function IpdDashboard() {
     overflow: visible !important; 
 }
 
+.rbc-toolbar .rbc-toolbar-label {
+    font-weight: 800 !important;
+    font-size: 20px !important;
+    color: #0f172a !important;
+    letter-spacing: 0.5px;
+}
+
 .rbc-header { 
     padding: 12px 0 !important; 
     font-weight: 7000 !important; 
@@ -677,10 +837,39 @@ export default function IpdDashboard() {
 
 .rbc-overlay { 
     position: absolute !important;
-    z-index: 10000 !important; 
-    background: #fff;
-    border: 1px solid #ccc;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    z-index: 100000 !important; 
+    background: #fff !important;
+    border: 1.5px solid #00bcd4 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
+    padding: 8px !important;
+    min-width: 230px !important;
+    width: max-content !important;
+    max-width: 320px !important;
+    max-height: 350px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+.rbc-overlay .rbc-event {
+    margin-bottom: 4px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.rbc-overlay-header {
+    border-bottom: 1px solid #cbd5e1 !important;
+    padding: 8px 10px 6px 10px !important;
+    margin: -8px -8px 6px -8px !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    color: #0f172a !important;
+    position: sticky !important;
+    top: -8px !important;
+    background: #ffffff !important;
+    z-index: 10 !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
 }
 
 .rbc-row-segment .rbc-show-more {
@@ -843,8 +1032,8 @@ export default function IpdDashboard() {
                       "Today's Surgery Overview"
                     ) : (
                       <>
-                        Patient Surgery Calendar for{" "}
-                        {moment(selectedDate).format("MMMM YYYY")}
+                        <span style={{ fontWeight: "700", fontSize: "20px", color: "#000000ff" }}>Patient Surgery Calendar for</span>{" "}
+                        <span style={{ fontWeight: "700", color: "#007e8bff" }}></span>{moment(selectedDate).format("MMMM YYYY")}
                       </>
                     )}
                   </h4>
@@ -854,10 +1043,10 @@ export default function IpdDashboard() {
                   style={{ gap: "6px", position: "relative", zIndex: 2 }}
                 >
                   <ColorLegend
-                    name="Surgery"
+                    name="IPD Patient"
                     type="surgery"
                     count={counts}
-                    bgColor="#00bcd4"
+                    bgColor="#d946ef"
                   />
                 </div>
               </Col>
@@ -978,6 +1167,7 @@ export default function IpdDashboard() {
                       onClick={() => {
                         setViewMode("list");
                         setCurrentView("day");
+                        setSelectedDate(new Date());
                       }}
                       size="sm"
                       style={{
@@ -997,6 +1187,7 @@ export default function IpdDashboard() {
                     borderTop: "none",
                     borderBottomLeftRadius: "10px",
                     borderBottomRightRadius: "10px",
+                    overflow: "visible",
                   }}
                 >
                   {loading ? (
@@ -1015,8 +1206,15 @@ export default function IpdDashboard() {
                       onView={handleCalendarView}
                       eventPropGetter={eventStyleGetter}
                       components={{ event: CalendarCustomEvent }}
-                      style={{ height: 580 }}
+                      style={{ height: 830 }}
                       popup={true}
+                      views={{
+                        month: true,
+                        week: true,
+                        day: true,
+                      }}
+                      length={3}
+                      maxEvents={3}
                     />
                   ) : (
                     <div className="day-list-container">
@@ -1056,7 +1254,7 @@ export default function IpdDashboard() {
                               }}
                             />
                           </div>
-                          <Badge bg="info" className="p-6">
+                          <Badge bg="primary" className="p-6">
                             {
                               filteredSurgeries.filter((s) =>
                                 moment(s.start).isSame(selectedDate, "day"),
@@ -1089,18 +1287,44 @@ export default function IpdDashboard() {
                             })
                             .sort((a, b) => moment(a.start).diff(moment(b.start)))
                             .map((s, index) => {
-                              const typeColor = s.isConfirmed ? "#10b981" : "#f59e0b";
+                              const hasBill = billedUhids.has(String(s.uhid));
+                              const listStatus = hasBill
+                                ? { text: "Bill Made", color: "#16a34a", bg: "#dcfce7", rowBg: "#f0fdf4", rowBorder: "#16a34a" }
+                                : s.isConfirmed
+                                  ? { text: "Admitted", color: "#1e40af", bg: "#eff6ff", rowBg: "#eff6ff", rowBorder: "#1e40af" }
+                                  : { text: "Pending", color: "#475569", bg: "#f1f5f9", rowBg: "#ffffff", rowBorder: "#cbd5e1" };
+                              const indicatorColor = hasBill ? "#16a34a" : s.isConfirmed ? "#1e40af" : "#334155";
                               const isActive = selectedEvent?.uhid === s.uhid;
-                              const listStatus = s.isConfirmed
-                                ? { text: "Admitted", color: "#10b981", bg: "#ecfdf5" }
-                                : { text: "Pending", color: "#d97706", bg: "#fef3c7" };
+                              const isPending = !s.isConfirmed && !hasBill;
+
+                              const itemStyle = isPending
+                                ? {
+                                  position: "relative",
+                                  backgroundColor: isActive ? "#f0f9ff" : "#ffffff",
+                                  border: isActive
+                                    ? "1.5px solid #0284c7"
+                                    : "1px solid #cbd5e1",
+                                  boxShadow: isActive
+                                    ? "0 4px 6px -1px rgba(2, 132, 199, 0.15)"
+                                    : "0 1px 3px rgba(0,0,0,0.02)",
+                                }
+                                : {
+                                  position: "relative",
+                                  backgroundColor: listStatus.rowBg,
+                                  border: isActive
+                                    ? `2px solid ${listStatus.rowBorder}`
+                                    : `1.5px solid ${listStatus.rowBorder}80`,
+                                  boxShadow: isActive
+                                    ? `0 4px 8px -1px ${listStatus.color}40`
+                                    : `0 1px 3px ${listStatus.color}20`,
+                                };
 
                               return (
                                 <div
                                   key={s.uhid || index}
                                   className={`appointment-item ${isActive ? "active" : ""}`}
                                   onClick={() => handleEventClick(s)}
-                                  style={{ position: "relative" }}
+                                  style={itemStyle}
                                 >
                                   <div className="time-slot">{s.time}</div>
                                   <div
@@ -1108,7 +1332,7 @@ export default function IpdDashboard() {
                                     style={{
                                       width: "4px",
                                       height: "35px",
-                                      backgroundColor: typeColor,
+                                      backgroundColor: indicatorColor,
                                       borderRadius: "2px",
                                     }}
                                   ></div>
@@ -1125,13 +1349,38 @@ export default function IpdDashboard() {
                                       {s.doctorName}
                                     </div>
                                   </div>
+                                  <div
+                                    className="status-badge-container d-flex gap-2 align-items-center"
+                                    style={{
+                                      position: "absolute",
+                                      left: "50%",
+                                      transform: "translateX(-50%)",
+                                      margin: 0,
+                                    }}
+                                  >
+                                    <span
+                                      style={{
+                                        backgroundColor: indicatorColor,
+                                        color: "white",
+                                        fontSize: "10px",
+                                        padding: "2px 8px",
+                                        borderRadius: "4px",
+                                        minWidth: "70px",
+                                        display: "inline-block",
+                                        textAlign: "center",
+                                        fontWeight: "700",
+                                      }}
+                                    >
+                                      IPD
+                                    </span>
+                                  </div>
                                   {listStatus && (
                                     <div className="d-flex align-items-center me-3">
                                       <span
                                         style={{
                                           backgroundColor: listStatus.bg,
-                                          color: listStatus.color,
-                                          border: `1px solid ${listStatus.color}40`,
+                                          color: indicatorColor,
+                                          border: `1px solid ${indicatorColor}60`,
                                           fontSize: "10px",
                                           padding: "2px 8px",
                                           borderRadius: "4px",

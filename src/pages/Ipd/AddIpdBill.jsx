@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import IpdbillNavbar from "../../components/Navbar/IpdbillNavbar";
+import { useNavigate, useLocation } from "react-router-dom";
+import IpdAdmissionNavbar from "../../components/Navbar/IpdAdmissionNavbar";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import {
   Row,
@@ -90,6 +90,8 @@ const FALLBACK_LOCATIONS = [
 
 const AddIpdBill = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const fromAdmissionList = location.state?.fromAdmissionList;
   const initialFormData = {
     invoice_id: "",
     admission_no: "",
@@ -105,14 +107,14 @@ const AddIpdBill = () => {
     consultantName: "",
     surgeonName: "",
     madeby: "",
-    Sub_Total: "0.00",
+    Sub_Total: "0",
     bill_Type: "",
     bill_method: "",
     note: "",
     dynamicRows: [{ label: "", value: "" }],
     discount: "",
     discountAmount: "",
-    payableAmount: "0.00",
+    payableAmount: "0",
     chequeno: "",
     pdc: "",
     reimbursement: "",
@@ -125,6 +127,7 @@ const AddIpdBill = () => {
   const [formData, setFormData] = useState(initialFormData);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [isSearchingUid, setIsSearchingUid] = useState(false);
   const [isInterbranch, setIsInterbranch] = useState(false);
   const [consultants, setConsultants] = useState([]);
   const [surgeons, setSurgeons] = useState([]);
@@ -136,6 +139,7 @@ const AddIpdBill = () => {
   const [patientResults, setPatientResults] = useState([]);
   const [showPatientDropdown, setShowPatientDropdown] = useState(false);
   const [invoiceWarning, setInvoiceWarning] = useState("");
+  const [admissionWarning, setAdmissionWarning] = useState("");
   const [selectedClinicPatient, setSelectedClinicPatient] = useState(null);
 
   useEffect(() => {
@@ -147,6 +151,106 @@ const AddIpdBill = () => {
       }
     }
   }, []);
+
+  useEffect(() => {
+    if (location.state && location.state.patient) {
+      const p = location.state.patient;
+
+      let parsedDate = "";
+      let parsedTime = "";
+      if (p.verifiedDate && p.verifiedDate !== "NOT ADMITTED") {
+        const parts = p.verifiedDate.split(" ");
+        if (parts[0]) {
+          const dateParts = parts[0].split("-");
+          if (dateParts.length === 3) {
+            parsedDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+          }
+        }
+        if (parts[1]) {
+          let timePart = parts[1];
+          const ampmPart = parts[2];
+          if (ampmPart) {
+            let [hours, minutes] = timePart.split(":");
+            let h = parseInt(hours);
+            if (ampmPart === "PM" && h < 12) h += 12;
+            if (ampmPart === "AM" && h === 12) h = 0;
+            parsedTime = `${h.toString().padStart(2, "0")}:${minutes}`;
+          } else {
+            parsedTime = timePart;
+          }
+        }
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        patient_id: p.patient_id || "",
+        patient_name: p.name || "",
+        phone_number: p.contact || "",
+        uid_no: p.uhid || "",
+        admission_no: (p.admissionNo && p.admissionNo !== "PENDING") ? p.admissionNo : "",
+        admission_date: parsedDate,
+        admissiontime: parsedTime,
+        bed_category: p.roomType || "",
+        surgeonName: p.surgeonName || "",
+      }));
+    }
+  }, [location.state]);
+
+  useEffect(() => {
+    if (location.state && location.state.patient && surgeons.length > 0) {
+      const p = location.state.patient;
+      const sName = p.surgeonName || p.surgeon_name;
+      if (sName && sName !== "N/A") {
+        const matched = surgeons.find(
+          (s) =>
+            s.name &&
+            s.name.toString().toLowerCase().trim() === sName.toString().toLowerCase().trim()
+        );
+        if (matched) {
+          setFormData((prev) => ({
+            ...prev,
+            surgeonName: matched.doctor_id,
+          }));
+        }
+      }
+    }
+  }, [location.state, surgeons]);
+
+  useEffect(() => {
+    if (!currentLocation || !formData.patient_id) return;
+
+    const fetchEarliestConsultant = async () => {
+      try {
+        const datesRes = await fetch(
+          `${BASE_URL}/V1/doctor/list-diagnosis-dates/${formData.patient_id}?location=${currentLocation}`
+        );
+        if (datesRes.ok) {
+          const datesJson = await datesRes.json();
+          const dates = datesJson.data || [];
+          if (dates.length > 0) {
+            // The list of dates is sorted DESC, so the earliest is the last element
+            const earliest = dates[dates.length - 1];
+            const diagRes = await fetch(
+              `${BASE_URL}/V1/doctor/get-diagnosis/${formData.patient_id}?location=${currentLocation}&date=${earliest.date}`
+            );
+            if (diagRes.ok) {
+              const diagJson = await diagRes.json();
+              if (diagJson.data && diagJson.data.consultant_doctor) {
+                setFormData((prev) => ({
+                  ...prev,
+                  consultantName: diagJson.data.consultant_doctor,
+                }));
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch earliest consultant:", err);
+      }
+    };
+
+    fetchEarliestConsultant();
+  }, [currentLocation, formData.patient_id]);
 
   useEffect(() => {
     const fetchClinicLocations = async () => {
@@ -212,15 +316,49 @@ const AddIpdBill = () => {
   }, [formData.invoice_id, currentLocation]);
 
   useEffect(() => {
-    if (!isInterbranch || !formData.interbranchLocation || formData.interbranchLocation === "DP Road" || !formData.selectedClinicUid) {
-      setSelectedClinicPatient(null);
+    if (!currentLocation || !formData.admission_no || formData.admission_no === "PENDING") {
+      setAdmissionWarning("");
       return;
     }
+
+    const checkTimeout = setTimeout(async () => {
+      try {
+        const response = await fetch(
+          `${BASE_URL}/V1/invoice/checkAdmissionNo?admission_no=${encodeURIComponent(formData.admission_no)}&location=${currentLocation}`,
+        );
+        const result = await response.json();
+        if (result.data?.exists) {
+          setAdmissionWarning(
+            `Admission Number already exists at current location for patient: ${result.data.patient_name}`,
+          );
+          return;
+        }
+
+        setAdmissionWarning("");
+      } catch (err) {
+        console.error("Admission No check failed:", err);
+      }
+    }, 500);
+
+    return () => clearTimeout(checkTimeout);
+  }, [formData.admission_no, currentLocation]);
+
+  useEffect(() => {
+    if (!isInterbranch || !formData.interbranchLocation || formData.interbranchLocation === "DP Road" || !formData.selectedClinicUid) {
+      setSelectedClinicPatient(null);
+      setIsSearchingUid(false);
+      return;
+    }
+
+    setIsSearchingUid(true);
 
     const delayDebounceFn = setTimeout(async () => {
       try {
         const query = formData.selectedClinicUid.trim();
-        if (query.length === 0) return;
+        if (query.length === 0) {
+          setIsSearchingUid(false);
+          return;
+        }
 
         const response = await fetch(
           `${BASE_URL}/V1/patient/searchPatient?query=${query}&location=${formData.interbranchLocation}`
@@ -259,6 +397,8 @@ const AddIpdBill = () => {
           ...prev,
           selectedClinicUid: "Error searching patient at selected clinic location.",
         }));
+      } finally {
+        setIsSearchingUid(false);
       }
     }, 500);
 
@@ -321,7 +461,6 @@ const AddIpdBill = () => {
       "bed_category",
       "admission_date",
       "admissiontime",
-      "consultantName",
       "surgeonName",
       "madeby",
       "Sub_Total",
@@ -586,9 +725,9 @@ const AddIpdBill = () => {
     }
 
     return {
-      subTotal: subTotal.toFixed(2),
-      discount: discount.toFixed(2),
-      payableAmount: formData.payableAmount,
+      subTotal: Math.round(subTotal).toString(),
+      discount: Math.round(discount).toString(),
+      payableAmount: Math.round(parseFloat(formData.payableAmount || 0)).toString(),
     };
   };
 
@@ -608,6 +747,16 @@ const AddIpdBill = () => {
         icon: "error",
         title: "Duplicate Invoice ID",
         text: invoiceWarning,
+        confirmButtonColor: "#00acc1",
+      });
+      return;
+    }
+
+    if (admissionWarning) {
+      Swal.fire({
+        icon: "error",
+        title: "Duplicate Admission Number",
+        text: admissionWarning,
         confirmButtonColor: "#00acc1",
       });
       return;
@@ -666,8 +815,6 @@ const AddIpdBill = () => {
             status: status,
             admissiontime: convertTo12Hour(formData.admissiontime),
             dischargetime: convertTo12Hour(formData.dischargetime),
-            consultantName: null,
-            surgeonName: null,
             patient_location: "DP Road",
             interbranch_id: 0, // Store 0 to allow full print, edit, and collection permissions at origin clinic
             receivedamt: Math.round(parseFloat(formData.pdc || 0)),
@@ -748,11 +895,12 @@ const AddIpdBill = () => {
           admissiontime: convertTo12Hour(formData.admissiontime),
           dischargetime: convertTo12Hour(formData.dischargetime),
           invoice_id: null,
-          consultantName: null,
-          surgeonName: null,
           interbranch_id: formData.invoice_id,
           receivedamt: Math.round(parseFloat(formData.pdc || 0)),
           advance_amt: null,
+          consultantName: null,
+          surgeonName: null,
+          madeby: null,
         };
 
         try {
@@ -876,7 +1024,39 @@ const AddIpdBill = () => {
           setLoading(false);
         }
       }
+    } else {
+      const missingFields = [];
+      if (validationErrors.invoice_id) missingFields.push("Invoice Number");
+      if (validationErrors.admission_no) missingFields.push("Admission Number");
+      if (validationErrors.discharge_date) missingFields.push("Discharge Date");
+      if (validationErrors.dischargetime) missingFields.push("Discharge Time");
+      if (validationErrors.bed_category) missingFields.push("Bed Category");
+      if (validationErrors.admission_date) missingFields.push("Admission Date");
+      if (validationErrors.admissiontime) missingFields.push("Admission Time");
+      if (validationErrors.surgeonName) missingFields.push("Surgeon Name");
+      if (validationErrors.madeby) missingFields.push("Made By");
+      if (validationErrors.bill_Type) missingFields.push("Payment Category");
+      if (validationErrors.insurance) missingFields.push("Insurance Company");
+      if (validationErrors.bill_method) missingFields.push("Bill Method");
+      if (validationErrors.interbranchLocation) missingFields.push("Patient Origin Clinic");
+      if (validationErrors.selectedClinicUid) missingFields.push("Selected Clinic Patient UID");
+      if (validationErrors.dynamicRows) missingFields.push("Billing Particulars (Item Name & Amount)");
+
+      Swal.fire({
+        icon: "warning",
+        title: "Please Fill Required Fields",
+        text: missingFields.length > 0 ? `Missing: ${missingFields.join(", ")}` : "Please complete all required fields.",
+        confirmButtonColor: "#00acc1",
+      });
     }
+  };
+
+
+
+  const getDisplayConsultant = (doctorId) => {
+    if (!doctorId) return "";
+    const matched = consultants.find((c) => String(c.doctor_id) === String(doctorId));
+    return matched ? matched.name : "";
   };
 
   // --- STYLING UPDATES FOR MEDIUM-SMALL TEXT ---
@@ -913,8 +1093,8 @@ const AddIpdBill = () => {
     marginBottom: "10px",
     marginTop: "5px",
     backgroundColor: "#fff",
-    marginLeft: "22px",
-    marginRight: "22px",
+    marginLeft: "10px",
+    marginRight: "10px",
   };
 
   return (
@@ -927,9 +1107,17 @@ const AddIpdBill = () => {
         fontFamily: "'Poppins', Arial, sans-serif",
       }}
     >
+      <style>
+        {`
+          .aligned-billing-container .navbar-container {
+            margin-left: 10px !important;
+            margin-right: 10px !important;
+          }
+        `}
+      </style>
       <PageBreadcrumb pagename="Add IPD Bill" />
-      <IpdbillNavbar />
-      <Container fluid className="p-0" >
+      <Container fluid className="aligned-billing-container">
+        <IpdAdmissionNavbar />
         <Form onSubmit={handleSubmit}>
           <Card style={cardStyle}>
             <Card.Body className="p-4">
@@ -965,64 +1153,47 @@ const AddIpdBill = () => {
                   )}
                 </Col>
                 <Col md={2}>
-                  <Form.Label style={labelStyle}>Admission Number</Form.Label>
+                  <Form.Label style={labelStyle}>
+                    Admission Number <span className="text-danger">*</span>
+                  </Form.Label>
                   <Form.Control
+                    required
                     name="admission_no"
                     style={inputStyle}
                     value={formData.admission_no}
                     onChange={handleInputChange}
-                    isInvalid={errors.admission_no}
+                    isInvalid={errors.admission_no || !!admissionWarning}
                     placeholder="Enter Admission Number"
                   />
+                  {admissionWarning && (
+                    <div
+                      className="text-danger"
+                      style={{
+                        fontSize: "10px",
+                        marginTop: "4px",
+                        fontWeight: "600",
+                      }}
+                    >
+                      {admissionWarning}
+                    </div>
+                  )}
                 </Col>
-                <Col md={3} className="position-relative">
+                <Col md={3}>
                   <Form.Label style={labelStyle}>
                     Patient Name <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
+                    readOnly
                     required
                     name="patient_name"
-                    style={inputStyle}
+                    style={{
+                      ...inputStyle,
+                      backgroundColor: "#e7ebebff",
+                      cursor: "not-allowed",
+                    }}
                     value={formData.patient_name}
-                    onChange={(e) => handlePatientSearch(e.target.value)}
-                    onBlur={handlePatientBlur}
-                    isInvalid={errors.patient_id}
-                    placeholder="Search Patient Name"
-                    autoComplete="off"
+                    placeholder="Patient Name"
                   />
-                  {showPatientDropdown && patientResults.length > 0 && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: "100%",
-                        left: "15px",
-                        right: "15px",
-                        backgroundColor: "white",
-                        border: "1px solid #ddd",
-                        borderRadius: "8px",
-                        boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
-                        zIndex: 1000,
-                        maxHeight: "200px",
-                        overflowY: "auto",
-                      }}
-                    >
-                      {patientResults.map((patient) => (
-                        <div
-                          key={patient.patient_id}
-                          style={{
-                            padding: "8px 12px",
-                            cursor: "pointer",
-                            fontSize: "12px",
-                            borderBottom: "1px solid #eee",
-                          }}
-                          onMouseDown={() => selectPatient(patient)}
-                          className="patient-search-item"
-                        >
-                          <strong>{patient.name}</strong> - {patient.phone} - {patient.Uid_no && `${patient.Uid_no}`}
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </Col>
                 <Col md={2}>
                   <Form.Label style={labelStyle}>Contact Number</Form.Label>
@@ -1056,18 +1227,20 @@ const AddIpdBill = () => {
                     Admission Date <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
+                    readOnly
                     required
-                    type="date"
-                    style={inputStyle}
+                    type="text"
+                    style={{
+                      ...inputStyle,
+                      backgroundColor: "#e7ebebff",
+                      cursor: "not-allowed",
+                    }}
                     name="admission_date"
-                    min={minDate}
-                    max={maxDate}
-                    value={formData.admission_date}
-                    onChange={handleInputChange}
-                    isInvalid={errors.admission_date}
-                    onKeyDown={(e) => e.preventDefault()}
-                    onPaste={(e) => e.preventDefault()}
-                    onWheel={(e) => e.target.blur()}
+                    value={
+                      formData.admission_date
+                        ? formData.admission_date.split("-").reverse().join("-")
+                        : ""
+                    }
                   />
                 </Col>
 
@@ -1081,7 +1254,8 @@ const AddIpdBill = () => {
                     style={{
                       borderRadius: "10px",
                       fontSize: "12px",
-                      border: "1px solid #4dd0e1",
+                      border: "1px solid rgb(77, 208, 225)",
+                      padding: "6px 10px",
                     }}
                     value={formData.admissiontime}
                     name="admissiontime"
@@ -1157,39 +1331,48 @@ const AddIpdBill = () => {
                   <Form.Label style={labelStyle}>
                     Bed Category <span className="text-danger">*</span>
                   </Form.Label>
-                  <Form.Control
+                  <Form.Select
                     required
                     name="bed_category"
-                    style={inputStyle}
-                    placeholder="Enter Bed Category"
+                    style={{
+                      ...inputStyle,
+                      height: "35px",
+                    }}
                     value={formData.bed_category}
                     onChange={handleInputChange}
-                    isInvalid={errors.bed_category}
+                  >
+                    <option value="">Select Bed Category</option>
+                    <option value="General Ward">General Ward</option>
+                    <option value="Semi Private">Semi Private</option>
+                    <option value="Private">Private</option>
+                    <option value="Deluxe">Deluxe</option>
+                    <option value="Super Deluxe">Super Deluxe</option>
+                    <option value="Suite">Suite</option>
+                  </Form.Select>
+                </Col>
+                <Col md={3}>
+                  <Form.Label style={labelStyle}>
+                    Consultant Name
+                  </Form.Label>
+                  <Form.Control
+                    readOnly
+                    type="text"
+                    style={{
+                      ...inputStyle,
+                      backgroundColor: "#e7ebebff",
+                      cursor: "not-allowed",
+                    }}
+                    name="consultantName"
+                    value={getDisplayConsultant(formData.consultantName) || (formData.consultantName ? formData.consultantName : "")}
+                    placeholder={formData.patient_id ? "Fetched from diagnosis" : "N/A"}
                   />
                 </Col>
                 <Col md={3}>
                   <Form.Label style={labelStyle}>
-                    Consultant Name <span className="text-danger">*</span>
+                    Surgeon Name <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Select
                     required
-                    style={inputStyle}
-                    name="consultantName"
-                    value={formData.consultantName}
-                    onChange={handleInputChange}
-                    isInvalid={errors.consultantName}
-                  >
-                    <option value="">SELECT CONSULTANT</option>
-                    {consultants.map((c) => (
-                      <option key={c.doctor_id} value={c.doctor_id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Col>
-                <Col md={3}>
-                  <Form.Label style={labelStyle}>Surgeon Name</Form.Label>
-                  <Form.Select
                     style={inputStyle}
                     name="surgeonName"
                     value={formData.surgeonName}
@@ -1197,9 +1380,9 @@ const AddIpdBill = () => {
                     isInvalid={errors.surgeonName}
                   >
                     <option value="">SELECT SURGEON</option>
-                    {surgeons.map((surgeon) => (
-                      <option key={surgeon.doctor_id} value={surgeon.doctor_id}>
-                        {surgeon.name}
+                    {surgeons.map((s) => (
+                      <option key={s.doctor_id} value={s.doctor_id}>
+                        {s.name}
                       </option>
                     ))}
                   </Form.Select>
@@ -1284,11 +1467,15 @@ const AddIpdBill = () => {
                           borderBottomLeftRadius: 0,
                           paddingLeft: "5px",
                         }}
-                        type="number"
+                        type="text"
                         placeholder="e.g. 500"
-                        value={row.value}
+                        value={
+                          row.value !== "" && row.value !== null && row.value !== undefined
+                            ? Number(String(row.value).replace(/,/g, "")).toLocaleString("en-IN")
+                            : ""
+                        }
                         onChange={(e) =>
-                          handleDynamicRowChange(index, "value", e.target.value)
+                          handleDynamicRowChange(index, "value", e.target.value.replace(/[^0-9]/g, ""))
                         }
                         onWheel={(e) => e.target.blur()}
                         onKeyDown={(e) =>
@@ -1354,6 +1541,8 @@ const AddIpdBill = () => {
                         #interbranch-checkbox {
                           border: 1.5px solid #000000 !important;
                           cursor: pointer;
+                          transform: scale(1.30);
+                          margin-right: 8px;
                         }
                         #interbranch-checkbox:checked {
                           background-color: #00bcd4 !important;
@@ -1546,10 +1735,17 @@ const AddIpdBill = () => {
                             e.preventDefault()
                           }
                           placeholder="Enter PDC Amount"
-                          type="number"
+                          type="text"
                           name="pdc"
-                          value={formData.pdc}
-                          onChange={handleInputChange}
+                          value={
+                            formData.pdc !== "" && formData.pdc !== null && formData.pdc !== undefined
+                              ? Number(String(formData.pdc).replace(/,/g, "")).toLocaleString("en-IN")
+                              : ""
+                          }
+                          onChange={(e) => {
+                            const raw = e.target.value.replace(/[^0-9]/g, "");
+                            handleInputChange({ target: { name: "pdc", value: raw } });
+                          }}
                         />
                       </InputGroup>
                     </Col>
@@ -1594,10 +1790,17 @@ const AddIpdBill = () => {
                           e.preventDefault()
                         }
                         placeholder="e.g. 1000"
-                        type="number"
+                        type="text"
                         name="discount"
-                        value={formData.discount}
-                        onChange={handleInputChange}
+                        value={
+                          formData.discount !== "" && formData.discount !== null && formData.discount !== undefined
+                            ? Number(String(formData.discount).replace(/,/g, "")).toLocaleString("en-IN")
+                            : ""
+                        }
+                        onChange={(e) => {
+                          const raw = e.target.value.replace(/[^0-9]/g, "");
+                          handleInputChange({ target: { name: "discount", value: raw } });
+                        }}
                       />
                     </InputGroup>
                   </Col>
@@ -1641,10 +1844,17 @@ const AddIpdBill = () => {
                           e.preventDefault()
                         }
                         placeholder="e.g. 100"
-                        type="number"
+                        type="text"
                         name="discountAmount"
-                        value={formData.discountAmount}
-                        onChange={handleInputChange}
+                        value={
+                          formData.discountAmount !== "" && formData.discountAmount !== null && formData.discountAmount !== undefined
+                            ? Number(String(formData.discountAmount).replace(/,/g, "")).toLocaleString("en-IN")
+                            : ""
+                        }
+                        onChange={(e) => {
+                          const raw = e.target.value.replace(/[^0-9]/g, "");
+                          handleInputChange({ target: { name: "discountAmount", value: raw } });
+                        }}
                       />
                     </InputGroup>
                   </Col>
@@ -1694,19 +1904,42 @@ const AddIpdBill = () => {
                             <span className="text-danger">*</span>
                           )}
                         </Form.Label>
-                        <Form.Control
-                          required={formData.interbranchLocation !== "DP Road"}
-                          disabled={formData.interbranchLocation === "DP Road"}
-                          name="selectedClinicUid"
-                          style={inputStyle}
-                          value={formData.selectedClinicUid || ""}
-                          onChange={handleInputChange}
-                          isInvalid={
-                            formData.interbranchLocation !== "DP Road" &&
-                            !!errors.selectedClinicUid
-                          }
-                          placeholder="Enter Patient UID No"
-                        />
+                        <div style={{ position: "relative" }}>
+                          <Form.Control
+                            required={formData.interbranchLocation !== "DP Road"}
+                            disabled={formData.interbranchLocation === "DP Road"}
+                            name="selectedClinicUid"
+                            style={{ ...inputStyle, paddingRight: isSearchingUid ? "30px" : "12px" }}
+                            value={formData.selectedClinicUid || ""}
+                            onChange={handleInputChange}
+                            isInvalid={
+                              formData.interbranchLocation !== "DP Road" &&
+                              !!errors.selectedClinicUid
+                            }
+                            placeholder="Enter Patient UID No"
+                          />
+                          {isSearchingUid && (
+                            <div
+                              style={{
+                                position: "absolute",
+                                right: "10px",
+                                top: "50%",
+                                transform: "translateY(-50%)",
+                                zIndex: 10,
+                                display: "flex",
+                                alignItems: "center"
+                              }}
+                            >
+                              <div
+                                className="spinner-border spinner-border-sm text-info"
+                                role="status"
+                                style={{ width: "1rem", height: "1rem" }}
+                              >
+                                <span className="visually-hidden">Loading...</span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                         {errors.selectedClinicUid && (
                           <div
                             className="text-danger"
@@ -1798,7 +2031,7 @@ const AddIpdBill = () => {
                         >
                           <span>{item.label || `Item ${idx + 1}`} :</span>
                           <span>
-                            ₹ {parseFloat(item.value || 0).toFixed(0)}
+                            ₹ {Math.round(parseFloat(item.value || 0)).toLocaleString("en-IN")}
                           </span>
                         </div>
                       ))}
@@ -1813,7 +2046,7 @@ const AddIpdBill = () => {
                     >
                       <div>
                         Total Amount:{" "}
-                        <strong>₹ {getChargeBreakdown().subTotal}</strong>
+                        <strong>₹ {Math.round(parseFloat(getChargeBreakdown().subTotal || 0)).toLocaleString("en-IN")}</strong>
                       </div>
                       <div style={{ color: "#d32f2f" }}>
                         {formData.bill_method === "PDC"
@@ -1822,7 +2055,7 @@ const AddIpdBill = () => {
                             ? "Charity Discount"
                             : "Discount"}{" "}
                         (₹):{" "}
-                        <strong>- ₹ {getChargeBreakdown().discount}</strong>
+                        <strong>- ₹ {Math.round(parseFloat(getChargeBreakdown().discount || 0)).toLocaleString("en-IN")}</strong>
                       </div>
                       {isInterbranch && (
                         <div style={{ color: "#00a619ff", fontStyle: "italic", fontSize: "13px", marginTop: "3px", textAlign: "right", fontWeight: "600" }}>
@@ -1839,7 +2072,7 @@ const AddIpdBill = () => {
                           paddingTop: "5px",
                         }}
                       >
-                        Total Payable: ₹ {getChargeBreakdown().payableAmount}
+                        Total Payable: ₹ {Math.round(parseFloat(getChargeBreakdown().payableAmount || 0)).toLocaleString("en-IN")}
                       </div>
                     </div>
                   </Col>

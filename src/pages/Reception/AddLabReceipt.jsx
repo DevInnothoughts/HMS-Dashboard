@@ -152,7 +152,7 @@ export default function AddLabReceipt() {
 
   const calculateTotals = () => {
     const subtotal = billingItems.reduce(
-      (acc, curr) => acc + (parseFloat(curr.amount) || 0),
+      (acc, curr) => acc + (parseFloat(String(curr.amount || "").replace(/,/g, "")) || 0),
       0
     );
     return { subtotal, payable: subtotal };
@@ -389,7 +389,7 @@ export default function AddLabReceipt() {
       const { payable } = calculateTotals();
       const consultationData = billingItems
         .filter((item) => item.label)
-        .map((item) => [item.label, parseFloat(item.amount) || 0]);
+        .map((item) => [item.label, parseFloat(String(item.amount || "").replace(/,/g, "")) || 0]);
 
       const receiptPayload = {
         appointment_id: null, // Manual receipt has no appointment
@@ -743,7 +743,7 @@ export default function AddLabReceipt() {
                             ₹
                           </InputGroup.Text>
                           <Form.Control
-                            type="number"
+                            type="text"
                             placeholder="E.g. 500"
                             style={{
                               fontSize: "11px",
@@ -752,15 +752,11 @@ export default function AddLabReceipt() {
                               borderRadius: "0 10px 10px 0",
                             }}
                             value={item.amount}
-                            onWheel={(e) => e.target.blur()}
-                            onKeyDown={(e) => {
-                              if (["e", "E", "+", "-", "."].includes(e.key)) {
-                                e.preventDefault();
-                              }
-                            }}
                             onChange={(e) => {
+                              const cleanValue = e.target.value.replace(/[^0-9]/g, "");
+                              const formattedValue = cleanValue ? Number(cleanValue).toLocaleString("en-IN") : "";
                               const newItems = [...billingItems];
-                              newItems[index].amount = e.target.value;
+                              newItems[index].amount = formattedValue;
                               setBillingItems(newItems);
                             }}
                           />
@@ -833,7 +829,7 @@ export default function AddLabReceipt() {
                     </Col>
 
                     {/* POS Terminal radio box */}
-                    <Col md={3}>
+                    <Col md={4}>
                       <Form.Label style={labelStyle}>
                         POS Terminal <span className="text-danger">*</span>
                       </Form.Label>
@@ -880,7 +876,7 @@ export default function AddLabReceipt() {
                     <Row className="text-end font-weight-bold">
                       <Col>
                         <h5 className="m-0" style={{ color: "#00838f", fontWeight: "700" }}>
-                          Total Amount: ₹ {payable.toFixed(2)}
+                          Total Amount: ₹ {Math.round(payable).toLocaleString("en-IN")}
                         </h5>
                       </Col>
                     </Row>

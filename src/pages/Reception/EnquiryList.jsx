@@ -23,6 +23,8 @@ import "../../styles/styles.css";
 import { FilterMatchMode } from "primereact/api";
 import moment from "moment";
 import Swal from "sweetalert2";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
 
@@ -230,8 +232,8 @@ export default function EnquiryList({ isTab = false }) {
         // Patient doesn't exist
         setAppointmentFormData((prev) => ({
           ...prev,
-          patient_id: data.patient_id,
-          patient_type: "Followup",
+          patient_id: "",
+          patient_type: "New",
           treatment: "",
         }));
       }
@@ -489,7 +491,7 @@ export default function EnquiryList({ isTab = false }) {
       return (
         (e.patient_name &&
           e.patient_name.toLowerCase().includes(lowerSearch)) ||
-        (e.patient_phone && e.patient_phone.includes(searchValue))
+        (e.patient_phone && String(e.patient_phone).includes(searchValue))
       );
     });
 
@@ -561,6 +563,64 @@ export default function EnquiryList({ isTab = false }) {
         matchMode: FilterMatchMode.CONTAINS,
       },
     });
+  };
+
+  const exportToExcel = () => {
+    let dataToExport = filteredEnquiries;
+
+    if (statusFilter) {
+      dataToExport = dataToExport.filter((item) => {
+        const status = item.dynamic_status || item.enquiry_status;
+        return status === statusFilter;
+      });
+    }
+
+    const globalSearch = filters1?.global?.value;
+    if (globalSearch && globalSearch.trim() !== "") {
+      const searchLower = globalSearch.toLowerCase().trim();
+      dataToExport = dataToExport.filter((item) => {
+        const dateStr = item.date ? moment(item.date).format("DD-MM-YYYY") : "";
+        const name = (item.patient_name || "").toLowerCase();
+        const phone = String(item.patient_phone || "").toLowerCase();
+        const docName = (item.doctorName || "").toLowerCase();
+        const note = (item.note || "").toLowerCase();
+        return (
+          dateStr.includes(searchLower) ||
+          name.includes(searchLower) ||
+          phone.includes(searchLower) ||
+          docName.includes(searchLower) ||
+          note.includes(searchLower)
+        );
+      });
+    }
+
+    const excelData = dataToExport.map((item, index) => ({
+      "Sr No": index + 1,
+      Date: item.date ? moment(item.date).format("DD-MM-YYYY") : "",
+      "Contact No": item.patient_phone || "",
+      "Patient Name": item.patient_name || "",
+      Address: item.patient_location || "",
+      "Enquiry Type": item.enquirytype || "",
+      "Doctor Name": item.doctorName || "",
+      "FDE Name": item.FDE_Name || "",
+      Note: item.note || "",
+      "Enquiry Status": item.dynamic_status || item.enquiry_status || "",
+    }));
+
+    const fileType =
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
+    const fileExtension = ".xlsx";
+
+    const ws = XLSX.utils.json_to_sheet(excelData);
+    const wb = { Sheets: { data: ws }, SheetNames: ["data"] };
+    const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const data = new Blob([excelBuffer], { type: fileType });
+
+    const formattedFromDate = fromDate ? moment(fromDate).format("DD-MM-YYYY") : "";
+    const formattedToDate = toDate ? moment(toDate).format("DD-MM-YYYY") : "";
+    const fileName = `Enquiry_List_${formattedFromDate}_to_${formattedToDate}${fileExtension}`;
+
+    saveAs(data, fileName);
   };
 
   const renderHeader = () => (
@@ -666,6 +726,29 @@ export default function EnquiryList({ isTab = false }) {
               )}
             </InputGroup>
           </Form.Group>
+          <Button
+            variant="outline-success"
+            onClick={exportToExcel}
+            style={{
+              backgroundColor: "#28a745",
+              border: "none",
+              borderRadius: "6px",
+              padding: "5px 10px",
+              fontSize: "12px",
+              fontWeight: "500",
+              color: "white",
+              cursor: "pointer",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              height: "26px",
+              display: "flex",
+              alignItems: "center",
+              gap: "5px",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <FeatherIcon icon="download" size={13} />
+            Download Excel
+          </Button>
         </div>
 
         <div
@@ -727,26 +810,6 @@ export default function EnquiryList({ isTab = false }) {
             />
           </div>
 
-          <Button
-            variant="primary"
-            onClick={fetchEnquiriesData}
-            style={{
-              backgroundColor: "#00bcd4",
-              border: "none",
-              borderRadius: "6px",
-              padding: "6px 7px",
-              fontSize: "12px",
-              fontWeight: "500",
-              color: "white",
-              cursor: "pointer",
-              transition: "all 0.3s ease",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              marginTop: "15px",
-            }}
-          >
-            <FeatherIcon icon="refresh-ccw" size={13} className="me-2" />
-            Refresh
-          </Button>
           <Button
             variant="secondary"
             onClick={() => {
@@ -1132,7 +1195,7 @@ export default function EnquiryList({ isTab = false }) {
             </Row>
 
             <Row>
-              <Col md={6}>
+              <Col md={6} className="mb-15">
                 <Form.Group>
                   <Form.Label
                     style={{
