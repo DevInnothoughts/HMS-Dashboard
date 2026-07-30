@@ -115,7 +115,7 @@ const OpdPatientMedicalRecords = () => {
   const [showFollowUpPrintModal, setShowFollowUpPrintModal] = useState(false);
   const [showOpdPrintModal, setShowOpdPrintModal] = useState(false);
 
-  const [historyData, setHistoryData] = useState({
+  const initialHistoryState = {
     patient_date: new Date().toISOString().split("T")[0],
     height_feet: "",
     weight_kg: "",
@@ -134,6 +134,7 @@ const OpdPatientMedicalRecords = () => {
     weightloss_comment: "",
     past_medical_history: [],
     past_medical_history_other: "",
+    pastmedicalduration: {},
     habits: [],
     drug_allergy: "",
     medication_history: [
@@ -175,7 +176,9 @@ const OpdPatientMedicalRecords = () => {
     investigation: "",
     upload_investigation: null,
     upload_investigation_existing: "",
-  });
+  };
+
+  const [historyData, setHistoryData] = useState(initialHistoryState);
 
   const [previousHistoryList, setPreviousHistoryList] = useState([]);
   const [selectedHistoryId, setSelectedHistoryId] = useState(null);
@@ -420,69 +423,6 @@ const OpdPatientMedicalRecords = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const initialHistoryState = {
-    patient_date: new Date().toISOString().split("T")[0],
-    height_feet: "",
-    weight_kg: "",
-    painscale: "1",
-    vital_bp: "",
-    vital_pulse: "",
-    vital_rr: "",
-    rs: "",
-    cvs: "",
-    cns: "",
-    pa: "",
-    "p/a": "",
-    family_history: [],
-    family_history_other: "",
-    general_history: [],
-    weightloss_comment: "",
-    past_medical_history: [],
-    past_medical_history_other: "",
-    pastmedicalduration: {},
-    habits: [],
-    drug_allergy: "",
-    medication_history: [
-      { medicine: "", indication: "", since: "" },
-      { medicine: "", indication: "", since: "" },
-      { medicine: "", indication: "", since: "" },
-    ],
-    past_surgical_history: "",
-    any_other_complaints: "",
-    present_complaints: "",
-    ongoing_medicines: [],
-    ongoing_medicines_other: "",
-    previous_investigation: [],
-    investigation_comments: {},
-    known_case_of: "",
-    assistance_doctor: "",
-    piles_data: [],
-    piles_duration: "",
-    fistula_data: [],
-    fistula_duration: "",
-    hernia_data: [],
-    hernia_duration: "",
-    varicose_data: [],
-    varicose_duration: "",
-    urinary_incontinence: false,
-    urinary_duration: "",
-    fecal_incontinence: false,
-    fecal_duration: "",
-    urology_data: [],
-    urology_duration: "",
-    ods_data: [],
-    ods_bowel_habits: "",
-    ods_duration: "",
-    pilonidal_data: [],
-    pilonidal_comment: "",
-    circumcision_comment: "",
-    investigations: [],
-    investigation_notes: {},
-    investigation: "",
-    upload_investigation: null,
-    upload_investigation_existing: "",
   };
 
   const handleSelectHistory = async (id) => {
@@ -2367,6 +2307,7 @@ const OpdPatientMedicalRecords = () => {
     }
     setShowDischargePrintModal(true);
   };
+
 
   const fetchPrescriptionDates = async () => {
     const patientId = formData.patient_id || patient?.patient_id;

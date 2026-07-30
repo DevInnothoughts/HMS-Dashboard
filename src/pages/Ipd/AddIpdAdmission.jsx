@@ -107,27 +107,41 @@ export default function AddIpdAdmission() {
     }
   };
 
+  const abortControllerRef = React.useRef(null);
+  const isPatientSelectedRef = React.useRef(false);
+
   const handleSearchChange = async (val) => {
+    isPatientSelectedRef.current = false;
     setUhid(val);
+    setPatientData(null);
+    setIsPendingAdmission(false);
+
     if (!val.trim()) {
+      if (abortControllerRef.current) abortControllerRef.current.abort();
       setSearchResults([]);
       setShowSearchDropdown(false);
-      setPatientData(null);
-      setIsPendingAdmission(false);
       return;
     }
 
     if (currentLocation === "default") return;
 
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+
     try {
       const response = await fetch(
         `${BASE_URL}/V1/ipd/admin/checkPatientOPD?location=${currentLocation}&uidNo=${encodeURIComponent(val.trim())}`,
+        { signal: abortControllerRef.current.signal },
       );
       if (response.ok) {
         const data = await response.json();
         if (Array.isArray(data)) {
           setSearchResults(data);
-          setShowSearchDropdown(data.length > 0);
+          if (!isPatientSelectedRef.current) {
+            setShowSearchDropdown(data.length > 0);
+          }
         } else {
           setSearchResults([]);
           setShowSearchDropdown(false);
@@ -137,9 +151,11 @@ export default function AddIpdAdmission() {
         setShowSearchDropdown(false);
       }
     } catch (error) {
-      console.error("Realtime search error:", error);
-      setSearchResults([]);
-      setShowSearchDropdown(false);
+      if (error.name !== "AbortError") {
+        console.error("Realtime search error:", error);
+        setSearchResults([]);
+        setShowSearchDropdown(false);
+      }
     }
   };
 
@@ -151,7 +167,12 @@ export default function AddIpdAdmission() {
 
   const handleSearchSubmit = async (e) => {
     if (e) e.preventDefault();
-    if (!uhid.trim()) return;
+    const queryStr = uhid.trim();
+    if (!queryStr) return;
+
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
 
     if (currentLocation === "default") {
       Swal.fire(
@@ -164,17 +185,27 @@ export default function AddIpdAdmission() {
 
     try {
       const response = await fetch(
-        `${BASE_URL}/V1/ipd/admin/checkPatientOPD?location=${currentLocation}&uidNo=${encodeURIComponent(uhid.trim())}`,
+        `${BASE_URL}/V1/ipd/admin/checkPatientOPD?location=${currentLocation}&uidNo=${encodeURIComponent(queryStr)}`,
       );
       if (response.ok) {
         const data = await response.json();
         if (data && data.length > 0) {
           setSearchResults(data);
-          if (data.length === 1) {
+          const exactMatch = data.find(
+            (p) =>
+              p.Uid_no &&
+              p.Uid_no.trim().toLowerCase() === queryStr.toLowerCase(),
+          );
+          if (exactMatch) {
+            selectPatient(exactMatch);
+            Toast.fire({ icon: "success", title: "Patient Found" });
+          } else if (data.length === 1) {
             selectPatient(data[0]);
             Toast.fire({ icon: "success", title: "Patient Found" });
           } else {
-            setShowSearchDropdown(true);
+            if (!isPatientSelectedRef.current) {
+              setShowSearchDropdown(true);
+            }
           }
         } else {
           setPatientData(null);
@@ -196,6 +227,9 @@ export default function AddIpdAdmission() {
   };
 
   const selectPatient = (patient) => {
+    isPatientSelectedRef.current = true;
+    setShowSearchDropdown(false);
+
     const isPending =
       patient.has_pending_admission === 1 ||
       patient.has_pending_admission === "1" ||
@@ -382,20 +416,17 @@ export default function AddIpdAdmission() {
     }
   };
 
-  const handleResetForm = () => {
-    setUhid("");
-    setPatientData(null);
-    setSearchResults([]);
+  const handleResetForm = (e) => {
+    if (e) e.preventDefault();
     setAdmissionDate("");
     setAdmissionTime("");
     setSurgeryDate("");
     setSurgeryTime("");
     setRoomNumber("");
     setRoomType("");
-    setSxPlan("");
+    setSxPlan(patientData?.surgical_advice || "");
     setNmbTime(null);
     setMainDoctorId("");
-    setIsPendingAdmission(false);
   };
 
   const labelStyle = "fw-bold uppercase mb-2";
@@ -460,16 +491,16 @@ export default function AddIpdAdmission() {
                         className="fw-bold uppercase mb-1"
                         style={{ fontSize: "0.8rem", color: "#1a5b61ff" }}
                       >
-                        Search by Patient Name / UID Number / Contact Number
+                        Search by Patient Name / UID Number
                       </Form.Label>
                       <InputGroup size="sm">
                         <Form.Control
                           type="text"
-                          placeholder="Enter Patient Details"
+                          placeholder="Enter Patient Name or UID Number"
                           value={uhid}
                           onChange={(e) => handleSearchChange(e.target.value)}
                           onBlur={handleSearchBlur}
-                          onFocus={() => {
+                          onClick={() => {
                             if (searchResults.length > 0) {
                               setShowSearchDropdown(true);
                             }
@@ -515,7 +546,10 @@ export default function AddIpdAdmission() {
                           {searchResults.map((patient, index) => (
                             <div
                               key={index}
-                              onClick={() => selectPatient(patient)}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                selectPatient(patient);
+                              }}
                               style={{
                                 padding: "10px 15px",
                                 cursor: "pointer",
@@ -533,7 +567,7 @@ export default function AddIpdAdmission() {
                               <div>
                                 <strong>{patient.name}</strong> ({patient.sex}, {patient.age} yrs)
                                 <div style={{ fontSize: "0.75rem" }}>
-                                  <strong>UID:</strong> {patient.Uid_no} | <strong>Contact:</strong> {patient.phone}
+                                  <strong>UID No:</strong> {patient.Uid_no} | <strong>Contact No:</strong> {patient.phone}
                                 </div>
                               </div>
                               <Button
@@ -563,7 +597,7 @@ export default function AddIpdAdmission() {
           </Row>
 
           {patientData && (
-            <Row className="mt-4">
+            <Row >
               <Col md={12}>
                 <Card
                   style={{
@@ -960,9 +994,10 @@ export default function AddIpdAdmission() {
 
                     <div className="d-flex justify-content-center gap-2 mt-3 mb-10">
                       <Button
+                        type="button"
                         onClick={handleResetForm}
                         variant="secondary"
-                        className="px-4 py-7"
+                        className="px-4 py-8"
                         style={{
                           borderRadius: "8px",
                           fontWeight: "600",

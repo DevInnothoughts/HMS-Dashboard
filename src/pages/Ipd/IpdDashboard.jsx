@@ -117,7 +117,8 @@ export default function IpdDashboard() {
           p.admission_no !== 0 &&
           p.admission_no !== "0" &&
           p.admission_no !== null &&
-          p.admission_no !== "PENDING",
+          p.admission_no !== undefined &&
+          p.admission_no !== "",
         admissionNo: p.admission_no,
         doctorName: p.doctor_name || p.surgeon_name || "N/A",
         doctorId: p.doctor_id,

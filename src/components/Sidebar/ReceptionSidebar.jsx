@@ -141,7 +141,7 @@ const ReceptionSidebar = ({
                     <li><Link to="/appointment-conversion" className={location.pathname === "/appointment-conversion" ? "active" : ""}>Appointment Conversion</Link></li>
                     <li><Link to="/billing-reports" className={location.pathname === "/billing-reports" ? "active" : ""}>Billing Report</Link></li>
                     <li><Link to="/birthday-alert" className={location.pathname === "/birthday-alert" ? "active" : ""}>Birthday Alert</Link></li>
-                    <li><Link to="/cash-deposit-report" className={location.pathname === "/cash-deposit-report" ? "active" : ""}>Cash Deposit Report</Link></li>
+                    {/* <li><Link to="/cash-deposit-report" className={location.pathname === "/cash-deposit-report" ? "active" : ""}>Cash Deposit Report</Link></li> */}
                     <li><Link to="/condition-wise-report" className={location.pathname === "/condition-wise-report" ? "active" : ""}>Condition Wise Report</Link></li>
                     <li><Link to="/daily-expense-report" className={location.pathname === "/daily-expense-report" ? "active" : ""}>Daily Expense Report</Link></li>
                     <li><Link to="/daily-opd-report" className={location.pathname === "/daily-opd-report" ? "active" : ""}>Daily OPD Report</Link></li>

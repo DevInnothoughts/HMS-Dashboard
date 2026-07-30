@@ -397,17 +397,16 @@ export default function DoctorDashboard() {
         doctorName: ipd.surgeon_name || "N/A",
         patientType: "IPD",
         status:
-          ipd.admission_no && ipd.admission_no !== "0" && ipd.admission_no !== "PENDING" ? "Admitted" : "Pending",
+          ipd.admission_no && ipd.admission_no !== "0" && ipd.admission_no !== 0 ? "Admitted" : "Pending",
         note: `Room Details: Room ${ipd.room_no || "N/A"} (${ipd.room_type || "N/A"})`,
         confirmTime:
-          ipd.admission_no && ipd.admission_no !== "0" && ipd.admission_no !== "PENDING" ? ipd.created_at : "0",
+          ipd.admission_no && ipd.admission_no !== "0" && ipd.admission_no !== 0 ? ipd.created_at : "0",
         patientid: ipd.patient_id,
         appointmentid: `ipd-${ipd.id}`,
         isConfirmed:
           ipd.admission_no &&
           ipd.admission_no !== "0" &&
-          ipd.admission_no !== 0 &&
-          ipd.admission_no !== "PENDING",
+          ipd.admission_no !== 0,
         isIpd: true,
         uid: ipd.uid,
         uhid: ipd.uid,

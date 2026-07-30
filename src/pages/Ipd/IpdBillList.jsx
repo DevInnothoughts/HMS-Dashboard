@@ -58,51 +58,9 @@ const Toast = Swal.mixin({
   },
 });
 
-const FALLBACK_LOCATIONS = [
-  "Ahmedabad",
-  "Andheri",
-  "Aurangabad",
-  "Baner",
-  "Belagavi",
-  "Bopal",
-  "Chakan",
-  "Dighi",
-  "DP Road",
-  "Electronic City",
-  "Gurgaon-14",
-  "Gurgaon-49",
-  "Hadapsar",
-  "Hinjewadi",
-  "HSR",
-  "Hyderabad",
-  "Indiranagar",
-  "Indore",
-  "JP Nagar",
-  "Kalaburagi",
-  "Kalyan",
-  "Katraj",
-  "Kemps-Corner",
-  "Kolhapur",
-  "Latur",
-  "Lucknow",
-  "Ludhiana",
-  "Mohali",
-  "Mysore",
-  "Nashik",
-  "Navi-Mumbai",
-  "Pimpri-Chinchwad",
-  "Rajajinagar",
-  "Sahakarnagar",
-  "Salunkhe-Vihar",
-  "Sarjapura",
-  "Secunderabad",
-  "Surat",
-  "Thane",
-  "Undri",
-  "Vashi",
-  "Whitefield",
-  "demo",
-];
+import { LOCATIONS_LIST } from "../Auth/Login";
+
+const FALLBACK_LOCATIONS = LOCATIONS_LIST;
 
 const getDynamicRowsFromInvoice = (invoice) => {
   const dynamicRows = [];
@@ -444,22 +402,36 @@ const IpdBillList = () => {
     }
   }, []);
 
+  const mergeLocations = (apiData, fallbackList) => {
+    const map = new Map();
+    const add = (item) => {
+      if (!item) return;
+      const value = typeof item === "object" ? (item.value || item.location || item.location_name || item.name || item.label) : item;
+      if (!value) return;
+      const key = value.toString().toLowerCase().trim();
+      if (!map.has(key)) {
+        map.set(key, item);
+      }
+    };
+    if (Array.isArray(fallbackList)) fallbackList.forEach(add);
+    if (Array.isArray(apiData)) apiData.forEach(add);
+    return Array.from(map.values());
+  };
+
   useEffect(() => {
     const fetchClinicLocations = async () => {
+      let apiData = [];
       try {
         const res = await fetch(`${BASE_URL}/V1/auth/locationDropdown`);
         if (res.ok) {
           const json = await res.json();
-          const data = json.data ?? [];
-          if (Array.isArray(data) && data.length > 0) {
-            setClinicLocations(data);
-            return;
-          }
+          apiData = json.data ?? [];
         }
       } catch (err) {
         console.error("Failed to fetch clinic locations from API, using fallback list:", err);
       }
-      setClinicLocations(FALLBACK_LOCATIONS);
+      const combined = mergeLocations(apiData, FALLBACK_LOCATIONS);
+      setClinicLocations(combined);
     };
 
     fetchClinicLocations();
@@ -3319,10 +3291,10 @@ const IpdBillList = () => {
                             >
                               <option value="">SELECT LOCATION</option>
                               {clinicLocations
-                                .filter((loc) => loc !== currentLocation)
+                                .filter((loc) => (typeof loc === "object" ? loc.value : loc) !== currentLocation)
                                 .map((loc, idx) => (
-                                  <option key={idx} value={loc}>
-                                    {loc}
+                                  <option key={idx} value={typeof loc === "object" ? loc.value : loc}>
+                                    {typeof loc === "object" ? loc.label : loc}
                                   </option>
                                 ))}
                             </Form.Select>
