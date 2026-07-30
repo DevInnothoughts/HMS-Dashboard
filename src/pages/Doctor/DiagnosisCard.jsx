@@ -71,7 +71,7 @@ const DiagnosisCard = ({
   React.useEffect(() => {
     const fetchInsuranceCompanies = async () => {
       try {
-        const BASE_URL = "http://194.195.117.79:5100/api";
+        const BASE_URL = "http://localhost:5100/api";
         const loc = localStorage.getItem("location") || "Kolhapur";
         const res = await fetch(
           `${BASE_URL}/V1/invoice/insurance_co_dropdown?location=${loc}`,

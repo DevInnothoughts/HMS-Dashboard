@@ -27,7 +27,7 @@ const Toast = Swal.mixin({
   timerProgressBar: true,
 });
 
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 const DailyClosing = () => {
   const formatToIndianCommas = (val) => {
@@ -63,6 +63,9 @@ const DailyClosing = () => {
   // Local file previews
   const [cashDepositPreviewUrl, setCashDepositPreviewUrl] = useState(null);
   const [cardSettlementPreviewUrl, setCardSettlementPreviewUrl] = useState(null);
+
+  // Active focus tracking for row container highlight
+  const [focusedField, setFocusedField] = useState(null);
 
   useEffect(() => {
     if (!cashDepositFile) {
@@ -647,92 +650,122 @@ const DailyClosing = () => {
                         showWarning: false,
                         required: true,
                       },
-                    ].map((field) => (
-                      <div
-                        key={field.name}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "space-between",
-                          padding: "6px 15px",
-                          borderRadius: "8px",
-                          border: "1px solid #d7d5d5ff",
-                          backgroundColor: "#f9fdfd",
-                          transition: "all 0.2s ease",
-                          boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
-                          flexWrap: "wrap",
-                          gap: "10px",
-                        }}
-                      >
-                        <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: "200px" }}>
-                          <div
-                            style={{
-                              width: "28px",
-                              height: "28px",
-                              borderRadius: "50%",
-                              backgroundColor: `${field.iconColor}12`,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              color: field.iconColor,
-                            }}
-                          >
-                            <i className={field.icon} style={{ fontSize: "13px" }}></i>
-                          </div>
-                          <span style={{ fontWeight: "700", color: "#37474f", fontSize: "12.5px" }}>
-                            {field.label}
-                          </span>
-                        </div>
-                        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
-                          <InputGroup style={{ width: "240px" }}>
-                            <InputGroup.Text
+                    ].map((field) => {
+                      const isFocused = focusedField === field.name;
+                      const hasValue =
+                        field.value !== "" &&
+                        field.value !== null &&
+                        field.value !== undefined;
+
+                      const rowBgColor = isFocused
+                        ? `${field.iconColor}18`
+                        : hasValue
+                        ? `${field.iconColor}0a`
+                        : "#f9fdfd";
+
+                      const rowBorderColor = isFocused
+                        ? field.iconColor
+                        : hasValue
+                        ? `${field.iconColor}80`
+                        : "#d7d5d5ff";
+
+                      const rowBoxShadow = isFocused
+                        ? `0 4px 12px ${field.iconColor}33`
+                        : "0 1px 3px rgba(0,0,0,0.02)";
+
+                      return (
+                        <div
+                          key={field.name}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            padding: "6px 15px",
+                            borderRadius: "8px",
+                            border: `1px solid ${rowBorderColor}`,
+                            backgroundColor: rowBgColor,
+                            transition: "all 0.25s ease",
+                            boxShadow: rowBoxShadow,
+                            flexWrap: "wrap",
+                            gap: "10px",
+                            transform: isFocused ? "translateY(-1px)" : "none",
+                          }}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: "200px" }}>
+                            <div
                               style={{
-                                border: "1px solid #4dd0e1",
-                                borderRight: "none",
-                                backgroundColor: "#f8f9fa",
-                                fontSize: "12px",
-                                borderTopLeftRadius: "6px",
-                                borderBottomLeftRadius: "6px",
+                                width: "28px",
+                                height: "28px",
+                                borderRadius: "50%",
+                                backgroundColor: isFocused ? field.iconColor : `${field.iconColor}18`,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                color: isFocused ? "#ffffff" : field.iconColor,
+                                transition: "all 0.2s ease",
+                                boxShadow: isFocused ? `0 2px 6px ${field.iconColor}40` : "none",
                               }}
                             >
-                              ₹
-                            </InputGroup.Text>
-                            <Form.Control
-                              type="text"
-                              inputMode="numeric"
-                              pattern="[0-9]*"
-                              placeholder={field.placeholder}
-                              name={field.name}
-                              onWheel={(e) => e.target.blur()}
-                              value={field.value}
-                              onChange={handleChange}
-                              readOnly={isSubmitted}
-                              style={{
-                                border: "1px solid #4dd0e1",
-                                borderTopRightRadius: "6px",
-                                borderBottomRightRadius: "6px",
-                                borderTopLeftRadius: "0",
-                                borderBottomLeftRadius: "0",
-                                padding: "5px 10px",
-                                fontSize: "12.5px",
-                                fontWeight: "600",
-                                transition: "all 0.3s ease",
-                                boxShadow: "none",
-                                cursor: isSubmitted ? "not-allowed" : "text",
-                                backgroundColor: isSubmitted ? "#f8f9fa" : "white",
-                              }}
-                              onFocus={(e) => !isSubmitted && (e.target.style.borderColor = "#00bcd4")}
-                              onBlur={(e) => !isSubmitted && (e.target.style.borderColor = "#4dd0e1")}
-                            />
-                          </InputGroup>
-                          {field.showWarning && (
-                            <div style={{ color: "#d32f2f", fontSize: "11px", fontWeight: "600", marginRight: "5px" }}>
-                              <i className="fa fa-warning me-1"></i>0 entered
+                              <i className={field.icon} style={{ fontSize: "13px" }}></i>
                             </div>
-                          )}
+                            <span style={{ fontWeight: "700", color: isFocused ? field.iconColor : "#37474f", fontSize: "12.5px", transition: "color 0.2s ease" }}>
+                              {field.label}
+                            </span>
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
+                            <InputGroup style={{ width: "240px" }}>
+                              <InputGroup.Text
+                                style={{
+                                  border: `1px solid ${isFocused ? field.iconColor : "#4dd0e1"}`,
+                                  borderRight: "none",
+                                  backgroundColor: isFocused ? `${field.iconColor}15` : "#f8f9fa",
+                                  color: isFocused ? field.iconColor : "inherit",
+                                  fontWeight: isFocused ? "bold" : "normal",
+                                  fontSize: "12px",
+                                  borderTopLeftRadius: "6px",
+                                  borderBottomLeftRadius: "6px",
+                                  transition: "all 0.2s ease",
+                                }}
+                              >
+                                ₹
+                              </InputGroup.Text>
+                              <Form.Control
+                                type="text"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                placeholder={field.placeholder}
+                                name={field.name}
+                                onWheel={(e) => e.target.blur()}
+                                value={field.value}
+                                onChange={handleChange}
+                                onFocus={() => !isSubmitted && setFocusedField(field.name)}
+                                onBlur={() => setFocusedField(null)}
+                                readOnly={isSubmitted}
+                                style={{
+                                  border: `1px solid ${isFocused ? field.iconColor : "#4dd0e1"}`,
+                                  borderTopRightRadius: "6px",
+                                  borderBottomRightRadius: "6px",
+                                  borderTopLeftRadius: "0",
+                                  borderBottomLeftRadius: "0",
+                                  padding: "5px 10px",
+                                  fontSize: "12.5px",
+                                  fontWeight: "600",
+                                  transition: "all 0.3s ease",
+                                  boxShadow: isFocused ? `0 0 0 3px ${field.iconColor}25` : "none",
+                                  cursor: isSubmitted ? "not-allowed" : "text",
+                                  backgroundColor: isSubmitted ? "#f8f9fa" : "white",
+                                }}
+                              />
+                            </InputGroup>
+                            {field.showWarning && (
+                              <div style={{ color: "#d32f2f", fontSize: "11px", fontWeight: "600", marginRight: "5px" }}>
+                                <i className="fa fa-warning me-1"></i>0 entered
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
 
                     {/* Cash Deposit Receipt */}
                     <div
@@ -1163,10 +1196,11 @@ const DailyClosing = () => {
                       <div
                         style={{
                           padding: "10px 10px",
-                          backgroundColor: "#fff5f5",
+                          backgroundColor: focusedField === "comment" ? "#00bcd418" : formData.comment ? "#00bcd40a" : "#fff5f5",
                           borderRadius: "8px",
-                          border: "1px solid #ffe3e3",
-                          boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
+                          border: `1px solid ${focusedField === "comment" ? "#00bcd4" : "#ffe3e3"}`,
+                          boxShadow: focusedField === "comment" ? "0 4px 12px rgba(0,188,212,0.2)" : "0 1px 3px rgba(0,0,0,0.02)",
+                          transition: "all 0.25s ease",
                           marginTop: "5px",
                         }}
                       >
@@ -1191,13 +1225,16 @@ const DailyClosing = () => {
                             name="comment"
                             value={formData.comment}
                             onChange={handleChange}
+                            onFocus={() => !isSubmitted && setFocusedField("comment")}
+                            onBlur={() => setFocusedField(null)}
                             readOnly={isSubmitted}
                             placeholder="Enter justification or remarks..."
                             style={{
                               fontSize: "13px",
-                              border: "1px solid #cbd5e0",
+                              border: `1px solid ${focusedField === "comment" ? "#00bcd4" : "#cbd5e0"}`,
                               borderRadius: "6px",
                               transition: "all 0.3s ease",
+                              boxShadow: focusedField === "comment" ? "0 0 0 3px rgba(0,188,212,0.25)" : "none",
                             }}
                           />
                         </Form.Group>

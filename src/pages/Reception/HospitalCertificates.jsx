@@ -8,8 +8,8 @@ import { decodeJwt } from "../../utils/decode-jwt";
 import moment from "moment";
 import Swal from "sweetalert2";
 
-const BASE_URL = "http://194.195.117.79:5100/api";
-const UPLOAD_BASE_URL = "http://194.195.117.79:5100/uploads";
+const BASE_URL = "http://localhost:5100/api";
+const UPLOAD_BASE_URL = "http://localhost:5100/uploads";
 
 const HospitalCertificates = () => {
   const [certificates, setCertificates] = useState([]);
@@ -48,13 +48,13 @@ const HospitalCertificates = () => {
   };
 
   const certificateOptions = [
-    "Hospital License",
-    "Fire NOC",
-    "Pollution Control Certificate",
-    "NABH Certificate",
-    "ISO Certificate",
     "Bio Medical Certificate",
-    "Rent Agreement"
+    "Fire NOC",
+    "Hospital License",
+    "ISO Certificate",
+    "NABH Certificate",
+    "Pollution Control Certificate",
+    "Rent Agreement",
   ];
 
   useEffect(() => {
@@ -165,7 +165,7 @@ const HospitalCertificates = () => {
       const url = new URL(BASE_URL);
       return `${url.origin}${dbPath}`;
     } catch (e) {
-      return `http://194.195.117.79:5100${dbPath}`;
+      return `http://localhost:5100${dbPath}`;
     }
   };
 
@@ -304,6 +304,7 @@ const HospitalCertificates = () => {
                                 <option value="">--Select Certificate--</option>
                                 {certificateOptions
                                   .filter((opt) => !isAlreadySubmitted(opt))
+                                  .sort((a, b) => a.localeCompare(b))
                                   .map((opt) => (
                                     <option key={opt} value={opt}>
                                       {opt}

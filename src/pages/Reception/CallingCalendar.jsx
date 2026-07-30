@@ -17,7 +17,7 @@ import PageBreadcrumb from "../../components/PageBreadcrumb";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 const Toast = Swal.mixin({
   toast: true,
@@ -2058,7 +2058,7 @@ export default function CallingCalendar() {
                             color: "#6b8f85",
                           }}
                         >
-                          No patients pending outreach since 1st July 2026
+                          No patients pending outreach (Above 30 days from enquiry without notes) since 1st July 2026
                         </div>
                       ) : (
                         <div>

@@ -15,7 +15,7 @@ import { decodeJwt } from "../../utils/decode-jwt";
 import Swal from "sweetalert2";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 const Toast = Swal.mixin({
   toast: true,
@@ -60,6 +60,17 @@ export default function DoctorCallingCalendar() {
       }
     }
   }, []);
+
+  // Refetch when toDate or currentLocation changes in advised view
+  useEffect(() => {
+    if (selectedView === "advised" && selectedType && currentLocation && currentLocation !== "default") {
+      if (selectedType === "MCDPA") {
+        fetchMCDPAData();
+      } else {
+        fetchAdvisedData(selectedType, selectedDays, toDate);
+      }
+    }
+  }, [toDate, currentLocation]);
 
   // Live Clock
   useEffect(() => {
@@ -1412,7 +1423,7 @@ export default function DoctorCallingCalendar() {
                               color: "#6b8f85",
                             }}
                           >
-                            No patients pending outreach since 1st July 2026
+                            No patients pending outreach (Above 30 days from advice without notes) since 1st July 2026
                           </div>
                         ) : (
                           <div>

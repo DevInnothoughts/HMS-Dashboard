@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Row, Col, Form, Container, Card, Button } from "react-bootstrap";
+import { Row, Col, Form, Container, Card, Button, Spinner } from "react-bootstrap";
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import FeatherIcon from "feather-icons-react";
@@ -12,7 +12,7 @@ import PageBreadcrumb from "../../components/PageBreadcrumb";
 import { decodeJwt } from "../../utils/decode-jwt";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 const Toast = Swal.mixin({
   toast: true,
@@ -101,6 +101,7 @@ const referralSources = [
 
 export default function AddOpdAppointment() {
   const [loading, setLoading] = useState(false);
+  const [isSearchingPatient, setIsSearchingPatient] = useState(false);
   const [doctors, setDoctors] = useState([]);
   const [fdeList, setFdeList] = useState([]);
   const [treatmentList, setTreatmentList] = useState([]);
@@ -171,6 +172,7 @@ export default function AddOpdAppointment() {
         return;
       }
 
+      setIsSearchingPatient(true);
       try {
         const url = `${BASE_URL}/V1/appointment/getPatientByMobile?patient_phone=${patient_phone}&location=${currentLocation}`;
         const response = await fetch(url, {
@@ -294,6 +296,8 @@ export default function AddOpdAppointment() {
           }
           return false;
         });
+      } finally {
+        setIsSearchingPatient(false);
       }
     },
     [currentLocation],
@@ -629,14 +633,39 @@ export default function AddOpdAppointment() {
                       <Form.Label style={labelStyle}>
                         Contact Number <span className="text-danger">*</span>
                       </Form.Label>
-                      <Form.Control
-                        required
-                        type="tel"
-                        style={inputStyle}
-                        value={formData.patient_phone}
-                        onChange={handlePhoneNumberChange}
-                        placeholder="Enter Contact Number"
-                      />
+                      <div style={{ position: "relative" }}>
+                        <Form.Control
+                          required
+                          type="tel"
+                          style={{
+                            ...inputStyle,
+                            paddingRight: isSearchingPatient ? "30px" : "10px",
+                          }}
+                          value={formData.patient_phone}
+                          onChange={handlePhoneNumberChange}
+                          placeholder="Enter Contact Number"
+                        />
+                        {isSearchingPatient && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              right: "10px",
+                              top: "50%",
+                              transform: "translateY(-50%)",
+                              zIndex: 10,
+                              display: "flex",
+                              alignItems: "center",
+                            }}
+                          >
+                            <Spinner
+                              animation="border"
+                              size="sm"
+                              variant="info"
+                              style={{ width: "16px", height: "16px" }}
+                            />
+                          </div>
+                        )}
+                      </div>
                       {errors.patient_phone && (
                         <p className="text-danger" style={{ fontSize: "11px" }}>
                           {errors.patient_phone}

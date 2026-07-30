@@ -20,7 +20,7 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import { decodeJwt } from "../../utils/decode-jwt";
 import SimpleBar from "simplebar-react";
 
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 const localizer = momentLocalizer(moment);
 
@@ -126,54 +126,6 @@ export default function IpdDashboard() {
     });
   }, []);
 
-  const fetchSurgeries = useCallback(async (dateToFetch) => {
-    if (currentLocation === "default") return;
-    setLoading(true);
-    const targetMoment = moment(dateToFetch || selectedDate);
-    let start, end;
-
-    if (currentView === "month") {
-      start = targetMoment.clone().startOf("month").toDate();
-      end = targetMoment.clone().endOf("month").toDate();
-    } else if (currentView === "week") {
-      start = targetMoment.clone().startOf("week").toDate();
-      end = targetMoment.clone().endOf("week").toDate();
-    } else {
-      start = targetMoment.clone().startOf("day").toDate();
-      end = targetMoment.clone().endOf("day").toDate();
-    }
-
-    try {
-      const fromDate = moment(start).format("YYYY-MM-DD");
-      const toDate = moment(end).format("YYYY-MM-DD");
-
-      const response = await fetch(
-        `${BASE_URL}/V1/ipd/admin/listVerifiedPatients?location=${currentLocation}&from=${fromDate}&to=${toDate}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        },
-      );
-
-      if (response.ok) {
-        const result = await response.json();
-        const formattedEvents = formatSurgeries(result);
-        setSurgeries(formattedEvents);
-      }
-    } catch (error) {
-      console.error("Error fetching surgeries:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [currentLocation, selectedDate, currentView, formatSurgeries]);
-
-  useEffect(() => {
-    fetchSurgeries();
-  }, [fetchSurgeries]);
-
   // Fetch IPD bills to know which patients already have a bill
   const fetchBilledUhids = useCallback(async () => {
     if (currentLocation === "default" || !currentLocation) return;
@@ -209,15 +161,63 @@ export default function IpdDashboard() {
           }
         });
         setBilledUhids(uidsMap);
+        return uidsMap;
       }
     } catch (err) {
       console.error("Error fetching IPD bills:", err);
     }
   }, [currentLocation]);
 
+  const fetchSurgeries = useCallback(async (dateToFetch) => {
+    if (currentLocation === "default") return;
+    setLoading(true);
+    const targetMoment = moment(dateToFetch || selectedDate);
+    let start, end;
+
+    if (currentView === "month") {
+      start = targetMoment.clone().startOf("month").toDate();
+      end = targetMoment.clone().endOf("month").toDate();
+    } else if (currentView === "week") {
+      start = targetMoment.clone().startOf("week").toDate();
+      end = targetMoment.clone().endOf("week").toDate();
+    } else {
+      start = targetMoment.clone().startOf("day").toDate();
+      end = targetMoment.clone().endOf("day").toDate();
+    }
+
+    try {
+      const fromDate = moment(start).format("YYYY-MM-DD");
+      const toDate = moment(end).format("YYYY-MM-DD");
+
+      const [surgeriesRes] = await Promise.all([
+        fetch(
+          `${BASE_URL}/V1/ipd/admin/listVerifiedPatients?location=${currentLocation}&from=${fromDate}&to=${toDate}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          },
+        ),
+        fetchBilledUhids(),
+      ]);
+
+      if (surgeriesRes && surgeriesRes.ok) {
+        const result = await surgeriesRes.json();
+        const formattedEvents = formatSurgeries(result);
+        setSurgeries(formattedEvents);
+      }
+    } catch (error) {
+      console.error("Error fetching surgeries:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentLocation, selectedDate, currentView, formatSurgeries, fetchBilledUhids]);
+
   useEffect(() => {
-    fetchBilledUhids();
-  }, [fetchBilledUhids]);
+    fetchSurgeries();
+  }, [fetchSurgeries]);
 
   const fetchDoctors = useCallback(async () => {
     if (currentLocation === "default" || !currentLocation) return;

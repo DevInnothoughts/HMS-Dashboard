@@ -18,7 +18,7 @@ import moment from "moment";
 import { decodeJwt } from "../../utils/decode-jwt";
 import "../../styles/styles.css";
 
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 const Toast = Swal.mixin({
   toast: true,
@@ -548,34 +548,50 @@ export default function AddLabReceipt() {
                       <Form.Group>
                         <Form.Label style={labelStyle}>
                           Contact Number <span className="text-danger">*</span>
-                          {isSearchingPatient && (
-                            <Spinner
-                              animation="border"
-                              size="sm"
-                              variant="info"
-                              className="ms-2"
-                              style={{ width: "12px", height: "12px" }}
-                            />
-                          )}
                         </Form.Label>
-                        <Form.Control
-                          required
-                          type="tel"
-                          name="patient_phone"
-                          value={formData.patient_phone}
-                          onChange={(e) => {
-                            const val = e.target.value.replace(/\D/g, "");
-                            if (val.length <= 10) {
-                              setFormData((prev) => ({
-                                ...prev,
-                                patient_phone: val,
-                                ...(val === "" ? { patient_name: "" } : {}),
-                              }));
-                            }
-                          }}
-                          placeholder="Enter 10-Digit Mobile Number"
-                          style={inputStyle}
-                        />
+                        <div style={{ position: "relative" }}>
+                          <Form.Control
+                            required
+                            type="tel"
+                            name="patient_phone"
+                            value={formData.patient_phone}
+                            onChange={(e) => {
+                              const val = e.target.value.replace(/\D/g, "");
+                              if (val.length <= 10) {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  patient_phone: val,
+                                  ...(val === "" ? { patient_name: "" } : {}),
+                                }));
+                              }
+                            }}
+                            placeholder="Enter 10-Digit Mobile Number"
+                            style={{
+                              ...inputStyle,
+                              paddingRight: isSearchingPatient ? "30px" : "10px",
+                            }}
+                          />
+                          {isSearchingPatient && (
+                            <div
+                              style={{
+                                position: "absolute",
+                                right: "10px",
+                                top: "50%",
+                                transform: "translateY(-50%)",
+                                zIndex: 10,
+                                display: "flex",
+                                alignItems: "center",
+                              }}
+                            >
+                              <Spinner
+                                animation="border"
+                                size="sm"
+                                variant="info"
+                                style={{ width: "16px", height: "16px" }}
+                              />
+                            </div>
+                          )}
+                        </div>
                         {errors.patient_phone && (
                           <p className="text-danger mt-1" style={{ fontSize: "11px" }}>
                             {errors.patient_phone}

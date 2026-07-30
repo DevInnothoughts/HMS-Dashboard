@@ -15,7 +15,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import moment from "moment";
 import Swal from "sweetalert2";
 
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 const Toast = Swal.mixin({
   toast: true,
@@ -793,15 +793,15 @@ const DailyExpense = () => {
                         }}
                         body={(rowData) => {
                           const isToday = moment(rowData.date).isSame(moment(), 'day');
-                          if (!isToday) return "-";
                           return (
                             <div className="d-flex align-items-center justify-content-center">
                               <Button
-                                style={{ borderRadius: "8px" }}
-                                onClick={() => handleDeleteClick(rowData.id)}
+                                style={{ borderRadius: "8px", cursor: isToday ? "pointer" : "not-allowed" }}
+                                onClick={() => isToday && handleDeleteClick(rowData.id)}
+                                disabled={!isToday}
                                 className="btn btn-extra-small btn-icon"
-                                variant="danger"
-                                title="Delete Expense"
+                                variant={isToday ? "danger" : "secondary"}
+                                title={isToday ? "Delete Expense" : "Cannot delete previous date expenses"}
                               >
                                 <FeatherIcon icon="trash-2" size={14} />
                               </Button>
