@@ -53,7 +53,7 @@ export default function IpdHeader() {
       const day = String(d.getDate()).padStart(2, "0");
       const today = `${year}-${month}-${day}`;
       const response = await fetch(
-        `http://localhost:5100/api/V1/ipd/admin/listVerifiedPatients?location=${currentLocation}&from=${today}&to=${today}&includeDeleted=true`,
+        `http://194.195.117.79:5100/api/V1/ipd/admin/listVerifiedPatients?location=${currentLocation}&from=${today}&to=${today}&includeDeleted=true`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,

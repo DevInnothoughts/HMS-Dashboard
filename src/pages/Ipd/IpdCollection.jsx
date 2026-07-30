@@ -22,8 +22,8 @@ import { clinincLoc } from "../../utils/IpdBill_ClinicLocations.js";
 import { receiptlocations } from "../../utils/OpdReceipt_ClinicLocations.js";
 import FeatherIcon from "feather-icons-react";
 
-const BASE_URL = "http://localhost:5100/api";
-const IMAGE_BASE_URL = "http://localhost:5100";
+const BASE_URL = "http://194.195.117.79:5100/api";
+const IMAGE_BASE_URL = "http://194.195.117.79:5100";
 
 const getLocalDateString = (date) => {
   const offset = date.getTimezoneOffset();

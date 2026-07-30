@@ -11,7 +11,7 @@ import { InputText } from "primereact/inputtext";
 import { decodeJwt } from "../../../utils/decode-jwt";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://localhost:5100/api"; // Update your API base URL here
+const BASE_URL = "http://194.195.117.79:5100/api"; // Update your API base URL here
 
 const formatDateDisplay = (dateStr) => {
   if (!dateStr) return "";

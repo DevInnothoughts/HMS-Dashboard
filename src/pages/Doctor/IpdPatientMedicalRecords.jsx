@@ -34,7 +34,7 @@ const toast = new Proxy(hotToast, {
 
 import { decodeJwt } from "../../utils/decode-jwt";
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const Toast = Swal.mixin({
   toast: true,

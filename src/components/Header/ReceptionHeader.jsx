@@ -35,7 +35,7 @@ export default function ReceptionHeader() {
       const date = `${year}-${month}-${day}`;
 
       const response = await fetch(
-        `http://localhost:5100/api/V1/appointment/getAppointmentCounts?location=${currentLocation}&date=${date}`,
+        `http://194.195.117.79:5100/api/V1/appointment/getAppointmentCounts?location=${currentLocation}&date=${date}`,
       );
       const data = await response.json();
       if (data.statusCode === 200) {
@@ -48,7 +48,7 @@ export default function ReceptionHeader() {
         .split("/")
         .join("-");
       const listRes = await fetch(
-        `http://localhost:5100/api/V1/appointment/listAppointments?from=${formattedDate}&to=${formattedDate}&location=${currentLocation}`,
+        `http://194.195.117.79:5100/api/V1/appointment/listAppointments?from=${formattedDate}&to=${formattedDate}&location=${currentLocation}`,
       );
       const listData = await listRes.json();
       if (listData.statusCode === 200 && Array.isArray(listData.data)) {
@@ -64,7 +64,7 @@ export default function ReceptionHeader() {
 
       // Fetch cancelled list for today
       const cancelledRes = await fetch(
-        `http://localhost:5100/api/V1/appointment/listAppointments?from=${formattedDate}&to=${formattedDate}&location=${currentLocation}&includeDeleted=true`,
+        `http://194.195.117.79:5100/api/V1/appointment/listAppointments?from=${formattedDate}&to=${formattedDate}&location=${currentLocation}&includeDeleted=true`,
       );
       const cancelledData = await cancelledRes.json();
       if (
