@@ -333,12 +333,17 @@ export default function DoctorDashboard() {
 
   const formatIpdAppointments = useCallback((ipdData) => {
     return ipdData.map((ipd) => {
-      let admissionTime = "12:00";
+      let eventTime = "12:00";
       let dateString = moment(ipd.created_at).format("DD-MM-YYYY");
       let start = new Date(ipd.created_at);
 
-      if (ipd.admission_datetime) {
-        const parsed = moment(ipd.admission_datetime, [
+      // Prioritize surgery_datetime over admission_datetime for doctor dashboard view
+      const targetDatetime = (ipd.surgery_datetime && ipd.surgery_datetime !== "Not Scheduled")
+        ? ipd.surgery_datetime
+        : ipd.admission_datetime;
+
+      if (targetDatetime) {
+        const parsed = moment(targetDatetime, [
           "DD-MM-YYYY HH:mm",
           "DD-MM-YYYY hh:mm A",
           "YYYY-MM-DD HH:mm",
@@ -348,15 +353,11 @@ export default function DoctorDashboard() {
         if (parsed.isValid()) {
           start = parsed.toDate();
           dateString = parsed.format("DD-MM-YYYY");
-          admissionTime = parsed.format("HH:mm");
+          eventTime = parsed.format("HH:mm");
         } else {
-          const parts = ipd.admission_datetime.split(" ");
-          if (parts.length >= 3) {
-            admissionTime = `${parts[1]}`;
-          } else if (parts.length === 2) {
-            admissionTime = parts[1];
-          } else {
-            admissionTime = parts[1] || "12:00";
+          const parts = targetDatetime.split(" ");
+          if (parts.length >= 2) {
+            eventTime = parts[1];
           }
         }
       }
@@ -373,26 +374,19 @@ export default function DoctorDashboard() {
         if (parsedSx.isValid()) {
           formattedSurgery = parsedSx.format("DD-MM-YYYY HH:mm");
         } else {
-          const parts = ipd.surgery_datetime.split(" ");
-          if (parts.length >= 3) {
-            formattedSurgery = ipd.surgery_datetime;
-          } else if (parts.length === 2) {
-            formattedSurgery = `${parts[0]} ${parts[1]}`;
-          } else {
-            formattedSurgery = ipd.surgery_datetime;
-          }
+          formattedSurgery = ipd.surgery_datetime;
         }
       }
 
       const end = moment(start).clone().add(30, "minutes").toDate();
 
       return {
-        title: `${admissionTime} — ${ipd.name || "Patient"} [IPD]`,
+        title: `${eventTime} — ${ipd.name || "Patient"} [IPD]`,
         start,
         end,
         phone: ipd.patient_phone,
         date: dateString,
-        time: admissionTime,
+        time: eventTime,
         patientName: ipd.name,
         doctorName: ipd.surgeon_name || "N/A",
         patientType: "IPD",

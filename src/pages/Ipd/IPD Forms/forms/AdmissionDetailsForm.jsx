@@ -6,7 +6,7 @@ import RadioGroup from "../inputs/RadioGroup";
 import FileInput from "../inputs/FileInput";
 import MuiDateTimePicker from "../inputs/MuiDateTimePicker";
 import "./Forms.css";
-import { decodeJwt } from "../../../../utils/decode-jwt";
+import { decodeJwt } from "../../../Utility/decode-jwt";
 import Swal from "sweetalert2";
 import hhcLogo from "../../../../assets/images/logo/hhclogo.webp";
 

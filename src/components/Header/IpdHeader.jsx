@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSidebarContext } from "../../pages/api/useSidebarContext";
 import "font-awesome/css/font-awesome.min.css";
-import { decodeJwt } from "../../utils/decode-jwt";
+import { decodeJwt } from "../../pages/Utility/decode-jwt";
 import FeatherIcon from "feather-icons-react";
 import SimpleBar from "simplebar-react";
 import moment from "moment";

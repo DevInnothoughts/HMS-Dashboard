@@ -9,7 +9,7 @@ import { Column } from "primereact/column";
 import { FilterMatchMode } from "primereact/api";
 import { InputText } from "primereact/inputtext";
 import ReactApexChart from "react-apexcharts";
-import { decodeJwt } from "../../../utils/decode-jwt";
+import { decodeJwt } from "../../Utility/decode-jwt";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
 

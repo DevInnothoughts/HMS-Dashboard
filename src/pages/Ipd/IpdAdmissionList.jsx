@@ -15,7 +15,7 @@ import {
 import FeatherIcon from "feather-icons-react";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import IpdAdmissionNavbar from "../../components/Navbar/IpdAdmissionNavbar";
-import { decodeJwt } from "../../utils/decode-jwt";
+import { decodeJwt } from "../Utility/decode-jwt";
 import { FilterMatchMode } from "primereact/api";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";

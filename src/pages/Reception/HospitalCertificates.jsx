@@ -4,7 +4,7 @@ import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import SimpleBar from "simplebar-react";
-import { decodeJwt } from "../../utils/decode-jwt";
+import { decodeJwt } from "../Utility/decode-jwt";
 import moment from "moment";
 import Swal from "sweetalert2";
 
@@ -13,6 +13,7 @@ const UPLOAD_BASE_URL = "http://194.195.117.79:5100/uploads";
 
 const HospitalCertificates = () => {
   const [certificates, setCertificates] = useState([]);
+  const [selectedStatus, setSelectedStatus] = useState("");
   const [newCertName, setNewCertName] = useState("");
   const [newExpiryDate, setNewExpiryDate] = useState("");
   const [newCertFile, setNewCertFile] = useState(null);
@@ -190,7 +191,9 @@ const HospitalCertificates = () => {
   };
 
   const isAlreadySubmitted = (name) => {
-    return certificates.some((c) => c.certificate_name === name);
+    return certificates.some(
+      (c) => c.certificate_name === name && getStatus(c.certificate_expiry) !== "Expired"
+    );
   };
 
   const actionBodyTemplate = (rowData) => {
@@ -238,6 +241,34 @@ const HospitalCertificates = () => {
 
     return <span style={badgeStyle}>{status}</span>;
   };
+
+  const filteredCertificates = certificates.filter((cert) => {
+    if (!selectedStatus) return true;
+    return getStatus(cert.certificate_expiry) === selectedStatus;
+  });
+
+  const statusHeader = (
+    <select
+      value={selectedStatus}
+      onChange={(e) => setSelectedStatus(e.target.value)}
+      style={{
+        fontSize: "12px",
+        fontWeight: "bold",
+        border: "1px solid  rgba(58, 137, 148, 1)",
+        backgroundColor: "transparent",
+        color: "black",
+        cursor: "pointer",
+        outline: "none",
+      }}
+    >
+      <option value="">Status (All)</option>
+      <option value="Active">Active</option>
+      <option value="Expires soon">Expires soon</option>
+      <option value="Expiring tomorrow">Expiring tomorrow</option>
+      <option value="Expiring today">Expiring today</option>
+      <option value="Expired">Expired</option>
+    </select>
+  );
 
   return (
     <div
@@ -495,7 +526,7 @@ const HospitalCertificates = () => {
                 </Card.Header>
                 <Card.Body style={{ padding: "5px" }}>
                   <DataTable
-                    value={certificates}
+                    value={filteredCertificates}
                     paginator
                     rows={10}
                     loading={loading}
@@ -525,7 +556,7 @@ const HospitalCertificates = () => {
                       style={{ width: "20%", textAlign: "center" }}
                     />
                     <Column
-                      header="Status"
+                      header={statusHeader}
                       body={statusBodyTemplate}
                       style={{ width: "20%", textAlign: "center" }}
                     />

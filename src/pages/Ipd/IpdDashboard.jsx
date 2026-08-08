@@ -17,7 +17,7 @@ import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import Swal from "sweetalert2";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import { decodeJwt } from "../../utils/decode-jwt";
+import { decodeJwt } from "../Utility/decode-jwt";
 import SimpleBar from "simplebar-react";
 
 const BASE_URL = "http://194.195.117.79:5100/api";

@@ -4,7 +4,7 @@ import SimpleBar from "simplebar-react";
 import { useNavigate } from "react-router-dom";
 import { useSidebarContext } from "../../pages/api/useSidebarContext";
 import "font-awesome/css/font-awesome.min.css";
-import { decodeJwt } from "../../utils/decode-jwt";
+import { decodeJwt } from "../../pages/Utility/decode-jwt";
 import moment from "moment";
 
 export default function DoctorHeader() {

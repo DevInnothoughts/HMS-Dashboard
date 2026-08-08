@@ -17,7 +17,7 @@ import {
 import FeatherIcon from "feather-icons-react";
 import DatePicker from "react-datepicker";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
-import { decodeJwt } from "../../utils/decode-jwt";
+import { decodeJwt } from "../Utility/decode-jwt";
 import { toast } from "react-hot-toast";
 
 const BASE_URL = "http://194.195.117.79:5100/api";

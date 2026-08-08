@@ -14,12 +14,12 @@ import {
 } from "react-bootstrap";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import { FaPrint, FaPlus, FaListUl, FaTasks, FaFileInvoiceDollar, FaInfoCircle, FaPlusCircle, FaSave } from "react-icons/fa";
-import { decodeJwt } from "../../utils/decode-jwt";
+import { decodeJwt } from "../Utility/decode-jwt";
 import Swal from "sweetalert2";
 import logo from "../../assets/images/3.png";
 import receiptLogo from "../../assets/images/4.png";
-import { clinincLoc } from "../../utils/IpdBill_ClinicLocations.js";
-import { receiptlocations } from "../../utils/OpdReceipt_ClinicLocations.js";
+import { clinincLoc } from "../Utility/IpdBill_ClinicLocations";
+import { receiptlocations } from "../Utility/OpdReceipt_ClinicLocations";
 import FeatherIcon from "feather-icons-react";
 
 const BASE_URL = "http://194.195.117.79:5100/api";

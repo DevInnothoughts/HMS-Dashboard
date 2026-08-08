@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
-import { decodeJwt } from "../../utils/decode-jwt";
+import { decodeJwt } from "../Utility/decode-jwt";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import Swal from "sweetalert2";
-import { receiptlocations } from "../../utils/OpdReceipt_ClinicLocations.js";
+import { receiptlocations } from "../Utility/OpdReceipt_ClinicLocations";
 import {
   Container,
   Row,
@@ -50,7 +50,7 @@ export default function ReceiptList() {
   const [rows, setRows] = useState(10);
   const [first, setFirst] = useState(0);
   const [filters, setFilters] = useState({
-    global: { value: null, matchMode: FilterMatchMode.EQUALS },
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
 
   const location = useLocation();
@@ -86,9 +86,13 @@ export default function ReceiptList() {
       if (response.ok) {
         const data = await response.json();
         if (data.data && data.data.length > 0) {
+          const formattedData = data.data.map((r) => ({
+            ...r,
+            patient_phone: r.patient_phone ? String(r.patient_phone) : "",
+          }));
           setReceipts((prev) => {
             const existingIds = new Set(prev.map((r) => r.receipt_id));
-            const newUniqueReceipts = data.data.filter(
+            const newUniqueReceipts = formattedData.filter(
               (r) => !existingIds.has(r.receipt_id),
             );
             return [...prev, ...newUniqueReceipts];
@@ -108,10 +112,11 @@ export default function ReceiptList() {
 
     const hasLocalMatches = receipts.some((r) => {
       const lowerSearch = searchValue.toLowerCase();
+      const phoneStr = String(r.patient_phone || r.phone || "");
       return (
         (r.receipt_id && String(r.receipt_id).includes(searchValue)) ||
         (r.patientName && r.patientName.toLowerCase().includes(lowerSearch)) ||
-        (r.patient_phone && r.patient_phone.includes(searchValue))
+        phoneStr.includes(searchValue)
       );
     });
 
@@ -154,7 +159,11 @@ export default function ReceiptList() {
 
       const data = await response.json();
       if (response.ok && Array.isArray(data.data)) {
-        setReceipts(data.data);
+        const formattedData = data.data.map((r) => ({
+          ...r,
+          patient_phone: r.patient_phone ? String(r.patient_phone) : "",
+        }));
+        setReceipts(formattedData);
       } else {
         Toast.fire({
           icon: "error",
@@ -866,6 +875,7 @@ export default function ReceiptList() {
                         "receipt_date",
                         "patientName",
                         "patient_phone",
+                        "phone",
                         "consultation",
                         "doctorName",
                         "paymentmode",

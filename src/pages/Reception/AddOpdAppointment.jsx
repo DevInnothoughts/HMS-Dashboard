@@ -9,7 +9,7 @@ import Swal from "sweetalert2";
 import "../../styles/styles.css";
 import { toast } from "react-hot-toast";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
-import { decodeJwt } from "../../utils/decode-jwt";
+import { decodeJwt } from "../Utility/decode-jwt";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
 const BASE_URL = "http://194.195.117.79:5100/api";

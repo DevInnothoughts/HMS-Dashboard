@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { decodeJwt } from "../../utils/decode-jwt";
+import { decodeJwt } from "../Utility/decode-jwt";
 import { FilterMatchMode } from "primereact/api";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
@@ -1195,19 +1195,42 @@ export default function OpdAppointmentList() {
       appointment_id,
       patient_type,
       patient_phone,
+      patient_name,
       appointment_timestamp,
     } = rowData;
 
     const checkPassed = await checkDailyClosing(appointment_timestamp, "confirming");
     if (!checkPassed) return;
 
-    handleProcessUpdate(
-      appointment_id,
-      "confirmAppointment",
-      patient_type,
-      patient_phone,
-      "Appointment confirmed!",
-    );
+    const result = await Swal.fire({
+      title: "Confirm Appointment",
+      html: `
+        <div style="text-align: left; padding: 5px 10px; font-family: 'Poppins', sans-serif; font-size: 13px;">
+          <p style="margin-bottom: 10px; color: #555;">Are you sure you want to confirm this appointment?</p>
+          <div style="background-color: #fffde7; border-radius: 6px; padding: 10px; border: 1px solid #ffe082; line-height: 1.5;">
+            <div style="margin-bottom: 6px;"><span style="color: #000000ff;">Patient Name:</span> <span style="color: #333; font-weight: 600;">${patient_name || "-"}</span></div>
+            <div><span style="color: #000000ff;">Contact Number:</span> <span style="color: #333; font-weight: 600;">${patient_phone || "-"}</span></div>
+          </div>
+        </div>
+      `,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, Confirm",
+      cancelButtonText: "No, Cancel",
+      confirmButtonColor: "#28a745",
+      cancelButtonColor: "#dc3545",
+      reverseButtons: true,
+    });
+
+    if (result.isConfirmed) {
+      handleProcessUpdate(
+        appointment_id,
+        "confirmAppointment",
+        patient_type,
+        patient_phone,
+        "Appointment confirmed!",
+      );
+    }
   };
 
   const getRowClassName = (rowData) => {

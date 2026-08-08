@@ -11,7 +11,7 @@ import {
   Spinner,
 } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
-import { decodeJwt } from "../../utils/decode-jwt";
+import { decodeJwt } from "../Utility/decode-jwt";
 import Swal from "sweetalert2";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import DatePicker from "react-datepicker";

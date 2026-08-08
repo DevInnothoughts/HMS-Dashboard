@@ -5,7 +5,7 @@ import { Paginator } from "primereact/paginator";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { InputGroup } from "react-bootstrap";
-import { clinincLoc } from "../../utils/IpdBill_ClinicLocations";
+import { clinincLoc } from "../Utility/IpdBill_ClinicLocations";
 import {
   Container,
   Row,
@@ -20,7 +20,7 @@ import {
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 
 import Swal from "sweetalert2";
-import { decodeJwt } from "../../utils/decode-jwt";
+import { decodeJwt } from "../Utility/decode-jwt";
 import { Link } from "react-router-dom";
 import logo from "../../assets/images/logo/hhc.png";
 import { toast } from "react-hot-toast";
@@ -402,39 +402,8 @@ const IpdBillList = () => {
     }
   }, []);
 
-  const mergeLocations = (apiData, fallbackList) => {
-    const map = new Map();
-    const add = (item) => {
-      if (!item) return;
-      const value = typeof item === "object" ? (item.value || item.location || item.location_name || item.name || item.label) : item;
-      if (!value) return;
-      const key = value.toString().toLowerCase().trim();
-      if (!map.has(key)) {
-        map.set(key, item);
-      }
-    };
-    if (Array.isArray(fallbackList)) fallbackList.forEach(add);
-    if (Array.isArray(apiData)) apiData.forEach(add);
-    return Array.from(map.values());
-  };
-
   useEffect(() => {
-    const fetchClinicLocations = async () => {
-      let apiData = [];
-      try {
-        const res = await fetch(`${BASE_URL}/V1/auth/locationDropdown`);
-        if (res.ok) {
-          const json = await res.json();
-          apiData = json.data ?? [];
-        }
-      } catch (err) {
-        console.error("Failed to fetch clinic locations from API, using fallback list:", err);
-      }
-      const combined = mergeLocations(apiData, FALLBACK_LOCATIONS);
-      setClinicLocations(combined);
-    };
-
-    fetchClinicLocations();
+    setClinicLocations(FALLBACK_LOCATIONS);
   }, []);
 
   const [formData, setFormData] = useState({

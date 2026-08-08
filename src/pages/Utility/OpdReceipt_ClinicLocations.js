@@ -34,7 +34,7 @@ export const receiptlocations = {
   Chakan: {
     address:
       "<b>Chakan : </b><br>Healing Hands Clinic<br>Gokul Complex, Near HDFC Bank, Wage Vasti Nashik Road,Chakan, Tal : Khed, Pune - 410501",
-    phone: "8888376666",
+    phone: "8888596666",
     hospitalcode: "CH",
   },
   Dighi: {

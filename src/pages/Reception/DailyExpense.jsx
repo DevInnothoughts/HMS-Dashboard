@@ -8,7 +8,7 @@ import { saveAs } from "file-saver";
 import * as XLSX from "xlsx";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import SimpleBar from "simplebar-react";
-import { decodeJwt } from "../../utils/decode-jwt";
+import { decodeJwt } from "../Utility/decode-jwt";
 import FeatherIcon from "feather-icons-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";

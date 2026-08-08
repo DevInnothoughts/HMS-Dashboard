@@ -11,7 +11,7 @@ import {
   Button,
   InputGroup,
 } from "react-bootstrap";
-import { decodeJwt } from "../../utils/decode-jwt";
+import { decodeJwt } from "../Utility/decode-jwt";
 import Swal from "sweetalert2";
 import { LOCATIONS_LIST } from "../Auth/Login";
 
@@ -209,39 +209,8 @@ const AddIpdBill = () => {
     fetchEarliestConsultant();
   }, [currentLocation, formData.patient_id]);
 
-  const mergeLocations = (apiData, fallbackList) => {
-    const map = new Map();
-    const add = (item) => {
-      if (!item) return;
-      const value = typeof item === "object" ? (item.value || item.location || item.location_name || item.name || item.label) : item;
-      if (!value) return;
-      const key = value.toString().toLowerCase().trim();
-      if (!map.has(key)) {
-        map.set(key, item);
-      }
-    };
-    if (Array.isArray(fallbackList)) fallbackList.forEach(add);
-    if (Array.isArray(apiData)) apiData.forEach(add);
-    return Array.from(map.values());
-  };
-
   useEffect(() => {
-    const fetchClinicLocations = async () => {
-      let apiData = [];
-      try {
-        const res = await fetch(`${BASE_URL}/V1/auth/locationDropdown`);
-        if (res.ok) {
-          const json = await res.json();
-          apiData = json.data ?? [];
-        }
-      } catch (err) {
-        console.error("Failed to fetch clinic locations from API, using fallback list:", err);
-      }
-      const combined = mergeLocations(apiData, FALLBACK_LOCATIONS);
-      setClinicLocations(combined);
-    };
-
-    fetchClinicLocations();
+    setClinicLocations(FALLBACK_LOCATIONS);
   }, []);
 
   const generateTimeOptions = () => {
@@ -443,6 +412,10 @@ const AddIpdBill = () => {
         newErrors[field] = `${field.replace(/([A-Z])/g, " $1")} is required.`;
       }
     });
+
+    if (!formData.consultantName || !String(formData.consultantName).trim()) {
+      newErrors.consultantName = "Consultant Name is required.";
+    }
 
     if (formData.bill_Type === "insurance") {
       if (!formData.insurance) {
@@ -702,6 +675,12 @@ const AddIpdBill = () => {
     };
   };
 
+  const getDisplayConsultant = (doctorId) => {
+    if (!doctorId) return "";
+    const matched = consultants.find((c) => String(c.doctor_id) === String(doctorId));
+    return matched ? matched.name : "";
+  };
+
   const handleReset = () => {
     resetForm();
     Toast.fire({
@@ -729,6 +708,18 @@ const AddIpdBill = () => {
         title: "Duplicate Admission Number",
         text: admissionWarning,
         confirmButtonColor: "#00acc1",
+      });
+      return;
+    }
+
+    const consultantStr = getDisplayConsultant(formData.consultantName) || (formData.consultantName ? String(formData.consultantName).trim() : "");
+    if (!consultantStr || consultantStr.toLowerCase() === "null" || consultantStr.toLowerCase() === "undefined") {
+      Swal.fire({
+        icon: "warning",
+        title: "Consultant Details Required",
+        html: "The <strong>Consultant Name</strong> input box is currently empty, which will display as <em>'null'</em> on the printed IPD bill.<br/><br/>Please ask the treating doctor to fill the diagnosis of the patient with all required details from the <strong>Doctor Panel</strong> for this patient.",
+        confirmButtonColor: "#00acc1",
+        confirmButtonText: "Okay",
       });
       return;
     }
@@ -999,6 +990,7 @@ const AddIpdBill = () => {
       const missingFields = [];
       if (validationErrors.invoice_id) missingFields.push("Invoice Number");
       if (validationErrors.admission_no) missingFields.push("Admission Number");
+      if (validationErrors.consultantName) missingFields.push("Consultant Name");
       if (validationErrors.discharge_date) missingFields.push("Discharge Date");
       if (validationErrors.dischargetime) missingFields.push("Discharge Time");
       if (validationErrors.bed_category) missingFields.push("Bed Category");
@@ -1020,14 +1012,6 @@ const AddIpdBill = () => {
         confirmButtonColor: "#00acc1",
       });
     }
-  };
-
-
-
-  const getDisplayConsultant = (doctorId) => {
-    if (!doctorId) return "";
-    const matched = consultants.find((c) => String(c.doctor_id) === String(doctorId));
-    return matched ? matched.name : "";
   };
 
   // --- STYLING UPDATES FOR MEDIUM-SMALL TEXT ---
@@ -1323,7 +1307,7 @@ const AddIpdBill = () => {
                 </Col>
                 <Col md={3}>
                   <Form.Label style={labelStyle}>
-                    Consultant Name
+                    Consultant Name <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
                     readOnly
@@ -1336,7 +1320,13 @@ const AddIpdBill = () => {
                     name="consultantName"
                     value={getDisplayConsultant(formData.consultantName) || (formData.consultantName ? formData.consultantName : "")}
                     placeholder={formData.patient_id ? "Fetched from diagnosis" : "N/A"}
+                    isInvalid={!!errors.consultantName}
                   />
+                  {errors.consultantName && (
+                    <Form.Control.Feedback type="invalid" style={{ fontSize: "11px" }}>
+                      {errors.consultantName}
+                    </Form.Control.Feedback>
+                  )}
                 </Col>
                 <Col md={3}>
                   <Form.Label style={labelStyle}>

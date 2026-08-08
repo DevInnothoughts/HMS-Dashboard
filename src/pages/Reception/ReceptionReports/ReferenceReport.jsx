@@ -8,7 +8,7 @@ import { InputText } from "primereact/inputtext";
 import { ColumnGroup } from "primereact/columngroup";
 import ReactApexChart from "react-apexcharts";
 import PageBreadcrumb from "../../../components/PageBreadcrumb";
-import { decodeJwt } from "../../../utils/decode-jwt";
+import { decodeJwt } from "../../Utility/decode-jwt";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
 

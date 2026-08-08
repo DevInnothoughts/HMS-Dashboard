@@ -16,7 +16,7 @@ import FeatherIcon from "feather-icons-react";
 import Swal from "sweetalert2";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import IpdAdmissionNavbar from "../../components/Navbar/IpdAdmissionNavbar";
-import { decodeJwt } from "../../utils/decode-jwt";
+import { decodeJwt } from "../Utility/decode-jwt";
 import MuiDateTimePicker from "../Utility/inputs/MuiDateTimePicker";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
@@ -138,9 +138,12 @@ export default function AddIpdAdmission() {
       if (response.ok) {
         const data = await response.json();
         if (Array.isArray(data)) {
-          setSearchResults(data);
+          const confirmedData = data.filter(
+            (p) => p.ConfirmPatient === undefined || Number(p.ConfirmPatient) === 1
+          );
+          setSearchResults(confirmedData);
           if (!isPatientSelectedRef.current) {
-            setShowSearchDropdown(data.length > 0);
+            setShowSearchDropdown(confirmedData.length > 0);
           }
         } else {
           setSearchResults([]);
@@ -189,9 +192,14 @@ export default function AddIpdAdmission() {
       );
       if (response.ok) {
         const data = await response.json();
-        if (data && data.length > 0) {
-          setSearchResults(data);
-          const exactMatch = data.find(
+        const confirmedData = Array.isArray(data)
+          ? data.filter(
+              (p) => p.ConfirmPatient === undefined || Number(p.ConfirmPatient) === 1
+            )
+          : [];
+        if (confirmedData && confirmedData.length > 0) {
+          setSearchResults(confirmedData);
+          const exactMatch = confirmedData.find(
             (p) =>
               p.Uid_no &&
               p.Uid_no.trim().toLowerCase() === queryStr.toLowerCase(),
@@ -199,8 +207,8 @@ export default function AddIpdAdmission() {
           if (exactMatch) {
             selectPatient(exactMatch);
             Toast.fire({ icon: "success", title: "Patient Found" });
-          } else if (data.length === 1) {
-            selectPatient(data[0]);
+          } else if (confirmedData.length === 1) {
+            selectPatient(confirmedData[0]);
             Toast.fire({ icon: "success", title: "Patient Found" });
           } else {
             if (!isPatientSelectedRef.current) {
@@ -209,7 +217,7 @@ export default function AddIpdAdmission() {
           }
         } else {
           setPatientData(null);
-          Swal.fire("Not Found", "No matches found.", "info");
+          Swal.fire("Not Found", "No confirmed matches found.", "info");
         }
       } else {
         const errorData = await response.json().catch(() => ({}));

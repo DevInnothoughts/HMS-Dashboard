@@ -10,7 +10,7 @@ import DiagnosisPrintView from "./DiagnosisPrintView";
 import OpdPrescriptionPrintView from "./OpdPrescriptionPrintView";
 import DischargePrintView from "./DischargePrintView";
 import { Link, useNavigate } from "react-router-dom";
-import { decodeJwt } from "../../utils/decode-jwt";
+import { decodeJwt } from "../Utility/decode-jwt";
 import Swal from "sweetalert2";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import {

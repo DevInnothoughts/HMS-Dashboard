@@ -427,18 +427,23 @@ export default function ReceptionDashboard() {
     }
 
     const result = await Swal.fire({
-      title: "Confirm Arrival?",
-      text: "Mark patient as arrived at the facility?",
-      icon: "question",
+      title: "Confirm Appointment",
+      html: `
+        <div style="text-align: left; padding: 5px 10px; font-family: 'Poppins', sans-serif; font-size: 13px;">
+          <p style="margin-bottom: 10px; color: #555;">Are you sure you want to confirm this appointment?</p>
+          <div style="background-color: #fffde7; border-radius: 6px; padding: 10px; border: 1px solid #ffe082; line-height: 1.5;">
+            <div style="margin-bottom: 6px;"><span style="color: #000000ff;">Patient Name:</span> <span style="color: #333; font-weight: 600;">${selectedEvent?.patientName || "-"}</span></div>
+            <div><span style="color: #000000ff;">Contact Number:</span> <span style="color: #333; font-weight: 600;">${phone || "-"}</span></div>
+          </div>
+        </div>
+      `,
+      icon: "warning",
       showCancelButton: true,
-      confirmButtonText: "Confirm Arrival",
-      cancelButtonText: "Cancel",
+      confirmButtonText: "Yes, Confirm",
+      cancelButtonText: "No, Cancel",
+      confirmButtonColor: "#28a745",
+      cancelButtonColor: "#dc3545",
       reverseButtons: true,
-      buttonsStyling: false,
-      customClass: {
-        confirmButton: "btn btn-primary swal-clinical-btn",
-        cancelButton: "btn btn-danger swal-clinical-btn me-2",
-      },
     });
     if (!result.isConfirmed) return;
     try {

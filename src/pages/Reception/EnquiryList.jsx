@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
-import { decodeJwt } from "../../utils/decode-jwt";
+import { decodeJwt } from "../Utility/decode-jwt";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import {
   Container,

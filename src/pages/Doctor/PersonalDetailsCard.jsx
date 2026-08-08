@@ -26,7 +26,7 @@ const toast = new Proxy(hotToast, {
     return target[prop];
   },
 });
-import { decodeJwt } from "../../utils/decode-jwt";
+import { decodeJwt } from "../Utility/decode-jwt";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
 

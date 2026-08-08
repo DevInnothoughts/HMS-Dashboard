@@ -13,7 +13,7 @@ import {
 } from "react-bootstrap";
 import Select from "react-select";
 import FeatherIcon from "feather-icons-react";
-// import { generateDiagnosisStream } from "../../utils/aiDiagnosisHelper";
+// import { generateDiagnosisStream } from "../Utility/aiDiagnosisHelper";
 import { toast } from "react-hot-toast";
 
 const localToday = (date = new Date()) => {

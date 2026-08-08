@@ -10,7 +10,7 @@ import {
 import FeatherIcon from "feather-icons-react";
 import IpdFeedbackForm from "../Ipd/IpdFeedbackForm";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
-import { decodeJwt } from "../../utils/decode-jwt";
+import { decodeJwt } from "../Utility/decode-jwt";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
 

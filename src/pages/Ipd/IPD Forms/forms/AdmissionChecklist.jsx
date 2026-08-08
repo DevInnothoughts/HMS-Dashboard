@@ -5,7 +5,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import "./Forms.css";
-import { decodeJwt } from "../../../../utils/decode-jwt";
+import { decodeJwt } from "../../../Utility/decode-jwt";
 import Swal from "sweetalert2";
 import hhcLogo from "../../../../assets/images/logo/hhclogo.webp";
 

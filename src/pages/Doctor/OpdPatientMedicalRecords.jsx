@@ -45,7 +45,7 @@ const toast = new Proxy(hotToast, {
     return target[prop];
   },
 });
-import { decodeJwt } from "../../utils/decode-jwt";
+import { decodeJwt } from "../Utility/decode-jwt";
 import nabhLogo from "../../assets/images/nabh-logo.png";
 import painScoreChart from "../../assets/images/pain-score-chart.jpg";
 
@@ -3371,6 +3371,9 @@ const OpdPatientMedicalRecords = () => {
                             handlePrescriptionChange("medicines", []);
                             handlePrescriptionChange("next-appo-date", "");
                             handlePrescriptionChange("patient_type", "");
+                            handlePrescriptionChange("prescription_type", "OPD_Type");
+                          } else {
+                            handlePrescriptionChange("prescription_type", "");
                           }
                         }}
                         className="m-0"

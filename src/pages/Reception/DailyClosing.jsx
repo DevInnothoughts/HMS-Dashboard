@@ -17,7 +17,7 @@ import {
 import FeatherIcon from "feather-icons-react";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import Swal from "sweetalert2";
-import { decodeJwt } from "../../utils/decode-jwt";
+import { decodeJwt } from "../Utility/decode-jwt";
 
 const Toast = Swal.mixin({
   toast: true,

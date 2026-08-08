@@ -15,7 +15,7 @@ import PageBreadcrumb from "../../components/PageBreadcrumb";
 import FeatherIcon from "feather-icons-react";
 import Swal from "sweetalert2";
 import moment from "moment";
-import { decodeJwt } from "../../utils/decode-jwt";
+import { decodeJwt } from "../Utility/decode-jwt";
 import "../../styles/styles.css";
 
 const BASE_URL = "http://194.195.117.79:5100/api";

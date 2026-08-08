@@ -5,7 +5,7 @@ import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import FeatherIcon from "feather-icons-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { decodeJwt } from "../../utils/decode-jwt";
+import { decodeJwt } from "../Utility/decode-jwt";
 import Swal from "sweetalert2";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import {
