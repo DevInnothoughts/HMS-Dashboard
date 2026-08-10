@@ -1182,10 +1182,14 @@ export default function OpdPatientList() {
 
   const handlePrint = (patient) => {
     const printWindow = window.open("", "_blank", "width=800,height=900");
-    const vipIcon =
-      patient.patient_type == 1
-        ? `<img src="${vipIconImg}" class="vip-logo-img" alt="(VIP)" />`
-        : "";
+    if (!printWindow) {
+      toast.error("Popup blocked! Please allow popups in your browser to print.");
+      return;
+    }
+    const isVip = patient.patient_type == 1 || patient.patient_type === true;
+    const vipIcon = isVip
+      ? `<span style="color: #e69900; font-size: 20px; margin-right: 4px;">★</span>`
+      : "";
 
     const location = currentLocation || "";
 
@@ -1338,7 +1342,7 @@ export default function OpdPatientList() {
             <tr>
             <td style="width:50%; vertical-align: top; line-height: 1.3;">
               <p><b>UID No :-</b>&nbsp;&nbsp;${patient.Uid_no || "-"}</p>
-              <p style="margin:0;"><b>Name :-</b>&nbsp;&nbsp;${patientName}${vipIcon}</p>
+              <p style="margin:0;"><b>Name :-</b>&nbsp;&nbsp;${vipIcon}${patientName}</p>
               <p><b>Gender :-</b>&nbsp;&nbsp;${patient.sex || "-"}</p>
               <p><b>Address :-</b>&nbsp;&nbsp;${patient.address || "-"}</p>
               <p><b>Contact No :-</b>&nbsp;&nbsp;${patient.phone || "-"}</p>
