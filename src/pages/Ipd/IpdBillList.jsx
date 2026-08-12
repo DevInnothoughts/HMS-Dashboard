@@ -2698,7 +2698,7 @@ const IpdBillList = () => {
                           border: "1px solid #4dd0e1",
                         }}
                         value={selectedInvoice.due_date}
-                        min={maxDate}
+                        min={selectedInvoice.creation_date}
                         onChange={(e) =>
                           setSelectedInvoice({
                             ...selectedInvoice,

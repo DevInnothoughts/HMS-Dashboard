@@ -1241,7 +1241,7 @@ const AddIpdBill = () => {
                     type="date"
                     style={inputStyle}
                     name="discharge_date"
-                    min={maxDate}
+                    min={formData.admission_date}
                     value={formData.discharge_date}
                     onChange={handleInputChange}
                     isInvalid={errors.discharge_date}
