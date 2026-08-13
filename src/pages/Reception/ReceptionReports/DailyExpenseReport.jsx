@@ -560,9 +560,8 @@ const DailyExpenseReport = () => {
                               <td>{formatAmount(item.balance)}</td>
                             </tr>
                           ))}
-                      </tbody>
-                      <tfoot>
-                        <tr>
+                        {/* Totals row inside tbody to avoid page repetition on multiple pages */}
+                        <tr className="print-totals-row">
                           <td colSpan={3} style={{ fontWeight: "bold", textAlign: "right" }}>
                             Total:
                           </td>
@@ -572,7 +571,7 @@ const DailyExpenseReport = () => {
                             {formatAmount(finalRemainingBalance)}
                           </td>
                         </tr>
-                      </tfoot>
+                      </tbody>
                     </table>
                   </div>
                 </Card.Body>
@@ -707,8 +706,9 @@ const DailyExpenseReport = () => {
           .print-table tbody tr:nth-child(even) td {
             background-color: #e0f7fa !important;
           }
-          .print-table tfoot td {
+          .print-table .print-totals-row td {
             background-color: #b2ebf2 !important;
+            font-weight: bold !important;
           }
           .print-table thead {
             display: table-header-group !important;

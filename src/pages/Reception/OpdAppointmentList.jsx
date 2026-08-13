@@ -1430,9 +1430,9 @@ export default function OpdAppointmentList() {
         style={{
           "--status-hover-color": bgColor,
           "--status-hover-bg": `${bgColor}15`,
+          borderColor: name === "Pending Appointment" ? "#b6bbc1ff" : bgColor,
           ...(isSelected
             ? {
-              borderColor: bgColor,
               backgroundColor: `${bgColor}25`,
               transform: "translateY(-1.5px)",
               boxShadow:
