@@ -791,7 +791,7 @@ export default function AddIpdAdmission() {
                                   height: "31px",
                                 }}
                                 name="surgery_date"
-                                min={maxDate}
+                                min={minDate}
                                 value={surgeryDate}
                                 onChange={(e) => setSurgeryDate(e.target.value)}
                                 onKeyDown={(e) => e.preventDefault()}

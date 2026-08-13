@@ -85,6 +85,10 @@ export default function IpdAdmissionList() {
   const timeOptions = generateTimeOptions();
   const todayDateString = formatToApiDate(new Date());
 
+  const minSurgeryDateObj = new Date();
+  minSurgeryDateObj.setDate(minSurgeryDateObj.getDate() - 1);
+  const minSurgeryDateString = formatToApiDate(minSurgeryDateObj);
+
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [cancelPatient, setCancelPatient] = useState(null);
@@ -1188,7 +1192,7 @@ export default function IpdAdmissionList() {
                       padding: "6px 10px",
                     }}
                     name="reschedule_date"
-                    min={todayDateString}
+                    min={minSurgeryDateString}
                     value={rescheduleDate}
                     onChange={(e) => setRescheduleDate(e.target.value)}
                     onKeyDown={(e) => e.preventDefault()}
