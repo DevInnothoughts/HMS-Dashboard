@@ -9,7 +9,7 @@ const ReceptionSidebar = ({
     location
 }) => {
     const reportRoutes = [
-        "/appointment-conversion", "/billing-reports", "/birthday-alert", "/cash-deposit-report",
+        "/appointment-conversion", "/birthday-alert", "/cash-deposit-report",
         "/condition-wise-report", "/daily-opd-report", "/enquiry-conversion", "/enquiry-data",
         "/opd-ipd-coll-graph", "/opd-ipd-collection", "/opd-collection-reports",
         "/opd-receipts-report", "/pharmacy-collection-report", "/reference-report",
@@ -139,7 +139,6 @@ const ReceptionSidebar = ({
                     style={{ display: isReportActive ? "block" : "none" }}
                 >
                     <li><Link to="/appointment-conversion" className={location.pathname === "/appointment-conversion" ? "active" : ""}>Appointment Conversion</Link></li>
-                    <li><Link to="/billing-reports" className={location.pathname === "/billing-reports" ? "active" : ""}>Billing Report</Link></li>
                     <li><Link to="/birthday-alert" className={location.pathname === "/birthday-alert" ? "active" : ""}>Birthday Alert</Link></li>
                     {/* <li><Link to="/cash-deposit-report" className={location.pathname === "/cash-deposit-report" ? "active" : ""}>Cash Deposit Report</Link></li> */}
                     <li><Link to="/condition-wise-report" className={location.pathname === "/condition-wise-report" ? "active" : ""}>Condition Wise Report</Link></li>

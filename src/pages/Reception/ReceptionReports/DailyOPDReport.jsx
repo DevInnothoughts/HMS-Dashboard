@@ -23,6 +23,7 @@ const initialReportState = {
   pharmacyCollectionDetails: [],
   opdCollectionDetails: [],
   testDetails: [],
+  opdReportDetails: [],
 };
 
 const formatDateIST = (date) => {
@@ -47,8 +48,19 @@ const formatAmount = (val) => {
   if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
     return "-";
   }
-  const parsed = parseFloat(val);
-  return isNaN(parsed) ? val : `₹ ${Math.round(parsed).toLocaleString("en-IN")}`;
+  const num = Number(val);
+  if (isNaN(num) || num === 0) {
+    return "-";
+  }
+  return `₹ ${num.toLocaleString("en-IN")}`;
+};
+
+const formatCount = (val) => {
+  if (val === null || val === undefined || val === "" || val === 0 || val === "0" || val === "-") {
+    return "-";
+  }
+  const num = Number(val);
+  return isNaN(num) || num === 0 ? "-" : val;
 };
 
 const DailyOPDReport = () => {
@@ -79,12 +91,12 @@ const DailyOPDReport = () => {
           const d = result.description;
           setReportData({
             opdCounts: [
-              { type: "New", count: d.dailyOPDReport[0][0] },
-              { type: "Follow UP", count: d.dailyOPDReport[0][1] },
-              { type: "PO", count: d.dailyOPDReport[0][2] },
-              { type: "PROCTOSCOPY", count: d.dailyOPDReport[0][3] },
-              { type: "MCDPA", count: d.dailyOPDReport[0][5] || 0 },
-              { type: "TOTAL", count: d.dailyOPDReport[0][4] },
+              { type: "New", count: d.dailyOPDReport[0][0] || 0 },
+              { type: "Follow UP", count: d.dailyOPDReport[0][1] || 0 },
+              { type: "PO", count: d.dailyOPDReport[0][2] || 0 },
+              { type: "PROCTOSCOPY", count: d.dailyOPDReport[0][3] || 0 },
+              { type: "MCDPA", count: d.dailyOPDReport[0][4] || 0 },
+              { type: "TOTAL", count: d.dailyOPDReport[0][5] || 0 },
             ],
             opdDetails: d.detailedData.map((row, index) => {
               const labels = [
@@ -97,10 +109,11 @@ const DailyOPDReport = () => {
               ];
               return {
                 type: labels[index],
-                new: row[0],
-                followUp: row[1],
-                po: row[2],
-                total: row[3],
+                new: row[0] || 0,
+                followUp: row[1] || 0,
+                po: row[2] || 0,
+                mcdpa: row[3] || 0,
+                total: row[4] || 0,
               };
             }),
             overallCollectionDetails: d.overallCollection.map((item) => ({
@@ -119,9 +132,13 @@ const DailyOPDReport = () => {
               method: item[0],
               amount: item[1],
             })),
-            testDetails: d.testReport.map((test) => ({
+            testDetails: (d.testReport || []).map((test) => ({
               testName: test[0],
               amount: test[1],
+            })),
+            opdReportDetails: (d.opdReport || []).map((item) => ({
+              name: item[0],
+              amount: item[1],
             })),
           });
         }
@@ -180,8 +197,7 @@ const DailyOPDReport = () => {
           (item) => `
             <tr>
               <td style="text-align:left;padding-left:10px;width:70%;
-                  font-weight:bold;
-                  color:${item.method?.toUpperCase() === "TOTAL" ? "inherit" : "#343030ff"} !important;">
+                  font-weight:${item.method?.toUpperCase() === "TOTAL" ? "bold" : "normal"};">
                 ${item.method}
               </td>
               <td style="width:30%;
@@ -279,8 +295,8 @@ const DailyOPDReport = () => {
         .map(
           (i) => `
                     <tr>
-                      <td class="fw-bold" style="color:${i.type === "TOTAL" ? "#000" : "#343030ff"} !important;">${i.type}</td>
-                      <td style="font-weight:${i.type === "TOTAL" ? "bold" : "normal"};">${i.count}</td>
+                      <td style="font-weight:${i.type === "TOTAL" ? "bold" : "normal"};">${i.type}</td>
+                      <td style="font-weight:${i.type === "TOTAL" ? "bold" : "normal"};">${formatCount(i.count)}</td>
                     </tr>
                   `,
         )
@@ -289,7 +305,7 @@ const DailyOPDReport = () => {
               </table>
             </div>
           </div>
-  
+
           <!-- OPD DETAILS -->
           <div class="row justify-content-center mb-2">
             <div class="col-10">
@@ -297,11 +313,12 @@ const DailyOPDReport = () => {
                 style="border:1px solid #00bcd4; border-collapse: collapse; width: 100%;">
                 <thead style="background:#e3f2fd;color:#000;font-size:13px;">
                   <tr>
-                    <th style="background-color:#e3f2fd !important; color:#000 !important; border-right:1px solid #00bcd4 !important; border-left:1px solid #00bcd4 !important;">Type</th>
-                    <th style="background-color:#e3f2fd !important; color:#000 !important; border-right:1px solid #00bcd4 !important; border-left:1px solid #00bcd4 !important;">New</th>
-                    <th style="background-color:#e3f2fd !important; color:#000 !important; border-right:1px solid #00bcd4 !important; border-left:1px solid #00bcd4 !important;">Follow UP</th>
-                    <th style="background-color:#e3f2fd !important; color:#000 !important; border-right:1px solid #00bcd4 !important; border-left:1px solid #00bcd4 !important;">PO</th>
-                    <th style="background-color:#e3f2fd !important; color:#000 !important; border-right:1px solid #00bcd4 !important; border-left:1px solid #00bcd4 !important;">Total</th>
+                    <th style="background-color:#e3f2fd !important; color:#000 !important; width: 28%; border-right:1px solid #00bcd4 !important; border-left:1px solid #00bcd4 !important;">Type</th>
+                    <th style="background-color:#e3f2fd !important; color:#000 !important; width: 14%; border-right:1px solid #00bcd4 !important; border-left:1px solid #00bcd4 !important;">New</th>
+                    <th style="background-color:#e3f2fd !important; color:#000 !important; width: 18%; border-right:1px solid #00bcd4 !important; border-left:1px solid #00bcd4 !important;">Follow UP</th>
+                    <th style="background-color:#e3f2fd !important; color:#000 !important; width: 14%; min-width: 65px; border-right:1px solid #00bcd4 !important; border-left:1px solid #00bcd4 !important;">PO</th>
+                    <th style="background-color:#e3f2fd !important; color:#000 !important; width: 13%; border-right:1px solid #00bcd4 !important; border-left:1px solid #00bcd4 !important;">MCDPA</th>
+                    <th style="background-color:#e3f2fd !important; color:#000 !important; width: 13%; border-right:1px solid #00bcd4 !important; border-left:1px solid #00bcd4 !important;">Total</th>
                   </tr>
                 </thead>
                 <tbody style="font-size:12px;">
@@ -309,11 +326,12 @@ const DailyOPDReport = () => {
         .map(
           (i) => `
                     <tr>
-                      <td class="fw-bold" style="color:#000 !important;">${i.type}</td>
-                      <td>${i.new}</td>
-                      <td>${i.followUp}</td>
-                      <td>${i.po}</td>
-                      <td>${i.total}</td>
+                      <td style="color:#000 !important;">${i.type}</td>
+                      <td>${formatCount(i.new)}</td>
+                      <td>${formatCount(i.followUp)}</td>
+                      <td>${formatCount(i.po)}</td>
+                      <td>${formatCount(i.mcdpa)}</td>
+                      <td>${formatCount(i.total)}</td>
                     </tr>
                   `,
         )
@@ -322,16 +340,39 @@ const DailyOPDReport = () => {
               </table>
             </div>
           </div>
-  
-          <!-- TEST DETAILS -->
+
+          <!-- OPD & LAB CONSULTATION DETAILS -->
           <div class="row justify-content-center mb-2">
-            <div class="col-6">
+            <div class="col-5">
               <table class="table table-sm table-striped text-center"
                 style="border:1px solid #00bcd4; border-collapse: collapse; width: 100%;">
                 <thead style="background:#e3f2fd;color:#000;font-size:13px;">
                   <tr>
-                    <th style="background-color:#e3f2fd !important; color:#000 !important; border-right:1px solid #00bcd4 !important; border-left:1px solid #00bcd4 !important;">Test</th>
-                    <th style="background-color:#e3f2fd !important; color:#000 !important; border-right:1px solid #00bcd4 !important; border-left:1px solid #00bcd4 !important;">Amount</th>
+                    <th style="background-color:#e3f2fd !important; color:#000 !important; width: 60%; border-right:1px solid #00bcd4 !important; border-left:1px solid #00bcd4 !important;">OPD</th>
+                    <th style="background-color:#e3f2fd !important; color:#000 !important; width: 40%; border-right:1px solid #00bcd4 !important; border-left:1px solid #00bcd4 !important;">Amount (₹)</th>
+                  </tr>
+                </thead>
+                <tbody style="font-size:12px;">
+                  ${(reportData.opdReportDetails || [])
+        .map(
+          (i) => `
+                    <tr>
+                       <td style="color:#000 !important;">${i.name}</td>
+                       <td>${formatAmount(i.amount)}</td>
+                     </tr>
+                  `,
+        )
+        .join("")}
+                </tbody>
+              </table>
+            </div>
+            <div class="col-5">
+              <table class="table table-sm table-striped text-center"
+                style="border:1px solid #00bcd4; border-collapse: collapse; width: 100%;">
+                <thead style="background:#e3f2fd;color:#000;font-size:13px;">
+                  <tr>
+                    <th style="background-color:#e3f2fd !important; color:#000 !important; width: 60%; border-right:1px solid #00bcd4 !important; border-left:1px solid #00bcd4 !important;">Lab</th>
+                    <th style="background-color:#e3f2fd !important; color:#000 !important; width: 40%; border-right:1px solid #00bcd4 !important; border-left:1px solid #00bcd4 !important;">Amount (₹)</th>
                   </tr>
                 </thead>
                 <tbody style="font-size:12px;">
@@ -339,7 +380,7 @@ const DailyOPDReport = () => {
         .map(
           (i) => `
                     <tr>
-                       <td class="fw-bold" style="color:#000 !important;">${i.testName}</td>
+                       <td style="color:#000 !important;">${i.testName}</td>
                        <td>${formatAmount(i.amount)}</td>
                      </tr>
                   `,
@@ -349,22 +390,22 @@ const DailyOPDReport = () => {
               </table>
             </div>
           </div>
-  
+
           <!-- COLLECTIONS -->
           <div class="row justify-content-center">
             <div class="col-4 mb-2">
-              ${buildCollectionTableContent("OPD Collection Details(Rs)", reportData.opdCollectionDetails)}
+              ${buildCollectionTableContent("OPD Collection Details (₹)", reportData.opdCollectionDetails)}
             </div>
             <div class="col-4 mb-2">
-              ${buildCollectionTableContent("LAB Collection Details(Rs)", reportData.labCollectionDetails)}
+              ${buildCollectionTableContent("LAB Collection Details (₹)", reportData.labCollectionDetails)}
               <div style="margin-top: 25px;"></div>  
-              ${buildCollectionTableContent("Overall Collection Details(Rs)", reportData.overallCollectionDetails)}
+              ${buildCollectionTableContent("Overall Collection Details (₹)", reportData.overallCollectionDetails)}
             </div>
             <div class="col-4 mb-2">
-              ${buildCollectionTableContent("Pharmacy Collection Details(Rs)", reportData.pharmacyCollectionDetails)}
+              ${buildCollectionTableContent("Pharmacy Collection Details (₹)", reportData.pharmacyCollectionDetails)}
             </div>
           </div>
-  
+
         </div>
       </div>
     </div>
@@ -528,11 +569,11 @@ const DailyOPDReport = () => {
                       <tbody style={{ fontSize: "12px" }}>
                         {reportData.opdCounts.map((item, index) => (
                           <tr key={index}>
-                            <td className={`fw-bold ${item.type === "TOTAL" ? "text-dark" : "text-secondary"}`}>
+                            <td className={item.type === "TOTAL" ? "fw-bold" : ""}>
                               {item.type}
                             </td>
                             <td className={item.type === "TOTAL" ? "fw-bold" : ""}>
-                              {item.count}
+                              {formatCount(item.count)}
                             </td>
                           </tr>
                         ))}
@@ -563,6 +604,7 @@ const DailyOPDReport = () => {
                         <tr>
                           <th
                             style={{
+                              width: "28%",
                               borderLeft: "1px solid #00bcd4",
                               borderRight: "1px solid #00bcd4",
                             }}
@@ -571,6 +613,7 @@ const DailyOPDReport = () => {
                           </th>
                           <th
                             style={{
+                              width: "14%",
                               borderLeft: "1px solid #00bcd4",
                               borderRight: "1px solid #00bcd4",
                             }}
@@ -579,6 +622,7 @@ const DailyOPDReport = () => {
                           </th>
                           <th
                             style={{
+                              width: "18%",
                               borderLeft: "1px solid #00bcd4",
                               borderRight: "1px solid #00bcd4",
                             }}
@@ -587,13 +631,24 @@ const DailyOPDReport = () => {
                           </th>
                           <th
                             style={{
+                              width: "14%",
+                              minWidth: "65px",
                               borderLeft: "1px solid #00bcd4",
                               borderRight: "1px solid #00bcd4",
                             }}
                           >
                             PO
                           </th>
-                          <th style={{ borderRight: "1px solid #00bcd4" }}>
+                          <th
+                            style={{
+                              width: "13%",
+                              borderLeft: "1px solid #00bcd4",
+                              borderRight: "1px solid #00bcd4",
+                            }}
+                          >
+                            MCDPA
+                          </th>
+                          <th style={{ width: "13%", borderRight: "1px solid #00bcd4" }}>
                             Total
                           </th>
                         </tr>
@@ -601,13 +656,14 @@ const DailyOPDReport = () => {
                       <tbody style={{ fontSize: "12px" }}>
                         {reportData.opdDetails.map((item, index) => (
                           <tr key={index}>
-                            <td className="fw-bold text-secondary">
+                            <td>
                               {item.type}
                             </td>
-                            <td>{item.new}</td>
-                            <td>{item.followUp}</td>
-                            <td>{item.po}</td>
-                            <td>{item.total}</td>
+                            <td>{formatCount(item.new)}</td>
+                            <td>{formatCount(item.followUp)}</td>
+                            <td>{formatCount(item.po)}</td>
+                            <td>{formatCount(item.mcdpa)}</td>
+                            <td>{formatCount(item.total)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -616,7 +672,8 @@ const DailyOPDReport = () => {
                 </Row>
 
                 <Row className="justify-content-center mb-4">
-                  <Col xs={12} sm={8} md={6} lg={4}>
+                  {/* OPD Table */}
+                  <Col xs={12} sm={6} md={5} lg={4} className="mb-3 mb-sm-0">
                     <Table
                       bordered
                       responsive
@@ -625,7 +682,7 @@ const DailyOPDReport = () => {
                         border: "1px solid #00bcd4",
                         textAlign: "center",
                         boxShadow: "0px 2px 4px rgba(0,0,0,0.05)",
-                        maxWidth: "300px",
+                        maxWidth: "350px",
                         margin: "0 auto",
                       }}
                     >
@@ -639,21 +696,71 @@ const DailyOPDReport = () => {
                         <tr>
                           <th
                             style={{
+                              width: "60%",
                               borderLeft: "1px solid #00bcd4",
                               borderRight: "1px solid #00bcd4",
                             }}
                           >
-                            Test
+                            OPD
                           </th>
-                          <th style={{ borderRight: "1px solid #00bcd4" }}>
-                            Amount
+                          <th style={{ width: "40%", borderRight: "1px solid #00bcd4" }}>
+                            Amount (₹)
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody style={{ fontSize: "12px" }}>
+                        {(reportData.opdReportDetails || []).map((item, index) => (
+                          <tr key={index}>
+                             <td>
+                               {item.name}
+                             </td>
+                             <td>{formatAmount(item.amount)}</td>
+                           </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  </Col>
+
+                  {/* Lab Table */}
+                  <Col xs={12} sm={6} md={5} lg={4}>
+                    <Table
+                      bordered
+                      responsive
+                      className="table-sm table-striped mx-auto"
+                      style={{
+                        border: "1px solid #00bcd4",
+                        textAlign: "center",
+                        boxShadow: "0px 2px 4px rgba(0,0,0,0.05)",
+                        maxWidth: "350px",
+                        margin: "0 auto",
+                      }}
+                    >
+                      <thead
+                        style={{
+                          backgroundColor: "#e3f2fd",
+                          color: "#000",
+                          fontSize: "13px",
+                        }}
+                      >
+                        <tr>
+                          <th
+                            style={{
+                              width: "60%",
+                              borderLeft: "1px solid #00bcd4",
+                              borderRight: "1px solid #00bcd4",
+                            }}
+                          >
+                            Lab
+                          </th>
+                          <th style={{ width: "40%", borderRight: "1px solid #00bcd4" }}>
+                            Amount (₹)
                           </th>
                         </tr>
                       </thead>
                       <tbody style={{ fontSize: "12px" }}>
                         {reportData.testDetails.map((item, index) => (
                           <tr key={index}>
-                             <td className="fw-bold text-secondary">
+                             <td>
                                {item.testName}
                              </td>
                              <td>{formatAmount(item.amount)}</td>
@@ -689,7 +796,7 @@ const DailyOPDReport = () => {
                               borderLeft: "1px solid #00bcd4",
                             }}
                           >
-                            OPD Collection Details(Rs)
+                            OPD Collection Details (₹)
                           </th>
                         </tr>
                       </thead>
@@ -697,7 +804,7 @@ const DailyOPDReport = () => {
                         {reportData.opdCollectionDetails.map((item, index) => (
                           <tr key={index}>
                             <td
-                              className={`fw-bold ${item.method?.toUpperCase() === "TOTAL" ? "" : "text-secondary"}`}
+                              className={item.method?.toUpperCase() === "TOTAL" ? "fw-bold" : ""}
                               style={{
                                 textAlign: "left",
                                 paddingLeft: "10px",
@@ -746,7 +853,7 @@ const DailyOPDReport = () => {
                               borderLeft: "1px solid #00bcd4",
                             }}
                           >
-                            LAB Collection Details(Rs)
+                            LAB Collection Details (₹)
                           </th>
                         </tr>
                       </thead>
@@ -754,7 +861,7 @@ const DailyOPDReport = () => {
                         {reportData.labCollectionDetails.map((item, index) => (
                           <tr key={index}>
                             <td
-                              className={`fw-bold ${item.method?.toUpperCase() === "TOTAL" ? "" : "text-secondary"}`}
+                              className={item.method?.toUpperCase() === "TOTAL" ? "fw-bold" : ""}
                               style={{
                                 textAlign: "left",
                                 paddingLeft: "10px",
@@ -801,7 +908,7 @@ const DailyOPDReport = () => {
                               borderLeft: "1px solid #00bcd4",
                             }}
                           >
-                            Overall Collection Details(Rs)
+                            Overall Collection Details (₹)
                           </th>
                         </tr>
                       </thead>
@@ -809,7 +916,7 @@ const DailyOPDReport = () => {
                         {reportData.overallCollectionDetails.map((item, index) => (
                           <tr key={index}>
                             <td
-                              className={`fw-bold ${item.method?.toUpperCase() === "TOTAL" ? "" : "text-secondary"}`}
+                              className={item.method?.toUpperCase() === "TOTAL" ? "fw-bold" : ""}
                               style={{
                                 textAlign: "left",
                                 paddingLeft: "10px",
@@ -857,7 +964,7 @@ const DailyOPDReport = () => {
                               borderLeft: "1px solid #00bcd4",
                             }}
                           >
-                            Pharmacy Collection Details(Rs)
+                            Pharmacy Collection Details (₹)
                           </th>
                         </tr>
                       </thead>
@@ -865,7 +972,7 @@ const DailyOPDReport = () => {
                         {reportData.pharmacyCollectionDetails.map((item, index) => (
                           <tr key={index}>
                             <td
-                              className={`fw-bold ${item.method?.toUpperCase() === "TOTAL" ? "" : "text-secondary"}`}
+                              className={item.method?.toUpperCase() === "TOTAL" ? "fw-bold" : ""}
                               style={{
                                 textAlign: "left",
                                 paddingLeft: "10px",

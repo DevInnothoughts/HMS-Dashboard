@@ -4,7 +4,7 @@ import FeatherIcon from "feather-icons-react";
 
 const IpdSidebar = ({ activeIndex, handleMenuClick, isCollapsed, location }) => {
     const reportRoutes = [
-        "/insurance-due-report", "/ipd-collection-report", "/ipd-due-report",
+        "/billing-reports", "/insurance-due-report", "/ipd-collection-report", "/ipd-due-report",
         "/opd-ipd-coll-graph", "/opd-ipd-collection"
     ];
     const isReportActive = location
@@ -86,6 +86,14 @@ const IpdSidebar = ({ activeIndex, handleMenuClick, isCollapsed, location }) => 
                     className="submenu-list"
                     style={{ display: isReportActive ? "block" : "none" }}
                 >
+                    <li>
+                        <Link
+                            to="/billing-reports"
+                            className={location?.pathname === "/billing-reports" ? "active" : ""}
+                        >
+                            Billing Report
+                        </Link>
+                    </li>
                     <li>
                         <Link
                             to="/insurance-due-report"
