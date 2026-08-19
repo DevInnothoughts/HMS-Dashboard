@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card, Row, Col, Form, Button, Table } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 import Swal from "sweetalert2";
@@ -68,6 +68,59 @@ export default function IpdFeedbackForm({ patient, location, BASE_URL, onSubmitS
     setTransparency((prev) => ({ ...prev, [field]: value }));
   };
 
+  // Calculate scores and Patient Satisfaction Index (%)
+  const scores = useMemo(() => {
+    const facilityScores = Object.values(facility).map((val) => Number(val) || 0);
+    const healingScores = Object.values(healingTeam).map((val) => Number(val) || 0);
+    const transparencyScores = Object.values(transparency).map((val) => Number(val) || 0);
+
+    const facilityAchieved = facilityScores.reduce((a, b) => a + b, 0);
+    const healingAchieved = healingScores.reduce((a, b) => a + b, 0);
+    const transparencyAchieved = transparencyScores.reduce((a, b) => a + b, 0);
+
+    const totalAchieved = facilityAchieved + healingAchieved + transparencyAchieved;
+    const maxPossible = 50; // 10 questions * 5 max stars
+
+    const facilityAnswered = Object.values(facility).filter((v) => v !== "").length;
+    const healingAnswered = Object.values(healingTeam).filter((v) => v !== "").length;
+    const transparencyAnswered = Object.values(transparency).filter((v) => v !== "").length;
+    const answeredCount = facilityAnswered + healingAnswered + transparencyAnswered;
+
+    const psi = maxPossible > 0 ? (totalAchieved / maxPossible) * 100 : 0;
+
+    return {
+      facilityAchieved,
+      facilityMax: 15,
+      facilityAnswered,
+      healingAchieved,
+      healingMax: 20,
+      healingAnswered,
+      transparencyAchieved,
+      transparencyMax: 15,
+      transparencyAnswered,
+      totalAchieved,
+      maxPossible,
+      answeredCount,
+      totalCriteria: 10,
+      psi: Number(psi.toFixed(2)),
+    };
+  }, [facility, healingTeam, transparency]);
+
+  // Calculate NPS details based on recommendation score (1-10)
+  const npsInfo = useMemo(() => {
+    const score = Number(recommendScore);
+    if (!recommendScore || isNaN(score)) {
+      return { category: "", score: null, label: "Not Selected", color: "#64748b", bg: "#f1f5f9" };
+    }
+    if (score >= 9) {
+      return { category: "Promoter", score: score, label: `Promoter (Score ${score})`, color: "#2e7d32", bg: "#e8f5e9" };
+    } else if (score >= 7) {
+      return { category: "Passive", score: score, label: `Passive (Score ${score})`, color: "#f57c00", bg: "#fff3e0" };
+    } else {
+      return { category: "Detractor", score: score, label: `Detractor (Score ${score})`, color: "#c62828", bg: "#ffebee" };
+    }
+  }, [recommendScore]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -93,7 +146,13 @@ export default function IpdFeedbackForm({ patient, location, BASE_URL, onSubmitS
       facility,
       healingTeam,
       transparency,
-      recommendScore,
+      recommendScore: Number(recommendScore),
+      totalScoreAchieved: scores.totalAchieved,
+      maxPossibleScore: scores.maxPossible,
+      patientSatisfactionIndex: scores.totalAchieved,
+      netPromoterScore: Number(recommendScore),
+      psi: scores.totalAchieved,
+      nps: Number(recommendScore),
     };
 
     console.log("Submitting IPD Feedback:", feedbackData);
@@ -119,7 +178,7 @@ export default function IpdFeedbackForm({ patient, location, BASE_URL, onSubmitS
       await Swal.fire({
         icon: "success",
         title: "Feedback Recorded",
-        text: "The IPD Feedback Form details have been entered successfully.",
+        text: `The IPD Feedback Form details have been entered successfully. Patient Satisfaction Index: ${scores.totalAchieved}/50`,
         confirmButtonColor: "#00bcd4",
       });
 
@@ -145,7 +204,7 @@ export default function IpdFeedbackForm({ patient, location, BASE_URL, onSubmitS
 
   // Helper component to render a row of ratings
   const RatingRow = ({ label, currentValue, onChange }) => (
-    <tr style={{ verticalAlign: "middle", borderBottom: "1px solid #f1f5f9" }}>
+    <tr style={{ verticalAlign: "middle", borderBottom: "1px dotted #c1d2e4ff" }}>
       <td style={{ textAlign: "left", padding: "6px 4px", fontWeight: "500", color: "#334155", fontSize: "12px" }}>
         {label}
       </td>
@@ -166,7 +225,7 @@ export default function IpdFeedbackForm({ patient, location, BASE_URL, onSubmitS
 
   const tableHeader = (
     <thead>
-      <tr>
+      <tr style={{ borderBottom: "1px dotted #9daab7ff" }}>
         <th style={{ width: "35%", textAlign: "left", border: "none", color: "#64748b", fontWeight: "600" }}></th>
         {ratingScales.map((star) => (
           <th key={star} style={{ textAlign: "center", border: "none", color: "#f59e0b", fontWeight: "600", fontSize: "11px", padding: "4px" }}>
@@ -181,20 +240,8 @@ export default function IpdFeedbackForm({ patient, location, BASE_URL, onSubmitS
   );
 
   return (
-    <div style={{ background: "#f8fafd", padding: "12px", borderRadius: "15px" }}>
-      <div className="d-flex justify-content-between align-items-center mb-3 px-2">
-        <h5
-          className="fw-bold m-0"
-          style={{
-            color: "#00838f",
-            textTransform: "uppercase",
-            letterSpacing: "1px",
-            fontSize: "14px",
-          }}
-        >
-          <FeatherIcon icon="file-text" size="18" className="me-2 text-info" />
-          IPD Feedback Form Details
-        </h5>
+    <>
+      <div className="d-flex justify-content-end align-items-center mb-3 px-2">
         {isReadOnly && (
           <Button
             variant="outline-warning"
@@ -215,11 +262,16 @@ export default function IpdFeedbackForm({ patient, location, BASE_URL, onSubmitS
       <Form onSubmit={handleSubmit}>
         <fieldset disabled={isReadOnly} style={{ display: "contents" }}>
           {/* SECTION 1: The Facility */}
-          <Card className="border-0 shadow-sm mb-15" style={{ borderRadius: "10px" }}>
+          <Card className="border shadow-sm mb-15" style={{ borderRadius: "10px", borderColor: "#cbd5e1" }}>
             <Card.Body style={{ padding: "12px 15px" }}>
-              <h6 className="fw-bold mb-2" style={{ color: "#2c3e50", fontSize: "13px" }}>
-                The Facility <span className="text-danger">*</span>
-              </h6>
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <h6 className="fw-bold m-0" style={{ color: "#2c3e50", fontSize: "13px" }}>
+                  The Facility <span className="text-danger">*</span>
+                </h6>
+                <span className="badge" style={{ backgroundColor: "#e0f7fa", color: "#00796b", fontSize: "11px", fontWeight: "600" }}>
+                  Score: {scores.facilityAchieved} / {scores.facilityMax}
+                </span>
+              </div>
               <Table responsive borderless style={{ marginBottom: 0 }}>
                 {tableHeader}
                 <tbody>
@@ -244,11 +296,16 @@ export default function IpdFeedbackForm({ patient, location, BASE_URL, onSubmitS
           </Card>
 
           {/* SECTION 2: The Healing Team */}
-          <Card className="border-0 shadow-sm mb-15" style={{ borderRadius: "10px" }}>
+          <Card className="border shadow-sm mb-15" style={{ borderRadius: "10px", borderColor: "#cbd5e1" }}>
             <Card.Body style={{ padding: "12px 15px" }}>
-              <h6 className="fw-bold mb-2" style={{ color: "#2c3e50", fontSize: "13px" }}>
-                The Healing Team (Everyone Who Supported Your Care) <span className="text-danger">*</span>
-              </h6>
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <h6 className="fw-bold m-0" style={{ color: "#2c3e50", fontSize: "13px" }}>
+                  The Healing Team (Everyone Who Supported Your Care) <span className="text-danger">*</span>
+                </h6>
+                <span className="badge" style={{ backgroundColor: "#e0f7fa", color: "#00796b", fontSize: "11px", fontWeight: "600" }}>
+                  Score: {scores.healingAchieved} / {scores.healingMax}
+                </span>
+              </div>
               <Table responsive borderless style={{ marginBottom: 0 }}>
                 {tableHeader}
                 <tbody>
@@ -278,11 +335,16 @@ export default function IpdFeedbackForm({ patient, location, BASE_URL, onSubmitS
           </Card>
 
           {/* SECTION 3: Ease and Transparency */}
-          <Card className="border-0 shadow-sm mb-15" style={{ borderRadius: "10px" }}>
+          <Card className="border shadow-sm mb-15" style={{ borderRadius: "10px", borderColor: "#cbd5e1" }}>
             <Card.Body style={{ padding: "12px 15px" }}>
-              <h6 className="fw-bold mb-2" style={{ color: "#2c3e50", fontSize: "13px" }}>
-                Ease and Transparency of Department <span className="text-danger">*</span>
-              </h6>
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <h6 className="fw-bold m-0" style={{ color: "#2c3e50", fontSize: "13px" }}>
+                  Ease and Transparency of Department <span className="text-danger">*</span>
+                </h6>
+                <span className="badge" style={{ backgroundColor: "#e0f7fa", color: "#00796b", fontSize: "11px", fontWeight: "600" }}>
+                  Score: {scores.transparencyAchieved} / {scores.transparencyMax}
+                </span>
+              </div>
               <Table responsive borderless style={{ marginBottom: 0 }}>
                 {tableHeader}
                 <tbody>
@@ -306,15 +368,32 @@ export default function IpdFeedbackForm({ patient, location, BASE_URL, onSubmitS
             </Card.Body>
           </Card>
 
-          {/* SECTION 4: Recommendation Dropdown */}
-          <Card className="border-0 shadow-sm mb-15" style={{ borderRadius: "10px" }}>
-            <Card.Body style={{ padding: "12px 15px" }}>
+          {/* SECTION 4: Recommendation Dropdown & NPS */}
+          <Card className="border shadow-sm mb-15" style={{ borderRadius: "10px", borderColor: "#cbd5e1" }}>
+            <Card.Body style={{ padding: "14px 18px" }}>
               <Form.Group>
-                <Form.Label className="fw-bold mb-2" style={{ color: "#2c3e50", fontSize: "12.5px" }}>
-                  How likely are you to recommend Healing Hands Clinic to family & friends? <span className="text-danger">*</span>
-                </Form.Label>
-                <Row>
-                  <Col md={6} lg={3}>
+                <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                  <Form.Label className="fw-bold m-0" style={{ color: "#2c3e50", fontSize: "13px" }}>
+                    How likely are you to recommend Healing Hands Clinic to family & friends? <span className="text-danger">*</span>
+                  </Form.Label>
+                  {npsInfo.category && (
+                    <span
+                      className="badge px-3 py-1"
+                      style={{
+                        backgroundColor: npsInfo.bg,
+                        color: npsInfo.color,
+                        fontSize: "11.5px",
+                        fontWeight: "700",
+                        borderRadius: "20px",
+                        border: `1px solid ${npsInfo.color}44`,
+                      }}
+                    >
+                      {npsInfo.category} ({npsInfo.score})
+                    </span>
+                  )}
+                </div>
+                <Row className="align-items-center">
+                  <Col md={6} lg={2}>
                     <Form.Select
                       value={recommendScore}
                       onChange={(e) => setRecommendScore(e.target.value)}
@@ -322,8 +401,9 @@ export default function IpdFeedbackForm({ patient, location, BASE_URL, onSubmitS
                         border: "2px solid rgb(224, 230, 237)",
                         fontSize: "12px",
                         borderRadius: "8px",
-                        padding: "4px 8px",
-                        color: "#334155"
+                        padding: "6px 10px",
+                        color: "#334155",
+                        fontWeight: "500",
                       }}
                     >
                       <option value="">--Choose option--</option>
@@ -341,6 +421,98 @@ export default function IpdFeedbackForm({ patient, location, BASE_URL, onSubmitS
                   </Col>
                 </Row>
               </Form.Group>
+            </Card.Body>
+          </Card>
+
+          {/* PATIENT SATISFACTION INDEX & NPS SUMMARY CARD */}
+          <Card
+            className="border shadow-sm mb-15"
+            style={{
+              borderRadius: "10px",
+              background: "linear-gradient(135deg, #e0f7fa 0%, #ffffff 100%)",
+              border: "1px solid #b2ebf2",
+              borderLeft: "5px solid #00bcd4",
+            }}
+          >
+            <Card.Body style={{ padding: "14px 18px" }}>
+              <Row className="gy-3 align-items-center">
+                {/* PSI Section */}
+                <Col md={6} style={{ borderRight: "1px solid #b2ebf2" }}>
+                  <div className="d-flex align-items-center gap-2 mb-1">
+                    <FeatherIcon icon="award" size="18" style={{ color: "#00838f" }} />
+                    <h6 className="fw-bold m-0" style={{ color: "#00695c", fontSize: "13.5px" }}>
+                      Patient Satisfaction Index (PSI)
+                    </h6>
+                  </div>
+                  <div className="d-flex align-items-start justify-content-between mt-2 pe-md-3">
+                    <div style={{ fontSize: "12px", color: "#334155", fontWeight: "500" }}>
+                      Score: <strong>{scores.totalAchieved}</strong> / <strong>{scores.maxPossible}</strong>
+                    </div>
+                    <div className="d-flex flex-column align-items-end text-end">
+                      <span
+                        style={{
+                          fontSize: "22px",
+                          fontWeight: "800",
+                          lineHeight: "1.1",
+                          color:
+                            scores.psi >= 80
+                              ? "#2e7d32"
+                              : scores.psi >= 60
+                                ? "#f57c00"
+                                : scores.psi > 0
+                                  ? "#c62828"
+                                  : "#64748b",
+                        }}
+                      >
+                        {scores.answeredCount > 0 ? `${scores.psi}%` : "0%"}
+                      </span>
+                      <div style={{ fontSize: "11px", color: "#475569", marginTop: "4px" }}>
+                        Formula: <code>(Total / Max) × 100</code>
+                      </div>
+                    </div>
+                  </div>
+                </Col>
+
+                {/* NPS Section */}
+                <Col md={6}>
+                  <div className="d-flex align-items-center gap-2 mb-1">
+                    <FeatherIcon icon="thumbs-up" size="18" style={{ color: "#00838f" }} />
+                    <h6 className="fw-bold m-0" style={{ color: "#00695c", fontSize: "13.5px" }}>
+                      Net Promoter Score (NPS)
+                    </h6>
+                  </div>
+                  <div className="d-flex align-items-start justify-content-between mt-2 ps-md-2">
+                    <div style={{ fontSize: "12px", color: "#334155", fontWeight: "500" }}>
+                      Rating: <strong>{recommendScore || "—"}</strong>
+                    </div>
+                    <div className="d-flex flex-column align-items-end text-end">
+                      {npsInfo.category ? (
+                        <span
+                          className="badge px-3 py-1"
+                          style={{
+                            backgroundColor: npsInfo.bg,
+                            color: npsInfo.color,
+                            fontSize: "11.5px",
+                            fontWeight: "700",
+                            borderRadius: "20px",
+                            border: `1px solid ${npsInfo.color}44`,
+                          }}
+                        >
+                          {npsInfo.category} ({npsInfo.score})
+                        </span>
+                      ) : (
+                        <span className="text-muted" style={{ fontSize: "12px" }}>Select rating</span>
+                      )}
+                      <div style={{ fontSize: "11px", color: "#475569", marginTop: "4px" }}>
+                        Formula: <code>NPS = % Promoters - % Detractors</code>
+                      </div>
+                      <div style={{ fontSize: "10.5px", color: "#64748b", marginTop: "2px" }}>
+                        • Promoters: 9–10 &nbsp;|&nbsp; Passives: 7–8 &nbsp;|&nbsp; Detractors: 1–6
+                      </div>
+                    </div>
+                  </div>
+                </Col>
+              </Row>
             </Card.Body>
           </Card>
         </fieldset>
@@ -417,6 +589,6 @@ export default function IpdFeedbackForm({ patient, location, BASE_URL, onSubmitS
           animation: spin 1s linear infinite;
         }
       `}</style>
-    </div>
+    </>
   );
 }
