@@ -2668,8 +2668,8 @@ export default function OpdAppointmentList() {
                             rowData.computedStatus !== "Pending Appointment";
 
                           return (
-                            <span className="selectable-text" style={{ display: "inline-flex", alignItems: "center", justifyFlex: "center", gap: "4px" }}>
-                              <span>
+                            <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
+                              <span className="selectable-text">
                                 {rowData.prefix ? `${rowData.prefix} ` : ""}
                                 {rowData.patient_name || "-"}
                               </span>
@@ -2693,6 +2693,7 @@ export default function OpdAppointmentList() {
                                     marginLeft: "1px",
                                     boxShadow: "0 2px 5px rgba(2,136,209,0.5)",
                                     border: "1px solid #ffffff",
+                                    userSelect: "none",
                                   }}
                                   title={`Patient already visited ${masterData.location || "another"} location`}
                                   onClick={(e) => {
