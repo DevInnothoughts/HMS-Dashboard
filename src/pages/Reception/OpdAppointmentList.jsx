@@ -3169,7 +3169,7 @@ export default function OpdAppointmentList() {
                     ))}
                   </Form.Select>
                 </Col>
-                <Col md={4}>
+                <Col md={7}>
                   <Form.Label
                     style={{
                       fontSize: "12px",
@@ -3189,30 +3189,33 @@ export default function OpdAppointmentList() {
                     }}
                   >
                     {/* 
-                      Commented legacy POS terminals:
+                      Commented legacy POS terminals / Federal:
+                      // "Federal",
                       // "BharatPe", "BharatPe1", "BharatPe2",
                       // "HDFC",
                       // "PineLabs"
                     */}
-                    {[...new Set(["Federal", "OFFLINE"])]
-                      .filter((opt) => receiptForm.paymentMode?.toLowerCase() === "cash" ? opt !== "Federal" : true)
-                      .map(
-                        (opt) => (
-                          <Form.Check
-                            required
-                            inline
-                            key={opt}
-                            label={opt}
-                            name="posTerminal"
-                            type="radio"
-                            id={`pos-${opt}`}
-                            value={opt}
-                            checked={receiptForm.posTerminal === opt}
-                            onChange={handleReceiptFormChange}
-                            style={{ fontSize: "12px", margin: "5px" }}
-                          />
-                        ),
-                      )}
+                    {/* 
+                      {[...new Set(["Federal", "OFFLINE"])]
+                        .filter((opt) => receiptForm.paymentMode?.toLowerCase() === "cash" ? opt !== "Federal" : true)
+                    */}
+                    {[...new Set([...posTerminalList, "OFFLINE"])].map(
+                      (opt) => (
+                        <Form.Check
+                          required
+                          inline
+                          key={opt}
+                          label={opt}
+                          name="posTerminal"
+                          type="radio"
+                          id={`pos-${opt}`}
+                          value={opt}
+                          checked={receiptForm.posTerminal === opt}
+                          onChange={handleReceiptFormChange}
+                          style={{ fontSize: "12px", margin: "5px" }}
+                        />
+                      ),
+                    )}
                   </div>
                 </Col>
               </Row>

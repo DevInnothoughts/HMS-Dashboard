@@ -849,7 +849,7 @@ export default function AddLabReceipt() {
                     </Col>
 
                     {/* POS Terminal radio box */}
-                    <Col md={2}>
+                    <Col md={5}>
                       <Form.Label style={labelStyle}>
                         POS Terminal <span className="text-danger">*</span>
                       </Form.Label>
@@ -861,28 +861,31 @@ export default function AddLabReceipt() {
                         }}
                       >
                         {/* 
-                          Commented legacy POS terminals:
+                          Commented legacy POS terminals / Federal:
+                          // "Federal",
                           // "BharatPe", "BharatPe1", "BharatPe2",
                           // "HDFC",
                           // "PineLabs"
                         */}
-                        {[...new Set(["Federal", "OFFLINE"])]
-                          .filter((opt) => formData.paymentMode?.toLowerCase() === "cash" ? opt !== "Federal" : true)
-                          .map((opt) => (
-                            <Form.Check
-                              required
-                              inline
-                              key={opt}
-                              label={opt}
-                              name="posTerminal"
-                              type="radio"
-                              id={`pos-${opt}`}
-                              value={opt}
-                              checked={formData.posTerminal === opt}
-                              onChange={handleInputChange}
-                              style={{ fontSize: "12px", margin: "7px" }}
-                            />
-                          ))}
+                        {/* 
+                          {[...new Set(["Federal", "OFFLINE"])]
+                            .filter((opt) => formData.paymentMode?.toLowerCase() === "cash" ? opt !== "Federal" : true)
+                        */}
+                        {[...new Set([...posTerminalList, "OFFLINE"])].map((opt) => (
+                          <Form.Check
+                            required
+                            inline
+                            key={opt}
+                            label={opt}
+                            name="posTerminal"
+                            type="radio"
+                            id={`pos-${opt}`}
+                            value={opt}
+                            checked={formData.posTerminal === opt}
+                            onChange={handleInputChange}
+                            style={{ fontSize: "12px", margin: "7px" }}
+                          />
+                        ))}
                       </div>
                       {errors.posTerminal && (
                         <p className="text-danger mt-1" style={{ fontSize: "11px" }}>

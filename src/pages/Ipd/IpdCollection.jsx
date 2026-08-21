@@ -558,7 +558,7 @@ const IpdCollection = () => {
     // "PineLabs",
     // "BharatPe1",
     // "BharatPe2",
-    "Federal",
+    // "Federal",
     "OFFLINE",
   ];
 
