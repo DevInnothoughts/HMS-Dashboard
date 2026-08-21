@@ -17,6 +17,8 @@ import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import Swal from "sweetalert2";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import { useReactToPrint } from "react-to-print";
+import DiagnosisPrintView from "./DiagnosisPrintView";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
 const BASE_URL = "http://194.195.117.79:5100/api";
@@ -202,6 +204,147 @@ export default function DoctorDashboard() {
   const [activePatientTypeFilter, setActivePatientTypeFilter] = useState(null);
   const [billedUhids, setBilledUhids] = useState(new Map()); // uid -> { createdAt, dischargeAt }
   const calendarRef = React.useRef(null);
+  const [showMasterViewModal, setShowMasterViewModal] = useState(false);
+  const [masterViewData, setMasterViewData] = useState({
+    patient: null,
+    history: [],
+    diagnosis: [],
+  });
+  const [masterVisitMap, setMasterVisitMap] = useState({});
+  const masterPrintRef = React.useRef();
+
+  const openMasterViewInNewTab = (data) => {
+    if (!data) return;
+    try {
+      sessionStorage.setItem("masterPrintData", JSON.stringify(data));
+      window.open(`${window.location.origin}/hms/diagnosis-card-preview`, "_blank");
+    } catch (e) {
+      console.error("Error opening diagnosis card preview in new tab:", e);
+    }
+  };
+
+  const normalizeLoc = (loc) => (loc ? String(loc).trim().toLowerCase().replace(/[^a-z0-9]/g, "") : "");
+
+  const checkMasterVisitsForList = useCallback(async (list) => {
+    if (!list || list.length === 0) return;
+    const uniquePhones = Array.from(
+      new Set(
+        list
+          .map((app) => {
+            const p = app.phone || app.patient_phone;
+            return p ? String(p).replace(/\D/g, "").slice(-10) : "";
+          })
+          .filter((p) => p && p.length >= 10)
+      )
+    );
+
+    if (uniquePhones.length === 0) return;
+
+    const currNorm = normalizeLoc(currentLocation);
+
+    const newMap = {};
+    await Promise.all(
+      uniquePhones.map(async (phone) => {
+        try {
+          const res = await fetch(`${BASE_URL}/V1/appointment/checkMasterPatient?patient_phone=${phone}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.statusCode === 200 && data.data && data.data.masterPatient) {
+              const mp = data.data.masterPatient;
+              if (mp.location && normalizeLoc(mp.location) !== currNorm) {
+                newMap[phone] = mp;
+              }
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
+      })
+    );
+    setMasterVisitMap((prev) => ({ ...prev, ...newMap }));
+  }, [currentLocation]);
+
+  const triggerMasterPrint = useReactToPrint({
+    contentRef: masterPrintRef,
+    content: () => masterPrintRef.current,
+  });
+
+  const checkAndShowMasterPatientVisit = async (patientPhone, isReadOnlyNotice = true) => {
+    if (!patientPhone) return { showed: false, confirmed: false };
+    try {
+      const cleanPhone = String(patientPhone).replace(/\D/g, "");
+      const last10 = cleanPhone.length > 10 ? cleanPhone.slice(-10) : cleanPhone;
+      if (!last10 || last10.length < 10) return { showed: false, confirmed: false };
+
+      const res = await fetch(`${BASE_URL}/V1/appointment/checkMasterPatient?patient_phone=${last10}`);
+      if (!res.ok) return { showed: false, confirmed: false };
+
+      const data = await res.json();
+      if (data.statusCode === 200 && data.data && data.data.masterPatient) {
+        const { masterPatient, history, diagnosis } = data.data;
+
+        setMasterVisitMap((prev) => ({ ...prev, [last10]: masterPatient }));
+        setMasterViewData({
+          patient: masterPatient,
+          history: history || [],
+          diagnosis: diagnosis || [],
+        });
+
+        await Swal.fire({
+          title: "Patient Previous Visit Notice",
+          html: `
+            <div style="font-family: 'Poppins', sans-serif;">
+              <div style="background-color: #fff3cd; border-left: 4px solid #ff9800; border-radius: 6px; padding: 14px 16px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; text-align: center;">
+                <svg width="22" height="22" fill="#d97706" viewBox="0 0 16 16" style="flex-shrink: 0;">
+                  <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                </svg>
+                <h5 style="margin: 0; color: #856404; font-size: 15px; font-weight: 600; line-height: 1.4;">
+                  This patient already visited <strong>HHC ${masterPatient.location}</strong> location
+                </h5>
+              </div>
+              <div style="margin-top: 20px; display: flex; justify-content: center; align-items: center; gap: 12px;">
+                <button id="close-master-notice-btn" type="button" style="background-color: #dc3545; color: #ffffff; border: none; padding: 8px 22px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;">
+                  Close
+                </button>
+                <button id="view-master-history-btn" type="button" style="background-color: #ffc107; color: #ffffffff; border: none; padding: 8px 20px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                  <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
+                    <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
+                  </svg>
+                  View Patient History & Diagnosis
+                </button>
+              </div>
+            </div>
+          `,
+          width: "550px",
+          showConfirmButton: false,
+          showCancelButton: false,
+          didOpen: () => {
+            const container = Swal.getHtmlContainer();
+            const closeBtn = container.querySelector("#close-master-notice-btn");
+            const viewBtn = container.querySelector("#view-master-history-btn");
+            if (closeBtn) {
+              closeBtn.addEventListener("click", () => Swal.close());
+            }
+            if (viewBtn) {
+              viewBtn.addEventListener("click", () => {
+                Swal.close();
+                openMasterViewInNewTab({
+                  patient: masterPatient,
+                  history: history || [],
+                  diagnosis: diagnosis || [],
+                });
+              });
+            }
+          },
+        });
+        return { showed: true, confirmed: false };
+      }
+    } catch (err) {
+      console.error("Error checking master patient visit:", err);
+    }
+    return { showed: false, confirmed: false };
+  };
 
   const togglePatientTypeFilter = (type) => {
     setActivePatientTypeFilter((prev) => (prev === type ? null : type));
@@ -497,7 +640,9 @@ export default function DoctorDashboard() {
           console.error("Error fetching IPD admissions for range:", ipdErr);
         }
 
-        setAppointments([...apptEvents, ...ipdEvents]);
+        const allEvents = [...apptEvents, ...ipdEvents];
+        setAppointments(allEvents);
+        checkMasterVisitsForList(allEvents);
       } catch (error) {
         console.error("Error fetching appointments:", error);
         setAppointments([]);
@@ -784,7 +929,7 @@ export default function DoctorDashboard() {
                       {`Admitted at: ${selectedEvent.confirmTime && selectedEvent.confirmTime !== "0"
                         ? moment(selectedEvent.confirmTime).format("HH:mm")
                         : "N/A"
-                      }`}
+                        }`}
                     </div>
                   </div>
                 </div>
@@ -1847,8 +1992,45 @@ margin-left: 1px;
                                   }}
                                 ></div>
                                 <div className="patient-info">
-                                  <div className="patient-name-text">
-                                    {app.patientName}
+                                  <div className="patient-name-text" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                    <span>{app.patientName}</span>
+                                    {(() => {
+                                      const cleanP = app.phone
+                                        ? String(app.phone).replace(/\D/g, "").slice(-10)
+                                        : "";
+                                      const masterData = masterVisitMap[cleanP];
+                                      const isConfirmed = app.confirmTime && app.confirmTime !== "0" && app.confirmTime !== 0;
+                                      return masterData && isConfirmed ? (
+                                        <span
+                                          style={{
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            width: "18px",
+                                            height: "18px",
+                                            borderRadius: "50%",
+                                            backgroundColor: "#0288d1",
+                                            color: "#ffffff",
+                                            fontSize: "12px",
+                                            fontWeight: "bold",
+                                            fontFamily: "serif",
+                                            fontStyle: "italic",
+                                            cursor: "pointer",
+                                            flexShrink: 0,
+                                            marginLeft: "1px",
+                                            boxShadow: "0 2px 5px rgba(2,136,209,0.5)",
+                                            border: "1px solid #ffffff",
+                                          }}
+                                          title={`Patient already visited ${masterData.location || "another"} location`}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            checkAndShowMasterPatientVisit(app.phone, true);
+                                          }}
+                                        >
+                                          i
+                                        </span>
+                                      ) : null;
+                                    })()}
                                   </div>
                                   <div className="doctor-info-text">
                                     <FeatherIcon
@@ -1987,6 +2169,65 @@ margin-left: 1px;
           </Row>
         </Container>
       </div>
+
+      {/* Diagnosis Card Preview Modal */}
+      <Modal
+        show={showMasterViewModal}
+        onHide={() => setShowMasterViewModal(false)}
+        size="xl"
+        centered
+        style={{ zIndex: 1060 }}
+      >
+        <Modal.Header closeButton className="bg-info text-white">
+          <Modal.Title className="fw-bold">
+            <FeatherIcon icon="eye" className="me-2" />
+            Diagnosis Card Preview
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body
+          className="p-0 bg-light"
+          style={{ maxHeight: "80vh", overflowY: "auto" }}
+        >
+          <div
+            className="p-4 bg-white shadow-sm mx-auto"
+            style={{ width: "210mm", minHeight: "297mm" }}
+          >
+            <DiagnosisPrintView
+              ref={masterPrintRef}
+              patient={masterViewData.patient}
+              historyList={masterViewData.history || []}
+              diagnosisList={masterViewData.diagnosis || []}
+              doctors={doctors}
+            />
+          </div>
+        </Modal.Body>
+        <Modal.Footer className="bg-white border-top shadow-sm justify-content-center">
+          <Button
+            variant="secondary"
+            onClick={() => setShowMasterViewModal(false)}
+            style={{
+              borderRadius: "20px",
+              padding: "8px 30px",
+              fontWeight: "bold",
+            }}
+          >
+            CANCEL
+          </Button>
+          <Button
+            variant="info"
+            className="text-white"
+            onClick={() => triggerMasterPrint()}
+            style={{
+              borderRadius: "20px",
+              padding: "8px 40px",
+              fontWeight: "bold",
+            }}
+          >
+            <FeatherIcon icon="printer" size="18" className="me-2" />
+            PRINT DIAGNOSIS CARD
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }

@@ -6,6 +6,7 @@ import OpdPatientMedicalRecords from "../pages/Doctor/OpdPatientMedicalRecords";
 import IpdPatientMedicalRecords from "../pages/Doctor/IpdPatientMedicalRecords";
 import DoctorCallingCalendar from "../pages/Doctor/DoctorCallingCalendar";
 import PendingSurgeryReport from "../pages/Doctor/DoctorReports/PendingSurgeryReport";
+import DiagnosisCardPrintPreview from "../pages/Doctor/DiagnosisCardPrintPreview";
 
 export const DoctorRoutes = (
   <>
@@ -15,5 +16,6 @@ export const DoctorRoutes = (
     <Route path="/ipd-patient-records" element={<IpdPatientMedicalRecords />} />
     <Route path="/doctor-calling-calendar" element={<DoctorCallingCalendar />} />
     <Route path="/doctor-pending-surgery-report" element={<PendingSurgeryReport />} />
+    <Route path="/diagnosis-card-preview" element={<DiagnosisCardPrintPreview />} />
   </>
 );

@@ -425,6 +425,14 @@ const DailyClosing = () => {
       }
     }
 
+    if (!cardSettlementFile && !formData.cardSettlementSlip) {
+      return Swal.fire(
+        "Required Field Missing",
+        "Please upload the Card Settlement Slip file.",
+        "warning"
+      );
+    }
+
     if (isSumZero && (!formData.comment || !formData.comment.trim())) {
       return Swal.fire(
         "Justification Required",
@@ -660,14 +668,14 @@ const DailyClosing = () => {
                       const rowBgColor = isFocused
                         ? `${field.iconColor}18`
                         : hasValue
-                        ? `${field.iconColor}0a`
-                        : "#f9fdfd";
+                          ? `${field.iconColor}0a`
+                          : "#f9fdfd";
 
                       const rowBorderColor = isFocused
                         ? field.iconColor
                         : hasValue
-                        ? `${field.iconColor}80`
-                        : "#d7d5d5ff";
+                          ? `${field.iconColor}80`
+                          : "#d7d5d5ff";
 
                       const rowBoxShadow = isFocused
                         ? `0 4px 12px ${field.iconColor}33`
@@ -1008,7 +1016,9 @@ const DailyClosing = () => {
                         >
                           <i className="fa fa-credit-card" style={{ fontSize: "13px" }}></i>
                         </div>
-                        <span style={{ fontWeight: "700", color: "#37474f", fontSize: "12.5px" }}>Card Settlement Slip</span>
+                        <span style={{ fontWeight: "700", color: "#37474f", fontSize: "12.5px" }}>
+                          Card Settlement Slip
+                        </span>
                       </div>
                       <div style={{ width: "240px", display: "flex", justifyContent: "flex-end" }}>
                         {isSubmitted ? (

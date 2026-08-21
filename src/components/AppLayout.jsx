@@ -17,6 +17,7 @@ const routesWithoutExtras = [
   "/verify-pin",
   "/landing",
   "/error-page",
+  "/diagnosis-card-preview",
 ];
 
 const AppLayout = ({ children }) => {

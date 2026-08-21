@@ -22,6 +22,8 @@ import AppointmentNavbar from "../../components/Navbar/AppointmentNavbar";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import moment from "moment";
+import { useReactToPrint } from "react-to-print";
+import DiagnosisPrintView from "../Doctor/DiagnosisPrintView";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
 const BASE_URL = "http://194.195.117.79:5100/api";
@@ -284,6 +286,70 @@ export default function OpdAppointmentList() {
   const [toDate, setToDate] = useState(new Date());
   const [showPendingPast, setShowPendingPast] = useState(true);
   const [posTerminalList, setPosTerminalList] = useState([]);
+  const [showMasterViewModal, setShowMasterViewModal] = useState(false);
+  const [masterViewData, setMasterViewData] = useState({
+    patient: null,
+    history: [],
+    diagnosis: [],
+  });
+  const [masterVisitMap, setMasterVisitMap] = useState({});
+  const masterPrintRef = React.useRef();
+
+  const openMasterViewInNewTab = (data) => {
+    if (!data) return;
+    try {
+      sessionStorage.setItem("masterPrintData", JSON.stringify(data));
+      window.open(`${window.location.origin}/hms/diagnosis-card-preview`, "_blank");
+    } catch (e) {
+      console.error("Error opening diagnosis card preview in new tab:", e);
+    }
+  };
+
+  const normalizeLoc = (loc) => (loc ? String(loc).trim().toLowerCase().replace(/[^a-z0-9]/g, "") : "");
+
+  const checkMasterVisitsForList = useCallback(async (list) => {
+    if (!list || list.length === 0) return;
+    const uniquePhones = Array.from(
+      new Set(
+        list
+          .map((app) => {
+            const p = app.patient_phone || app.phone;
+            return p ? String(p).replace(/\D/g, "").slice(-10) : "";
+          })
+          .filter((p) => p && p.length >= 10)
+      )
+    );
+
+    if (uniquePhones.length === 0) return;
+
+    const currNorm = normalizeLoc(currentLocation);
+
+    const newMap = {};
+    await Promise.all(
+      uniquePhones.map(async (phone) => {
+        try {
+          const res = await fetch(`${BASE_URL}/V1/appointment/checkMasterPatient?patient_phone=${phone}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.statusCode === 200 && data.data && data.data.masterPatient) {
+              const mp = data.data.masterPatient;
+              if (mp.location && normalizeLoc(mp.location) !== currNorm) {
+                newMap[phone] = mp;
+              }
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
+      })
+    );
+    setMasterVisitMap((prev) => ({ ...prev, ...newMap }));
+  }, [currentLocation]);
+
+  const triggerMasterPrint = useReactToPrint({
+    contentRef: masterPrintRef,
+    content: () => masterPrintRef.current,
+  });
 
   useEffect(() => {
     if (location.state?.searchPhone) {
@@ -505,7 +571,7 @@ export default function OpdAppointmentList() {
       confirmButtonText: "Check Status",
       cancelButtonText: "Cancel Payment",
       confirmButtonColor: "#00bcd4",
-      cancelButtonColor: "#cfd8dc",
+      cancelButtonColor: "#dc3545",
       showLoaderOnConfirm: true,
       preConfirm: async () => {
         try {
@@ -548,7 +614,13 @@ export default function OpdAppointmentList() {
           timer: 2000,
         });
         setShowReceiptModal(false);
-        navigate("/receipt-list", { state: { receipt_generated: true, returnTo: "/opd-appointment-list" } });
+        navigate("/receipt-list", {
+          state: {
+            printReceiptId: result.value?.data?.receipt_id,
+            receipt_generated: true,
+            returnTo: "/opd-appointment-list",
+          },
+        });
       } else if (result.dismiss === Swal.DismissReason.cancel) {
         const confirmCancel = await Swal.fire({
           title: "Are you sure?",
@@ -557,6 +629,8 @@ export default function OpdAppointmentList() {
           showCancelButton: true,
           confirmButtonText: "Yes, Cancel it!",
           cancelButtonText: "No, Wait",
+          confirmButtonColor: "#dc3545",
+          cancelButtonColor: "#0d6efd",
         });
 
         if (confirmCancel.isConfirmed) {
@@ -617,6 +691,13 @@ export default function OpdAppointmentList() {
       const cleanValue = value.replace(/[^0-9]/g, "");
       const formattedValue = cleanValue ? Number(cleanValue).toLocaleString("en-IN") : "";
       setReceiptForm((prev) => ({ ...prev, discountAmt: formattedValue }));
+    } else if (name === "paymentMode") {
+      const isCash = value?.toLowerCase() === "cash";
+      setReceiptForm((prev) => ({
+        ...prev,
+        paymentMode: value,
+        ...(isCash ? { posTerminal: "OFFLINE" } : (prev.posTerminal === "OFFLINE" && !isCash ? { posTerminal: "" } : {})),
+      }));
     } else {
       setReceiptForm((prev) => ({ ...prev, [name]: value }));
     }
@@ -837,6 +918,7 @@ export default function OpdAppointmentList() {
             };
           });
           setAppointmentData(mappedData);
+          checkMasterVisitsForList(mappedData);
         } else {
           console.error(
             "Error fetching appointments:",
@@ -1190,6 +1272,133 @@ export default function OpdAppointmentList() {
     }
   };
 
+  const checkAndShowMasterPatientVisit = async (patientPhone, isReadOnlyNotice = false) => {
+    if (!patientPhone) return { showed: false, confirmed: false };
+    try {
+      const cleanPhone = String(patientPhone).replace(/\D/g, "");
+      const last10 = cleanPhone.length > 10 ? cleanPhone.slice(-10) : cleanPhone;
+      if (!last10 || last10.length < 10) return { showed: false, confirmed: false };
+
+      const res = await fetch(`${BASE_URL}/V1/appointment/checkMasterPatient?patient_phone=${last10}`);
+      if (!res.ok) return { showed: false, confirmed: false };
+
+      const data = await res.json();
+      if (data.statusCode === 200 && data.data && data.data.masterPatient) {
+        const { masterPatient, history, diagnosis } = data.data;
+
+        setMasterVisitMap((prev) => ({ ...prev, [last10]: masterPatient }));
+        setMasterViewData({
+          patient: masterPatient,
+          history: history || [],
+          diagnosis: diagnosis || [],
+        });
+
+        if (isReadOnlyNotice) {
+          await Swal.fire({
+            title: "Patient Previous Visit Notice",
+            html: `
+              <div style="font-family: 'Poppins', sans-serif;">
+                <div style="background-color: #fff3cd; border-left: 4px solid #ff9800; border-radius: 6px; padding: 14px 16px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; gap: 10px; text-align: center;">
+                  <svg width="22" height="22" fill="#d97706" viewBox="0 0 16 16" style="flex-shrink: 0;">
+                    <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                  </svg>
+                  <h5 style="margin: 0; color: #856404; font-size: 15px; font-weight: 600; line-height: 1.4;">
+                    This patient already visited <strong>HHC ${masterPatient.location}</strong> location
+                  </h5>
+                </div>
+                <div style="margin-top: 20px; display: flex; justify-content: center; align-items: center; gap: 12px;">
+                  <button id="close-master-notice-btn" type="button" style="background-color: #dc3545; color: #ffffff; border: none; padding: 8px 22px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;">
+                    Close
+                  </button>
+                  <button id="view-master-history-btn" type="button" style="background-color: #ffc107; color: #ffffffff; border: none; padding: 8px 20px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                      <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
+                      <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
+                    </svg>
+                    View Patient History & Diagnosis
+                  </button>
+                </div>
+              </div>
+            `,
+            width: "550px",
+            showConfirmButton: false,
+            showCancelButton: false,
+            didOpen: () => {
+              const container = Swal.getHtmlContainer();
+              const closeBtn = container.querySelector("#close-master-notice-btn");
+              const viewBtn = container.querySelector("#view-master-history-btn");
+              if (closeBtn) {
+                closeBtn.addEventListener("click", () => Swal.close());
+              }
+              if (viewBtn) {
+                viewBtn.addEventListener("click", () => {
+                  Swal.close();
+                  openMasterViewInNewTab({
+                    patient: masterPatient,
+                    history: history || [],
+                    diagnosis: diagnosis || [],
+                  });
+                });
+              }
+            },
+          });
+          return { showed: true, confirmed: false };
+        }
+
+        const result = await Swal.fire({
+          title: "Patient Previous Visit Notice",
+          html: `
+            <div style="font-family: 'Poppins', sans-serif;">
+              <div style="background-color: #fff3cd; border-left: 4px solid #ff9800; padding: 15px; margin-bottom: 15px; border-radius: 4px; display: flex; align-items: center; justify-content: center; gap: 10px; text-align: center;">
+                <svg width="22" height="22" fill="#d97706" viewBox="0 0 16 16" style="flex-shrink: 0;">
+                  <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                </svg>
+                <h5 style="margin: 0; color: #856404; font-size: 15px; font-weight: 600;">
+                  This patient already visited <strong>HHC ${masterPatient.location}</strong> location
+                </h5>
+              </div>
+              <div style="margin-top: 15px; text-align: center;">
+                <button id="view-master-history-btn" type="button" style="background-color: #ffc107; color: #ffffffff; border: none; padding: 8px 20px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                  <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/>
+                    <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/>
+                  </svg>
+                  View Patient History & Diagnosis
+                </button>
+              </div>
+            </div>
+          `,
+          width: "550px",
+          showConfirmButton: true,
+          confirmButtonText: "Continue & Confirm Appointment",
+          confirmButtonColor: "#28a745",
+          showCancelButton: true,
+          cancelButtonText: "Cancel",
+          cancelButtonColor: "#dc3545",
+          reverseButtons: true,
+          didOpen: () => {
+            const viewBtn = Swal.getHtmlContainer().querySelector("#view-master-history-btn");
+            if (viewBtn) {
+              viewBtn.addEventListener("click", () => {
+                Swal.close();
+                openMasterViewInNewTab({
+                  patient: masterPatient,
+                  history: history || [],
+                  diagnosis: diagnosis || [],
+                });
+              });
+            }
+          },
+        });
+
+        return { showed: true, confirmed: result.isConfirmed };
+      }
+    } catch (err) {
+      console.error("Error checking master patient visit:", err);
+    }
+    return { showed: false, confirmed: false };
+  };
+
   const confirmAppointmentWithCheck = async (rowData) => {
     const {
       appointment_id,
@@ -1201,6 +1410,21 @@ export default function OpdAppointmentList() {
 
     const checkPassed = await checkDailyClosing(appointment_timestamp, "confirming");
     if (!checkPassed) return;
+
+    const masterResult = await checkAndShowMasterPatientVisit(patient_phone);
+
+    if (masterResult.showed) {
+      if (masterResult.confirmed) {
+        handleProcessUpdate(
+          appointment_id,
+          "confirmAppointment",
+          patient_type,
+          patient_phone,
+          "Appointment confirmed!",
+        );
+      }
+      return;
+    }
 
     const result = await Swal.fire({
       title: "Confirm Appointment",
@@ -2429,15 +2653,59 @@ export default function OpdAppointmentList() {
                         field="patient_name"
                         header="Patient Name"
                         style={{
-                          ...getColumnStyle("120px"),
+                          ...getColumnStyle("140px"),
                           border: "1px solid #90caf9",
                         }}
-                        body={(rowData) => (
-                          <span className="selectable-text">
-                            {rowData.prefix ? `${rowData.prefix} ` : ""}
-                            {rowData.patient_name || "-"}
-                          </span>
-                        )}
+                        body={(rowData) => {
+                          const cleanP = rowData.patient_phone
+                            ? String(rowData.patient_phone).replace(/\D/g, "").slice(-10)
+                            : "";
+                          const masterData = masterVisitMap[cleanP];
+                          const isConfirmed =
+                            rowData.confirm_time &&
+                            rowData.confirm_time !== "0" &&
+                            rowData.confirm_time !== 0 &&
+                            rowData.computedStatus !== "Pending Appointment";
+
+                          return (
+                            <span className="selectable-text" style={{ display: "inline-flex", alignItems: "center", justifyFlex: "center", gap: "4px" }}>
+                              <span>
+                                {rowData.prefix ? `${rowData.prefix} ` : ""}
+                                {rowData.patient_name || "-"}
+                              </span>
+                              {masterData && isConfirmed && (
+                                <span
+                                  style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    width: "18px",
+                                    height: "18px",
+                                    borderRadius: "50%",
+                                    backgroundColor: "#0288d1",
+                                    color: "#ffffff",
+                                    fontSize: "12px",
+                                    fontWeight: "bold",
+                                    fontFamily: "serif",
+                                    fontStyle: "italic",
+                                    cursor: "pointer",
+                                    flexShrink: 0,
+                                    marginLeft: "1px",
+                                    boxShadow: "0 2px 5px rgba(2,136,209,0.5)",
+                                    border: "1px solid #ffffff",
+                                  }}
+                                  title={`Patient already visited ${masterData.location || "another"} location`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    checkAndShowMasterPatientVisit(rowData.patient_phone, true);
+                                  }}
+                                >
+                                  i
+                                </span>
+                              )}
+                            </span>
+                          );
+                        }}
                         headerClassName="datatable-header-center"
                       />
 
@@ -2901,7 +3169,7 @@ export default function OpdAppointmentList() {
                     ))}
                   </Form.Select>
                 </Col>
-                <Col md={8}>
+                <Col md={4}>
                   <Form.Label
                     style={{
                       fontSize: "12px",
@@ -2920,23 +3188,31 @@ export default function OpdAppointmentList() {
                       borderRadius: "10px",
                     }}
                   >
-                    {[...new Set([...posTerminalList, "OFFLINE"])].map(
-                      (opt) => (
-                        <Form.Check
-                          required
-                          inline
-                          key={opt}
-                          label={opt}
-                          name="posTerminal"
-                          type="radio"
-                          id={`pos-${opt}`}
-                          value={opt}
-                          checked={receiptForm.posTerminal === opt}
-                          onChange={handleReceiptFormChange}
-                          style={{ fontSize: "12px", margin: "5px" }}
-                        />
-                      ),
-                    )}
+                    {/* 
+                      Commented legacy POS terminals:
+                      // "BharatPe", "BharatPe1", "BharatPe2",
+                      // "HDFC",
+                      // "PineLabs"
+                    */}
+                    {[...new Set(["Federal", "OFFLINE"])]
+                      .filter((opt) => receiptForm.paymentMode?.toLowerCase() === "cash" ? opt !== "Federal" : true)
+                      .map(
+                        (opt) => (
+                          <Form.Check
+                            required
+                            inline
+                            key={opt}
+                            label={opt}
+                            name="posTerminal"
+                            type="radio"
+                            id={`pos-${opt}`}
+                            value={opt}
+                            checked={receiptForm.posTerminal === opt}
+                            onChange={handleReceiptFormChange}
+                            style={{ fontSize: "12px", margin: "5px" }}
+                          />
+                        ),
+                      )}
                   </div>
                 </Col>
               </Row>
@@ -3071,6 +3347,63 @@ export default function OpdAppointmentList() {
             }}
           >
             Generate Receipt
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal
+        show={showMasterViewModal}
+        onHide={() => setShowMasterViewModal(false)}
+        size="xl"
+        centered
+      >
+        <Modal.Header closeButton className="bg-info text-white">
+          <Modal.Title className="fw-bold">
+            <FeatherIcon icon="eye" className="me-2" />
+            Diagnosis Card Preview
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body
+          className="p-0 bg-light"
+          style={{ maxHeight: "80vh", overflowY: "auto" }}
+        >
+          <div
+            className="p-4 bg-white shadow-sm mx-auto"
+            style={{ width: "210mm", minHeight: "297mm" }}
+          >
+            <DiagnosisPrintView
+              ref={masterPrintRef}
+              patient={masterViewData.patient}
+              historyList={masterViewData.history || []}
+              diagnosisList={masterViewData.diagnosis || []}
+              doctors={doctors}
+            />
+          </div>
+        </Modal.Body>
+        <Modal.Footer className="bg-white border-top shadow-sm justify-content-center">
+          <Button
+            variant="secondary"
+            onClick={() => setShowMasterViewModal(false)}
+            style={{
+              borderRadius: "20px",
+              padding: "8px 30px",
+              fontWeight: "bold",
+            }}
+          >
+            CANCEL
+          </Button>
+          <Button
+            variant="info"
+            className="text-white"
+            onClick={() => triggerMasterPrint()}
+            style={{
+              borderRadius: "20px",
+              padding: "8px 40px",
+              fontWeight: "bold",
+            }}
+          >
+            <FeatherIcon icon="printer" size="18" className="me-2" />
+            PRINT DIAGNOSIS CARD
           </Button>
         </Modal.Footer>
       </Modal>

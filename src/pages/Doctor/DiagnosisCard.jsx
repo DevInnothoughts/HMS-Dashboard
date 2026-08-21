@@ -15,6 +15,7 @@ import Select from "react-select";
 import FeatherIcon from "feather-icons-react";
 // import { generateDiagnosisStream } from "../Utility/aiDiagnosisHelper";
 import { toast } from "react-hot-toast";
+import { decodeJwt } from "../Utility/decode-jwt";
 
 const localToday = (date = new Date()) => {
   // arrow fn, NOT invoked
@@ -44,22 +45,91 @@ const DiagnosisCard = ({
   doctors = [],
   assistanceDoctors = [],
   validationErrors = {},
+  patientPhone = null,
+  patient = null,
 }) => {
   const [aiLoading, setAiLoading] = React.useState(false);
   const lastGeneratedRef = React.useRef({ diag: "", surg: "" });
   const userInteracted = React.useRef(false);
+  const [masterPatientInfo, setMasterPatientInfo] = React.useState(null);
+
+  const normalizeLoc = (loc) => (loc ? String(loc).trim().toLowerCase().replace(/[^a-z0-9]/g, "") : "");
+
+  const effectivePhone = patientPhone || (patient && patient.phone) || (diagnosisData && (diagnosisData.phone || diagnosisData.patient_phone));
+
+  React.useEffect(() => {
+    const checkMaster = async () => {
+      if (!effectivePhone) return;
+      try {
+        const cleanPhone = String(effectivePhone).replace(/\D/g, "");
+        const last10 = cleanPhone.length > 10 ? cleanPhone.slice(-10) : cleanPhone;
+        if (!last10 || last10.length < 10) return;
+
+        const BASE_URL = "http://194.195.117.79:5100/api";
+        const res = await fetch(`${BASE_URL}/V1/appointment/checkMasterPatient?patient_phone=${last10}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.statusCode === 200 && data.data && data.data.masterPatient) {
+            const mp = data.data.masterPatient;
+            const currentLocation = localStorage.getItem("location") || "Kolhapur";
+            if (mp.location && normalizeLoc(mp.location) !== normalizeLoc(currentLocation)) {
+              setMasterPatientInfo(data.data);
+            } else {
+              setMasterPatientInfo(null);
+            }
+          } else {
+            setMasterPatientInfo(null);
+          }
+        }
+      } catch (err) {
+        console.error("Error checking master patient in DiagnosisCard:", err);
+      }
+    };
+    checkMaster();
+  }, [effectivePhone]);
+
+  const handleViewMasterHistory = () => {
+    if (!masterPatientInfo || !masterPatientInfo.masterPatient) return;
+    const { masterPatient, history, diagnosis } = masterPatientInfo;
+    const printData = {
+      patient: masterPatient,
+      history: history || [],
+      diagnosis: diagnosis || [],
+    };
+    try {
+      sessionStorage.setItem("masterPrintData", JSON.stringify(printData));
+      window.open(`${window.location.origin}/hms/diagnosis-card-preview`, "_blank");
+    } catch (e) {
+      console.error("Error opening diagnosis card preview in new tab:", e);
+    }
+  };
 
   const onSpecialityClick = (speciality, value) => {
     userInteracted.current = true;
     handleSpecialityCheckboxChange(speciality, value);
   };
   const [insuranceCompanies, setInsuranceCompanies] = React.useState([]);
+  const [tpaCompanies, setTpaCompanies] = React.useState([]);
 
   // A saved record is being viewed when an id is selected. It stays LOCKED
   // until the doctor clicks EDIT (isEditing, owned by parent). A brand-new
   // entry (no id selected) is always editable.
   const isViewingSaved = !!selectedDiagnosisId;
   const isReadOnly = isViewingSaved && !isEditing;
+
+  const isSurgeryOrMedsSx =
+    Array.isArray(diagnosisData?.advice_types) &&
+    (diagnosisData.advice_types.includes("Surgery") ||
+      diagnosisData.advice_types.includes("Meds -> Sx"));
+
+  const isInsuranceCompanyRequired =
+    Array.isArray(diagnosisData?.categories) &&
+    (diagnosisData.categories.includes("Cashless") ||
+      diagnosisData.categories.includes("Reimbursement"));
+
+  const isReferredToAnotherDoctor =
+    Array.isArray(diagnosisData?.advice_types) &&
+    diagnosisData.advice_types.includes("Referred to another doctor");
 
   // Layout-transparent lock wrapper (same approach as PatientHistoryCard):
   // `display: contents` removes the fieldset's own box from layout, so flex
@@ -69,23 +139,30 @@ const DiagnosisCard = ({
   const lockStyle = { display: "contents" };
 
   React.useEffect(() => {
-    const fetchInsuranceCompanies = async () => {
+    const fetchInsuranceAndTpa = async () => {
       try {
         const BASE_URL = "http://194.195.117.79:5100/api";
-        const loc = localStorage.getItem("location") || "Kolhapur";
-        const res = await fetch(
-          `${BASE_URL}/V1/invoice/insurance_co_dropdown?location=${loc}`,
-        );
-        const data = await res.json();
+        const [insRes, tpaRes] = await Promise.all([
+          fetch(`${BASE_URL}/V1/doctor/insurance-companies`),
+          fetch(`${BASE_URL}/V1/doctor/tpa-companies`),
+        ]);
 
-        if (data.statusCode === 200) {
-          setInsuranceCompanies(data.data || []);
+        const [insData, tpaData] = await Promise.all([
+          insRes.json(),
+          tpaRes.json(),
+        ]);
+
+        if (insRes.ok && insData.statusCode === 200) {
+          setInsuranceCompanies(insData.data || []);
+        }
+        if (tpaRes.ok && tpaData.statusCode === 200) {
+          setTpaCompanies(tpaData.data || []);
         }
       } catch (err) {
-        console.error("Failed to fetch insurance companies", err);
+        console.error("Failed to fetch insurance or TPA companies", err);
       }
     };
-    fetchInsuranceCompanies();
+    fetchInsuranceAndTpa();
   }, []);
 
   const handleManualGenerateDiagnosis = () => {
@@ -299,7 +376,7 @@ const DiagnosisCard = ({
 
             if (specialityData.haemorrhoids_position) {
               diagParts.push(
-                `Grade ${numbers.join("/")} Haemorrhoids at ${specialityData.haemorrhoids_position} o clock`,
+                `Grade ${numbers.join("/")} Haemorrhoids at ${specialityData.haemorrhoids_position} o'clock`,
               );
             } else {
               diagParts.push(`Grade ${numbers.join("/")} Haemorrhoids`);
@@ -316,7 +393,7 @@ const DiagnosisCard = ({
             if (pilesMapping[p]) {
               let diag = pilesMapping[p].diag;
               if (p === "Skin Tag" && specialityData.skin_tag_position) {
-                diag = `Skin Tag at ${specialityData.skin_tag_position} o clock`;
+                diag = `Skin Tag at ${specialityData.skin_tag_position} o'clock`;
               }
               diagParts.push(diag);
               if (pilesMapping[p].surg) surgParts.push(pilesMapping[p].surg);
@@ -729,6 +806,55 @@ const DiagnosisCard = ({
             </Dropdown>
           </div>
         </div>
+        {masterPatientInfo && masterPatientInfo.masterPatient && (
+          <div
+            style={{
+              backgroundColor: "#fff3cd",
+              borderLeft: "4px solid #ff9800",
+              borderRadius: "6px",
+              padding: "5px 10px",
+              marginTop: "12px",
+              marginBottom: "12px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "10px",
+              flexWrap: "wrap",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <svg width="22" height="22" fill="#d97706" viewBox="0 0 16 16" style={{ flexShrink: 0 }}>
+                <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z" />
+              </svg>
+              <h6 style={{ margin: 0, color: "#856404", fontSize: "14px", fontWeight: "600" }}>
+                This patient already visited <strong>HHC {masterPatientInfo.masterPatient.location}</strong> location
+              </h6>
+            </div>
+            <Button
+              type="button"
+              onClick={handleViewMasterHistory}
+              style={{
+                backgroundColor: "#ffc107",
+                color: "#ffffffff",
+                border: "none",
+                padding: "6px 16px",
+                borderRadius: "6px",
+                fontSize: "13px",
+                fontWeight: "600",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                whiteSpace: "nowrap",
+              }}
+            >
+              <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z" />
+                <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" />
+              </svg>
+              View Patient History & Diagnosis
+            </Button>
+          </div>
+        )}
         <fieldset disabled={isReadOnly} style={lockStyle}>
           <Row>
             <Col md={2} className="mb-17">
@@ -1584,19 +1710,55 @@ const DiagnosisCard = ({
               "Test",
               "MCDPA",
               "Referred to another doctor",
+              "Meds -> Sx",
             ].map((type) => (
               <Form.Check
                 key={type}
-                label={type}
+                label={
+                  type === "Meds -> Sx" ? (
+                    <OverlayTrigger
+                      placement="top"
+                      overlay={
+                        <Tooltip id="tooltip-meds-sx">
+                          Medicines lastly Surgery
+                        </Tooltip>
+                      }
+                    >
+                      <span
+                        style={{
+                          borderBottom: "1px dashed #006064",
+                          cursor: "help",
+                        }}
+                      >
+                        {type}
+                      </span>
+                    </OverlayTrigger>
+                  ) : (
+                    type
+                  )
+                }
                 checked={diagnosisData.advice_types.includes(type)}
                 onChange={() =>
                   handleDiagnosisCheckboxChange("advice_types", type)
                 }
                 disabled={
+                  (type === "Referred to another doctor" &&
+                    diagnosisData.advice_types.some(
+                      (t) => t !== "Referred to another doctor",
+                    )) ||
+                  (type !== "Referred to another doctor" &&
+                    diagnosisData.advice_types.includes(
+                      "Referred to another doctor",
+                    )) ||
                   (type === "Medication" &&
-                    diagnosisData.advice_types.includes("Surgery")) ||
+                    (diagnosisData.advice_types.includes("Surgery") ||
+                      diagnosisData.advice_types.includes("Meds -> Sx"))) ||
                   (type === "Surgery" &&
-                    diagnosisData.advice_types.includes("Medication"))
+                    (diagnosisData.advice_types.includes("Medication") ||
+                      diagnosisData.advice_types.includes("Meds -> Sx"))) ||
+                  (type === "Meds -> Sx" &&
+                    (diagnosisData.advice_types.includes("Medication") ||
+                      diagnosisData.advice_types.includes("Surgery")))
                 }
                 className="mb-0"
                 style={{ fontSize: "14px", fontWeight: "600" }}
@@ -1717,69 +1879,95 @@ const DiagnosisCard = ({
 
       {/* 5. Payments & Administration */}
       <div
-        className="p-3 bg-white rounded shadow-sm border mb-3 d-flex flex-wrap align-items-center gap-3"
-        style={{ borderLeft: "5px solid #00838f" }}
+        className="p-3 bg-white rounded shadow-sm border mb-3"
+        style={{
+          borderLeft: "5px solid #00838f",
+          border: validationErrors.categories ? "2px solid red" : undefined,
+        }}
       >
+        <h5
+          className="fw-bold mb-3"
+          style={{
+            color: "#00838f",
+            textTransform: "uppercase",
+            fontSize: "14px",
+            padding: "5px",
+          }}
+        >
+          Payment Category {isSurgeryOrMedsSx && <span className="text-danger">*</span>}
+        </h5>
         <fieldset disabled={isReadOnly} style={lockStyle}>
-          <h5
-            className="fw-bold mb-0"
-            style={{
-              color: "#00838f",
-              textTransform: "uppercase",
-              fontSize: "14px",
-              minWidth: "50px",
-            }}
-          >
-            Payment Category
-          </h5>
-          <div
-            className="d-flex flex-wrap gap-3 align-items-center px-3"
-            style={{ borderLeft: "2px solid #b2ebf2" }}
-          >
-            {["Cashless", "Reimbursement", "HHF", "Cash"].map((cat) => (
-              <Form.Check
-                key={cat}
-                label={cat}
-                checked={diagnosisData.categories.includes(cat)}
-                onChange={() =>
-                  handleDiagnosisCheckboxChange("categories", cat)
-                }
-                className="mb-0"
-                style={{
-                  color: "#00838f",
-                  fontSize: "13px",
-                  fontWeight: "700",
-                }}
-              />
-            ))}
-          </div>
-          <div
-            className="d-flex flex-grow-1 gap-2 align-items-center ms-auto"
-            style={{ minWidth: "250px" }}
-          >
-            <div className="d-flex align-items-center gap-2">
+          <style>
+            {`
+              .custom-payment-radio .form-check-input {
+                width: 1.3em;
+                height: 1.3em;
+                cursor: pointer;
+                margin-top: 0;
+              }
+              .custom-payment-radio .form-check-label {
+                cursor: pointer;
+                user-select: none;
+              }
+            `}
+          </style>
+          <div className="d-flex flex-wrap gap-4 align-items-center mb-3 px-1">
+            {["Cashless", "Reimbursement", "Charity", "No Insurance"].map((cat) => {
+              const isChecked = diagnosisData.categories.includes(cat);
+              return (
+                <Form.Check
+                  key={cat}
+                  type="radio"
+                  name="payment_category"
+                  id={`payment-cat-${cat.replace(/\s+/g, "-")}`}
+                  label={cat}
+                  checked={isChecked}
+                  disabled={isReferredToAnotherDoctor}
+                  onClick={() => {
+                    if (isChecked) {
+                      handleDiagnosisCheckboxChange("categories", cat);
+                    }
+                  }}
+                  onChange={() => {
+                    if (!isChecked) {
+                      handleDiagnosisCheckboxChange("categories", cat);
+                    }
+                  }}
+                  className="mb-0 custom-payment-radio d-flex align-items-center gap-2"
+                  style={{
+                    fontSize: "14px",
+                    fontWeight: "600",
+                  }}
+                />
+              );
+            })}
+
+            <div className="d-flex align-items-center gap-2 ms-auto">
               <label
                 style={{
-                  fontSize: "14px",
+                  fontSize: "13px",
                   color: "#00838f",
                   fontWeight: "800",
                   whiteSpace: "nowrap",
                 }}
               >
-                Insurance Co.
+                Insurance Company {isInsuranceCompanyRequired && <span className="text-danger">*</span>}
               </label>
               <Form.Select
                 value={diagnosisData.insurance_company_id || ""}
                 onChange={(e) =>
                   handleDiagnosisChange("insurance_company_id", e.target.value)
                 }
+                isInvalid={!!validationErrors.insurance_company_id}
                 style={{
                   borderRadius: "10px",
-                  border: "2px solid #b2ebf2",
+                  border: validationErrors.insurance_company_id
+                    ? "2px solid red"
+                    : "2px solid #b2ebf2",
                   padding: "6px 12px",
                   fontSize: "12px",
                   color: "#00838f",
-                  minWidth: "250px",
+                  minWidth: "180px",
                 }}
               >
                 <option value="">Select Company</option>
@@ -1790,20 +1978,72 @@ const DiagnosisCard = ({
                 ))}
               </Form.Select>
             </div>
+
+            <div className="d-flex align-items-center gap-2">
+              <label
+                style={{
+                  fontSize: "13px",
+                  color: "#00838f",
+                  fontWeight: "800",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                TPA
+              </label>
+              <Form.Select
+                value={diagnosisData.tpa_id || ""}
+                onChange={(e) =>
+                  handleDiagnosisChange("tpa_id", e.target.value)
+                }
+                style={{
+                  borderRadius: "10px",
+                  border: "2px solid #b2ebf2",
+                  padding: "6px 12px",
+                  fontSize: "12px",
+                  color: "#00838f",
+                  minWidth: "180px",
+                }}
+              >
+                <option value="">Select TPA</option>
+                {tpaCompanies.map((t) => (
+                  <option key={t.comapny_id || t.tpaid} value={t.comapny_id || t.tpaid}>
+                    {t.companyname || t.tpaname}
+                  </option>
+                ))}
+              </Form.Select>
+            </div>
+          </div>
+
+          <div>
+            <label
+              style={{
+                fontSize: "13px",
+                color: "#00838f",
+                fontWeight: "800",
+                marginBottom: "4px",
+                display: "block",
+                marginTop: "15px"
+              }}
+            >
+              Estimate Package/Insurance Details {isSurgeryOrMedsSx && <span className="text-danger">*</span>}
+            </label>
             <Form.Control
               as="textarea"
               rows={1}
-              placeholder="Estimate Package/Insurance Details..."
+              placeholder="Enter details of package / insurance"
               value={diagnosisData.category_comment}
               onChange={(e) =>
                 handleDiagnosisChange("category_comment", e.target.value)
               }
+              isInvalid={!!validationErrors.category_comment}
               style={{
                 borderRadius: "10px",
-                border: "2px solid #b2ebf2",
+                border: validationErrors.category_comment
+                  ? "2px solid red"
+                  : "2px solid #b2ebf2",
                 padding: "6px 12px",
                 fontSize: "12px",
-                flex: 2,
+                width: "100%",
               }}
             />
           </div>

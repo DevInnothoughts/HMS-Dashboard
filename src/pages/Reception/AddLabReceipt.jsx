@@ -145,8 +145,8 @@ export default function AddLabReceipt() {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-      ...(name === "paymentMode" && value === "Cash" ? { posTerminal: "OFFLINE" } : {}),
-      ...(name === "paymentMode" && value !== "Cash" && prev.posTerminal === "OFFLINE" ? { posTerminal: "" } : {}),
+      ...(name === "paymentMode" && value?.toLowerCase() === "cash" ? { posTerminal: "OFFLINE" } : {}),
+      ...(name === "paymentMode" && value?.toLowerCase() !== "cash" && prev.posTerminal === "OFFLINE" ? { posTerminal: "" } : {}),
     }));
   };
 
@@ -254,7 +254,7 @@ export default function AddLabReceipt() {
       confirmButtonText: "Check Status",
       cancelButtonText: "Cancel Payment",
       confirmButtonColor: "#00bcd4",
-      cancelButtonColor: "#cfd8dc",
+      cancelButtonColor: "#dc3545",
       showLoaderOnConfirm: true,
       preConfirm: async () => {
         try {
@@ -294,7 +294,9 @@ export default function AddLabReceipt() {
           icon: "success",
           timer: 2000,
         });
-        navigate("/receipt-list");
+        navigate("/receipt-list", {
+          state: { printReceiptId: result.value?.data?.receipt_id },
+        });
       } else if (result.dismiss === Swal.DismissReason.cancel) {
         const confirmCancel = await Swal.fire({
           title: "Are you sure?",
@@ -303,6 +305,8 @@ export default function AddLabReceipt() {
           showCancelButton: true,
           confirmButtonText: "Yes, Cancel it!",
           cancelButtonText: "No, Wait",
+          confirmButtonColor: "#dc3545",
+          cancelButtonColor: "#0d6efd",
         });
 
         if (confirmCancel.isConfirmed) {
@@ -434,8 +438,8 @@ export default function AddLabReceipt() {
         (result.data?.result === "success" || result.data?.stat === "success")
       ) {
         showPaymentPendingPopup(
-          result.data.transaction_id,
-          receiptPayload,
+          result.data.reference_id || result.data.transaction_id,
+          { ...receiptPayload, transaction_id: result.data.transaction_id },
           result.data
         );
       } else {
@@ -845,7 +849,7 @@ export default function AddLabReceipt() {
                     </Col>
 
                     {/* POS Terminal radio box */}
-                    <Col md={4}>
+                    <Col md={2}>
                       <Form.Label style={labelStyle}>
                         POS Terminal <span className="text-danger">*</span>
                       </Form.Label>
@@ -856,21 +860,29 @@ export default function AddLabReceipt() {
                           borderRadius: "10px",
                         }}
                       >
-                        {[...new Set([...posTerminalList, "OFFLINE"])].map((opt) => (
-                          <Form.Check
-                            required
-                            inline
-                            key={opt}
-                            label={opt}
-                            name="posTerminal"
-                            type="radio"
-                            id={`pos-${opt}`}
-                            value={opt}
-                            checked={formData.posTerminal === opt}
-                            onChange={handleInputChange}
-                            style={{ fontSize: "12px", margin: "7px" }}
-                          />
-                        ))}
+                        {/* 
+                          Commented legacy POS terminals:
+                          // "BharatPe", "BharatPe1", "BharatPe2",
+                          // "HDFC",
+                          // "PineLabs"
+                        */}
+                        {[...new Set(["Federal", "OFFLINE"])]
+                          .filter((opt) => formData.paymentMode?.toLowerCase() === "cash" ? opt !== "Federal" : true)
+                          .map((opt) => (
+                            <Form.Check
+                              required
+                              inline
+                              key={opt}
+                              label={opt}
+                              name="posTerminal"
+                              type="radio"
+                              id={`pos-${opt}`}
+                              value={opt}
+                              checked={formData.posTerminal === opt}
+                              onChange={handleInputChange}
+                              style={{ fontSize: "12px", margin: "7px" }}
+                            />
+                          ))}
                       </div>
                       {errors.posTerminal && (
                         <p className="text-danger mt-1" style={{ fontSize: "11px" }}>

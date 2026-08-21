@@ -343,7 +343,7 @@ const IpdCollection = () => {
       confirmButtonText: "Check Status",
       cancelButtonText: "Cancel Payment",
       confirmButtonColor: "#00bcd4",
-      cancelButtonColor: "#cfd8dc",
+      cancelButtonColor: "#dc3545",
       showLoaderOnConfirm: true,
       preConfirm: async () => {
         try {
@@ -409,6 +409,8 @@ const IpdCollection = () => {
           showCancelButton: true,
           confirmButtonText: "Yes, Cancel it!",
           cancelButtonText: "No, Keep Waiting",
+          confirmButtonColor: "#dc3545",
+          cancelButtonColor: "#0d6efd",
         });
 
         if (confirmCancel.isConfirmed) {
@@ -554,9 +556,10 @@ const IpdCollection = () => {
   const terminalOptions = [
     // "HDFC",
     // "PineLabs",
-    "OFFLINE",
     // "BharatPe1",
     // "BharatPe2",
+    "Federal",
+    "OFFLINE",
   ];
 
   const getBase64Image = (imgUrl) => {

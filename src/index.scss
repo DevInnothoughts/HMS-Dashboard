@@ -15,3 +15,15 @@
 
 /*Custom Style*/
 @import 'assets/scss/style';
+
+/* Prevent background layout shift when Bootstrap Modals / SweetAlert popups open & close */
+html {
+  overflow-y: scroll;
+}
+
+body,
+body.modal-open,
+body.swal2-shown,
+body.swal2-height-auto {
+  padding-right: 0px !important;
+}

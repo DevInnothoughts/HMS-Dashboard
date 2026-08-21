@@ -824,7 +824,9 @@ const OpdPatientMedicalRecords = () => {
     general_comment: "",
     has_surgical_date: false,
     surgical_date: "0000-00-00",
-    categories: [], // Cashless, Reimbursement, HHF, Cash
+    categories: [], // Cashless, Reimbursement, Charity, No Insurance
+    insurance_company_id: "",
+    tpa_id: "",
     category_comment: "",
     medical_advice: [], // MCDPA, CHT, etc.
     medical_advice_notes: {},
@@ -981,6 +983,36 @@ const OpdPatientMedicalRecords = () => {
       errors.assistance_doctor = true;
     }
 
+    const isSurgeryOrMedsSx =
+      Array.isArray(diagnosisData.advice_types) &&
+      (diagnosisData.advice_types.includes("Surgery") ||
+        diagnosisData.advice_types.includes("Meds -> Sx"));
+
+    if (isSurgeryOrMedsSx) {
+      if (!diagnosisData.categories || diagnosisData.categories.length === 0) {
+        errors.categories = true;
+      }
+      if (
+        !diagnosisData.category_comment ||
+        String(diagnosisData.category_comment).trim() === ""
+      ) {
+        errors.category_comment = true;
+      }
+    }
+
+    const isInsuranceCompanyRequired =
+      Array.isArray(diagnosisData.categories) &&
+      (diagnosisData.categories.includes("Cashless") ||
+        diagnosisData.categories.includes("Reimbursement"));
+
+    if (
+      isInsuranceCompanyRequired &&
+      (!diagnosisData.insurance_company_id ||
+        String(diagnosisData.insurance_company_id).trim() === "")
+    ) {
+      errors.insurance_company_id = true;
+    }
+
     if (!hasData || Object.keys(errors).length > 0) {
       if (!hasData) {
         errors.diagnosis_text = true;
@@ -1095,6 +1127,7 @@ const OpdPatientMedicalRecords = () => {
   });
 
   const opdPrescriptionPrintRef = useRef();
+  const opdPrescriptionDatesRef = useRef(null);
   const triggerPrintOpdPrescription = useReactToPrint({
     contentRef: opdPrescriptionPrintRef,
   });
@@ -2514,19 +2547,36 @@ const OpdPatientMedicalRecords = () => {
     setDiagnosisData((prev) => {
       const current = prev[field] || [];
       const isRemoving = current.includes(value);
-      const updated = isRemoving
+      let updated = isRemoving
         ? current.filter((item) => item !== value)
         : [...current, value];
 
+      let nextState = { ...prev };
 
-
-      let nextState = { ...prev, [field]: updated };
-
-      // Clear comment if Test is unselected
-      if (field === "advice_types" && value === "Test" && isRemoving) {
-        nextState.diagnosis_comment = "";
+      if (field === "categories") {
+        updated = isRemoving ? [] : [value];
       }
 
+      if (field === "advice_types") {
+        if (value === "Referred to another doctor" && !isRemoving) {
+          updated = ["Referred to another doctor"];
+          nextState.diagnosis_comment = "";
+          nextState.categories = [];
+          nextState.insurance_company_id = "";
+          nextState.tpa_id = "";
+          nextState.category_comment = "";
+        } else if (value === "Meds -> Sx" && !isRemoving) {
+          updated = updated.filter(
+            (item) => item !== "Medication" && item !== "Surgery",
+          );
+        } else if ((value === "Medication" || value === "Surgery") && !isRemoving) {
+          updated = updated.filter((item) => item !== "Meds -> Sx");
+        } else if (value === "Test" && isRemoving) {
+          nextState.diagnosis_comment = "";
+        }
+      }
+
+      nextState[field] = updated;
       return nextState;
     });
   };
@@ -3439,6 +3489,8 @@ const OpdPatientMedicalRecords = () => {
                     isEditing={isEditingDiagnosis}
                     onEditDiagnosis={handleEditDiagnosis}
                     validationErrors={validationErrors}
+                    patientPhone={formData.phone}
+                    patient={formData}
                   />
                 )}
                 {activeTab === "follow-up" && (
