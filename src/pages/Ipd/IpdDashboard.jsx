@@ -92,37 +92,99 @@ export default function IpdDashboard() {
   };
 
   const formatSurgeries = useCallback((data) => {
-    return data.map((p) => {
-      const surgeryMoment = p.surgery_datetime
-        ? moment(p.surgery_datetime, ["DD-MM-YYYY hh:mm A", "DD-MM-YYYY HH:mm", "YYYY-MM-DD HH:mm", "YYYY-MM-DD hh:mm A"])
-        : moment(p.created_at);
+    const list = Array.isArray(data)
+      ? data
+      : Array.isArray(data?.data)
+      ? data.data
+      : Array.isArray(data?.result)
+      ? data.result
+      : [];
+
+    return list.map((p) => {
+      let surgeryMoment = null;
+      let hasSurgeryDate = false;
+
+      const rawSurgeryDate =
+        p.surgery_datetime && p.surgery_datetime !== "Not Scheduled"
+          ? p.surgery_datetime
+          : p.surgery_date
+          ? `${p.surgery_date} ${p.surgery_time || ""}`.trim()
+          : null;
+
+      if (rawSurgeryDate) {
+        const parsed = moment(rawSurgeryDate, [
+          "DD-MM-YYYY hh:mm A",
+          "DD-MM-YYYY HH:mm",
+          "DD-MM-YYYY HH:mm:ss",
+          "YYYY-MM-DD HH:mm",
+          "YYYY-MM-DD hh:mm A",
+          "YYYY-MM-DDTHH:mm:ss.SSSZ",
+          "YYYY-MM-DDTHH:mm:ssZ",
+          "DD-MM-YYYY",
+          "YYYY-MM-DD",
+          moment.ISO_8601,
+        ]);
+        if (parsed.isValid()) {
+          surgeryMoment = parsed;
+          hasSurgeryDate = true;
+        }
+      }
+
+      if (!surgeryMoment || !surgeryMoment.isValid()) {
+        const fallbackDate =
+          p.admission_datetime && p.admission_datetime !== "NOT ADMITTED"
+            ? p.admission_datetime
+            : p.created_at;
+        surgeryMoment = moment(fallbackDate);
+        if (!surgeryMoment.isValid()) {
+          surgeryMoment = moment();
+        }
+      }
 
       const startTime = surgeryMoment.toDate();
       const endTime = surgeryMoment.clone().add(1, "hour").toDate();
+      const patientName = p.name || p.patient_name || p.patientName || "Patient";
+      const doctorName = p.surgeon_name || p.doctor_name || p.doctorName || "N/A";
+      const phone = p.patient_phone || p.phone || p.contact || "";
+      const uhid =
+        p.uid ||
+        p.uhid ||
+        p.patient_uid ||
+        p.Uid_no ||
+        p.uid_no ||
+        p.global_id ||
+        (p.patient_id ? String(p.patient_id) : "") ||
+        "";
+      const age = p.age || "";
+      const gender = p.sex || p.gender || "";
+
+      const rawAdmNo = p.admission_no || p.adm_no || p.admissionNo;
+      const isConfirmed = Boolean(
+        rawAdmNo &&
+        rawAdmNo !== 0 &&
+        rawAdmNo !== "0" &&
+        String(rawAdmNo).trim() !== ""
+      );
 
       return {
-        title: `${surgeryMoment.format("HH:mm")} — ${p.name || "Patient"}`,
+        title: `${surgeryMoment.format("HH:mm")} — ${patientName}`,
         start: startTime,
         end: endTime,
-        phone: p.patient_phone,
+        phone,
         date: surgeryMoment.format("DD-MM-YYYY"),
         time: surgeryMoment.format("HH:mm"),
-        patientName: p.name,
-        sxPlan: p.sx_plan,
-        uhid: p.uid,
-        age: p.age,
-        gender: p.sex,
-        patientid: p.patient_id,
-        isConfirmed:
-          p.admission_no !== 0 &&
-          p.admission_no !== "0" &&
-          p.admission_no !== null &&
-          p.admission_no !== undefined &&
-          p.admission_no !== "",
-        admissionNo: p.admission_no,
-        doctorName: p.doctor_name || p.surgeon_name || "N/A",
+        patientName,
+        sxPlan: p.sx_plan || p.surgery_name || p.procedure || "",
+        uhid,
+        age,
+        gender,
+        patientid: p.patient_id || p.id,
+        isConfirmed,
+        admissionNo: isConfirmed ? rawAdmNo : null,
+        doctorName,
         doctorId: p.doctor_id,
         confirmTime: p.created_at,
+        hasSurgeryDate,
       };
     });
   }, []);
@@ -145,21 +207,26 @@ export default function IpdDashboard() {
         const result = await response.json();
         const rawData = Array.isArray(result.data?.[0])
           ? result.data[0]
-          : result.data || [];
+          : Array.isArray(result.data)
+          ? result.data
+          : result || [];
         const uidsMap = new Map();
         rawData.forEach((inv) => {
-          const uid = String(inv.patient_uid || inv.Uid_no || inv.uid || "");
-          if (uid) {
-            // Keep the most recent bill per UID if multiple exist
-            if (!uidsMap.has(uid)) {
-              uidsMap.set(uid, {
-                createdAt: inv.creation_date || null,
-                admissionTime: inv.admissiontime || null,
-                dischargeAt: inv.due_date || null,
-                dischargeTime: inv.dischargetime || null,
-              });
-            }
-          }
+          const uid = String(inv.patient_uid || inv.Uid_no || inv.uid || "").trim();
+          const phone = String(inv.patient_phone || inv.phone || inv.patient_phone_no || inv.contact || "").replace(/\D/g, "").slice(-10);
+          const admNo = String(inv.admission_no || inv.adm_no || inv.admissionno || "").trim();
+
+          const billData = {
+            createdAt: inv.creation_date || null,
+            admissionTime: inv.admissiontime || null,
+            dischargeAt: inv.due_date || null,
+            dischargeTime: inv.dischargetime || null,
+            invoiceId: inv.invoice_id || null,
+          };
+
+          if (uid) uidsMap.set(uid, billData);
+          if (admNo && admNo !== "0" && admNo !== "PENDING") uidsMap.set(admNo, billData);
+          if (phone) uidsMap.set(phone, billData);
         });
         setBilledUhids(uidsMap);
         return uidsMap;
@@ -169,52 +236,154 @@ export default function IpdDashboard() {
     }
   }, [currentLocation]);
 
-  const fetchSurgeries = useCallback(async (dateToFetch) => {
-    if (currentLocation === "default") return;
-    setLoading(true);
-    const targetMoment = moment(dateToFetch || selectedDate);
-    let start, end;
+  const getDedupeKey = (item) => {
+    const uid = String(
+      item.uid ||
+        item.uhid ||
+        item.patient_uid ||
+        item.Uid_no ||
+        item.uid_no ||
+        item.global_id ||
+        item.patient_id ||
+        ""
+    ).trim().toLowerCase();
 
-    if (currentView === "month") {
-      start = targetMoment.clone().startOf("month").toDate();
-      end = targetMoment.clone().endOf("month").toDate();
-    } else if (currentView === "week") {
-      start = targetMoment.clone().startOf("week").toDate();
-      end = targetMoment.clone().endOf("week").toDate();
-    } else {
-      start = targetMoment.clone().startOf("day").toDate();
-      end = targetMoment.clone().endOf("day").toDate();
+    const phone = String(
+      item.patient_phone || item.phone || item.contact || ""
+    ).replace(/\D/g, "").slice(-10);
+
+    const name = String(
+      item.name || item.patient_name || item.patientName || ""
+    ).trim().toLowerCase();
+
+    const admNo = String(
+      item.admission_no || item.adm_no || item.admissionNo || ""
+    ).trim().toLowerCase();
+
+    const rawSxDate = String(
+      item.surgery_datetime || item.surgery_date || item.admission_datetime || item.adm_date || item.created_at || ""
+    ).trim();
+
+    let sxDateStr = rawSxDate;
+    if (rawSxDate) {
+      const parsed = moment(rawSxDate, [
+        "DD-MM-YYYY HH:mm",
+        "DD-MM-YYYY hh:mm A",
+        "YYYY-MM-DD HH:mm",
+        "YYYY-MM-DD hh:mm A",
+        "YYYY-MM-DDTHH:mm:ss.SSSZ",
+        "YYYY-MM-DDTHH:mm:ssZ",
+        "DD-MM-YYYY",
+        "YYYY-MM-DD",
+        "DD/MM/YYYY",
+        "YYYY/MM/DD",
+      ]);
+      if (parsed.isValid()) {
+        sxDateStr = parsed.format("YYYY-MM-DD");
+      }
     }
 
+    if (uid && uid !== "0") return `uid_${uid}_${sxDateStr}`;
+    if (phone && name) return `person_${phone}_${name}_${sxDateStr}`;
+    if (phone) return `phone_${phone}_${sxDateStr}`;
+    if (admNo && admNo !== "0" && admNo !== "pending") return `adm_${admNo}_${sxDateStr}`;
+
+    return `id_${item.id || item.appointment_id || Math.random()}`;
+  };
+
+  const fetchSurgeries = useCallback(async () => {
+    if (currentLocation === "default" || !currentLocation) return;
+    setLoading(true);
+
     try {
-      const fromDate = moment(start).format("YYYY-MM-DD");
-      const toDate = moment(end).format("YYYY-MM-DD");
+      const headers = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      };
 
-      const [surgeriesRes] = await Promise.all([
-        fetch(
-          `${BASE_URL}/V1/ipd/admin/listVerifiedPatients?location=${currentLocation}&from=${fromDate}&to=${toDate}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          },
-        ),
-        fetchBilledUhids(),
-      ]);
+      const endpoints = [
+        `${BASE_URL}/V1/doctor/manage-admission/list?location=${encodeURIComponent(currentLocation)}`,
+        `${BASE_URL}/V1/doctor/admission/list-admissions?location=${encodeURIComponent(currentLocation)}`,
+        `${BASE_URL}/V1/ipd/admin/listVerifiedPatients?location=${encodeURIComponent(currentLocation)}`,
+      ];
 
-      if (surgeriesRes && surgeriesRes.ok) {
-        const result = await surgeriesRes.json();
-        const formattedEvents = formatSurgeries(result);
-        setSurgeries(formattedEvents);
+      const responses = await Promise.allSettled(
+        endpoints.map((url) => fetch(url, { method: "GET", headers }))
+      );
+
+      let allRawData = [];
+
+      for (const res of responses) {
+        if (res.status === "fulfilled" && res.value && res.value.ok) {
+          try {
+            const json = await res.value.json();
+            const list = Array.isArray(json)
+              ? json
+              : Array.isArray(json?.data)
+              ? json.data
+              : Array.isArray(json?.result)
+              ? json.result
+              : [];
+            if (Array.isArray(list) && list.length > 0) {
+              allRawData.push(...list);
+            }
+          } catch (e) {
+            console.error("JSON parse error from endpoint:", e);
+          }
+        }
       }
+
+      // Deduplicate using composite key matching patient identity + normalized surgery date
+      const uniqueMap = new Map();
+      allRawData.forEach((item) => {
+        const key = getDedupeKey(item);
+        if (!uniqueMap.has(key)) {
+          uniqueMap.set(key, item);
+        } else {
+          // Merge records for the same key, preserving valid admission numbers and cancellation status
+          const existing = uniqueMap.get(key);
+          const existingAdm = existing.admission_no || existing.adm_no || existing.admissionNo;
+          const newAdm = item.admission_no || item.adm_no || item.admissionNo;
+
+          const existingHasAdm =
+            existingAdm &&
+            String(existingAdm) !== "0" &&
+            String(existingAdm).trim() !== "";
+          const newHasAdm =
+            newAdm &&
+            String(newAdm) !== "0" &&
+            String(newAdm).trim() !== "";
+
+          const merged = { ...existing, ...item };
+          if (existingHasAdm && !newHasAdm) {
+            merged.admission_no = existingAdm;
+            merged.adm_no = existingAdm;
+          } else if (newHasAdm) {
+            merged.admission_no = newAdm;
+            merged.adm_no = newAdm;
+          }
+
+          if (existing.is_deleted || item.is_deleted) {
+            merged.is_deleted = 1;
+          }
+
+          uniqueMap.set(key, merged);
+        }
+      });
+
+      const uniqueRecords = Array.from(uniqueMap.values()).filter(
+        (p) => !p.is_deleted || p.is_deleted === 0 || p.is_deleted === "0"
+      );
+
+      await fetchBilledUhids();
+      const formattedEvents = formatSurgeries(uniqueRecords);
+      setSurgeries(formattedEvents);
     } catch (error) {
       console.error("Error fetching surgeries:", error);
     } finally {
       setLoading(false);
     }
-  }, [currentLocation, selectedDate, currentView, formatSurgeries, fetchBilledUhids]);
+  }, [currentLocation, selectedDate, formatSurgeries, fetchBilledUhids]);
 
   useEffect(() => {
     fetchSurgeries();
@@ -261,9 +430,21 @@ export default function IpdDashboard() {
       }
     }
 
+    // Keep selectedEvent synchronized with latest surgeries list
+    if (selectedEvent && surgeries.length > 0) {
+      const updated = surgeries.find(
+        (s) =>
+          (s.uhid && s.uhid === selectedEvent.uhid) ||
+          (s.patientid && String(s.patientid) === String(selectedEvent.patientid))
+      );
+      if (updated && (updated.isConfirmed !== selectedEvent.isConfirmed || updated.admissionNo !== selectedEvent.admissionNo)) {
+        setSelectedEvent(updated);
+      }
+    }
+
     return () =>
       window.removeEventListener("selectSurgery", handleSelectEvent);
-  }, [surgeries]);
+  }, [surgeries, selectedEvent]);
 
   const filteredSurgeries = useMemo(() => {
     return surgeries.filter((s) => {
@@ -281,17 +462,22 @@ export default function IpdDashboard() {
   }, [surgeries, selectedDoctorId, activeStatusFilter]);
 
   const counts = useMemo(() => {
-    const monthStart = moment(selectedDate).startOf("month");
-    const monthEnd = moment(selectedDate).endOf("month");
-
-    return surgeries.filter((event) => {
-      const eventDate = moment(event.start);
-      return (
-        eventDate.isSameOrAfter(monthStart, "day") &&
-        eventDate.isSameOrBefore(monthEnd, "day")
-      );
-    }).length;
-  }, [surgeries, selectedDate]);
+    if (viewMode === "list") {
+      return filteredSurgeries.filter((event) => {
+        return event.hasSurgeryDate && moment(event.start).isSame(selectedDate, "day");
+      }).length;
+    } else {
+      const monthStart = moment(selectedDate).clone().startOf("month");
+      const monthEnd = moment(selectedDate).clone().endOf("month");
+      return filteredSurgeries.filter((event) => {
+        const eventDate = moment(event.start);
+        return (
+          eventDate.isSameOrAfter(monthStart, "day") &&
+          eventDate.isSameOrBefore(monthEnd, "day")
+        );
+      }).length;
+    }
+  }, [filteredSurgeries, selectedDate, viewMode]);
 
   const handleCalendarNavigate = (newDate) => setSelectedDate(newDate);
   const handleCalendarView = (newView) => setCurrentView(newView);
@@ -308,7 +494,7 @@ export default function IpdDashboard() {
   const handleConfirmSurgery = (contact, uhid) => {
     Swal.fire({
       title: "Confirm Admission?",
-      text: "This will move the patient to the surgery list.",
+      text: "This will confirm the patient's admission.",
       icon: "question",
       showCancelButton: true,
       confirmButtonText: "Confirm",
@@ -319,10 +505,13 @@ export default function IpdDashboard() {
       if (result.isConfirmed) {
         try {
           const response = await fetch(
-            `${BASE_URL}/V1/ipd/admin/confirmAdmissionEntry`,
+            `${BASE_URL}/V1/doctor/manage-admission/confirm`,
             {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
               body: JSON.stringify({
                 contact,
                 uhid,
@@ -332,17 +521,22 @@ export default function IpdDashboard() {
           );
 
           if (response.ok) {
-            const data = await response.json();
             Swal.fire(
               "Confirmed!",
-              `Admission No: ${data.admissionNo} generated.`,
+              "Admission confirmed successfully. You can now add an IPD bill and set the Admission Number.",
               "success",
+            );
+            setSelectedEvent((prev) =>
+              prev ? { ...prev, isConfirmed: true, status: "Admitted", confirmTime: new Date().toISOString() } : null
             );
             fetchSurgeries();
             window.dispatchEvent(new CustomEvent("refreshIpdCount"));
+          } else {
+            const err = await response.json();
+            throw new Error(err.message || "Failed to confirm");
           }
         } catch (error) {
-          Swal.fire("Error", "Could not confirm admission", "error");
+          Swal.fire("Error", error.message || "Could not confirm admission", "error");
         }
       }
     });
@@ -429,8 +623,24 @@ export default function IpdDashboard() {
     });
   };
 
+  const getBillInfo = useCallback((event) => {
+    if (!event) return null;
+    const uidKey = event.uhid ? String(event.uhid).trim() : "";
+    const admKey = event.admissionNo ? String(event.admissionNo).trim() : "";
+    const phoneKey = event.phone ? String(event.phone).replace(/\D/g, "").slice(-10) : "";
+
+    if (uidKey && billedUhids.has(uidKey)) return billedUhids.get(uidKey);
+    if (admKey && admKey !== "0" && admKey !== "PENDING" && billedUhids.has(admKey)) return billedUhids.get(admKey);
+    if (phoneKey && billedUhids.has(phoneKey)) return billedUhids.get(phoneKey);
+    return null;
+  }, [billedUhids]);
+
+  const checkHasBill = useCallback((event) => {
+    return Boolean(getBillInfo(event));
+  }, [getBillInfo]);
+
   const eventStyleGetter = useCallback((event) => {
-    const hasBill = billedUhids.has(String(event.uhid));
+    const hasBill = checkHasBill(event);
     const bgColor = hasBill ? "#16a34a" : event.isConfirmed ? "#1e40af" : "#475569";
     return {
       style: {
@@ -441,7 +651,7 @@ export default function IpdDashboard() {
         display: "block",
       },
     };
-  }, [billedUhids]);
+  }, [checkHasBill]);
 
   const toggleStatusFilter = (status) => {
     setActiveStatusFilter((prev) => (prev === status ? null : status));
@@ -602,7 +812,7 @@ export default function IpdDashboard() {
           style={{ borderTop: "1px solid #a3b1b4ff" }}
         ></div>
 
-        {selectedEvent.isConfirmed && !billedUhids.has(String(selectedEvent.uhid)) && (
+        {selectedEvent.isConfirmed && !checkHasBill(selectedEvent) && (
           <div
             className="d-flex align-items-center p-3 mb-3"
             style={{
@@ -640,8 +850,8 @@ export default function IpdDashboard() {
           <div className="d-grid gap-1">
             {selectedEvent.isConfirmed ? (
               <>
-                {billedUhids.has(String(selectedEvent.uhid)) && (() => {
-                  const billInfo = billedUhids.get(String(selectedEvent.uhid));
+                {checkHasBill(selectedEvent) && (() => {
+                  const billInfo = getBillInfo(selectedEvent);
                   const madeAt = billInfo?.admissionTime
                     ? billInfo.admissionTime
                     : billInfo?.createdAt
@@ -1257,8 +1467,10 @@ export default function IpdDashboard() {
                           </div>
                           <Badge bg="primary" className="p-6">
                             {
-                              filteredSurgeries.filter((s) =>
-                                moment(s.start).isSame(selectedDate, "day"),
+                              filteredSurgeries.filter(
+                                (s) =>
+                                  s.hasSurgeryDate &&
+                                  moment(s.start).isSame(selectedDate, "day"),
                               ).length
                             }{" "}
                             Surgeries
@@ -1270,6 +1482,7 @@ export default function IpdDashboard() {
                         <div className="appointment-list-scroll">
                           {filteredSurgeries
                             .filter((s) => {
+                              if (!s.hasSurgeryDate) return false;
                               const isSameDay = moment(s.start).isSame(
                                 selectedDate,
                                 "day",
@@ -1288,7 +1501,7 @@ export default function IpdDashboard() {
                             })
                             .sort((a, b) => moment(a.start).diff(moment(b.start)))
                             .map((s, index) => {
-                              const hasBill = billedUhids.has(String(s.uhid));
+                              const hasBill = checkHasBill(s);
                               const listStatus = hasBill
                                 ? { text: "Bill Made", color: "#16a34a", bg: "#dcfce7", rowBg: "#f0fdf4", rowBorder: "#16a34a" }
                                 : s.isConfirmed
@@ -1409,8 +1622,10 @@ export default function IpdDashboard() {
                         </div>
                       </SimpleBar>
 
-                      {filteredSurgeries.filter((s) =>
-                        moment(s.start).isSame(selectedDate, "day"),
+                      {filteredSurgeries.filter(
+                        (s) =>
+                          s.hasSurgeryDate &&
+                          moment(s.start).isSame(selectedDate, "day"),
                       ).length === 0 && (
                           <div className="text-center py-5">
                             <FeatherIcon

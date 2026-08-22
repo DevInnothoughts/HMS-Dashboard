@@ -403,25 +403,37 @@ export default function DoctorDashboard() {
   }, []);
 
   const counts = useMemo(() => {
-    const monthStart = moment(selectedDate).startOf("month");
-    const monthEnd = moment(selectedDate).endOf("month");
-
-    return appointments
-      .filter((event) => {
+    let filtered;
+    if (viewMode === "list") {
+      filtered = appointments.filter((event) => {
+        if (event.isIpd) {
+          return (
+            event.hasSurgeryDate &&
+            moment(event.start).isSame(selectedDate, "day")
+          );
+        }
+        return moment(event.start).isSame(selectedDate, "day");
+      });
+    } else {
+      const monthStart = moment(selectedDate).clone().startOf("month");
+      const monthEnd = moment(selectedDate).clone().endOf("month");
+      filtered = appointments.filter((event) => {
         const eventDate = moment(event.start);
         return (
           eventDate.isSameOrAfter(monthStart, "day") &&
           eventDate.isSameOrBefore(monthEnd, "day")
         );
-      })
-      .reduce(
-        (acc, event) => {
-          acc[event.patientType] = (acc[event.patientType] || 0) + 1;
-          return acc;
-        },
-        { NEW: 0, FOLLOW: 0, POSTOPERATIVE: 0, MCDPA: 0, OTHER: 0, IPD: 0 },
-      );
-  }, [appointments, selectedDate]);
+      });
+    }
+
+    return filtered.reduce(
+      (acc, event) => {
+        acc[event.patientType] = (acc[event.patientType] || 0) + 1;
+        return acc;
+      },
+      { NEW: 0, FOLLOW: 0, POSTOPERATIVE: 0, MCDPA: 0, OTHER: 0, IPD: 0 },
+    );
+  }, [appointments, selectedDate, viewMode]);
 
   const formatAppointments = useCallback((data) => {
     return data.map((app) => {
@@ -479,81 +491,100 @@ export default function DoctorDashboard() {
       let eventTime = "12:00";
       let dateString = moment(ipd.created_at).format("DD-MM-YYYY");
       let start = new Date(ipd.created_at);
+      let hasSurgeryDate = false;
 
-      // Prioritize surgery_datetime over admission_datetime for doctor dashboard view
-      const targetDatetime = (ipd.surgery_datetime && ipd.surgery_datetime !== "Not Scheduled")
-        ? ipd.surgery_datetime
-        : ipd.admission_datetime;
+      const rawSurgeryDate =
+        ipd.surgery_datetime && ipd.surgery_datetime !== "Not Scheduled"
+          ? ipd.surgery_datetime
+          : ipd.surgery_date
+          ? `${ipd.surgery_date} ${ipd.surgery_time || ""}`.trim()
+          : null;
 
-      if (targetDatetime) {
-        const parsed = moment(targetDatetime, [
+      if (rawSurgeryDate) {
+        const parsed = moment(rawSurgeryDate, [
           "DD-MM-YYYY HH:mm",
           "DD-MM-YYYY hh:mm A",
           "YYYY-MM-DD HH:mm",
           "YYYY-MM-DD hh:mm A",
           "YYYY-MM-DDTHH:mm:ss.SSSZ",
+          "YYYY-MM-DDTHH:mm:ssZ",
+          "DD-MM-YYYY",
+          "YYYY-MM-DD",
         ]);
         if (parsed.isValid()) {
           start = parsed.toDate();
           dateString = parsed.format("DD-MM-YYYY");
           eventTime = parsed.format("HH:mm");
-        } else {
-          const parts = targetDatetime.split(" ");
-          if (parts.length >= 2) {
-            eventTime = parts[1];
-          }
+          hasSurgeryDate = true;
         }
       }
 
-      let formattedSurgery = "Not Scheduled";
-      if (ipd.surgery_datetime && ipd.surgery_datetime !== "Not Scheduled") {
-        const parsedSx = moment(ipd.surgery_datetime, [
-          "DD-MM-YYYY HH:mm",
-          "DD-MM-YYYY hh:mm A",
-          "YYYY-MM-DD HH:mm",
-          "YYYY-MM-DD hh:mm A",
-          "YYYY-MM-DDTHH:mm:ss.SSSZ",
-        ]);
-        if (parsedSx.isValid()) {
-          formattedSurgery = parsedSx.format("DD-MM-YYYY HH:mm");
-        } else {
-          formattedSurgery = ipd.surgery_datetime;
+      if (!hasSurgeryDate) {
+        const fallbackDate =
+          ipd.admission_datetime && ipd.admission_datetime !== "NOT ADMITTED"
+            ? ipd.admission_datetime
+            : ipd.created_at;
+        const parsedFallback = moment(fallbackDate);
+        if (parsedFallback.isValid()) {
+          start = parsedFallback.toDate();
+          dateString = parsedFallback.format("DD-MM-YYYY");
+          eventTime = parsedFallback.format("HH:mm");
         }
       }
 
-      const end = moment(start).clone().add(30, "minutes").toDate();
+      const formattedSurgery = hasSurgeryDate
+        ? moment(start).format("DD-MM-YYYY HH:mm")
+        : "Not Scheduled";
+      const end = moment(start).clone().add(1, "hour").toDate();
+
+      const patientName = ipd.name || ipd.patient_name || ipd.patientName || "Patient";
+      const doctorName = ipd.surgeon_name || ipd.doctor_name || ipd.doctorName || "N/A";
+      const phone = ipd.patient_phone || ipd.phone || ipd.contact || "";
+      const uhid =
+        ipd.uid ||
+        ipd.uhid ||
+        ipd.patient_uid ||
+        ipd.Uid_no ||
+        ipd.uid_no ||
+        ipd.global_id ||
+        (ipd.patient_id ? String(ipd.patient_id) : "") ||
+        "";
+
+      const rawAdmNo = ipd.admission_no || ipd.adm_no || ipd.admissionNo;
+      const isConfirmed = Boolean(
+        rawAdmNo &&
+        rawAdmNo !== 0 &&
+        rawAdmNo !== "0" &&
+        String(rawAdmNo).trim() !== ""
+      );
 
       return {
-        title: `${eventTime} — ${ipd.name || "Patient"} [IPD]`,
+        title: `${eventTime} — ${patientName} [IPD]`,
         start,
         end,
-        phone: ipd.patient_phone,
+        phone,
         date: dateString,
         time: eventTime,
-        patientName: ipd.name,
-        doctorName: ipd.surgeon_name || "N/A",
+        patientName,
+        doctorName,
         patientType: "IPD",
-        status:
-          ipd.admission_no && ipd.admission_no !== "0" && ipd.admission_no !== 0 ? "Admitted" : "Pending",
+        status: isConfirmed ? "Admitted" : "Pending",
         note: `Room Details: Room ${ipd.room_no || "N/A"} (${ipd.room_type || "N/A"})`,
-        confirmTime:
-          ipd.admission_no && ipd.admission_no !== "0" && ipd.admission_no !== 0 ? ipd.created_at : "0",
-        patientid: ipd.patient_id,
-        appointmentid: `ipd-${ipd.id}`,
-        isConfirmed:
-          ipd.admission_no &&
-          ipd.admission_no !== "0" &&
-          ipd.admission_no !== 0,
+        confirmTime: isConfirmed ? ipd.created_at : "0",
+        patientid: ipd.patient_id || ipd.id,
+        appointmentid: `ipd-${ipd.id || ipd.patient_id || uhid}`,
+        isConfirmed,
         isIpd: true,
-        uid: ipd.uid,
-        uhid: ipd.uid,
-        age: ipd.age,
-        gender: ipd.sex,
-        admissionNo: ipd.admission_no,
+        uid: uhid,
+        uhid,
+        age: ipd.age || "",
+        gender: ipd.sex || ipd.gender || "",
+        admissionNo: isConfirmed ? rawAdmNo : null,
         surgeryDatetime: formattedSurgery,
-        sxPlan: ipd.sx_plan,
-        roomNo: ipd.room_no,
-        roomType: ipd.room_type,
+        sxPlan: ipd.sx_plan || ipd.surgery_name || ipd.procedure || "",
+        roomNo: ipd.room_no || "N/A",
+        roomType: ipd.room_type || "N/A",
+        hasSurgeryDate,
       };
     });
   }, []);
@@ -611,31 +642,151 @@ export default function DoctorDashboard() {
           apptEvents = formatAppointments(filteredData);
         }
 
-        // Fetch IPD Admissions for date range
+        // Fetch IPD Admissions across all IPD endpoints for date range
         let ipdEvents = [];
         try {
           const fromIpd = moment(start).format("YYYY-MM-DD");
           const toIpd = moment(end).format("YYYY-MM-DD");
-          const ipdResponse = await fetch(
-            `${BASE_URL}/V1/doctor/manage-admission/list?location=${currentLocation}&from=${fromIpd}&to=${toIpd}`,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-              },
-            },
+          const headers = {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          };
+
+          const ipdEndpoints = [
+            `${BASE_URL}/V1/doctor/admission/list-admissions?location=${encodeURIComponent(currentLocation)}`,
+            `${BASE_URL}/V1/doctor/manage-admission/list?location=${encodeURIComponent(currentLocation)}&from=${fromIpd}&to=${toIpd}`,
+            `${BASE_URL}/V1/doctor/manage-admission/list?location=${encodeURIComponent(currentLocation)}`,
+            `${BASE_URL}/V1/ipd/admin/listVerifiedPatients?location=${encodeURIComponent(currentLocation)}&from=${fromIpd}&to=${toIpd}`,
+          ];
+
+          const ipdResponses = await Promise.allSettled(
+            ipdEndpoints.map((url) => fetch(url, { headers }))
           );
-          if (ipdResponse.ok) {
-            const ipdData = await ipdResponse.json();
-            if (Array.isArray(ipdData)) {
-              let filteredIpd = ipdData;
-              if (doctorId) {
-                filteredIpd = ipdData.filter(
-                  (ipd) => String(ipd.doctor_id) === String(doctorId),
-                );
+
+          let allRawIpd = [];
+          for (const res of ipdResponses) {
+            if (res.status === "fulfilled" && res.value && res.value.ok) {
+              try {
+                const json = await res.value.json();
+                const list = Array.isArray(json)
+                  ? json
+                  : Array.isArray(json?.data)
+                  ? json.data
+                  : Array.isArray(json?.result)
+                  ? json.result
+                  : [];
+                if (Array.isArray(list) && list.length > 0) {
+                  allRawIpd.push(...list);
+                }
+              } catch (e) {
+                console.error("Error parsing IPD response:", e);
               }
-              ipdEvents = formatIpdAppointments(filteredIpd);
             }
           }
+
+          // Deduplicate IPD records using composite key matching patient identity + normalized surgery date
+          const getDedupeKey = (item) => {
+            const uid = String(
+              item.uid ||
+                item.uhid ||
+                item.patient_uid ||
+                item.Uid_no ||
+                item.uid_no ||
+                item.global_id ||
+                item.patient_id ||
+                ""
+            ).trim().toLowerCase();
+
+            const phone = String(
+              item.patient_phone || item.phone || item.contact || ""
+            ).replace(/\D/g, "").slice(-10);
+
+            const name = String(
+              item.name || item.patient_name || item.patientName || ""
+            ).trim().toLowerCase();
+
+            const admNo = String(
+              item.admission_no || item.adm_no || item.admissionNo || ""
+            ).trim().toLowerCase();
+
+            const rawSxDate = String(
+              item.surgery_datetime || item.surgery_date || item.admission_datetime || item.adm_date || item.created_at || ""
+            ).trim();
+
+            let sxDateStr = rawSxDate;
+            if (rawSxDate) {
+              const parsed = moment(rawSxDate, [
+                "DD-MM-YYYY HH:mm",
+                "DD-MM-YYYY hh:mm A",
+                "YYYY-MM-DD HH:mm",
+                "YYYY-MM-DD hh:mm A",
+                "YYYY-MM-DDTHH:mm:ss.SSSZ",
+                "YYYY-MM-DDTHH:mm:ssZ",
+                "DD-MM-YYYY",
+                "YYYY-MM-DD",
+                "DD/MM/YYYY",
+                "YYYY/MM/DD",
+              ]);
+              if (parsed.isValid()) {
+                sxDateStr = parsed.format("YYYY-MM-DD");
+              }
+            }
+
+            if (uid && uid !== "0") return `uid_${uid}_${sxDateStr}`;
+            if (phone && name) return `person_${phone}_${name}_${sxDateStr}`;
+            if (phone) return `phone_${phone}_${sxDateStr}`;
+            if (admNo && admNo !== "0" && admNo !== "pending") return `adm_${admNo}_${sxDateStr}`;
+
+            return `id_${item.id || item.appointment_id || Math.random()}`;
+          };
+
+          const uniqueIpdMap = new Map();
+          allRawIpd.forEach((item) => {
+            const key = getDedupeKey(item);
+            if (!uniqueIpdMap.has(key)) {
+              uniqueIpdMap.set(key, item);
+            } else {
+              // Merge records for the same key, preserving valid admission numbers and cancellation status
+              const existing = uniqueIpdMap.get(key);
+              const existingAdm = existing.admission_no || existing.adm_no || existing.admissionNo;
+              const newAdm = item.admission_no || item.adm_no || item.admissionNo;
+
+              const existingHasAdm =
+                existingAdm &&
+                String(existingAdm) !== "0" &&
+                String(existingAdm).trim() !== "";
+              const newHasAdm =
+                newAdm &&
+                String(newAdm) !== "0" &&
+                String(newAdm).trim() !== "";
+
+              const merged = { ...existing, ...item };
+              if (existingHasAdm && !newHasAdm) {
+                merged.admission_no = existingAdm;
+                merged.adm_no = existingAdm;
+              } else if (newHasAdm) {
+                merged.admission_no = newAdm;
+                merged.adm_no = newAdm;
+              }
+
+              if (existing.is_deleted || item.is_deleted) {
+                merged.is_deleted = 1;
+              }
+
+              uniqueIpdMap.set(key, merged);
+            }
+          });
+
+          let uniqueIpdRecords = Array.from(uniqueIpdMap.values()).filter(
+            (p) => !p.is_deleted || p.is_deleted === 0 || p.is_deleted === "0"
+          );
+
+          if (doctorId) {
+            uniqueIpdRecords = uniqueIpdRecords.filter(
+              (ipd) => String(ipd.doctor_id) === String(doctorId),
+            );
+          }
+
+          ipdEvents = formatIpdAppointments(uniqueIpdRecords);
         } catch (ipdErr) {
           console.error("Error fetching IPD admissions for range:", ipdErr);
         }
@@ -1891,7 +2042,10 @@ margin-left: 1px;
                           <Badge bg="primary" className="p-6">
                             {
                               filteredAppointments.filter((a) =>
-                                moment(a.start).isSame(selectedDate, "day"),
+                                a.isIpd
+                                  ? a.hasSurgeryDate &&
+                                    moment(a.start).isSame(selectedDate, "day")
+                                  : moment(a.start).isSame(selectedDate, "day"),
                               ).length
                             }{" "}
                             Appointments
@@ -1902,6 +2056,7 @@ margin-left: 1px;
                       <div className="appointment-list-scroll">
                         {filteredAppointments
                           .filter((app) => {
+                            if (app.isIpd && !app.hasSurgeryDate) return false;
                             const isSameDay = moment(app.start).isSame(
                               selectedDate,
                               "day",

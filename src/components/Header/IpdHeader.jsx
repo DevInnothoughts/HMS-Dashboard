@@ -25,21 +25,46 @@ export default function IpdHeader() {
   const [showCancelledDropdown, setShowCancelledDropdown] = useState(false);
 
   const getSurgeryTime = (p) => {
-    if (p.surgery_datetime) {
-      const parsed = moment(p.surgery_datetime, [
-        "DD-MM-YYYY HH:mm",
-        "DD-MM-YYYY hh:mm A",
-        "YYYY-MM-DD HH:mm",
-        "YYYY-MM-DD hh:mm A",
-        "YYYY-MM-DDTHH:mm:ss.SSSZ",
-      ]);
+    const surgeryVal =
+      p.surgery_datetime && p.surgery_datetime !== "Not Scheduled"
+        ? p.surgery_datetime
+        : p.surgery_date
+        ? `${p.surgery_date} ${p.surgery_time || ""}`.trim()
+        : null;
+
+    const dateFormats = [
+      "DD-MM-YYYY HH:mm",
+      "DD-MM-YYYY hh:mm A",
+      "YYYY-MM-DD HH:mm",
+      "YYYY-MM-DD hh:mm A",
+      "YYYY-MM-DDTHH:mm:ss.SSSZ",
+      "YYYY-MM-DDTHH:mm:ssZ",
+      "DD-MM-YYYY",
+      "YYYY-MM-DD",
+      "DD/MM/YYYY",
+      "YYYY/MM/DD",
+    ];
+
+    if (surgeryVal) {
+      const parsed = moment(surgeryVal, dateFormats);
       if (parsed.isValid()) {
         return parsed.format("HH:mm");
       }
-      return p.surgery_datetime;
+      return surgeryVal;
+    }
+    if (p.surgery_time) {
+      return p.surgery_time;
+    }
+    if (p.adm_time) {
+      return p.adm_time;
+    }
+    if (p.admission_datetime && p.admission_datetime !== "NOT ADMITTED") {
+      const parsedAdm = moment(p.admission_datetime, dateFormats);
+      if (parsedAdm.isValid()) return parsedAdm.format("HH:mm");
     }
     if (p.created_at) {
-      return moment(p.created_at).format("HH:mm");
+      const parsedCreated = moment(p.created_at, dateFormats);
+      if (parsedCreated.isValid()) return parsedCreated.format("HH:mm");
     }
     return "N/A";
   };
@@ -47,38 +72,203 @@ export default function IpdHeader() {
   const fetchIpdCount = useCallback(async () => {
     if (!currentLocation) return;
     try {
-      const d = new Date();
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, "0");
-      const day = String(d.getDate()).padStart(2, "0");
-      const today = `${year}-${month}-${day}`;
-      const response = await fetch(
-        `http://194.195.117.79:5100/api/V1/ipd/admin/listVerifiedPatients?location=${currentLocation}&from=${today}&to=${today}&includeDeleted=true`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
+      const BASE_URL = "http://194.195.117.79:5100/api";
+      const todayStr = moment().format("YYYY-MM-DD");
+
+      const headers = {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      };
+
+      const endpoints = [
+        `${BASE_URL}/V1/doctor/admission/list-admissions?location=${encodeURIComponent(currentLocation)}`,
+        `${BASE_URL}/V1/doctor/manage-admission/list?location=${encodeURIComponent(currentLocation)}&from=${todayStr}&to=${todayStr}`,
+        `${BASE_URL}/V1/doctor/manage-admission/list?location=${encodeURIComponent(currentLocation)}`,
+        `${BASE_URL}/V1/ipd/admin/listVerifiedPatients?location=${encodeURIComponent(currentLocation)}&from=${todayStr}&to=${todayStr}&includeDeleted=true`,
+      ];
+
+      const responses = await Promise.allSettled(
+        endpoints.map((url) => fetch(url, { headers }))
       );
-      if (response.ok) {
-        const data = await response.json();
-        if (Array.isArray(data)) {
-          const confirmed = data.filter(p => !p.is_deleted && p.admission_no !== 0 && p.admission_no !== "0" && p.admission_no !== null);
-          const pending = data.filter(p => !p.is_deleted && (p.admission_no === 0 || p.admission_no === "0" || p.admission_no === null));
-          const cancelled = data.filter(p => p.is_deleted);
 
-          setConfirmedSurgeries(confirmed);
-          setPendingSurgeries(pending);
-          setCancelledSurgeries(cancelled);
+      let allRawData = [];
 
-          setSurgeryCounts({
-            total: confirmed.length + pending.length + cancelled.length,
-            confirmed: confirmed.length,
-            pending: pending.length,
-            cancelled: cancelled.length,
-          });
+      for (const res of responses) {
+        if (res.status === "fulfilled" && res.value && res.value.ok) {
+          try {
+            const json = await res.value.json();
+            const list = Array.isArray(json)
+              ? json
+              : Array.isArray(json?.data)
+              ? json.data
+              : Array.isArray(json?.result)
+              ? json.result
+              : [];
+            if (Array.isArray(list) && list.length > 0) {
+              allRawData.push(...list);
+            }
+          } catch (e) {
+            console.error("JSON parse error in IPD header:", e);
+          }
         }
       }
+
+      // Deduplicate using composite key based on patient identity
+      const getDedupeKey = (item) => {
+        const uid = String(
+          item.uid ||
+          item.uhid ||
+          item.patient_uid ||
+          item.uid_no ||
+          item.patient_id ||
+          ""
+        ).trim().toLowerCase();
+
+        const phone = String(
+          item.patient_phone || item.phone || item.contact || ""
+        ).replace(/\D/g, "").slice(-10);
+
+        const name = String(
+          item.name || item.patient_name || item.patientName || ""
+        ).trim().toLowerCase();
+
+        const admNo = String(
+          item.admission_no || item.adm_no || item.admissionNo || ""
+        ).trim().toLowerCase();
+
+        if (uid && uid !== "0") return `uid_${uid}`;
+        if (phone && name) return `person_${phone}_${name}`;
+        if (phone) return `phone_${phone}`;
+        if (admNo && admNo !== "0" && admNo !== "pending") return `adm_${admNo}`;
+
+        return `id_${item.id || item.appointment_id || Math.random()}`;
+      };
+
+      const uniqueMap = new Map();
+      allRawData.forEach((item) => {
+        const key = getDedupeKey(item);
+        if (!uniqueMap.has(key)) {
+          uniqueMap.set(key, item);
+        } else {
+          // Merge records for the same key, keeping valid admission numbers and cancellation status
+          const existing = uniqueMap.get(key);
+          const existingAdm = existing.admission_no || existing.adm_no || existing.admissionNo;
+          const newAdm = item.admission_no || item.adm_no || item.admissionNo;
+
+          const existingHasAdm =
+            existingAdm &&
+            String(existingAdm) !== "0" &&
+            String(existingAdm).trim() !== "";
+          const newHasAdm =
+            newAdm &&
+            String(newAdm) !== "0" &&
+            String(newAdm).trim() !== "";
+
+          const merged = { ...existing, ...item };
+          if (existingHasAdm && !newHasAdm) {
+            merged.admission_no = existingAdm;
+            merged.adm_no = existingAdm;
+          } else if (newHasAdm) {
+            merged.admission_no = newAdm;
+            merged.adm_no = newAdm;
+          }
+
+          if (existing.is_deleted || item.is_deleted) {
+            merged.is_deleted = 1;
+          }
+
+          uniqueMap.set(key, merged);
+        }
+      });
+      const uniqueRecords = Array.from(uniqueMap.values());
+
+      // Filter for records relevant to TODAY
+      const isTodayRecord = (p) => {
+        const dateFormats = [
+          "DD-MM-YYYY HH:mm",
+          "DD-MM-YYYY hh:mm A",
+          "YYYY-MM-DD HH:mm",
+          "YYYY-MM-DD hh:mm A",
+          "YYYY-MM-DDTHH:mm:ss.SSSZ",
+          "YYYY-MM-DDTHH:mm:ssZ",
+          "DD-MM-YYYY",
+          "YYYY-MM-DD",
+          "DD/MM/YYYY",
+          "YYYY/MM/DD",
+        ];
+
+        const sxVal =
+          p.surgery_datetime && p.surgery_datetime !== "Not Scheduled"
+            ? p.surgery_datetime
+            : p.surgery_date
+            ? `${p.surgery_date} ${p.surgery_time || ""}`.trim()
+            : null;
+
+        if (sxVal) {
+          const parsedSx = moment(sxVal, dateFormats);
+          if (parsedSx.isValid()) {
+            return parsedSx.format("YYYY-MM-DD") === todayStr;
+          }
+        }
+
+        const admVal =
+          p.admission_datetime && p.admission_datetime !== "NOT ADMITTED"
+            ? p.admission_datetime
+            : p.adm_date
+            ? `${p.adm_date} ${p.adm_time || ""}`.trim()
+            : p.admission_date
+            ? `${p.admission_date}`.trim()
+            : p.created_at;
+
+        if (admVal) {
+          const parsedAdm = moment(admVal, dateFormats);
+          if (parsedAdm.isValid()) {
+            return parsedAdm.format("YYYY-MM-DD") === todayStr;
+          }
+        }
+
+        return false;
+      };
+
+      const todayRecords = uniqueRecords.filter(isTodayRecord);
+      const recordsToUse = todayRecords;
+
+      // Normalize items
+      const normalizedData = recordsToUse.map((p) => ({
+        ...p,
+        name: p.name || p.patient_name || p.patientName || "Patient",
+        uid: p.uid || p.uhid || p.patient_uid || p.patient_id || p.uid_no || "",
+        patient_phone: p.patient_phone || p.phone || p.contact || "",
+        surgeon_name: p.surgeon_name || p.doctor_name || p.doctorName || "N/A",
+        doctor_name: p.doctor_name || p.surgeon_name || p.doctorName || "N/A",
+        admission_no: p.admission_no || p.adm_no || p.admissionNo || null,
+      }));
+
+      const activePatients = normalizedData.filter((p) => !p.is_deleted);
+      const cancelled = normalizedData.filter((p) => p.is_deleted);
+
+      const isConfirmedPatient = (p) => {
+        const admNo = p.admission_no;
+        return Boolean(
+          admNo &&
+          admNo !== 0 &&
+          admNo !== "0" &&
+          String(admNo).trim() !== ""
+        );
+      };
+
+      const confirmed = activePatients.filter((p) => isConfirmedPatient(p));
+      const pending = activePatients.filter((p) => !isConfirmedPatient(p));
+
+      setConfirmedSurgeries(confirmed);
+      setPendingSurgeries(pending);
+      setCancelledSurgeries(cancelled);
+
+      setSurgeryCounts({
+        total: confirmed.length + pending.length + cancelled.length,
+        confirmed: confirmed.length,
+        pending: pending.length,
+        cancelled: cancelled.length,
+      });
     } catch (error) {
       console.error("Error fetching IPD count:", error);
     }

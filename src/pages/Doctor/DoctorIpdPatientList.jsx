@@ -521,6 +521,20 @@ export default function DoctorIpdPatientList() {
                     className="datatable-compact-style datatable-medium-small"
                   >
                     <Column
+                      header="Sr. No."
+                      body={(rowData, options) => (
+                        <span className="selectable-text">{options.rowIndex + 1}</span>
+                      )}
+                      headerClassName="datatable-header-center"
+                      style={{
+                        border: "1px solid #90caf9",
+                        textAlign: "center",
+                        padding: "0.75rem",
+                        width: "70px",
+                      }}
+                    />
+
+                    <Column
                       field="surgeryDate"
                       header="Surgery Date"
                       body={(rowData) => <span className="selectable-text">{formatOnlyDate(rowData.surgeryDate)}</span>}

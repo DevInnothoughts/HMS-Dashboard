@@ -49,28 +49,246 @@ export default function DoctorHeader() {
 
   const fetchDoctorStats = useCallback(async () => {
     if (!currentLocation || !doctorId) {
-      console.warn(
-        "⚠️ [DoctorHeader] fetchDoctorStats skipped — location:",
-        currentLocation,
-        "doctorId:",
-        doctorId,
-      );
       return;
     }
     try {
-      const url = `http://194.195.117.79:5100/api/V1/doctor/header-stats?location=${currentLocation}&doctorId=${doctorId}`;
+      const BASE_URL = "http://194.195.117.79:5100/api";
+      const todayStr = moment().format("YYYY-MM-DD");
+      const headers = {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      };
 
-      const response = await fetch(url);
-      const data = await response.json();
-
-      if (data.statusCode === 200 && data.data) {
-        setStats(data.data);
-
-      } else {
-        console.warn("⚠️ [DoctorHeader] Unexpected response structure:", data);
+      // 1. Fetch header stats for OPD
+      let opdStats = {
+        counts: { total: 0, new: 0, follow: 0, postop: 0, other: 0, ipd: 0 },
+        lists: { new: [], follow: [], postop: [], other: [], ipd: [] },
+      };
+      try {
+        const url = `${BASE_URL}/V1/doctor/header-stats?location=${currentLocation}&doctorId=${doctorId}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        if (data.statusCode === 200 && data.data) {
+          opdStats = data.data;
+        }
+      } catch (err) {
+        console.error("Error fetching OPD header stats:", err);
       }
+
+      // 2. Query all IPD endpoints for today
+      const endpoints = [
+        `${BASE_URL}/V1/doctor/admission/list-admissions?location=${encodeURIComponent(currentLocation)}`,
+        `${BASE_URL}/V1/doctor/manage-admission/list?location=${encodeURIComponent(currentLocation)}&from=${todayStr}&to=${todayStr}`,
+        `${BASE_URL}/V1/doctor/manage-admission/list?location=${encodeURIComponent(currentLocation)}`,
+        `${BASE_URL}/V1/ipd/admin/listVerifiedPatients?location=${encodeURIComponent(currentLocation)}&from=${todayStr}&to=${todayStr}&includeDeleted=true`,
+      ];
+
+      const responses = await Promise.allSettled(
+        endpoints.map((url) => fetch(url, { headers }))
+      );
+
+      let allRawIpd = [];
+      for (const res of responses) {
+        if (res.status === "fulfilled" && res.value && res.value.ok) {
+          try {
+            const json = await res.value.json();
+            const list = Array.isArray(json)
+              ? json
+              : Array.isArray(json?.data)
+              ? json.data
+              : Array.isArray(json?.result)
+              ? json.result
+              : [];
+            if (Array.isArray(list) && list.length > 0) {
+              allRawIpd.push(...list);
+            }
+          } catch (e) {
+            console.error("JSON parse error in DoctorHeader IPD:", e);
+          }
+        }
+      }
+
+      // Deduplicate IPD records using composite key based on patient identity
+      const getDedupeKey = (item) => {
+        const uid = String(
+          item.uid ||
+          item.uhid ||
+          item.patient_uid ||
+          item.uid_no ||
+          item.patient_id ||
+          ""
+        ).trim().toLowerCase();
+
+        const phone = String(
+          item.patient_phone || item.phone || item.contact || ""
+        ).replace(/\D/g, "").slice(-10);
+
+        const name = String(
+          item.name || item.patient_name || item.patientName || ""
+        ).trim().toLowerCase();
+
+        const admNo = String(
+          item.admission_no || item.adm_no || item.admissionNo || ""
+        ).trim().toLowerCase();
+
+        if (uid && uid !== "0") return `uid_${uid}`;
+        if (phone && name) return `person_${phone}_${name}`;
+        if (phone) return `phone_${phone}`;
+        if (admNo && admNo !== "0" && admNo !== "pending") return `adm_${admNo}`;
+
+        return `id_${item.id || item.appointment_id || Math.random()}`;
+      };
+
+      const uniqueMap = new Map();
+      allRawIpd.forEach((item) => {
+        const key = getDedupeKey(item);
+        if (!uniqueMap.has(key)) {
+          uniqueMap.set(key, item);
+        } else {
+          // Merge records for the same key, keeping valid admission numbers and cancellation status
+          const existing = uniqueMap.get(key);
+          const existingAdm = existing.admission_no || existing.adm_no || existing.admissionNo;
+          const newAdm = item.admission_no || item.adm_no || item.admissionNo;
+
+          const existingHasAdm =
+            existingAdm &&
+            String(existingAdm) !== "0" &&
+            String(existingAdm).trim() !== "";
+          const newHasAdm =
+            newAdm &&
+            String(newAdm) !== "0" &&
+            String(newAdm).trim() !== "";
+
+          const merged = { ...existing, ...item };
+          if (existingHasAdm && !newHasAdm) {
+            merged.admission_no = existingAdm;
+            merged.adm_no = existingAdm;
+          } else if (newHasAdm) {
+            merged.admission_no = newAdm;
+            merged.adm_no = newAdm;
+          }
+
+          if (existing.is_deleted || item.is_deleted) {
+            merged.is_deleted = 1;
+          }
+
+          uniqueMap.set(key, merged);
+        }
+      });
+      const uniqueIpd = Array.from(uniqueMap.values());
+
+      // Filter for records scheduled specifically on TODAY
+      const isTodayRecord = (p) => {
+        if (p.is_deleted) return false;
+        const dateFormats = [
+          "DD-MM-YYYY HH:mm",
+          "DD-MM-YYYY hh:mm A",
+          "YYYY-MM-DD HH:mm",
+          "YYYY-MM-DD hh:mm A",
+          "YYYY-MM-DDTHH:mm:ss.SSSZ",
+          "YYYY-MM-DDTHH:mm:ssZ",
+          "DD-MM-YYYY",
+          "YYYY-MM-DD",
+          "DD/MM/YYYY",
+          "YYYY/MM/DD",
+        ];
+
+        const sxVal =
+          p.surgery_datetime && p.surgery_datetime !== "Not Scheduled"
+            ? p.surgery_datetime
+            : p.surgery_date
+            ? `${p.surgery_date} ${p.surgery_time || ""}`.trim()
+            : null;
+
+        if (sxVal) {
+          const parsedSx = moment(sxVal, dateFormats);
+          if (parsedSx.isValid()) {
+            return parsedSx.format("YYYY-MM-DD") === todayStr;
+          }
+        }
+
+        const admVal =
+          p.admission_datetime && p.admission_datetime !== "NOT ADMITTED"
+            ? p.admission_datetime
+            : p.adm_date
+            ? `${p.adm_date} ${p.adm_time || ""}`.trim()
+            : p.admission_date
+            ? `${p.admission_date}`.trim()
+            : p.created_at;
+
+        if (admVal) {
+          const parsedAdm = moment(admVal, dateFormats);
+          if (parsedAdm.isValid()) {
+            return parsedAdm.format("YYYY-MM-DD") === todayStr;
+          }
+        }
+
+        return false;
+      };
+
+      let todayIpd = uniqueIpd.filter(isTodayRecord);
+      if (doctorId) {
+        todayIpd = todayIpd.filter(
+          (p) => !p.doctor_id || String(p.doctor_id) === String(doctorId)
+        );
+      }
+
+      // Normalize IPD items
+      const normalizedIpd = todayIpd.map((p) => {
+        const sxVal =
+          p.surgery_datetime && p.surgery_datetime !== "Not Scheduled"
+            ? p.surgery_datetime
+            : p.surgery_date
+            ? `${p.surgery_date} ${p.surgery_time || ""}`.trim()
+            : p.admission_datetime || p.created_at;
+        const dateFormats = [
+          "DD-MM-YYYY HH:mm",
+          "DD-MM-YYYY hh:mm A",
+          "YYYY-MM-DD HH:mm",
+          "YYYY-MM-DD hh:mm A",
+          "YYYY-MM-DDTHH:mm:ss.SSSZ",
+          "YYYY-MM-DDTHH:mm:ssZ",
+          "DD-MM-YYYY",
+          "YYYY-MM-DD",
+          "DD/MM/YYYY",
+          "YYYY/MM/DD",
+        ];
+        const parsedTime = moment(sxVal, dateFormats);
+        const displayTime = parsedTime.isValid() ? parsedTime.format("HH:mm") : "12:00";
+
+        return {
+          ...p,
+          patient_name: p.patient_name || p.name || p.patientName || "Patient",
+          name: p.name || p.patient_name || p.patientName || "Patient",
+          appointment_id: p.id || p.patient_id || p.uid || p.uhid,
+          appointment_time: displayTime,
+          doctor_name: p.surgeon_name || p.doctor_name || p.doctorName || "N/A",
+          patient_phone: p.patient_phone || p.phone || p.contact || "",
+          uid: p.uid || p.uhid || p.patient_uid || p.patient_id || p.uid_no || "",
+          uhid: p.uhid || p.uid || p.patient_uid || p.uid_no || "",
+        };
+      });
+
+      const updatedCounts = {
+        ...(opdStats.counts || {}),
+        ipd: normalizedIpd.length,
+        total:
+          (opdStats.counts?.new || 0) +
+          (opdStats.counts?.follow || 0) +
+          (opdStats.counts?.postop || 0) +
+          (opdStats.counts?.mcdpa || 0) +
+          (opdStats.counts?.other || 0) +
+          normalizedIpd.length,
+      };
+
+      setStats({
+        counts: updatedCounts,
+        lists: {
+          ...(opdStats.lists || {}),
+          ipd: normalizedIpd,
+        },
+      });
     } catch (error) {
-      console.error("❌ Error fetching doctor header stats:", error);
+      console.error("Error fetching doctor stats:", error);
     }
   }, [currentLocation, doctorId]);
 

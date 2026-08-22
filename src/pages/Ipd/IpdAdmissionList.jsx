@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom";
 import {
@@ -111,16 +111,33 @@ export default function IpdAdmissionList() {
   });
   const [fullScreenImage, setFullScreenImage] = useState(null);
 
+  const normalizeSurgeryDate = (dateStr) => {
+    if (!dateStr || dateStr === "Not Scheduled" || dateStr === "NOT ADMITTED") {
+      return null;
+    }
+    const parsed = moment(dateStr, [
+      "DD-MM-YYYY hh:mm A",
+      "DD-MM-YYYY HH:mm",
+      "DD-MM-YYYY HH:mm:ss",
+      "YYYY-MM-DD HH:mm",
+      "YYYY-MM-DD hh:mm A",
+      "YYYY-MM-DDTHH:mm:ss.SSSZ",
+      "YYYY-MM-DDTHH:mm:ssZ",
+      "DD-MM-YYYY",
+      "YYYY-MM-DD",
+      moment.ISO_8601,
+    ]);
+    return parsed.isValid() ? parsed.toDate() : null;
+  };
+
   const fetchVerifiedPatients = useCallback(async () => {
     if (currentLocation === "default") return;
 
     setLoading(true);
     try {
-      const from = fromDate ? formatToApiDate(fromDate) : "";
-      const to = toDate ? formatToApiDate(toDate) : "";
       const search = searchTerm || "";
       const response = await fetch(
-        `${BASE_URL}/V1/doctor/manage-admission/list?location=${currentLocation}&from=${from}&to=${to}&search=${search}`,
+        `${BASE_URL}/V1/doctor/manage-admission/list?location=${currentLocation}&search=${search}`,
         {
           method: "GET",
           headers: {
@@ -132,7 +149,6 @@ export default function IpdAdmissionList() {
 
       if (response.ok) {
         const result = await response.json();
-
 
         if (!Array.isArray(result)) {
           console.error("Expected array but got:", typeof result);
@@ -177,7 +193,29 @@ export default function IpdAdmissionList() {
     } finally {
       setLoading(false);
     }
-  }, [currentLocation, fromDate, toDate, searchTerm]);
+  }, [currentLocation, searchTerm]);
+
+  const filteredPatients = useMemo(() => {
+    return patients.filter((patient) => {
+      const patientSxDate = normalizeSurgeryDate(
+        patient.surgeryDate || patient.surgery_datetime,
+      );
+
+      let matchesFrom = true;
+      if (fromDate) {
+        const startOfFrom = moment(fromDate).startOf("day").toDate();
+        matchesFrom = Boolean(patientSxDate && patientSxDate >= startOfFrom);
+      }
+
+      let matchesTo = true;
+      if (toDate) {
+        const endOfTo = moment(toDate).endOf("day").toDate();
+        matchesTo = Boolean(patientSxDate && patientSxDate <= endOfTo);
+      }
+
+      return matchesFrom && matchesTo;
+    });
+  }, [patients, fromDate, toDate]);
 
   const searchFromDatabase = async (query) => {
     if (!currentLocation || isDbSearching) return;
@@ -968,7 +1006,7 @@ export default function IpdAdmissionList() {
                     </div>
                   ) : (
                     <DataTable
-                      value={patients}
+                      value={filteredPatients}
                       paginator
                       rows={rows}
                       first={first}
