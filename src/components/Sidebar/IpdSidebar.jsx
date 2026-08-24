@@ -61,6 +61,14 @@ const IpdSidebar = ({ activeIndex, handleMenuClick, isCollapsed, location }) => 
                 </Link>
             </li>
 
+            {/* Cashless Bill Settlement */}
+            <li className={`menu-item ${activeIndex === "/cashless-bill-settlement" ? "active" : ""}`}>
+                <Link to="/cashless-bill-settlement" data-label="Cashless Bill Settlement">
+                    <div className="icon-wrap"><FeatherIcon icon="file-text" /></div>
+                    {!isCollapsed && <span>Cashless Bill Settlement</span>}
+                </Link>
+            </li>
+
 
 
             {/* Bed Allotment */}

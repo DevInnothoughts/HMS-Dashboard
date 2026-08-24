@@ -75,9 +75,12 @@ export const receiptlocations = {
   },
   "Kemps-Corner": {
     address:
-      "<b>Kemps-Corner Mumbai : </b><br>Healing Hands Clinic<br>3rd Floor, Advani Chambers, August Kranti Marg, Kemps Corner, South Mumbai, Maharashtra - 400036",
-    phone: "8888266664",
-    hospitalcode: "KC",
+      // "<b>Kemps-Corner Mumbai : </b><br>Healing Hands Clinic<br>3rd Floor, Advani Chambers, August Kranti Marg, Kemps Corner, South Mumbai, Maharashtra - 400036",
+      "<b>HSR : </b><br>Healing Hands Clinic<br>1st Floor, Krishna Complex, HSR Layout - 1st Sector, 17th Cross Road, 27th Main Road, Opposite to Sri Basaveshwara Gayatri Temple, Above More Supermarket, Bengaluru - 560102",
+    // phone: "8888266664",
+    // hospitalcode: "KC",
+    phone: "8792950455",
+    hospitalcode: "HSR",
   },
   Thane: {
     address:

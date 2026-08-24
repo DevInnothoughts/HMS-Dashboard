@@ -202,6 +202,7 @@ const calculatePayableAmt = (invoice) => {
   }
   return Math.max(0, totalAmt - discount).toFixed(0);
 };
+
 const formatDateForDisplay = (dateValue) => {
   if (!dateValue) return "N/A";
   try {
@@ -446,7 +447,7 @@ const IpdBillList = () => {
         const result = await response.json();
         if (result.data?.exists) {
           setInvoiceWarning(
-            `Invoice ID already exists for patient: ${result.data.patient_name}`,
+            `Bill Number already exists for patient: ${result.data.patient_name}`,
           );
         } else {
           setInvoiceWarning("");
@@ -1738,6 +1739,33 @@ const IpdBillList = () => {
   };
 
   const handlePrint = (invoice) => {
+    console.log("🖨️ [PRINT INVOICE] Full Data fetched from database/state:", invoice);
+    if (invoice && typeof invoice === "object") {
+      const { dynamicRows, Sub_Total } = getDynamicRowsFromInvoice(invoice);
+      console.log("📋 Invoice ID:", invoice.invoice_id);
+      console.log("👤 Patient Name:", invoice.patient_name);
+      console.log("📞 Phone:", invoice.patient_phone);
+      console.log("🆔 UID No:", invoice.patient_uid);
+      console.log("🏥 Admission No:", invoice.admission_no);
+      console.log("🗓️ Admission Date & Time:", `${formatDateForDisplay(invoice.creation_date)} ${invoice.admissiontime || ""}`.trim());
+      console.log("🚪 Discharge Date & Time:", `${formatDateForDisplay(invoice.due_date)} ${invoice.dischargetime || ""}`.trim());
+      console.log("⏱️ Raw admissiontime field:", invoice.admissiontime);
+      console.log("⏱️ Raw dischargetime field:", invoice.dischargetime);
+      console.log("👨‍⚕️ Consultant:", invoice.consultant_name || invoice.consultant);
+      console.log("🩺 Surgeon:", invoice.surgeon_name || invoice.prepared_doctor);
+      console.log("📅 Bill Date (creation_date):", invoice.creation_date);
+      console.log("📅 Due Date:", invoice.due_date);
+      console.log("🏷️ Bill Type / Method:", invoice.bill_Type || invoice.bill_type || invoice.status);
+      console.log("🏢 Insurance Co:", invoice.insurance_company_name || invoice.insurancecompany);
+      console.log("🏢 TPA:", invoice.tpa_name || invoice.tpa);
+      console.log("💵 Total Amount:", invoice.totalamt);
+      console.log("🏷️ Discount Amount:", invoice.discount);
+      console.log("💰 Received Amount:", invoice.receivedamt);
+      console.log("❗ Total Due Amount:", invoice.totaldue);
+      console.log("📊 Parsed Dynamic Rows (Particulars):", dynamicRows);
+      console.log("🧮 Parsed Sub-Total:", Sub_Total);
+    }
+
     if (!invoice || typeof invoice !== "object" || !invoice.invoice_id) {
       Toast.fire({
         icon: "info",
@@ -1773,6 +1801,7 @@ const IpdBillList = () => {
   };
 
   const handleViewInvoice = (invoice) => {
+    console.log("👁️ [VIEW INVOICE PREVIEW] Full Data fetched from database/state:", invoice);
     if (!invoice || typeof invoice !== "object" || !invoice.invoice_id) {
       return;
     }
@@ -2141,7 +2170,7 @@ const IpdBillList = () => {
                     <Column
                       headerClassName="datatable-header-center"
                       field="invoice_id"
-                      header="Invoice ID"
+                      header="Bill No"
                       style={{ width: "100px", border: "1px solid #4dd0e1" }}
                     />
                     <Column
@@ -2461,7 +2490,7 @@ const IpdBillList = () => {
                         }}
                         className="text-muted"
                       >
-                        Invoice Number
+                        Bill Number
                       </Form.Label>
                       <Form.Control
                         size="sm"

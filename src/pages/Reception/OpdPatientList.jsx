@@ -3439,12 +3439,13 @@ export default function OpdPatientList() {
                     <Form.Control
                       type="text"
                       name="Uid_no"
-                      value={formData.Uid_no}
-                      readOnly
+                      value={formData.Uid_no || ""}
+                      onChange={handleInputChange}
+                      readOnly={String(currentLocation || "").trim().toLowerCase() !== "kemps-corner"}
                       required
                       style={{
-                        backgroundColor: "#e7ebebff",
-                        cursor: "not-allowed",
+                        backgroundColor: String(currentLocation || "").trim().toLowerCase() === "kemps-corner" ? "#ffffff" : "#e7ebebff",
+                        cursor: String(currentLocation || "").trim().toLowerCase() === "kemps-corner" ? "text" : "not-allowed",
                         border: "2px solid rgb(77, 208, 225)",
                         fontSize: "12px",
                         borderRadius: "10px",

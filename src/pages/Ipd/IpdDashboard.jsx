@@ -304,7 +304,7 @@ export default function IpdDashboard() {
       const endpoints = [
         `${BASE_URL}/V1/doctor/manage-admission/list?location=${encodeURIComponent(currentLocation)}`,
         `${BASE_URL}/V1/doctor/admission/list-admissions?location=${encodeURIComponent(currentLocation)}`,
-        `${BASE_URL}/V1/ipd/admin/listVerifiedPatients?location=${encodeURIComponent(currentLocation)}`,
+        `${BASE_URL}/V1/ipd/admin/listVerifiedPatients?location=${encodeURIComponent(currentLocation)}&from=${moment().subtract(30, "days").format("YYYY-MM-DD")}&to=${moment().format("YYYY-MM-DD")}`,
       ];
 
       const responses = await Promise.allSettled(

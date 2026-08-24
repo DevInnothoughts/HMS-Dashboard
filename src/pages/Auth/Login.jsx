@@ -34,7 +34,7 @@ export const LOCATIONS_LIST = [
   // "Kalaburagi",
   "Kalyan",
   "Katraj",
-  // "Kemps-Corner",
+  "Kemps-Corner",
   "Kolhapur",
   "Latur",
   "Lucknow",

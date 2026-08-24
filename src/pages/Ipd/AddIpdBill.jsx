@@ -241,7 +241,7 @@ const AddIpdBill = () => {
         const result = await response.json();
         if (result.data?.exists) {
           setInvoiceWarning(
-            `Invoice ID already exists at current location for patient: ${result.data.patient_name}`,
+            `Bill Number already exists at current location for patient: ${result.data.patient_name}`,
           );
           return;
         }
@@ -1080,7 +1080,7 @@ const AddIpdBill = () => {
               <Row className="g-3">
                 <Col md={2}>
                   <Form.Label style={labelStyle}>
-                    Invoice Number <span className="text-danger">*</span>
+                    Bill Number <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
                     required
@@ -1088,7 +1088,7 @@ const AddIpdBill = () => {
                     value={formData.invoice_id}
                     onChange={handleInputChange}
                     isInvalid={errors.invoice_id || !!invoiceWarning}
-                    placeholder="Enter Invoice Number"
+                    placeholder="Enter Bill Number"
                     style={{
                       ...inputStyle,
                       backgroundColor: "#fff",

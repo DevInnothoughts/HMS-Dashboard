@@ -68,9 +68,13 @@ export const clinincLoc = {
     EmergencySMS: "8693850004",
   },
   "Kemps-Corner": {
+    // invoiceAddress:
+    //   "<b>Healing Hands Clinic</b><br> 3rd Floor, Advani Chambers, August Kranti Marg, Kemps Corner - 400036",
+    // invoiceHelplineNo: "",
+    // EmergencySMS: "",
     invoiceAddress:
-      "<b>Healing Hands Clinic</b><br> 3rd Floor, Advani Chambers, August Kranti Marg, Kemps Corner - 400036",
-    invoiceHelplineNo: "",
+      "<b>Healing Hands Clinic</b><br> 1st Floor, Krishna Complex, HSR Layout - 1st Sector, 17th Cross Road, 27th Main Road, Opposite to Sri Basaveshwara Gayatri Temple, Above More Supermarket, Bengaluru - 560102",
+    invoiceHelplineNo: "8792950455",
     EmergencySMS: "",
   },
   Andheri: {
