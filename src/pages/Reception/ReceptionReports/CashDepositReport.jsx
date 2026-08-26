@@ -1,31 +1,62 @@
 import React, { useState, useEffect } from "react";
-import { Row, Col, Card, Container, Form } from "react-bootstrap";
+import { Row, Col, Card, Container, Form, Spinner } from "react-bootstrap";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { FilterMatchMode } from "primereact/api";
 import { InputText } from "primereact/inputtext";
+import { ColumnGroup } from "primereact/columngroup";
+import { saveAs } from "file-saver";
+import * as XLSX from "xlsx";
 import PageBreadcrumb from "../../../components/PageBreadcrumb";
 import SimpleBar from "simplebar-react";
 import { decodeJwt } from "../../Utility/decode-jwt";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
 
-const CashDepositReport = () => {
-  const formatAmount = (val) => {
-    if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
-      return "-";
-    }
-    const parsed = parseFloat(val);
-    return isNaN(parsed) ? val : `₹ ${Math.round(parsed).toLocaleString("en-IN")}`;
-  };
+const formatValue = (val) => {
+  if (val === null || val === undefined || val === "" || val === "N/A" || val === "-") {
+    return "-";
+  }
+  return val;
+};
 
+const formatAmount = (val) => {
+  if (val === null || val === undefined || val === "" || val === "N/A" || val === "-") {
+    return "₹ 0";
+  }
+  const parsed = parseFloat(val);
+  if (isNaN(parsed)) return val;
+  const isNegative = parsed < 0;
+  const absVal = Math.abs(parsed);
+  return `${isNegative ? "-" : ""}₹ ${Math.round(absVal).toLocaleString("en-IN")}`;
+};
+
+const formatDateDisplay = (dateStr) => {
+  if (!dateStr) return "";
+  try {
+    const date = new Date(dateStr);
+    if (!isNaN(date.getTime())) {
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      return `${day}-${month}-${year}`;
+    }
+  } catch (e) {
+    // Fallback if parsing fails
+  }
+  const datePart = dateStr.includes("T") ? dateStr.split("T")[0] : dateStr;
+  return datePart.split("-").reverse().join("-");
+};
+
+const CashDepositReport = () => {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
   const [tableData, setTableData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [rows, setRows] = useState(10);
-  const [currentLocation, setCurrentLocation] = useState("");
+  const [currentLocation, setCurrentLocation] = useState("default");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -50,7 +81,7 @@ const CashDepositReport = () => {
   const handleFind = async (e) => {
     if (e) e.preventDefault();
     if (!fromDate || !toDate) {
-      alert("Please Enter the all fields details..");
+      alert("Please select From Date and To Date.");
       return;
     }
 
@@ -68,129 +99,148 @@ const CashDepositReport = () => {
             location: currentLocation,
             Fromdate: fromDate,
             Todate: toDate,
+            status: statusFilter,
           }),
-        },
+        }
       );
 
       const result = await response.json();
-      // console.log(result);
-      if (result.success) {
-        // Mapping backend fields to your table state
-        // Logic: total = opd + ipd
-        const formattedData = result.data.map((item, index) => ({
-          id: index + 1,
-          date: item.date,
-          opdCash: parseFloat(item.opd_cash) || 0,
-          ipdCash: parseFloat(item.ipd_cash) || 0,
-          total:
-            (parseFloat(item.opd_cash) || 0) + (parseFloat(item.ipd_cash) || 0),
-          cashDeposited: "",
-          receiptNo: "",
-          difference: "",
-        }));
-        setTableData(formattedData);
+      if (result.success && Array.isArray(result.data)) {
+        setTableData(result.data);
       } else {
         alert(result.message || "Failed to fetch records");
+        setTableData([]);
       }
     } catch (error) {
       console.error("Search Error:", error);
       alert("Error connecting to server");
+      setTableData([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const formatDateDisplay = (dateStr) => {
-    if (!dateStr) return "";
-    const date = new Date(dateStr);
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}-${month}-${year}`;
-  };
-
-  const handleInputChange = (e, rowData, field) => {
-    const value = e.target.value;
-    const updatedData = tableData.map((item) => {
-      if (item.id === rowData.id) {
-        if (field === "cashDeposited") {
-          const cleanValue = value.replace(/[^0-9]/g, "");
-          const formattedValue = cleanValue ? Number(cleanValue).toLocaleString("en-IN") : "";
-          const deposited = parseFloat(cleanValue) || 0;
-          const diffVal = item.total - deposited;
-          return {
-            ...item,
-            cashDeposited: formattedValue,
-            difference: Math.round(diffVal).toLocaleString("en-IN"),
-          };
-        } else if (field === "difference") {
-          const cleanValue = value.replace(/[^0-9.-]/g, "");
-          let formattedValue = cleanValue;
-          if (cleanValue && !cleanValue.endsWith(".") && !cleanValue.endsWith("-")) {
-            const num = parseFloat(cleanValue);
-            formattedValue = isNaN(num) ? cleanValue : Math.round(num).toLocaleString("en-IN");
-          }
-          return { ...item, difference: formattedValue };
-        } else {
-          return { ...item, [field]: value };
-        }
-      }
-      return item;
+  const handleReset = () => {
+    setFromDate("");
+    setToDate("");
+    setStatusFilter("All");
+    setTableData([]);
+    setSearchText("");
+    setFilters({
+      global: { value: null, matchMode: FilterMatchMode.CONTAINS },
     });
-    setTableData(updatedData);
   };
 
-  const handleAddReceipt = async (rowData) => {
-    const { date, opdCash, ipdCash, cashDeposited, receiptNo, difference } =
-      rowData;
+  const handlePrint = () => {
+    window.print();
+  };
 
-    const cleanCashDeposited = String(cashDeposited || "").replace(/,/g, "");
-    const cleanDifference = String(difference || "").replace(/,/g, "");
+  const getFilteredData = () => {
+    if (!searchText) return tableData;
+    const query = searchText.toLowerCase().trim();
+    return tableData.filter((item) => {
+      const dt = formatDateDisplay(item.date).toLowerCase();
+      const opd = String(item.opd_cash || "").toLowerCase();
+      const ipd = String(item.ipd_cash || "").toLowerCase();
+      const exp = String(item.total_expected || "").toLowerCase();
+      const dep = String(item.cash_deposited || "").toLowerCase();
+      const diff = String(item.difference || "").toLowerCase();
+      const st = String(item.status || "").toLowerCase();
 
-    if (!cleanCashDeposited || !receiptNo || !cleanDifference) {
-      alert("Please Enter the all fields details..");
-      return;
-    }
-
-    try {
-      // Replicating: $.ajax({ url: "index.php?receptionist/SaveDatewiseCash" })
-      const response = await fetch(
-        `${BASE_URL}/V1/managereports/SaveDatewiseCash`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          body: JSON.stringify({
-            location: currentLocation,
-            entrydate: date,
-            opdcash: opdCash,
-            ipdcash: ipdCash,
-            pharmacycash: 0, // Defaulting as per your PHP logic flow
-            upiamt: 0,
-            cardamt: 0,
-            bankdeposit: cleanCashDeposited, // This maps to depositedamt in backend
-            receiptno: receiptNo,
-            cashdiffernce: cleanDifference,
-          }),
-        },
+      return (
+        dt.includes(query) ||
+        opd.includes(query) ||
+        ipd.includes(query) ||
+        exp.includes(query) ||
+        dep.includes(query) ||
+        diff.includes(query) ||
+        st.includes(query)
       );
-
-      const result = await response.json();
-
-      if (result.success) {
-        alert("Your record saved Successfully");
-        // Refresh the data to show the updated "Cash in Hand" or clear inputs
-        handleFind();
-      } else {
-        alert(result.message || "Failed to save record");
-      }
-    } catch (error) {
-      console.error("Save Error:", error);
-      alert("Error saving record to database");
-    }
+    });
   };
+
+  const filteredData = getFilteredData();
+
+  // Grand totals
+  const totalOpdCash = filteredData.reduce((acc, curr) => acc + (Number(curr.opd_cash) || 0), 0);
+  const totalIpdCash = filteredData.reduce((acc, curr) => acc + (Number(curr.ipd_cash) || 0), 0);
+  const totalExpectedSum = filteredData.reduce((acc, curr) => acc + (Number(curr.total_expected) || 0), 0);
+  const totalDepositedSum = filteredData.reduce((acc, curr) => acc + (Number(curr.cash_deposited) || 0), 0);
+  const totalDifferenceSum = totalDepositedSum - totalExpectedSum;
+
+  const exportToExcel = () => {
+    const fileType =
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
+    const fileExtension = ".xlsx";
+
+    const excelData = filteredData.map((item, index) => ({
+      "Sr No": index + 1,
+      Date: formatDateDisplay(item.date),
+      "OPD Cash": item.opd_cash || 0,
+      "IPD Cash": item.ipd_cash || 0,
+      "Total Expected": item.total_expected || 0,
+      "Cash Deposited": item.cash_deposited || 0,
+      "Difference (Auto-Calculated)": item.difference || 0,
+      Status: item.status || "Matched",
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(excelData);
+    const wb = { Sheets: { data: ws }, SheetNames: ["data"] };
+    const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const data = new Blob([excelBuffer], { type: fileType });
+    saveAs(data, "Daily_Cash_Reconciliation_Report" + fileExtension);
+  };
+
+  const renderStatusBadge = (status) => {
+    let badgeClass = "bg-success text-white";
+    if (status === "Shortfall") badgeClass = "bg-danger text-white";
+    else if (status === "Excess") badgeClass = "bg-info text-white";
+
+    return (
+      <span
+        className={`badge ${badgeClass}`}
+        style={{ fontSize: "11px", padding: "5px 10px", borderRadius: "12px" }}
+      >
+        {status}
+      </span>
+    );
+  };
+
+  const footerGroup = (
+    <ColumnGroup>
+      <Row>
+        <Column
+          footer="Total"
+          colSpan={2}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={formatAmount(totalOpdCash)}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={formatAmount(totalIpdCash)}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={formatAmount(totalExpectedSum)}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={formatAmount(totalDepositedSum)}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={formatAmount(totalDifferenceSum)}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer=""
+          footerStyle={{ textAlign: "center" }}
+        />
+      </Row>
+    </ColumnGroup>
+  );
 
   const renderHeader = () => {
     return (
@@ -243,11 +293,37 @@ const CashDepositReport = () => {
             </span>
           </div>
         </div>
+        <div className="d-flex" style={{ gap: "10px" }}>
+          <button
+            className="btn btn-success btn-sm"
+            onClick={exportToExcel}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "5px",
+              borderRadius: "8px",
+              fontWeight: "600",
+            }}
+          >
+            <i className="fa fa-file-excel-o"></i> Download Excel
+          </button>
+          <button
+            className="btn btn-danger btn-sm"
+            onClick={handlePrint}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "5px",
+              borderRadius: "8px",
+              fontWeight: "600",
+            }}
+          >
+            <i className="fa fa-print"></i> Print Report
+          </button>
+        </div>
       </div>
     );
   };
-
-  const header = renderHeader();
 
   return (
     <div
@@ -259,7 +335,7 @@ const CashDepositReport = () => {
         minHeight: "100vh",
       }}
     >
-      <PageBreadcrumb pagename="Cash Deposit Report" />
+      <PageBreadcrumb pagename="Daily Cash Reconciliation Report" />
 
       <SimpleBar className="theme-body common-dash">
         <Container fluid>
@@ -286,15 +362,22 @@ const CashDepositReport = () => {
                     fontSize: "16px",
                   }}
                 >
-                  <h4 style={{ margin: 0 }}>Cash Deposit Report</h4>
+                  <h4 style={{ margin: 0, fontSize: "18px" }}>
+                    Daily Cash Reconciliation Report
+                  </h4>
+                  {fromDate && toDate && (
+                    <div style={{ fontSize: "13px", fontWeight: "normal", marginTop: "5px" }}>
+                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b>
+                    </div>
+                  )}
                 </Card.Header>
                 <Card.Body style={{ padding: "5px" }}>
-                  <Form onSubmit={handleFind}>
+                  <Form onSubmit={handleFind} className="no-print">
                     <Row
-                      className="align-items-end mb-4 flex-nowrap"
-                      style={{ margin: "0 -5px" }}
+                      className="align-items-end mb-4 flex-wrap"
+                      style={{ margin: "0 -5px", rowGap: "10px" }}
                     >
-                      <Col style={{ padding: "0 5px", flex: "1" }}>
+                      <Col style={{ padding: "0 5px", flex: "1 1 180px" }}>
                         <Form.Group className="mb-2">
                           <Form.Label
                             style={{
@@ -320,7 +403,7 @@ const CashDepositReport = () => {
                           />
                         </Form.Group>
                       </Col>
-                      <Col style={{ padding: "0 5px", flex: "1" }}>
+                      <Col style={{ padding: "0 5px", flex: "1 1 180px" }}>
                         <Form.Group className="mb-2">
                           <Form.Label
                             style={{
@@ -346,11 +429,42 @@ const CashDepositReport = () => {
                           />
                         </Form.Group>
                       </Col>
-                      <Col style={{ padding: "0 5px", flex: "1" }}>
+                      <Col style={{ padding: "0 5px", flex: "1 1 180px" }}>
                         <Form.Group className="mb-2">
+                          <Form.Label
+                            style={{
+                              fontWeight: "bold",
+                              color: "#006064",
+                              whiteSpace: "nowrap",
+                              fontSize: "12px",
+                            }}
+                          >
+                            Status
+                          </Form.Label>
+                          <Form.Select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            style={{
+                              border: "2px solid #4dd0e1",
+                              borderRadius: "8px",
+                              padding: "6px",
+                              backgroundColor: "#e0f7fa",
+                              fontSize: "12px",
+                            }}
+                          >
+                            <option value="All">All Statuses</option>
+                            <option value="Matched">Matched</option>
+                            <option value="Shortfall">Shortfall</option>
+                            <option value="Excess">Excess</option>
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                      <Col style={{ padding: "0 5px", flex: "1 1 180px" }}>
+                        <Form.Group className="mb-2 d-flex gap-2">
                           <button
                             className="btn btn-primary"
                             type="submit"
+                            disabled={loading}
                             style={{
                               height: "35px",
                               width: "100%",
@@ -362,23 +476,41 @@ const CashDepositReport = () => {
                               fontSize: "13px",
                             }}
                           >
-                            {loading ? "Loading..." : "Search"}
+                            {loading ? <Spinner animation="border" size="sm" /> : "Search"}
+                          </button>
+                          <button
+                            className="btn btn-secondary"
+                            type="button"
+                            onClick={handleReset}
+                            disabled={loading}
+                            style={{
+                              height: "35px",
+                              width: "100%",
+                              borderRadius: "8px",
+                              fontWeight: "bold",
+                              fontSize: "13px",
+                            }}
+                          >
+                            Reset
                           </button>
                         </Form.Group>
                       </Col>
                     </Row>
                   </Form>
 
+                  {/* Header controls bar */}
+                  <div className="no-print">{renderHeader()}</div>
+
                   <DataTable
-                    value={tableData}
+                    value={filteredData}
                     paginator
                     rows={rows}
                     filters={filters}
-                    header={header}
+                    footerColumnGroup={footerGroup}
                     paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
                     currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
                     emptyMessage={loading ? "Loading..." : "No records found."}
-                    className="p-datatable-sm custom-datatable"
+                    className="p-datatable-sm custom-datatable mb-4"
                     style={{ fontSize: "12px" }}
                     rowHover
                     stripedRows
@@ -393,91 +525,111 @@ const CashDepositReport = () => {
                       field="date"
                       header="Date"
                       body={(rowData) => formatDateDisplay(rowData.date)}
+                      style={{ width: "110px", textAlign: "center" }}
                     />
-                    <Column field="opdCash" header="OPD Cash" body={(rowData) => formatAmount(rowData.opdCash)} />
-                    <Column field="ipdCash" header="IPD Cash" body={(rowData) => formatAmount(rowData.ipdCash)} />
-                    <Column field="total" header="Total" body={(rowData) => formatAmount(rowData.total)} />
                     <Column
+                      field="opd_cash"
+                      header="OPD Cash"
+                      body={(rowData) => formatAmount(rowData.opd_cash)}
+                      style={{ width: "120px", textAlign: "center" }}
+                    />
+                    <Column
+                      field="ipd_cash"
+                      header="IPD Cash"
+                      body={(rowData) => formatAmount(rowData.ipd_cash)}
+                      style={{ width: "120px", textAlign: "center" }}
+                    />
+                    <Column
+                      field="total_expected"
+                      header="Total Expected"
+                      body={(rowData) => formatAmount(rowData.total_expected)}
+                      style={{ width: "140px", textAlign: "center" }}
+                    />
+                    <Column
+                      field="cash_deposited"
                       header="Cash Deposited"
-                      body={(rowData) => (
-                        <Form.Control
-                          type="text"
-                          size="sm"
-                          value={rowData.cashDeposited}
-                          onChange={(e) =>
-                            handleInputChange(e, rowData, "cashDeposited")
-                          }
-                          style={{
-                            fontSize: "12px",
-                            borderRadius: "4px",
-                            border: "1px solid #4dd0e1",
-                          }}
-                        />
-                      )}
+                      body={(rowData) => formatAmount(rowData.cash_deposited)}
+                      style={{ width: "140px", textAlign: "center" }}
                     />
                     <Column
-                      header="Receipt No"
-                      body={(rowData) => (
-                        <Form.Control
-                          type="text"
-                          size="sm"
-                          onWheel={(e) => e.target.blur()}
-                          value={rowData.receiptNo}
-                          onChange={(e) =>
-                            handleInputChange(e, rowData, "receiptNo")
-                          }
-                          style={{
-                            fontSize: "12px",
-                            borderRadius: "4px",
-                            border: "1px solid #4dd0e1",
-                          }}
-                        />
-                      )}
-                    />
-                    <Column
+                      field="difference"
                       header="Difference"
                       body={(rowData) => (
-                        <Form.Control
-                          type="text"
-                          size="sm"
-                          value={rowData.difference}
-                          onChange={(e) =>
-                            handleInputChange(e, rowData, "difference")
-                          }
+                        <span
                           style={{
-                            fontSize: "12px",
-                            borderRadius: "4px",
-                            border: "1px solid #4dd0e1",
-                          }}
-                        />
-                      )}
-                    />
-                    <Column
-                      header="Action"
-                      body={(rowData) => (
-                        <button
-                          className="btn btn-primary btn-sm"
-                          onClick={() => handleAddReceipt(rowData)}
-                          style={{
-                            fontSize: "11px",
-                            borderRadius: "4px",
-                            backgroundColor: "#00acc1",
-                            borderColor: "#00acc1",
+                            fontWeight: "bold",
+                            color:
+                              rowData.difference < 0
+                                ? "#d32f2f"
+                                : rowData.difference > 0
+                                  ? "#0288d1"
+                                  : "#2e7d32",
                           }}
                         >
-                          Add Receipt
-                        </button>
+                          {formatAmount(rowData.difference)}
+                        </span>
                       )}
-                      style={{ textAlign: "center" }}
+                      style={{ width: "140px", textAlign: "center" }}
+                    />
+                    <Column
+                      field="status"
+                      header="Status"
+                      body={(rowData) => renderStatusBadge(rowData.status)}
+                      style={{ width: "120px", textAlign: "center" }}
                     />
                   </DataTable>
+
+                  {/* Print-only container displaying all rows */}
+                  <div className="print-table-container">
+                    <table className="print-table">
+                      <thead>
+                        <tr>
+                          <th style={{ width: "6%" }}>Sr No</th>
+                          <th style={{ width: "14%" }}>Date</th>
+                          <th style={{ width: "14%" }}>OPD Cash</th>
+                          <th style={{ width: "14%" }}>IPD Cash</th>
+                          <th style={{ width: "16%" }}>Total Expected</th>
+                          <th style={{ width: "16%" }}>Cash Deposited</th>
+                          <th style={{ width: "14%" }}>Difference</th>
+                          <th style={{ width: "12%" }}>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredData.map((item, index) => (
+                          <tr key={index}>
+                            <td>{index + 1}</td>
+                            <td>{formatDateDisplay(item.date)}</td>
+                            <td>{formatAmount(item.opd_cash)}</td>
+                            <td>{formatAmount(item.ipd_cash)}</td>
+                            <td>{formatAmount(item.total_expected)}</td>
+                            <td>{formatAmount(item.cash_deposited)}</td>
+                            <td>{formatAmount(item.difference)}</td>
+                            <td>{item.status}</td>
+                          </tr>
+                        ))}
+                        <tr className="print-totals-row">
+                          <td colSpan={2}>Total</td>
+                          <td>{formatAmount(totalOpdCash)}</td>
+                          <td>{formatAmount(totalIpdCash)}</td>
+                          <td>{formatAmount(totalExpectedSum)}</td>
+                          <td>{formatAmount(totalDepositedSum)}</td>
+                          <td>{formatAmount(totalDifferenceSum)}</td>
+                          <td>-</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </Card.Body>
               </Card>
             </Col>
           </Row>
         </Container>
       </SimpleBar>
+
       <style>{`
+        .print-table-container {
+          display: none;
+        }
         .custom-datatable .p-datatable-header {
           background: #e0f7fa;
           border: 1px solid #4dd0e1;
@@ -503,12 +655,117 @@ const CashDepositReport = () => {
           border: 1px solid #90caf9;
           text-align: center !important;
         }
+        .custom-datatable .p-datatable-tfoot > tr > td {
+          background-color: #e0f7fa !important;
+          color: black !important;
+          padding: 10px 8px;
+          border: 1px solid #90caf9 !important;
+          font-size: 12px;
+        }
         .custom-datatable .p-paginator {
           background: #f8fdfe;
           border: 1px solid #4dd0e1;
           border-bottom-left-radius: 8px;
           border-bottom-right-radius: 8px;
           padding: 5px;
+        }
+
+        @media print {
+          @page {
+            size: landscape;
+            margin: 20mm 15mm;
+          }
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .codex-sidebar,
+          .codex-header,
+          .codex-breadcrumb,
+          .scroll-top,
+          .no-print,
+          .p-datatable-header,
+          .p-paginator,
+          .simplebar-placeholder,
+          .simplebar-track,
+          .simplebar-scrollbar {
+            display: none !important;
+          }
+          body, html {
+            background: #fff !important;
+            color: #000 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            height: auto !important;
+            min-height: auto !important;
+          }
+          .themebody-wrap {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #fff !important;
+            min-height: auto !important;
+            height: auto !important;
+            page-break-after: avoid !important;
+          }
+          .theme-body,
+          .simplebar-content-wrapper,
+          .simplebar-mask,
+          .simplebar-wrapper,
+          .simplebar-offset,
+          .simplebar-content {
+            padding: 0 !important;
+            margin: 0 !important;
+            min-height: auto !important;
+            height: auto !important;
+            max-height: none !important;
+            overflow: visible !important;
+            position: relative !important;
+          }
+          .card {
+            border: none !important;
+            box-shadow: none !important;
+          }
+          .container-fluid {
+            padding: 0 !important;
+            width: 100% !important;
+          }
+          .custom-datatable {
+            display: none !important;
+          }
+          .print-table-container {
+            display: block !important;
+            width: 100% !important;
+          }
+          .print-table {
+            width: 100% !important;
+            table-layout: fixed !important;
+            border-collapse: collapse !important;
+            margin-top: 10px !important;
+          }
+          .print-table th, .print-table td {
+            border: 1px solid #90caf9 !important;
+            padding: 6px 4px !important;
+            font-size: 10px !important;
+            color: #000 !important;
+            text-align: center !important;
+          }
+          .print-table th {
+            background-color: #b2ebf2 !important;
+            font-weight: bold !important;
+          }
+          .print-table .print-totals-row td {
+            background-color: #e0f7fa !important;
+            font-weight: bold !important;
+          }
+          .print-table thead {
+            display: table-header-group !important;
+          }
+          .print-table tbody {
+            display: table-row-group !important;
+          }
+          .print-table tr {
+            page-break-inside: avoid !important;
+          }
         }
       `}</style>
     </div>

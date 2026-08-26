@@ -10,7 +10,7 @@ const DoctorSidebar = ({
     department
 }) => {
     const dashboardPath = "/doctor-dashboard";
-    const doctorReportRoutes = ["/diagnosis-report", "/doctor-performance-report", "/opd-surgery-report", "/doctor-pending-surgery-report"];
+    const doctorReportRoutes = ["/diagnosis-report", "/doctor-performance-report", "/follow-up-compliance-report", "/patient-feedback-report", "/doctor-pending-surgery-report", "/sx-conversion-report"];
     const isDoctorReportActive = doctorReportRoutes.includes(location.pathname) || activeIndex === "/manage-doctor-reports";
 
     return (
@@ -100,10 +100,18 @@ const DoctorSidebar = ({
                     </li>
                     <li>
                         <Link
-                            to="/opd-surgery-report"
-                            className={location.pathname === "/opd-surgery-report" ? "active" : ""}
+                            to="/follow-up-compliance-report"
+                            className={location.pathname === "/follow-up-compliance-report" ? "active" : ""}
                         >
-                            OPD Surgery Report
+                            Follow-up Compliance Report
+                        </Link>
+                    </li>
+                    <li>
+                        <Link
+                            to="/patient-feedback-report"
+                            className={location.pathname === "/patient-feedback-report" ? "active" : ""}
+                        >
+                            Patient Feedback / NPS Report
                         </Link>
                     </li>
                     <li>
@@ -112,6 +120,14 @@ const DoctorSidebar = ({
                             className={location.pathname === "/doctor-pending-surgery-report" ? "active" : ""}
                         >
                             Pending Surgery Report
+                        </Link>
+                    </li>
+                    <li>
+                        <Link
+                            to="/sx-conversion-report"
+                            className={location.pathname === "/sx-conversion-report" ? "active" : ""}
+                        >
+                            SX Conversion Report
                         </Link>
                     </li>
                 </ul>

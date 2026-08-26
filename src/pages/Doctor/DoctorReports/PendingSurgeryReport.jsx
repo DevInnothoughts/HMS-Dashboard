@@ -232,6 +232,7 @@ const PendingSurgeryReport = () => {
               alignItems: "center",
               gap: "5px",
               borderRadius: "8px",
+              marginBottom: "12px",
             }}
           >
             <i className="fa fa-file-excel-o"></i> Download Excel
@@ -244,6 +245,7 @@ const PendingSurgeryReport = () => {
               alignItems: "center",
               gap: "5px",
               borderRadius: "8px",
+              marginBottom: "12px",
             }}
           >
             <i className="fa fa-print"></i> Print Report

@@ -9,8 +9,8 @@ const ReceptionSidebar = ({
     location
 }) => {
     const reportRoutes = [
-        "/appointment-conversion", "/birthday-alert", "/cash-deposit-report",
-        "/condition-wise-report", "/daily-opd-report", "/enquiry-conversion", "/enquiry-data",
+        "/appointment-conversion", "/birthday-alert", "/call-log-performance-report", "/cash-deposit-report",
+        "/condition-wise-report", "/daily-opd-report", "/dnt-report", "/enquiry-conversion", "/enquiry-data",
         "/opd-ipd-coll-graph", "/opd-ipd-collection", "/opd-collection-reports",
         "/opd-receipts-report", "/pharmacy-collection-report", "/reference-report",
         "/sx-conversion-report", "/daily-expense-report", "/lost-lead-report"
@@ -140,10 +140,12 @@ const ReceptionSidebar = ({
                 >
                     <li><Link to="/appointment-conversion" className={location.pathname === "/appointment-conversion" ? "active" : ""}>Appointment Conversion</Link></li>
                     <li><Link to="/birthday-alert" className={location.pathname === "/birthday-alert" ? "active" : ""}>Birthday Alert</Link></li>
-                    {/* <li><Link to="/cash-deposit-report" className={location.pathname === "/cash-deposit-report" ? "active" : ""}>Cash Deposit Report</Link></li> */}
+                    <li><Link to="/call-log-performance-report" className={location.pathname === "/call-log-performance-report" ? "active" : ""}>Call Log Performance Report</Link></li>
+                    <li><Link to="/cash-deposit-report" className={location.pathname === "/cash-deposit-report" ? "active" : ""}>Cash Deposit Report</Link></li>
                     <li><Link to="/condition-wise-report" className={location.pathname === "/condition-wise-report" ? "active" : ""}>Condition Wise Report</Link></li>
                     <li><Link to="/daily-expense-report" className={location.pathname === "/daily-expense-report" ? "active" : ""}>Daily Expense Report</Link></li>
                     <li><Link to="/daily-opd-report" className={location.pathname === "/daily-opd-report" ? "active" : ""}>Daily OPD Report</Link></li>
+                    <li><Link to="/dnt-report" className={location.pathname === "/dnt-report" ? "active" : ""}>DNT Report</Link></li>
                     <li><Link to="/enquiry-conversion" className={location.pathname === "/enquiry-conversion" ? "active" : ""}>Enquiry Conversion</Link></li>
                     <li><Link to="/enquiry-data" className={location.pathname === "/enquiry-data" ? "active" : ""}>Enquiry Data</Link></li>
                     <li><Link to="/lost-lead-report" className={location.pathname === "/lost-lead-report" ? "active" : ""}>Lost Lead Report</Link></li>
@@ -153,7 +155,6 @@ const ReceptionSidebar = ({
                     <li><Link to="/opd-receipts-report" className={location.pathname === "/opd-receipts-report" ? "active" : ""}>OPD Receipts Report</Link></li>
                     <li><Link to="/pharmacy-collection-report" className={location.pathname === "/pharmacy-collection-report" ? "active" : ""}>Pharmacy Collection Report</Link></li>
                     <li><Link to="/reference-report" className={location.pathname === "/reference-report" ? "active" : ""}>Reference Report</Link></li>
-                    <li><Link to="/sx-conversion-report" className={location.pathname === "/sx-conversion-report" ? "active" : ""}>SX Conversion Report</Link></li>
                 </ul>
             </li>
         </ul>

@@ -22,7 +22,7 @@ const formatValue = (val) => {
 
 const formatAmount = (val) => {
   if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
-    return "-";
+    return "₹ 0";
   }
   const parsed = parseFloat(val);
   return isNaN(parsed) ? val : `₹ ${Math.round(parsed).toLocaleString("en-IN")}`;
@@ -65,7 +65,7 @@ const PharmacyCollectionReport = () => {
   const handleFind = async (e) => {
     if (e) e.preventDefault();
     if (!fromDate || !toDate) {
-      alert("Please Enter the all fields details..");
+      alert("Please select From Date and To Date.");
       return;
     }
 
@@ -84,7 +84,7 @@ const PharmacyCollectionReport = () => {
             Fromdate: fromDate,
             Todate: toDate,
           }),
-        },
+        }
       );
 
       if (!response.ok) throw new Error("Failed to fetch data");
@@ -93,12 +93,21 @@ const PharmacyCollectionReport = () => {
       const formattedData = data.map((item) => {
         const paymentMode = item.paymentmode;
         const total = parseFloat(item.final_total) || 0;
+        const billNumber =
+          item.bill_no ||
+          item.billno ||
+          (item.pharmacybill_id ? `PH-${item.pharmacybill_id}` : null) ||
+          (item.bill_id ? `PH-${item.bill_id}` : null) ||
+          (item.id ? `PH-${item.id}` : null) ||
+          item.receipt_no ||
+          "-";
+
         return {
           ...item,
           date: item.created_at ? item.created_at.split("T")[0] : "",
-          billNo: item.bill_no || `PH-${item.id}`,
+          billNo: billNumber,
           patientName: item.patient_name || item.patient || "N/A",
-          prescriptionType: item.prescription_type,
+          prescriptionType: item.prescription_type || "General",
           cashamt: paymentMode === "Cash" ? total : 0,
           cardamt: paymentMode === "Card" ? total : 0,
           onlineUpiAmt:
@@ -110,7 +119,7 @@ const PharmacyCollectionReport = () => {
       setTableData(formattedData);
 
       if (formattedData.length === 0) {
-        alert("No records found for the selected date range");
+        alert("No records found for the selected date range.");
       }
     } catch (error) {
       console.error("Error:", error);
@@ -119,6 +128,16 @@ const PharmacyCollectionReport = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleReset = () => {
+    setFromDate("");
+    setToDate("");
+    setTableData([]);
+    setSearchText("");
+    setFilters({
+      global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    });
   };
 
   const handlePrint = () => {
@@ -215,7 +234,7 @@ const PharmacyCollectionReport = () => {
     </ColumnGroup>
   );
 
-  const header = (
+  const renderHeader = () => (
     <div className="d-flex justify-content-between align-items-center mb-1">
       <div className="d-flex align-items-center" style={{ gap: "20px" }}>
         <div className="d-flex align-items-center">
@@ -239,6 +258,7 @@ const PharmacyCollectionReport = () => {
             <option value={10}>10</option>
             <option value={25}>25</option>
             <option value={50}>50</option>
+            <option value={100}>100</option>
           </Form.Select>
         </div>
         <div className="d-flex align-items-center">
@@ -273,6 +293,7 @@ const PharmacyCollectionReport = () => {
             alignItems: "center",
             gap: "5px",
             borderRadius: "8px",
+            fontWeight: "600",
           }}
         >
           <i className="fa fa-file-excel-o"></i> Download Excel
@@ -285,6 +306,7 @@ const PharmacyCollectionReport = () => {
             alignItems: "center",
             gap: "5px",
             borderRadius: "8px",
+            fontWeight: "600",
           }}
         >
           <i className="fa fa-print"></i> Print Report
@@ -324,7 +346,7 @@ const PharmacyCollectionReport = () => {
                     padding: "0.8rem",
                   }}
                 >
-                  <h4 style={{ margin: 0 }}>Pharmacy Collection Report</h4>
+                  <h4 style={{ margin: 0, fontSize: "18px" }}>Pharmacy Collection Report</h4>
                   {fromDate && toDate && (
                     <div style={{ fontSize: "13px", fontWeight: "normal", marginTop: "5px" }}>
                       Date Range: <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b>
@@ -334,10 +356,10 @@ const PharmacyCollectionReport = () => {
                 <Card.Body style={{ padding: "5px" }}>
                   <Form onSubmit={handleFind} className="no-print">
                     <Row
-                      className="align-items-end mb-4 flex-nowrap"
-                      style={{ margin: "0 -5px" }}
+                      className="align-items-end mb-4 flex-wrap"
+                      style={{ margin: "0 -5px", rowGap: "10px" }}
                     >
-                      <Col style={{ padding: "0 5px", flex: "1" }}>
+                      <Col style={{ padding: "0 5px", flex: "1 1 180px" }}>
                         <Form.Group className="mb-2">
                           <Form.Label
                             style={{
@@ -362,7 +384,7 @@ const PharmacyCollectionReport = () => {
                           />
                         </Form.Group>
                       </Col>
-                      <Col style={{ padding: "0 5px", flex: "1" }}>
+                      <Col style={{ padding: "0 5px", flex: "1 1 180px" }}>
                         <Form.Group className="mb-2">
                           <Form.Label
                             style={{
@@ -387,8 +409,8 @@ const PharmacyCollectionReport = () => {
                           />
                         </Form.Group>
                       </Col>
-                      <Col style={{ padding: "0 5px", flex: "1" }}>
-                        <Form.Group className="mb-2">
+                      <Col style={{ padding: "0 5px", flex: "1 1 180px" }}>
+                        <Form.Group className="mb-2 d-flex gap-2">
                           <button
                             className="btn btn-primary"
                             type="submit"
@@ -402,24 +424,43 @@ const PharmacyCollectionReport = () => {
                               fontWeight: "bold",
                               fontSize: "13px",
                             }}
+                            disabled={loading}
                           >
                             {loading ? "Loading..." : "Search"}
+                          </button>
+                          <button
+                            className="btn btn-secondary"
+                            type="button"
+                            onClick={handleReset}
+                            style={{
+                              height: "35px",
+                              width: "100%",
+                              borderRadius: "8px",
+                              fontWeight: "bold",
+                              fontSize: "13px",
+                            }}
+                            disabled={loading}
+                          >
+                            Reset
                           </button>
                         </Form.Group>
                       </Col>
                     </Row>
                   </Form>
+
+                  {/* Header controls bar */}
+                  <div className="no-print">{renderHeader()}</div>
+
                   <DataTable
                     value={tableData}
                     paginator
                     rows={rows}
                     filters={filters}
-                    header={header}
                     footerColumnGroup={footerGroup}
                     paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
                     currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
                     emptyMessage={loading ? "Loading..." : "No records found."}
-                    className="p-datatable-sm custom-datatable"
+                    className="p-datatable-sm custom-datatable mb-4"
                     style={{ fontSize: "12px" }}
                     rowHover
                     stripedRows
@@ -434,29 +475,49 @@ const PharmacyCollectionReport = () => {
                       field="date"
                       header="Date"
                       body={(rowData) => formatValue(formatDateDisplay(rowData.date))}
+                      style={{ width: "110px", textAlign: "center" }}
                     />
-                    <Column field="billNo" header="Bill No" body={(rowData) => formatValue(rowData.billNo)} />
-                    <Column field="patientName" header="Patient Name" body={(rowData) => formatValue(rowData.patientName)} />
-                    <Column field="prescriptionType" header="Type" body={(rowData) => formatValue(rowData.prescriptionType)} />
+                    <Column
+                      field="billNo"
+                      header="Bill No"
+                      body={(rowData) => formatValue(rowData.billNo)}
+                      style={{ width: "120px", textAlign: "center" }}
+                    />
+                    <Column
+                      field="patientName"
+                      header="Patient Name"
+                      body={(rowData) => formatValue(rowData.patientName)}
+                      style={{ width: "180px", wordBreak: "break-word" }}
+                    />
+                    <Column
+                      field="prescriptionType"
+                      header="Type"
+                      body={(rowData) => formatValue(rowData.prescriptionType)}
+                      style={{ width: "110px", textAlign: "center" }}
+                    />
                     <Column
                       field="cashamt"
                       header="Cash"
                       body={(r) => formatAmount(r.cashamt)}
+                      style={{ width: "120px", textAlign: "center" }}
                     />
                     <Column
                       field="onlineUpiAmt"
                       header="Online/UPI"
                       body={(r) => formatAmount(r.onlineUpiAmt)}
+                      style={{ width: "120px", textAlign: "center" }}
                     />
                     <Column
                       field="cardamt"
                       header="Card"
                       body={(r) => formatAmount(r.cardamt)}
+                      style={{ width: "120px", textAlign: "center" }}
                     />
                     <Column
                       field="discount"
                       header="Discount"
                       body={(r) => formatAmount(r.discount)}
+                      style={{ width: "120px", textAlign: "center" }}
                     />
                   </DataTable>
 
@@ -465,15 +526,15 @@ const PharmacyCollectionReport = () => {
                     <table className="print-table">
                       <thead>
                         <tr>
-                          <th>Sr No</th>
-                          <th>Date</th>
-                          <th>Bill No</th>
-                          <th>Patient Name</th>
-                          <th>Type</th>
-                          <th>Cash</th>
-                          <th>Online/UPI</th>
-                          <th>Card</th>
-                          <th>Discount</th>
+                          <th style={{ width: "6%" }}>Sr No</th>
+                          <th style={{ width: "12%" }}>Date</th>
+                          <th style={{ width: "12%" }}>Bill No</th>
+                          <th style={{ width: "22%" }}>Patient Name</th>
+                          <th style={{ width: "10%" }}>Type</th>
+                          <th style={{ width: "10%" }}>Cash</th>
+                          <th style={{ width: "10%" }}>Online/UPI</th>
+                          <th style={{ width: "9%" }}>Card</th>
+                          <th style={{ width: "9%" }}>Discount</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -490,7 +551,6 @@ const PharmacyCollectionReport = () => {
                             <td>{formatAmount(item.discount)}</td>
                           </tr>
                         ))}
-                        {/* Totals row inside tbody to avoid page repetition on multiple pages */}
                         <tr className="print-totals-row">
                           <td colSpan={5}>Total</td>
                           <td>{formatAmount(printTotals.cash)}</td>
@@ -598,6 +658,7 @@ const PharmacyCollectionReport = () => {
           }
           .print-table {
             width: 100% !important;
+            table-layout: fixed !important;
             border-collapse: collapse !important;
             margin-top: 10px !important;
           }

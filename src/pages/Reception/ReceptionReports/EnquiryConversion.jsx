@@ -10,67 +10,49 @@ import { FilterMatchMode } from "primereact/api";
 import { InputText } from "primereact/inputtext";
 import { decodeJwt } from "../../Utility/decode-jwt";
 
-// const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://194.195.117.79:5100/api"; // Update your API base URL here
-
-const formatDateDisplay = (dateStr) => {
-  if (!dateStr) return "";
-  const datePart = dateStr.includes("T") ? dateStr.split("T")[0] : dateStr;
-  return datePart.split("-").reverse().join("-");
-};
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const formatValue = (val) => {
   if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
-    return "-";
+    return "0";
   }
   return val;
+};
+
+const formatDateDisplay = (dateStr) => {
+  if (!dateStr) return "";
+  try {
+    const date = new Date(dateStr);
+    if (!isNaN(date.getTime())) {
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      return `${day}-${month}-${year}`;
+    }
+  } catch (e) {
+    // Fallback if parsing fails
+  }
+  const datePart = dateStr.includes("T") ? dateStr.split("T")[0] : dateStr;
+  return datePart.split("-").reverse().join("-");
 };
 
 const EnquiryConversion = () => {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
-  const [reportData, setReportData] = useState({
-    bookedAppointments: "-",
-    visited: "-",
-    dnw: "-",
-    dnt: "-",
-    totalEnquiries: "-",
-    callBack: "-",
-  });
+  const [fdeFilter, setFdeFilter] = useState("All");
+  const [sourceFilter, setSourceFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
+  
+  const [fdeOptions, setFdeOptions] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [reportData, setReportData] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [rows, setRows] = useState(10);
+  const [currentLocation, setCurrentLocation] = useState("");
+
   const [filters, setFilters] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
   });
-  const [currentLocation, setCurrentLocation] = useState("");
-
-  const handlePrint = () => {
-    window.print();
-  };
-
-  const getFilteredData = () => {
-    const data = [reportData];
-    if (!searchText) return data;
-    const query = searchText.toLowerCase().trim();
-    return data.filter((item) => {
-      const booked = String(formatValue(item.bookedAppointments)).toLowerCase();
-      const visited = String(formatValue(item.visited)).toLowerCase();
-      const dnw = String(formatValue(item.dnw)).toLowerCase();
-      const dnt = String(formatValue(item.dnt)).toLowerCase();
-      const total = String(formatValue(item.totalEnquiries)).toLowerCase();
-      const callBack = String(formatValue(item.callBack)).toLowerCase();
-      return (
-        booked.includes(query) ||
-        visited.includes(query) ||
-        dnw.includes(query) ||
-        dnt.includes(query) ||
-        total.includes(query) ||
-        callBack.includes(query)
-      );
-    });
-  };
-
-  const filteredData = getFilteredData();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -82,6 +64,24 @@ const EnquiryConversion = () => {
     }
   }, []);
 
+  // Fetch FDE dropdown options on mount or location change
+  useEffect(() => {
+    const fetchFDEs = async () => {
+      try {
+        const res = await fetch(
+          `${BASE_URL}/V1/managereports/getFDEDropdownList?location=${currentLocation || "default"}`
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setFdeOptions(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        console.error("Failed to load FDE dropdown:", err);
+      }
+    };
+    fetchFDEs();
+  }, [currentLocation]);
+
   const onGlobalFilterChange = (e) => {
     const value = e.target.value;
     let _filters = { ...filters };
@@ -90,124 +90,115 @@ const EnquiryConversion = () => {
     setSearchText(value);
   };
 
-  const handleFind = async (e) => {
-    e.preventDefault();
-
+  const handleFindClick = async (e) => {
+    if (e) e.preventDefault();
     if (!fromDate || !toDate) {
-      alert("Please Enter all fields details..");
+      alert("Please select date range");
       return;
     }
 
-    try {
-      // 1. Format dates for the API (DD/MM/YYYY)
-      // const formattedFromDate = fromDate.split("-").reverse().join("-");
-      // const formattedToDate = toDate.split("-").reverse().join("-");
-      
-      // 2. Fetch both datasets concurrently using Promise.all
-      const [appointmentResponse, callBackResponse] = await Promise.all([
-        fetch(
-          `${BASE_URL}/V1/managereports/listEnqConv?location=${currentLocation}&from=${fromDate}&to=${toDate}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-          },
-        ),
-        fetch(
-          `${BASE_URL}/V1/managereports/listEnqConvCallBack?location=${currentLocation}&from=${fromDate}&to=${toDate}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-          },
-        ),
-      ]);
+    setLoading(true);
+    const authHeaders = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    };
 
-      if (!appointmentResponse.ok || !callBackResponse.ok) {
-        throw new Error("Failed to fetch data from the server");
+    try {
+      const res = await fetch(`${BASE_URL}/V1/managereports/getEnquiryConversionReport`, {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify({
+          location: currentLocation,
+          Fromdate: fromDate,
+          Todate: toDate,
+          fdeId: fdeFilter,
+          source: sourceFilter,
+          status: statusFilter,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch conversion report data");
       }
 
-      const appointmentData = await appointmentResponse.json();
-      const callBackData = await callBackResponse.json();
-      // console.log(appointmentData, callBackData);
-      // 3. Process Appointment Logic (Counters and Unique Enquiries)
-      let confirmedPatients = 0;
-      let dnwPatients = 0;
-      let dntPatients = 0;
-      const uniqueEnquiryList = [];
-
-      const appointments = appointmentData?.data || [];
-
-      appointments.forEach((item) => {
-        // Visited: confirm_time is not 0
-        if (item.confirm_time !== 0) {
-          confirmedPatients++;
-        }
-        // DNW (Do Not Wait): executivechk is 0 AND confirmed
-        if (item.executivechk === 0 && item.confirm_time !== 0) {
-          dnwPatients++;
-        }
-        // DNT (Did Not Turnup): confirm_time is 0
-        if (item.confirm_time === 0) {
-          dntPatients++;
-        }
-        // Collect unique total enquiries
-        if (
-          item.totalenquiry &&
-          !uniqueEnquiryList.includes(item.totalenquiry)
-        ) {
-          uniqueEnquiryList.push(item.totalenquiry);
-        }
-      });
-
-      // 4. Update State with combined results
-      setReportData({
-        bookedAppointments: appointments.length || 0,
-        visited: confirmedPatients,
-        dnw: dnwPatients,
-        dnt: dntPatients,
-        totalEnquiries: uniqueEnquiryList.length > 0 ? uniqueEnquiryList[0] : 0,
-        callBack: callBackData?.data?.length || 0,
-      });
+      const data = await res.json();
+      setReportData(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error("Error fetching conversion data:", error);
-      alert(`Error: ${error.message}`);
-      setReportData({
-        bookedAppointments: "-",
-        visited: "-",
-        dnw: "-",
-        dnt: "-",
-        totalEnquiries: "-",
-        callBack: "-",
-      });
+      console.error("Fetch error:", error);
+      alert("Error fetching Enquiry Conversion report data. Please try again.");
+      setReportData([]);
+    } finally {
+      setLoading(false);
     }
   };
+
+  const handleReset = () => {
+    setFromDate("");
+    setToDate("");
+    setFdeFilter("All");
+    setSourceFilter("All");
+    setStatusFilter("All");
+    setReportData([]);
+    setSearchText("");
+    setFilters({
+      global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    });
+  };
+
+  const getFilteredData = () => {
+    if (!searchText) return reportData;
+    const query = searchText.toLowerCase().trim();
+    return reportData.filter((item) => {
+      const fde = String(item.fdeName || "").toLowerCase();
+      const total = String(item.totalEnquiries || "").toLowerCase();
+      const booked = String(item.booked || "").toLowerCase();
+      const visited = String(item.visited || "").toLowerCase();
+      const dnw = String(item.dnw || "").toLowerCase();
+      const dnt = String(item.dnt || "").toLowerCase();
+      const callBack = String(item.callBackPending || "").toLowerCase();
+      const conv = String(item.conversionPercent || "").toLowerCase();
+
+      return (
+        fde.includes(query) ||
+        total.includes(query) ||
+        booked.includes(query) ||
+        visited.includes(query) ||
+        dnw.includes(query) ||
+        dnt.includes(query) ||
+        callBack.includes(query) ||
+        conv.includes(query)
+      );
+    });
+  };
+
+  const filteredData = getFilteredData();
 
   const exportToExcel = () => {
     const fileType =
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
     const fileExtension = ".xlsx";
 
-    const excelData = [
-      {
-        "Booked Appointment": reportData.bookedAppointments,
-        Visited: reportData.visited,
-        DNW: reportData.dnw,
-        DNT: reportData.dnt,
-        "Total Enquiries": reportData.totalEnquiries,
-        "Call Back": reportData.callBack,
-      },
-    ];
+    const excelData = filteredData.map((item, index) => ({
+      "Sr No": index + 1,
+      FDE: item.fdeName || "Unassigned",
+      "Total Enquiries": item.totalEnquiries || 0,
+      Booked: item.booked || 0,
+      Visited: item.visited || 0,
+      "DNW (Did Not Wait)": item.dnw || 0,
+      "DNT (Did Not Turn Up)": item.dnt || 0,
+      "Call Back Pending": item.callBackPending || 0,
+      "Conversion %": item.conversionPercent || "0.00%",
+    }));
 
     const ws = XLSX.utils.json_to_sheet(excelData);
     const wb = { Sheets: { data: ws }, SheetNames: ["data"] };
     const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
     const data = new Blob([excelBuffer], { type: fileType });
     saveAs(data, "Enquiry_Conversion_Report" + fileExtension);
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   const renderHeader = () => {
@@ -291,8 +282,6 @@ const EnquiryConversion = () => {
     );
   };
 
-  const header = renderHeader();
-
   return (
     <div
       className="themebody-wrap"
@@ -301,6 +290,7 @@ const EnquiryConversion = () => {
         background: "linear-gradient(to right, #e0f7fa, #80deea)",
         fontFamily: "'Poppins', Arial, sans-serif",
         minHeight: "100vh",
+        fontSize: "13px",
       }}
     >
       <PageBreadcrumb pagename="Enquiry Conversion Report" />
@@ -330,7 +320,9 @@ const EnquiryConversion = () => {
                     fontSize: "16px",
                   }}
                 >
-                  <h4 style={{ margin: 0 }}>Enquiry Conversion Report</h4>
+                  <h4 style={{ margin: 0, fontSize: "18px" }}>
+                    Enquiry Conversion Report
+                  </h4>
                   {fromDate && toDate && (
                     <div style={{ fontSize: "13px", fontWeight: "normal", marginTop: "5px" }}>
                       Date Range: <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b>
@@ -338,12 +330,12 @@ const EnquiryConversion = () => {
                   )}
                 </Card.Header>
                 <Card.Body style={{ padding: "5px" }}>
-                  <Form onSubmit={handleFind} className="no-print">
+                  <Form onSubmit={handleFindClick} className="no-print">
                     <Row
-                      className="align-items-end mb-4 flex-nowrap"
-                      style={{ margin: "0 -5px" }}
+                      className="align-items-end mb-4 flex-wrap"
+                      style={{ margin: "0 -5px", rowGap: "10px" }}
                     >
-                      <Col style={{ padding: "0 5px", flex: "1" }}>
+                      <Col style={{ padding: "0 5px", flex: "1 1 160px" }}>
                         <Form.Group className="mb-2">
                           <Form.Label
                             style={{
@@ -369,7 +361,7 @@ const EnquiryConversion = () => {
                           />
                         </Form.Group>
                       </Col>
-                      <Col style={{ padding: "0 5px", flex: "1" }}>
+                      <Col style={{ padding: "0 5px", flex: "1 1 160px" }}>
                         <Form.Group className="mb-2">
                           <Form.Label
                             style={{
@@ -395,11 +387,107 @@ const EnquiryConversion = () => {
                           />
                         </Form.Group>
                       </Col>
-                      <Col style={{ padding: "0 5px", flex: "1" }}>
+                      <Col style={{ padding: "0 5px", flex: "1 1 160px" }}>
                         <Form.Group className="mb-2">
+                          <Form.Label
+                            style={{
+                              fontWeight: "bold",
+                              color: "#006064",
+                              whiteSpace: "nowrap",
+                              fontSize: "12px",
+                            }}
+                          >
+                            FDE
+                          </Form.Label>
+                          <Form.Select
+                            value={fdeFilter}
+                            onChange={(e) => setFdeFilter(e.target.value)}
+                            style={{
+                              border: "2px solid #4dd0e1",
+                              borderRadius: "8px",
+                              padding: "6px",
+                              backgroundColor: "#e0f7fa",
+                              fontSize: "12px",
+                            }}
+                          >
+                            <option value="All">All FDEs</option>
+                            {fdeOptions.map((opt) => (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                      <Col style={{ padding: "0 5px", flex: "1 1 160px" }}>
+                        <Form.Group className="mb-2">
+                          <Form.Label
+                            style={{
+                              fontWeight: "bold",
+                              color: "#006064",
+                              whiteSpace: "nowrap",
+                              fontSize: "12px",
+                            }}
+                          >
+                            Enquiry Source
+                          </Form.Label>
+                          <Form.Select
+                            value={sourceFilter}
+                            onChange={(e) => setSourceFilter(e.target.value)}
+                            style={{
+                              border: "2px solid #4dd0e1",
+                              borderRadius: "8px",
+                              padding: "6px",
+                              backgroundColor: "#e0f7fa",
+                              fontSize: "12px",
+                            }}
+                          >
+                            <option value="All">All Sources</option>
+                            <option value="Web">Web (WebEnquiryList)</option>
+                            <option value="Bot">Bot (ChatbotEnquiryList)</option>
+                            <option value="IVR">IVR (IvrEnquiryList)</option>
+                            <option value="Direct">Direct (EnquiryList)</option>
+                            <option value="Helpline">Helpline</option>
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                      <Col style={{ padding: "0 5px", flex: "1 1 160px" }}>
+                        <Form.Group className="mb-2">
+                          <Form.Label
+                            style={{
+                              fontWeight: "bold",
+                              color: "#006064",
+                              whiteSpace: "nowrap",
+                              fontSize: "12px",
+                            }}
+                          >
+                            Status
+                          </Form.Label>
+                          <Form.Select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            style={{
+                              border: "2px solid #4dd0e1",
+                              borderRadius: "8px",
+                              padding: "6px",
+                              backgroundColor: "#e0f7fa",
+                              fontSize: "12px",
+                            }}
+                          >
+                            <option value="All">All Statuses</option>
+                            <option value="Visited">Visited</option>
+                            <option value="Booked">Booked</option>
+                            <option value="DNW">DNW (Did Not Wait)</option>
+                            <option value="DNT">DNT (Did Not Turn Up)</option>
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                      <Col style={{ padding: "0 5px", flex: "1 1 160px" }}>
+                        <Form.Group className="mb-2 d-flex gap-2">
                           <button
                             className="btn btn-primary"
                             type="submit"
+                            disabled={loading}
                             style={{
                               height: "35px",
                               width: "100%",
@@ -411,22 +499,39 @@ const EnquiryConversion = () => {
                               fontSize: "13px",
                             }}
                           >
-                            Search
+                            {loading ? "Loading..." : "Search"}
+                          </button>
+                          <button
+                            className="btn btn-secondary"
+                            type="button"
+                            onClick={handleReset}
+                            disabled={loading}
+                            style={{
+                              height: "35px",
+                              width: "100%",
+                              borderRadius: "8px",
+                              fontWeight: "bold",
+                              fontSize: "13px",
+                            }}
+                          >
+                            Reset
                           </button>
                         </Form.Group>
                       </Col>
                     </Row>
                   </Form>
 
+                  {/* Controls bar matching AppointmentConversion.jsx */}
+                  <div className="mb-3 no-print">{renderHeader()}</div>
+
                   <DataTable
-                    value={[reportData]}
+                    value={filteredData}
                     paginator
                     rows={rows}
                     filters={filters}
-                    header={header}
                     paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
                     currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
-                    emptyMessage="No records found."
+                    emptyMessage={loading ? "Loading..." : "No records found."}
                     className="p-datatable-sm custom-datatable"
                     style={{ fontSize: "12px" }}
                     rowHover
@@ -434,15 +539,58 @@ const EnquiryConversion = () => {
                     responsiveLayout="scroll"
                   >
                     <Column
-                      field="bookedAppointments"
-                      header="Booked Appointment"
-                      body={(rowData) => formatValue(rowData.bookedAppointments)}
+                      header="Sr No"
+                      body={(rowData, { rowIndex }) => rowIndex + 1}
+                      style={{ width: "60px", textAlign: "center" }}
                     />
-                    <Column field="visited" header="Visited" body={(rowData) => formatValue(rowData.visited)} />
-                    <Column field="dnw" header="DNW" body={(rowData) => formatValue(rowData.dnw)} />
-                    <Column field="dnt" header="DNT" body={(rowData) => formatValue(rowData.dnt)} />
-                    <Column field="totalEnquiries" header="Total Enquiries" body={(rowData) => formatValue(rowData.totalEnquiries)} />
-                    <Column field="callBack" header="Call Back" body={(rowData) => formatValue(rowData.callBack)} />
+                    <Column
+                      field="fdeName"
+                      header="FDE"
+                      body={(row) => formatValue(row.fdeName)}
+                      style={{ width: "180px" }}
+                    />
+                    <Column
+                      field="totalEnquiries"
+                      header="Total Enquiries"
+                      body={(row) => formatValue(row.totalEnquiries)}
+                      style={{ width: "120px", textAlign: "center" }}
+                    />
+                    <Column
+                      field="booked"
+                      header="Booked"
+                      body={(row) => formatValue(row.booked)}
+                      style={{ width: "100px", textAlign: "center" }}
+                    />
+                    <Column
+                      field="visited"
+                      header="Visited"
+                      body={(row) => formatValue(row.visited)}
+                      style={{ width: "100px", textAlign: "center" }}
+                    />
+                    <Column
+                      field="dnw"
+                      header="DNW (Did Not Wait)"
+                      body={(row) => formatValue(row.dnw)}
+                      style={{ width: "140px", textAlign: "center" }}
+                    />
+                    <Column
+                      field="dnt"
+                      header="DNT (Did Not Turn Up)"
+                      body={(row) => formatValue(row.dnt)}
+                      style={{ width: "140px", textAlign: "center" }}
+                    />
+                    <Column
+                      field="callBackPending"
+                      header="Call Back Pending"
+                      body={(row) => formatValue(row.callBackPending)}
+                      style={{ width: "140px", textAlign: "center" }}
+                    />
+                    <Column
+                      field="conversionPercent"
+                      header="Conversion % (Visited/Enquiries)"
+                      body={(row) => formatValue(row.conversionPercent)}
+                      style={{ width: "150px", textAlign: "center" }}
+                    />
                   </DataTable>
 
                   {/* Print-only container displaying all rows */}
@@ -450,27 +598,37 @@ const EnquiryConversion = () => {
                     <table className="print-table">
                       <thead>
                         <tr>
-                          <th>Sr No</th>
-                          <th>Booked Appointment</th>
-                          <th>Visited</th>
-                          <th>DNW</th>
-                          <th>DNT</th>
-                          <th>Total Enquiries</th>
-                          <th>Call Back</th>
+                          <th style={{ width: "5%" }}>Sr No</th>
+                          <th style={{ width: "20%" }}>FDE</th>
+                          <th style={{ width: "12%" }}>Total Enquiries</th>
+                          <th style={{ width: "10%" }}>Booked</th>
+                          <th style={{ width: "10%" }}>Visited</th>
+                          <th style={{ width: "13%" }}>DNW</th>
+                          <th style={{ width: "13%" }}>DNT</th>
+                          <th style={{ width: "13%" }}>Call Back Pending</th>
+                          <th style={{ width: "14%" }}>Conversion %</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {filteredData.map((item, index) => (
-                          <tr key={index}>
-                            <td>{index + 1}</td>
-                            <td>{formatValue(item.bookedAppointments)}</td>
-                            <td>{formatValue(item.visited)}</td>
-                            <td>{formatValue(item.dnw)}</td>
-                            <td>{formatValue(item.dnt)}</td>
-                            <td>{formatValue(item.totalEnquiries)}</td>
-                            <td>{formatValue(item.callBack)}</td>
+                        {filteredData && filteredData.length > 0 ? (
+                          filteredData.map((item, index) => (
+                            <tr key={index}>
+                              <td>{index + 1}</td>
+                              <td>{formatValue(item.fdeName)}</td>
+                              <td>{formatValue(item.totalEnquiries)}</td>
+                              <td>{formatValue(item.booked)}</td>
+                              <td>{formatValue(item.visited)}</td>
+                              <td>{formatValue(item.dnw)}</td>
+                              <td>{formatValue(item.dnt)}</td>
+                              <td>{formatValue(item.callBackPending)}</td>
+                              <td>{formatValue(item.conversionPercent)}</td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="9">No records found.</td>
                           </tr>
-                        ))}
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -480,6 +638,7 @@ const EnquiryConversion = () => {
           </Row>
         </Container>
       </SimpleBar>
+
       <style>{`
         .print-table-container {
           display: none;
@@ -516,6 +675,7 @@ const EnquiryConversion = () => {
           border-bottom-right-radius: 8px;
           padding: 5px;
         }
+
         @media print {
           @page {
             size: landscape;
@@ -584,6 +744,7 @@ const EnquiryConversion = () => {
           }
           .print-table {
             width: 100% !important;
+            table-layout: fixed !important;
             border-collapse: collapse !important;
             margin-top: 10px !important;
           }

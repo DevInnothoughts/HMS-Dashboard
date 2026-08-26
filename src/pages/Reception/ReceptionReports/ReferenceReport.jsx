@@ -6,7 +6,8 @@ import { Column } from "primereact/column";
 import { FilterMatchMode } from "primereact/api";
 import { InputText } from "primereact/inputtext";
 import { ColumnGroup } from "primereact/columngroup";
-import ReactApexChart from "react-apexcharts";
+import { saveAs } from "file-saver";
+import * as XLSX from "xlsx";
 import PageBreadcrumb from "../../../components/PageBreadcrumb";
 import { decodeJwt } from "../../Utility/decode-jwt";
 
@@ -25,9 +26,29 @@ const formatDateDisplay = (dateStr) => {
   return datePart.split("-").reverse().join("-");
 };
 
+const referenceTypeOptions = [
+  { value: "All", label: "All Reference Types" },
+  { value: "aggregators", label: "Aggregators (JustDial, Practo, etc.)" },
+  { value: "dr_ref", label: "Doctor Reference" },
+  { value: "internet", label: "Internet" },
+  { value: "family_friends", label: "Family / Friends" },
+  { value: "old_ref", label: "Old Patient Reference" },
+  { value: "newspaper", label: "Newspaper / Magazine" },
+  { value: "socialMedia", label: "Social Media" },
+  { value: "MediaRef", label: "TV Show / Radio" },
+  { value: "campaign", label: "Campaign" },
+  { value: "brand_ambassador", label: "Brand Ambassador" },
+  { value: "awareness_lecture", label: "Awareness Lecture" },
+  { value: "hhc_board", label: "HHC Board on Building" },
+  { value: "hhc_branch", label: "HHC Branch" },
+  { value: "dr_privilege_card", label: "Doctor's Privilege Card" },
+  { value: "other", label: "Other Reference" },
+];
+
 const ReferenceReport = () => {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [selectedRefType, setSelectedRefType] = useState("All");
   const [searchText, setSearchText] = useState("");
   const [rows, setRows] = useState(10);
   const [loading, setLoading] = useState(false);
@@ -46,28 +67,10 @@ const ReferenceReport = () => {
     }
   }, []);
 
-  const getFriendlyName = (type) => {
-    const mapping = {
-      newspaper: "Newspaper Reference",
-      dr_ref: "Doctor Reference",
-      internet: "Internet Reference",
-      old_ref: "Old Reference",
-      MediaRef: "Media Reference",
-      hhc_board: "HHC Board Reference",
-      WOM: "Word of Mouth",
-      TVShow: "TV Show",
-      dr_privilege_card: "Doctor's Privilege Card",
-      campaign: "Campaign",
-      brand_ambassador: "Brand Ambassador",
-      "": "Not Visited",
-    };
-    return mapping[type] || type || "Other Reference";
-  };
-
   const handleFindClick = async (e) => {
     if (e) e.preventDefault();
     if (!fromDate || !toDate) {
-      alert("Please Enter all fields details..");
+      alert("Please enter From Date and To Date.");
       return;
     }
 
@@ -85,26 +88,33 @@ const ReferenceReport = () => {
             location: currentLocation,
             Fromdate: fromDate,
             Todate: toDate,
+            selectedReferenceType: selectedRefType,
             type: "summary",
           }),
-        },
+        }
       );
 
       if (!response.ok) throw new Error("Failed to fetch data");
       const result = await response.json();
-      
-      const formattedData = result.map((item) => ({
-        type: getFriendlyName(item.reference_type),
-        count: parseInt(item.referencecount) || 0,
-      }));
-
-      setReferenceData(formattedData);
+      setReferenceData(Array.isArray(result) ? result : []);
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error fetching Reference Report:", error);
       alert("Failed to load reference statistics");
+      setReferenceData([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleReset = () => {
+    setFromDate("");
+    setToDate("");
+    setSelectedRefType("All");
+    setReferenceData([]);
+    setSearchText("");
+    setFilters({
+      global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    });
   };
 
   const onGlobalFilterChange = (e) => {
@@ -124,59 +134,82 @@ const ReferenceReport = () => {
     if (!searchText) return referenceData;
     const query = searchText.toLowerCase().trim();
     return referenceData.filter((item) => {
-      const type = (item.type || "").toLowerCase();
+      const type = (item.referenceType || "").toLowerCase();
+      const sub = (item.subReference || "").toLowerCase();
       const count = String(item.count || "").toLowerCase();
+      const pct = (item.pctOfTotal || "").toLowerCase();
+      const conv = (item.conversionPct || "").toLowerCase();
 
-      return type.includes(query) || count.includes(query);
+      return (
+        type.includes(query) ||
+        sub.includes(query) ||
+        count.includes(query) ||
+        pct.includes(query) ||
+        conv.includes(query)
+      );
     });
   };
 
   const filteredData = getFilteredData();
 
-  const printTotals = filteredData.reduce(
-    (acc, curr) => {
-      acc.count += Number(curr.count) || 0;
-      return acc;
-    },
-    { count: 0 }
+  // Compute totals
+  const totalPatientsCount = filteredData.reduce(
+    (acc, curr) => acc + (Number(curr.count) || 0),
+    0
   );
+  const totalVisitedCount = filteredData.reduce(
+    (acc, curr) => acc + (Number(curr.visited) || 0),
+    0
+  );
+  const overallConversionPct =
+    totalPatientsCount > 0
+      ? ((totalVisitedCount / totalPatientsCount) * 100).toFixed(2) + "%"
+      : "0.00%";
+
+  const exportToExcel = () => {
+    const fileType =
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8";
+    const fileExtension = ".xlsx";
+
+    const excelData = filteredData.map((item, index) => ({
+      "Sr No": index + 1,
+      "Reference Type": item.referenceType || "-",
+      "Sub Reference / Detail": item.subReference || "-",
+      Count: item.count || 0,
+      "% of Total": item.pctOfTotal || "0.00%",
+      "Conversion to Visit %": item.conversionPct || "0.00%",
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(excelData);
+    const wb = { Sheets: { data: ws }, SheetNames: ["data"] };
+    const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const data = new Blob([excelBuffer], { type: fileType });
+    saveAs(data, "Reference_Report" + fileExtension);
+  };
 
   const footerGroup = (
     <ColumnGroup>
       <Row>
         <Column
           footer="Total"
-          colSpan={2}
+          colSpan={3}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
-          footer={formatValue(printTotals.count)}
+          footer={formatValue(totalPatientsCount)}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer="100.00%"
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={overallConversionPct}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
       </Row>
     </ColumnGroup>
   );
-
-  const chartSeries = [
-    {
-      name: "Reference Count",
-      data: referenceData.map((item) => item.count),
-    },
-  ];
-
-  const chartOptions = {
-    chart: { type: "bar", height: 380 },
-    plotOptions: {
-      bar: { borderRadius: 4, horizontal: true, distributed: true },
-    },
-    colors: ["#42A5F5", "#FFCA28", "#66BB6A", "#FFA726", "#AB47BC", "#EC407A"],
-    xaxis: { categories: referenceData.map((item) => item.type) },
-    title: {
-      text: "Patient Source Distribution",
-      align: "center",
-      style: { color: "#006064" },
-    },
-  };
 
   const renderHeader = () => (
     <div className="d-flex justify-content-between align-items-center mb-1">
@@ -184,7 +217,7 @@ const ReferenceReport = () => {
         <div className="d-flex align-items-center">
           <span
             className="me-1"
-            style={{ fontWeight: "bold", color: "#006064", fontSize: "13px" }}
+            style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}
           >
             Show
           </span>
@@ -202,12 +235,13 @@ const ReferenceReport = () => {
             <option value={10}>10</option>
             <option value={25}>25</option>
             <option value={50}>50</option>
+            <option value={100}>100</option>
           </Form.Select>
         </div>
         <div className="d-flex align-items-center">
           <span
             className="me-1"
-            style={{ fontWeight: "bold", color: "#006064", fontSize: "13px" }}
+            style={{ fontWeight: "bold", color: "#006064", fontSize: "12px" }}
           >
             Search
           </span>
@@ -227,19 +261,36 @@ const ReferenceReport = () => {
           </span>
         </div>
       </div>
-      <button
-        className="btn btn-danger btn-sm"
-        onClick={handlePrint}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "5px",
-          borderRadius: "8px",
-          fontWeight: "600",
-        }}
-      >
-        <i className="fa fa-print"></i> Print Report
-      </button>
+      <div className="d-flex" style={{ gap: "10px" }}>
+        <button
+          className="btn btn-success btn-sm"
+          onClick={exportToExcel}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "5px",
+            borderRadius: "8px",
+            fontWeight: "600",
+            marginBottom: "12px",
+          }}
+        >
+          <i className="fa fa-file-excel-o"></i> Download Excel
+        </button>
+        <button
+          className="btn btn-danger btn-sm"
+          onClick={handlePrint}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "5px",
+            borderRadius: "8px",
+            fontWeight: "600",
+            marginBottom: "12px",
+          }}
+        >
+          <i className="fa fa-print"></i> Print Report
+        </button>
+      </div>
     </div>
   );
 
@@ -263,6 +314,7 @@ const ReferenceReport = () => {
                   borderRadius: "12px",
                   boxShadow: "0px 6px 12px rgba(0, 0, 0, 0.15)",
                   border: "1px solid #00bcd4",
+                  background: "white",
                 }}
               >
                 <Card.Header
@@ -273,7 +325,7 @@ const ReferenceReport = () => {
                     padding: "0.8rem",
                   }}
                 >
-                  <h4 style={{ margin: 0 }}>Reference Report</h4>
+                  <h4 style={{ margin: 0, fontSize: "18px" }}>Reference Report</h4>
                   {fromDate && toDate && (
                     <div style={{ fontSize: "13px", fontWeight: "normal", marginTop: "5px" }}>
                       Date Range: <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b>
@@ -283,10 +335,10 @@ const ReferenceReport = () => {
                 <Card.Body style={{ padding: "5px" }}>
                   <Form onSubmit={handleFindClick} className="no-print">
                     <Row
-                      className="align-items-end mb-4 flex-nowrap"
-                      style={{ margin: "0 -5px" }}
+                      className="align-items-end mb-4 flex-wrap"
+                      style={{ margin: "0 -5px", rowGap: "10px" }}
                     >
-                      <Col style={{ padding: "0 5px", flex: "1" }}>
+                      <Col style={{ padding: "0 5px", flex: "1 1 180px" }}>
                         <Form.Group className="mb-2">
                           <Form.Label
                             style={{
@@ -311,7 +363,7 @@ const ReferenceReport = () => {
                           />
                         </Form.Group>
                       </Col>
-                      <Col style={{ padding: "0 5px", flex: "1" }}>
+                      <Col style={{ padding: "0 5px", flex: "1 1 180px" }}>
                         <Form.Group className="mb-2">
                           <Form.Label
                             style={{
@@ -336,8 +388,38 @@ const ReferenceReport = () => {
                           />
                         </Form.Group>
                       </Col>
-                      <Col style={{ padding: "0 5px", flex: "1" }}>
+                      <Col style={{ padding: "0 5px", flex: "1 1 220px" }}>
                         <Form.Group className="mb-2">
+                          <Form.Label
+                            style={{
+                              fontWeight: "bold",
+                              color: "#006064",
+                              fontSize: "12px",
+                            }}
+                          >
+                            Reference Type
+                          </Form.Label>
+                          <Form.Select
+                            value={selectedRefType}
+                            onChange={(e) => setSelectedRefType(e.target.value)}
+                            style={{
+                              border: "2px solid #4dd0e1",
+                              borderRadius: "8px",
+                              padding: "6px",
+                              backgroundColor: "#e0f7fa",
+                              fontSize: "12px",
+                            }}
+                          >
+                            {referenceTypeOptions.map((opt) => (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                      <Col style={{ padding: "0 5px", flex: "1 1 180px" }}>
+                        <Form.Group className="mb-2 d-flex gap-2">
                           <button
                             className="btn btn-primary"
                             type="submit"
@@ -353,23 +435,36 @@ const ReferenceReport = () => {
                             }}
                             disabled={loading}
                           >
-                            {loading ? (
-                              <Spinner animation="border" size="sm" />
-                            ) : (
-                              "Search"
-                            )}
+                            {loading ? <Spinner animation="border" size="sm" /> : "Search"}
+                          </button>
+                          <button
+                            className="btn btn-secondary"
+                            type="button"
+                            onClick={handleReset}
+                            style={{
+                              height: "35px",
+                              width: "100%",
+                              borderRadius: "8px",
+                              fontWeight: "bold",
+                              fontSize: "13px",
+                            }}
+                            disabled={loading}
+                          >
+                            Reset
                           </button>
                         </Form.Group>
                       </Col>
                     </Row>
                   </Form>
 
+                  {/* Header controls bar */}
+                  <div className="no-print">{renderHeader()}</div>
+
                   <DataTable
-                    value={referenceData}
+                    value={filteredData}
                     paginator
                     rows={rows}
                     filters={filters}
-                    header={renderHeader()}
                     footerColumnGroup={footerGroup}
                     paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
                     currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
@@ -382,10 +477,38 @@ const ReferenceReport = () => {
                     <Column
                       header="Sr No"
                       body={(r, { rowIndex }) => rowIndex + 1}
+                      style={{ width: "60px", textAlign: "center" }}
+                    />
+                    <Column
+                      field="referenceType"
+                      header="Reference Type"
+                      body={(rowData) => formatValue(rowData.referenceType)}
+                      style={{ width: "180px" }}
+                    />
+                    <Column
+                      field="subReference"
+                      header="Sub Reference / Detail"
+                      body={(rowData) => formatValue(rowData.subReference)}
+                      style={{ width: "220px", wordBreak: "break-word", whiteSpace: "normal" }}
+                    />
+                    <Column
+                      field="count"
+                      header="Count"
+                      body={(rowData) => formatValue(rowData.count)}
                       style={{ width: "100px", textAlign: "center" }}
                     />
-                    <Column field="type" header="Reference Type" body={(rowData) => formatValue(rowData.type)} sortable />
-                    <Column field="count" header="Reference Count" body={(rowData) => formatValue(rowData.count)} sortable />
+                    <Column
+                      field="pctOfTotal"
+                      header="% of Total"
+                      body={(rowData) => formatValue(rowData.pctOfTotal)}
+                      style={{ width: "110px", textAlign: "center" }}
+                    />
+                    <Column
+                      field="conversionPct"
+                      header="Conversion to Visit %"
+                      body={(rowData) => formatValue(rowData.conversionPct)}
+                      style={{ width: "150px", textAlign: "center" }}
+                    />
                   </DataTable>
 
                   {/* Print-only container displaying all rows */}
@@ -393,49 +516,43 @@ const ReferenceReport = () => {
                     <table className="print-table">
                       <thead>
                         <tr>
-                          <th>Sr No</th>
-                          <th>Reference Type</th>
-                          <th>Reference Count</th>
+                          <th style={{ width: "6%" }}>Sr No</th>
+                          <th style={{ width: "24%" }}>Reference Type</th>
+                          <th style={{ width: "30%" }}>Sub Reference / Detail</th>
+                          <th style={{ width: "12%" }}>Count</th>
+                          <th style={{ width: "13%" }}>% of Total</th>
+                          <th style={{ width: "15%" }}>Conversion to Visit %</th>
                         </tr>
                       </thead>
                       <tbody>
                         {filteredData.map((item, index) => (
                           <tr key={index}>
                             <td>{index + 1}</td>
-                            <td>{formatValue(item.type)}</td>
+                            <td>{formatValue(item.referenceType)}</td>
+                            <td style={{ wordBreak: "break-word", whiteSpace: "normal" }}>
+                              {formatValue(item.subReference)}
+                            </td>
                             <td>{formatValue(item.count)}</td>
+                            <td>{formatValue(item.pctOfTotal)}</td>
+                            <td>{formatValue(item.conversionPct)}</td>
                           </tr>
                         ))}
-                        {/* Totals row inside tbody to avoid page repetition on multiple pages */}
                         <tr className="print-totals-row">
-                          <td colSpan={2}>Total</td>
-                          <td>{formatValue(printTotals.count)}</td>
+                          <td colSpan={3}>Total</td>
+                          <td>{formatValue(totalPatientsCount)}</td>
+                          <td>100.00%</td>
+                          <td>{overallConversionPct}</td>
                         </tr>
                       </tbody>
                     </table>
                   </div>
-
-                  {referenceData.length > 0 && (
-                    <div className="mt-5 d-flex flex-column align-items-center print-chart-container">
-                      <h5 style={{ color: "#006064", fontWeight: "bold" }}>
-                        Reference Statistics
-                      </h5>
-                      <div style={{ width: "100%", maxWidth: "850px" }}>
-                        <ReactApexChart
-                          options={chartOptions}
-                          series={chartSeries}
-                          type="bar"
-                          height={450}
-                        />
-                      </div>
-                    </div>
-                  )}
                 </Card.Body>
               </Card>
             </Col>
           </Row>
         </Container>
       </SimpleBar>
+
       <style>{`
         .print-table-container {
           display: none;
@@ -515,6 +632,7 @@ const ReferenceReport = () => {
           }
           .print-table {
             width: 100% !important;
+            table-layout: fixed !important;
             border-collapse: collapse !important;
             margin-top: 10px !important;
           }
@@ -541,10 +659,6 @@ const ReferenceReport = () => {
           }
           .print-table tr {
             page-break-inside: avoid !important;
-          }
-          .print-chart-container {
-            page-break-inside: avoid !important;
-            margin-top: 20px !important;
           }
         }
       `}</style>

@@ -27,13 +27,14 @@ import BillingReports from "../pages/Reception/ReceptionReports/BillingReports.j
 import ReferenceReport from "../pages/Reception/ReceptionReports/ReferenceReport.jsx";
 import ConditionWiseReport from "../pages/Reception/ReceptionReports/ConditionWiseReport.jsx";
 import CashDepositReport from "../pages/Reception/ReceptionReports/CashDepositReport.jsx";
+import OPDIPDCollection from "../pages/Reception/ReceptionReports/OPDIPDCollection.jsx";
 import OPDCollectionReports from "../pages/Reception/ReceptionReports/OPDCollectionReports.jsx";
 import PharmacyCollectionReport from "../pages/Reception/ReceptionReports/PharmacyCollectionReport.jsx";
-import SxConversionReport from "../pages/Reception/ReceptionReports/SxConversionReport.jsx";
-import OPDIPDCollection from "../pages/Reception/ReceptionReports/OPDIPDCollection.jsx";
 import OPDIPDCollGraph from "../pages/Reception/ReceptionReports/OPDIPDCollGraph.jsx";
 import DailyExpenseReport from "../pages/Reception/ReceptionReports/DailyExpenseReport.jsx";
 import LostLeadReport from "../pages/Reception/ReceptionReports/LostLeadReport.jsx";
+import DNTReport from "../pages/Reception/ReceptionReports/DNTReport.jsx";
+import CallLogPerformanceReport from "../pages/Reception/ReceptionReports/CallLogPerformanceReport.jsx";
 
 // Navbar for leads
 import RecpEnquiriesNavBar from "../components/Navbar/RecpEnquiriesNavBar";
@@ -56,7 +57,6 @@ export const ReceptionRoutes = (
     <Route path="/enquiry-list" element={<EnquiryList />} />
     <Route path="/add-enquiry" element={<AddEnquiry />} />
     <Route path="/calling-calendar" element={<CallingCalendar />} />
-    <Route path="/sx-conversion-report" element={<SxConversionReport />} />
     <Route path="/opd-ipd-collection" element={<OPDIPDCollection />} />
     <Route path="/opd-ipd-coll-graph" element={<OPDIPDCollGraph />} />
     <Route path="/daily-opd-report" element={<DailyOPDReport />} />
@@ -73,5 +73,7 @@ export const ReceptionRoutes = (
     <Route path="/cash-deposit-report" element={<CashDepositReport />} />
     <Route path="/daily-expense-report" element={<DailyExpenseReport />} />
     <Route path="/lost-lead-report" element={<LostLeadReport />} />
+    <Route path="/dnt-report" element={<DNTReport />} />
+    <Route path="/call-log-performance-report" element={<CallLogPerformanceReport />} />
   </>
 );

@@ -39,7 +39,7 @@ const OPDReceiptsReport = () => {
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
   const [consultation, setConsultation] = useState("");
-  const [patientStatus, setPatientStatus] = useState("");
+  // const [patientStatus, setPatientStatus] = useState("");
   const [currentLocation, setCurrentLocation] = useState("default");
   const [consultationOptions, setConsultationOptions] = useState([]);
 
@@ -96,7 +96,7 @@ const OPDReceiptsReport = () => {
       const displayDate = (item.item_date || "").toLowerCase();
       const patientName = (item.patient || "").toLowerCase();
       const consultation = (item.consultation || "").toLowerCase();
-      const patientStatus = (item.chargeCondition || "").toLowerCase();
+      // const patientStatus = (item.chargeCondition || "").toLowerCase();
       // const sprayQty = String(item.sprayqty || "").toLowerCase();
       const paymentMode = (item.payment_mode || "").toLowerCase();
       const amount = String((Number(item.total || 0) - Number(item.discountamt || 0))).toLowerCase();
@@ -105,7 +105,7 @@ const OPDReceiptsReport = () => {
         displayDate.includes(query) ||
         patientName.includes(query) ||
         consultation.includes(query) ||
-        patientStatus.includes(query) ||
+        // patientStatus.includes(query) ||
         // sprayQty.includes(query) ||
         paymentMode.includes(query) ||
         amount.includes(query)
@@ -128,7 +128,7 @@ const OPDReceiptsReport = () => {
       <Row>
         <Column
           footer="Total"
-          colSpan={6}
+          colSpan={5}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
         <Column
@@ -172,7 +172,7 @@ const OPDReceiptsReport = () => {
         Todate: finalToDate,
         location: currentLocation || undefined,
         Consultation: consultation || undefined,
-        Patientstatus: patientStatus || undefined,
+        // Patientstatus: patientStatus || undefined,
         Paymentmode: paymentMode || undefined,
       };
 
@@ -219,7 +219,7 @@ const OPDReceiptsReport = () => {
       Date: formatDateDisplay(receipt.item_date),
       "Patient Name": receipt.patient,
       Consultation: receipt.consultation,
-      "Patient Status": receipt.chargeCondition,
+      // "Patient Status": receipt.chargeCondition,
       // "Spray Qty": receipt.sprayqty,
       "Payment Mode": receipt.payment_mode,
       Amount: Number(receipt.total || 0) - Number(receipt.discountamt || 0),
@@ -448,7 +448,7 @@ const OPDReceiptsReport = () => {
                         </Form.Select>
                       </Form.Group>
                     </Col>
-                    <Col style={{ padding: "0 5px", flex: "1" }}>
+                    {/* <Col style={{ padding: "0 5px", flex: "1" }}>
                       <Form.Group className="mb-2">
                         <Form.Label
                           style={{
@@ -477,7 +477,7 @@ const OPDReceiptsReport = () => {
                           <option value="DNW">DNW ( Do not Wait )</option>
                         </Form.Select>
                       </Form.Group>
-                    </Col>
+                    </Col> */}
                     <Col style={{ padding: "0 5px", flex: "1" }}>
                       <Form.Group className="mb-2">
                         <Form.Label
@@ -561,7 +561,7 @@ const OPDReceiptsReport = () => {
                     <Column field="item_date" header="Date" body={(rowData) => formatValue(formatDateDisplay(rowData.item_date))} />
                     <Column field="patient" header="Patient Name" body={(rowData) => formatValue(rowData.patient)} />
                     <Column field="consultation" header="Consultation" body={(rowData) => formatValue(rowData.consultation)} />
-                    <Column field="chargeCondition" header="Patient Status" body={(rowData) => formatValue(rowData.chargeCondition)} />
+                    {/* <Column field="chargeCondition" header="Patient Status" body={(rowData) => formatValue(rowData.chargeCondition)} /> */}
                     {/* <Column field="sprayqty" header="Spray Qty" body={(rowData) => formatValue(rowData.sprayqty)} /> */}
                     <Column field="payment_mode" header="Payment Mode" body={(rowData) => formatValue(rowData.payment_mode)} />
                     <Column field="amount" header="Amount" body={(rowData) => formatAmount(Number(rowData.total || 0) - Number(rowData.discountamt || 0))} />
@@ -576,7 +576,7 @@ const OPDReceiptsReport = () => {
                           <th>Date</th>
                           <th>Patient Name</th>
                           <th>Consultation</th>
-                          <th>Patient Status</th>
+                          {/* <th>Patient Status</th> */}
                           {/* <th>Spray Qty</th> */}
                           <th>Payment Mode</th>
                           <th>Amount</th>
@@ -589,16 +589,16 @@ const OPDReceiptsReport = () => {
                             <td>{formatValue(formatDateDisplay(item.item_date))}</td>
                             <td>{formatValue(item.patient)}</td>
                             <td>{formatValue(item.consultation)}</td>
-                            <td>{formatValue(item.chargeCondition)}</td>
+                            {/* <td>{formatValue(item.chargeCondition)}</td> */}
                             {/* <td>{formatValue(item.sprayqty)}</td> */}
                             <td>{formatValue(item.payment_mode)}</td>
-                            <td>{formatValue(Number(item.total || 0) - Number(item.discountamt || 0))}</td>
+                            <td>{formatAmount(Number(item.total || 0) - Number(item.discountamt || 0))}</td>
                           </tr>
                         ))}
                         {/* Totals row inside tbody to avoid page repetition on multiple pages */}
                         <tr className="print-totals-row">
-                          <td colSpan={6}>Total</td>
-                          <td>{formatValue(printTotals.amount)}</td>
+                          <td colSpan={5}>Total</td>
+                          <td>{formatAmount(printTotals.amount)}</td>
                         </tr>
                       </tbody>
                     </table>

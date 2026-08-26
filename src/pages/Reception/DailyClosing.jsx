@@ -775,218 +775,6 @@ const DailyClosing = () => {
                       );
                     })}
 
-                    {/* Cash Deposit Receipt */}
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: "6px 15px",
-                        borderRadius: "8px",
-                        border: "1px solid #d7d5d5ff",
-                        backgroundColor: "#f9fdfd",
-                        flexWrap: "wrap",
-                        gap: "10px",
-                      }}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: "200px" }}>
-                        <div
-                          style={{
-                            width: "28px",
-                            height: "28px",
-                            borderRadius: "50%",
-                            backgroundColor: "#00bcd412",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            color: "#00bcd4",
-                          }}
-                        >
-                          <i className="fa fa-file-image-o" style={{ fontSize: "13px" }}></i>
-                        </div>
-                        <span style={{ fontWeight: "700", color: "#37474f", fontSize: "12.5px" }}>Cash Deposit Receipt</span>
-                      </div>
-                      <div style={{ width: "240px", display: "flex", justifyContent: "flex-end" }}>
-                        {isSubmitted ? (
-                          formData.cashDepositReceipt ? (
-                            <div className="d-flex align-items-center justify-content-end gap-2" style={{ width: "100%" }}>
-                              <Form.Control
-                                type="text"
-                                readOnly
-                                value={`${BASE_URL.replace("/api", "")}${formData.cashDepositReceipt}`}
-                                style={{
-                                  fontSize: "12.5px",
-                                  textAlign: "left",
-                                  flex: 1,
-                                  minWidth: 0,
-                                  textOverflow: "ellipsis",
-                                  border: "1px solid #4dd0e1",
-                                  padding: "5px 10px",
-                                }}
-                                onClick={(e) => e.target.select()}
-                              />
-                              <Button
-                                variant="outline-info"
-                                style={{ fontSize: "12px", padding: "5px 12px", whiteSpace: "nowrap", display: "inline-flex", alignItems: "center" }}
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  const url = `${BASE_URL.replace("/api", "")}${formData.cashDepositReceipt}`;
-                                  setPreviewUrl(url);
-                                  setPreviewName("Cash Deposit Receipt");
-                                  setPreviewType(url.toLowerCase().split("?")[0].endsWith(".pdf") ? "pdf" : "image");
-                                  setShowPreview(true);
-                                }}
-                              >
-                                <i className="fa fa-eye me-1"></i>View
-                              </Button>
-                            </div>
-                          ) : (
-                            <span className="text-muted" style={{ fontSize: "12px" }}>-</span>
-                          )
-                        ) : (<div className="d-flex align-items-center justify-content-end gap-2" style={{ width: "100%" }}>
-                          {cashDepositFile && cashDepositPreviewUrl && (
-                            <div
-                              style={{
-                                padding: "6px",
-                                borderRadius: "8px",
-                                backgroundColor: "#f0fdfa",
-                                border: "1px dashed #00acc1",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "8px",
-                                flex: 1,
-                                minWidth: 0,
-                              }}
-                            >
-                              {cashDepositFile.type === "application/pdf" || cashDepositFile.name.toLowerCase().endsWith(".pdf") ? (
-                                <div
-                                  style={{
-                                    width: "30px",
-                                    height: "30px",
-                                    borderRadius: "4px",
-                                    backgroundColor: "#ffebee",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    color: "#c62828",
-                                    fontSize: "14px",
-                                    fontWeight: "bold",
-                                    boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
-                                  }}
-                                >
-                                  <i className="fa fa-file-pdf-o"></i>
-                                </div>
-                              ) : (
-                                <img
-                                  src={cashDepositPreviewUrl}
-                                  alt="Selected preview"
-                                  style={{
-                                    width: "30px",
-                                    height: "30px",
-                                    objectFit: "cover",
-                                    borderRadius: "4px",
-                                    boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
-                                    border: "1px solid #e0e0e0",
-                                  }}
-                                />
-                              )}
-                              <div style={{ flex: 1, textAlign: "left", minWidth: 0 }}>
-                                <div
-                                  style={{
-                                    fontSize: "10px",
-                                    fontWeight: "600",
-                                    color: "#37474f",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    whiteSpace: "nowrap",
-                                  }}
-                                  title={cashDepositFile.name}
-                                >
-                                  {cashDepositFile.name}
-                                </div>
-                                <Button
-                                  variant="link"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    setPreviewUrl(cashDepositPreviewUrl);
-                                    setPreviewName(cashDepositFile.name);
-                                    setPreviewType(
-                                      cashDepositFile.type === "application/pdf" || cashDepositFile.name.toLowerCase().endsWith(".pdf")
-                                        ? "pdf"
-                                        : "image"
-                                    );
-                                    setShowPreview(true);
-                                  }}
-                                  style={{
-                                    color: "#00acc1",
-                                    fontWeight: "bold",
-                                    textDecoration: "underline",
-                                    padding: 0,
-                                    fontSize: "9px",
-                                    border: "none",
-                                    background: "none",
-                                    lineHeight: 1,
-                                    marginTop: "2px",
-                                  }}
-                                >
-                                  Preview
-                                </Button>
-                              </div>
-                              <Button
-                                variant="link"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  setCashDepositFile(null);
-                                  const input = document.getElementById("cashDepositReceiptFile");
-                                  if (input) input.value = "";
-                                }}
-                                style={{
-                                  color: "#d32f2f",
-                                  padding: "2px",
-                                  fontSize: "13px",
-                                  border: "none",
-                                  background: "none",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  marginLeft: "auto",
-                                }}
-                                title="Remove file"
-                              >
-                                <i className="fa fa-times-circle"></i>
-                              </Button>
-                            </div>
-                          )}
-                          <input
-                            type="file"
-                            accept="image/*,application/pdf"
-                            id="cashDepositReceiptFile"
-                            style={{ display: "none" }}
-                            onChange={(e) => {
-                              const file = e.target.files[0] || null;
-                              setCashDepositFile(file);
-                            }}
-                          />
-                          <label
-                            htmlFor="cashDepositReceiptFile"
-                            className="btn btn-sm btn-info text-white mb-0"
-                            style={{
-                              cursor: "pointer",
-                              fontSize: "11px",
-                              padding: "5px 10px",
-                              borderRadius: "6px",
-                              backgroundColor: cashDepositFile ? "#0097a7" : "#00bcd4",
-                              borderColor: cashDepositFile ? "#0097a7" : "#00bcd4",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {cashDepositFile ? "Change" : "Choose File"}
-                          </label>
-                        </div>
-                        )}
-                      </div>
-                    </div>
-
                     {/* Card Settlement Slip */}
                     <div
                       style={{
@@ -1195,6 +983,218 @@ const DailyClosing = () => {
                             }}
                           >
                             {cardSettlementFile ? "Change" : "Choose File"}
+                          </label>
+                        </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Cash Deposit Receipt */}
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "6px 15px",
+                        borderRadius: "8px",
+                        border: "1px solid #d7d5d5ff",
+                        backgroundColor: "#f9fdfd",
+                        flexWrap: "wrap",
+                        gap: "10px",
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: "200px" }}>
+                        <div
+                          style={{
+                            width: "28px",
+                            height: "28px",
+                            borderRadius: "50%",
+                            backgroundColor: "#00bcd412",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            color: "#00bcd4",
+                          }}
+                        >
+                          <i className="fa fa-file-image-o" style={{ fontSize: "13px" }}></i>
+                        </div>
+                        <span style={{ fontWeight: "700", color: "#37474f", fontSize: "12.5px" }}>Cash Deposit Receipt</span>
+                      </div>
+                      <div style={{ width: "240px", display: "flex", justifyContent: "flex-end" }}>
+                        {isSubmitted ? (
+                          formData.cashDepositReceipt ? (
+                            <div className="d-flex align-items-center justify-content-end gap-2" style={{ width: "100%" }}>
+                              <Form.Control
+                                type="text"
+                                readOnly
+                                value={`${BASE_URL.replace("/api", "")}${formData.cashDepositReceipt}`}
+                                style={{
+                                  fontSize: "12.5px",
+                                  textAlign: "left",
+                                  flex: 1,
+                                  minWidth: 0,
+                                  textOverflow: "ellipsis",
+                                  border: "1px solid #4dd0e1",
+                                  padding: "5px 10px",
+                                }}
+                                onClick={(e) => e.target.select()}
+                              />
+                              <Button
+                                variant="outline-info"
+                                style={{ fontSize: "12px", padding: "5px 12px", whiteSpace: "nowrap", display: "inline-flex", alignItems: "center" }}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  const url = `${BASE_URL.replace("/api", "")}${formData.cashDepositReceipt}`;
+                                  setPreviewUrl(url);
+                                  setPreviewName("Cash Deposit Receipt");
+                                  setPreviewType(url.toLowerCase().split("?")[0].endsWith(".pdf") ? "pdf" : "image");
+                                  setShowPreview(true);
+                                }}
+                              >
+                                <i className="fa fa-eye me-1"></i>View
+                              </Button>
+                            </div>
+                          ) : (
+                            <span className="text-muted" style={{ fontSize: "12px" }}>-</span>
+                          )
+                        ) : (<div className="d-flex align-items-center justify-content-end gap-2" style={{ width: "100%" }}>
+                          {cashDepositFile && cashDepositPreviewUrl && (
+                            <div
+                              style={{
+                                padding: "6px",
+                                borderRadius: "8px",
+                                backgroundColor: "#f0fdfa",
+                                border: "1px dashed #00acc1",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                                flex: 1,
+                                minWidth: 0,
+                              }}
+                            >
+                              {cashDepositFile.type === "application/pdf" || cashDepositFile.name.toLowerCase().endsWith(".pdf") ? (
+                                <div
+                                  style={{
+                                    width: "30px",
+                                    height: "30px",
+                                    borderRadius: "4px",
+                                    backgroundColor: "#ffebee",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    color: "#c62828",
+                                    fontSize: "14px",
+                                    fontWeight: "bold",
+                                    boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
+                                  }}
+                                >
+                                  <i className="fa fa-file-pdf-o"></i>
+                                </div>
+                              ) : (
+                                <img
+                                  src={cashDepositPreviewUrl}
+                                  alt="Selected preview"
+                                  style={{
+                                    width: "30px",
+                                    height: "30px",
+                                    objectFit: "cover",
+                                    borderRadius: "4px",
+                                    boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
+                                    border: "1px solid #e0e0e0",
+                                  }}
+                                />
+                              )}
+                              <div style={{ flex: 1, textAlign: "left", minWidth: 0 }}>
+                                <div
+                                  style={{
+                                    fontSize: "10px",
+                                    fontWeight: "600",
+                                    color: "#37474f",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                  title={cashDepositFile.name}
+                                >
+                                  {cashDepositFile.name}
+                                </div>
+                                <Button
+                                  variant="link"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    setPreviewUrl(cashDepositPreviewUrl);
+                                    setPreviewName(cashDepositFile.name);
+                                    setPreviewType(
+                                      cashDepositFile.type === "application/pdf" || cashDepositFile.name.toLowerCase().endsWith(".pdf")
+                                        ? "pdf"
+                                        : "image"
+                                    );
+                                    setShowPreview(true);
+                                  }}
+                                  style={{
+                                    color: "#00acc1",
+                                    fontWeight: "bold",
+                                    textDecoration: "underline",
+                                    padding: 0,
+                                    fontSize: "9px",
+                                    border: "none",
+                                    background: "none",
+                                    lineHeight: 1,
+                                    marginTop: "2px",
+                                  }}
+                                >
+                                  Preview
+                                </Button>
+                              </div>
+                              <Button
+                                variant="link"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setCashDepositFile(null);
+                                  const input = document.getElementById("cashDepositReceiptFile");
+                                  if (input) input.value = "";
+                                }}
+                                style={{
+                                  color: "#d32f2f",
+                                  padding: "2px",
+                                  fontSize: "13px",
+                                  border: "none",
+                                  background: "none",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  marginLeft: "auto",
+                                }}
+                                title="Remove file"
+                              >
+                                <i className="fa fa-times-circle"></i>
+                              </Button>
+                            </div>
+                          )}
+                          <input
+                            type="file"
+                            accept="image/*,application/pdf"
+                            id="cashDepositReceiptFile"
+                            style={{ display: "none" }}
+                            onChange={(e) => {
+                              const file = e.target.files[0] || null;
+                              setCashDepositFile(file);
+                            }}
+                          />
+                          <label
+                            htmlFor="cashDepositReceiptFile"
+                            className="btn btn-sm btn-info text-white mb-0"
+                            style={{
+                              cursor: "pointer",
+                              fontSize: "11px",
+                              padding: "5px 10px",
+                              borderRadius: "6px",
+                              backgroundColor: cashDepositFile ? "#0097a7" : "#00bcd4",
+                              borderColor: cashDepositFile ? "#0097a7" : "#00bcd4",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {cashDepositFile ? "Change" : "Choose File"}
                           </label>
                         </div>
                         )}
