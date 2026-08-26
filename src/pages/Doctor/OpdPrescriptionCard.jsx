@@ -164,7 +164,12 @@ const OpdPrescriptionCard = ({
   ];
 
   return (
-    <div className="animate__animated animate__fadeIn">
+    <div
+      className="animate__animated animate__fadeIn"
+      onInput={(e) => {
+        console.log("Typing:", e.target.value);
+      }}
+    >
       <style>{`
         .form-check-input {
           border: 1px solid black !important;

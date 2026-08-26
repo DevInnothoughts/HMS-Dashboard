@@ -78,7 +78,16 @@ const OpdPatientMedicalRecords = () => {
   }, [activeTab]);
 
   const [loading, setLoading] = useState(false);
-  const [currentLocation, setCurrentLocation] = useState("default");
+  const [currentLocation, setCurrentLocation] = useState(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const payload = decodeJwt(token);
+      if (payload && payload.jobLocation) {
+        return payload.jobLocation;
+      }
+    }
+    return "default";
+  });
   const [hasFetchedPatient, setHasFetchedPatient] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -2153,7 +2162,7 @@ const OpdPatientMedicalRecords = () => {
 
   const fetchDischargeDates = async () => {
     const patientId = formData.patient_id || patient?.patient_id;
-    if (!patientId) return;
+    if (!patientId || !currentLocation || currentLocation === "default") return;
 
     try {
       const response = await fetch(
@@ -2344,7 +2353,7 @@ const OpdPatientMedicalRecords = () => {
 
   const fetchPrescriptionDates = async () => {
     const patientId = formData.patient_id || patient?.patient_id;
-    if (!patientId) return;
+    if (!patientId || !currentLocation || currentLocation === "default") return;
 
     try {
       const response = await fetch(
