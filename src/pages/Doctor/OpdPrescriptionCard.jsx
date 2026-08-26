@@ -164,12 +164,7 @@ const OpdPrescriptionCard = ({
   ];
 
   return (
-    <div
-      className="animate__animated animate__fadeIn"
-      onInput={(e) => {
-        console.log("Typing:", e.target.value);
-      }}
-    >
+    <div className="animate__animated animate__fadeIn">
       <style>{`
         .form-check-input {
           border: 1px solid black !important;
@@ -1021,7 +1016,6 @@ const OpdPrescriptionCard = ({
                 disabled={prescriptionData.no_medicines_prescribed}
                 onChange={(e) => {
                   const val = e.target.value;
-                  console.log("Prescribed Medicine Search Query:", val);
                   setCurrentMedicine((prev) => ({
                     ...prev,
                     name: val,
@@ -1033,7 +1027,6 @@ const OpdPrescriptionCard = ({
                       .then((res) => res.json())
                       .then((data) => {
                         if (data.statusCode === 200) {
-                          console.log("Medicine Search Dropdown Results:", data.data);
                           setMedicineSearchResults(data.data);
                           setShowMedicineDropdown(true);
                         }
@@ -1104,7 +1097,6 @@ const OpdPrescriptionCard = ({
                         className="px-3 py-2 cursor-pointer hover-bg-light border-bottom"
                         onMouseDown={(e) => {
                           e.preventDefault();
-                          console.log("Selected Medicine from Search Dropdown:", med);
                           setCurrentMedicine((prev) => ({
                             ...prev,
                             name: fullSearchValue,
