@@ -105,6 +105,8 @@ const OpdPrescriptionCard = ({
             `${BASE_URL}/V1/doctor/prescriptionAdviceDropdown?location=${location}&testadvice=${adviceCategory}`,
           );
           const result = await res.json();
+          console.log("Fetched api url:", `${BASE_URL}/V1/doctor/prescriptionAdviceDropdown?location=${location}&testadvice=${adviceCategory}`);
+          console.log("Fetched test advice:", result);
           if (result.statusCode === 200) {
             setTestAdviceOptions(result.data || []);
           }
