@@ -24,7 +24,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import moment from "moment";
 import { useReactToPrint } from "react-to-print";
 import DiagnosisPrintView from "../Doctor/DiagnosisPrintView";
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 const NoteCell = ({ note }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   if (!note) return /* @__PURE__ */ React.createElement("span", null, "-");

@@ -11,7 +11,7 @@ import {
 } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 const todayLocal = (() => {
   const d = new Date();
@@ -105,8 +105,6 @@ const OpdPrescriptionCard = ({
             `${BASE_URL}/V1/doctor/prescriptionAdviceDropdown?location=${location}&testadvice=${adviceCategory}`,
           );
           const result = await res.json();
-          console.log("Fetched api url:", `${BASE_URL}/V1/doctor/prescriptionAdviceDropdown?location=${location}&testadvice=${adviceCategory}`);
-          console.log("Fetched test advice:", result);
           if (result.statusCode === 200) {
             setTestAdviceOptions(result.data || []);
           }
@@ -1023,6 +1021,7 @@ const OpdPrescriptionCard = ({
                 disabled={prescriptionData.no_medicines_prescribed}
                 onChange={(e) => {
                   const val = e.target.value;
+                  console.log("Prescribed Medicine Search Query:", val);
                   setCurrentMedicine((prev) => ({
                     ...prev,
                     name: val,
@@ -1034,6 +1033,7 @@ const OpdPrescriptionCard = ({
                       .then((res) => res.json())
                       .then((data) => {
                         if (data.statusCode === 200) {
+                          console.log("Medicine Search Dropdown Results:", data.data);
                           setMedicineSearchResults(data.data);
                           setShowMedicineDropdown(true);
                         }
@@ -1104,6 +1104,7 @@ const OpdPrescriptionCard = ({
                         className="px-3 py-2 cursor-pointer hover-bg-light border-bottom"
                         onMouseDown={(e) => {
                           e.preventDefault();
+                          console.log("Selected Medicine from Search Dropdown:", med);
                           setCurrentMedicine((prev) => ({
                             ...prev,
                             name: fullSearchValue,
