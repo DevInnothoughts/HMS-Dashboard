@@ -20,7 +20,7 @@ const DiagnosisPrintView = React.forwardRef(
     React.useEffect(() => {
       const fetchCompanies = async () => {
         try {
-          const BASE_URL = "http://localhost:5100/api";
+          const BASE_URL = "http://194.195.117.79:5100/api";
           const [iRes, tRes] = await Promise.all([
             fetch(`${BASE_URL}/V1/doctor/insurance-companies`),
             fetch(`${BASE_URL}/V1/doctor/tpa-companies`),

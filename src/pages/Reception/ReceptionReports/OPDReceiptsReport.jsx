@@ -12,7 +12,7 @@ import * as XLSX from "xlsx";
 import { decodeJwt } from "../../Utility/decode-jwt";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
-const BASE_URL = "http://localhost:5100/api"; // Updated to local API based on previous files
+const BASE_URL = "http://194.195.117.79:5100/api"; // Updated to local API based on previous files
 
 const formatDateDisplay = (dateStr) => {
   if (!dateStr) return "";

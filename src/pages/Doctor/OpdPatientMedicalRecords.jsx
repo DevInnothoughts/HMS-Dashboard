@@ -49,8 +49,8 @@ import { decodeJwt } from "../Utility/decode-jwt";
 import nabhLogo from "../../assets/images/nabh-logo.png";
 import painScoreChart from "../../assets/images/pain-score-chart.jpg";
 
-const BASE_URL = "http://localhost:5100/api";
-const UPLOAD_BASE_URL = "http://localhost:5100/uploads";
+const BASE_URL = "http://194.195.117.79:5100/api";
+const UPLOAD_BASE_URL = "http://194.195.117.79:5100/uploads";
 
 const countries = [
   "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria",
