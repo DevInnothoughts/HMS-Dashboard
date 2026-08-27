@@ -16,7 +16,8 @@ import moment from "moment";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { FilterMatchMode } from "primereact/api";
-
+import { saveAs } from "file-saver";
+import * as XLSX from "xlsx";
 import { decodeJwt } from "../../Utility/decode-jwt";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
@@ -30,6 +31,16 @@ const BirthdayAlert = () => {
     if (!birthDate || birthDate === "-" || birthDate === "--") return "-";
     const m = moment(birthDate, ["DD-MM-YYYY", "DD/MM/YYYY", "DDMMYYYY", "YYYY-MM-DD"]);
     return m.isValid() ? m.format("DD-MM-YYYY") : birthDate;
+  };
+
+  const formatDateDisplay = (dateStr) => {
+    if (!dateStr || dateStr === "-" || dateStr === "--") return "-";
+    const cleanDate = dateStr.includes("T") ? dateStr.split("T")[0] : dateStr;
+    const parts = cleanDate.split("-");
+    if (parts.length === 3) {
+      if (parts[0].length === 4) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+    return dateStr;
   };
   const [loading, setLoading] = useState(false);
   const [currentLocation, setCurrentLocation] = useState("default");
@@ -107,6 +118,31 @@ const BirthdayAlert = () => {
     window.print();
   };
 
+  const exportToExcel = () => {
+    if (!patients || patients.length === 0) {
+      alert("No data available to export.");
+      return;
+    }
+
+    const excelData = filteredData.map((item, index) => ({
+      "Sr No": index + 1,
+      "Birth Date": formatBirthDate(item.birth_date),
+      "Patient Name": item.name || "-",
+      "Contact Number": item.phone || "-",
+      "Address": item.address || "-",
+      "Last Visited Date": formatDateDisplay(item.last_visited_date || item.lastVisitedDate),
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Birthday Alerts");
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    saveAs(
+      new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8" }),
+      `Birthday_Alerts_${currentDate}.xlsx`
+    );
+  };
+
   const getFilteredData = () => {
     const data = [...patients];
     data.sort((a, b) => {
@@ -122,12 +158,14 @@ const BirthdayAlert = () => {
       const phone = (item.phone || "").toLowerCase();
       const address = (item.address || "").toLowerCase();
       const birthDate = formatBirthDate(item.birth_date).toLowerCase();
+      const lastVisited = formatDateDisplay(item.last_visited_date || item.lastVisitedDate).toLowerCase();
 
       return (
         name.includes(query) ||
         phone.includes(query) ||
         address.includes(query) ||
-        birthDate.includes(query)
+        birthDate.includes(query) ||
+        lastVisited.includes(query)
       );
     });
   };
@@ -143,7 +181,7 @@ const BirthdayAlert = () => {
           padding: "6px 12px",
           borderRadius: "8px",
           border: "1.5px solid #4dd0e1",
-          marginBottom: "6px",
+          marginBottom: "12px",
         }}
       >
         <div className="d-flex align-items-center gap-3">
@@ -210,6 +248,26 @@ const BirthdayAlert = () => {
 
         <div className="d-flex gap-2">
           <Button
+            variant="success"
+            onClick={exportToExcel}
+            style={{
+              backgroundColor: "#2e7d32",
+              border: "none",
+              borderRadius: "8px",
+              padding: "8px 15px",
+              fontSize: "13px",
+              fontWeight: "600",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              marginBottom: "12px",
+            }}
+          >
+            <i className="fa fa-file-excel-o"></i>
+            Download Excel
+          </Button>
+          <Button
             variant="danger"
             onClick={handlePrint}
             style={{
@@ -223,6 +281,7 @@ const BirthdayAlert = () => {
               alignItems: "center",
               gap: "8px",
               boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              marginBottom: "12px",
             }}
           >
             <i className="fa fa-print"></i>
@@ -308,12 +367,13 @@ const BirthdayAlert = () => {
                     <Column
                       header="Sr No"
                       body={(rowData, { rowIndex }) => rowIndex + 1}
-                      style={{ width: "60px", textAlign: "center" }}
+                      style={{ width: "80px", textAlign: "center" }}
                     />
                     <Column
                       field="birth_date"
                       header="Birth Date"
                       body={(rowData) => formatValue(formatBirthDate(rowData.birth_date))}
+                      style={{ width: "130px", textAlign: "center" }}
                     />
                     <Column
                       field="name"
@@ -330,6 +390,12 @@ const BirthdayAlert = () => {
                       header="Address"
                       body={(rowData) => formatValue(rowData.address)}
                     />
+                    <Column
+                      field="last_visited_date"
+                      header="Last Visited Date"
+                      body={(rowData) => formatDateDisplay(rowData.last_visited_date || rowData.lastVisitedDate)}
+                      style={{ textAlign: "center", width: "150px" }}
+                    />
                   </DataTable>
 
                   {/* Print-only container displaying all rows */}
@@ -342,6 +408,7 @@ const BirthdayAlert = () => {
                           <th>Patient Name</th>
                           <th>Contact Number</th>
                           <th>Address</th>
+                          <th>Last Visited Date</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -352,6 +419,7 @@ const BirthdayAlert = () => {
                             <td>{formatValue(item.name)}</td>
                             <td>{formatValue(item.phone)}</td>
                             <td>{formatValue(item.address)}</td>
+                            <td>{formatDateDisplay(item.last_visited_date || item.lastVisitedDate)}</td>
                           </tr>
                         ))}
                       </tbody>

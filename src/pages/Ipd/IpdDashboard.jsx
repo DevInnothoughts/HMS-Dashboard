@@ -641,7 +641,7 @@ export default function IpdDashboard() {
 
   const eventStyleGetter = useCallback((event) => {
     const hasBill = checkHasBill(event);
-    const bgColor = hasBill ? "#16a34a" : event.isConfirmed ? "#1e40af" : "#475569";
+    const bgColor = hasBill ? "#10b981" : event.isConfirmed ? "#1e40af" : "#475569";
     return {
       style: {
         backgroundColor: bgColor,
@@ -867,9 +867,9 @@ export default function IpdDashboard() {
                       className="d-flex align-items-center p-3 mb-3"
                       style={{
                         borderRadius: "8px",
-                        backgroundColor: "#dcfce780",
-                        color: "#15803d",
-                        border: "1px solid rgba(22, 163, 74, 0.2)",
+                        backgroundColor: "#ecfdf5",
+                        color: "#10b981",
+                        border: "1px solid rgba(16, 185, 129, 0.2)",
                       }}
                     >
                       <FeatherIcon
@@ -1503,11 +1503,11 @@ export default function IpdDashboard() {
                             .map((s, index) => {
                               const hasBill = checkHasBill(s);
                               const listStatus = hasBill
-                                ? { text: "Bill Made", color: "#16a34a", bg: "#dcfce7", rowBg: "#f0fdf4", rowBorder: "#16a34a" }
+                                ? { text: "Bill Made", color: "#10b981", bg: "#ecfdf5", rowBg: "#ecfdf5", rowBorder: "#10b981" }
                                 : s.isConfirmed
                                   ? { text: "Admitted", color: "#1e40af", bg: "#eff6ff", rowBg: "#eff6ff", rowBorder: "#1e40af" }
                                   : { text: "Pending", color: "#475569", bg: "#f1f5f9", rowBg: "#ffffff", rowBorder: "#cbd5e1" };
-                              const indicatorColor = hasBill ? "#16a34a" : s.isConfirmed ? "#1e40af" : "#334155";
+                              const indicatorColor = hasBill ? "#10b981" : s.isConfirmed ? "#1e40af" : "#334155";
                               const isActive = selectedEvent?.uhid === s.uhid;
                               const isPending = !s.isConfirmed && !hasBill;
 

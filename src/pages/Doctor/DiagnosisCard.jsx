@@ -53,7 +53,14 @@ const DiagnosisCard = ({
   const userInteracted = React.useRef(false);
   const [masterPatientInfo, setMasterPatientInfo] = React.useState(null);
 
-  const normalizeLoc = (loc) => (loc ? String(loc).trim().toLowerCase().replace(/[^a-z0-9]/g, "") : "");
+  const normalizeLoc = (loc) => {
+    if (!loc) return "";
+    return String(loc)
+      .trim()
+      .toLowerCase()
+      .replace(/hospital|clinic|hhc|branch|location/gi, "")
+      .replace(/[^a-z0-9]/g, "");
+  };
 
   const effectivePhone = patientPhone || (patient && patient.phone) || (diagnosisData && (diagnosisData.phone || diagnosisData.patient_phone));
 
@@ -71,7 +78,16 @@ const DiagnosisCard = ({
           const data = await res.json();
           if (data.statusCode === 200 && data.data && data.data.masterPatient) {
             const mp = data.data.masterPatient;
-            const currentLocation = localStorage.getItem("location") || "Kolhapur";
+            let currentLocation = "";
+            const token = localStorage.getItem("token");
+            if (token) {
+              const payload = decodeJwt(token);
+              if (payload?.jobLocation) currentLocation = payload.jobLocation;
+            }
+            if (!currentLocation) {
+              currentLocation = localStorage.getItem("location") || "Kolhapur";
+            }
+
             if (mp.location && normalizeLoc(mp.location) !== normalizeLoc(currentLocation)) {
               setMasterPatientInfo(data.data);
             } else {

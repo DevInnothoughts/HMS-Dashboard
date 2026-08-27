@@ -603,6 +603,46 @@ export default function DoctorDashboard() {
     }
   }, [currentLocation]);
 
+  // Fetch IPD bills to know which patients already have a bill
+  const fetchBilledUhids = useCallback(async () => {
+    if (currentLocation === "default" || !currentLocation) return;
+    try {
+      const response = await fetch(
+        `${BASE_URL}/V1/invoice/listInvoice?location=${currentLocation}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        },
+      );
+      if (response.ok) {
+        const result = await response.json();
+        const rawData = Array.isArray(result.data?.[0])
+          ? result.data[0]
+          : result.data || [];
+        const uidsMap = new Map();
+        rawData.forEach((inv) => {
+          const uid = String(inv.patient_uid || inv.Uid_no || inv.uid || "");
+          if (uid) {
+            if (!uidsMap.has(uid)) {
+              uidsMap.set(uid, {
+                createdAt: inv.creation_date || null,
+                admissionTime: inv.admissiontime || null,
+                dischargeAt: inv.due_date || null,
+                dischargeTime: inv.dischargetime || null,
+              });
+            }
+          }
+        });
+        setBilledUhids(uidsMap);
+      }
+    } catch (err) {
+      console.error("Error fetching IPD bills:", err);
+    }
+  }, [currentLocation]);
+
   const fetchAppointmentsForRange = useCallback(
     async (dateToFetch, doctorId) => {
       if (currentLocation === "default") return;
@@ -792,6 +832,7 @@ export default function DoctorDashboard() {
         }
 
         const allEvents = [...apptEvents, ...ipdEvents];
+        await fetchBilledUhids();
         setAppointments(allEvents);
         checkMasterVisitsForList(allEvents);
       } catch (error) {
@@ -801,7 +842,7 @@ export default function DoctorDashboard() {
         setLoading(false);
       }
     },
-    [currentLocation, currentView, formatAppointments],
+    [currentLocation, currentView, formatAppointments, fetchBilledUhids],
   );
 
   useEffect(() => {
@@ -819,46 +860,6 @@ export default function DoctorDashboard() {
   useEffect(() => {
     fetchDropdowns();
   }, [fetchDropdowns]);
-
-  // Fetch IPD bills to know which patients already have a bill
-  const fetchBilledUhids = useCallback(async () => {
-    if (currentLocation === "default" || !currentLocation) return;
-    try {
-      const response = await fetch(
-        `${BASE_URL}/V1/invoice/listInvoice?location=${currentLocation}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        },
-      );
-      if (response.ok) {
-        const result = await response.json();
-        const rawData = Array.isArray(result.data?.[0])
-          ? result.data[0]
-          : result.data || [];
-        const uidsMap = new Map();
-        rawData.forEach((inv) => {
-          const uid = String(inv.patient_uid || inv.Uid_no || inv.uid || "");
-          if (uid) {
-            if (!uidsMap.has(uid)) {
-              uidsMap.set(uid, {
-                createdAt: inv.creation_date || null,
-                admissionTime: inv.admissiontime || null,
-                dischargeAt: inv.due_date || null,
-                dischargeTime: inv.dischargetime || null,
-              });
-            }
-          }
-        });
-        setBilledUhids(uidsMap);
-      }
-    } catch (err) {
-      console.error("Error fetching IPD bills:", err);
-    }
-  }, [currentLocation]);
 
   useEffect(() => {
     fetchBilledUhids();
@@ -878,7 +879,7 @@ export default function DoctorDashboard() {
     if (event.isIpd) {
       const hasBill = billedUhids.has(String(event.uid || event.uhid));
       const bgColor = hasBill
-        ? "#16a34a"
+        ? "#10b981"
         : event.isConfirmed
           ? "#1e40af"
           : "#475569";
@@ -998,7 +999,7 @@ export default function DoctorDashboard() {
                 <span
                   style={{
                     backgroundColor: hasBill
-                      ? "#16a34a"
+                      ? "#10b981"
                       : selectedEvent.isConfirmed
                         ? "#1e40af"
                         : "#475569",
@@ -1100,9 +1101,9 @@ export default function DoctorDashboard() {
                   className="d-flex align-items-center p-3 mb-5"
                   style={{
                     borderRadius: "8px",
-                    backgroundColor: "#dcfce780",
-                    color: "#15803d",
-                    border: "1px solid rgba(22, 163, 74, 0.2)",
+                    backgroundColor: "#ecfdf5",
+                    color: "#10b981",
+                    border: "1px solid rgba(16, 185, 129, 0.2)",
                   }}
                 >
                   <FeatherIcon
@@ -2099,7 +2100,7 @@ margin-left: 1px;
 
                             // Override listStatus for billed IPD patients to show green
                             const effectiveListStatus = hasBill
-                              ? { ...listStatus, text: "Bill Made", color: "#16a34a", bg: "#dcfce7", rowBg: "#f0fdf4", rowBorder: "#16a34a" }
+                              ? { ...listStatus, text: "Bill Made", color: "#10b981", bg: "#ecfdf5", rowBg: "#ecfdf5", rowBorder: "#10b981" }
                               : listStatus;
 
                             const isActive =
