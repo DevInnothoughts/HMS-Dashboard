@@ -44,6 +44,7 @@ export const LOCATIONS_LIST = [
   "Nashik",
   "Navi-Mumbai",
   "Pimpri-Chinchwad",
+  "Raipur",
   "Rajajinagar",
   { label: "RR Nagar", value: "RRNagar" },
   "Sahakarnagar",

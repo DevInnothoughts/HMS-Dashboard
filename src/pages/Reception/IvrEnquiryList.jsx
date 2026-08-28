@@ -130,7 +130,7 @@ export default function IvrEnquiryList({ isTab = false }) {
       patientName: "",
       doctor_id: "",
       FDE_Name: "",
-      patient_type: "",
+      patient_type: "New",
       treatment: "",
       patient_id: undefined,
     }));

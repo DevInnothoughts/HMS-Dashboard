@@ -54,7 +54,7 @@ const NoteCell = ({ note }) => {
     );
 };
 
-export default function WebEnquiryList({ isTab = false }) {
+export default function WebFormEnquiryList({ isTab = false }) {
     const [webLeads, setWebLeads] = useState([]);
     const [doctors, setDoctors] = useState([]);
     const [fdeList, setFdeList] = useState([]);
@@ -352,7 +352,7 @@ export default function WebEnquiryList({ isTab = false }) {
             patientName: rowData.name || "",
             doctor_id: "",
             FDE_Name: "",
-            patient_type: "",
+            patient_type: "New",
             treatment: "",
             patient_id: "",
         }));
@@ -766,7 +766,7 @@ export default function WebEnquiryList({ isTab = false }) {
                                         },
                                     })
                                 }
-                                placeholder="Search web leads"
+                                placeholder="Search leads"
                                 style={{
                                     borderRadius: "6px",
                                     border: "1px solid #4dd0e1",
@@ -2595,7 +2595,7 @@ export default function WebEnquiryList({ isTab = false }) {
                         padding: "10px",
                     }}
                 >
-                    <PageBreadcrumb pagename="Web Enquiry List" />
+                    <PageBreadcrumb pagename="Web Form Enquiry List" />
                     {webPageContent}
                 </div>
             )}

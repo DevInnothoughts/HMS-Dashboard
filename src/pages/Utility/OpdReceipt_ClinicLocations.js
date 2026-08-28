@@ -274,4 +274,10 @@ export const receiptlocations = {
     phone: "8884488016",
     hospitalcode: "RR",
   },
+  "Raipur": {
+    address:
+      "<b>Raipur:</b> <br>Healing Hands Clinic<br> Bajaj Tower, Ring Road No. 1, New Rajendra Nagar, Raipur, Chhattisgarh - 492001.",
+    phone: "8956748767",
+    hospitalcode: "RP",
+  },
 };

@@ -277,4 +277,10 @@ export const clinincLoc = {
     invoiceHelplineNo: "8884488016",
     EmergencySMS: "",
   },
+  "Raipur": {
+    invoiceAddress:
+      "<b>Healing Hands Clinic</b><br> Bajaj Tower, Ring Road No. 1, New Rajendra Nagar, Raipur, Chhattisgarh - 492001.",
+    invoiceHelplineNo: "8956748767",
+    EmergencySMS: "",
+  },
 };

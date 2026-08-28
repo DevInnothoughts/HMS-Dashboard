@@ -14,7 +14,8 @@ import {
 import FeatherIcon from "feather-icons-react";
 import PageBreadcrumb from "../PageBreadcrumb";
 import IvrEnquiryList from "../../pages/Reception/IvrEnquiryList";
-import WebEnquiryList from "../../pages/Reception/WebEnquiryList";
+import WebFormEnquiryList from "../../pages/Reception/WebFormEnquiryList";
+import WebCallEnquiryList from "../../pages/Reception/WebCallEnquiryList";
 import ChatbotEnquiryList from "../../pages/Reception/ChatbotEnquiryList";
 import UnattendedEnquiryList from "../../pages/Reception/UnattendedEnquiryList";
 import EnquiryList from "../../pages/Reception/EnquiryList";
@@ -38,7 +39,9 @@ export default function RecpEnquiriesNavBar() {
       case "chatbot":
         return "Chatbot Enquiry List";
       case "web":
-        return "Web Enquiry List";
+        return "Web Form Enquiry List";
+      case "webCall":
+        return "Web Call Enquiry List";
       case "enquiryList":
         return "Enquiry List";
       case "addEnquiry":
@@ -66,9 +69,9 @@ export default function RecpEnquiriesNavBar() {
       <Container fluid className="px-0" style={{ marginTop: "10px" }}>
         <Row className="mb-3">
           <Col>
-            <div className="navbar-container" style={{ border: "1.5px solid #00bcd4", margin: "0 10px", background: "rgba(255, 255, 255, 0.95)" }}>
-              <div className="navbar-content">
-                <nav className="breadcrumb-nav" style={{ width: "100%", display: "flex", justifyContent: "flex-start", gap: "20px" }}>
+            <div className="navbar-container" style={{ border: "1.5px solid #00bcd4", margin: "0 10px", background: "rgba(255, 255, 255, 0.95)", display: "flex", alignItems: "center", minHeight: "48px" }}>
+              <div className="navbar-content" style={{ flexWrap: "nowrap", overflowX: "auto", display: "flex", alignItems: "center", width: "100%" }}>
+                <nav className="breadcrumb-nav" style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "4px", flexWrap: "nowrap", whiteSpace: "nowrap", margin: "0" }}>
                   <button
                     onClick={() => setActiveTab("ivr")}
                     className={`nav-link ${activeTab === "ivr" ? "active" : ""}`}
@@ -90,7 +93,15 @@ export default function RecpEnquiriesNavBar() {
                     className={`nav-link ${activeTab === "web" ? "active" : ""}`}
                   >
                     <span className="nav-icon">🌐</span>
-                    Web Enquiries
+                    Web Form Enquiries
+                  </button>
+                  <span className="separator">•</span>
+                  <button
+                    onClick={() => setActiveTab("webCall")}
+                    className={`nav-link ${activeTab === "webCall" ? "active" : ""}`}
+                  >
+                    <span className="nav-icon">📲</span>
+                    Web Call Enquiries
                   </button>
                   <span className="separator">•</span>
                   <button
@@ -136,7 +147,11 @@ export default function RecpEnquiriesNavBar() {
             )}
 
             {activeTab === "web" && (
-              <WebEnquiryList isTab={true} />
+              <WebFormEnquiryList isTab={true} />
+            )}
+
+            {activeTab === "webCall" && (
+              <WebCallEnquiryList isTab={true} />
             )}
 
             {activeTab === "unattended" && (
@@ -158,7 +173,6 @@ export default function RecpEnquiriesNavBar() {
         </Row>
       </Container>
 
-      {/* Global CSS for Animations */}
       <style>{`
         @keyframes fadeIn {
           from {
@@ -173,50 +187,78 @@ export default function RecpEnquiriesNavBar() {
 
         .navbar-container {
           background: linear-gradient(135deg, #ffffff 0%, #f0f4f8 100%);
-          padding: 10px 12px;
+          padding: 6px 14px;
           border-radius: 16px;
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-          margin: 15px 22px 22px 22px;
+          margin: 10px 15px;
           border: 1px solid rgba(255, 255, 255, 0.8);
+          display: flex;
+          align-items: center;
+          min-height: 48px;
         }
 
         .navbar-content {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          flex-wrap: wrap;
-          gap: 20px;
+          flex-wrap: nowrap;
+          overflow-x: auto;
+          gap: 10px;
+          width: 100%;
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+
+        .navbar-content::-webkit-scrollbar,
+        .breadcrumb-nav::-webkit-scrollbar {
+          display: none;
+          width: 0;
+          height: 0;
         }
 
         .breadcrumb-nav {
           display: flex;
           align-items: center;
-          flex-wrap: wrap;
-          gap: 10px;
+          flex-wrap: nowrap;
+          white-space: nowrap;
+          gap: 4px;
           font-weight: 500;
-          font-size: 14px;
+          font-size: 13px;
+          width: 100%;
+          justify-content: space-between;
+          margin: 0;
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
 
         .nav-link {
-          display: flex;
+          display: inline-flex;
           align-items: center;
-          gap: 5px;
+          justify-content: center;
+          gap: 6px;
           text-decoration: none;
           color: #000000ff;
-          padding: 8px 10px;
+          padding: 6px 10px;
+          height: 36px;
           border-radius: 8px;
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           background: transparent;
           border: none;
           cursor: pointer;
           font-family: inherit;
+          white-space: nowrap;
+          flex-shrink: 0;
+          vertical-align: middle;
+          line-height: 1;
         }
 
         .nav-icon {
-          font-size: 16px;
+          font-size: 15px;
           opacity: 0.8;
-          display: flex;
+          display: inline-flex;
           align-items: center;
+          justify-content: center;
+          line-height: 1;
         }
 
         .nav-link:hover {
@@ -234,7 +276,12 @@ export default function RecpEnquiriesNavBar() {
         .separator {
           color: #888888ff;
           font-size: 12px;
-          margin: 4px;
+          margin: 0 2px;
+          flex-shrink: 0;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          line-height: 1;
         }
 
         .nav-link.active {

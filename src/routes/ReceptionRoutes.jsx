@@ -3,7 +3,8 @@ import { Route } from "react-router-dom";
 import OpdPatientList from "../pages/Reception/OpdPatientList";
 import IvrEnquiryList from "../pages/Reception/IvrEnquiryList";
 import ChatbotEnquiryList from "../pages/Reception/ChatbotEnquiryList";
-import WebEnquiryList from "../pages/Reception/WebEnquiryList";
+import WebFormEnquiryList from "../pages/Reception/WebFormEnquiryList";
+import WebCallEnquiryList from "../pages/Reception/WebCallEnquiryList";
 import EnquiryList from "../pages/Reception/EnquiryList";
 import AddEnquiry from "../pages/Reception/AddEnquiry";
 import UnattendedEnquiryList from "../pages/Reception/UnattendedEnquiryList";
@@ -45,7 +46,9 @@ export const ReceptionRoutes = (
     <Route path="/ivr-enquiry-list" element={<IvrEnquiryList />} />
     <Route path="/recp-enquiries-navbar" element={<RecpEnquiriesNavBar />} />
     <Route path="/chatbot-enquiry-list" element={<ChatbotEnquiryList />} />
-    <Route path="/web-enquiry-list" element={<WebEnquiryList />} />
+    <Route path="/web-form-enquiry-list" element={<WebFormEnquiryList />} />
+    <Route path="/web-enquiry-list" element={<WebFormEnquiryList />} />
+    <Route path="/web-call-enquiry-list" element={<WebCallEnquiryList />} />
     <Route path="/unattended-enquiry-list" element={<UnattendedEnquiryList />} />
     <Route path="/opd-appointment-list" element={<OpdAppointmentList />} />
     <Route path="/add-opd-appointment" element={<AddOpdAppointment />} />

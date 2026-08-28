@@ -781,6 +781,11 @@ export default function OpdPatientList() {
       return;
     }
 
+    if (!selectedReference && !formData.reference_type) {
+      toast.error("Please select a Reference.");
+      return;
+    }
+
     setLoading(true);
     let reference_type = selectedPatient.ref;
     let ref = "";
@@ -788,13 +793,23 @@ export default function OpdPatientList() {
     switch (selectedReference) {
       case "newspaper":
         reference_type = "newspaper";
-        ref = referenceDetails.newspaper || formData.ref || "";
+        if (!referenceDetails.newspaper && !referenceDetails.Other_Newspaper?.trim() && !formData.ref) {
+          toast.error("Please select a newspaper or enter newspaper/magazine name.");
+          setLoading(false);
+          return;
+        }
+        ref = referenceDetails.newspaper || referenceDetails.Other_Newspaper || formData.ref || "";
         break;
       case "dr_ref":
         reference_type = "dr_ref";
         if (isManualEntry) {
           if (!referenceDetails.dr_name || !referenceDetails.dr_name.trim()) {
             toast.error("Please enter a doctor name.");
+            setLoading(false);
+            return;
+          }
+          if (!referenceDetails.dr_contact || !referenceDetails.dr_contact.trim()) {
+            toast.error("Please enter doctor contact number.");
             setLoading(false);
             return;
           }
@@ -816,7 +831,6 @@ export default function OpdPatientList() {
             if (addDoctorRes.ok && addDoctorData?.data?.reference_doctor_id) {
               const newDrId = addDoctorData.data.reference_doctor_id;
               ref = newDrId;
-              // Also update referenceDetails to hold the new ID so the state aligns
               setReferenceDetails((prev) => ({ ...prev, dr_id: newDrId }));
             } else {
               toast.error(
@@ -833,64 +847,140 @@ export default function OpdPatientList() {
             return;
           }
         } else {
-          ref = referenceDetails.dr_id || referenceDetails.dr_name || "";
+          if (!referenceDetails.dr_id && !referenceDetails.dr_name?.trim() && !formData.ref) {
+            toast.error("Please select or enter a doctor reference.");
+            setLoading(false);
+            return;
+          }
+          ref = referenceDetails.dr_id || referenceDetails.dr_name || formData.ref || "";
         }
         break;
       case "internet":
         reference_type = "internet";
+        if (!referenceDetails.internet && !formData.ref) {
+          toast.error("Please select an internet reference option.");
+          setLoading(false);
+          return;
+        }
         ref = referenceDetails.internet || formData.ref || "";
         break;
       case "MediaRef":
         reference_type = "MediaRef";
+        if (!referenceDetails.MediaRef && !formData.ref) {
+          toast.error("Please select an entertainment media option.");
+          setLoading(false);
+          return;
+        }
         ref = referenceDetails.MediaRef || formData.ref || "";
         break;
       case "TVShow":
         reference_type = "TVShow";
+        if (!referenceDetails.TVShow && !formData.ref) {
+          toast.error("Please select a TV show option.");
+          setLoading(false);
+          return;
+        }
         ref = referenceDetails.TVShow || formData.ref || "";
         break;
       case "brand_ambassador":
-        reference_type = "brand_ambassador";
-        ref = `${oldPatientDetails.patient_ref_no || ""},${oldPatientDetails.old_patient_name || ""}`;
-        break;
       case "old_ref":
-        reference_type = "old_ref";
-        ref = `${oldPatientDetails.patient_ref_no || ""},${oldPatientDetails.old_patient_name || ""}`;
+        reference_type = selectedReference;
+        if (!oldPatientDetails.patient_ref_no || !oldPatientDetails.patient_ref_no.trim()) {
+          toast.error("Please enter reference patient contact number.");
+          setLoading(false);
+          return;
+        }
+        if (!oldPatientDetails.old_patient_name || !oldPatientDetails.old_patient_name.trim()) {
+          toast.error("Please enter reference patient name.");
+          setLoading(false);
+          return;
+        }
+        ref = `${oldPatientDetails.patient_ref_no.trim()},${oldPatientDetails.old_patient_name.trim()}`;
         break;
       case "family_friends":
         reference_type = "family_friends";
-        ref = `${referenceDetails.friendname || ""},${referenceDetails.friendno || ""
-          }`;
+        if (!referenceDetails.friendname || !referenceDetails.friendname.trim()) {
+          toast.error("Please enter friend/family name.");
+          setLoading(false);
+          return;
+        }
+        if (!referenceDetails.friendno || !referenceDetails.friendno.trim()) {
+          toast.error("Please enter friend/family contact number.");
+          setLoading(false);
+          return;
+        }
+        ref = `${referenceDetails.friendname.trim()},${referenceDetails.friendno.trim()}`;
         break;
       case "hhc_board":
         reference_type = "hhc_board";
+        if (!referenceDetails.HHC_board && !formData.ref) {
+          toast.error("Please select HHC board option.");
+          setLoading(false);
+          return;
+        }
         ref = referenceDetails.HHC_board || formData.ref || "";
         break;
       case "HHF":
         reference_type = "HHF";
+        if (!referenceDetails.HHF && !formData.ref) {
+          toast.error("Please select HHF option.");
+          setLoading(false);
+          return;
+        }
         ref = referenceDetails.HHF || formData.ref || "";
         break;
       case "other":
         reference_type = "other";
+        if (!referenceDetails.other?.trim() && !formData.ref?.trim()) {
+          toast.error("Please enter reference detail.");
+          setLoading(false);
+          return;
+        }
         ref = referenceDetails.other || formData.ref || "";
         break;
       case "WOM":
         reference_type = "WOM";
+        if (!referenceDetails.WOM?.trim() && !formData.ref?.trim()) {
+          toast.error("Please enter WOM detail.");
+          setLoading(false);
+          return;
+        }
         ref = referenceDetails.WOM || formData.ref || "";
         break;
       case "awareness_lecture":
         reference_type = "awareness_lecture";
+        if (!referenceDetails.awareness_lecture?.trim() && !formData.ref?.trim()) {
+          toast.error("Please enter awareness lecture detail.");
+          setLoading(false);
+          return;
+        }
         ref = referenceDetails.awareness_lecture || formData.ref || "";
         break;
       case "treated_past":
         reference_type = "treated_past";
+        if (!referenceDetails.treated_past_status && !formData.ref) {
+          toast.error("Please select treated in past option.");
+          setLoading(false);
+          return;
+        }
         ref = referenceDetails.treated_past_status || formData.ref || "";
         break;
       case "hhc_branch":
         reference_type = "hhc_branch";
+        if (!referenceDetails.hhc_branch?.trim() && !formData.ref?.trim()) {
+          toast.error("Please enter HHC branch name.");
+          setLoading(false);
+          return;
+        }
         ref = referenceDetails.hhc_branch || formData.ref || "";
         break;
       case "aggregators":
         reference_type = "aggregators";
+        if (!referenceDetails.aggregators && !formData.ref) {
+          toast.error("Please select an aggregator option.");
+          setLoading(false);
+          return;
+        }
         ref = referenceDetails.aggregators || formData.ref || "";
         break;
       case "dr_privilege_card":
@@ -899,11 +989,25 @@ export default function OpdPatientList() {
         break;
       case "campaign":
         reference_type = "campaign";
-        ref = referenceDetails.campaign || formData.ref || "Campaign";
+        if (!referenceDetails.campaign?.trim() && !formData.ref?.trim()) {
+          toast.error("Please enter campaign name.");
+          setLoading(false);
+          return;
+        }
+        ref = referenceDetails.campaign || formData.ref || "";
         break;
       default:
         reference_type = null;
         ref = referenceDetails[selectedReference] || formData.ref;
+    }
+
+    if (selectedReference && selectedReference !== "dr_privilege_card") {
+      const cleanRef = (ref || "").trim();
+      if (!cleanRef || cleanRef === ",") {
+        toast.error("Please enter or select sub-reference details.");
+        setLoading(false);
+        return;
+      }
     }
 
 
@@ -1451,10 +1555,11 @@ export default function OpdPatientList() {
                 marginBottom: "5px",
               }}
             >
-              Campaign Name
+              Campaign Name <span className="text-danger">*</span>
             </label>
             <div className="controls">
               <input
+                required
                 style={{
                   border: "2px solid rgb(77, 208, 225)",
                   fontSize: "12px",
@@ -1492,7 +1597,7 @@ export default function OpdPatientList() {
                 marginBottom: "5px",
               }}
             >
-              Newspaper / Magazine
+              Newspaper / Magazine <span className="text-danger">*</span>
             </label>
             <div
               className="controls"
@@ -1526,6 +1631,7 @@ export default function OpdPatientList() {
                       }}
                     >
                       <input
+                        required
                         type="radio"
                         name="newspaper"
                         value={paper}
@@ -1589,10 +1695,11 @@ export default function OpdPatientList() {
                 marginBottom: "5px",
               }}
             >
-              Family / Friends Details
+              Family / Friends Details <span className="text-danger">*</span>
             </label>
             <div className="controls" style={{ display: "flex", gap: "10px" }}>
               <input
+                required
                 className="form-control"
                 type="text"
                 placeholder="Friend Name"
@@ -1616,6 +1723,7 @@ export default function OpdPatientList() {
                 }}
               />
               <input
+                required
                 className="form-control"
                 type="text"
                 placeholder="Friend Number"
@@ -1653,7 +1761,7 @@ export default function OpdPatientList() {
                 marginBottom: "5px",
               }}
             >
-              Patient Reference
+              Patient Reference <span className="text-danger">*</span>
             </label>
             <div
               className="controls"
@@ -1665,6 +1773,7 @@ export default function OpdPatientList() {
               }}
             >
               <input
+                required
                 className="form-control"
                 type="tel"
                 name="patient_ref_no"
@@ -1745,6 +1854,7 @@ export default function OpdPatientList() {
               )}
 
               <input
+                required
                 className="form-control"
                 type="text"
                 name="old_patient_name"
@@ -1785,7 +1895,7 @@ export default function OpdPatientList() {
                 marginBottom: "5px",
               }}
             >
-              Internet
+              Internet <span className="text-danger">*</span>
             </label>
             <div
               className="controls"
@@ -1828,6 +1938,7 @@ export default function OpdPatientList() {
                     }}
                   >
                     <input
+                      required
                       type="radio"
                       name="internet"
                       value={source}
@@ -1870,7 +1981,7 @@ export default function OpdPatientList() {
                 marginBottom: "10px",
               }}
             >
-              Entertainment Media
+              Entertainment Media <span className="text-danger">*</span>
             </label>
             <div
               className="controls"
@@ -1898,6 +2009,7 @@ export default function OpdPatientList() {
                     }}
                   >
                     <input
+                      required
                       type="radio"
                       name="MediaRef"
                       value={media}
@@ -1937,7 +2049,7 @@ export default function OpdPatientList() {
                 marginBottom: "10px",
               }}
             >
-              TV Show
+              TV Show <span className="text-danger">*</span>
             </label>
             <div
               className="controls"
@@ -1981,6 +2093,7 @@ export default function OpdPatientList() {
                     }}
                   >
                     <input
+                      required
                       type="radio"
                       name="TVShow"
                       value={show}
@@ -2027,7 +2140,7 @@ export default function OpdPatientList() {
                   fontWeight: "bold",
                 }}
               >
-                Doctor Reference{" "}
+                Doctor Reference <span className="text-danger">*</span>{" "}
                 {isManualEntry ? "(Manual Entry)" : "(Search as you type)"}
               </label>
 
@@ -2239,7 +2352,7 @@ export default function OpdPatientList() {
                 marginBottom: "5px",
               }}
             >
-              HHC Board Reference
+              HHC Board Reference <span className="text-danger">*</span>
             </label>
             <div className="controls">
               <ul
@@ -2261,6 +2374,7 @@ export default function OpdPatientList() {
                   }}
                 >
                   <input
+                    required
                     type="radio"
                     name="hhc_board_radio"
                     value="HHC Board"
@@ -2288,11 +2402,22 @@ export default function OpdPatientList() {
       case "HHF":
         return (
           <div className="control-group">
-            <label className="control-label">HHF</label>
+            <label
+              className="control-label"
+              style={{
+                marginTop: "20px",
+                fontSize: "12px",
+                fontWeight: "bold",
+                marginBottom: "5px",
+              }}
+            >
+              HHF <span className="text-danger">*</span>
+            </label>
             <div className="controls">
               <ul className="checkbox-grid">
                 <li>
                   <input
+                    required
                     type="radio"
                     name="HHF"
                     value="HHF"
@@ -2325,10 +2450,11 @@ export default function OpdPatientList() {
                 marginBottom: "5px",
               }}
             >
-              Reference Detail
+              Reference Detail <span className="text-danger">*</span>
             </label>
             <div className="controls">
               <input
+                required
                 className="form-control"
                 type="text"
                 name="other_detail"
@@ -2355,11 +2481,22 @@ export default function OpdPatientList() {
       case "WOM":
         return (
           <div className="control-group">
-            <label className="control-label">WOM Detail</label>
+            <label
+              className="control-label"
+              style={{
+                marginTop: "20px",
+                fontSize: "12px",
+                fontWeight: "bold",
+                marginBottom: "5px",
+              }}
+            >
+              WOM Detail <span className="text-danger">*</span>
+            </label>
             <div className="controls">
               <ul className="checkbox-grid">
                 <li>
                   <input
+                    required
                     className="form-control"
                     type="text"
                     name="WOM"
@@ -2391,10 +2528,11 @@ export default function OpdPatientList() {
                 marginBottom: "5px",
               }}
             >
-              Awareness Lecture
+              Awareness Lecture <span className="text-danger">*</span>
             </label>
             <div className="controls">
               <input
+                required
                 className="form-control"
                 type="text"
                 name="awareness_lecture"
@@ -2433,7 +2571,7 @@ export default function OpdPatientList() {
                 marginBottom: "5px",
               }}
             >
-              Self Old Pt
+              Self Old Pt <span className="text-danger">*</span>
             </label>
             <div className="controls">
               <ul
@@ -2457,6 +2595,7 @@ export default function OpdPatientList() {
                     }}
                   >
                     <input
+                      required
                       type="radio"
                       name="treated_past_status"
                       value={status}
@@ -2493,10 +2632,11 @@ export default function OpdPatientList() {
                 marginBottom: "5px",
               }}
             >
-              HHC Branch
+              HHC Branch <span className="text-danger">*</span>
             </label>
             <div className="controls">
               <input
+                required
                 className="form-control"
                 type="text"
                 name="hhc_branch"
@@ -2535,7 +2675,7 @@ export default function OpdPatientList() {
                 marginBottom: "5px",
               }}
             >
-              Aggregators
+              Aggregators <span className="text-danger">*</span>
             </label>
             <div
               className="controls"
@@ -2565,6 +2705,7 @@ export default function OpdPatientList() {
                       }}
                     >
                       <input
+                        required
                         type="radio"
                         name="aggregators"
                         value={aggregator}
@@ -4050,10 +4191,11 @@ export default function OpdPatientList() {
                     className="small fw-bold mb-1"
                     style={{ fontSize: "12px" }}
                   >
-                    Reference
+                    Reference <span className="text-danger">*</span>
                   </Form.Label>
                   <div className="d-flex gap-3 align-items-start p-3 rounded bg-white">
                     <Form.Select
+                      required
                       name="reference"
                       className="w-auto"
                       value={formData.reference_type}

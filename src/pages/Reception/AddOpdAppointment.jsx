@@ -183,19 +183,15 @@ export default function AddOpdAppointment() {
         if (latestPhoneRef.current !== patient_phone) return;
 
         if (!response.ok) {
-          setIsExistingPatient((prev) => {
-            if (prev) {
-              setFormData((prevForm) => ({
-                ...prevForm,
-                patientName: "",
-                patient_id: "",
-                patient_location: "",
-                patient_type: "New",
-                doctor_id: "",
-              }));
-            }
-            return false;
-          });
+          setIsExistingPatient(false);
+          setFormData((prevForm) => ({
+            ...prevForm,
+            patientName: "",
+            patient_id: "",
+            patient_location: "",
+            patient_type: "New",
+            doctor_id: "",
+          }));
           setNoPendingAppt(true);
           return;
         }
@@ -263,39 +259,31 @@ export default function AddOpdAppointment() {
             FDE_Name: data.data.FDE_Name || "",
             departmentName: data.data.departmentName || "",
             doctorName: data.data.doctorName || "",
-            patient_type: "",
+            patient_type: prev.patient_type || "",
             doctor_id: data.data.doctor_id || "",
           }));
         } else {
-          setIsExistingPatient((prev) => {
-            if (prev) {
-              setFormData((prevForm) => ({
-                ...prevForm,
-                patientName: "",
-                patient_id: "",
-                patient_type: "New",
-                doctor_id: "",
-              }));
-            }
-            return false;
-          });
+          setIsExistingPatient(false);
+          setFormData((prevForm) => ({
+            ...prevForm,
+            patientName: "",
+            patient_id: "",
+            patient_type: "New",
+            doctor_id: "",
+          }));
           setNoPendingAppt(true);
         }
       } catch (error) {
         console.error("Error fetching patient details:", error);
         if (latestPhoneRef.current !== patient_phone) return;
-        setIsExistingPatient((prev) => {
-          if (prev) {
-            setFormData((prevForm) => ({
-              ...prevForm,
-              patientName: "",
-              patient_id: "",
-              patient_type: "New",
-              doctor_id: "",
-            }));
-          }
-          return false;
-        });
+        setIsExistingPatient(false);
+        setFormData((prevForm) => ({
+          ...prevForm,
+          patientName: "",
+          patient_id: "",
+          patient_type: "New",
+          doctor_id: "",
+        }));
       } finally {
         setIsSearchingPatient(false);
       }
