@@ -1986,7 +1986,7 @@ const IpdBillList = () => {
             }}
           >
             <FeatherIcon icon="calendar" size={12} className="me-1" />
-            Today's Invoice
+            Today's IPD Bills
           </Button>
 
         </div>

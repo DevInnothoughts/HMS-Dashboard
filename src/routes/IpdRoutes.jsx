@@ -6,6 +6,7 @@ import IpdAdmissionList from "../pages/Ipd/IpdAdmissionList";
 import IpdBillList from "../pages/Ipd/IpdBillList";
 import CashlessBillSettlement from "../pages/Ipd/CashlessBillSettlement";
 import AddIpdBill from "../pages/Ipd/AddIpdBill";
+import AggregatorBills from "../pages/Ipd/AggregatorBills";
 import IpdCollection from "../pages/Ipd/IpdCollection";
 import BedAllotmentList from "../pages/Ipd/BedAllotmentList";
 import IPDCollectionReport from "../pages/Ipd/IpdReports/IPDCollectionReport";
@@ -19,6 +20,7 @@ export const IpdRoutes = (
     <Route path="/ipd-admission-list" element={<IpdAdmissionList />} />
     <Route path="/add-ipd-admission" element={<AddIpdAdmission />} />
     <Route path="/ipd-bill-list" element={<IpdBillList />} />
+    <Route path="/aggregator-bills" element={<AggregatorBills />} />
     <Route path="/cashless-bill-settlement" element={<CashlessBillSettlement />} />
     <Route path="/add-ipd-bill" element={<AddIpdBill />} />
     <Route path="/ipd-collection" element={<IpdCollection />} />

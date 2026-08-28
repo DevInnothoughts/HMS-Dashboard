@@ -61,6 +61,14 @@ const IpdSidebar = ({ activeIndex, handleMenuClick, isCollapsed, location }) => 
                 </Link>
             </li>
 
+            {/* Aggregator Bills */}
+            <li className={`menu-item ${activeIndex === "/aggregator-bills" ? "active" : ""}`}>
+                <Link to="/aggregator-bills" data-label="Aggregator Bills">
+                    <div className="icon-wrap"><FeatherIcon icon="file-text" /></div>
+                    {!isCollapsed && <span>Aggregator Bills</span>}
+                </Link>
+            </li>
+
             {/* Cashless Bill Settlement */}
             <li className={`menu-item ${activeIndex === "/cashless-bill-settlement" ? "active" : ""}`}>
                 <Link to="/cashless-bill-settlement" data-label="Cashless Bill Settlement">
