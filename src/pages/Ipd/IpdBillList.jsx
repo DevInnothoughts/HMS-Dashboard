@@ -218,6 +218,21 @@ const formatDateForDisplay = (dateValue) => {
   }
 };
 
+const getISTDate = date => {
+  const now = new Date(date);
+
+  // Convert to milliseconds since UTC and add IST offset
+  const istOffsetMs = 5.5 * 60 * 60 * 1000;
+  const istTime = new Date(now.getTime() + istOffsetMs);
+  //console.log(istTime);
+  // Format IST date manually in YYYY-MM-DD format
+  const year = istTime.getUTCFullYear();
+  const month = String(istTime.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(istTime.getUTCDate()).padStart(2, '0');
+  //console.log(${year}-${month}-${day});
+  return `${day}-${month}-${year}`;
+};
+
 const rowClassName = (rowData) => {
   // Logic to match PHP: (status === "Charity" || status === "NonInsurance") && (creation_date != today && totaldue > 0)
   const status = (rowData.status || "").trim();
@@ -1598,7 +1613,7 @@ const IpdBillList = () => {
       <table class="details-table">
         <tr>
           <td>Bill No:</td><td>${invoice.invoice_id}</td>
-          <td>Bill Date:</td><td>${formatDateForDisplay(invoice.due_date)}</td>
+          <td>Bill Date:</td><td>${getISTDate(invoice.due_date)}</td>
         </tr>
         <tr>
           <td>Patient Name:</td><td>${invoice.prefix || ""} ${invoice.patient_name || invoice.name}</td>
@@ -1616,11 +1631,11 @@ const IpdBillList = () => {
         <tr>
           <td>TPA Name:</td>
           <td>${(invoice.status || "").toLowerCase() === "cashless" || (invoice.status || "").toLowerCase() === "reimbursement" || (invoice.status || "").toLowerCase() === "pdc" || invoice.bill_Type === "insurance" ? invoice.tpa_name || "" : ""}</td>
-          <td>Admission Date & Time:</td><td>${formatDateForDisplay(invoice.creation_date)} &nbsp; ${invoice.admissiontime}</td>
+          <td>Admission Date & Time:</td><td>${getISTDate(invoice.creation_date)} &nbsp;${invoice.admissiontime}</td>
         </tr>
         <tr>
           <td>Doctor Name:</td><td>${invoice.consultant_name}</td>
-          <td>Discharge Date & Time:</td><td>${formatDateForDisplay(invoice.due_date)} &nbsp; ${invoice.dischargetime}</td>
+          <td>Discharge Date & Time:</td><td>${getISTDate(invoice.due_date)} &nbsp;${invoice.dischargetime}</td>
         </tr>
         <tr>
           <td>Surgeon Name:</td><td>${invoice.surgeon_name}</td>
