@@ -1002,7 +1002,7 @@ export default function OpdPatientList() {
     }
 
     if (selectedReference && selectedReference !== "dr_privilege_card") {
-      const cleanRef = (ref || "").trim();
+      const cleanRef = String(ref || "").trim();
       if (!cleanRef || cleanRef === ",") {
         toast.error("Please enter or select sub-reference details.");
         setLoading(false);
