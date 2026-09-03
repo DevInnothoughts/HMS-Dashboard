@@ -59,7 +59,7 @@ export default function ActiveSessionTracker() {
           navigate("/login", { replace: true });
         }
       }
-    }, 10000); // Check every 10 seconds
+    }, 10000); // Check every 10 seconds 
 
     return () => {
       // Clean up event listeners and interval

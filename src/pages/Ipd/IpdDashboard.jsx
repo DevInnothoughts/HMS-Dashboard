@@ -68,7 +68,7 @@ export default function IpdDashboard() {
   const [doctors, setDoctors] = useState([]);
   const [selectedDoctorId, setSelectedDoctorId] = useState("");
   const [activeStatusFilter, setActiveStatusFilter] = useState(null); // null, "confirmed", "pending"
-  const [billedUhids, setBilledUhids] = useState(new Map()); // uid -> { createdAt, dischargeAt }
+  const [billedInvoices, setBilledInvoices] = useState([]);
 
   const calendarRef = React.useRef(null);
 
@@ -189,7 +189,7 @@ export default function IpdDashboard() {
     });
   }, []);
 
-  // Fetch IPD bills to know which patients already have a bill
+  // Fetch IPD bills to know which admissions already have a bill
   const fetchBilledUhids = useCallback(async () => {
     if (currentLocation === "default" || !currentLocation) return;
     try {
@@ -210,26 +210,34 @@ export default function IpdDashboard() {
           : Array.isArray(result.data)
           ? result.data
           : result || [];
-        const uidsMap = new Map();
-        rawData.forEach((inv) => {
-          const uid = String(inv.patient_uid || inv.Uid_no || inv.uid || "").trim();
-          const phone = String(inv.patient_phone || inv.phone || inv.patient_phone_no || inv.contact || "").replace(/\D/g, "").slice(-10);
-          const admNo = String(inv.admission_no || inv.adm_no || inv.admissionno || "").trim();
 
-          const billData = {
+        const invoicesList = rawData.map((inv) => {
+          const uid = String(inv.patient_uid || inv.Uid_no || inv.uid || "").trim().toLowerCase();
+          const phone = String(inv.patient_phone || inv.phone || inv.patient_phone_no || inv.contact || "").replace(/\D/g, "").slice(-10);
+          const rawAdmNo = String(inv.admission_no || inv.adm_no || inv.admissionno || "").trim();
+          const admNo = (rawAdmNo && rawAdmNo !== "0" && rawAdmNo.toUpperCase() !== "PENDING") ? rawAdmNo : null;
+          const invDateRaw = inv.creation_date || inv.admissiondate || inv.adm_date || null;
+          let formattedInvDate = null;
+          if (invDateRaw) {
+            const parsed = moment(invDateRaw);
+            if (parsed.isValid()) formattedInvDate = parsed.format("YYYY-MM-DD");
+          }
+
+          return {
+            admissionNo: admNo,
+            uid,
+            phone,
+            invDate: formattedInvDate,
             createdAt: inv.creation_date || null,
             admissionTime: inv.admissiontime || null,
             dischargeAt: inv.due_date || null,
             dischargeTime: inv.dischargetime || null,
             invoiceId: inv.invoice_id || null,
           };
-
-          if (uid) uidsMap.set(uid, billData);
-          if (admNo && admNo !== "0" && admNo !== "PENDING") uidsMap.set(admNo, billData);
-          if (phone) uidsMap.set(phone, billData);
         });
-        setBilledUhids(uidsMap);
-        return uidsMap;
+
+        setBilledInvoices(invoicesList);
+        return invoicesList;
       }
     } catch (err) {
       console.error("Error fetching IPD bills:", err);
@@ -624,16 +632,36 @@ export default function IpdDashboard() {
   };
 
   const getBillInfo = useCallback((event) => {
-    if (!event) return null;
-    const uidKey = event.uhid ? String(event.uhid).trim() : "";
-    const admKey = event.admissionNo ? String(event.admissionNo).trim() : "";
-    const phoneKey = event.phone ? String(event.phone).replace(/\D/g, "").slice(-10) : "";
+    if (!event || !billedInvoices || billedInvoices.length === 0) return null;
 
-    if (uidKey && billedUhids.has(uidKey)) return billedUhids.get(uidKey);
-    if (admKey && admKey !== "0" && admKey !== "PENDING" && billedUhids.has(admKey)) return billedUhids.get(admKey);
-    if (phoneKey && billedUhids.has(phoneKey)) return billedUhids.get(phoneKey);
+    const admKey = event.admissionNo ? String(event.admissionNo).trim() : "";
+    const isConfirmedAdm = admKey && admKey !== "0" && admKey.toUpperCase() !== "PENDING";
+
+    // 1. If admission has a confirmed admission number, match by admission_no ONLY
+    if (isConfirmedAdm) {
+      const matchByAdmNo = billedInvoices.find(
+        (inv) => inv.admissionNo && inv.admissionNo.toLowerCase() === admKey.toLowerCase()
+      );
+      if (matchByAdmNo) return matchByAdmNo;
+    }
+
+    // 2. If unconfirmed (PENDING) or if admission_no is missing/not matched yet:
+    // Match by patient identity (uid or phone) AND exact admission/surgery date
+    const uidKey = event.uhid ? String(event.uhid).trim().toLowerCase() : "";
+    const phoneKey = event.phone ? String(event.phone).replace(/\D/g, "").slice(-10) : "";
+    const eventDateStr = event.date ? moment(event.date, ["DD-MM-YYYY", "YYYY-MM-DD"]).format("YYYY-MM-DD") : null;
+
+    if (eventDateStr && (uidKey || phoneKey)) {
+      const matchByPatientAndDate = billedInvoices.find((inv) => {
+        const matchesPatient = (uidKey && inv.uid === uidKey) || (phoneKey && inv.phone === phoneKey);
+        const matchesDate = inv.invDate === eventDateStr;
+        return matchesPatient && matchesDate;
+      });
+      if (matchByPatientAndDate) return matchByPatientAndDate;
+    }
+
     return null;
-  }, [billedUhids]);
+  }, [billedInvoices]);
 
   const checkHasBill = useCallback((event) => {
     return Boolean(getBillInfo(event));

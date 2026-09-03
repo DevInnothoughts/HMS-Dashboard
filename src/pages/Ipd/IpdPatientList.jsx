@@ -24,16 +24,9 @@ const BASE_URL = "http://194.195.117.79:5100/api";
 
 const formatOnlyDate = (value) => {
   if (!value) return "-";
-  const trimmed = value.trim();
-  const parsed = moment(trimmed, [
-    "YYYY-MM-DD HH:mm:ss",
-    "YYYY-MM-DD HH:mm",
-    "DD-MM-YYYY HH:mm",
-    "DD-MM-YYYY hh:mm A",
-    "YYYY-MM-DD hh:mm A",
-    "YYYY-MM-DD",
-    "DD-MM-YYYY",
-  ]);
+  const trimmed = String(value).trim();
+  const dateOnlyStr = trimmed.split("T")[0].split(" ")[0];
+  const parsed = moment(dateOnlyStr, ["YYYY-MM-DD", "DD-MM-YYYY"]);
   if (parsed.isValid()) {
     return parsed.format("DD-MM-YYYY");
   }

@@ -1014,14 +1014,11 @@ const IpdBillList = () => {
 
     const formatForInput = (dateValue) => {
       if (!dateValue) return "";
-      const date = new Date(dateValue);
-      // Ensure it's a valid date before formatting
-      if (isNaN(date.getTime())) return "";
-
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      return `${year}-${month}-${day}`;
+      const str = String(dateValue).trim();
+      if (!str || str.startsWith("0000")) return "";
+      const dateOnly = str.split("T")[0].split(" ")[0];
+      const parsed = moment(dateOnly, ["YYYY-MM-DD", "DD-MM-YYYY"]);
+      return parsed.isValid() ? parsed.format("YYYY-MM-DD") : "";
     };
 
     const formatTimeForInput = (timeStr) => {

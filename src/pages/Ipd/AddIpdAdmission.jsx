@@ -301,7 +301,7 @@ export default function AddIpdAdmission() {
     }
     const hasTime = (val) => {
       if (!val) return false;
-      return /\d{2}-\d{2}-\d{4}\s\d{2}:\d{2}/.test(val);
+      return /^(\d{4}-\d{2}-\d{2}|\d{2}-\d{2}-\d{4})\s\d{2}:\d{2}/.test(val);
     };
 
     const convertTo12Hour = (time24) => {
@@ -322,10 +322,10 @@ export default function AddIpdAdmission() {
     };
 
     const formattedTime = convertTo12Hour(admissionTime);
-    const combinedAdmissionDatetime = admissionDate && formattedTime ? `${dayjs(admissionDate).format("DD-MM-YYYY")} ${formattedTime}` : "";
+    const combinedAdmissionDatetime = admissionDate && formattedTime ? `${dayjs(admissionDate).format("YYYY-MM-DD")} ${formattedTime}` : "";
 
     const formattedSurgeryTime = convertTo12Hour(surgeryTime);
-    const combinedSurgeryDatetime = surgeryDate && formattedSurgeryTime ? `${dayjs(surgeryDate).format("DD-MM-YYYY")} ${formattedSurgeryTime}` : "";
+    const combinedSurgeryDatetime = surgeryDate && formattedSurgeryTime ? `${dayjs(surgeryDate).format("YYYY-MM-DD")} ${formattedSurgeryTime}` : "";
 
     if (!combinedAdmissionDatetime || !hasTime(combinedAdmissionDatetime)) {
       Swal.fire("Required", "Please select a valid Admission Date & Time (both Date and Time are required)", "warning");

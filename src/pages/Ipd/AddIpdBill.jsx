@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import IpdAdmissionNavbar from "../../components/Navbar/IpdAdmissionNavbar";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
+import moment from "moment";
 import {
   Row,
   Col,
@@ -34,6 +35,17 @@ const getLocalDateString = (date) => {
   const offset = date.getTimezoneOffset();
   const localDate = new Date(date.getTime() - (offset * 60 * 1000));
   return localDate.toISOString().split("T")[0];
+};
+
+const formatDisplayDate = (val) => {
+  if (!val) return "";
+  const trimmed = String(val).trim();
+  const dateOnly = trimmed.split("T")[0].split(" ")[0];
+  const parsed = moment(dateOnly, ["YYYY-MM-DD", "DD-MM-YYYY"]);
+  if (parsed.isValid()) {
+    return parsed.format("DD-MM-YYYY");
+  }
+  return val;
 };
 
 const today = new Date();
@@ -1191,11 +1203,7 @@ const AddIpdBill = () => {
                       cursor: "not-allowed",
                     }}
                     name="admission_date"
-                    value={
-                      formData.admission_date
-                        ? formData.admission_date.split("-").reverse().join("-")
-                        : ""
-                    }
+                    value={formatDisplayDate(formData.admission_date)}
                   />
                 </Col>
 
@@ -1289,10 +1297,7 @@ const AddIpdBill = () => {
                   <Form.Select
                     required
                     name="bed_category"
-                    style={{
-                      ...inputStyle,
-                      height: "35px",
-                    }}
+                    style={inputStyle}
                     value={formData.bed_category}
                     onChange={handleInputChange}
                   >
@@ -1319,7 +1324,7 @@ const AddIpdBill = () => {
                     }}
                     name="consultantName"
                     value={getDisplayConsultant(formData.consultantName) || (formData.consultantName ? formData.consultantName : "")}
-                    placeholder={formData.patient_id ? "Fetched from diagnosis" : "N/A"}
+                    placeholder={formData.patient_id ? "Fetched from patient's diagnosis card" : "N/A"}
                     isInvalid={!!errors.consultantName}
                   />
                   {errors.consultantName && (

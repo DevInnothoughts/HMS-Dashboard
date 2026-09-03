@@ -202,7 +202,7 @@ export default function DoctorDashboard() {
   const [viewMode, setViewMode] = useState("list"); // "calendar" or "list"
   const [daySearchTerm, setDaySearchTerm] = useState("");
   const [activePatientTypeFilter, setActivePatientTypeFilter] = useState(null);
-  const [billedUhids, setBilledUhids] = useState(new Map()); // uid -> { createdAt, dischargeAt }
+  const [billedInvoices, setBilledInvoices] = useState([]);
   const calendarRef = React.useRef(null);
   const [showMasterViewModal, setShowMasterViewModal] = useState(false);
   const [masterViewData, setMasterViewData] = useState({
@@ -299,7 +299,7 @@ export default function DoctorDashboard() {
                   <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
                 </svg>
                 <h5 style="margin: 0; color: #856404; font-size: 15px; font-weight: 600; line-height: 1.4;">
-                  This patient already visited <strong>HHC ${masterPatient.location}</strong> location
+                  This patient has already visited <strong>HHC ${masterPatient.location}</strong> location
                 </h5>
               </div>
               <div style="margin-top: 20px; display: flex; justify-content: center; align-items: center; gap: 12px;">
@@ -497,8 +497,8 @@ export default function DoctorDashboard() {
         ipd.surgery_datetime && ipd.surgery_datetime !== "Not Scheduled"
           ? ipd.surgery_datetime
           : ipd.surgery_date
-          ? `${ipd.surgery_date} ${ipd.surgery_time || ""}`.trim()
-          : null;
+            ? `${ipd.surgery_date} ${ipd.surgery_time || ""}`.trim()
+            : null;
 
       if (rawSurgeryDate) {
         const parsed = moment(rawSurgeryDate, [
@@ -603,7 +603,7 @@ export default function DoctorDashboard() {
     }
   }, [currentLocation]);
 
-  // Fetch IPD bills to know which patients already have a bill
+  // Fetch IPD bills to know which admissions already have a bill
   const fetchBilledUhids = useCallback(async () => {
     if (currentLocation === "default" || !currentLocation) return;
     try {
@@ -622,26 +622,74 @@ export default function DoctorDashboard() {
         const rawData = Array.isArray(result.data?.[0])
           ? result.data[0]
           : result.data || [];
-        const uidsMap = new Map();
-        rawData.forEach((inv) => {
-          const uid = String(inv.patient_uid || inv.Uid_no || inv.uid || "");
-          if (uid) {
-            if (!uidsMap.has(uid)) {
-              uidsMap.set(uid, {
-                createdAt: inv.creation_date || null,
-                admissionTime: inv.admissiontime || null,
-                dischargeAt: inv.due_date || null,
-                dischargeTime: inv.dischargetime || null,
-              });
-            }
+
+        const invoicesList = rawData.map((inv) => {
+          const uid = String(inv.patient_uid || inv.Uid_no || inv.uid || "").trim().toLowerCase();
+          const phone = String(inv.patient_phone || inv.phone || inv.patient_phone_no || inv.contact || "").replace(/\D/g, "").slice(-10);
+          const rawAdmNo = String(inv.admission_no || inv.adm_no || inv.admissionno || "").trim();
+          const admNo = (rawAdmNo && rawAdmNo !== "0" && rawAdmNo.toUpperCase() !== "PENDING") ? rawAdmNo : null;
+          const invDateRaw = inv.creation_date || inv.admissiondate || inv.adm_date || null;
+          let formattedInvDate = null;
+          if (invDateRaw) {
+            const parsed = moment(invDateRaw);
+            if (parsed.isValid()) formattedInvDate = parsed.format("YYYY-MM-DD");
           }
+
+          return {
+            admissionNo: admNo,
+            uid,
+            phone,
+            invDate: formattedInvDate,
+            createdAt: inv.creation_date || null,
+            admissionTime: inv.admissiontime || null,
+            dischargeAt: inv.due_date || null,
+            dischargeTime: inv.dischargetime || null,
+            invoiceId: inv.invoice_id || null,
+          };
         });
-        setBilledUhids(uidsMap);
+
+        setBilledInvoices(invoicesList);
       }
     } catch (err) {
       console.error("Error fetching IPD bills:", err);
     }
   }, [currentLocation]);
+
+  const getBillInfo = useCallback((event) => {
+    if (!event || !event.isIpd || !billedInvoices || billedInvoices.length === 0) return null;
+
+    const admKey = event.admissionNo ? String(event.admissionNo).trim() : "";
+    const isConfirmedAdm = admKey && admKey !== "0" && admKey.toUpperCase() !== "PENDING";
+
+    // 1. If admission has a confirmed admission number, match by admission_no ONLY
+    if (isConfirmedAdm) {
+      const matchByAdmNo = billedInvoices.find(
+        (inv) => inv.admissionNo && inv.admissionNo.toLowerCase() === admKey.toLowerCase()
+      );
+      if (matchByAdmNo) return matchByAdmNo;
+    }
+
+    // 2. If unconfirmed (PENDING) or if admission_no is missing/not matched yet:
+    // Match by patient identity (uid or phone) AND exact admission/surgery date
+    const uidKey = (event.uid || event.uhid) ? String(event.uid || event.uhid).trim().toLowerCase() : "";
+    const phoneKey = event.phone ? String(event.phone).replace(/\D/g, "").slice(-10) : "";
+    const eventDateStr = event.date ? moment(event.date, ["DD-MM-YYYY", "YYYY-MM-DD"]).format("YYYY-MM-DD") : null;
+
+    if (eventDateStr && (uidKey || phoneKey)) {
+      const matchByPatientAndDate = billedInvoices.find((inv) => {
+        const matchesPatient = (uidKey && inv.uid === uidKey) || (phoneKey && inv.phone === phoneKey);
+        const matchesDate = inv.invDate === eventDateStr;
+        return matchesPatient && matchesDate;
+      });
+      if (matchByPatientAndDate) return matchByPatientAndDate;
+    }
+
+    return null;
+  }, [billedInvoices]);
+
+  const checkHasBill = useCallback((event) => {
+    return Boolean(getBillInfo(event));
+  }, [getBillInfo]);
 
   const fetchAppointmentsForRange = useCallback(
     async (dateToFetch, doctorId) => {
@@ -710,10 +758,10 @@ export default function DoctorDashboard() {
                 const list = Array.isArray(json)
                   ? json
                   : Array.isArray(json?.data)
-                  ? json.data
-                  : Array.isArray(json?.result)
-                  ? json.result
-                  : [];
+                    ? json.data
+                    : Array.isArray(json?.result)
+                      ? json.result
+                      : [];
                 if (Array.isArray(list) && list.length > 0) {
                   allRawIpd.push(...list);
                 }
@@ -727,13 +775,13 @@ export default function DoctorDashboard() {
           const getDedupeKey = (item) => {
             const uid = String(
               item.uid ||
-                item.uhid ||
-                item.patient_uid ||
-                item.Uid_no ||
-                item.uid_no ||
-                item.global_id ||
-                item.patient_id ||
-                ""
+              item.uhid ||
+              item.patient_uid ||
+              item.Uid_no ||
+              item.uid_no ||
+              item.global_id ||
+              item.patient_id ||
+              ""
             ).trim().toLowerCase();
 
             const phone = String(
@@ -877,7 +925,7 @@ export default function DoctorDashboard() {
 
   const eventStyleGetter = useCallback((event) => {
     if (event.isIpd) {
-      const hasBill = billedUhids.has(String(event.uid || event.uhid));
+      const hasBill = checkHasBill(event);
       const bgColor = hasBill
         ? "#10b981"
         : event.isConfirmed
@@ -903,7 +951,7 @@ export default function DoctorDashboard() {
         display: "block",
       },
     };
-  }, [billedUhids]);
+  }, [checkHasBill]);
 
   const AppointmentDetailsCard = () => {
     if (!selectedEvent) {
@@ -922,7 +970,7 @@ export default function DoctorDashboard() {
     }
 
     if (selectedEvent.isIpd) {
-      const hasBill = billedUhids.has(String(selectedEvent.uid || selectedEvent.uhid));
+      const hasBill = checkHasBill(selectedEvent);
       return (
         <div className="clinical-card" style={{ margin: "10px" }}>
           <div className="clinical-body">
@@ -1053,7 +1101,7 @@ export default function DoctorDashboard() {
                 </p>
               </div>
             ) : (
-              !billedUhids.has(String(selectedEvent.uid || selectedEvent.uhid)) && (
+              !checkHasBill(selectedEvent) && (
                 <div
                   className="d-flex align-items-center p-3 mb-5"
                   style={{
@@ -1088,9 +1136,8 @@ export default function DoctorDashboard() {
               )
             )}
             {selectedEvent.isConfirmed && (() => {
-              const uhid = String(selectedEvent.uid || selectedEvent.uhid);
-              if (!billedUhids.has(uhid)) return null;
-              const billInfo = billedUhids.get(uhid);
+              const billInfo = getBillInfo(selectedEvent);
+              if (!billInfo) return null;
               const dischargeAt = billInfo?.dischargeTime
                 ? billInfo.dischargeTime
                 : billInfo?.dischargeAt
@@ -2045,7 +2092,7 @@ margin-left: 1px;
                               filteredAppointments.filter((a) =>
                                 a.isIpd
                                   ? a.hasSurgeryDate &&
-                                    moment(a.start).isSame(selectedDate, "day")
+                                  moment(a.start).isSame(selectedDate, "day")
                                   : moment(a.start).isSame(selectedDate, "day"),
                               ).length
                             }{" "}
@@ -2088,9 +2135,8 @@ margin-left: 1px;
                               IPD: "#d946ef",
                             };
 
-                            // Check if an IPD bill exists for this patient
-                            const patientUhid = app.isIpd ? (app.uid || app.uhid) : null;
-                            const hasBill = patientUhid ? billedUhids.has(String(patientUhid)) : false;
+                            // Check if an IPD bill exists for this admission
+                            const hasBill = app.isIpd ? checkHasBill(app) : false;
 
                             const indicatorColor = hasBill
                               ? "#16a34a"
