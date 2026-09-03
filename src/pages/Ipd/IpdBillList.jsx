@@ -205,32 +205,32 @@ const calculatePayableAmt = (invoice) => {
 
 const formatDateForDisplay = (dateValue) => {
   if (!dateValue) return "N/A";
-  try {
-    const date = new Date(dateValue);
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}-${month}-${year}`;
-  } catch (e) {
-    const parts = String(dateValue).split("T")[0].split("-");
-    if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
-    return String(dateValue);
+  const str = String(dateValue).trim();
+  if (!str || str.startsWith("0000")) return "N/A";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    const [y, m, d] = str.split("-");
+    return `${d}-${m}-${y}`;
   }
+  if (/^\d{2}-\d{2}-\d{4}$/.test(str)) {
+    return str;
+  }
+  const m = moment(dateValue);
+  return m.isValid() ? m.format("DD-MM-YYYY") : String(dateValue);
 };
 
-const getISTDate = date => {
-  const now = new Date(date);
-
-  // Convert to milliseconds since UTC and add IST offset
-  const istOffsetMs = 5.5 * 60 * 60 * 1000;
-  const istTime = new Date(now.getTime() + istOffsetMs);
-  //console.log(istTime);
-  // Format IST date manually in YYYY-MM-DD format
-  const year = istTime.getUTCFullYear();
-  const month = String(istTime.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(istTime.getUTCDate()).padStart(2, '0');
-  //console.log(${year}-${month}-${day});
-  return `${day}-${month}-${year}`;
+const getISTDate = (dateValue) => {
+  if (!dateValue) return "";
+  const str = String(dateValue).trim();
+  if (!str || str.startsWith("0000")) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    const [y, m, d] = str.split("-");
+    return `${d}-${m}-${y}`;
+  }
+  if (/^\d{2}-\d{2}-\d{4}$/.test(str)) {
+    return str;
+  }
+  const m = moment(dateValue);
+  return m.isValid() ? m.format("DD-MM-YYYY") : "";
 };
 
 const rowClassName = (rowData) => {
@@ -1016,8 +1016,15 @@ const IpdBillList = () => {
       if (!dateValue) return "";
       const str = String(dateValue).trim();
       if (!str || str.startsWith("0000")) return "";
-      const dateOnly = str.split("T")[0].split(" ")[0];
-      const parsed = moment(dateOnly, ["YYYY-MM-DD", "DD-MM-YYYY"]);
+
+      if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+        return str;
+      }
+      if (/^\d{2}-\d{2}-\d{4}$/.test(str)) {
+        const [d, m, y] = str.split("-");
+        return `${y}-${m}-${d}`;
+      }
+      const parsed = moment(dateValue);
       return parsed.isValid() ? parsed.format("YYYY-MM-DD") : "";
     };
 

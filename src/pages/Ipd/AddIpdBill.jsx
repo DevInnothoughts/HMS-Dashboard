@@ -39,13 +39,17 @@ const getLocalDateString = (date) => {
 
 const formatDisplayDate = (val) => {
   if (!val) return "";
-  const trimmed = String(val).trim();
-  const dateOnly = trimmed.split("T")[0].split(" ")[0];
-  const parsed = moment(dateOnly, ["YYYY-MM-DD", "DD-MM-YYYY"]);
-  if (parsed.isValid()) {
-    return parsed.format("DD-MM-YYYY");
+  const str = String(val).trim();
+  if (!str || str.startsWith("0000")) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    const [y, m, d] = str.split("-");
+    return `${d}-${m}-${y}`;
   }
-  return val;
+  if (/^\d{2}-\d{2}-\d{4}$/.test(str)) {
+    return str;
+  }
+  const parsed = moment(val);
+  return parsed.isValid() ? parsed.format("DD-MM-YYYY") : str;
 };
 
 const today = new Date();
@@ -132,7 +136,13 @@ const AddIpdBill = () => {
         if (parts[0]) {
           const dateParts = parts[0].split("-");
           if (dateParts.length === 3) {
-            parsedDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+            if (dateParts[0].length === 4) {
+              parsedDate = parts[0];
+            } else if (dateParts[2].length === 4) {
+              parsedDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+            } else {
+              parsedDate = parts[0];
+            }
           }
         }
         if (parts[1]) {
