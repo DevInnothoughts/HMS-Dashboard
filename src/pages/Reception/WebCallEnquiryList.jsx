@@ -25,7 +25,7 @@ import { toast } from "react-hot-toast";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 export default function WebCallEnquiryList({ isTab = false }) {
     const [callLeads, setCallLeads] = useState([]);

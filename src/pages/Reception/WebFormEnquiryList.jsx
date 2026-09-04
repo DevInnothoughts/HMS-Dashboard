@@ -25,7 +25,7 @@ import { toast } from "react-hot-toast";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 
-const BASE_URL = "http://194.195.117.79:5100/api";
+const BASE_URL = "http://localhost:5100/api";
 
 const NoteCell = ({ note }) => {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -637,8 +637,8 @@ export default function WebFormEnquiryList({ isTab = false }) {
         if (globalSearch && globalSearch.trim() !== "") {
             const searchLower = globalSearch.toLowerCase().trim();
             dataToExport = dataToExport.filter((item) => {
-                const dateStr = item.date ? moment(item.date).format("DD-MM-YYYY") : "";
-                const timeStr = item.date ? moment(item.date).format("hh:mm A") : "";
+                const dateStr = item.date ? moment.utc(item.date).format("DD-MM-YYYY") : "";
+                const timeStr = item.date ? moment.utc(item.date).format("hh:mm A") : "";
                 const name = (item.name || "").toLowerCase();
                 const phone = String(item.phoneno || "").toLowerCase();
                 const email = (item.email_id || "").toLowerCase();
@@ -659,8 +659,8 @@ export default function WebFormEnquiryList({ isTab = false }) {
         }
 
         const excelData = dataToExport.map((item) => ({
-            Date: item.date ? moment(item.date).format("DD-MM-YYYY") : "",
-            Time: item.date ? moment(item.date).format("hh:mm A") : "",
+            Date: item.date ? moment.utc(item.date).format("DD-MM-YYYY") : "",
+            Time: item.date ? moment.utc(item.date).format("hh:mm A") : "",
             "Full Name": item.name || "",
             "Contact Number": item.phoneno || "",
             Email: item.email_id || "",
@@ -1095,7 +1095,7 @@ export default function WebFormEnquiryList({ isTab = false }) {
                             <Column
                                 field="date"
                                 header="Date"
-                                body={(rowData) => moment(rowData.date).format("DD-MM-YYYY")}
+                                body={(rowData) => moment.utc(rowData.date).format("DD-MM-YYYY")}
                                 headerClassName="datatable-header-center"
                                 style={{
                                     border: "1px solid #90caf9",
@@ -1108,7 +1108,7 @@ export default function WebFormEnquiryList({ isTab = false }) {
                             <Column
                                 field="date"
                                 header="Time"
-                                body={(rowData) => moment(rowData.date).format("hh:mm A")}
+                                body={(rowData) => moment.utc(rowData.date).format("hh:mm A")}
                                 headerClassName="datatable-header-center"
                                 style={{
                                     border: "1px solid #90caf9",
