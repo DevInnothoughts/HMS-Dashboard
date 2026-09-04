@@ -10,7 +10,7 @@ import { FilterMatchMode } from "primereact/api";
 import { InputText } from "primereact/inputtext";
 import { decodeJwt } from "../../Utility/decode-jwt";
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const formatValue = (val) => {
   if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {

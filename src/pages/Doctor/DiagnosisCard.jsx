@@ -72,7 +72,7 @@ const DiagnosisCard = ({
         const last10 = cleanPhone.length > 10 ? cleanPhone.slice(-10) : cleanPhone;
         if (!last10 || last10.length < 10) return;
 
-        const BASE_URL = "http://localhost:5100/api";
+        const BASE_URL = "http://194.195.117.79:5100/api";
         const res = await fetch(`${BASE_URL}/V1/appointment/checkMasterPatient?patient_phone=${last10}`);
         if (res.ok) {
           const data = await res.json();
@@ -157,7 +157,7 @@ const DiagnosisCard = ({
   React.useEffect(() => {
     const fetchInsuranceAndTpa = async () => {
       try {
-        const BASE_URL = "http://localhost:5100/api";
+        const BASE_URL = "http://194.195.117.79:5100/api";
         const [insRes, tpaRes] = await Promise.all([
           fetch(`${BASE_URL}/V1/doctor/insurance-companies`),
           fetch(`${BASE_URL}/V1/doctor/tpa-companies`),

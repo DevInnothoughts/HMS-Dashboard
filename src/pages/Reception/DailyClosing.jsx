@@ -27,7 +27,7 @@ const Toast = Swal.mixin({
   timerProgressBar: true,
 });
 
-const BASE_URL = "http://localhost:5100/api";
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 const DailyClosing = () => {
   const formatToIndianCommas = (val) => {
