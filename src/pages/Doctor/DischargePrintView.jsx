@@ -167,13 +167,20 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors 
       Address: "<b>Healing Hands Clinic </b><br> Plot No.5, Gahlot Majesty, Sector 46, Seawoods, Navi Mumbai-400706"
     },
     "Kemps-Corner": {
-      AssistantSurgeon: "8390848433",
-      Insurance: "8888066664",
-      Nutritionist: "",
-      Physiotherapist: "8888066664",
-      QueriesSMS: "DR GIRISH HATALKAR ON 9881012888",
-      Helpline: "8888266664",
-      Address: "<b>Healing Hands Clinic </b><br> 3rd Floor, Advani Chambers, August Kranti Marg, Kemps Corner-400036"
+      // AssistantSurgeon: "8390848433",
+      AssistantSurgeon: "8971718692",
+      // Insurance: "8888066664",
+      Insurance: "8197978659",
+      // Nutritionist: "",
+      Nutritionist: "9591130662",
+      // Physiotherapist: "8888066664",
+      Physiotherapist: "8197978642",
+      // QueriesSMS: "DR GIRISH HATALKAR ON 9881012888",
+      QueriesSMS: "DR KISHAN ON 8197978641",
+      // Helpline: "8888266664",
+      Helpline: "8197978641 / 8197978651",
+      // Address: "<b>Healing Hands Clinic </b><br> 3rd Floor, Advani Chambers, August Kranti Marg, Kemps Corner-400036"
+      Address: "<b>Healing Hands Clinic </b><br> 1st Floor, Krishna Complex, HSR Layout - 1st Sector, 17th Cross Road, 27th Main Road, Opposite to Sri Basaveshwara Gayatri Temple, Above More Supermarket, Bengaluru – 560102"
     },
     "Andheri": {
       AssistantSurgeon: "8956223458",
