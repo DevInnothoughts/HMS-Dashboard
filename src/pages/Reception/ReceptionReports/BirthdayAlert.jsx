@@ -29,7 +29,12 @@ const BirthdayAlert = () => {
 
   const formatBirthDate = (birthDate) => {
     if (!birthDate || birthDate === "-" || birthDate === "--") return "-";
-    const m = moment(birthDate, ["DD-MM-YYYY", "DD/MM/YYYY", "DDMMYYYY", "YYYY-MM-DD"]);
+    const m = moment(birthDate, [
+      "DD-MM-YYYY",
+      "DD/MM/YYYY",
+      "DDMMYYYY",
+      "YYYY-MM-DD",
+    ]);
     return m.isValid() ? m.format("DD-MM-YYYY") : birthDate;
   };
 
@@ -86,7 +91,11 @@ const BirthdayAlert = () => {
         console.log("Extracted birthday patients list:", birthdayData);
         setPatients(birthdayData);
       } else {
-        console.error("Birthday API error response:", response.status, response.statusText);
+        console.error(
+          "Birthday API error response:",
+          response.status,
+          response.statusText,
+        );
       }
     } catch (error) {
       console.error("Error fetching birthdays:", error);
@@ -108,7 +117,15 @@ const BirthdayAlert = () => {
   };
 
   const formatValue = (val) => {
-    if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+    if (
+      val === null ||
+      val === undefined ||
+      val === "" ||
+      val === "N/A" ||
+      val === 0 ||
+      val === "0" ||
+      val === "-"
+    ) {
       return "-";
     }
     return val;
@@ -129,25 +146,42 @@ const BirthdayAlert = () => {
       "Birth Date": formatBirthDate(item.birth_date),
       "Patient Name": item.name || "-",
       "Contact Number": item.phone || "-",
-      "Address": item.address || "-",
-      "Last Visited Date": formatDateDisplay(item.last_visited_date || item.lastVisitedDate),
+      Address: item.address || "-",
+      "Last Visited Date": formatDateDisplay(
+        item.last_visited_date || item.lastVisitedDate,
+      ),
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(excelData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Birthday Alerts");
-    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
     saveAs(
-      new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8" }),
-      `Birthday_Alerts_${currentDate}.xlsx`
+      new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
+      }),
+      `Birthday_Alerts_${currentDate}.xlsx`,
     );
   };
 
   const getFilteredData = () => {
     const data = [...patients];
     data.sort((a, b) => {
-      const dateA = moment(a.birth_date, ["DD-MM-YYYY", "DD/MM/YYYY", "DDMMYYYY", "YYYY-MM-DD"]);
-      const dateB = moment(b.birth_date, ["DD-MM-YYYY", "DD/MM/YYYY", "DDMMYYYY", "YYYY-MM-DD"]);
+      const dateA = moment(a.birth_date, [
+        "DD-MM-YYYY",
+        "DD/MM/YYYY",
+        "DDMMYYYY",
+        "YYYY-MM-DD",
+      ]);
+      const dateB = moment(b.birth_date, [
+        "DD-MM-YYYY",
+        "DD/MM/YYYY",
+        "DDMMYYYY",
+        "YYYY-MM-DD",
+      ]);
       return dateA.diff(dateB);
     });
 
@@ -158,7 +192,9 @@ const BirthdayAlert = () => {
       const phone = (item.phone || "").toLowerCase();
       const address = (item.address || "").toLowerCase();
       const birthDate = formatBirthDate(item.birth_date).toLowerCase();
-      const lastVisited = formatDateDisplay(item.last_visited_date || item.lastVisitedDate).toLowerCase();
+      const lastVisited = formatDateDisplay(
+        item.last_visited_date || item.lastVisitedDate,
+      ).toLowerCase();
 
       return (
         name.includes(query) ||
@@ -343,8 +379,18 @@ const BirthdayAlert = () => {
                   {renderHeader()}
                   <DataTable
                     value={[...patients].sort((a, b) => {
-                      const dateA = moment(a.birth_date, ["DD-MM-YYYY", "DD/MM/YYYY", "DDMMYYYY", "YYYY-MM-DD"]);
-                      const dateB = moment(b.birth_date, ["DD-MM-YYYY", "DD/MM/YYYY", "DDMMYYYY", "YYYY-MM-DD"]);
+                      const dateA = moment(a.birth_date, [
+                        "DD-MM-YYYY",
+                        "DD/MM/YYYY",
+                        "DDMMYYYY",
+                        "YYYY-MM-DD",
+                      ]);
+                      const dateB = moment(b.birth_date, [
+                        "DD-MM-YYYY",
+                        "DD/MM/YYYY",
+                        "DDMMYYYY",
+                        "YYYY-MM-DD",
+                      ]);
                       return dateA.diff(dateB);
                     })}
                     paginator
@@ -372,7 +418,9 @@ const BirthdayAlert = () => {
                     <Column
                       field="birth_date"
                       header="Birth Date"
-                      body={(rowData) => formatValue(formatBirthDate(rowData.birth_date))}
+                      body={(rowData) =>
+                        formatValue(formatBirthDate(rowData.birth_date))
+                      }
                       style={{ width: "130px", textAlign: "center" }}
                     />
                     <Column
@@ -393,7 +441,11 @@ const BirthdayAlert = () => {
                     <Column
                       field="last_visited_date"
                       header="Last Visited Date"
-                      body={(rowData) => formatDateDisplay(rowData.last_visited_date || rowData.lastVisitedDate)}
+                      body={(rowData) =>
+                        formatDateDisplay(
+                          rowData.last_visited_date || rowData.lastVisitedDate,
+                        )
+                      }
                       style={{ textAlign: "center", width: "150px" }}
                     />
                   </DataTable>
@@ -415,11 +467,17 @@ const BirthdayAlert = () => {
                         {filteredData.map((item, index) => (
                           <tr key={index}>
                             <td>{index + 1}</td>
-                            <td>{formatValue(formatBirthDate(item.birth_date))}</td>
+                            <td>
+                              {formatValue(formatBirthDate(item.birth_date))}
+                            </td>
                             <td>{formatValue(item.name)}</td>
                             <td>{formatValue(item.phone)}</td>
                             <td>{formatValue(item.address)}</td>
-                            <td>{formatDateDisplay(item.last_visited_date || item.lastVisitedDate)}</td>
+                            <td>
+                              {formatDateDisplay(
+                                item.last_visited_date || item.lastVisitedDate,
+                              )}
+                            </td>
                           </tr>
                         ))}
                       </tbody>

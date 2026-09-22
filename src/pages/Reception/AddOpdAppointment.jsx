@@ -1,5 +1,13 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Row, Col, Form, Container, Card, Button, Spinner } from "react-bootstrap";
+import {
+  Row,
+  Col,
+  Form,
+  Container,
+  Card,
+  Button,
+  Spinner,
+} from "react-bootstrap";
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import FeatherIcon from "feather-icons-react";
@@ -727,7 +735,9 @@ export default function AddOpdAppointment() {
                         style={{
                           ...inputStyle,
                           cursor: isExistingPatient ? "not-allowed" : "default",
-                          backgroundColor: isExistingPatient ? "#e7ebebff" : undefined,
+                          backgroundColor: isExistingPatient
+                            ? "#e7ebebff"
+                            : undefined,
                         }}
                         readOnly={isExistingPatient}
                         type="text"
@@ -739,29 +749,29 @@ export default function AddOpdAppointment() {
                     </Col>
                     {(formData.patient_type === "Other" ||
                       formData.treatment) && (
-                        <Col md={3}>
-                          <Form.Label style={labelStyle}>
-                            Treatment <span className="text-danger">*</span>
-                          </Form.Label>
-                          <Form.Select
-                            required
-                            style={inputStyle}
-                            name="treatment"
-                            value={formData.treatment}
-                            onChange={handleInputChange}
-                          >
-                            <option value="">Select Treatment</option>
-                            {treatmentList?.map((t) => (
-                              <option
-                                key={t.treatment_name}
-                                value={t.treatment_name}
-                              >
-                                {t.treatment_name}
-                              </option>
-                            ))}
-                          </Form.Select>
-                        </Col>
-                      )}
+                      <Col md={3}>
+                        <Form.Label style={labelStyle}>
+                          Treatment <span className="text-danger">*</span>
+                        </Form.Label>
+                        <Form.Select
+                          required
+                          style={inputStyle}
+                          name="treatment"
+                          value={formData.treatment}
+                          onChange={handleInputChange}
+                        >
+                          <option value="">Select Treatment</option>
+                          {treatmentList?.map((t) => (
+                            <option
+                              key={t.treatment_name}
+                              value={t.treatment_name}
+                            >
+                              {t.treatment_name}
+                            </option>
+                          ))}
+                        </Form.Select>
+                      </Col>
+                    )}
 
                     {formData.patient_type === "New" && (
                       <Col md={3}>

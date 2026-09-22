@@ -14,18 +14,36 @@ import { decodeJwt } from "../../Utility/decode-jwt";
 const BASE_URL = "http://194.195.117.79:5100/api";
 
 const formatValue = (val) => {
-  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+  if (
+    val === null ||
+    val === undefined ||
+    val === "" ||
+    val === "N/A" ||
+    val === 0 ||
+    val === "0" ||
+    val === "-"
+  ) {
     return "-";
   }
   return val;
 };
 
 const formatAmount = (val) => {
-  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+  if (
+    val === null ||
+    val === undefined ||
+    val === "" ||
+    val === "N/A" ||
+    val === 0 ||
+    val === "0" ||
+    val === "-"
+  ) {
     return "-";
   }
   const parsed = parseFloat(val);
-  return isNaN(parsed) ? val : `₹ ${Math.round(parsed).toLocaleString("en-IN")}`;
+  return isNaN(parsed)
+    ? val
+    : `₹ ${Math.round(parsed).toLocaleString("en-IN")}`;
 };
 
 const OPDIPDCollection = () => {
@@ -95,7 +113,7 @@ const OPDIPDCollection = () => {
       ipdCheque: 0,
       opdOnline: 0,
       ipdOnline: 0,
-    }
+    },
   );
 
   const [totals, setTotals] = useState({
@@ -420,8 +438,15 @@ const OPDIPDCollection = () => {
                 >
                   <h4 style={{ margin: 0 }}>OPD + IPD Collection Report</h4>
                   {fromDate && toDate && (
-                    <div style={{ fontSize: "13px", fontWeight: "normal", marginTop: "5px" }}>
-                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "normal",
+                        marginTop: "5px",
+                      }}
+                    >
+                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to{" "}
+                      <b>{formatDateDisplay(toDate)}</b>
                     </div>
                   )}
                 </Card.Header>
@@ -528,16 +553,50 @@ const OPDIPDCollection = () => {
                     <Column
                       field="receiptDate"
                       header="Date"
-                      body={(rowData) => formatValue(formatDateDisplay(rowData.receiptDate))}
+                      body={(rowData) =>
+                        formatValue(formatDateDisplay(rowData.receiptDate))
+                      }
                     />
-                    <Column field="opdCash" header="OPD Cash" body={(rowData) => formatAmount(rowData.opdCash)} />
-                    <Column field="ipdCash" header="IPD Cash" body={(rowData) => formatAmount(rowData.ipdCash)} />
-                    <Column field="opdCard" header="OPD Card" body={(rowData) => formatAmount(rowData.opdCard)} />
-                    <Column field="ipdCard" header="IPD Card" body={(rowData) => formatAmount(rowData.ipdCard)} />
-                    <Column field="opdCheque" header="OPD Chq" body={(rowData) => formatAmount(rowData.opdCheque)} />
-                    <Column field="ipdCheque" header="IPD Chq" body={(rowData) => formatAmount(rowData.ipdCheque)} />
-                    <Column field="opdOnline" header="OPD Onl" body={(rowData) => formatAmount(rowData.opdOnline)} />
-                    <Column field="ipdOnline" header="IPD Onl" body={(rowData) => formatAmount(rowData.ipdOnline)} />
+                    <Column
+                      field="opdCash"
+                      header="OPD Cash"
+                      body={(rowData) => formatAmount(rowData.opdCash)}
+                    />
+                    <Column
+                      field="ipdCash"
+                      header="IPD Cash"
+                      body={(rowData) => formatAmount(rowData.ipdCash)}
+                    />
+                    <Column
+                      field="opdCard"
+                      header="OPD Card"
+                      body={(rowData) => formatAmount(rowData.opdCard)}
+                    />
+                    <Column
+                      field="ipdCard"
+                      header="IPD Card"
+                      body={(rowData) => formatAmount(rowData.ipdCard)}
+                    />
+                    <Column
+                      field="opdCheque"
+                      header="OPD Chq"
+                      body={(rowData) => formatAmount(rowData.opdCheque)}
+                    />
+                    <Column
+                      field="ipdCheque"
+                      header="IPD Chq"
+                      body={(rowData) => formatAmount(rowData.ipdCheque)}
+                    />
+                    <Column
+                      field="opdOnline"
+                      header="OPD Onl"
+                      body={(rowData) => formatAmount(rowData.opdOnline)}
+                    />
+                    <Column
+                      field="ipdOnline"
+                      header="IPD Onl"
+                      body={(rowData) => formatAmount(rowData.ipdOnline)}
+                    />
                   </DataTable>
 
                   {/* Print-only container displaying all rows */}
@@ -561,7 +620,9 @@ const OPDIPDCollection = () => {
                         {filteredData.map((item, index) => (
                           <tr key={index}>
                             <td>{index + 1}</td>
-                            <td>{formatValue(formatDateDisplay(item.receiptDate))}</td>
+                            <td>
+                              {formatValue(formatDateDisplay(item.receiptDate))}
+                            </td>
                             <td>{formatValue(item.opdCash)}</td>
                             <td>{formatValue(item.ipdCash)}</td>
                             <td>{formatValue(item.opdCard)}</td>

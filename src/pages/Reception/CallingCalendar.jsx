@@ -89,7 +89,9 @@ export default function CallingCalendar() {
         if (response.ok) {
           const res = await response.json();
           if (res.data) {
-            const filtered = res.data.filter(app => app.confirm_time == 0 && app.is_deleted === 0);
+            const filtered = res.data.filter(
+              (app) => app.confirm_time == 0 && app.is_deleted === 0,
+            );
             return filtered.sort((a, b) => {
               const timeA = a.appointment_time
                 ? moment(a.appointment_time, ["HH:mm:ss", "hh:mm A"]).valueOf()
@@ -112,7 +114,7 @@ export default function CallingCalendar() {
 
     const [todayList, tomorrowList] = await Promise.all([
       fetchForDate(todayStr),
-      fetchForDate(tomorrowStr)
+      fetchForDate(tomorrowStr),
     ]);
 
     setTodayAppointments(todayList);
@@ -124,8 +126,12 @@ export default function CallingCalendar() {
     if (!currentLocation || currentLocation === "default") return;
     try {
       const [doctorRes, fdeRes] = await Promise.all([
-        fetch(`${BASE_URL}/V1/doctor/doctorDropdown?location=${currentLocation}`).then(res => res.json()),
-        fetch(`${BASE_URL}/V1/appointment/fdeDropdown?location=${currentLocation}`).then(res => res.json()),
+        fetch(
+          `${BASE_URL}/V1/doctor/doctorDropdown?location=${currentLocation}`,
+        ).then((res) => res.json()),
+        fetch(
+          `${BASE_URL}/V1/appointment/fdeDropdown?location=${currentLocation}`,
+        ).then((res) => res.json()),
       ]);
       setDoctors(Array.isArray(doctorRes.data) ? doctorRes.data : []);
       setFdeList(Array.isArray(fdeRes.data) ? fdeRes.data : []);
@@ -192,10 +198,15 @@ export default function CallingCalendar() {
       return;
     }
 
-    const dateOnly = moment(selectedAppointment.appointment_timestamp).format("YYYY-MM-DD");
+    const dateOnly = moment(selectedAppointment.appointment_timestamp).format(
+      "YYYY-MM-DD",
+    );
 
     const finalAppointmentTime = selectedAppointment.appointment_time
-      ? moment(selectedAppointment.appointment_time, ["HH:mm:ss", "hh:mm A"]).format("HH:mm")
+      ? moment(selectedAppointment.appointment_time, [
+          "HH:mm:ss",
+          "hh:mm A",
+        ]).format("HH:mm")
       : null;
 
     const updatePayload = {
@@ -439,7 +450,10 @@ export default function CallingCalendar() {
           title: "Note submitted successfully!",
         });
         // Refresh local data
-        if (selectedRecordType === "todayAppointments" || selectedRecordType === "tomorrowAppointments") {
+        if (
+          selectedRecordType === "todayAppointments" ||
+          selectedRecordType === "tomorrowAppointments"
+        ) {
           fetchPendingAppointments();
         } else {
           fetchAdvisedData(selectedType, selectedDays);
@@ -508,9 +522,11 @@ export default function CallingCalendar() {
   // Excel Download
   const handleDownloadExcel = () => {
     const daysString = "3,7,15,30,0";
-    const typeValue = (selectedView === "todayAppointments" || selectedView === "tomorrowAppointments")
-      ? selectedView
-      : selectedType;
+    const typeValue =
+      selectedView === "todayAppointments" ||
+      selectedView === "tomorrowAppointments"
+        ? selectedView
+        : selectedType;
 
     let fromDateValue = fromDate;
     let toDateValue = toDate;
@@ -539,19 +555,65 @@ export default function CallingCalendar() {
         paddingRight: "15px",
       }}
     >
-      <div style={{ width: "25%", color: "#0f7b63", fontSize: "15px", fontWeight: "700", letterSpacing: "1.2px", textTransform: "uppercase" }}>Patient Details</div>
-      <div style={{ width: "35%", color: "#0f7b63", fontSize: "15px", fontWeight: "700", letterSpacing: "1.2px", textTransform: "uppercase" }}>Diagnosis</div>
-      <div style={{ width: "30%", color: "#0f7b63", fontSize: "15px", fontWeight: "700", letterSpacing: "1.2px", textTransform: "uppercase" }}>Action Taken</div>
-      <div style={{ width: "10%", color: "#0f7b63", fontSize: "15px", fontWeight: "700", letterSpacing: "1.2px", textTransform: "uppercase", textAlign: "right" }}>Actions</div>
+      <div
+        style={{
+          width: "25%",
+          color: "#0f7b63",
+          fontSize: "15px",
+          fontWeight: "700",
+          letterSpacing: "1.2px",
+          textTransform: "uppercase",
+        }}
+      >
+        Patient Details
+      </div>
+      <div
+        style={{
+          width: "35%",
+          color: "#0f7b63",
+          fontSize: "15px",
+          fontWeight: "700",
+          letterSpacing: "1.2px",
+          textTransform: "uppercase",
+        }}
+      >
+        Diagnosis
+      </div>
+      <div
+        style={{
+          width: "30%",
+          color: "#0f7b63",
+          fontSize: "15px",
+          fontWeight: "700",
+          letterSpacing: "1.2px",
+          textTransform: "uppercase",
+        }}
+      >
+        Action Taken
+      </div>
+      <div
+        style={{
+          width: "10%",
+          color: "#0f7b63",
+          fontSize: "15px",
+          fontWeight: "700",
+          letterSpacing: "1.2px",
+          textTransform: "uppercase",
+          textAlign: "right",
+        }}
+      >
+        Actions
+      </div>
     </div>
   );
 
   const renderRecordCard = (row) => {
-    const recordId = selectedType === "Dischargecard"
-      ? row.discharge_id
-      : selectedType === "Enquiry"
-        ? row.id
-        : row.diag_id;
+    const recordId =
+      selectedType === "Dischargecard"
+        ? row.discharge_id
+        : selectedType === "Enquiry"
+          ? row.id
+          : row.diag_id;
 
     let parsedNotes = [];
     if (row.calling_notes) {
@@ -562,13 +624,17 @@ export default function CallingCalendar() {
         } else {
           try {
             parsed = JSON.parse(parsed);
-          } catch (e) { }
+          } catch (e) {}
         }
       }
 
       if (Array.isArray(parsed)) {
         parsedNotes = parsed;
-      } else if (typeof parsed === "object" && parsed !== null && Object.keys(parsed).length > 0) {
+      } else if (
+        typeof parsed === "object" &&
+        parsed !== null &&
+        Object.keys(parsed).length > 0
+      ) {
         parsedNotes = [parsed];
       } else if (typeof parsed === "string" && parsed.trim() !== "") {
         parsedNotes = [{ note: parsed }];
@@ -609,7 +675,13 @@ export default function CallingCalendar() {
         }}
       >
         <Card.Body className="p-4">
-          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start" }}>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "flex-start",
+            }}
+          >
             {/* Patient Details */}
             <div style={{ width: "25%", padding: "5px" }}>
               {row.was_sunday === 1 && (
@@ -626,45 +698,112 @@ export default function CallingCalendar() {
                     marginBottom: "6px",
                     fontWeight: "600",
                     border: "1px solid #ffe082",
-                    textTransform: "none"
+                    textTransform: "none",
                   }}
                 >
                   <span>⚠️ Scheduled Sunday (Moved to Saturday)</span>
                 </div>
               )}
-              <p style={{ margin: "0 0 4px 0", fontSize: "15px", fontWeight: "700", color: "#1a2b26", textTransform: "uppercase" }}>
+              <p
+                style={{
+                  margin: "0 0 4px 0",
+                  fontSize: "15px",
+                  fontWeight: "700",
+                  color: "#1a2b26",
+                  textTransform: "uppercase",
+                }}
+              >
                 {row.name || "Unknown Patient"}
                 <br />
-                <span style={{ fontSize: "13px", color: "#4f6961ff" }}>{row.phone || "-"}</span>
+                <span style={{ fontSize: "13px", color: "#4f6961ff" }}>
+                  {row.phone || "-"}
+                </span>
               </p>
             </div>
 
             {/* Diagnosis */}
-            <div style={{ width: "35%", paddingRight: "12px", fontSize: "14px", fontWeight: "600", color: "#1a2b26", textTransform: "uppercase" }}>
+            <div
+              style={{
+                width: "35%",
+                paddingRight: "12px",
+                fontSize: "14px",
+                fontWeight: "600",
+                color: "#1a2b26",
+                textTransform: "uppercase",
+              }}
+            >
               {row.diagnosis || "-"}
             </div>
 
             {/* Action Taken */}
-            <div style={{ width: "30%", paddingRight: "12px", fontSize: "12px" }}>
+            <div
+              style={{ width: "30%", paddingRight: "12px", fontSize: "12px" }}
+            >
               {parsedNotes.length === 0 ? (
-                <span className="text-muted" style={{ fontSize: "11px", fontStyle: "italic" }}>No notes added yet</span>
+                <span
+                  className="text-muted"
+                  style={{ fontSize: "11px", fontStyle: "italic" }}
+                >
+                  No notes added yet
+                </span>
               ) : (
                 parsedNotes.map((note, index) => {
                   let formattedDate = "";
                   if (note.date) {
                     try {
-                      formattedDate = moment(note.date, ["DD-MM-YYYY HH:mm:ss", "YYYY-MM-DDTHH:mm:ss.SSSZ", "YYYY-MM-DD HH:mm:ss"]).format("DD-MM-YYYY HH:mm");
+                      formattedDate = moment(note.date, [
+                        "DD-MM-YYYY HH:mm:ss",
+                        "YYYY-MM-DDTHH:mm:ss.SSSZ",
+                        "YYYY-MM-DD HH:mm:ss",
+                      ]).format("DD-MM-YYYY HH:mm");
                     } catch (err) {
                       formattedDate = "";
                     }
                   }
                   return (
-                    <div key={index} style={{ marginBottom: "8px", borderBottom: index < parsedNotes.length - 1 ? "1px solid #f0f7f5" : "none", paddingBottom: "6px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "2px" }}>
-                        <FeatherIcon icon="clock" size={10} style={{ color: "#0f7b63" }} />
-                        <span style={{ fontSize: "10px", fontWeight: "700", color: "#6b8f85" }}>{formattedDate || "N/A"}</span>
+                    <div
+                      key={index}
+                      style={{
+                        marginBottom: "8px",
+                        borderBottom:
+                          index < parsedNotes.length - 1
+                            ? "1px solid #f0f7f5"
+                            : "none",
+                        paddingBottom: "6px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          marginBottom: "2px",
+                        }}
+                      >
+                        <FeatherIcon
+                          icon="clock"
+                          size={10}
+                          style={{ color: "#0f7b63" }}
+                        />
+                        <span
+                          style={{
+                            fontSize: "10px",
+                            fontWeight: "700",
+                            color: "#6b8f85",
+                          }}
+                        >
+                          {formattedDate || "N/A"}
+                        </span>
                       </div>
-                      <div style={{ paddingLeft: "16px", color: "#4a5d58", fontWeight: "500", fontSize: "12px", wordBreak: "break-word" }}>
+                      <div
+                        style={{
+                          paddingLeft: "16px",
+                          color: "#4a5d58",
+                          fontWeight: "500",
+                          fontSize: "12px",
+                          wordBreak: "break-word",
+                        }}
+                      >
                         <span>
                           {typeof note === "string"
                             ? note
@@ -680,20 +819,61 @@ export default function CallingCalendar() {
             </div>
 
             {/* Actions */}
-            <div style={{ width: "10%", display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+            <div
+              style={{
+                width: "10%",
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "8px",
+              }}
+            >
               <Button
                 onClick={() => handleOpenNoteModal(recordId, selectedType)}
-                style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "36px", height: "36px", backgroundColor: "#0f7b63", border: "none", borderRadius: "8px", color: "white", padding: 0, boxShadow: "0 2px 6px rgba(15,123,99,0.15)" }}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "36px",
+                  height: "36px",
+                  backgroundColor: "#0f7b63",
+                  border: "none",
+                  borderRadius: "8px",
+                  color: "white",
+                  padding: 0,
+                  boxShadow: "0 2px 6px rgba(15,123,99,0.15)",
+                }}
                 title="Add Note"
               >
-                <FeatherIcon icon="edit-3" size={14} stroke="white" style={{ color: "white", stroke: "white" }} />
+                <FeatherIcon
+                  icon="edit-3"
+                  size={14}
+                  stroke="white"
+                  style={{ color: "white", stroke: "white" }}
+                />
               </Button>
               <Button
                 onClick={() => handleOpenCallbackModal(recordId, selectedType)}
-                style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "36px", height: "36px", backgroundColor: "#0f7b63", border: "none", borderRadius: "8px", color: "white", padding: 0, boxShadow: "0 2px 6px rgba(15,123,99,0.15)" }}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "36px",
+                  height: "36px",
+                  backgroundColor: "#0f7b63",
+                  border: "none",
+                  borderRadius: "8px",
+                  color: "white",
+                  padding: 0,
+                  boxShadow: "0 2px 6px rgba(15,123,99,0.15)",
+                }}
                 title="Add Callback Date"
               >
-                <FeatherIcon icon="calendar" size={14} stroke="white" style={{ color: "white", stroke: "white" }} />
+                <FeatherIcon
+                  icon="calendar"
+                  size={14}
+                  stroke="white"
+                  style={{ color: "white", stroke: "white" }}
+                />
               </Button>
             </div>
           </div>
@@ -714,11 +894,67 @@ export default function CallingCalendar() {
         paddingRight: "15px",
       }}
     >
-      <div style={{ width: "25%", color: "#0f7b63", fontSize: "15px", fontWeight: "700", letterSpacing: "1.2px", textTransform: "uppercase" }}>Patient Details</div>
-      <div style={{ width: "20%", color: "#0f7b63", fontSize: "15px", fontWeight: "700", letterSpacing: "1.2px", textTransform: "uppercase" }}>Date & Time</div>
-      <div style={{ width: "25%", color: "#0f7b63", fontSize: "15px", fontWeight: "700", letterSpacing: "1.2px", textTransform: "uppercase" }}>Doctor & FDE</div>
-      <div style={{ width: "20%", color: "#0f7b63", fontSize: "15px", fontWeight: "700", letterSpacing: "1.2px", textTransform: "uppercase" }}>Calling Notes</div>
-      <div style={{ width: "10%", color: "#0f7b63", fontSize: "15px", fontWeight: "700", letterSpacing: "1.2px", textTransform: "uppercase", textAlign: "right" }}>Actions</div>
+      <div
+        style={{
+          width: "25%",
+          color: "#0f7b63",
+          fontSize: "15px",
+          fontWeight: "700",
+          letterSpacing: "1.2px",
+          textTransform: "uppercase",
+        }}
+      >
+        Patient Details
+      </div>
+      <div
+        style={{
+          width: "20%",
+          color: "#0f7b63",
+          fontSize: "15px",
+          fontWeight: "700",
+          letterSpacing: "1.2px",
+          textTransform: "uppercase",
+        }}
+      >
+        Date & Time
+      </div>
+      <div
+        style={{
+          width: "25%",
+          color: "#0f7b63",
+          fontSize: "15px",
+          fontWeight: "700",
+          letterSpacing: "1.2px",
+          textTransform: "uppercase",
+        }}
+      >
+        Doctor & FDE
+      </div>
+      <div
+        style={{
+          width: "20%",
+          color: "#0f7b63",
+          fontSize: "15px",
+          fontWeight: "700",
+          letterSpacing: "1.2px",
+          textTransform: "uppercase",
+        }}
+      >
+        Calling Notes
+      </div>
+      <div
+        style={{
+          width: "10%",
+          color: "#0f7b63",
+          fontSize: "15px",
+          fontWeight: "700",
+          letterSpacing: "1.2px",
+          textTransform: "uppercase",
+          textAlign: "right",
+        }}
+      >
+        Actions
+      </div>
     </div>
   );
 
@@ -732,13 +968,17 @@ export default function CallingCalendar() {
         } else {
           try {
             parsed = JSON.parse(parsed);
-          } catch (e) { }
+          } catch (e) {}
         }
       }
 
       if (Array.isArray(parsed)) {
         parsedNotes = parsed;
-      } else if (typeof parsed === "object" && parsed !== null && Object.keys(parsed).length > 0) {
+      } else if (
+        typeof parsed === "object" &&
+        parsed !== null &&
+        Object.keys(parsed).length > 0
+      ) {
         parsedNotes = [parsed];
       } else if (typeof parsed === "string" && parsed.trim() !== "") {
         parsedNotes = [{ note: parsed }];
@@ -779,36 +1019,99 @@ export default function CallingCalendar() {
         }}
       >
         <Card.Body style={{ padding: "10px 5px" }}>
-          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center" }}>
+          <div
+            style={{ display: "flex", flexWrap: "wrap", alignItems: "center" }}
+          >
             {/* Patient Details */}
-            <div style={{ width: "25%", paddingLeft: "10px", paddingRight: "10px" }}>
-              <p style={{ margin: "0 0 4px 0", fontSize: "15px", fontWeight: "700", color: "#1a2b26", textTransform: "uppercase" }}>
+            <div
+              style={{
+                width: "25%",
+                paddingLeft: "10px",
+                paddingRight: "10px",
+              }}
+            >
+              <p
+                style={{
+                  margin: "0 0 4px 0",
+                  fontSize: "15px",
+                  fontWeight: "700",
+                  color: "#1a2b26",
+                  textTransform: "uppercase",
+                }}
+              >
                 {app.patient_name || "Unknown Patient"}
               </p>
-              <span style={{ fontSize: "13px", color: "#4f6961ff", fontWeight: "600" }}>{app.patient_phone || "-"}</span>
-              <div style={{ marginTop: "4px", fontSize: "12px", color: "#000000ff", fontWeight: "600" }}>
+              <span
+                style={{
+                  fontSize: "13px",
+                  color: "#4f6961ff",
+                  fontWeight: "600",
+                }}
+              >
+                {app.patient_phone || "-"}
+              </span>
+              <div
+                style={{
+                  marginTop: "4px",
+                  fontSize: "12px",
+                  color: "#000000ff",
+                  fontWeight: "600",
+                }}
+              >
                 {" "}
-                <span className="badge" style={{ backgroundColor: "#e0f7fa", color: "#00838f", fontSize: "11px" }}>
+                <span
+                  className="badge"
+                  style={{
+                    backgroundColor: "#e0f7fa",
+                    color: "#00838f",
+                    fontSize: "11px",
+                  }}
+                >
                   {app.patient_type || "New"}
                 </span>
               </div>
             </div>
 
             {/* Date & Time */}
-            <div style={{ width: "20%", paddingRight: "12px", fontSize: "14px", fontWeight: "600", color: "#1a2b26" }}>
+            <div
+              style={{
+                width: "20%",
+                paddingRight: "12px",
+                fontSize: "14px",
+                fontWeight: "600",
+                color: "#1a2b26",
+              }}
+            >
               <div className="d-flex align-items-center gap-1 mb-1">
                 <i className="fa fa-calendar text-muted"></i>
-                <span>{app.appointment_timestamp ? moment(app.appointment_timestamp).format("DD-MM-YYYY") : "-"}</span>
+                <span>
+                  {app.appointment_timestamp
+                    ? moment(app.appointment_timestamp).format("DD-MM-YYYY")
+                    : "-"}
+                </span>
               </div>
               <div className="d-flex align-items-center gap-1">
                 <i className="fa fa-clock-o text-muted"></i>
-                <span>{app.appointment_time ? moment(app.appointment_time, ["HH:mm:ss", "hh:mm A"]).format("HH:mm") : "-"}</span>
+                <span>
+                  {app.appointment_time
+                    ? moment(app.appointment_time, [
+                        "HH:mm:ss",
+                        "hh:mm A",
+                      ]).format("HH:mm")
+                    : "-"}
+                </span>
               </div>
             </div>
 
             {/* Doctor & FDE */}
             <div style={{ width: "25%", paddingRight: "12px" }}>
-              <div style={{ fontSize: "14px", color: "#1a2b26", marginBottom: "4px" }}>
+              <div
+                style={{
+                  fontSize: "14px",
+                  color: "#1a2b26",
+                  marginBottom: "4px",
+                }}
+              >
                 <strong>Doctor:</strong> {app.doctor_name || "N/A"}
               </div>
               <div style={{ fontSize: "14px", color: "#1a2b26" }}>
@@ -817,22 +1120,62 @@ export default function CallingCalendar() {
             </div>
 
             {/* Note */}
-            <div style={{ width: "20%", paddingRight: "12px", overflowY: "auto", maxHeight: "110px" }} className="scroll-note">
+            <div
+              style={{
+                width: "20%",
+                paddingRight: "12px",
+                overflowY: "auto",
+                maxHeight: "110px",
+              }}
+              className="scroll-note"
+            >
               {parsedNotes.length === 0 ? (
-                <span style={{ color: "#6b8f85", fontSize: "13px" }}>No calling notes added yet.</span>
+                <span style={{ color: "#6b8f85", fontSize: "13px" }}>
+                  No calling notes added yet.
+                </span>
               ) : (
                 parsedNotes.map((note, index) => {
                   const formattedNoteDate = note.date
-                    ? moment(note.date, ["DD-MM-YYYY HH:mm:ss", "YYYY-MM-DDTHH:mm:ss.SSSZ", "YYYY-MM-DD HH:mm:ss"]).format("DD-MM-YYYY HH:mm")
+                    ? moment(note.date, [
+                        "DD-MM-YYYY HH:mm:ss",
+                        "YYYY-MM-DDTHH:mm:ss.SSSZ",
+                        "YYYY-MM-DD HH:mm:ss",
+                      ]).format("DD-MM-YYYY HH:mm")
                     : "";
                   return (
-                    <div key={index} style={{ marginBottom: "8px", paddingBottom: "8px", borderBottom: index < parsedNotes.length - 1 ? "1px dashed #d4e8e3" : "none" }}>
-                      <div style={{ fontSize: "13px", color: "#1a2b26", lineHeight: "1.4" }}>
-                        <span style={{ fontWeight: "700", color: "#0f7b63" }}>{index + 1}.</span>{" "}
+                    <div
+                      key={index}
+                      style={{
+                        marginBottom: "8px",
+                        paddingBottom: "8px",
+                        borderBottom:
+                          index < parsedNotes.length - 1
+                            ? "1px dashed #d4e8e3"
+                            : "none",
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: "13px",
+                          color: "#1a2b26",
+                          lineHeight: "1.4",
+                        }}
+                      >
+                        <span style={{ fontWeight: "700", color: "#0f7b63" }}>
+                          {index + 1}.
+                        </span>{" "}
                         {formattedNoteDate && (
                           <>
-                            <span style={{ fontWeight: "600", color: "#486f64ff" }}>{formattedNoteDate}</span>
-                            <span style={{ margin: "0 4px", color: "#6f988eff" }}>|</span>
+                            <span
+                              style={{ fontWeight: "600", color: "#486f64ff" }}
+                            >
+                              {formattedNoteDate}
+                            </span>
+                            <span
+                              style={{ margin: "0 4px", color: "#6f988eff" }}
+                            >
+                              |
+                            </span>
                           </>
                         )}
                         <span style={{ fontWeight: "600" }}>
@@ -850,7 +1193,15 @@ export default function CallingCalendar() {
             </div>
 
             {/* Actions */}
-            <div style={{ width: "10%", display: "flex", justifyContent: "flex-end", gap: "8px", paddingRight: "10px" }}>
+            <div
+              style={{
+                width: "10%",
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "8px",
+                paddingRight: "10px",
+              }}
+            >
               <Button
                 onClick={() => {
                   setSelectedRecordId(app.appointment_id);
@@ -869,11 +1220,16 @@ export default function CallingCalendar() {
                   borderRadius: "8px",
                   color: "white",
                   padding: 0,
-                  boxShadow: "0 2px 6px rgba(15,123,99,0.15)"
+                  boxShadow: "0 2px 6px rgba(15,123,99,0.15)",
                 }}
                 title="Add Calling Note"
               >
-                <FeatherIcon icon="edit-3" size={15} stroke="white" style={{ color: "white", stroke: "white" }} />
+                <FeatherIcon
+                  icon="edit-3"
+                  size={15}
+                  stroke="white"
+                  style={{ color: "white", stroke: "white" }}
+                />
               </Button>
               <Button
                 onClick={() => {
@@ -891,11 +1247,16 @@ export default function CallingCalendar() {
                   borderRadius: "8px",
                   color: "white",
                   padding: 0,
-                  boxShadow: "0 2px 6px rgba(0,188,212,0.15)"
+                  boxShadow: "0 2px 6px rgba(0,188,212,0.15)",
                 }}
                 title="Edit Appointment"
               >
-                <FeatherIcon icon="edit" size={15} stroke="white" style={{ color: "white", stroke: "white" }} />
+                <FeatherIcon
+                  icon="edit"
+                  size={15}
+                  stroke="white"
+                  style={{ color: "white", stroke: "white" }}
+                />
               </Button>
               <Button
                 variant="danger"
@@ -913,11 +1274,16 @@ export default function CallingCalendar() {
                   borderRadius: "8px",
                   color: "white",
                   padding: 0,
-                  boxShadow: "0 2px 6px rgba(220,53,69,0.15)"
+                  boxShadow: "0 2px 6px rgba(220,53,69,0.15)",
                 }}
                 title="Cancel Appointment"
               >
-                <FeatherIcon icon="trash-2" size={15} stroke="white" style={{ color: "white", stroke: "white" }} />
+                <FeatherIcon
+                  icon="trash-2"
+                  size={15}
+                  stroke="white"
+                  style={{ color: "white", stroke: "white" }}
+                />
               </Button>
             </div>
           </div>
@@ -925,7 +1291,6 @@ export default function CallingCalendar() {
       </Card>
     );
   };
-
 
   return (
     <>
@@ -1038,7 +1403,7 @@ export default function CallingCalendar() {
                     fontWeight: "600",
                     fontSize: "13px",
                     boxShadow: "0 4px 12px rgba(15,123,99,0.3)",
-                    marginLeft: "auto"
+                    marginLeft: "auto",
                   }}
                 >
                   <i className="fa fa-file-excel"></i> Download Excel
@@ -1610,7 +1975,9 @@ export default function CallingCalendar() {
                             height: "30px",
                             borderRadius: "50%",
                             backgroundColor:
-                              hoveredCard === "TodayAppt" ? "#00bcd4" : "#e0f7fa",
+                              hoveredCard === "TodayAppt"
+                                ? "#00bcd4"
+                                : "#e0f7fa",
                             color:
                               hoveredCard === "TodayAppt" ? "white" : "#00bcd4",
                             display: "flex",
@@ -1677,7 +2044,8 @@ export default function CallingCalendar() {
                               margin: "0 0 4px 0",
                             }}
                           >
-                            Tomorrow's Appointment ({tomorrowAppointments.length})
+                            Tomorrow's Appointment (
+                            {tomorrowAppointments.length})
                           </h5>
                           <p
                             style={{
@@ -1698,9 +2066,13 @@ export default function CallingCalendar() {
                             height: "30px",
                             borderRadius: "50%",
                             backgroundColor:
-                              hoveredCard === "TomorrowAppt" ? "#3b82f6" : "#e8f0fe",
+                              hoveredCard === "TomorrowAppt"
+                                ? "#3b82f6"
+                                : "#e8f0fe",
                             color:
-                              hoveredCard === "TomorrowAppt" ? "white" : "#3b82f6",
+                              hoveredCard === "TomorrowAppt"
+                                ? "white"
+                                : "#3b82f6",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
@@ -1724,7 +2096,8 @@ export default function CallingCalendar() {
                   </Col>
                 </Row>
               </div>
-            ) : selectedView === "todayAppointments" || selectedView === "tomorrowAppointments" ? (
+            ) : selectedView === "todayAppointments" ||
+              selectedView === "tomorrowAppointments" ? (
               <div>
                 {/* Header Toolbar */}
                 <div
@@ -1777,7 +2150,10 @@ export default function CallingCalendar() {
                 </div>
 
                 {/* Records List */}
-                {(selectedView === "todayAppointments" ? todayAppointments : tomorrowAppointments).length === 0 ? (
+                {(selectedView === "todayAppointments"
+                  ? todayAppointments
+                  : tomorrowAppointments
+                ).length === 0 ? (
                   <div
                     style={{
                       backgroundColor: "white",
@@ -1801,7 +2177,10 @@ export default function CallingCalendar() {
                 ) : (
                   <div>
                     {renderAppointmentsHeader()}
-                    {(selectedView === "todayAppointments" ? todayAppointments : tomorrowAppointments).map(renderAppointmentCard)}
+                    {(selectedView === "todayAppointments"
+                      ? todayAppointments
+                      : tomorrowAppointments
+                    ).map(renderAppointmentCard)}
                   </div>
                 )}
               </div>
@@ -2058,7 +2437,8 @@ export default function CallingCalendar() {
                             color: "#6b8f85",
                           }}
                         >
-                          No patients pending outreach (Above 30 days from enquiry without notes) since 1st July 2026
+                          No patients pending outreach (Above 30 days from
+                          enquiry without notes) since 1st July 2026
                         </div>
                       ) : (
                         <div>
@@ -2310,7 +2690,13 @@ export default function CallingCalendar() {
               <Row className="g-3">
                 <Col md={4}>
                   <Form.Group>
-                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                    <Form.Label
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        marginBottom: "4px",
+                      }}
+                    >
                       Appointment Date
                     </Form.Label>
                     <DatePicker
@@ -2334,7 +2720,13 @@ export default function CallingCalendar() {
 
                 <Col md={4}>
                   <Form.Group>
-                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                    <Form.Label
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        marginBottom: "4px",
+                      }}
+                    >
                       Appointment Time
                     </Form.Label>
                     <Form.Select
@@ -2342,9 +2734,9 @@ export default function CallingCalendar() {
                       value={
                         selectedAppointment.appointment_time
                           ? moment(selectedAppointment.appointment_time, [
-                            "HH:mm:ss",
-                            "hh:mm A",
-                          ]).format("hh:mm A")
+                              "HH:mm:ss",
+                              "hh:mm A",
+                            ]).format("hh:mm A")
                           : ""
                       }
                       onChange={handleEditModalInputChange}
@@ -2366,7 +2758,13 @@ export default function CallingCalendar() {
 
                 <Col md={4}>
                   <Form.Group>
-                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                    <Form.Label
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        marginBottom: "4px",
+                      }}
+                    >
                       Doctor Name
                     </Form.Label>
                     <Form.Select
@@ -2402,7 +2800,13 @@ export default function CallingCalendar() {
 
                 <Col md={4}>
                   <Form.Group>
-                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                    <Form.Label
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        marginBottom: "4px",
+                      }}
+                    >
                       Patient Type
                     </Form.Label>
                     <Form.Select
@@ -2416,18 +2820,26 @@ export default function CallingCalendar() {
                       }}
                     >
                       <option value="">Select Type</option>
-                      {["New", "Follow", "Postoperative", "MCDPA", "Other"].map((type, index) => (
-                        <option key={index} value={type}>
-                          {type}
-                        </option>
-                      ))}
+                      {["New", "Follow", "Postoperative", "MCDPA", "Other"].map(
+                        (type, index) => (
+                          <option key={index} value={type}>
+                            {type}
+                          </option>
+                        ),
+                      )}
                     </Form.Select>
                   </Form.Group>
                 </Col>
 
                 <Col md={4}>
                   <Form.Group>
-                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                    <Form.Label
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        marginBottom: "4px",
+                      }}
+                    >
                       Patient Name
                     </Form.Label>
                     <Form.Control
@@ -2444,8 +2856,12 @@ export default function CallingCalendar() {
                         fontSize: "12px",
                         borderRadius: "9px",
                         border: "2px solid rgb(77, 208, 225)",
-                        backgroundColor: selectedAppointment.patient_id ? "#e7ebebff" : undefined,
-                        cursor: selectedAppointment.patient_id ? "not-allowed" : "default",
+                        backgroundColor: selectedAppointment.patient_id
+                          ? "#e7ebebff"
+                          : undefined,
+                        cursor: selectedAppointment.patient_id
+                          ? "not-allowed"
+                          : "default",
                       }}
                     />
                   </Form.Group>
@@ -2453,7 +2869,13 @@ export default function CallingCalendar() {
 
                 <Col md={4}>
                   <Form.Group>
-                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                    <Form.Label
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        marginBottom: "4px",
+                      }}
+                    >
                       Contact Number
                     </Form.Label>
                     <Form.Control
@@ -2490,7 +2912,13 @@ export default function CallingCalendar() {
 
                 <Col md={4}>
                   <Form.Group>
-                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                    <Form.Label
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        marginBottom: "4px",
+                      }}
+                    >
                       Patient Address
                     </Form.Label>
                     <Form.Control
@@ -2510,7 +2938,13 @@ export default function CallingCalendar() {
 
                 <Col md={4}>
                   <Form.Group>
-                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                    <Form.Label
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        marginBottom: "4px",
+                      }}
+                    >
                       Note
                     </Form.Label>
                     <Form.Control
@@ -2531,7 +2965,13 @@ export default function CallingCalendar() {
 
                 <Col md={4}>
                   <Form.Group>
-                    <Form.Label style={{ fontSize: "12px", fontWeight: "600", marginBottom: "4px" }}>
+                    <Form.Label
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        marginBottom: "4px",
+                      }}
+                    >
                       FDE Name
                     </Form.Label>
                     <Form.Select

@@ -14,7 +14,15 @@ import { decodeJwt } from "../../Utility/decode-jwt";
 const BASE_URL = "http://194.195.117.79:5100/api";
 
 const formatValue = (val) => {
-  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+  if (
+    val === null ||
+    val === undefined ||
+    val === "" ||
+    val === "N/A" ||
+    val === 0 ||
+    val === "0" ||
+    val === "-"
+  ) {
     return "-";
   }
   return val;
@@ -91,7 +99,7 @@ const ReferenceReport = () => {
             selectedReferenceType: selectedRefType,
             type: "summary",
           }),
-        }
+        },
       );
 
       if (!response.ok) throw new Error("Failed to fetch data");
@@ -155,11 +163,11 @@ const ReferenceReport = () => {
   // Compute totals
   const totalPatientsCount = filteredData.reduce(
     (acc, curr) => acc + (Number(curr.count) || 0),
-    0
+    0,
   );
   const totalVisitedCount = filteredData.reduce(
     (acc, curr) => acc + (Number(curr.visited) || 0),
-    0
+    0,
   );
   const overallConversionPct =
     totalPatientsCount > 0
@@ -325,10 +333,19 @@ const ReferenceReport = () => {
                     padding: "0.8rem",
                   }}
                 >
-                  <h4 style={{ margin: 0, fontSize: "18px" }}>Reference Report</h4>
+                  <h4 style={{ margin: 0, fontSize: "18px" }}>
+                    Reference Report
+                  </h4>
                   {fromDate && toDate && (
-                    <div style={{ fontSize: "13px", fontWeight: "normal", marginTop: "5px" }}>
-                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "normal",
+                        marginTop: "5px",
+                      }}
+                    >
+                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to{" "}
+                      <b>{formatDateDisplay(toDate)}</b>
                     </div>
                   )}
                 </Card.Header>
@@ -435,7 +452,11 @@ const ReferenceReport = () => {
                             }}
                             disabled={loading}
                           >
-                            {loading ? <Spinner animation="border" size="sm" /> : "Search"}
+                            {loading ? (
+                              <Spinner animation="border" size="sm" />
+                            ) : (
+                              "Search"
+                            )}
                           </button>
                           <button
                             className="btn btn-secondary"
@@ -489,7 +510,11 @@ const ReferenceReport = () => {
                       field="subReference"
                       header="Sub Reference / Detail"
                       body={(rowData) => formatValue(rowData.subReference)}
-                      style={{ width: "220px", wordBreak: "break-word", whiteSpace: "normal" }}
+                      style={{
+                        width: "220px",
+                        wordBreak: "break-word",
+                        whiteSpace: "normal",
+                      }}
                     />
                     <Column
                       field="count"
@@ -518,10 +543,14 @@ const ReferenceReport = () => {
                         <tr>
                           <th style={{ width: "6%" }}>Sr No</th>
                           <th style={{ width: "24%" }}>Reference Type</th>
-                          <th style={{ width: "30%" }}>Sub Reference / Detail</th>
+                          <th style={{ width: "30%" }}>
+                            Sub Reference / Detail
+                          </th>
                           <th style={{ width: "12%" }}>Count</th>
                           <th style={{ width: "13%" }}>% of Total</th>
-                          <th style={{ width: "15%" }}>Conversion to Visit %</th>
+                          <th style={{ width: "15%" }}>
+                            Conversion to Visit %
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
@@ -529,7 +558,12 @@ const ReferenceReport = () => {
                           <tr key={index}>
                             <td>{index + 1}</td>
                             <td>{formatValue(item.referenceType)}</td>
-                            <td style={{ wordBreak: "break-word", whiteSpace: "normal" }}>
+                            <td
+                              style={{
+                                wordBreak: "break-word",
+                                whiteSpace: "normal",
+                              }}
+                            >
                               {formatValue(item.subReference)}
                             </td>
                             <td>{formatValue(item.count)}</td>

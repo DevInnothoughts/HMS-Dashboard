@@ -1,5 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Row, Col, Card, Container, Button, Form, Modal } from "react-bootstrap";
+import {
+  Row,
+  Col,
+  Card,
+  Container,
+  Button,
+  Form,
+  Modal,
+} from "react-bootstrap";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
@@ -72,7 +80,9 @@ const HospitalCertificates = () => {
     if (currentLocation === "default") return;
     setLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/V1/certificates?location=${currentLocation}`);
+      const response = await fetch(
+        `${BASE_URL}/V1/certificates?location=${currentLocation}`,
+      );
       const data = await response.json();
       if (response.ok && data.data) {
         setCertificates(data.data);
@@ -121,10 +131,13 @@ const HospitalCertificates = () => {
     formData.append("certificate_file", newCertFile);
 
     try {
-      const response = await fetch(`${BASE_URL}/V1/certificates?location=${currentLocation}`, {
-        method: "POST",
-        body: formData,
-      });
+      const response = await fetch(
+        `${BASE_URL}/V1/certificates?location=${currentLocation}`,
+        {
+          method: "POST",
+          body: formData,
+        },
+      );
       const data = await response.json();
       if (response.ok && data.statusCode === 201) {
         Swal.fire({
@@ -161,7 +174,8 @@ const HospitalCertificates = () => {
 
   const getFileUrl = (dbPath) => {
     if (!dbPath) return "";
-    if (dbPath.startsWith("http://") || dbPath.startsWith("https://")) return dbPath;
+    if (dbPath.startsWith("http://") || dbPath.startsWith("https://"))
+      return dbPath;
     try {
       const url = new URL(BASE_URL);
       return `${url.origin}${dbPath}`;
@@ -192,7 +206,9 @@ const HospitalCertificates = () => {
 
   const isAlreadySubmitted = (name) => {
     return certificates.some(
-      (c) => c.certificate_name === name && getStatus(c.certificate_expiry) !== "Expired"
+      (c) =>
+        c.certificate_name === name &&
+        getStatus(c.certificate_expiry) !== "Expired",
     );
   };
 
@@ -202,13 +218,22 @@ const HospitalCertificates = () => {
         <Button
           variant="outline-info"
           size="sm"
-          style={{ borderRadius: "10px", fontSize: "11px", fontWeight: "bold", padding: "6px 8px" }}
+          style={{
+            borderRadius: "10px",
+            fontSize: "11px",
+            fontWeight: "bold",
+            padding: "6px 8px",
+          }}
           onClick={() => {
             const url = getFileUrl(rowData.certificate_path);
             if (url) {
               setPreviewUrl(url);
               setPreviewName(rowData.certificate_name);
-              setPreviewType(url.toLowerCase().split("?")[0].endsWith(".pdf") ? "pdf" : "image");
+              setPreviewType(
+                url.toLowerCase().split("?")[0].endsWith(".pdf")
+                  ? "pdf"
+                  : "image",
+              );
               setShowPreview(true);
             } else {
               Swal.fire({
@@ -228,15 +253,32 @@ const HospitalCertificates = () => {
 
   const statusBodyTemplate = (rowData) => {
     const status = getStatus(rowData.certificate_expiry);
-    let badgeStyle = { padding: "4px 8px", borderRadius: "12px", fontWeight: "bold", fontSize: "12px" };
+    let badgeStyle = {
+      padding: "4px 8px",
+      borderRadius: "12px",
+      fontWeight: "bold",
+      fontSize: "12px",
+    };
 
     if (status === "Active") {
-      badgeStyle = { ...badgeStyle, backgroundColor: "#e8f5e9", color: "#2e7d32" };
+      badgeStyle = {
+        ...badgeStyle,
+        backgroundColor: "#e8f5e9",
+        color: "#2e7d32",
+      };
     } else if (status === "Expires soon") {
-      badgeStyle = { ...badgeStyle, backgroundColor: "#fff3e0", color: "#e65100" };
+      badgeStyle = {
+        ...badgeStyle,
+        backgroundColor: "#fff3e0",
+        color: "#e65100",
+      };
     } else {
       // "Expired", "Expiring today", "Expiring tomorrow" all use danger red styling
-      badgeStyle = { ...badgeStyle, backgroundColor: "#ffebee", color: "#c62828" };
+      badgeStyle = {
+        ...badgeStyle,
+        backgroundColor: "#ffebee",
+        color: "#c62828",
+      };
     }
 
     return <span style={badgeStyle}>{status}</span>;
@@ -295,7 +337,7 @@ const HospitalCertificates = () => {
                   borderColor: "#00bcd4",
                   background: "white",
                   border: "1px solid #00bcd4",
-                  marginTop: "10px"
+                  marginTop: "10px",
                 }}
               >
                 <Card.Header
@@ -309,12 +351,17 @@ const HospitalCertificates = () => {
                     fontSize: "16px",
                   }}
                 >
-                  <h4 style={{ margin: 0 }}><i className="fa fa-plus-circle me-2"></i>Add Certificate</h4>
+                  <h4 style={{ margin: 0 }}>
+                    <i className="fa fa-plus-circle me-2"></i>Add Certificate
+                  </h4>
                 </Card.Header>
                 <Card.Body style={{ padding: "6px" }}>
                   <form onSubmit={handleAddSubmit}>
                     <div className="table-responsive add-cert-table-responsive">
-                      <table className="table text-center add-cert-table" style={{ marginBottom: 0 }}>
+                      <table
+                        className="table text-center add-cert-table"
+                        style={{ marginBottom: 0 }}
+                      >
                         <thead>
                           <tr>
                             <th style={{ width: "30%" }}>Certificate Name</th>
@@ -330,7 +377,11 @@ const HospitalCertificates = () => {
                                 required
                                 value={newCertName}
                                 onChange={(e) => setNewCertName(e.target.value)}
-                                style={{ fontSize: "12px", borderRadius: "8px", border: "1px solid #4dd0e1" }}
+                                style={{
+                                  fontSize: "12px",
+                                  borderRadius: "8px",
+                                  border: "1px solid #4dd0e1",
+                                }}
                               >
                                 <option value="">--Select Certificate--</option>
                                 {certificateOptions
@@ -349,8 +400,14 @@ const HospitalCertificates = () => {
                                 required
                                 min={new Date().toISOString().split("T")[0]}
                                 value={newExpiryDate}
-                                onChange={(e) => setNewExpiryDate(e.target.value)}
-                                style={{ fontSize: "12px", borderRadius: "8px", border: "1px solid #4dd0e1" }}
+                                onChange={(e) =>
+                                  setNewExpiryDate(e.target.value)
+                                }
+                                style={{
+                                  fontSize: "12px",
+                                  borderRadius: "8px",
+                                  border: "1px solid #4dd0e1",
+                                }}
                               />
                             </td>
                             <td style={{ verticalAlign: "middle" }}>
@@ -360,7 +417,11 @@ const HospitalCertificates = () => {
                                 accept="image/*,application/pdf"
                                 ref={fileInputRef}
                                 onChange={handleFileChange}
-                                style={{ fontSize: "12px", borderRadius: "8px", border: "1px solid #4dd0e1" }}
+                                style={{
+                                  fontSize: "12px",
+                                  borderRadius: "8px",
+                                  border: "1px solid #4dd0e1",
+                                }}
                               />
                               {newCertFile && filePreviewUrl && (
                                 <div
@@ -375,7 +436,10 @@ const HospitalCertificates = () => {
                                     gap: "8px",
                                   }}
                                 >
-                                  {newCertFile.type === "application/pdf" || newCertFile.name.toLowerCase().endsWith(".pdf") ? (
+                                  {newCertFile.type === "application/pdf" ||
+                                  newCertFile.name
+                                    .toLowerCase()
+                                    .endsWith(".pdf") ? (
                                     <div
                                       style={{
                                         width: "40px",
@@ -388,7 +452,8 @@ const HospitalCertificates = () => {
                                         color: "#c62828",
                                         fontSize: "18px",
                                         fontWeight: "bold",
-                                        boxShadow: "0px 2px 4px rgba(0,0,0,0.1)",
+                                        boxShadow:
+                                          "0px 2px 4px rgba(0,0,0,0.1)",
                                       }}
                                     >
                                       <i className="fa fa-file-pdf-o"></i>
@@ -402,12 +467,19 @@ const HospitalCertificates = () => {
                                         height: "40px",
                                         objectFit: "cover",
                                         borderRadius: "6px",
-                                        boxShadow: "0px 2px 4px rgba(0,0,0,0.1)",
+                                        boxShadow:
+                                          "0px 2px 4px rgba(0,0,0,0.1)",
                                         border: "1px solid #e0e0e0",
                                       }}
                                     />
                                   )}
-                                  <div style={{ flex: 1, textAlign: "left", minWidth: 0 }}>
+                                  <div
+                                    style={{
+                                      flex: 1,
+                                      textAlign: "left",
+                                      minWidth: 0,
+                                    }}
+                                  >
                                     <div
                                       style={{
                                         fontSize: "11px",
@@ -427,9 +499,13 @@ const HospitalCertificates = () => {
                                         setPreviewUrl(filePreviewUrl);
                                         setPreviewName(newCertFile.name);
                                         setPreviewType(
-                                          newCertFile.type === "application/pdf" || newCertFile.name.toLowerCase().endsWith(".pdf")
+                                          newCertFile.type ===
+                                            "application/pdf" ||
+                                            newCertFile.name
+                                              .toLowerCase()
+                                              .endsWith(".pdf")
                                             ? "pdf"
-                                            : "image"
+                                            : "image",
                                         );
                                         setShowPreview(true);
                                       }}
@@ -445,7 +521,8 @@ const HospitalCertificates = () => {
                                         marginTop: "2px",
                                       }}
                                     >
-                                      <i className="fa fa-eye me-1"></i> Click to preview
+                                      <i className="fa fa-eye me-1"></i> Click
+                                      to preview
                                     </Button>
                                   </div>
                                   <Button
@@ -485,7 +562,7 @@ const HospitalCertificates = () => {
                                   borderRadius: "8px",
                                   fontWeight: "bold",
                                   fontSize: "13px",
-                                  padding: "5px 12px"
+                                  padding: "5px 12px",
                                 }}
                               >
                                 <i className="fa fa-upload me-1"></i>Upload
@@ -507,7 +584,7 @@ const HospitalCertificates = () => {
                   borderColor: "#00bcd4",
                   background: "white",
                   border: "1px solid #00bcd4",
-                  marginTop: "20px"
+                  marginTop: "20px",
                 }}
               >
                 <Card.Header
@@ -522,7 +599,10 @@ const HospitalCertificates = () => {
                     fontSize: "16px",
                   }}
                 >
-                  <h4 style={{ margin: 0 }}><i className="fa fa-certificate me-2"></i>Hospital Certificates</h4>
+                  <h4 style={{ margin: 0 }}>
+                    <i className="fa fa-certificate me-2"></i>Hospital
+                    Certificates
+                  </h4>
                 </Card.Header>
                 <Card.Body style={{ padding: "5px" }}>
                   <DataTable
@@ -547,12 +627,23 @@ const HospitalCertificates = () => {
                     <Column
                       field="certificate_name"
                       header="Certificate Name"
-                      style={{ width: "20%", fontWeight: "600", color: "#006064", textAlign: "left" }}
+                      style={{
+                        width: "20%",
+                        fontWeight: "600",
+                        color: "#006064",
+                        textAlign: "left",
+                      }}
                     />
                     <Column
                       field="certificate_expiry"
                       header="Expiry Date"
-                      body={(rowData) => rowData.certificate_expiry ? moment(rowData.certificate_expiry).format("DD-MM-YYYY") : "-"}
+                      body={(rowData) =>
+                        rowData.certificate_expiry
+                          ? moment(rowData.certificate_expiry).format(
+                              "DD-MM-YYYY",
+                            )
+                          : "-"
+                      }
                       style={{ width: "20%", textAlign: "center" }}
                     />
                     <Column
@@ -580,12 +671,23 @@ const HospitalCertificates = () => {
         size="lg"
         centered
       >
-        <Modal.Header closeButton style={{ background: "#e0f7fa", borderBottom: "2px solid #00bcd4" }}>
-          <Modal.Title style={{ color: "#006064", fontWeight: "bold", fontSize: "16px" }}>
+        <Modal.Header
+          closeButton
+          style={{ background: "#e0f7fa", borderBottom: "2px solid #00bcd4" }}
+        >
+          <Modal.Title
+            style={{ color: "#006064", fontWeight: "bold", fontSize: "16px" }}
+          >
             <i className="fa fa-file-pdf-o me-2"></i> {previewName} Preview
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body style={{ textAlign: "center", backgroundColor: "#f5fcfd", padding: "15px" }}>
+        <Modal.Body
+          style={{
+            textAlign: "center",
+            backgroundColor: "#f5fcfd",
+            padding: "15px",
+          }}
+        >
           {previewType === "pdf" ? (
             <iframe
               src={`${previewUrl}#toolbar=0`}

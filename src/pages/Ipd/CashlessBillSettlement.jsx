@@ -39,7 +39,11 @@ const getLocationFromStorage = () => {
     const payload = decodeJwt(token);
     if (payload?.jobLocation) return payload.jobLocation;
   }
-  return localStorage.getItem("location") || localStorage.getItem("jobLocation") || "default";
+  return (
+    localStorage.getItem("location") ||
+    localStorage.getItem("jobLocation") ||
+    "default"
+  );
 };
 
 const formatDateForDisplay = (dateValue) => {
@@ -80,7 +84,9 @@ const CashlessBillSettlement = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [currentLocation, setCurrentLocation] = useState(getLocationFromStorage());
+  const [currentLocation, setCurrentLocation] = useState(
+    getLocationFromStorage(),
+  );
   const [insuranceOptions, setInsuranceOptions] = useState([]);
   const [tpaOptions, setTpaOptions] = useState([]);
 
@@ -122,8 +128,12 @@ const CashlessBillSettlement = () => {
     const fetchDropdowns = async () => {
       try {
         const [iRes, tRes] = await Promise.all([
-          fetch(`${BASE_URL}/V1/invoice/insurance_co_dropdown?location=${encodeURIComponent(loc)}`),
-          fetch(`${BASE_URL}/V1/invoice/tpa_dropdown?location=${encodeURIComponent(loc)}`),
+          fetch(
+            `${BASE_URL}/V1/invoice/insurance_co_dropdown?location=${encodeURIComponent(loc)}`,
+          ),
+          fetch(
+            `${BASE_URL}/V1/invoice/tpa_dropdown?location=${encodeURIComponent(loc)}`,
+          ),
         ]);
 
         if (iRes.ok) {
@@ -144,35 +154,45 @@ const CashlessBillSettlement = () => {
 
   const resolveInsuranceName = useCallback(
     (val) => {
-      if (!val || val === "0" || val === 0 || val === "NULL" || val === "null") return "-";
+      if (!val || val === "0" || val === 0 || val === "NULL" || val === "null")
+        return "-";
       const strVal = String(val).trim();
       const match = insuranceOptions.find(
         (i) =>
           String(i.comapny_id) === strVal ||
           String(i.company_id) === strVal ||
-          String(i.id) === strVal
+          String(i.id) === strVal,
       );
-      if (match) return match.companyname || match.company_name || match.name || strVal;
+      if (match)
+        return match.companyname || match.company_name || match.name || strVal;
       return strVal;
     },
-    [insuranceOptions]
+    [insuranceOptions],
   );
 
   const resolveTpaName = useCallback(
     (val) => {
-      if (!val || val === "0" || val === 0 || val === "NULL" || val === "null") return "-";
+      if (!val || val === "0" || val === 0 || val === "NULL" || val === "null")
+        return "-";
       const strVal = String(val).trim();
       const match = tpaOptions.find(
         (t) =>
           String(t.comapny_id) === strVal ||
           String(t.company_id) === strVal ||
           String(t.id) === strVal ||
-          String(t.tpa_id) === strVal
+          String(t.tpa_id) === strVal,
       );
-      if (match) return match.companyname || match.company_name || match.name || match.tpaname || strVal;
+      if (match)
+        return (
+          match.companyname ||
+          match.company_name ||
+          match.name ||
+          match.tpaname ||
+          strVal
+        );
       return strVal;
     },
-    [tpaOptions]
+    [tpaOptions],
   );
 
   const dropdownCache = useRef({});
@@ -186,8 +206,12 @@ const CashlessBillSettlement = () => {
     try {
       const dateQuery = dateStr ? `&date=${encodeURIComponent(dateStr)}` : "";
       const [iRes, tRes] = await Promise.all([
-        fetch(`${BASE_URL}/V1/invoice/insurance_co_dropdown?location=${encodeURIComponent(loc)}${dateQuery}`),
-        fetch(`${BASE_URL}/V1/invoice/tpa_dropdown?location=${encodeURIComponent(loc)}${dateQuery}`),
+        fetch(
+          `${BASE_URL}/V1/invoice/insurance_co_dropdown?location=${encodeURIComponent(loc)}${dateQuery}`,
+        ),
+        fetch(
+          `${BASE_URL}/V1/invoice/tpa_dropdown?location=${encodeURIComponent(loc)}${dateQuery}`,
+        ),
       ]);
 
       const iData = iRes.ok ? await iRes.json() : {};
@@ -231,7 +255,12 @@ const CashlessBillSettlement = () => {
         let options = {
           method: "POST",
           headers,
-          body: JSON.stringify({ isAjax: "true", location: loc, Fromdate: fromStr, Todate: toStr }),
+          body: JSON.stringify({
+            isAjax: "true",
+            location: loc,
+            Fromdate: fromStr,
+            Todate: toStr,
+          }),
         };
 
         if (fromStr && toStr) {
@@ -239,7 +268,11 @@ const CashlessBillSettlement = () => {
           options = {
             method: "POST",
             headers,
-            body: JSON.stringify({ Fromdate: fromStr, Todate: toStr, location: loc }),
+            body: JSON.stringify({
+              Fromdate: fromStr,
+              Todate: toStr,
+              location: loc,
+            }),
           };
         }
 
@@ -252,7 +285,9 @@ const CashlessBillSettlement = () => {
 
         if (res.ok) {
           const json = await res.json();
-          const list = Array.isArray(json) ? json : json.data || json.companydetails;
+          const list = Array.isArray(json)
+            ? json
+            : json.data || json.companydetails;
           if (Array.isArray(list) && list.length > 0) {
             fetchedData = list;
           }
@@ -264,15 +299,18 @@ const CashlessBillSettlement = () => {
       // 2. Fallback to getInsuranceDueReport
       if (!fetchedData) {
         try {
-          const res = await fetch(`${BASE_URL}/V1/managereports/getInsuranceDueReport`, {
-            method: "POST",
-            headers,
-            body: JSON.stringify({
-              location: loc,
-              Fromdate: fromStr || "2020-01-01",
-              Todate: toStr || moment().format("YYYY-MM-DD"),
-            }),
-          });
+          const res = await fetch(
+            `${BASE_URL}/V1/managereports/getInsuranceDueReport`,
+            {
+              method: "POST",
+              headers,
+              body: JSON.stringify({
+                location: loc,
+                Fromdate: fromStr || "2020-01-01",
+                Todate: toStr || moment().format("YYYY-MM-DD"),
+              }),
+            },
+          );
           if (res.ok) {
             const json = await res.json();
             const list = Array.isArray(json) ? json : json.data;
@@ -292,12 +330,20 @@ const CashlessBillSettlement = () => {
           const res = await fetch(url, { method: "GET", headers });
           if (res.ok) {
             const json = await res.json();
-            const raw = Array.isArray(json.data?.[0]) ? json.data[0] : json.data || [];
+            const raw = Array.isArray(json.data?.[0])
+              ? json.data[0]
+              : json.data || [];
             const insuranceInvoices = raw.filter((inv) => {
               const st = (inv.status || "").toLowerCase();
               const bm = (inv.bill_method || "").toLowerCase();
               const bt = (inv.bill_Type || inv.bill_type || "").toLowerCase();
-              return st === "cashless" || bm === "cashless" || bt === "insurance" || inv.insurancecompany || inv.companyname;
+              return (
+                st === "cashless" ||
+                bm === "cashless" ||
+                bt === "insurance" ||
+                inv.insurancecompany ||
+                inv.companyname
+              );
             });
             if (insuranceInvoices.length > 0) {
               fetchedData = insuranceInvoices;
@@ -312,25 +358,38 @@ const CashlessBillSettlement = () => {
         const processed = await Promise.all(
           fetchedData.map(async (item) => {
             const rawComp =
-              item.companyname && item.companyname !== "0" && item.companyname !== "NULL" && item.companyname !== "null"
+              item.companyname &&
+              item.companyname !== "0" &&
+              item.companyname !== "NULL" &&
+              item.companyname !== "null"
                 ? item.companyname
-                : item.companyName && item.companyName !== "0" && item.companyName !== "NULL"
+                : item.companyName &&
+                    item.companyName !== "0" &&
+                    item.companyName !== "NULL"
                   ? item.companyName
-                  : item.insurance_company_name && item.insurance_company_name !== "0"
+                  : item.insurance_company_name &&
+                      item.insurance_company_name !== "0"
                     ? item.insurance_company_name
-                    : item.invoice_insurancecompany && item.invoice_insurancecompany !== "0"
+                    : item.invoice_insurancecompany &&
+                        item.invoice_insurancecompany !== "0"
                       ? item.invoice_insurancecompany
                       : item.insurancecompany || item.insurance_name || "-";
 
             const rawTpa =
-              item.tpaname && item.tpaname !== "0" && item.tpaname !== "NULL" && item.tpaname !== "null"
+              item.tpaname &&
+              item.tpaname !== "0" &&
+              item.tpaname !== "NULL" &&
+              item.tpaname !== "null"
                 ? item.tpaname
-                : item.tpa_name && item.tpa_name !== "0" && item.tpa_name !== "NULL"
+                : item.tpa_name &&
+                    item.tpa_name !== "0" &&
+                    item.tpa_name !== "NULL"
                   ? item.tpa_name
                   : item.invoice_tpa && item.invoice_tpa !== "0"
                     ? item.invoice_tpa
                     : item.tpa || "-";
-            const creationDate = item.creationdate || item.creation_date || item.date || "";
+            const creationDate =
+              item.creationdate || item.creation_date || item.date || "";
 
             let finalComp = rawComp;
             let finalTpa = rawTpa;
@@ -339,17 +398,24 @@ const CashlessBillSettlement = () => {
             const isTpaNumeric = /^\d+$/.test(String(rawTpa).trim());
 
             if (isCompNumeric || isTpaNumeric) {
-              const dateDropdowns = await getDropdownsForDate(loc, creationDate);
+              const dateDropdowns = await getDropdownsForDate(
+                loc,
+                creationDate,
+              );
 
               if (isCompNumeric) {
                 const match = dateDropdowns.insurance.find(
                   (i) =>
                     String(i.comapny_id) === String(rawComp).trim() ||
                     String(i.company_id) === String(rawComp).trim() ||
-                    String(i.id) === String(rawComp).trim()
+                    String(i.id) === String(rawComp).trim(),
                 );
                 if (match) {
-                  finalComp = match.companyname || match.company_name || match.name || rawComp;
+                  finalComp =
+                    match.companyname ||
+                    match.company_name ||
+                    match.name ||
+                    rawComp;
                 } else {
                   finalComp = resolveInsuranceName(rawComp);
                 }
@@ -361,10 +427,15 @@ const CashlessBillSettlement = () => {
                     String(t.comapny_id) === String(rawTpa).trim() ||
                     String(t.company_id) === String(rawTpa).trim() ||
                     String(t.id) === String(rawTpa).trim() ||
-                    String(t.tpa_id) === String(rawTpa).trim()
+                    String(t.tpa_id) === String(rawTpa).trim(),
                 );
                 if (match) {
-                  finalTpa = match.companyname || match.company_name || match.name || match.tpaname || rawTpa;
+                  finalTpa =
+                    match.companyname ||
+                    match.company_name ||
+                    match.name ||
+                    match.tpaname ||
+                    rawTpa;
                 } else {
                   finalTpa = resolveTpaName(rawTpa);
                 }
@@ -374,32 +445,47 @@ const CashlessBillSettlement = () => {
               finalTpa = resolveTpaName(rawTpa);
             }
 
-            const totalAmt = parseFloat(item.totalamt || item.total_amt || item.totalAmt || 0);
-            const autoAmt = parseFloat(item.autoamt !== undefined ? item.autoamt : (item.authoamt || item.approvedAmt || 0));
-            const recAmt = parseFloat(item.receivedamt || item.received_amt || item.receivedAmt || 0);
+            const totalAmt = parseFloat(
+              item.totalamt || item.total_amt || item.totalAmt || 0,
+            );
+            const autoAmt = parseFloat(
+              item.autoamt !== undefined
+                ? item.autoamt
+                : item.authoamt || item.approvedAmt || 0,
+            );
+            const recAmt = parseFloat(
+              item.receivedamt || item.received_amt || item.receivedAmt || 0,
+            );
             const tdsAmt = parseFloat(item.tdsamt || item.tds_amt || 0);
 
             const totalDue = parseFloat(
-              item.invoice_totaldue !== undefined && item.invoice_totaldue !== null
+              item.invoice_totaldue !== undefined &&
+                item.invoice_totaldue !== null
                 ? item.invoice_totaldue
                 : item.totaldue !== undefined && item.totaldue !== null
                   ? item.totaldue
                   : item.total_due !== undefined && item.total_due !== null
                     ? item.total_due
-                    : item.due_amt || 0
+                    : item.due_amt || 0,
             );
 
             const companyDue = parseFloat(
               item.companydue !== undefined && item.companydue !== null
                 ? item.companydue
-                : item.company_due || 0
+                : item.company_due || 0,
             );
 
             return {
               ...item,
-              invoiceid: item.invoiceid || item.invoice_id || item.invoiceNo || item.id,
+              invoiceid:
+                item.invoiceid || item.invoice_id || item.invoiceNo || item.id,
               creationdate: creationDate,
-              patientname: item.patientname || item.patient_name || item.patientName || item.name || "-",
+              patientname:
+                item.patientname ||
+                item.patient_name ||
+                item.patientName ||
+                item.name ||
+                "-",
               companyname: finalComp,
               tpaname: finalTpa,
               totalamt: totalAmt,
@@ -409,7 +495,7 @@ const CashlessBillSettlement = () => {
               totaldue: totalDue,
               companydue: companyDue,
             };
-          })
+          }),
         );
         setData(processed);
       } else {
@@ -421,7 +507,14 @@ const CashlessBillSettlement = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentLocation, fromDate, toDate, getDropdownsForDate, resolveInsuranceName, resolveTpaName]);
+  }, [
+    currentLocation,
+    fromDate,
+    toDate,
+    getDropdownsForDate,
+    resolveInsuranceName,
+    resolveTpaName,
+  ]);
 
   useEffect(() => {
     fetchInsuranceData();
@@ -460,9 +553,13 @@ const CashlessBillSettlement = () => {
       const term = searchTerm.toLowerCase();
       exportList = data.filter((item) => {
         const pName = String(item.patientname || "").toLowerCase();
-        const comp = String(resolveInsuranceName(item.companyname) || "").toLowerCase();
+        const comp = String(
+          resolveInsuranceName(item.companyname) || "",
+        ).toLowerCase();
         const tpa = String(resolveTpaName(item.tpaname) || "").toLowerCase();
-        const dateStr = String(formatDateForDisplay(item.creationdate) || "").toLowerCase();
+        const dateStr = String(
+          formatDateForDisplay(item.creationdate) || "",
+        ).toLowerCase();
         const invId = String(item.invoiceid || "").toLowerCase();
         return (
           pName.includes(term) ||
@@ -503,8 +600,12 @@ const CashlessBillSettlement = () => {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Cashless Settlements");
 
-    const formattedFromDate = fromDate ? moment(fromDate).format("DD-MM-YYYY") : "All";
-    const formattedToDate = toDate ? moment(toDate).format("DD-MM-YYYY") : "All";
+    const formattedFromDate = fromDate
+      ? moment(fromDate).format("DD-MM-YYYY")
+      : "All";
+    const formattedToDate = toDate
+      ? moment(toDate).format("DD-MM-YYYY")
+      : "All";
     const fileName = `Cashless_Bill_Settlement_${formattedFromDate}_to_${formattedToDate}.xlsx`;
 
     XLSX.writeFile(wb, fileName);
@@ -513,10 +614,18 @@ const CashlessBillSettlement = () => {
   const handleOpenModal = (rowData) => {
     const invoiceId = rowData.invoiceid || rowData.invoice_id || "";
     const totalBill = rowData.totalamt || 0;
-    const authoAmt = rowData.autoamt !== undefined ? rowData.autoamt : (rowData.authoamt || 0);
+    const authoAmt =
+      rowData.autoamt !== undefined ? rowData.autoamt : rowData.authoamt || 0;
     const patientName = rowData.patientname || rowData.patient_name || "-";
-    const existingLetter = rowData.settlementLetter || rowData.settlementletter || rowData.settlement_letter || null;
-    const totalDue = rowData.totaldue !== undefined && rowData.totaldue !== null ? rowData.totaldue : 0;
+    const existingLetter =
+      rowData.settlementLetter ||
+      rowData.settlementletter ||
+      rowData.settlement_letter ||
+      null;
+    const totalDue =
+      rowData.totaldue !== undefined && rowData.totaldue !== null
+        ? rowData.totaldue
+        : 0;
 
     setSettlementForm({
       invoice_id: invoiceId,
@@ -524,7 +633,9 @@ const CashlessBillSettlement = () => {
       totalbill: totalBill,
       authoamt: authoAmt,
       totaldue: totalDue,
-      receivedamt: rowData.receivedamt ? formatNumberWithCommas(rowData.receivedamt) : "",
+      receivedamt: rowData.receivedamt
+        ? formatNumberWithCommas(rowData.receivedamt)
+        : "",
       tdsamt: rowData.tdsamt ? formatNumberWithCommas(rowData.tdsamt) : "",
       utrno: rowData.utrno || "",
       paymentdate: "",
@@ -537,8 +648,10 @@ const CashlessBillSettlement = () => {
   const handleSettlementSubmit = async (e) => {
     e.preventDefault();
 
-    const receivedamt = parseFloat(String(settlementForm.receivedamt).replace(/,/g, "")) || 0;
-    const tdsamt = parseFloat(String(settlementForm.tdsamt).replace(/,/g, "")) || 0;
+    const receivedamt =
+      parseFloat(String(settlementForm.receivedamt).replace(/,/g, "")) || 0;
+    const tdsamt =
+      parseFloat(String(settlementForm.tdsamt).replace(/,/g, "")) || 0;
     const authoamt = parseFloat(settlementForm.authoamt) || 0;
     const total = receivedamt + tdsamt;
 
@@ -552,7 +665,14 @@ const CashlessBillSettlement = () => {
       return;
     }
 
-    if (!settlementForm.paymentdate || !settlementForm.receivedamt || !settlementForm.tdsamt || !settlementForm.utrno || (!settlementForm.settlementletter && !settlementForm.existingSettlementLetter)) {
+    if (
+      !settlementForm.paymentdate ||
+      !settlementForm.receivedamt ||
+      !settlementForm.tdsamt ||
+      !settlementForm.utrno ||
+      (!settlementForm.settlementletter &&
+        !settlementForm.existingSettlementLetter)
+    ) {
       Swal.fire({
         icon: "warning",
         title: "Required Fields",
@@ -606,7 +726,12 @@ const CashlessBillSettlement = () => {
 
       const resData = await res.json();
 
-      if (res.ok && (resData.status === "success" || resData.statusCode === 200 || resData.status === true)) {
+      if (
+        res.ok &&
+        (resData.status === "success" ||
+          resData.statusCode === 200 ||
+          resData.status === true)
+      ) {
         Toast.fire({
           icon: "success",
           title: "Insurance data updated successfully.",
@@ -818,15 +943,21 @@ const CashlessBillSettlement = () => {
     </div>
   );
 
-  const recAmtNum = parseFloat(String(settlementForm.receivedamt || "").replace(/,/g, "")) || 0;
-  const tdsAmtNum = parseFloat(String(settlementForm.tdsamt || "").replace(/,/g, "")) || 0;
+  const recAmtNum =
+    parseFloat(String(settlementForm.receivedamt || "").replace(/,/g, "")) || 0;
+  const tdsAmtNum =
+    parseFloat(String(settlementForm.tdsamt || "").replace(/,/g, "")) || 0;
   const authoAmtNum = parseFloat(settlementForm.authoamt) || 0;
   const totalDueNum = parseFloat(settlementForm.totaldue) || 0;
 
   const recAmtExceeded = authoAmtNum > 0 && recAmtNum > authoAmtNum;
-  const totalAmtExceeded = authoAmtNum > 0 && (recAmtNum + tdsAmtNum) > authoAmtNum;
+  const totalAmtExceeded =
+    authoAmtNum > 0 && recAmtNum + tdsAmtNum > authoAmtNum;
   const isAmountExceeded = recAmtExceeded || totalAmtExceeded;
-  const isTotalDueZero = settlementForm.totaldue !== undefined && settlementForm.totaldue !== null && totalDueNum <= 0;
+  const isTotalDueZero =
+    settlementForm.totaldue !== undefined &&
+    settlementForm.totaldue !== null &&
+    totalDueNum <= 0;
 
   return (
     <div
@@ -915,14 +1046,18 @@ const CashlessBillSettlement = () => {
                       field="creationdate"
                       header="Date"
                       headerClassName="datatable-header-center"
-                      body={(rowData) => formatDateForDisplay(rowData.creationdate)}
+                      body={(rowData) =>
+                        formatDateForDisplay(rowData.creationdate)
+                      }
                       style={{ width: "100px", border: "1px solid #4dd0e1" }}
                     />
                     <Column
                       field="invoiceid"
                       header="Bill No"
                       headerClassName="datatable-header-center"
-                      body={(rowData) => rowData.invoiceid || rowData.invoice_id || "-"}
+                      body={(rowData) =>
+                        rowData.invoiceid || rowData.invoice_id || "-"
+                      }
                       style={{ width: "110px", border: "1px solid #4dd0e1" }}
                     />
                     <Column
@@ -935,7 +1070,9 @@ const CashlessBillSettlement = () => {
                       field="companyname"
                       header="Insurance Name"
                       headerClassName="datatable-header-center"
-                      body={(rowData) => resolveInsuranceName(rowData.companyname)}
+                      body={(rowData) =>
+                        resolveInsuranceName(rowData.companyname)
+                      }
                       style={{ width: "150px", border: "1px solid #4dd0e1" }}
                     />
                     <Column
@@ -1062,8 +1199,16 @@ const CashlessBillSettlement = () => {
                 gap: "10px",
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <span style={{ fontSize: "12px", color: "#00838f", fontWeight: "bold" }}>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "6px" }}
+              >
+                <span
+                  style={{
+                    fontSize: "12px",
+                    color: "#00838f",
+                    fontWeight: "bold",
+                  }}
+                >
                   Bill No:
                 </span>
                 <span
@@ -1081,20 +1226,48 @@ const CashlessBillSettlement = () => {
                 </span>
               </div>
 
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <span style={{ fontSize: "12px", color: "#00838f", fontWeight: "bold" }}>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "6px" }}
+              >
+                <span
+                  style={{
+                    fontSize: "12px",
+                    color: "#00838f",
+                    fontWeight: "bold",
+                  }}
+                >
                   Patient Name:
                 </span>
-                <span style={{ fontSize: "12.5px", color: "#333", fontWeight: "600" }}>
+                <span
+                  style={{
+                    fontSize: "12.5px",
+                    color: "#333",
+                    fontWeight: "600",
+                  }}
+                >
                   {settlementForm.patientname || "-"}
                 </span>
               </div>
 
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <span style={{ fontSize: "12px", color: "#00838f", fontWeight: "bold" }}>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "6px" }}
+              >
+                <span
+                  style={{
+                    fontSize: "12px",
+                    color: "#00838f",
+                    fontWeight: "bold",
+                  }}
+                >
                   Approved Amt:
                 </span>
-                <span style={{ fontSize: "12.5px", color: "#000000ff", fontWeight: "bold" }}>
+                <span
+                  style={{
+                    fontSize: "12.5px",
+                    color: "#000000ff",
+                    fontWeight: "bold",
+                  }}
+                >
                   {formatAmount(settlementForm.authoamt)}
                 </span>
               </div>
@@ -1291,7 +1464,8 @@ const CashlessBillSettlement = () => {
                     className="small fw-bold mb-1"
                     style={{ fontSize: "12px", color: "#333" }}
                   >
-                    Upload Settlement Letter <span className="text-danger">*</span>
+                    Upload Settlement Letter{" "}
+                    <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
                     type="file"
@@ -1299,7 +1473,11 @@ const CashlessBillSettlement = () => {
                     accept=".pdf,application/pdf"
                     onChange={(e) => {
                       const file = e.target.files[0];
-                      if (file && file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+                      if (
+                        file &&
+                        file.type !== "application/pdf" &&
+                        !file.name.toLowerCase().endsWith(".pdf")
+                      ) {
                         Swal.fire({
                           icon: "warning",
                           title: "Invalid File Type",
@@ -1324,7 +1502,10 @@ const CashlessBillSettlement = () => {
                       border: "1px solid #4dd0e1",
                       borderRadius: "6px",
                     }}
-                    required={!settlementForm.settlementletter && !settlementForm.existingSettlementLetter}
+                    required={
+                      !settlementForm.settlementletter &&
+                      !settlementForm.existingSettlementLetter
+                    }
                   />
                   {settlementForm.settlementletter ? (
                     <div
@@ -1356,9 +1537,13 @@ const CashlessBillSettlement = () => {
                           size="sm"
                           onClick={(e) => {
                             e.preventDefault();
-                            const url = URL.createObjectURL(settlementForm.settlementletter);
+                            const url = URL.createObjectURL(
+                              settlementForm.settlementletter,
+                            );
                             setPreviewUrl(url);
-                            setPreviewName(settlementForm.settlementletter.name);
+                            setPreviewName(
+                              settlementForm.settlementletter.name,
+                            );
                             setShowPreview(true);
                           }}
                           style={{
@@ -1371,7 +1556,7 @@ const CashlessBillSettlement = () => {
                             display: "flex",
                             alignItems: "center",
                             gap: "4px",
-                            height: "25px"
+                            height: "25px",
                           }}
                         >
                           <FeatherIcon icon="eye" size={12} />
@@ -1387,7 +1572,9 @@ const CashlessBillSettlement = () => {
                               ...prev,
                               settlementletter: null,
                             }));
-                            const inputEl = document.getElementById("settlementLetterFileInput");
+                            const inputEl = document.getElementById(
+                              "settlementLetterFileInput",
+                            );
                             if (inputEl) inputEl.value = "";
                           }}
                           style={{
@@ -1396,7 +1583,7 @@ const CashlessBillSettlement = () => {
                             borderRadius: "4px",
                             display: "flex",
                             alignItems: "center",
-                            height: "25px"
+                            height: "25px",
                           }}
                           title="Remove file"
                         >
@@ -1411,7 +1598,7 @@ const CashlessBillSettlement = () => {
                         backgroundColor: "#e8f5e9",
                         border: "1px solid #81c784",
                         borderRadius: "6px",
-                        height: "30px"
+                        height: "30px",
                       }}
                     >
                       <span
@@ -1433,12 +1620,15 @@ const CashlessBillSettlement = () => {
                         size="sm"
                         onClick={(e) => {
                           e.preventDefault();
-                          const letter = settlementForm.existingSettlementLetter;
+                          const letter =
+                            settlementForm.existingSettlementLetter;
                           const fullUrl = letter.startsWith("http")
                             ? letter
                             : `${BASE_URL.replace("/api", "")}${letter}`;
                           setPreviewUrl(fullUrl);
-                          setPreviewName(`Submitted Settlement Letter (${settlementForm.invoice_id})`);
+                          setPreviewName(
+                            `Submitted Settlement Letter (${settlementForm.invoice_id})`,
+                          );
                           setShowPreview(true);
                         }}
                         style={{
@@ -1521,14 +1711,23 @@ const CashlessBillSettlement = () => {
                 form="settlement-form"
                 disabled={submitting || isAmountExceeded || isTotalDueZero}
                 style={{
-                  backgroundColor: (isAmountExceeded || isTotalDueZero) ? "#b0bec5" : "rgb(77, 208, 225)",
-                  borderColor: (isAmountExceeded || isTotalDueZero) ? "#b0bec5" : "rgb(77, 208, 225)",
+                  backgroundColor:
+                    isAmountExceeded || isTotalDueZero
+                      ? "#b0bec5"
+                      : "rgb(77, 208, 225)",
+                  borderColor:
+                    isAmountExceeded || isTotalDueZero
+                      ? "#b0bec5"
+                      : "rgb(77, 208, 225)",
                   color: "white",
                   borderRadius: "8px",
                   fontSize: "12px",
                   padding: "8px 30px",
                   fontWeight: "600",
-                  cursor: (isAmountExceeded || isTotalDueZero) ? "not-allowed" : "pointer",
+                  cursor:
+                    isAmountExceeded || isTotalDueZero
+                      ? "not-allowed"
+                      : "pointer",
                 }}
               >
                 {submitting ? "Adding..." : "Add"}
@@ -1548,14 +1747,25 @@ const CashlessBillSettlement = () => {
       >
         <Modal.Header
           closeButton
-          style={{ backgroundColor: "#e0f7fa", borderBottom: "2px solid #00bcd4" }}
+          style={{
+            backgroundColor: "#e0f7fa",
+            borderBottom: "2px solid #00bcd4",
+          }}
         >
-          <Modal.Title style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}>
+          <Modal.Title
+            style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}
+          >
             <FeatherIcon icon="eye" className="me-2" size="16" />
             {previewName} Preview
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body style={{ textAlign: "center", backgroundColor: "#f5fcfd", padding: "15px" }}>
+        <Modal.Body
+          style={{
+            textAlign: "center",
+            backgroundColor: "#f5fcfd",
+            padding: "15px",
+          }}
+        >
           {previewUrl && (
             <iframe
               src={`${previewUrl}#toolbar=0&navpanes=0`}

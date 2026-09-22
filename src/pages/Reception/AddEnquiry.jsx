@@ -322,11 +322,11 @@ export default function AddEnquiry({ isTab = false }) {
         isTab
           ? { fontFamily: "'Poppins', Arial, sans-serif" }
           : {
-            background: "linear-gradient(to right, #e0f7fa, #80deea)",
-            minHeight: "100vh",
-            padding: "10px",
-            fontFamily: "'Poppins', Arial, sans-serif",
-          }
+              background: "linear-gradient(to right, #e0f7fa, #80deea)",
+              minHeight: "100vh",
+              padding: "10px",
+              fontFamily: "'Poppins', Arial, sans-serif",
+            }
       }
     >
       {!isTab && <PageBreadcrumb pagename="Add Enquiry" />}

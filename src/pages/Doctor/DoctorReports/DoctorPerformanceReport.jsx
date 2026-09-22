@@ -21,7 +21,15 @@ import { decodeJwt } from "../../Utility/decode-jwt";
 const BASE_URL = "http://194.195.117.79:5100/api";
 
 const formatValue = (val) => {
-  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+  if (
+    val === null ||
+    val === undefined ||
+    val === "" ||
+    val === "N/A" ||
+    val === 0 ||
+    val === "0" ||
+    val === "-"
+  ) {
     return "-";
   }
   return val;
@@ -70,7 +78,9 @@ const DoctorPerformanceReport = () => {
   const fetchDoctorList = async (locationStr) => {
     try {
       const loc = locationStr || currentLocation || "DP Road";
-      const res = await fetch(`${BASE_URL}/V1/doctor/reports/getDoctors?location=${encodeURIComponent(loc)}`);
+      const res = await fetch(
+        `${BASE_URL}/V1/doctor/reports/getDoctors?location=${encodeURIComponent(loc)}`,
+      );
       const result = await res.json();
       if (result.statusCode === 200 && Array.isArray(result.data)) {
         setDoctorOptions(result.data);
@@ -98,20 +108,23 @@ const DoctorPerformanceReport = () => {
         loc = payload?.jobLocation || "DP Road";
       }
 
-      const res = await fetch(`${BASE_URL}/V1/doctor/reports/getDoctorPerformanceReport`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const res = await fetch(
+        `${BASE_URL}/V1/doctor/reports/getDoctorPerformanceReport`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            location: loc || "DP Road",
+            Fromdate: fDate,
+            Todate: tDate,
+            doctorId: selectedDoctor,
+            role: selectedRole,
+          }),
         },
-        body: JSON.stringify({
-          location: loc || "DP Road",
-          Fromdate: fDate,
-          Todate: tDate,
-          doctorId: selectedDoctor,
-          role: selectedRole,
-        }),
-      });
+      );
 
       const result = await res.json();
       if (result.statusCode === 200 && Array.isArray(result.data)) {
@@ -154,7 +167,7 @@ const DoctorPerformanceReport = () => {
     const excelData = reportData.map((item, index) => ({
       "Sr No": index + 1,
       "Doctor Name": item.DoctorName || "-",
-      "Role": item.role || "-",
+      Role: item.role || "-",
       "Total Patients": item.totalPatients ?? 0,
       "New Patients": item.newPatients ?? 0,
       "Follow-up Patients": item.followupPatients ?? 0,
@@ -168,7 +181,10 @@ const DoctorPerformanceReport = () => {
     const worksheet = XLSX.utils.json_to_sheet(excelData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Doctor Performance");
-    XLSX.writeFile(workbook, `Doctor_Performance_Report_${fromDate}_to_${toDate}.xlsx`);
+    XLSX.writeFile(
+      workbook,
+      `Doctor_Performance_Report_${fromDate}_to_${toDate}.xlsx`,
+    );
   };
 
   const handlePrint = () => {
@@ -185,27 +201,95 @@ const DoctorPerformanceReport = () => {
     );
   });
 
-  const totalPatientsSum = filteredData.reduce((sum, r) => sum + (Number(r.totalPatients) || 0), 0);
-  const newPatientsSum = filteredData.reduce((sum, r) => sum + (Number(r.newPatients) || 0), 0);
-  const followupPatientsSum = filteredData.reduce((sum, r) => sum + (Number(r.followupPatients) || 0), 0);
-  const postopPatientsSum = filteredData.reduce((sum, r) => sum + (Number(r.postopPatients) || 0), 0);
-  const surgeriesAdvisedSum = filteredData.reduce((sum, r) => sum + (Number(r.surgeriesAdvised) || 0), 0);
-  const surgeriesCompletedSum = filteredData.reduce((sum, r) => sum + (Number(r.surgeriesCompleted) || 0), 0);
-  const prescriptionsIssuedSum = filteredData.reduce((sum, r) => sum + (Number(r.prescriptionsIssued) || 0), 0);
-  const overallAvgPerDay = filteredData.length > 0 ? (totalPatientsSum / filteredData.length).toFixed(1) : 0;
+  const totalPatientsSum = filteredData.reduce(
+    (sum, r) => sum + (Number(r.totalPatients) || 0),
+    0,
+  );
+  const newPatientsSum = filteredData.reduce(
+    (sum, r) => sum + (Number(r.newPatients) || 0),
+    0,
+  );
+  const followupPatientsSum = filteredData.reduce(
+    (sum, r) => sum + (Number(r.followupPatients) || 0),
+    0,
+  );
+  const postopPatientsSum = filteredData.reduce(
+    (sum, r) => sum + (Number(r.postopPatients) || 0),
+    0,
+  );
+  const surgeriesAdvisedSum = filteredData.reduce(
+    (sum, r) => sum + (Number(r.surgeriesAdvised) || 0),
+    0,
+  );
+  const surgeriesCompletedSum = filteredData.reduce(
+    (sum, r) => sum + (Number(r.surgeriesCompleted) || 0),
+    0,
+  );
+  const prescriptionsIssuedSum = filteredData.reduce(
+    (sum, r) => sum + (Number(r.prescriptionsIssued) || 0),
+    0,
+  );
+  const overallAvgPerDay =
+    filteredData.length > 0
+      ? (totalPatientsSum / filteredData.length).toFixed(1)
+      : 0;
 
   const footerGroup = (
     <ColumnGroup>
       <Row>
-        <Column footer="Total" colSpan={3} footerStyle={{ textAlign: "center", fontWeight: "bold" }} />
-        <Column footer={totalPatientsSum} footerStyle={{ textAlign: "center", fontWeight: "bold" }} />
-        <Column footer={newPatientsSum} footerStyle={{ textAlign: "center", fontWeight: "bold" }} />
-        <Column footer={followupPatientsSum} footerStyle={{ textAlign: "center", fontWeight: "bold" }} />
-        <Column footer={postopPatientsSum} footerStyle={{ textAlign: "center", fontWeight: "bold", color: "#ed6c02" }} />
-        <Column footer={surgeriesAdvisedSum} footerStyle={{ textAlign: "center", fontWeight: "bold", color: "#006064" }} />
-        <Column footer={surgeriesCompletedSum} footerStyle={{ textAlign: "center", fontWeight: "bold", color: "#2e7d32" }} />
-        <Column footer={prescriptionsIssuedSum} footerStyle={{ textAlign: "center", fontWeight: "bold" }} />
-        <Column footer={overallAvgPerDay} footerStyle={{ textAlign: "center", fontWeight: "bold", color: "#0288d1" }} />
+        <Column
+          footer="Total"
+          colSpan={3}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={totalPatientsSum}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={newPatientsSum}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={followupPatientsSum}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={postopPatientsSum}
+          footerStyle={{
+            textAlign: "center",
+            fontWeight: "bold",
+            color: "#ed6c02",
+          }}
+        />
+        <Column
+          footer={surgeriesAdvisedSum}
+          footerStyle={{
+            textAlign: "center",
+            fontWeight: "bold",
+            color: "#006064",
+          }}
+        />
+        <Column
+          footer={surgeriesCompletedSum}
+          footerStyle={{
+            textAlign: "center",
+            fontWeight: "bold",
+            color: "#2e7d32",
+          }}
+        />
+        <Column
+          footer={prescriptionsIssuedSum}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={overallAvgPerDay}
+          footerStyle={{
+            textAlign: "center",
+            fontWeight: "bold",
+            color: "#0288d1",
+          }}
+        />
       </Row>
     </ColumnGroup>
   );
@@ -262,7 +346,10 @@ const DoctorPerformanceReport = () => {
           </div>
         </div>
       </Col>
-      <Col style={{ padding: "0 5px" }} className="d-flex justify-content-end gap-2">
+      <Col
+        style={{ padding: "0 5px" }}
+        className="d-flex justify-content-end gap-2"
+      >
         <button
           className="btn btn-success btn-sm"
           onClick={exportToExcel}
@@ -329,8 +416,15 @@ const DoctorPerformanceReport = () => {
                 >
                   <h4 style={{ margin: 0 }}>Doctor Performance Report</h4>
                   {fromDate && toDate && (
-                    <div style={{ fontSize: "13px", fontWeight: "normal", marginTop: "5px" }}>
-                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "normal",
+                        marginTop: "5px",
+                      }}
+                    >
+                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to{" "}
+                      <b>{formatDateDisplay(toDate)}</b>
                     </div>
                   )}
                 </Card.Header>
@@ -464,7 +558,11 @@ const DoctorPerformanceReport = () => {
                       </Col>
 
                       {/* Search & Reset Buttons */}
-                      <Col md={2} className="d-flex justify-content-end gap-2 mt-2" style={{ padding: "0 5px" }}>
+                      <Col
+                        md={2}
+                        className="d-flex justify-content-end gap-2 mt-2"
+                        style={{ padding: "0 5px" }}
+                      >
                         <button
                           className="btn btn-primary"
                           type="submit"
@@ -534,7 +632,11 @@ const DoctorPerformanceReport = () => {
                         field="role"
                         header="Role"
                         body={(rowData) => (
-                          <Badge bg={rowData.role === "Main" ? "primary" : "info"} className="text-white" style={{ color: "#ffffff", fontWeight: "600" }}>
+                          <Badge
+                            bg={rowData.role === "Main" ? "primary" : "info"}
+                            className="text-white"
+                            style={{ color: "#ffffff", fontWeight: "600" }}
+                          >
                             {rowData.role || "Main"}
                           </Badge>
                         )}
@@ -544,7 +646,11 @@ const DoctorPerformanceReport = () => {
                         field="totalPatients"
                         header="Total Patients"
                         body={(rowData) => formatValue(rowData.totalPatients)}
-                        style={{ width: "130px", textAlign: "center", fontWeight: "bold" }}
+                        style={{
+                          width: "130px",
+                          textAlign: "center",
+                          fontWeight: "bold",
+                        }}
                       />
                       <Column
                         field="newPatients"
@@ -555,38 +661,68 @@ const DoctorPerformanceReport = () => {
                       <Column
                         field="followupPatients"
                         header="Follow-up Patients"
-                        body={(rowData) => formatValue(rowData.followupPatients)}
+                        body={(rowData) =>
+                          formatValue(rowData.followupPatients)
+                        }
                         style={{ width: "130px", textAlign: "center" }}
                       />
                       <Column
                         field="postopPatients"
                         header="Post-Op Patients"
                         body={(rowData) => formatValue(rowData.postopPatients)}
-                        style={{ width: "130px", textAlign: "center", color: "#ed6c02", fontWeight: "600" }}
+                        style={{
+                          width: "130px",
+                          textAlign: "center",
+                          color: "#ed6c02",
+                          fontWeight: "600",
+                        }}
                       />
                       <Column
                         field="surgeriesAdvised"
                         header="Surgeries Advised"
-                        body={(rowData) => formatValue(rowData.surgeriesAdvised)}
-                        style={{ width: "130px", textAlign: "center", color: "#006064", fontWeight: "600" }}
+                        body={(rowData) =>
+                          formatValue(rowData.surgeriesAdvised)
+                        }
+                        style={{
+                          width: "130px",
+                          textAlign: "center",
+                          color: "#006064",
+                          fontWeight: "600",
+                        }}
                       />
                       <Column
                         field="surgeriesCompleted"
                         header="Surgeries Completed"
-                        body={(rowData) => formatValue(rowData.surgeriesCompleted)}
-                        style={{ width: "140px", textAlign: "center", color: "#2e7d32", fontWeight: "600" }}
+                        body={(rowData) =>
+                          formatValue(rowData.surgeriesCompleted)
+                        }
+                        style={{
+                          width: "140px",
+                          textAlign: "center",
+                          color: "#2e7d32",
+                          fontWeight: "600",
+                        }}
                       />
                       <Column
                         field="prescriptionsIssued"
                         header="Prescriptions Issued"
-                        body={(rowData) => formatValue(rowData.prescriptionsIssued)}
+                        body={(rowData) =>
+                          formatValue(rowData.prescriptionsIssued)
+                        }
                         style={{ width: "140px", textAlign: "center" }}
                       />
                       <Column
                         field="avgPatientsPerDay"
                         header="Avg Patients / Day"
-                        body={(rowData) => formatValue(rowData.avgPatientsPerDay)}
-                        style={{ width: "130px", textAlign: "center", fontWeight: "bold", color: "#0288d1" }}
+                        body={(rowData) =>
+                          formatValue(rowData.avgPatientsPerDay)
+                        }
+                        style={{
+                          width: "130px",
+                          textAlign: "center",
+                          fontWeight: "bold",
+                          color: "#0288d1",
+                        }}
                       />
                     </DataTable>
                   </div>

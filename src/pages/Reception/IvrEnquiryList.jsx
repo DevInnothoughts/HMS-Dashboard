@@ -116,7 +116,6 @@ export default function IvrEnquiryList({ isTab = false }) {
   }, []);
 
   const handleAddAppointmentClick = async (rowData) => {
-
     const today = new Date();
     const patient_phone = rowData.caller_no || "";
     setNoPendingAppt(true);
@@ -299,7 +298,6 @@ export default function IvrEnquiryList({ isTab = false }) {
   }, [filters1.global.value, CallLogs]);
 
   const fetchCallLogsData = async () => {
-
     setLoading(true);
     try {
       let finalFromDate = formatToApiDate(fromDate);
@@ -317,7 +315,6 @@ export default function IvrEnquiryList({ isTab = false }) {
         to: finalToDate,
         location: currentLocation,
       };
-
 
       Object.keys(params).forEach((key) => {
         if (params[key]) url.searchParams.append(key, params[key]);
@@ -362,24 +359,36 @@ export default function IvrEnquiryList({ isTab = false }) {
 
   const fetchDropdownData = useCallback(async () => {
     try {
-      const [fdeResponse, doctorResponse, treatmentResponse] = await Promise.all([
-        fetch(`${BASE_URL}/V1/appointment/fdeDropdown?location=${currentLocation}`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        }).then((res) => res.json()),
-        fetch(`${BASE_URL}/V1/doctor/doctorDropdown?location=${currentLocation}`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        }).then((res) => res.json()),
-        fetch(`${BASE_URL}/V1/appointment/treatmentDropdown?location=${currentLocation}`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        }).then((res) => res.json()),
-      ]);
+      const [fdeResponse, doctorResponse, treatmentResponse] =
+        await Promise.all([
+          fetch(
+            `${BASE_URL}/V1/appointment/fdeDropdown?location=${currentLocation}`,
+            {
+              method: "GET",
+              headers: { "Content-Type": "application/json" },
+            },
+          ).then((res) => res.json()),
+          fetch(
+            `${BASE_URL}/V1/doctor/doctorDropdown?location=${currentLocation}`,
+            {
+              method: "GET",
+              headers: { "Content-Type": "application/json" },
+            },
+          ).then((res) => res.json()),
+          fetch(
+            `${BASE_URL}/V1/appointment/treatmentDropdown?location=${currentLocation}`,
+            {
+              method: "GET",
+              headers: { "Content-Type": "application/json" },
+            },
+          ).then((res) => res.json()),
+        ]);
 
       setFdeList(Array.isArray(fdeResponse.data) ? fdeResponse.data : []);
       setDoctors(Array.isArray(doctorResponse.data) ? doctorResponse.data : []);
-      setTreatmentList(Array.isArray(treatmentResponse.data) ? treatmentResponse.data : []);
+      setTreatmentList(
+        Array.isArray(treatmentResponse.data) ? treatmentResponse.data : [],
+      );
     } catch (error) {
       console.error("Error fetching dropdown data:", error.message);
       toast.error("Failed to load selection data.");
@@ -454,8 +463,6 @@ export default function IvrEnquiryList({ isTab = false }) {
   };
 
   const handleEnquiryClick = (callLog) => {
-
-
     const today = new Date();
     setSelectedCallLog(callLog);
     setSelectedDate(today);
@@ -469,7 +476,6 @@ export default function IvrEnquiryList({ isTab = false }) {
   };
 
   const handleNoteClick = (note, rowData) => {
-
     setSelectedCallLog(rowData);
     setFormData((prev) => ({
       ...prev,
@@ -496,8 +502,6 @@ export default function IvrEnquiryList({ isTab = false }) {
         ivr_id: selectedCallLog.ivr_id,
         note: formData.note.trim(),
       };
-
-
 
       const response = await fetch(
         `${BASE_URL}/V1/ivrdata/editNote/${selectedCallLog.ivr_id}?location=${currentLocation}`,
@@ -656,7 +660,10 @@ export default function IvrEnquiryList({ isTab = false }) {
       dataToExport = dataToExport.filter((item) => {
         const rawDate = item.call_date;
         const dateObj = rawDate ? moment(rawDate, "YYYY-MM-DD") : null;
-        const dateStr = dateObj && dateObj.isValid() ? dateObj.format("DD-MM-YYYY") : (rawDate || "");
+        const dateStr =
+          dateObj && dateObj.isValid()
+            ? dateObj.format("DD-MM-YYYY")
+            : rawDate || "";
         const timeStr = (item.call_time || "").toLowerCase();
         const callerNo = String(item.caller_no || "").toLowerCase();
         const patName = (item.patient_name || "").toLowerCase();
@@ -682,7 +689,10 @@ export default function IvrEnquiryList({ isTab = false }) {
     const excelData = dataToExport.map((item, index) => {
       const rawDate = item.call_date;
       const dateObj = rawDate ? moment(rawDate, "YYYY-MM-DD") : null;
-      const formattedDate = dateObj && dateObj.isValid() ? dateObj.format("DD-MM-YYYY") : (rawDate || "");
+      const formattedDate =
+        dateObj && dateObj.isValid()
+          ? dateObj.format("DD-MM-YYYY")
+          : rawDate || "";
 
       return {
         "Sr No": index + 1,
@@ -707,7 +717,9 @@ export default function IvrEnquiryList({ isTab = false }) {
     const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
     const data = new Blob([excelBuffer], { type: fileType });
 
-    const formattedFromDate = fromDate ? moment(fromDate).format("DD-MM-YYYY") : "";
+    const formattedFromDate = fromDate
+      ? moment(fromDate).format("DD-MM-YYYY")
+      : "";
     const formattedToDate = toDate ? moment(toDate).format("DD-MM-YYYY") : "";
     const fileName = `IVR_Enquiry_List_${formattedFromDate}_to_${formattedToDate}${fileExtension}`;
 
@@ -1007,7 +1019,6 @@ export default function IvrEnquiryList({ isTab = false }) {
     };
 
     try {
-
       // console.log(payload);
       const response = await fetch(
         `${BASE_URL}/V1/appointment/addAppointment?location=${currentLocation}`,
@@ -1076,8 +1087,6 @@ export default function IvrEnquiryList({ isTab = false }) {
 
     setLoading(true);
     try {
-
-
       const response = await fetch(
         `${BASE_URL}/V1/enquiry/addEnquiry?location=${currentLocation}`,
         {
@@ -1542,7 +1551,7 @@ export default function IvrEnquiryList({ isTab = false }) {
                     <option value="">Select Type</option>
 
                     {formData.patient_type === "New" ||
-                      formData.patient_id === undefined ? (
+                    formData.patient_id === undefined ? (
                       <option value="New">NEW</option>
                     ) : (
                       <>
@@ -1588,7 +1597,14 @@ export default function IvrEnquiryList({ isTab = false }) {
                   </Form.Group>
                 </Col>
               )}
-              <Col md={6} className={(formData.patient_type === "Other" || formData.treatment) ? "mt-2" : ""}>
+              <Col
+                md={6}
+                className={
+                  formData.patient_type === "Other" || formData.treatment
+                    ? "mt-2"
+                    : ""
+                }
+              >
                 <Form.Group className="mb-10">
                   <Form.Label
                     style={{
@@ -1613,7 +1629,9 @@ export default function IvrEnquiryList({ isTab = false }) {
                       fontSize: "12px",
                       borderRadius: "10px",
                       cursor: formData.patient_id ? "not-allowed" : "default",
-                      backgroundColor: formData.patient_id ? "#e7ebebff" : undefined,
+                      backgroundColor: formData.patient_id
+                        ? "#e7ebebff"
+                        : undefined,
                     }}
                   />
                 </Form.Group>

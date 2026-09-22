@@ -85,7 +85,8 @@ const buildSurgeryValue = (date, time) => {
 };
 
 const formatAgeGender = (age, sex) => {
-  const ageText = age === null || age === undefined || age === "" ? "N/A" : `${age} yrs`;
+  const ageText =
+    age === null || age === undefined || age === "" ? "N/A" : `${age} yrs`;
   const sexText = sex ? sex : "N/A";
   return `${ageText} / ${sexText}`;
 };
@@ -187,25 +188,25 @@ export default function DoctorIpdPatientList() {
       const result = await response.json();
       const normalizedPatients = Array.isArray(result)
         ? result.map((patient) => ({
-          ...patient,
-          surgeryDate: buildSurgeryValue(
-            patient.surgery_date,
-            patient.surgery_time,
-          ),
-          admissionNo: patient.adm_no || "",
-          patientName: patient.patient_name || "",
-          name: patient.patient_name || "",
-          ageGender: formatAgeGender(patient.age, patient.sex),
-          roomType: patient.room_type || "N/A",
-          surgeonName: patient.surgeon_name || "N/A",
-          sxPlan: patient.sx_plan || "N/A",
-          Uid_no: patient.uid_no || "",
-          patient_type: patient.patient_type ?? 0,
-          phone: patient.phone || "",
-          age: patient.age || "",
-          sex: patient.sex || "",
-          address: patient.address || "",
-        }))
+            ...patient,
+            surgeryDate: buildSurgeryValue(
+              patient.surgery_date,
+              patient.surgery_time,
+            ),
+            admissionNo: patient.adm_no || "",
+            patientName: patient.patient_name || "",
+            name: patient.patient_name || "",
+            ageGender: formatAgeGender(patient.age, patient.sex),
+            roomType: patient.room_type || "N/A",
+            surgeonName: patient.surgeon_name || "N/A",
+            sxPlan: patient.sx_plan || "N/A",
+            Uid_no: patient.uid_no || "",
+            patient_type: patient.patient_type ?? 0,
+            phone: patient.phone || "",
+            age: patient.age || "",
+            sex: patient.sex || "",
+            address: patient.address || "",
+          }))
         : [];
 
       setPatients(normalizedPatients);
@@ -266,8 +267,16 @@ export default function DoctorIpdPatientList() {
 
   const handleTodayPatients = () => {
     const today = new Date();
-    const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const end = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+    const start = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+    );
+    const end = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate() + 1,
+    );
     setFromDate(start);
     setToDate(end);
   };
@@ -312,7 +321,9 @@ export default function DoctorIpdPatientList() {
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ fontSize: "12px", fontWeight: "bold", color: "#333" }}>
+            <span
+              style={{ fontSize: "12px", fontWeight: "bold", color: "#333" }}
+            >
               Show
             </span>
             <Form.Select
@@ -334,7 +345,9 @@ export default function DoctorIpdPatientList() {
             </Form.Select>
           </div>
 
-          <Form.Group style={{ display: "flex", alignItems: "center", margin: 0 }}>
+          <Form.Group
+            style={{ display: "flex", alignItems: "center", margin: 0 }}
+          >
             <span
               style={{
                 marginRight: "10px",
@@ -414,7 +427,9 @@ export default function DoctorIpdPatientList() {
               dateFormat="dd-MM-yyyy"
               placeholderText="Select from date"
               customInput={
-                <Form.Control style={{ padding: "5px 8px", fontSize: "12px" }} />
+                <Form.Control
+                  style={{ padding: "5px 8px", fontSize: "12px" }}
+                />
               }
             />
           </div>
@@ -436,11 +451,12 @@ export default function DoctorIpdPatientList() {
               dateFormat="dd-MM-yyyy"
               placeholderText="Select to date"
               customInput={
-                <Form.Control style={{ padding: "5px 8px", fontSize: "12px" }} />
+                <Form.Control
+                  style={{ padding: "5px 8px", fontSize: "12px" }}
+                />
               }
             />
           </div>
-
 
           <Button
             variant="secondary"
@@ -523,7 +539,9 @@ export default function DoctorIpdPatientList() {
                     <Column
                       header="Sr. No."
                       body={(rowData, options) => (
-                        <span className="selectable-text">{options.rowIndex + 1}</span>
+                        <span className="selectable-text">
+                          {options.rowIndex + 1}
+                        </span>
                       )}
                       headerClassName="datatable-header-center"
                       style={{
@@ -537,7 +555,11 @@ export default function DoctorIpdPatientList() {
                     <Column
                       field="surgeryDate"
                       header="Surgery Date"
-                      body={(rowData) => <span className="selectable-text">{formatOnlyDate(rowData.surgeryDate)}</span>}
+                      body={(rowData) => (
+                        <span className="selectable-text">
+                          {formatOnlyDate(rowData.surgeryDate)}
+                        </span>
+                      )}
                       headerClassName="datatable-header-center"
                       style={{
                         border: "1px solid #90caf9",
@@ -550,7 +572,11 @@ export default function DoctorIpdPatientList() {
                     <Column
                       field="surgeryDate"
                       header="Surgery Time"
-                      body={(rowData) => <span className="selectable-text">{formatOnlyTime(rowData.surgeryDate)}</span>}
+                      body={(rowData) => (
+                        <span className="selectable-text">
+                          {formatOnlyTime(rowData.surgeryDate)}
+                        </span>
+                      )}
                       headerClassName="datatable-header-center"
                       style={{
                         border: "1px solid #90caf9",
@@ -564,7 +590,9 @@ export default function DoctorIpdPatientList() {
                       field="admissionNo"
                       header="Admission Number"
                       body={(rowData) => {
-                        const isPending = !rowData.admissionNo || rowData.admissionNo === "PENDING";
+                        const isPending =
+                          !rowData.admissionNo ||
+                          rowData.admissionNo === "PENDING";
                         return isPending ? (
                           <span
                             className="selectable-text text-danger fw-bold"
@@ -574,7 +602,9 @@ export default function DoctorIpdPatientList() {
                             Pending
                           </span>
                         ) : (
-                          <span className="selectable-text">{rowData.admissionNo}</span>
+                          <span className="selectable-text">
+                            {rowData.admissionNo}
+                          </span>
                         );
                       }}
                       headerClassName="datatable-header-center"
@@ -589,7 +619,11 @@ export default function DoctorIpdPatientList() {
                     <Column
                       field="patientName"
                       header="Patient Name"
-                      body={(rowData) => <span className="selectable-text">{rowData.patientName || "-"}</span>}
+                      body={(rowData) => (
+                        <span className="selectable-text">
+                          {rowData.patientName || "-"}
+                        </span>
+                      )}
                       headerClassName="datatable-header-center"
                       style={{
                         border: "1px solid #90caf9",
@@ -602,7 +636,11 @@ export default function DoctorIpdPatientList() {
                     <Column
                       field="phone"
                       header="Contact Number"
-                      body={(rowData) => <span className="selectable-text">{rowData.phone || "-"}</span>}
+                      body={(rowData) => (
+                        <span className="selectable-text">
+                          {rowData.phone || "-"}
+                        </span>
+                      )}
                       headerClassName="datatable-header-center"
                       style={{
                         border: "1px solid #90caf9",
@@ -615,7 +653,11 @@ export default function DoctorIpdPatientList() {
                     <Column
                       field="ageGender"
                       header="Age/Gender"
-                      body={(rowData) => <span className="selectable-text">{rowData.ageGender || "-"}</span>}
+                      body={(rowData) => (
+                        <span className="selectable-text">
+                          {rowData.ageGender || "-"}
+                        </span>
+                      )}
                       headerClassName="datatable-header-center"
                       style={{
                         border: "1px solid #90caf9",
@@ -628,7 +670,11 @@ export default function DoctorIpdPatientList() {
                     <Column
                       field="surgeonName"
                       header="Surgeon Name"
-                      body={(rowData) => <span className="selectable-text">{rowData.surgeonName || "-"}</span>}
+                      body={(rowData) => (
+                        <span className="selectable-text">
+                          {rowData.surgeonName || "-"}
+                        </span>
+                      )}
                       headerClassName="datatable-header-center"
                       style={{
                         border: "1px solid #90caf9",
@@ -641,7 +687,11 @@ export default function DoctorIpdPatientList() {
                     <Column
                       field="sxPlan"
                       header="SX Plan"
-                      body={(rowData) => <span className="selectable-text">{rowData.sxPlan || "-"}</span>}
+                      body={(rowData) => (
+                        <span className="selectable-text">
+                          {rowData.sxPlan || "-"}
+                        </span>
+                      )}
                       headerClassName="datatable-header-center"
                       style={{
                         border: "1px solid #90caf9",

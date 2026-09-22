@@ -21,7 +21,15 @@ import { decodeJwt } from "../../Utility/decode-jwt";
 const BASE_URL = "http://194.195.117.79:5100/api";
 
 const formatValue = (val) => {
-  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+  if (
+    val === null ||
+    val === undefined ||
+    val === "" ||
+    val === "N/A" ||
+    val === 0 ||
+    val === "0" ||
+    val === "-"
+  ) {
     return "-";
   }
   return val;
@@ -40,15 +48,55 @@ const formatDateDisplay = (dateStr) => {
 const getStatusBadge = (status) => {
   switch (status) {
     case "On-time":
-      return <Badge bg="success" className="text-white" style={{ color: "#ffffff", fontWeight: "600" }}>On-time</Badge>;
+      return (
+        <Badge
+          bg="success"
+          className="text-white"
+          style={{ color: "#ffffff", fontWeight: "600" }}
+        >
+          On-time
+        </Badge>
+      );
     case "Late":
-      return <Badge bg="warning" className="text-white" style={{ color: "#ffffff", fontWeight: "600" }}>Late</Badge>;
+      return (
+        <Badge
+          bg="warning"
+          className="text-white"
+          style={{ color: "#ffffff", fontWeight: "600" }}
+        >
+          Late
+        </Badge>
+      );
     case "No-show":
-      return <Badge bg="danger" className="text-white" style={{ color: "#ffffff", fontWeight: "600" }}>No-show</Badge>;
+      return (
+        <Badge
+          bg="danger"
+          className="text-white"
+          style={{ color: "#ffffff", fontWeight: "600" }}
+        >
+          No-show
+        </Badge>
+      );
     case "Sx Done":
-      return <Badge bg="primary" className="text-white" style={{ color: "#ffffff", fontWeight: "600" }}>Sx Done</Badge>;
+      return (
+        <Badge
+          bg="primary"
+          className="text-white"
+          style={{ color: "#ffffff", fontWeight: "600" }}
+        >
+          Sx Done
+        </Badge>
+      );
     default:
-      return <Badge bg="secondary" className="text-white" style={{ color: "#ffffff", fontWeight: "600" }}>{status || "-"}</Badge>;
+      return (
+        <Badge
+          bg="secondary"
+          className="text-white"
+          style={{ color: "#ffffff", fontWeight: "600" }}
+        >
+          {status || "-"}
+        </Badge>
+      );
   }
 };
 
@@ -85,7 +133,9 @@ const FollowUpComplianceReport = () => {
   const fetchDoctorList = async (locationStr) => {
     try {
       const loc = locationStr || currentLocation || "DP Road";
-      const res = await fetch(`${BASE_URL}/V1/doctor/reports/getDoctors?location=${encodeURIComponent(loc)}`);
+      const res = await fetch(
+        `${BASE_URL}/V1/doctor/reports/getDoctors?location=${encodeURIComponent(loc)}`,
+      );
       const result = await res.json();
       if (result.statusCode === 200 && Array.isArray(result.data)) {
         setDoctorOptions(result.data);
@@ -113,20 +163,23 @@ const FollowUpComplianceReport = () => {
         loc = payload?.jobLocation || "DP Road";
       }
 
-      const res = await fetch(`${BASE_URL}/V1/doctor/reports/getFollowUpComplianceReport`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const res = await fetch(
+        `${BASE_URL}/V1/doctor/reports/getFollowUpComplianceReport`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            location: loc || "DP Road",
+            Fromdate: fDate,
+            Todate: tDate,
+            doctorId: selectedDoctor,
+            status: selectedStatus,
+          }),
         },
-        body: JSON.stringify({
-          location: loc || "DP Road",
-          Fromdate: fDate,
-          Todate: tDate,
-          doctorId: selectedDoctor,
-          status: selectedStatus,
-        }),
-      });
+      );
 
       const result = await res.json();
       if (result.statusCode === 200 && Array.isArray(result.data)) {
@@ -169,11 +222,11 @@ const FollowUpComplianceReport = () => {
     const excelData = reportData.map((item, index) => ({
       "Sr No": index + 1,
       "Patient Name": item.patientName || "-",
-      "Doctor": item.doctor || "-",
+      Doctor: item.doctor || "-",
       "Last Visit Date": formatDateDisplay(item.lastVisitDate),
       "Follow-up Advised Date": formatDateDisplay(item.followUpAdvisedDate),
       "Actual Return Date": formatDateDisplay(item.actualReturnDate),
-      "Status": item.status || "-",
+      Status: item.status || "-",
       "Days Overdue": item.daysOverdue ?? 0,
       "No. of Visits": item.noOfVisits ?? 1,
     }));
@@ -181,7 +234,10 @@ const FollowUpComplianceReport = () => {
     const worksheet = XLSX.utils.json_to_sheet(excelData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Follow-up Compliance");
-    XLSX.writeFile(workbook, `FollowUp_Compliance_Report_${fromDate}_to_${toDate}.xlsx`);
+    XLSX.writeFile(
+      workbook,
+      `FollowUp_Compliance_Report_${fromDate}_to_${toDate}.xlsx`,
+    );
   };
 
   const handlePrint = () => {
@@ -200,19 +256,53 @@ const FollowUpComplianceReport = () => {
   });
 
   const totalPatients = filteredData.length;
-  const onTimeCount = filteredData.filter(r => r.status === "On-time").length;
-  const lateCount = filteredData.filter(r => r.status === "Late").length;
-  const noShowCount = filteredData.filter(r => r.status === "No-show").length;
-  const sxDoneCount = filteredData.filter(r => r.status === "Sx Done").length;
+  const onTimeCount = filteredData.filter((r) => r.status === "On-time").length;
+  const lateCount = filteredData.filter((r) => r.status === "Late").length;
+  const noShowCount = filteredData.filter((r) => r.status === "No-show").length;
+  const sxDoneCount = filteredData.filter((r) => r.status === "Sx Done").length;
 
   const footerGroup = (
     <ColumnGroup>
       <Row>
-        <Column footer={`Total Patients: ${totalPatients}`} colSpan={3} footerStyle={{ textAlign: "center", fontWeight: "bold" }} />
-        <Column footer={`On-time: ${onTimeCount}`} colSpan={2} footerStyle={{ textAlign: "center", fontWeight: "bold", color: "#2e7d32" }} />
-        <Column footer={`Late: ${lateCount}`} footerStyle={{ textAlign: "center", fontWeight: "bold", color: "#ed6c02" }} />
-        <Column footer={`No-show: ${noShowCount}`} footerStyle={{ textAlign: "center", fontWeight: "bold", color: "#d32f2f" }} />
-        <Column footer={`Sx Done: ${sxDoneCount}`} colSpan={2} footerStyle={{ textAlign: "center", fontWeight: "bold", color: "#0288d1" }} />
+        <Column
+          footer={`Total Patients: ${totalPatients}`}
+          colSpan={3}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={`On-time: ${onTimeCount}`}
+          colSpan={2}
+          footerStyle={{
+            textAlign: "center",
+            fontWeight: "bold",
+            color: "#2e7d32",
+          }}
+        />
+        <Column
+          footer={`Late: ${lateCount}`}
+          footerStyle={{
+            textAlign: "center",
+            fontWeight: "bold",
+            color: "#ed6c02",
+          }}
+        />
+        <Column
+          footer={`No-show: ${noShowCount}`}
+          footerStyle={{
+            textAlign: "center",
+            fontWeight: "bold",
+            color: "#d32f2f",
+          }}
+        />
+        <Column
+          footer={`Sx Done: ${sxDoneCount}`}
+          colSpan={2}
+          footerStyle={{
+            textAlign: "center",
+            fontWeight: "bold",
+            color: "#0288d1",
+          }}
+        />
       </Row>
     </ColumnGroup>
   );
@@ -269,7 +359,10 @@ const FollowUpComplianceReport = () => {
           </div>
         </div>
       </Col>
-      <Col style={{ padding: "0 5px" }} className="d-flex justify-content-end gap-2">
+      <Col
+        style={{ padding: "0 5px" }}
+        className="d-flex justify-content-end gap-2"
+      >
         <button
           className="btn btn-success btn-sm"
           onClick={exportToExcel}
@@ -336,8 +429,15 @@ const FollowUpComplianceReport = () => {
                 >
                   <h4 style={{ margin: 0 }}>Follow-up Compliance Report</h4>
                   {fromDate && toDate && (
-                    <div style={{ fontSize: "13px", fontWeight: "normal", marginTop: "5px" }}>
-                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "normal",
+                        marginTop: "5px",
+                      }}
+                    >
+                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to{" "}
+                      <b>{formatDateDisplay(toDate)}</b>
                     </div>
                   )}
                 </Card.Header>
@@ -473,7 +573,11 @@ const FollowUpComplianceReport = () => {
                       </Col>
 
                       {/* Search & Reset Buttons */}
-                      <Col md={2} className="d-flex justify-content-end gap-2 mt-2" style={{ padding: "0 5px" }}>
+                      <Col
+                        md={2}
+                        className="d-flex justify-content-end gap-2 mt-2"
+                        style={{ padding: "0 5px" }}
+                      >
                         <button
                           className="btn btn-primary"
                           type="submit"
@@ -548,19 +652,25 @@ const FollowUpComplianceReport = () => {
                       <Column
                         field="lastVisitDate"
                         header="Last Visit Date"
-                        body={(rowData) => formatDateDisplay(rowData.lastVisitDate)}
+                        body={(rowData) =>
+                          formatDateDisplay(rowData.lastVisitDate)
+                        }
                         style={{ width: "120px", textAlign: "center" }}
                       />
                       <Column
                         field="followUpAdvisedDate"
                         header="Follow-up Advised Date"
-                        body={(rowData) => formatDateDisplay(rowData.followUpAdvisedDate)}
+                        body={(rowData) =>
+                          formatDateDisplay(rowData.followUpAdvisedDate)
+                        }
                         style={{ width: "140px", textAlign: "center" }}
                       />
                       <Column
                         field="actualReturnDate"
                         header="Actual Return Date"
-                        body={(rowData) => formatDateDisplay(rowData.actualReturnDate)}
+                        body={(rowData) =>
+                          formatDateDisplay(rowData.actualReturnDate)
+                        }
                         style={{ width: "130px", textAlign: "center" }}
                       />
                       <Column
@@ -572,7 +682,11 @@ const FollowUpComplianceReport = () => {
                       <Column
                         field="daysOverdue"
                         header="Days Overdue"
-                        body={(rowData) => rowData.daysOverdue > 0 ? `${rowData.daysOverdue} days` : "-"}
+                        body={(rowData) =>
+                          rowData.daysOverdue > 0
+                            ? `${rowData.daysOverdue} days`
+                            : "-"
+                        }
                         style={{ width: "110px", textAlign: "center" }}
                       />
                       <Column
@@ -593,7 +707,9 @@ const FollowUpComplianceReport = () => {
                           <th style={{ width: "160px" }}>Patient Name</th>
                           <th style={{ width: "140px" }}>Doctor Name</th>
                           <th style={{ width: "110px" }}>Last Visit Date</th>
-                          <th style={{ width: "130px" }}>Follow-up Advised Date</th>
+                          <th style={{ width: "130px" }}>
+                            Follow-up Advised Date
+                          </th>
                           <th style={{ width: "120px" }}>Actual Return Date</th>
                           <th style={{ width: "90px" }}>Status</th>
                           <th style={{ width: "90px" }}>Days Overdue</th>
@@ -607,10 +723,16 @@ const FollowUpComplianceReport = () => {
                             <td>{formatValue(item.patientName)}</td>
                             <td>{formatValue(item.doctor)}</td>
                             <td>{formatDateDisplay(item.lastVisitDate)}</td>
-                            <td>{formatDateDisplay(item.followUpAdvisedDate)}</td>
+                            <td>
+                              {formatDateDisplay(item.followUpAdvisedDate)}
+                            </td>
                             <td>{formatDateDisplay(item.actualReturnDate)}</td>
                             <td>{item.status || "-"}</td>
-                            <td>{item.daysOverdue > 0 ? `${item.daysOverdue} d` : "-"}</td>
+                            <td>
+                              {item.daysOverdue > 0
+                                ? `${item.daysOverdue} d`
+                                : "-"}
+                            </td>
                             <td>{formatValue(item.noOfVisits)}</td>
                           </tr>
                         ))}

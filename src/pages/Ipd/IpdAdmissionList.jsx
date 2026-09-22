@@ -366,10 +366,17 @@ export default function IpdAdmissionList() {
     };
 
     const formattedRescheduleTime = convertTo12Hour(rescheduleTime);
-    const combinedRescheduleDate = rescheduleDate && formattedRescheduleTime ? `${moment(rescheduleDate).format("DD-MM-YYYY")} ${formattedRescheduleTime}` : "";
+    const combinedRescheduleDate =
+      rescheduleDate && formattedRescheduleTime
+        ? `${moment(rescheduleDate).format("DD-MM-YYYY")} ${formattedRescheduleTime}`
+        : "";
 
     if (!combinedRescheduleDate || !hasTime(combinedRescheduleDate)) {
-      Swal.fire("Required", "Please select a valid New Surgery Date & Time (both Date and Time are required)", "warning");
+      Swal.fire(
+        "Required",
+        "Please select a valid New Surgery Date & Time (both Date and Time are required)",
+        "warning",
+      );
       return;
     }
     setIsSubmitting(true);
@@ -611,14 +618,14 @@ export default function IpdAdmissionList() {
         prev.map((patient) =>
           patient.id === docPatient.id
             ? {
-              ...patient,
-              aadharcard: savedDocuments.aadharcard || patient.aadharcard,
-              pancard: savedDocuments.pancard || patient.pancard,
-              cancelled_cheque:
-                savedDocuments.cancelled_cheque || patient.cancelled_cheque,
-              pdc_cheque: savedDocuments.pdc_cheque || patient.pdc_cheque,
-              policy_copy: savedDocuments.policy_copy || patient.policy_copy,
-            }
+                ...patient,
+                aadharcard: savedDocuments.aadharcard || patient.aadharcard,
+                pancard: savedDocuments.pancard || patient.pancard,
+                cancelled_cheque:
+                  savedDocuments.cancelled_cheque || patient.cancelled_cheque,
+                pdc_cheque: savedDocuments.pdc_cheque || patient.pdc_cheque,
+                policy_copy: savedDocuments.policy_copy || patient.policy_copy,
+              }
             : patient,
         ),
       );
@@ -626,14 +633,14 @@ export default function IpdAdmissionList() {
       setDocPatient((prev) =>
         prev
           ? {
-            ...prev,
-            aadharcard: savedDocuments.aadharcard || prev.aadharcard,
-            pancard: savedDocuments.pancard || prev.pancard,
-            cancelled_cheque:
-              savedDocuments.cancelled_cheque || prev.cancelled_cheque,
-            pdc_cheque: savedDocuments.pdc_cheque || prev.pdc_cheque,
-            policy_copy: savedDocuments.policy_copy || prev.policy_copy,
-          }
+              ...prev,
+              aadharcard: savedDocuments.aadharcard || prev.aadharcard,
+              pancard: savedDocuments.pancard || prev.pancard,
+              cancelled_cheque:
+                savedDocuments.cancelled_cheque || prev.cancelled_cheque,
+              pdc_cheque: savedDocuments.pdc_cheque || prev.pdc_cheque,
+              policy_copy: savedDocuments.policy_copy || prev.policy_copy,
+            }
           : prev,
       );
       setPreviews(
@@ -954,7 +961,11 @@ export default function IpdAdmissionList() {
               variant="outline-success"
               className="btn-success btn-extra-small btn-icon me-1"
               title="Add IPD Bill"
-              onClick={() => navigate("/add-ipd-bill", { state: { patient, fromAdmissionList: true } })}
+              onClick={() =>
+                navigate("/add-ipd-bill", {
+                  state: { patient, fromAdmissionList: true },
+                })
+              }
               style={{
                 borderRadius: "6px",
                 padding: "5px 8px",
@@ -995,7 +1006,7 @@ export default function IpdAdmissionList() {
                   border: "none",
                   background: "white",
                   overflow: "hidden",
-                  marginTop: "10px"
+                  marginTop: "10px",
                 }}
               >
                 <Card.Body className="p-0">
@@ -1032,9 +1043,11 @@ export default function IpdAdmissionList() {
                         field="verifiedDate"
                         header="Admission Date & Time"
                         headerClassName="datatable-header-center"
-                        body={(rowData) =>
-                          <span className="selectable-text">{formatDisplayDateTime(rowData.verifiedDate)}</span>
-                        }
+                        body={(rowData) => (
+                          <span className="selectable-text">
+                            {formatDisplayDateTime(rowData.verifiedDate)}
+                          </span>
+                        )}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -1047,9 +1060,11 @@ export default function IpdAdmissionList() {
                         field="surgeryDate"
                         header="Surgery Date & Time"
                         headerClassName="datatable-header-center"
-                        body={(rowData) =>
-                          <span className="selectable-text">{formatDisplayDateTime(rowData.surgeryDate)}</span>
-                        }
+                        body={(rowData) => (
+                          <span className="selectable-text">
+                            {formatDisplayDateTime(rowData.surgeryDate)}
+                          </span>
+                        )}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -1062,7 +1077,11 @@ export default function IpdAdmissionList() {
                         field="uhid"
                         header="UID No"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => <span className="selectable-text">{rowData.uhid || "-"}</span>}
+                        body={(rowData) => (
+                          <span className="selectable-text">
+                            {rowData.uhid || "-"}
+                          </span>
+                        )}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -1076,7 +1095,9 @@ export default function IpdAdmissionList() {
                         header="Admission No"
                         headerClassName="datatable-header-center"
                         body={(rowData) => {
-                          const isPending = !rowData.admissionNo || rowData.admissionNo === "PENDING";
+                          const isPending =
+                            !rowData.admissionNo ||
+                            rowData.admissionNo === "PENDING";
                           return isPending ? (
                             <span
                               className="selectable-text text-danger fw-bold"
@@ -1086,7 +1107,9 @@ export default function IpdAdmissionList() {
                               Pending
                             </span>
                           ) : (
-                            <span className="selectable-text">{rowData.admissionNo}</span>
+                            <span className="selectable-text">
+                              {rowData.admissionNo}
+                            </span>
                           );
                         }}
                         style={{
@@ -1101,7 +1124,11 @@ export default function IpdAdmissionList() {
                         field="name"
                         header="Patient Name"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => <span className="selectable-text">{rowData.name || "-"}</span>}
+                        body={(rowData) => (
+                          <span className="selectable-text">
+                            {rowData.name || "-"}
+                          </span>
+                        )}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -1114,7 +1141,11 @@ export default function IpdAdmissionList() {
                         field="contact"
                         header="Contact No"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => <span className="selectable-text">{rowData.contact || "-"}</span>}
+                        body={(rowData) => (
+                          <span className="selectable-text">
+                            {rowData.contact || "-"}
+                          </span>
+                        )}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -1126,9 +1157,9 @@ export default function IpdAdmissionList() {
                       <Column
                         header="Age/Gender"
                         headerClassName="datatable-header-center"
-                        body={(rowData) =>
+                        body={(rowData) => (
                           <span className="selectable-text">{`${rowData.age} yrs / ${rowData.gender}`}</span>
-                        }
+                        )}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -1141,7 +1172,11 @@ export default function IpdAdmissionList() {
                         field="roomType"
                         header="Bed Category"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => <span className="selectable-text">{rowData.roomType || "-"}</span>}
+                        body={(rowData) => (
+                          <span className="selectable-text">
+                            {rowData.roomType || "-"}
+                          </span>
+                        )}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -1154,7 +1189,11 @@ export default function IpdAdmissionList() {
                         field="roomNo"
                         header="Room No"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => <span className="selectable-text">{rowData.roomNo || "-"}</span>}
+                        body={(rowData) => (
+                          <span className="selectable-text">
+                            {rowData.roomNo || "-"}
+                          </span>
+                        )}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -1167,7 +1206,11 @@ export default function IpdAdmissionList() {
                         field="surgeonName"
                         header="Surgeon Name"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => <span className="selectable-text">{rowData.surgeonName || "-"}</span>}
+                        body={(rowData) => (
+                          <span className="selectable-text">
+                            {rowData.surgeonName || "-"}
+                          </span>
+                        )}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -1202,12 +1245,17 @@ export default function IpdAdmissionList() {
         onHide={() => setShowRescheduleModal(false)}
         centered
       >
-        <Modal.Header closeButton style={{
-          backgroundColor: "#e0f7fa",
-          borderBottom: "2px solid #00bcd4",
-          padding: "10px 15px",
-        }}>
-          <Modal.Title style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}>
+        <Modal.Header
+          closeButton
+          style={{
+            backgroundColor: "#e0f7fa",
+            borderBottom: "2px solid #00bcd4",
+            padding: "10px 15px",
+          }}
+        >
+          <Modal.Title
+            style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}
+          >
             <FeatherIcon icon="calendar" size={18} className="me-1" />
             Reschedule Surgery
           </Modal.Title>
@@ -1217,7 +1265,13 @@ export default function IpdAdmissionList() {
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label style={{ color: "#1a5b61ff", fontSize: "13px", fontWeight: "600" }}>
+                  <Form.Label
+                    style={{
+                      color: "#1a5b61ff",
+                      fontSize: "13px",
+                      fontWeight: "600",
+                    }}
+                  >
                     New Surgery Date <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Control
@@ -1242,7 +1296,13 @@ export default function IpdAdmissionList() {
 
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label style={{ color: "#1a5b61ff", fontSize: "13px", fontWeight: "600" }}>
+                  <Form.Label
+                    style={{
+                      color: "#1a5b61ff",
+                      fontSize: "13px",
+                      fontWeight: "600",
+                    }}
+                  >
                     New Surgery Time <span className="text-danger">*</span>
                   </Form.Label>
                   <Form.Select
@@ -1298,18 +1358,24 @@ export default function IpdAdmissionList() {
         onHide={() => setShowCancelModal(false)}
         centered
       >
-        <Modal.Header closeButton style={{
-          backgroundColor: "#e0f7fa",
-          borderBottom: "2px solid #00bcd4",
-          padding: "10px 15px",
-        }}>
-          <Modal.Title style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}>
+        <Modal.Header
+          closeButton
+          style={{
+            backgroundColor: "#e0f7fa",
+            borderBottom: "2px solid #00bcd4",
+            padding: "10px 15px",
+          }}
+        >
+          <Modal.Title
+            style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}
+          >
             <FeatherIcon
               className="me-2"
               icon="trash"
               size="17"
               style={{ color: "#1a5b61ff" }}
-            />Reason of Cancellation <span className="text-danger">*</span>
+            />
+            Reason of Cancellation <span className="text-danger">*</span>
           </Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleCancelSubmit}>
@@ -1327,11 +1393,17 @@ export default function IpdAdmissionList() {
             </Form.Group>
           </Modal.Body>
           <div className="d-flex justify-content-end">
-            <Button variant="danger" type="submit" className="me-2 px-3 mb-5" disabled={isSubmitting} style={{
-              borderRadius: "10px",
-              fontSize: "12px",
-              padding: "10px",
-            }}>
+            <Button
+              variant="danger"
+              type="submit"
+              className="me-2 px-3 mb-5"
+              disabled={isSubmitting}
+              style={{
+                borderRadius: "10px",
+                fontSize: "12px",
+                padding: "10px",
+              }}
+            >
               {isSubmitting ? "Cancelling..." : "Submit & Cancel"}
             </Button>
           </div>

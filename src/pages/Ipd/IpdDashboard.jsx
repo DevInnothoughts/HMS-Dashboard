@@ -95,10 +95,10 @@ export default function IpdDashboard() {
     const list = Array.isArray(data)
       ? data
       : Array.isArray(data?.data)
-      ? data.data
-      : Array.isArray(data?.result)
-      ? data.result
-      : [];
+        ? data.data
+        : Array.isArray(data?.result)
+          ? data.result
+          : [];
 
     return list.map((p) => {
       let surgeryMoment = null;
@@ -108,8 +108,8 @@ export default function IpdDashboard() {
         p.surgery_datetime && p.surgery_datetime !== "Not Scheduled"
           ? p.surgery_datetime
           : p.surgery_date
-          ? `${p.surgery_date} ${p.surgery_time || ""}`.trim()
-          : null;
+            ? `${p.surgery_date} ${p.surgery_time || ""}`.trim()
+            : null;
 
       if (rawSurgeryDate) {
         const parsed = moment(rawSurgeryDate, [
@@ -143,8 +143,10 @@ export default function IpdDashboard() {
 
       const startTime = surgeryMoment.toDate();
       const endTime = surgeryMoment.clone().add(1, "hour").toDate();
-      const patientName = p.name || p.patient_name || p.patientName || "Patient";
-      const doctorName = p.surgeon_name || p.doctor_name || p.doctorName || "N/A";
+      const patientName =
+        p.name || p.patient_name || p.patientName || "Patient";
+      const doctorName =
+        p.surgeon_name || p.doctor_name || p.doctorName || "N/A";
       const phone = p.patient_phone || p.phone || p.contact || "";
       const uhid =
         p.uid ||
@@ -163,7 +165,7 @@ export default function IpdDashboard() {
         rawAdmNo &&
         rawAdmNo !== 0 &&
         rawAdmNo !== "0" &&
-        String(rawAdmNo).trim() !== ""
+        String(rawAdmNo).trim() !== "",
       );
 
       return {
@@ -208,19 +210,36 @@ export default function IpdDashboard() {
         const rawData = Array.isArray(result.data?.[0])
           ? result.data[0]
           : Array.isArray(result.data)
-          ? result.data
-          : result || [];
+            ? result.data
+            : result || [];
 
         const invoicesList = rawData.map((inv) => {
-          const uid = String(inv.patient_uid || inv.Uid_no || inv.uid || "").trim().toLowerCase();
-          const phone = String(inv.patient_phone || inv.phone || inv.patient_phone_no || inv.contact || "").replace(/\D/g, "").slice(-10);
-          const rawAdmNo = String(inv.admission_no || inv.adm_no || inv.admissionno || "").trim();
-          const admNo = (rawAdmNo && rawAdmNo !== "0" && rawAdmNo.toUpperCase() !== "PENDING") ? rawAdmNo : null;
-          const invDateRaw = inv.creation_date || inv.admissiondate || inv.adm_date || null;
+          const uid = String(inv.patient_uid || inv.Uid_no || inv.uid || "")
+            .trim()
+            .toLowerCase();
+          const phone = String(
+            inv.patient_phone ||
+              inv.phone ||
+              inv.patient_phone_no ||
+              inv.contact ||
+              "",
+          )
+            .replace(/\D/g, "")
+            .slice(-10);
+          const rawAdmNo = String(
+            inv.admission_no || inv.adm_no || inv.admissionno || "",
+          ).trim();
+          const admNo =
+            rawAdmNo && rawAdmNo !== "0" && rawAdmNo.toUpperCase() !== "PENDING"
+              ? rawAdmNo
+              : null;
+          const invDateRaw =
+            inv.creation_date || inv.admissiondate || inv.adm_date || null;
           let formattedInvDate = null;
           if (invDateRaw) {
             const parsed = moment(invDateRaw);
-            if (parsed.isValid()) formattedInvDate = parsed.format("YYYY-MM-DD");
+            if (parsed.isValid())
+              formattedInvDate = parsed.format("YYYY-MM-DD");
           }
 
           return {
@@ -253,23 +272,34 @@ export default function IpdDashboard() {
         item.uid_no ||
         item.global_id ||
         item.patient_id ||
-        ""
-    ).trim().toLowerCase();
+        "",
+    )
+      .trim()
+      .toLowerCase();
 
-    const phone = String(
-      item.patient_phone || item.phone || item.contact || ""
-    ).replace(/\D/g, "").slice(-10);
+    const phone = String(item.patient_phone || item.phone || item.contact || "")
+      .replace(/\D/g, "")
+      .slice(-10);
 
     const name = String(
-      item.name || item.patient_name || item.patientName || ""
-    ).trim().toLowerCase();
+      item.name || item.patient_name || item.patientName || "",
+    )
+      .trim()
+      .toLowerCase();
 
     const admNo = String(
-      item.admission_no || item.adm_no || item.admissionNo || ""
-    ).trim().toLowerCase();
+      item.admission_no || item.adm_no || item.admissionNo || "",
+    )
+      .trim()
+      .toLowerCase();
 
     const rawSxDate = String(
-      item.surgery_datetime || item.surgery_date || item.admission_datetime || item.adm_date || item.created_at || ""
+      item.surgery_datetime ||
+        item.surgery_date ||
+        item.admission_datetime ||
+        item.adm_date ||
+        item.created_at ||
+        "",
     ).trim();
 
     let sxDateStr = rawSxDate;
@@ -294,7 +324,8 @@ export default function IpdDashboard() {
     if (uid && uid !== "0") return `uid_${uid}_${sxDateStr}`;
     if (phone && name) return `person_${phone}_${name}_${sxDateStr}`;
     if (phone) return `phone_${phone}_${sxDateStr}`;
-    if (admNo && admNo !== "0" && admNo !== "pending") return `adm_${admNo}_${sxDateStr}`;
+    if (admNo && admNo !== "0" && admNo !== "pending")
+      return `adm_${admNo}_${sxDateStr}`;
 
     return `id_${item.id || item.appointment_id || Math.random()}`;
   };
@@ -316,7 +347,7 @@ export default function IpdDashboard() {
       ];
 
       const responses = await Promise.allSettled(
-        endpoints.map((url) => fetch(url, { method: "GET", headers }))
+        endpoints.map((url) => fetch(url, { method: "GET", headers })),
       );
 
       let allRawData = [];
@@ -328,10 +359,10 @@ export default function IpdDashboard() {
             const list = Array.isArray(json)
               ? json
               : Array.isArray(json?.data)
-              ? json.data
-              : Array.isArray(json?.result)
-              ? json.result
-              : [];
+                ? json.data
+                : Array.isArray(json?.result)
+                  ? json.result
+                  : [];
             if (Array.isArray(list) && list.length > 0) {
               allRawData.push(...list);
             }
@@ -350,7 +381,8 @@ export default function IpdDashboard() {
         } else {
           // Merge records for the same key, preserving valid admission numbers and cancellation status
           const existing = uniqueMap.get(key);
-          const existingAdm = existing.admission_no || existing.adm_no || existing.admissionNo;
+          const existingAdm =
+            existing.admission_no || existing.adm_no || existing.admissionNo;
           const newAdm = item.admission_no || item.adm_no || item.admissionNo;
 
           const existingHasAdm =
@@ -358,9 +390,7 @@ export default function IpdDashboard() {
             String(existingAdm) !== "0" &&
             String(existingAdm).trim() !== "";
           const newHasAdm =
-            newAdm &&
-            String(newAdm) !== "0" &&
-            String(newAdm).trim() !== "";
+            newAdm && String(newAdm) !== "0" && String(newAdm).trim() !== "";
 
           const merged = { ...existing, ...item };
           if (existingHasAdm && !newHasAdm) {
@@ -380,7 +410,7 @@ export default function IpdDashboard() {
       });
 
       const uniqueRecords = Array.from(uniqueMap.values()).filter(
-        (p) => !p.is_deleted || p.is_deleted === 0 || p.is_deleted === "0"
+        (p) => !p.is_deleted || p.is_deleted === 0 || p.is_deleted === "0",
       );
 
       await fetchBilledUhids();
@@ -443,21 +473,28 @@ export default function IpdDashboard() {
       const updated = surgeries.find(
         (s) =>
           (s.uhid && s.uhid === selectedEvent.uhid) ||
-          (s.patientid && String(s.patientid) === String(selectedEvent.patientid))
+          (s.patientid &&
+            String(s.patientid) === String(selectedEvent.patientid)),
       );
-      if (updated && (updated.isConfirmed !== selectedEvent.isConfirmed || updated.admissionNo !== selectedEvent.admissionNo)) {
+      if (
+        updated &&
+        (updated.isConfirmed !== selectedEvent.isConfirmed ||
+          updated.admissionNo !== selectedEvent.admissionNo)
+      ) {
         setSelectedEvent(updated);
       }
     }
 
-    return () =>
-      window.removeEventListener("selectSurgery", handleSelectEvent);
+    return () => window.removeEventListener("selectSurgery", handleSelectEvent);
   }, [surgeries, selectedEvent]);
 
   const filteredSurgeries = useMemo(() => {
     return surgeries.filter((s) => {
       if (selectedDoctorId) {
-        const docMatch = s.doctorName?.toLowerCase().includes(selectedDoctorId.toLowerCase()) ||
+        const docMatch =
+          s.doctorName
+            ?.toLowerCase()
+            .includes(selectedDoctorId.toLowerCase()) ||
           String(s.doctorId) === String(selectedDoctorId);
         if (!docMatch) return false;
       }
@@ -472,7 +509,10 @@ export default function IpdDashboard() {
   const counts = useMemo(() => {
     if (viewMode === "list") {
       return filteredSurgeries.filter((event) => {
-        return event.hasSurgeryDate && moment(event.start).isSame(selectedDate, "day");
+        return (
+          event.hasSurgeryDate &&
+          moment(event.start).isSame(selectedDate, "day")
+        );
       }).length;
     } else {
       const monthStart = moment(selectedDate).clone().startOf("month");
@@ -535,7 +575,14 @@ export default function IpdDashboard() {
               "success",
             );
             setSelectedEvent((prev) =>
-              prev ? { ...prev, isConfirmed: true, status: "Admitted", confirmTime: new Date().toISOString() } : null
+              prev
+                ? {
+                    ...prev,
+                    isConfirmed: true,
+                    status: "Admitted",
+                    confirmTime: new Date().toISOString(),
+                  }
+                : null,
             );
             fetchSurgeries();
             window.dispatchEvent(new CustomEvent("refreshIpdCount"));
@@ -544,7 +591,11 @@ export default function IpdDashboard() {
             throw new Error(err.message || "Failed to confirm");
           }
         } catch (error) {
-          Swal.fire("Error", error.message || "Could not confirm admission", "error");
+          Swal.fire(
+            "Error",
+            error.message || "Could not confirm admission",
+            "error",
+          );
         }
       }
     });
@@ -631,55 +682,77 @@ export default function IpdDashboard() {
     });
   };
 
-  const getBillInfo = useCallback((event) => {
-    if (!event || !billedInvoices || billedInvoices.length === 0) return null;
+  const getBillInfo = useCallback(
+    (event) => {
+      if (!event || !billedInvoices || billedInvoices.length === 0) return null;
 
-    const admKey = event.admissionNo ? String(event.admissionNo).trim() : "";
-    const isConfirmedAdm = admKey && admKey !== "0" && admKey.toUpperCase() !== "PENDING";
+      const admKey = event.admissionNo ? String(event.admissionNo).trim() : "";
+      const isConfirmedAdm =
+        admKey && admKey !== "0" && admKey.toUpperCase() !== "PENDING";
 
-    // 1. If admission has a confirmed admission number, match by admission_no ONLY
-    if (isConfirmedAdm) {
-      const matchByAdmNo = billedInvoices.find(
-        (inv) => inv.admissionNo && inv.admissionNo.toLowerCase() === admKey.toLowerCase()
-      );
-      if (matchByAdmNo) return matchByAdmNo;
-    }
+      // 1. If admission has a confirmed admission number, match by admission_no ONLY
+      if (isConfirmedAdm) {
+        const matchByAdmNo = billedInvoices.find(
+          (inv) =>
+            inv.admissionNo &&
+            inv.admissionNo.toLowerCase() === admKey.toLowerCase(),
+        );
+        if (matchByAdmNo) return matchByAdmNo;
+      }
 
-    // 2. If unconfirmed (PENDING) or if admission_no is missing/not matched yet:
-    // Match by patient identity (uid or phone) AND exact admission/surgery date
-    const uidKey = event.uhid ? String(event.uhid).trim().toLowerCase() : "";
-    const phoneKey = event.phone ? String(event.phone).replace(/\D/g, "").slice(-10) : "";
-    const eventDateStr = event.date ? moment(event.date, ["DD-MM-YYYY", "YYYY-MM-DD"]).format("YYYY-MM-DD") : null;
+      // 2. If unconfirmed (PENDING) or if admission_no is missing/not matched yet:
+      // Match by patient identity (uid or phone) AND exact admission/surgery date
+      const uidKey = event.uhid ? String(event.uhid).trim().toLowerCase() : "";
+      const phoneKey = event.phone
+        ? String(event.phone).replace(/\D/g, "").slice(-10)
+        : "";
+      const eventDateStr = event.date
+        ? moment(event.date, ["DD-MM-YYYY", "YYYY-MM-DD"]).format("YYYY-MM-DD")
+        : null;
 
-    if (eventDateStr && (uidKey || phoneKey)) {
-      const matchByPatientAndDate = billedInvoices.find((inv) => {
-        const matchesPatient = (uidKey && inv.uid === uidKey) || (phoneKey && inv.phone === phoneKey);
-        const matchesDate = inv.invDate === eventDateStr;
-        return matchesPatient && matchesDate;
-      });
-      if (matchByPatientAndDate) return matchByPatientAndDate;
-    }
+      if (eventDateStr && (uidKey || phoneKey)) {
+        const matchByPatientAndDate = billedInvoices.find((inv) => {
+          const matchesPatient =
+            (uidKey && inv.uid === uidKey) ||
+            (phoneKey && inv.phone === phoneKey);
+          const matchesDate = inv.invDate === eventDateStr;
+          return matchesPatient && matchesDate;
+        });
+        if (matchByPatientAndDate) return matchByPatientAndDate;
+      }
 
-    return null;
-  }, [billedInvoices]);
+      return null;
+    },
+    [billedInvoices],
+  );
 
-  const checkHasBill = useCallback((event) => {
-    return Boolean(getBillInfo(event));
-  }, [getBillInfo]);
+  const checkHasBill = useCallback(
+    (event) => {
+      return Boolean(getBillInfo(event));
+    },
+    [getBillInfo],
+  );
 
-  const eventStyleGetter = useCallback((event) => {
-    const hasBill = checkHasBill(event);
-    const bgColor = hasBill ? "#10b981" : event.isConfirmed ? "#1e40af" : "#475569";
-    return {
-      style: {
-        backgroundColor: bgColor,
-        borderRadius: "4px",
-        border: "none",
-        color: "white",
-        display: "block",
-      },
-    };
-  }, [checkHasBill]);
+  const eventStyleGetter = useCallback(
+    (event) => {
+      const hasBill = checkHasBill(event);
+      const bgColor = hasBill
+        ? "#10b981"
+        : event.isConfirmed
+          ? "#1e40af"
+          : "#475569";
+      return {
+        style: {
+          backgroundColor: bgColor,
+          borderRadius: "4px",
+          border: "none",
+          color: "white",
+          display: "block",
+        },
+      };
+    },
+    [checkHasBill],
+  );
 
   const toggleStatusFilter = (status) => {
     setActiveStatusFilter((prev) => (prev === status ? null : status));
@@ -713,7 +786,10 @@ export default function IpdDashboard() {
             backgroundColor: "#475569",
             borderRadius: "50%",
             ...(isSelected
-              ? { transform: "scale(1.25)", boxShadow: "0 0 8px rgba(71,85,105,0.4)" }
+              ? {
+                  transform: "scale(1.25)",
+                  boxShadow: "0 0 8px rgba(71,85,105,0.4)",
+                }
               : {}),
           }}
         ></div>
@@ -730,10 +806,7 @@ export default function IpdDashboard() {
           }}
         >
           {name}{" "}
-          <span
-            className="cnt"
-            style={{ fontSize: "11px", color: "#000000" }}
-          >
+          <span className="cnt" style={{ fontSize: "11px", color: "#000000" }}>
             ({count || 0})
           </span>
         </p>
@@ -764,7 +837,9 @@ export default function IpdDashboard() {
             <label>
               <FeatherIcon icon="calendar" size={14} /> Surgery Date & Time:
             </label>
-            <span className="data-value fw-bold">{selectedEvent.date} &nbsp;{selectedEvent.time}</span>
+            <span className="data-value fw-bold">
+              {selectedEvent.date} &nbsp;{selectedEvent.time}
+            </span>
           </div>
 
           <div className="data-item-inline">
@@ -772,7 +847,10 @@ export default function IpdDashboard() {
               <FeatherIcon icon="info" size={14} /> Admission No:
             </label>
             <span className="data-value fw-bold">
-              {!selectedEvent.admissionNo || selectedEvent.admissionNo === "0" || selectedEvent.admissionNo === 0 || selectedEvent.admissionNo === "PENDING" ? (
+              {!selectedEvent.admissionNo ||
+              selectedEvent.admissionNo === "0" ||
+              selectedEvent.admissionNo === 0 ||
+              selectedEvent.admissionNo === "PENDING" ? (
                 <span
                   className="selectable-text text-danger fw-bold"
                   title="Confirm admission and create an IPD bill. The assigned admission number will reflect here."
@@ -850,11 +928,7 @@ export default function IpdDashboard() {
               border: "1px solid rgba(30, 64, 175, 0.2)",
             }}
           >
-            <FeatherIcon
-              icon="check-circle"
-              size={20}
-              className="me-2"
-            />
+            <FeatherIcon icon="check-circle" size={20} className="me-2" />
             <div className="d-flex align-items-center py-2 justify-content-between flex-grow-1">
               <strong>Admission Confirmed</strong>
               <div
@@ -865,10 +939,11 @@ export default function IpdDashboard() {
                   textAlign: "right",
                 }}
               >
-                {`Admitted at: ${selectedEvent.confirmTime && selectedEvent.confirmTime !== "0"
-                  ? moment(selectedEvent.confirmTime).format("HH:mm")
-                  : "N/A"
-                  }`}
+                {`Admitted at: ${
+                  selectedEvent.confirmTime && selectedEvent.confirmTime !== "0"
+                    ? moment(selectedEvent.confirmTime).format("HH:mm")
+                    : "N/A"
+                }`}
               </div>
             </div>
           </div>
@@ -878,50 +953,51 @@ export default function IpdDashboard() {
           <div className="d-grid gap-1">
             {selectedEvent.isConfirmed ? (
               <>
-                {checkHasBill(selectedEvent) && (() => {
-                  const billInfo = getBillInfo(selectedEvent);
-                  const madeAt = billInfo?.admissionTime
-                    ? billInfo.admissionTime
-                    : billInfo?.createdAt
-                      ? moment(billInfo.createdAt).format("HH:mm")
-                      : "N/A";
-                  const dischargeAt = billInfo?.dischargeTime
-                    ? billInfo.dischargeTime
-                    : billInfo?.dischargeAt
-                      ? moment(billInfo.dischargeAt).format("DD-MM-YY")
-                      : "N/A";
-                  return (
-                    <div
-                      className="d-flex align-items-center p-3 mb-3"
-                      style={{
-                        borderRadius: "8px",
-                        backgroundColor: "#ecfdf5",
-                        color: "#10b981",
-                        border: "1px solid rgba(16, 185, 129, 0.2)",
-                      }}
-                    >
-                      <FeatherIcon
-                        icon="file-text"
-                        size={20}
-                        className="me-2"
-                        style={{ flexShrink: 0 }}
-                      />
-                      <div className="d-flex align-items-center py-2 justify-content-between flex-grow-1">
-                        <strong>IPD Bill Made</strong>
-                        <div
-                          style={{
-                            fontSize: "13px",
-                            opacity: 1.0,
-                            marginLeft: "10px",
-                            textAlign: "right",
-                          }}
-                        >
-                          <div>Made at: {dischargeAt}</div>
+                {checkHasBill(selectedEvent) &&
+                  (() => {
+                    const billInfo = getBillInfo(selectedEvent);
+                    const madeAt = billInfo?.admissionTime
+                      ? billInfo.admissionTime
+                      : billInfo?.createdAt
+                        ? moment(billInfo.createdAt).format("HH:mm")
+                        : "N/A";
+                    const dischargeAt = billInfo?.dischargeTime
+                      ? billInfo.dischargeTime
+                      : billInfo?.dischargeAt
+                        ? moment(billInfo.dischargeAt).format("DD-MM-YY")
+                        : "N/A";
+                    return (
+                      <div
+                        className="d-flex align-items-center p-3 mb-3"
+                        style={{
+                          borderRadius: "8px",
+                          backgroundColor: "#ecfdf5",
+                          color: "#10b981",
+                          border: "1px solid rgba(16, 185, 129, 0.2)",
+                        }}
+                      >
+                        <FeatherIcon
+                          icon="file-text"
+                          size={20}
+                          className="me-2"
+                          style={{ flexShrink: 0 }}
+                        />
+                        <div className="d-flex align-items-center py-2 justify-content-between flex-grow-1">
+                          <strong>IPD Bill Made</strong>
+                          <div
+                            style={{
+                              fontSize: "13px",
+                              opacity: 1.0,
+                              marginLeft: "10px",
+                              textAlign: "right",
+                            }}
+                          >
+                            <div>Made at: {dischargeAt}</div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })()}
+                    );
+                  })()}
                 <Button
                   className="d-flex align-items-center justify-content-center"
                   onClick={() => {
@@ -955,23 +1031,32 @@ export default function IpdDashboard() {
                 <Button
                   variant="primary"
                   className="confirm-btn flex-grow-1"
-                  style={{ borderRadius: "10px", padding: "8px 12px", fontSize: "13px", fontWeight: "600" }}
+                  style={{
+                    borderRadius: "10px",
+                    padding: "8px 12px",
+                    fontSize: "13px",
+                    fontWeight: "600",
+                  }}
                   onClick={() =>
-                    handleConfirmSurgery(selectedEvent.phone, selectedEvent.uhid)
+                    handleConfirmSurgery(
+                      selectedEvent.phone,
+                      selectedEvent.uhid,
+                    )
                   }
                 >
-                  <FeatherIcon
-                    icon="check-circle"
-                    size={16}
-                    className="me-1"
-                  />
+                  <FeatherIcon icon="check-circle" size={16} className="me-1" />
                   Confirm Admission
                 </Button>
 
                 <Button
                   variant="danger"
                   className="flex-grow-1"
-                  style={{ borderRadius: "10px", padding: "8px 12px", fontSize: "13px", fontWeight: "600" }}
+                  style={{
+                    borderRadius: "10px",
+                    padding: "8px 12px",
+                    fontSize: "13px",
+                    fontWeight: "600",
+                  }}
                   onClick={handleCancelSurgery}
                 >
                   <FeatherIcon icon="x-circle" size={14} className="me-1" />
@@ -991,7 +1076,7 @@ export default function IpdDashboard() {
       style={{
         background: "linear-gradient(to right, #e0f7fa, #80deea)",
         minHeight: "100vh",
-        padding: "10px"
+        padding: "10px",
       }}
     >
       <style>{`
@@ -1271,8 +1356,19 @@ export default function IpdDashboard() {
                       "Today's Surgery Overview"
                     ) : (
                       <>
-                        <span style={{ fontWeight: "700", fontSize: "20px", color: "#000000ff" }}>Patient Surgery Calendar for</span>{" "}
-                        <span style={{ fontWeight: "700", color: "#007e8bff" }}></span>{moment(selectedDate).format("MMMM YYYY")}
+                        <span
+                          style={{
+                            fontWeight: "700",
+                            fontSize: "20px",
+                            color: "#000000ff",
+                          }}
+                        >
+                          Patient Surgery Calendar for
+                        </span>{" "}
+                        <span
+                          style={{ fontWeight: "700", color: "#007e8bff" }}
+                        ></span>
+                        {moment(selectedDate).format("MMMM YYYY")}
                       </>
                     )}
                   </h4>
@@ -1527,39 +1623,65 @@ export default function IpdDashboard() {
 
                               return nameMatch || phoneMatch;
                             })
-                            .sort((a, b) => moment(a.start).diff(moment(b.start)))
+                            .sort((a, b) =>
+                              moment(a.start).diff(moment(b.start)),
+                            )
                             .map((s, index) => {
                               const hasBill = checkHasBill(s);
                               const listStatus = hasBill
-                                ? { text: "Bill Made", color: "#10b981", bg: "#ecfdf5", rowBg: "#ecfdf5", rowBorder: "#10b981" }
+                                ? {
+                                    text: "Bill Made",
+                                    color: "#10b981",
+                                    bg: "#ecfdf5",
+                                    rowBg: "#ecfdf5",
+                                    rowBorder: "#10b981",
+                                  }
                                 : s.isConfirmed
-                                  ? { text: "Admitted", color: "#1e40af", bg: "#eff6ff", rowBg: "#eff6ff", rowBorder: "#1e40af" }
-                                  : { text: "Pending", color: "#475569", bg: "#f1f5f9", rowBg: "#ffffff", rowBorder: "#cbd5e1" };
-                              const indicatorColor = hasBill ? "#10b981" : s.isConfirmed ? "#1e40af" : "#334155";
+                                  ? {
+                                      text: "Admitted",
+                                      color: "#1e40af",
+                                      bg: "#eff6ff",
+                                      rowBg: "#eff6ff",
+                                      rowBorder: "#1e40af",
+                                    }
+                                  : {
+                                      text: "Pending",
+                                      color: "#475569",
+                                      bg: "#f1f5f9",
+                                      rowBg: "#ffffff",
+                                      rowBorder: "#cbd5e1",
+                                    };
+                              const indicatorColor = hasBill
+                                ? "#10b981"
+                                : s.isConfirmed
+                                  ? "#1e40af"
+                                  : "#334155";
                               const isActive = selectedEvent?.uhid === s.uhid;
                               const isPending = !s.isConfirmed && !hasBill;
 
                               const itemStyle = isPending
                                 ? {
-                                  position: "relative",
-                                  backgroundColor: isActive ? "#f0f9ff" : "#ffffff",
-                                  border: isActive
-                                    ? "1.5px solid #0284c7"
-                                    : "1px solid #cbd5e1",
-                                  boxShadow: isActive
-                                    ? "0 4px 6px -1px rgba(2, 132, 199, 0.15)"
-                                    : "0 1px 3px rgba(0,0,0,0.02)",
-                                }
+                                    position: "relative",
+                                    backgroundColor: isActive
+                                      ? "#f0f9ff"
+                                      : "#ffffff",
+                                    border: isActive
+                                      ? "1.5px solid #0284c7"
+                                      : "1px solid #cbd5e1",
+                                    boxShadow: isActive
+                                      ? "0 4px 6px -1px rgba(2, 132, 199, 0.15)"
+                                      : "0 1px 3px rgba(0,0,0,0.02)",
+                                  }
                                 : {
-                                  position: "relative",
-                                  backgroundColor: listStatus.rowBg,
-                                  border: isActive
-                                    ? `2px solid ${listStatus.rowBorder}`
-                                    : `1.5px solid ${listStatus.rowBorder}80`,
-                                  boxShadow: isActive
-                                    ? `0 4px 8px -1px ${listStatus.color}40`
-                                    : `0 1px 3px ${listStatus.color}20`,
-                                };
+                                    position: "relative",
+                                    backgroundColor: listStatus.rowBg,
+                                    border: isActive
+                                      ? `2px solid ${listStatus.rowBorder}`
+                                      : `1.5px solid ${listStatus.rowBorder}80`,
+                                    boxShadow: isActive
+                                      ? `0 4px 8px -1px ${listStatus.color}40`
+                                      : `0 1px 3px ${listStatus.color}20`,
+                                  };
 
                               return (
                                 <div
@@ -1655,17 +1777,17 @@ export default function IpdDashboard() {
                           s.hasSurgeryDate &&
                           moment(s.start).isSame(selectedDate, "day"),
                       ).length === 0 && (
-                          <div className="text-center py-5">
-                            <FeatherIcon
-                              icon="calendar"
-                              size={50}
-                              className="text-muted mb-3 opacity-25"
-                            />
-                            <p className="text-muted">
-                              No surgeries scheduled for this day.
-                            </p>
-                          </div>
-                        )}
+                        <div className="text-center py-5">
+                          <FeatherIcon
+                            icon="calendar"
+                            size={50}
+                            className="text-muted mb-3 opacity-25"
+                          />
+                          <p className="text-muted">
+                            No surgeries scheduled for this day.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </Card.Body>
@@ -1735,15 +1857,18 @@ export default function IpdDashboard() {
             backgroundColor: "#e0f7fa",
             borderBottom: "2px solid #00bcd4",
             padding: "10px 15px",
-          }}>
+          }}
+        >
           <Modal.Title
             style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}
-          ><FeatherIcon
+          >
+            <FeatherIcon
               className="me-2"
               icon="trash"
               size="17"
               style={{ color: "#1a5b61ff" }}
-            />Reason of Cancellation <span className="text-danger">*</span>
+            />
+            Reason of Cancellation <span className="text-danger">*</span>
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-1 pt-0">
@@ -1773,7 +1898,8 @@ export default function IpdDashboard() {
                   borderRadius: "10px",
                   fontSize: "12px",
                   padding: "10px",
-                }}>
+                }}
+              >
                 Confirm & Cancel
               </Button>
             </div>

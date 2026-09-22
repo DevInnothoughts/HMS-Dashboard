@@ -1,12 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  Row,
-  Col,
-  Card,
-  Container,
-  Form,
-  Spinner,
-} from "react-bootstrap";
+import { Row, Col, Card, Container, Form, Spinner } from "react-bootstrap";
 import SimpleBar from "simplebar-react";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
@@ -19,7 +12,15 @@ import { decodeJwt } from "../../Utility/decode-jwt";
 const BASE_URL = "http://194.195.117.79:5100/api";
 
 const formatValue = (val) => {
-  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+  if (
+    val === null ||
+    val === undefined ||
+    val === "" ||
+    val === "N/A" ||
+    val === 0 ||
+    val === "0" ||
+    val === "-"
+  ) {
     return "-";
   }
   return val;
@@ -300,15 +301,42 @@ const ConditionWiseReport = () => {
           colSpan={2}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
-        <Column footer={formatValue(totals.piles)} footerStyle={{ textAlign: "center", fontWeight: "bold" }} />
-        <Column footer={formatValue(totals.fistula)} footerStyle={{ textAlign: "center", fontWeight: "bold" }} />
-        <Column footer={formatValue(totals.hernia)} footerStyle={{ textAlign: "center", fontWeight: "bold" }} />
-        <Column footer={formatValue(totals.varicoseVeins)} footerStyle={{ textAlign: "center", fontWeight: "bold" }} />
-        <Column footer={formatValue(totals.prolapse)} footerStyle={{ textAlign: "center", fontWeight: "bold" }} />
-        <Column footer={formatValue(totals.circumcision)} footerStyle={{ textAlign: "center", fontWeight: "bold" }} />
-        <Column footer={formatValue(totals.abscess)} footerStyle={{ textAlign: "center", fontWeight: "bold" }} />
-        <Column footer={formatValue(totals.fissure)} footerStyle={{ textAlign: "center", fontWeight: "bold" }} />
-        <Column footer={formatValue(totals.ibs)} footerStyle={{ textAlign: "center", fontWeight: "bold" }} />
+        <Column
+          footer={formatValue(totals.piles)}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={formatValue(totals.fistula)}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={formatValue(totals.hernia)}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={formatValue(totals.varicoseVeins)}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={formatValue(totals.prolapse)}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={formatValue(totals.circumcision)}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={formatValue(totals.abscess)}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={formatValue(totals.fissure)}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={formatValue(totals.ibs)}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
       </Row>
     </ColumnGroup>
   );
@@ -432,15 +460,51 @@ const ConditionWiseReport = () => {
           body={(rowData, { rowIndex }) => rowIndex + 1}
           style={{ width: "60px", textAlign: "center" }}
         />
-        <Column field="doctorName" header="Doctor Name" body={(r) => formatValue(r.doctorName)} />
-        <Column field="piles" header="Piles" body={(r) => formatValue(r.piles)} />
-        <Column field="fistula" header="Fistula" body={(r) => formatValue(r.fistula)} />
-        <Column field="hernia" header="Hernia" body={(r) => formatValue(r.hernia)} />
-        <Column field="varicoseVeins" header="Varicose Veins" body={(r) => formatValue(r.varicoseVeins)} />
-        <Column field="prolapse" header="Prolapse" body={(r) => formatValue(r.prolapse)} />
-        <Column field="circumcision" header="Circumcision" body={(r) => formatValue(r.circumcision)} />
-        <Column field="abscess" header="Abscess" body={(r) => formatValue(r.abscess)} />
-        <Column field="fissure" header="Fissure" body={(r) => formatValue(r.fissure)} />
+        <Column
+          field="doctorName"
+          header="Doctor Name"
+          body={(r) => formatValue(r.doctorName)}
+        />
+        <Column
+          field="piles"
+          header="Piles"
+          body={(r) => formatValue(r.piles)}
+        />
+        <Column
+          field="fistula"
+          header="Fistula"
+          body={(r) => formatValue(r.fistula)}
+        />
+        <Column
+          field="hernia"
+          header="Hernia"
+          body={(r) => formatValue(r.hernia)}
+        />
+        <Column
+          field="varicoseVeins"
+          header="Varicose Veins"
+          body={(r) => formatValue(r.varicoseVeins)}
+        />
+        <Column
+          field="prolapse"
+          header="Prolapse"
+          body={(r) => formatValue(r.prolapse)}
+        />
+        <Column
+          field="circumcision"
+          header="Circumcision"
+          body={(r) => formatValue(r.circumcision)}
+        />
+        <Column
+          field="abscess"
+          header="Abscess"
+          body={(r) => formatValue(r.abscess)}
+        />
+        <Column
+          field="fissure"
+          header="Fissure"
+          body={(r) => formatValue(r.fissure)}
+        />
         <Column field="ibs" header="IBS" body={(r) => formatValue(r.ibs)} />
       </DataTable>
     </div>
@@ -483,8 +547,15 @@ const ConditionWiseReport = () => {
                 >
                   <h4 style={{ margin: 0 }}>Condition Wise Report</h4>
                   {fromDate && toDate && (
-                    <div style={{ fontSize: "13px", fontWeight: "normal", marginTop: "5px" }}>
-                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "normal",
+                        marginTop: "5px",
+                      }}
+                    >
+                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to{" "}
+                      <b>{formatDateDisplay(toDate)}</b>
                     </div>
                   )}
                 </Card.Header>
@@ -598,7 +669,9 @@ const ConditionWiseReport = () => {
 
                   {/* Print-only container displaying all tables */}
                   <div className="print-table-container">
-                    <h5 className="print-section-title">Assisted - Condition Wise Performance</h5>
+                    <h5 className="print-section-title">
+                      Assisted - Condition Wise Performance
+                    </h5>
                     <table className="print-table mb-4">
                       <thead>
                         <tr>
@@ -646,7 +719,9 @@ const ConditionWiseReport = () => {
                       </tbody>
                     </table>
 
-                    <h5 className="print-section-title">Converted - Condition Wise Performance</h5>
+                    <h5 className="print-section-title">
+                      Converted - Condition Wise Performance
+                    </h5>
                     <table className="print-table mb-4">
                       <thead>
                         <tr>
@@ -694,7 +769,9 @@ const ConditionWiseReport = () => {
                       </tbody>
                     </table>
 
-                    <h5 className="print-section-title">Total Package - Condition Wise</h5>
+                    <h5 className="print-section-title">
+                      Total Package - Condition Wise
+                    </h5>
                     <table className="print-table mb-4">
                       <thead>
                         <tr>
@@ -732,9 +809,13 @@ const ConditionWiseReport = () => {
                           <td>{formatValue(totalPackageTotals.piles)}</td>
                           <td>{formatValue(totalPackageTotals.fistula)}</td>
                           <td>{formatValue(totalPackageTotals.hernia)}</td>
-                          <td>{formatValue(totalPackageTotals.varicoseVeins)}</td>
+                          <td>
+                            {formatValue(totalPackageTotals.varicoseVeins)}
+                          </td>
                           <td>{formatValue(totalPackageTotals.prolapse)}</td>
-                          <td>{formatValue(totalPackageTotals.circumcision)}</td>
+                          <td>
+                            {formatValue(totalPackageTotals.circumcision)}
+                          </td>
                           <td>{formatValue(totalPackageTotals.abscess)}</td>
                           <td>{formatValue(totalPackageTotals.fissure)}</td>
                           <td>{formatValue(totalPackageTotals.ibs)}</td>
@@ -742,7 +823,9 @@ const ConditionWiseReport = () => {
                       </tbody>
                     </table>
 
-                    <h5 className="print-section-title">Average Package - Condition Wise</h5>
+                    <h5 className="print-section-title">
+                      Average Package - Condition Wise
+                    </h5>
                     <table className="print-table mb-4">
                       <thead>
                         <tr>
@@ -780,9 +863,13 @@ const ConditionWiseReport = () => {
                           <td>{formatValue(averagePackageTotals.piles)}</td>
                           <td>{formatValue(averagePackageTotals.fistula)}</td>
                           <td>{formatValue(averagePackageTotals.hernia)}</td>
-                          <td>{formatValue(averagePackageTotals.varicoseVeins)}</td>
+                          <td>
+                            {formatValue(averagePackageTotals.varicoseVeins)}
+                          </td>
                           <td>{formatValue(averagePackageTotals.prolapse)}</td>
-                          <td>{formatValue(averagePackageTotals.circumcision)}</td>
+                          <td>
+                            {formatValue(averagePackageTotals.circumcision)}
+                          </td>
                           <td>{formatValue(averagePackageTotals.abscess)}</td>
                           <td>{formatValue(averagePackageTotals.fissure)}</td>
                           <td>{formatValue(averagePackageTotals.ibs)}</td>

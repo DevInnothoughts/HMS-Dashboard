@@ -27,7 +27,15 @@ const appointmentStatusOptions = [
 ];
 
 const formatValue = (val) => {
-  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+  if (
+    val === null ||
+    val === undefined ||
+    val === "" ||
+    val === "N/A" ||
+    val === 0 ||
+    val === "0" ||
+    val === "-"
+  ) {
     return "-";
   }
   return val;
@@ -321,9 +329,15 @@ const AppointmentConversion = () => {
     if (!searchText) return appointments;
     const query = searchText.toLowerCase().trim();
     return appointments.filter((app) => {
-      const date = String(app.appointment_timestamp || app.date || app.appointment_date || "").toLowerCase();
-      const uid = String(app.UidNo || app.appointment_uid || app._id || "").toLowerCase();
-      const patient = String(app.patient || app.patientName || "").toLowerCase();
+      const date = String(
+        app.appointment_timestamp || app.date || app.appointment_date || "",
+      ).toLowerCase();
+      const uid = String(
+        app.UidNo || app.appointment_uid || app._id || "",
+      ).toLowerCase();
+      const patient = String(
+        app.patient || app.patientName || "",
+      ).toLowerCase();
       const type1 = String(app.patient_type || "").toLowerCase();
       const type2 = String(app.appointmentType || "").toLowerCase();
       const doctor = String(app.doctor || app.doctorName || "").toLowerCase();
@@ -354,7 +368,9 @@ const AppointmentConversion = () => {
 
     const excelData = filteredData.map((app, index) => ({
       "Sr No": index + 1,
-      Date: formatDateDisplay(app.appointment_timestamp || app.date || app.appointment_date),
+      Date: formatDateDisplay(
+        app.appointment_timestamp || app.date || app.appointment_date,
+      ),
       "UID no": app.UidNo || app.appointment_uid || app._id,
       "Patient Name": app.patient || app.patientName,
       "Patient Type": app.patient_type || app.appointmentType,
@@ -499,8 +515,15 @@ const AppointmentConversion = () => {
                     Manage Appointment Report
                   </h4>
                   {fromDate && toDate && (
-                    <div style={{ fontSize: "13px", fontWeight: "normal", marginTop: "5px" }}>
-                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "normal",
+                        marginTop: "5px",
+                      }}
+                    >
+                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to{" "}
+                      <b>{formatDateDisplay(toDate)}</b>
                     </div>
                   )}
                 </Card.Header>
@@ -675,18 +698,18 @@ const AppointmentConversion = () => {
                       style={{ width: "60px", textAlign: "center" }}
                     />
                     <Column
-                       field="date"
-                       header="Date"
-                       body={(row) =>
-                         formatValue(
-                           formatDateDisplay(
-                             row.appointment_timestamp ||
-                               row.date ||
-                               row.appointment_date,
-                           )
-                         )
-                       }
-                     />
+                      field="date"
+                      header="Date"
+                      body={(row) =>
+                        formatValue(
+                          formatDateDisplay(
+                            row.appointment_timestamp ||
+                              row.date ||
+                              row.appointment_date,
+                          ),
+                        )
+                      }
+                    />
                     <Column
                       field="appointment_uid"
                       header="UID no"
@@ -697,17 +720,23 @@ const AppointmentConversion = () => {
                     <Column
                       field="patientName"
                       header="Patient Name"
-                      body={(row) => formatValue(row.patient || row.patientName)}
+                      body={(row) =>
+                        formatValue(row.patient || row.patientName)
+                      }
                     />
                     <Column
                       field="patient_type"
                       header="Patient Type"
-                      body={(row) => formatValue(row.patient_type || row.appointmentType)}
+                      body={(row) =>
+                        formatValue(row.patient_type || row.appointmentType)
+                      }
                     />
                     <Column
                       field="appointmentType"
                       header="Appointment Type"
-                      body={(row) => formatValue(row.patient_type || row.appointmentType)}
+                      body={(row) =>
+                        formatValue(row.patient_type || row.appointmentType)
+                      }
                     />
                     <Column
                       field="doctorName"
@@ -750,16 +779,42 @@ const AppointmentConversion = () => {
                       </thead>
                       <tbody>
                         {filteredData.map((item, index) => (
-                           <tr key={index}>
-                             <td>{index + 1}</td>
-                             <td>{formatValue(formatDateDisplay(item.appointment_timestamp || item.date || item.appointment_date))}</td>
-                            <td>{formatValue(item.UidNo || item.appointment_uid || item._id)}</td>
-                            <td>{formatValue(item.patient || item.patientName)}</td>
-                            <td>{formatValue(item.patient_type || item.appointmentType)}</td>
-                            <td>{formatValue(item.patient_type || item.appointmentType)}</td>
-                            <td>{formatValue(item.doctor || item.doctorName)}</td>
+                          <tr key={index}>
+                            <td>{index + 1}</td>
+                            <td>
+                              {formatValue(
+                                formatDateDisplay(
+                                  item.appointment_timestamp ||
+                                    item.date ||
+                                    item.appointment_date,
+                                ),
+                              )}
+                            </td>
+                            <td>
+                              {formatValue(
+                                item.UidNo || item.appointment_uid || item._id,
+                              )}
+                            </td>
+                            <td>
+                              {formatValue(item.patient || item.patientName)}
+                            </td>
+                            <td>
+                              {formatValue(
+                                item.patient_type || item.appointmentType,
+                              )}
+                            </td>
+                            <td>
+                              {formatValue(
+                                item.patient_type || item.appointmentType,
+                              )}
+                            </td>
+                            <td>
+                              {formatValue(item.doctor || item.doctorName)}
+                            </td>
                             <td>{formatValue(item.doctor_type)}</td>
-                            <td>{formatValue(item.FDE_Name || item.fde_name)}</td>
+                            <td>
+                              {formatValue(item.FDE_Name || item.fde_name)}
+                            </td>
                             <td>{formatValue(item.cancellation_reason)}</td>
                           </tr>
                         ))}
@@ -768,7 +823,8 @@ const AppointmentConversion = () => {
                   </div>
 
                   {/* Analytics Section - Replicating PHP Chart Containers */}
-                  {(dailyChartData.series.length > 0 || monthlyChartData.series.length > 0) && (
+                  {(dailyChartData.series.length > 0 ||
+                    monthlyChartData.series.length > 0) && (
                     <Row className="mt-4 mb-4 print-chart-container">
                       <Col md={6}>
                         <ReactApexChart

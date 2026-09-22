@@ -311,10 +311,10 @@ export default function ReceiptList() {
     const trimmedLocation = currentLocation ? currentLocation.trim() : "";
     const clinicAddr = receiptlocations[trimmedLocation] ||
       receiptlocations[currentLocation] || {
-      address:
-        "Healing Hands Clinic Pvt Ltd, DP Road, Ground Floor, Millenium Star Extension, Adjacent to Ruby Hall Clinic, Pune 411001",
-      phone: "8888288884 | 020-26164488/99",
-    };
+        address:
+          "Healing Hands Clinic Pvt Ltd, DP Road, Ground Floor, Millenium Star Extension, Adjacent to Ruby Hall Clinic, Pune 411001",
+        phone: "8888288884 | 020-26164488/99",
+      };
 
     const getBase64Image = (imgUrl) => {
       return new Promise((resolve) => {
@@ -342,18 +342,24 @@ export default function ReceiptList() {
         if (selectedReceipt.item_details) {
           selectedReceipt.item_details.split(",").forEach((itemGroup) => {
             const parts = itemGroup.split(":");
-            const amount = parts[1] ? parseFloat(String(parts[1]).replace(/,/g, "").trim()) || 0 : 0;
+            const amount = parts[1]
+              ? parseFloat(String(parts[1]).replace(/,/g, "").trim()) || 0
+              : 0;
             calculatedSubtotal += amount;
           });
         }
         if (calculatedSubtotal === 0) {
-          calculatedSubtotal = parseFloat(String(selectedReceipt.totalamt || "").replace(/,/g, "")) || 0;
+          calculatedSubtotal =
+            parseFloat(
+              String(selectedReceipt.totalamt || "").replace(/,/g, ""),
+            ) || 0;
         }
 
-        const rawNet = (
+        const rawNet =
           calculatedSubtotal -
-          parseFloat(String(selectedReceipt.discountamt || 0).replace(/,/g, ""))
-        );
+          parseFloat(
+            String(selectedReceipt.discountamt || 0).replace(/,/g, ""),
+          );
         const netAmountVal = Math.round(rawNet);
         const netAmount = netAmountVal.toLocaleString("en-IN");
         const amountInWords = numberToWords(netAmountVal);
@@ -523,27 +529,30 @@ export default function ReceiptList() {
                     </tr>
                   </thead>
                   <tbody>
-                    ${selectedReceipt.item_details
-            ? selectedReceipt.item_details
-              .split(",")
-              .map((itemGroup, index) => {
-                const parts = itemGroup.split(":");
-                const label = parts[0] ? parts[0].trim() : "-";
-                const amount = parts[1]
-                  ? parseFloat(String(parts[1]).replace(/,/g, "").trim()) || 0
-                  : 0;
+                    ${
+                      selectedReceipt.item_details
+                        ? selectedReceipt.item_details
+                            .split(",")
+                            .map((itemGroup, index) => {
+                              const parts = itemGroup.split(":");
+                              const label = parts[0] ? parts[0].trim() : "-";
+                              const amount = parts[1]
+                                ? parseFloat(
+                                    String(parts[1]).replace(/,/g, "").trim(),
+                                  ) || 0
+                                : 0;
 
-                return `
+                              return `
                         <tr>
                               <td class="col-sr">${index + 1}</td>
                               <td class="col-desc">${label}</td>
                               <td class="col-amt">₹ ${Math.round(amount).toLocaleString("en-IN")}</td>
                             </tr>
                           `;
-              })
-              .join("")
-            : `<tr><td class="col-sr">1</td><td class="col-desc">-</td><td class="col-amt">₹ 0</td></tr>`
-          }
+                            })
+                            .join("")
+                        : `<tr><td class="col-sr">1</td><td class="col-desc">-</td><td class="col-amt">₹ 0</td></tr>`
+                    }
                   </tbody>
                 </table>
                 <div class="summary-section">
@@ -1014,10 +1023,16 @@ export default function ReceiptList() {
                         header="Payable Amount"
                         headerClassName="datatable-header-center"
                         body={(rowData) => {
-                          const payable = (
-                            parseFloat(String(rowData.totalamt || 0).replace(/,/g, "")) -
-                            parseFloat(String(rowData.discountamt || 0).replace(/,/g, ""))
-                          );
+                          const payable =
+                            parseFloat(
+                              String(rowData.totalamt || 0).replace(/,/g, ""),
+                            ) -
+                            parseFloat(
+                              String(rowData.discountamt || 0).replace(
+                                /,/g,
+                                "",
+                              ),
+                            );
                           return `₹ ${Math.round(payable).toLocaleString("en-IN")}`;
                         }}
                         style={{

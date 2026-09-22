@@ -33,7 +33,7 @@ const Toast = Swal.mixin({
 
 const getLocalDateString = (date) => {
   const offset = date.getTimezoneOffset();
-  const localDate = new Date(date.getTime() - (offset * 60 * 1000));
+  const localDate = new Date(date.getTime() - offset * 60 * 1000);
   return localDate.toISOString().split("T")[0];
 };
 
@@ -166,7 +166,8 @@ const AddIpdBill = () => {
         patient_name: p.name || "",
         phone_number: p.contact || "",
         uid_no: p.uhid || "",
-        admission_no: (p.admissionNo && p.admissionNo !== "PENDING") ? p.admissionNo : "",
+        admission_no:
+          p.admissionNo && p.admissionNo !== "PENDING" ? p.admissionNo : "",
         admission_date: parsedDate,
         admissiontime: parsedTime,
         bed_category: p.roomType || "",
@@ -183,7 +184,8 @@ const AddIpdBill = () => {
         const matched = surgeons.find(
           (s) =>
             s.name &&
-            s.name.toString().toLowerCase().trim() === sName.toString().toLowerCase().trim()
+            s.name.toString().toLowerCase().trim() ===
+              sName.toString().toLowerCase().trim(),
         );
         if (matched) {
           setFormData((prev) => ({
@@ -201,7 +203,7 @@ const AddIpdBill = () => {
     const fetchEarliestConsultant = async () => {
       try {
         const datesRes = await fetch(
-          `${BASE_URL}/V1/doctor/list-diagnosis-dates/${formData.patient_id}?location=${currentLocation}`
+          `${BASE_URL}/V1/doctor/list-diagnosis-dates/${formData.patient_id}?location=${currentLocation}`,
         );
         if (datesRes.ok) {
           const datesJson = await datesRes.json();
@@ -210,7 +212,7 @@ const AddIpdBill = () => {
             // The list of dates is sorted DESC, so the earliest is the last element
             const earliest = dates[dates.length - 1];
             const diagRes = await fetch(
-              `${BASE_URL}/V1/doctor/get-diagnosis/${formData.patient_id}?location=${currentLocation}&date=${earliest.date}`
+              `${BASE_URL}/V1/doctor/get-diagnosis/${formData.patient_id}?location=${currentLocation}&date=${earliest.date}`,
             );
             if (diagRes.ok) {
               const diagJson = await diagRes.json();
@@ -278,7 +280,11 @@ const AddIpdBill = () => {
   }, [formData.invoice_id, currentLocation]);
 
   useEffect(() => {
-    if (!currentLocation || !formData.admission_no || formData.admission_no === "PENDING") {
+    if (
+      !currentLocation ||
+      !formData.admission_no ||
+      formData.admission_no === "PENDING"
+    ) {
       setAdmissionWarning("");
       return;
     }
@@ -306,7 +312,12 @@ const AddIpdBill = () => {
   }, [formData.admission_no, currentLocation]);
 
   useEffect(() => {
-    if (!isInterbranch || !formData.interbranchLocation || formData.interbranchLocation === "DP Road" || !formData.selectedClinicUid) {
+    if (
+      !isInterbranch ||
+      !formData.interbranchLocation ||
+      formData.interbranchLocation === "DP Road" ||
+      !formData.selectedClinicUid
+    ) {
       setSelectedClinicPatient(null);
       setIsSearchingUid(false);
       return;
@@ -323,7 +334,7 @@ const AddIpdBill = () => {
         }
 
         const response = await fetch(
-          `${BASE_URL}/V1/patient/searchPatient?query=${query}&location=${formData.interbranchLocation}`
+          `${BASE_URL}/V1/patient/searchPatient?query=${query}&location=${formData.interbranchLocation}`,
         );
         const json = await response.json();
         if (response.ok && json.data) {
@@ -332,7 +343,10 @@ const AddIpdBill = () => {
               p.Uid_no &&
               p.Uid_no.toString().toLowerCase() === query.toLowerCase() &&
               (p.ConfirmPatient === 1 || p.ConfirmPatient === "1") &&
-              (p.is_deleted === 0 || p.is_deleted === "0" || p.is_deleted === null || p.is_deleted === undefined)
+              (p.is_deleted === 0 ||
+                p.is_deleted === "0" ||
+                p.is_deleted === null ||
+                p.is_deleted === undefined),
           );
 
           if (matched) {
@@ -342,14 +356,16 @@ const AddIpdBill = () => {
             setSelectedClinicPatient(null);
             setErrors((prev) => ({
               ...prev,
-              selectedClinicUid: "*No patient found with this UID No at the selected clinic location.",
+              selectedClinicUid:
+                "*No patient found with this UID No at the selected clinic location.",
             }));
           }
         } else {
           setSelectedClinicPatient(null);
           setErrors((prev) => ({
             ...prev,
-            selectedClinicUid: "Error searching patient at selected clinic location.",
+            selectedClinicUid:
+              "Error searching patient at selected clinic location.",
           }));
         }
       } catch (err) {
@@ -357,7 +373,8 @@ const AddIpdBill = () => {
         setSelectedClinicPatient(null);
         setErrors((prev) => ({
           ...prev,
-          selectedClinicUid: "Error searching patient at selected clinic location.",
+          selectedClinicUid:
+            "Error searching patient at selected clinic location.",
         }));
       } finally {
         setIsSearchingUid(false);
@@ -372,7 +389,9 @@ const AddIpdBill = () => {
 
     const fetchDropdowns = async () => {
       try {
-        const dateQuery = formData.admission_date ? `&date=${formData.admission_date}` : "";
+        const dateQuery = formData.admission_date
+          ? `&date=${formData.admission_date}`
+          : "";
         const [cRes, sRes, iRes, tRes, fRes] = await Promise.all([
           fetch(
             `${BASE_URL}/V1/invoice/consultant_dropdown?location=${currentLocation}`,
@@ -454,9 +473,11 @@ const AddIpdBill = () => {
       }
       if (formData.interbranchLocation !== "DP Road") {
         if (!formData.selectedClinicUid) {
-          newErrors.selectedClinicUid = "*Selected Clinic Location UID No is required.";
+          newErrors.selectedClinicUid =
+            "*Selected Clinic Location UID No is required.";
         } else if (!selectedClinicPatient) {
-          newErrors.selectedClinicUid = "*Must match the correct UID No of the patient at the selected clinic location.";
+          newErrors.selectedClinicUid =
+            "*Must match the correct UID No of the patient at the selected clinic location.";
         }
       }
     }
@@ -475,7 +496,7 @@ const AddIpdBill = () => {
         rowErrors[idx] = rowErr;
       }
     });
-    if (rowErrors.some(err => err)) {
+    if (rowErrors.some((err) => err)) {
       newErrors.dynamicRows = rowErrors;
     }
 
@@ -483,12 +504,13 @@ const AddIpdBill = () => {
   };
 
   const calculatePayableAmount = (data) => {
-    const subTotal = parseFloat(String(data.Sub_Total || 0).replace(/,/g, "")) || 0;
-    const discountNonIns = parseFloat(String(data.discount || 0).replace(/,/g, "")) || 0;
-    const discountCharity = parseFloat(String(data.discountAmount || 0).replace(/,/g, "")) || 0;
+    const subTotal =
+      parseFloat(String(data.Sub_Total || 0).replace(/,/g, "")) || 0;
+    const discountNonIns =
+      parseFloat(String(data.discount || 0).replace(/,/g, "")) || 0;
+    const discountCharity =
+      parseFloat(String(data.discountAmount || 0).replace(/,/g, "")) || 0;
     const pdc = parseFloat(String(data.pdc || 0).replace(/,/g, "")) || 0;
-
-
 
     let deduction = 0;
     if (data.bill_Type === "charity") {
@@ -597,8 +619,11 @@ const AddIpdBill = () => {
         if (response.ok) {
           const filtered = (data.data || []).filter(
             (p) =>
-              (p.is_deleted === 0 || p.is_deleted === "0" || p.is_deleted === null || p.is_deleted === undefined) &&
-              (p.ConfirmPatient === 1 || p.ConfirmPatient === "1")
+              (p.is_deleted === 0 ||
+                p.is_deleted === "0" ||
+                p.is_deleted === null ||
+                p.is_deleted === undefined) &&
+              (p.ConfirmPatient === 1 || p.ConfirmPatient === "1"),
           );
           setPatientResults(filtered);
           setShowPatientDropdown(true);
@@ -634,7 +659,8 @@ const AddIpdBill = () => {
       i === index ? { ...row, [field]: value } : row,
     );
     const newSubTotal = updatedRows.reduce(
-      (total, row) => total + (parseFloat(String(row.value || 0).replace(/,/g, "")) || 0),
+      (total, row) =>
+        total + (parseFloat(String(row.value || 0).replace(/,/g, "")) || 0),
       0,
     );
 
@@ -659,7 +685,8 @@ const AddIpdBill = () => {
 
     const updatedRows = formData.dynamicRows.filter((_, i) => i !== index);
     const newSubTotal = updatedRows.reduce(
-      (total, row) => total + (parseFloat(String(row.value || 0).replace(/,/g, "")) || 0),
+      (total, row) =>
+        total + (parseFloat(String(row.value || 0).replace(/,/g, "")) || 0),
       0,
     );
 
@@ -693,13 +720,17 @@ const AddIpdBill = () => {
     return {
       subTotal: Math.round(subTotal).toString(),
       discount: Math.round(discount).toString(),
-      payableAmount: Math.round(parseFloat(formData.payableAmount || 0)).toString(),
+      payableAmount: Math.round(
+        parseFloat(formData.payableAmount || 0),
+      ).toString(),
     };
   };
 
   const getDisplayConsultant = (doctorId) => {
     if (!doctorId) return "";
-    const matched = consultants.find((c) => String(c.doctor_id) === String(doctorId));
+    const matched = consultants.find(
+      (c) => String(c.doctor_id) === String(doctorId),
+    );
     return matched ? matched.name : "";
   };
 
@@ -734,8 +765,14 @@ const AddIpdBill = () => {
       return;
     }
 
-    const consultantStr = getDisplayConsultant(formData.consultantName) || (formData.consultantName ? String(formData.consultantName).trim() : "");
-    if (!consultantStr || consultantStr.toLowerCase() === "null" || consultantStr.toLowerCase() === "undefined") {
+    const consultantStr =
+      getDisplayConsultant(formData.consultantName) ||
+      (formData.consultantName ? String(formData.consultantName).trim() : "");
+    if (
+      !consultantStr ||
+      consultantStr.toLowerCase() === "null" ||
+      consultantStr.toLowerCase() === "undefined"
+    ) {
       Swal.fire({
         icon: "warning",
         title: "Consultant Details Required",
@@ -745,7 +782,6 @@ const AddIpdBill = () => {
       });
       return;
     }
-
 
     const validationErrors = validate();
     setErrors(validationErrors);
@@ -794,7 +830,9 @@ const AddIpdBill = () => {
             Sub_Total: formData.Sub_Total,
             payableAmount: payableAmountVal.toFixed(2),
             payable_amt: payableAmountVal.toFixed(2),
-            totaldue: isPdc ? Math.round(parseFloat(formData.Sub_Total || 0)) : Math.round(payableAmountVal),
+            totaldue: isPdc
+              ? Math.round(parseFloat(formData.Sub_Total || 0))
+              : Math.round(payableAmountVal),
             creation_date: formData.admission_date,
             status: status,
             admissiontime: convertTo12Hour(formData.admissiontime),
@@ -812,14 +850,16 @@ const AddIpdBill = () => {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payloadLoggedIn),
-              }
+              },
             );
             const dataLoggedIn = await responseLoggedIn.json();
 
             if (!responseLoggedIn.ok) {
               Swal.fire({
                 title: "Ops...",
-                text: dataLoggedIn.message || `Error adding invoice at logged-in clinic (${currentLocation}).`,
+                text:
+                  dataLoggedIn.message ||
+                  `Error adding invoice at logged-in clinic (${currentLocation}).`,
                 icon: "error",
               });
               setLoading(false);
@@ -855,7 +895,9 @@ const AddIpdBill = () => {
           Sub_Total: formData.Sub_Total,
           payableAmount: payableAmountVal.toFixed(2),
           payable_amt: payableAmountVal.toFixed(2),
-          totaldue: isPdc ? Math.round(parseFloat(formData.Sub_Total || 0)) : Math.round(payableAmountVal),
+          totaldue: isPdc
+            ? Math.round(parseFloat(formData.Sub_Total || 0))
+            : Math.round(payableAmountVal),
           creation_date: formData.admission_date,
           status: status,
           admissiontime: convertTo12Hour(formData.admissiontime),
@@ -873,7 +915,9 @@ const AddIpdBill = () => {
           Sub_Total: formData.Sub_Total,
           payableAmount: payableAmountVal.toFixed(2),
           payable_amt: payableAmountVal.toFixed(2),
-          totaldue: isPdc ? Math.round(parseFloat(formData.Sub_Total || 0)) : Math.round(payableAmountVal),
+          totaldue: isPdc
+            ? Math.round(parseFloat(formData.Sub_Total || 0))
+            : Math.round(payableAmountVal),
           creation_date: formData.admission_date,
           status: status,
           admissiontime: convertTo12Hour(formData.admissiontime),
@@ -894,14 +938,16 @@ const AddIpdBill = () => {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(payloadLoggedIn),
-            }
+            },
           );
           const dataLoggedIn = await responseLoggedIn.json();
 
           if (!responseLoggedIn.ok) {
             Swal.fire({
               title: "Ops...",
-              text: dataLoggedIn.message || `Error adding invoice at logged-in clinic (${currentLocation}).`,
+              text:
+                dataLoggedIn.message ||
+                `Error adding invoice at logged-in clinic (${currentLocation}).`,
               icon: "error",
             });
             setLoading(false);
@@ -914,14 +960,16 @@ const AddIpdBill = () => {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(payloadSelected),
-            }
+            },
           );
           const dataSelected = await responseSelected.json();
 
           if (!responseSelected.ok) {
             Swal.fire({
               title: "Ops...",
-              text: dataSelected.message || `Error adding invoice at selected clinic (${formData.interbranchLocation}).`,
+              text:
+                dataSelected.message ||
+                `Error adding invoice at selected clinic (${formData.interbranchLocation}).`,
               icon: "error",
             });
             setLoading(false);
@@ -955,7 +1003,9 @@ const AddIpdBill = () => {
           Sub_Total: formData.Sub_Total,
           payableAmount: formData.payableAmount,
           payable_amt: formData.payableAmount,
-          totaldue: isPdc ? Math.round(parseFloat(formData.Sub_Total || 0)) : Math.round(parseFloat(formData.payableAmount || 0)),
+          totaldue: isPdc
+            ? Math.round(parseFloat(formData.Sub_Total || 0))
+            : Math.round(parseFloat(formData.payableAmount || 0)),
           creation_date: formData.admission_date,
           status: status,
           admissiontime: convertTo12Hour(formData.admissiontime),
@@ -1012,7 +1062,8 @@ const AddIpdBill = () => {
       const missingFields = [];
       if (validationErrors.invoice_id) missingFields.push("Invoice Number");
       if (validationErrors.admission_no) missingFields.push("Admission Number");
-      if (validationErrors.consultantName) missingFields.push("Consultant Name");
+      if (validationErrors.consultantName)
+        missingFields.push("Consultant Name");
       if (validationErrors.discharge_date) missingFields.push("Discharge Date");
       if (validationErrors.dischargetime) missingFields.push("Discharge Time");
       if (validationErrors.bed_category) missingFields.push("Bed Category");
@@ -1023,14 +1074,20 @@ const AddIpdBill = () => {
       if (validationErrors.bill_Type) missingFields.push("Payment Category");
       if (validationErrors.insurance) missingFields.push("Insurance Company");
       if (validationErrors.bill_method) missingFields.push("Bill Method");
-      if (validationErrors.interbranchLocation) missingFields.push("Patient Origin Clinic");
-      if (validationErrors.selectedClinicUid) missingFields.push("Selected Clinic Patient UID");
-      if (validationErrors.dynamicRows) missingFields.push("Billing Particulars (Item Name & Amount)");
+      if (validationErrors.interbranchLocation)
+        missingFields.push("Patient Origin Clinic");
+      if (validationErrors.selectedClinicUid)
+        missingFields.push("Selected Clinic Patient UID");
+      if (validationErrors.dynamicRows)
+        missingFields.push("Billing Particulars (Item Name & Amount)");
 
       Swal.fire({
         icon: "warning",
         title: "Please Fill Required Fields",
-        text: missingFields.length > 0 ? `Missing: ${missingFields.join(", ")}` : "Please complete all required fields.",
+        text:
+          missingFields.length > 0
+            ? `Missing: ${missingFields.join(", ")}`
+            : "Please complete all required fields.",
         confirmButtonColor: "#00acc1",
       });
     }
@@ -1333,12 +1390,22 @@ const AddIpdBill = () => {
                       cursor: "not-allowed",
                     }}
                     name="consultantName"
-                    value={getDisplayConsultant(formData.consultantName) || (formData.consultantName ? formData.consultantName : "")}
-                    placeholder={formData.patient_id ? "Fetched from patient's diagnosis card" : "N/A"}
+                    value={
+                      getDisplayConsultant(formData.consultantName) ||
+                      (formData.consultantName ? formData.consultantName : "")
+                    }
+                    placeholder={
+                      formData.patient_id
+                        ? "Fetched from patient's diagnosis card"
+                        : "N/A"
+                    }
                     isInvalid={!!errors.consultantName}
                   />
                   {errors.consultantName && (
-                    <Form.Control.Feedback type="invalid" style={{ fontSize: "11px" }}>
+                    <Form.Control.Feedback
+                      type="invalid"
+                      style={{ fontSize: "11px" }}
+                    >
                       {errors.consultantName}
                     </Form.Control.Feedback>
                   )}
@@ -1446,12 +1513,20 @@ const AddIpdBill = () => {
                         type="text"
                         placeholder="e.g. 500"
                         value={
-                          row.value !== "" && row.value !== null && row.value !== undefined
-                            ? Number(String(row.value).replace(/,/g, "")).toLocaleString("en-IN")
+                          row.value !== "" &&
+                          row.value !== null &&
+                          row.value !== undefined
+                            ? Number(
+                                String(row.value).replace(/,/g, ""),
+                              ).toLocaleString("en-IN")
                             : ""
                         }
                         onChange={(e) =>
-                          handleDynamicRowChange(index, "value", e.target.value.replace(/[^0-9]/g, ""))
+                          handleDynamicRowChange(
+                            index,
+                            "value",
+                            e.target.value.replace(/[^0-9]/g, ""),
+                          )
                         }
                         onWheel={(e) => e.target.blur()}
                         onKeyDown={(e) =>
@@ -1492,7 +1567,9 @@ const AddIpdBill = () => {
 
           <Card style={cardStyle}>
             <Card.Body className="p-4">
-              <h5 className="mb-3" style={sectionTitleStyle}>Payment Details</h5>
+              <h5 className="mb-3" style={sectionTitleStyle}>
+                Payment Details
+              </h5>
               <Row className="g-3">
                 <Col md={3}>
                   <Form.Label
@@ -1714,13 +1791,19 @@ const AddIpdBill = () => {
                           type="text"
                           name="pdc"
                           value={
-                            formData.pdc !== "" && formData.pdc !== null && formData.pdc !== undefined
-                              ? Number(String(formData.pdc).replace(/,/g, "")).toLocaleString("en-IN")
+                            formData.pdc !== "" &&
+                            formData.pdc !== null &&
+                            formData.pdc !== undefined
+                              ? Number(
+                                  String(formData.pdc).replace(/,/g, ""),
+                                ).toLocaleString("en-IN")
                               : ""
                           }
                           onChange={(e) => {
                             const raw = e.target.value.replace(/[^0-9]/g, "");
-                            handleInputChange({ target: { name: "pdc", value: raw } });
+                            handleInputChange({
+                              target: { name: "pdc", value: raw },
+                            });
                           }}
                         />
                       </InputGroup>
@@ -1769,13 +1852,19 @@ const AddIpdBill = () => {
                         type="text"
                         name="discount"
                         value={
-                          formData.discount !== "" && formData.discount !== null && formData.discount !== undefined
-                            ? Number(String(formData.discount).replace(/,/g, "")).toLocaleString("en-IN")
+                          formData.discount !== "" &&
+                          formData.discount !== null &&
+                          formData.discount !== undefined
+                            ? Number(
+                                String(formData.discount).replace(/,/g, ""),
+                              ).toLocaleString("en-IN")
                             : ""
                         }
                         onChange={(e) => {
                           const raw = e.target.value.replace(/[^0-9]/g, "");
-                          handleInputChange({ target: { name: "discount", value: raw } });
+                          handleInputChange({
+                            target: { name: "discount", value: raw },
+                          });
                         }}
                       />
                     </InputGroup>
@@ -1823,13 +1912,22 @@ const AddIpdBill = () => {
                         type="text"
                         name="discountAmount"
                         value={
-                          formData.discountAmount !== "" && formData.discountAmount !== null && formData.discountAmount !== undefined
-                            ? Number(String(formData.discountAmount).replace(/,/g, "")).toLocaleString("en-IN")
+                          formData.discountAmount !== "" &&
+                          formData.discountAmount !== null &&
+                          formData.discountAmount !== undefined
+                            ? Number(
+                                String(formData.discountAmount).replace(
+                                  /,/g,
+                                  "",
+                                ),
+                              ).toLocaleString("en-IN")
                             : ""
                         }
                         onChange={(e) => {
                           const raw = e.target.value.replace(/[^0-9]/g, "");
-                          handleInputChange({ target: { name: "discountAmount", value: raw } });
+                          handleInputChange({
+                            target: { name: "discountAmount", value: raw },
+                          });
                         }}
                       />
                     </InputGroup>
@@ -1846,7 +1944,8 @@ const AddIpdBill = () => {
                           marginBottom: "2px",
                         }}
                       >
-                        Patient Origin Clinic <span className="text-danger">*</span>
+                        Patient Origin Clinic{" "}
+                        <span className="text-danger">*</span>
                       </Form.Label>
                       <Form.Select
                         required
@@ -1858,9 +1957,16 @@ const AddIpdBill = () => {
                       >
                         <option value="">Select Location</option>
                         {clinicLocations
-                          .filter((loc) => (typeof loc === "object" ? loc.value : loc) !== currentLocation)
+                          .filter(
+                            (loc) =>
+                              (typeof loc === "object" ? loc.value : loc) !==
+                              currentLocation,
+                          )
                           .map((loc, idx) => (
-                            <option key={idx} value={typeof loc === "object" ? loc.value : loc}>
+                            <option
+                              key={idx}
+                              value={typeof loc === "object" ? loc.value : loc}
+                            >
                               {typeof loc === "object" ? loc.label : loc}
                             </option>
                           ))}
@@ -1882,10 +1988,17 @@ const AddIpdBill = () => {
                         </Form.Label>
                         <div style={{ position: "relative" }}>
                           <Form.Control
-                            required={formData.interbranchLocation !== "DP Road"}
-                            disabled={formData.interbranchLocation === "DP Road"}
+                            required={
+                              formData.interbranchLocation !== "DP Road"
+                            }
+                            disabled={
+                              formData.interbranchLocation === "DP Road"
+                            }
                             name="selectedClinicUid"
-                            style={{ ...inputStyle, paddingRight: isSearchingUid ? "30px" : "12px" }}
+                            style={{
+                              ...inputStyle,
+                              paddingRight: isSearchingUid ? "30px" : "12px",
+                            }}
                             value={formData.selectedClinicUid || ""}
                             onChange={handleInputChange}
                             isInvalid={
@@ -1903,7 +2016,7 @@ const AddIpdBill = () => {
                                 transform: "translateY(-50%)",
                                 zIndex: 10,
                                 display: "flex",
-                                alignItems: "center"
+                                alignItems: "center",
                               }}
                             >
                               <div
@@ -1911,7 +2024,9 @@ const AddIpdBill = () => {
                                 role="status"
                                 style={{ width: "1rem", height: "1rem" }}
                               >
-                                <span className="visually-hidden">Loading...</span>
+                                <span className="visually-hidden">
+                                  Loading...
+                                </span>
                               </div>
                             </div>
                           )}
@@ -1937,7 +2052,9 @@ const AddIpdBill = () => {
                               fontWeight: "600",
                             }}
                           >
-                            <strong> *Patient Found: </strong> {selectedClinicPatient.name} - {selectedClinicPatient.phone || "N/A"}
+                            <strong> *Patient Found: </strong>{" "}
+                            {selectedClinicPatient.name} -{" "}
+                            {selectedClinicPatient.phone || "N/A"}
                           </div>
                         )}
                       </Col>
@@ -2007,7 +2124,10 @@ const AddIpdBill = () => {
                         >
                           <span>{item.label || `Item ${idx + 1}`} :</span>
                           <span>
-                            ₹ {Math.round(parseFloat(item.value || 0)).toLocaleString("en-IN")}
+                            ₹{" "}
+                            {Math.round(
+                              parseFloat(item.value || 0),
+                            ).toLocaleString("en-IN")}
                           </span>
                         </div>
                       ))}
@@ -2022,7 +2142,12 @@ const AddIpdBill = () => {
                     >
                       <div>
                         Total Amount:{" "}
-                        <strong>₹ {Math.round(parseFloat(getChargeBreakdown().subTotal || 0)).toLocaleString("en-IN")}</strong>
+                        <strong>
+                          ₹{" "}
+                          {Math.round(
+                            parseFloat(getChargeBreakdown().subTotal || 0),
+                          ).toLocaleString("en-IN")}
+                        </strong>
                       </div>
                       <div style={{ color: "#d32f2f" }}>
                         {formData.bill_method === "PDC"
@@ -2031,11 +2156,26 @@ const AddIpdBill = () => {
                             ? "Charity Discount"
                             : "Discount"}{" "}
                         (₹):{" "}
-                        <strong>- ₹ {Math.round(parseFloat(getChargeBreakdown().discount || 0)).toLocaleString("en-IN")}</strong>
+                        <strong>
+                          - ₹{" "}
+                          {Math.round(
+                            parseFloat(getChargeBreakdown().discount || 0),
+                          ).toLocaleString("en-IN")}
+                        </strong>
                       </div>
                       {isInterbranch && (
-                        <div style={{ color: "#00a619ff", fontStyle: "italic", fontSize: "13px", marginTop: "3px", textAlign: "right", fontWeight: "600" }}>
-                          *Interbranch bill will be synchronized across both clinic locations.
+                        <div
+                          style={{
+                            color: "#00a619ff",
+                            fontStyle: "italic",
+                            fontSize: "13px",
+                            marginTop: "3px",
+                            textAlign: "right",
+                            fontWeight: "600",
+                          }}
+                        >
+                          *Interbranch bill will be synchronized across both
+                          clinic locations.
                         </div>
                       )}
                       <div
@@ -2048,7 +2188,10 @@ const AddIpdBill = () => {
                           paddingTop: "5px",
                         }}
                       >
-                        Total Payable: ₹ {Math.round(parseFloat(getChargeBreakdown().payableAmount || 0)).toLocaleString("en-IN")}
+                        Total Payable: ₹{" "}
+                        {Math.round(
+                          parseFloat(getChargeBreakdown().payableAmount || 0),
+                        ).toLocaleString("en-IN")}
                       </div>
                     </div>
                   </Col>

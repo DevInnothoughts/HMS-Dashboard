@@ -26,7 +26,195 @@ import logo from "../../assets/images/3.png";
 const BASE_URL = "http://194.195.117.79:5100/api";
 
 const countries = [
-  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Ivory Coast", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "Norway", "Oman", "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Samoa", "San Marino", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe",
+  "Afghanistan",
+  "Albania",
+  "Algeria",
+  "Andorra",
+  "Angola",
+  "Antigua and Barbuda",
+  "Argentina",
+  "Armenia",
+  "Australia",
+  "Austria",
+  "Azerbaijan",
+  "Bahamas",
+  "Bahrain",
+  "Bangladesh",
+  "Barbados",
+  "Belarus",
+  "Belgium",
+  "Belize",
+  "Benin",
+  "Bhutan",
+  "Bolivia",
+  "Bosnia and Herzegovina",
+  "Botswana",
+  "Brazil",
+  "Brunei",
+  "Bulgaria",
+  "Burkina Faso",
+  "Burundi",
+  "Cabo Verde",
+  "Cambodia",
+  "Cameroon",
+  "Canada",
+  "Central African Republic",
+  "Chad",
+  "Chile",
+  "China",
+  "Colombia",
+  "Comoros",
+  "Congo",
+  "Costa Rica",
+  "Croatia",
+  "Cuba",
+  "Cyprus",
+  "Czech Republic",
+  "Denmark",
+  "Djibouti",
+  "Dominica",
+  "Dominican Republic",
+  "Ecuador",
+  "Egypt",
+  "El Salvador",
+  "Equatorial Guinea",
+  "Eritrea",
+  "Estonia",
+  "Eswatini",
+  "Ethiopia",
+  "Fiji",
+  "Finland",
+  "France",
+  "Gabon",
+  "Gambia",
+  "Georgia",
+  "Germany",
+  "Ghana",
+  "Greece",
+  "Grenada",
+  "Guatemala",
+  "Guinea",
+  "Guyana",
+  "Haiti",
+  "Honduras",
+  "Hungary",
+  "Iceland",
+  "India",
+  "Indonesia",
+  "Iran",
+  "Iraq",
+  "Ireland",
+  "Israel",
+  "Italy",
+  "Ivory Coast",
+  "Jamaica",
+  "Japan",
+  "Jordan",
+  "Kazakhstan",
+  "Kenya",
+  "Kiribati",
+  "Kuwait",
+  "Kyrgyzstan",
+  "Laos",
+  "Latvia",
+  "Lebanon",
+  "Lesotho",
+  "Liberia",
+  "Libya",
+  "Liechtenstein",
+  "Lithuania",
+  "Luxembourg",
+  "Madagascar",
+  "Malawi",
+  "Malaysia",
+  "Maldives",
+  "Mali",
+  "Malta",
+  "Mauritania",
+  "Mauritius",
+  "Mexico",
+  "Micronesia",
+  "Moldova",
+  "Monaco",
+  "Mongolia",
+  "Montenegro",
+  "Morocco",
+  "Mozambique",
+  "Myanmar",
+  "Namibia",
+  "Nauru",
+  "Nepal",
+  "Netherlands",
+  "New Zealand",
+  "Nicaragua",
+  "Niger",
+  "Nigeria",
+  "North Korea",
+  "Norway",
+  "Oman",
+  "Pakistan",
+  "Palau",
+  "Palestine",
+  "Panama",
+  "Papua New Guinea",
+  "Paraguay",
+  "Peru",
+  "Philippines",
+  "Poland",
+  "Portugal",
+  "Qatar",
+  "Romania",
+  "Russia",
+  "Rwanda",
+  "Saint Kitts and Nevis",
+  "Saint Lucia",
+  "Samoa",
+  "San Marino",
+  "Saudi Arabia",
+  "Senegal",
+  "Serbia",
+  "Seychelles",
+  "Sierra Leone",
+  "Singapore",
+  "Slovakia",
+  "Slovenia",
+  "Solomon Islands",
+  "Somalia",
+  "South Africa",
+  "South Korea",
+  "South Sudan",
+  "Spain",
+  "Sri Lanka",
+  "Sudan",
+  "Suriname",
+  "Sweden",
+  "Switzerland",
+  "Syria",
+  "Taiwan",
+  "Tajikistan",
+  "Tanzania",
+  "Thailand",
+  "Togo",
+  "Tonga",
+  "Trinidad and Tobago",
+  "Tunisia",
+  "Turkey",
+  "Turkmenistan",
+  "Tuvalu",
+  "Uganda",
+  "Ukraine",
+  "United Arab Emirates",
+  "United Kingdom",
+  "United States",
+  "Uruguay",
+  "Uzbekistan",
+  "Vanuatu",
+  "Vatican City",
+  "Venezuela",
+  "Vietnam",
+  "Yemen",
+  "Zambia",
+  "Zimbabwe",
 ];
 
 const formatDateToLocal = (dateString) => {
@@ -58,8 +246,6 @@ const formatDate = (dateString) => {
   const year = date.getFullYear();
   return `${day}-${month}-${year}`;
 };
-
-
 
 export default function OpdPatientList() {
   const location = useLocation();
@@ -144,7 +330,6 @@ export default function OpdPatientList() {
       });
   }, [patients]);
 
-
   const isTodayActive =
     fromDate &&
     toDate &&
@@ -226,12 +411,14 @@ export default function OpdPatientList() {
           headers: {
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (treatmentResponse.ok) {
         const treatmentData = await treatmentResponse.json();
-        setTreatmentList(Array.isArray(treatmentData.data) ? treatmentData.data : []);
+        setTreatmentList(
+          Array.isArray(treatmentData.data) ? treatmentData.data : [],
+        );
       }
     } catch (error) {
       console.error("Error fetching dropdown data:", error.message);
@@ -295,8 +482,6 @@ export default function OpdPatientList() {
 
     setIsSearchingPatient(true);
     try {
-
-
       const response = await fetch(
         `${BASE_URL}/V1/Patients/listRefPatient?phone=${phone}&location=${currentLocation}`,
         {
@@ -307,20 +492,15 @@ export default function OpdPatientList() {
         },
       );
 
-
-
       if (response.ok) {
         const data = await response.json();
-
 
         if (data.statusCode === 200 && data.data.refPatientData) {
           const results = Array.isArray(data.data.refPatientData)
             ? data.data.refPatientData
             : [data.data.refPatientData];
           setPatientSearchResults(results);
-
         } else {
-
           setPatientSearchResults([]);
         }
       } else {
@@ -333,9 +513,7 @@ export default function OpdPatientList() {
     }
   };
 
-  useEffect(() => {
-
-  }, [patientSearchResults]);
+  useEffect(() => {}, [patientSearchResults]);
 
   const calculateAge = (birthDate) => {
     if (!birthDate) return "";
@@ -374,7 +552,6 @@ export default function OpdPatientList() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-
 
     setFormData((prev) => {
       let nextState = { ...prev };
@@ -463,7 +640,7 @@ export default function OpdPatientList() {
       const isLabMatch =
         p.registration_id === 1 &&
         "registered via lab/other receipt registered via lab other receipt registered via lab receipt".includes(
-          lowerSearch
+          lowerSearch,
         );
       return (
         isLabMatch ||
@@ -676,8 +853,6 @@ export default function OpdPatientList() {
   };
 
   const handleEditPatient = (patient) => {
-
-
     const formattedBirthDate = patient.birth_date || "";
     const workPatternsArray = (patient.specific_work || "")
       .split(",")
@@ -685,7 +860,10 @@ export default function OpdPatientList() {
 
     const age = patient.age || calculateAge(formattedBirthDate) || "";
 
-    if (patient.reference_type === "old_ref" || patient.reference_type === "brand_ambassador") {
+    if (
+      patient.reference_type === "old_ref" ||
+      patient.reference_type === "brand_ambassador"
+    ) {
       const parts = (patient.ref || "").split(",");
       setOldPatientDetails({
         patient_ref_no: parts[0] || "",
@@ -722,12 +900,11 @@ export default function OpdPatientList() {
         [patient.reference_type]: patient.ref || "",
         Other_Newspaper:
           patient.reference_type === "newspaper" &&
-            !standardNewspapers.includes(patient.ref)
+          !standardNewspapers.includes(patient.ref)
             ? patient.ref
             : "",
       }));
     }
-
 
     setFormData({
       // Uid_no: patient.uid || "",
@@ -793,12 +970,22 @@ export default function OpdPatientList() {
     switch (selectedReference) {
       case "newspaper":
         reference_type = "newspaper";
-        if (!referenceDetails.newspaper && !referenceDetails.Other_Newspaper?.trim() && !formData.ref) {
-          toast.error("Please select a newspaper or enter newspaper/magazine name.");
+        if (
+          !referenceDetails.newspaper &&
+          !referenceDetails.Other_Newspaper?.trim() &&
+          !formData.ref
+        ) {
+          toast.error(
+            "Please select a newspaper or enter newspaper/magazine name.",
+          );
           setLoading(false);
           return;
         }
-        ref = referenceDetails.newspaper || referenceDetails.Other_Newspaper || formData.ref || "";
+        ref =
+          referenceDetails.newspaper ||
+          referenceDetails.Other_Newspaper ||
+          formData.ref ||
+          "";
         break;
       case "dr_ref":
         reference_type = "dr_ref";
@@ -808,7 +995,10 @@ export default function OpdPatientList() {
             setLoading(false);
             return;
           }
-          if (!referenceDetails.dr_contact || !referenceDetails.dr_contact.trim()) {
+          if (
+            !referenceDetails.dr_contact ||
+            !referenceDetails.dr_contact.trim()
+          ) {
             toast.error("Please enter doctor contact number.");
             setLoading(false);
             return;
@@ -835,7 +1025,7 @@ export default function OpdPatientList() {
             } else {
               toast.error(
                 addDoctorData.message ||
-                "Failed to add manual doctor reference.",
+                  "Failed to add manual doctor reference.",
               );
               setLoading(false);
               return;
@@ -847,12 +1037,20 @@ export default function OpdPatientList() {
             return;
           }
         } else {
-          if (!referenceDetails.dr_id && !referenceDetails.dr_name?.trim() && !formData.ref) {
+          if (
+            !referenceDetails.dr_id &&
+            !referenceDetails.dr_name?.trim() &&
+            !formData.ref
+          ) {
             toast.error("Please select or enter a doctor reference.");
             setLoading(false);
             return;
           }
-          ref = referenceDetails.dr_id || referenceDetails.dr_name || formData.ref || "";
+          ref =
+            referenceDetails.dr_id ||
+            referenceDetails.dr_name ||
+            formData.ref ||
+            "";
         }
         break;
       case "internet":
@@ -885,12 +1083,18 @@ export default function OpdPatientList() {
       case "brand_ambassador":
       case "old_ref":
         reference_type = selectedReference;
-        if (!oldPatientDetails.patient_ref_no || !oldPatientDetails.patient_ref_no.trim()) {
+        if (
+          !oldPatientDetails.patient_ref_no ||
+          !oldPatientDetails.patient_ref_no.trim()
+        ) {
           toast.error("Please enter reference patient contact number.");
           setLoading(false);
           return;
         }
-        if (!oldPatientDetails.old_patient_name || !oldPatientDetails.old_patient_name.trim()) {
+        if (
+          !oldPatientDetails.old_patient_name ||
+          !oldPatientDetails.old_patient_name.trim()
+        ) {
           toast.error("Please enter reference patient name.");
           setLoading(false);
           return;
@@ -899,7 +1103,10 @@ export default function OpdPatientList() {
         break;
       case "family_friends":
         reference_type = "family_friends";
-        if (!referenceDetails.friendname || !referenceDetails.friendname.trim()) {
+        if (
+          !referenceDetails.friendname ||
+          !referenceDetails.friendname.trim()
+        ) {
           toast.error("Please enter friend/family name.");
           setLoading(false);
           return;
@@ -949,7 +1156,10 @@ export default function OpdPatientList() {
         break;
       case "awareness_lecture":
         reference_type = "awareness_lecture";
-        if (!referenceDetails.awareness_lecture?.trim() && !formData.ref?.trim()) {
+        if (
+          !referenceDetails.awareness_lecture?.trim() &&
+          !formData.ref?.trim()
+        ) {
           toast.error("Please enter awareness lecture detail.");
           setLoading(false);
           return;
@@ -985,7 +1195,10 @@ export default function OpdPatientList() {
         break;
       case "dr_privilege_card":
         reference_type = "dr_privilege_card";
-        ref = referenceDetails.dr_privilege_card || formData.ref || "Doctor's Privilege Card";
+        ref =
+          referenceDetails.dr_privilege_card ||
+          formData.ref ||
+          "Doctor's Privilege Card";
         break;
       case "campaign":
         reference_type = "campaign";
@@ -1009,9 +1222,6 @@ export default function OpdPatientList() {
         return;
       }
     }
-
-
-
 
     const specificWork = Object.entries(workPatterns)
       .filter(([_, value]) => value)
@@ -1041,7 +1251,6 @@ export default function OpdPatientList() {
         language: formData.language,
       },
     };
-
 
     try {
       const response = await fetch(
@@ -1079,7 +1288,7 @@ export default function OpdPatientList() {
         const apptPatientType = location.state?.appointment_patient_type;
         const returnToAppointment = location.state?.returnToAppointment;
         const isNewPatient = apptPatientType
-          ? (apptPatientType.toUpperCase() === "NEW")
+          ? apptPatientType.toUpperCase() === "NEW"
           : !!returnToAppointment;
 
         if (isNewPatient) {
@@ -1111,17 +1320,17 @@ export default function OpdPatientList() {
 
   const statusBodyTemplate = (formData) => (
     <span
-      className={`badge ${formData.status
-        ? ` status- ${formData.status.toLowerCase()}`
-        : "status-unknown"
-        }`}
+      className={`badge ${
+        formData.status
+          ? ` status- ${formData.status.toLowerCase()}`
+          : "status-unknown"
+      }`}
     >
       {formData.status || "Unknown"}
     </span>
   );
 
   const handleViewPatient = async (patient) => {
-
     if (!patient || !patient.phone) {
       console.error("Patient data or phone number is missing");
       return;
@@ -1187,8 +1396,6 @@ export default function OpdPatientList() {
     };
 
     try {
-
-
       const response = await fetch(
         `${BASE_URL}/V1/appointment/addAppointment?location=${currentLocation}`,
         {
@@ -1287,7 +1494,9 @@ export default function OpdPatientList() {
   const handlePrint = (patient) => {
     const printWindow = window.open("", "_blank", "width=800,height=900");
     if (!printWindow) {
-      toast.error("Popup blocked! Please allow popups in your browser to print.");
+      toast.error(
+        "Popup blocked! Please allow popups in your browser to print.",
+      );
       return;
     }
     const isVip = patient.patient_type == 1 || patient.patient_type === true;
@@ -1458,7 +1667,7 @@ export default function OpdPatientList() {
               <p><b>Email :-</b>&nbsp;&nbsp;${patient.email || "-"}</p>
               <p><b>Occupation :-</b>&nbsp;&nbsp;${patient.occupation || "-"}</p>
               ${patient.companyname ? `<p><b>Company Name :-</b>&nbsp;&nbsp;${patient.companyname}</p>` : ""}
-              ${patient.reference_type === "dr_ref" && (patient.ref_doctor_name || patient.ref) ? `<p><b>Reference :-</b>&nbsp;&nbsp;${patient.ref_doctor_name || patient.ref}${patient.ref_doctor_phone ? ` (${patient.ref_doctor_phone})` : ""}</p>` : patient.ref ? `<p><b>Reference :-</b>&nbsp;&nbsp;${patient.reference_type ? `${patient.reference_type.replace(/_/g, ' ').replace(/\\b\\w/g, l => l.toUpperCase())} (${patient.ref})` : patient.ref}</p>` : ""}
+              ${patient.reference_type === "dr_ref" && (patient.ref_doctor_name || patient.ref) ? `<p><b>Reference :-</b>&nbsp;&nbsp;${patient.ref_doctor_name || patient.ref}${patient.ref_doctor_phone ? ` (${patient.ref_doctor_phone})` : ""}</p>` : patient.ref ? `<p><b>Reference :-</b>&nbsp;&nbsp;${patient.reference_type ? `${patient.reference_type.replace(/_/g, " ").replace(/\\b\\w/g, (l) => l.toUpperCase())} (${patient.ref})` : patient.ref}</p>` : ""}
             </td>
           </tr>
           </table>
@@ -1512,8 +1721,12 @@ export default function OpdPatientList() {
           onClick={() => handleAddAppointmentClick(patient)}
           disabled={isLabPatient}
           className="appointment-btn btn-primary btn-extra-small btn-icon me-2"
-          title={isLabPatient ? "Add appointment disabled for lab patients" : "Add Appointment"}
-          style={isLabPatient ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+          title={
+            isLabPatient
+              ? "Add appointment disabled for lab patients"
+              : "Add Appointment"
+          }
+          style={isLabPatient ? { opacity: 0.5, cursor: "not-allowed" } : {}}
         >
           <FeatherIcon icon="plus-square" size="16" />
         </Button>
@@ -1522,8 +1735,10 @@ export default function OpdPatientList() {
           onClick={() => handleEditPatient(patient)}
           disabled={isLabPatient}
           className="edit-btn btn-primary btn-extra-small btn-icon me-2"
-          title={isLabPatient ? "Edit disabled for lab patients" : "Edit Patient"}
-          style={isLabPatient ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+          title={
+            isLabPatient ? "Edit disabled for lab patients" : "Edit Patient"
+          }
+          style={isLabPatient ? { opacity: 0.5, cursor: "not-allowed" } : {}}
         >
           <FeatherIcon icon="edit" size="16" />
         </Button>
@@ -1532,8 +1747,12 @@ export default function OpdPatientList() {
           onClick={() => handlePrint(patient)}
           disabled={isLabPatient}
           className="print btn-primary btn-extra-small btn-icon"
-          title={isLabPatient ? "Print disabled for lab patients" : "Print Registration Form"}
-          style={isLabPatient ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+          title={
+            isLabPatient
+              ? "Print disabled for lab patients"
+              : "Print Registration Form"
+          }
+          style={isLabPatient ? { opacity: 0.5, cursor: "not-allowed" } : {}}
         >
           <FeatherIcon icon="printer" size="16" />
         </Button>
@@ -2692,42 +2911,47 @@ export default function OpdPatientList() {
                   fontSize: "12px",
                 }}
               >
-                {["Mediend", "Hexa", "Practo", "Medibuddy", "Mykare", "Signaasat"].map(
-                  (aggregator) => (
-                    <li
-                      key={aggregator}
-                      style={{
-                        listStyleType: "none",
-                        display: "flex",
-                        alignItems: "center",
-                        cursor: "pointer",
-                        transform: "scale(1.0)",
+                {[
+                  "Mediend",
+                  "Hexa",
+                  "Practo",
+                  "Medibuddy",
+                  "Mykare",
+                  "Signaasat",
+                ].map((aggregator) => (
+                  <li
+                    key={aggregator}
+                    style={{
+                      listStyleType: "none",
+                      display: "flex",
+                      alignItems: "center",
+                      cursor: "pointer",
+                      transform: "scale(1.0)",
+                    }}
+                  >
+                    <input
+                      required
+                      type="radio"
+                      name="aggregators"
+                      value={aggregator}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setReferenceDetails((prev) => ({
+                          ...prev,
+                          aggregators: val,
+                        }));
+                        setFormData((prev) => ({
+                          ...prev,
+                          ref: val,
+                          reference_type: "aggregators",
+                        }));
                       }}
-                    >
-                      <input
-                        required
-                        type="radio"
-                        name="aggregators"
-                        value={aggregator}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setReferenceDetails((prev) => ({
-                            ...prev,
-                            aggregators: val,
-                          }));
-                          setFormData((prev) => ({
-                            ...prev,
-                            ref: val,
-                            reference_type: "aggregators",
-                          }));
-                        }}
-                        checked={formData.ref === aggregator}
-                        style={{ marginRight: "1px" }}
-                      />
-                      {aggregator}
-                    </li>
-                  ),
-                )}
+                      checked={formData.ref === aggregator}
+                      style={{ marginRight: "1px" }}
+                    />
+                    {aggregator}
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
@@ -3289,7 +3513,14 @@ export default function OpdPatientList() {
                   </Form.Group>
                 </Col>
               )}
-              <Col md={6} className={(formData.patient_type === "Other" || formData.treatment) ? "mt-3" : ""}>
+              <Col
+                md={6}
+                className={
+                  formData.patient_type === "Other" || formData.treatment
+                    ? "mt-3"
+                    : ""
+                }
+              >
                 <Form.Group>
                   <Form.Label
                     style={{
@@ -3313,7 +3544,9 @@ export default function OpdPatientList() {
                       fontSize: "11px",
                       borderRadius: "10px",
                       cursor: formData.patient_id ? "not-allowed" : "default",
-                      backgroundColor: formData.patient_id ? "#e7ebebff" : undefined,
+                      backgroundColor: formData.patient_id
+                        ? "#e7ebebff"
+                        : undefined,
                     }}
                     required
                   />
@@ -3535,13 +3768,12 @@ export default function OpdPatientList() {
                     <DatePicker
                       required
                       selected={
-                        formData?.date
-                          ? parseDate(formData.date)
-                          : null
+                        formData?.date ? parseDate(formData.date) : null
                       }
                       onChange={(date) => {
                         if (date) {
-                          const formattedDate = moment(date).format("DD-MM-YYYY");
+                          const formattedDate =
+                            moment(date).format("DD-MM-YYYY");
                           setFormData((prev) => ({
                             ...prev,
                             date: formattedDate,
@@ -3582,11 +3814,25 @@ export default function OpdPatientList() {
                       name="Uid_no"
                       value={formData.Uid_no || ""}
                       onChange={handleInputChange}
-                      readOnly={String(currentLocation || "").trim().toLowerCase() !== "kemps-corner"}
+                      readOnly={
+                        String(currentLocation || "")
+                          .trim()
+                          .toLowerCase() !== "kemps-corner"
+                      }
                       required
                       style={{
-                        backgroundColor: String(currentLocation || "").trim().toLowerCase() === "kemps-corner" ? "#ffffff" : "#e7ebebff",
-                        cursor: String(currentLocation || "").trim().toLowerCase() === "kemps-corner" ? "text" : "not-allowed",
+                        backgroundColor:
+                          String(currentLocation || "")
+                            .trim()
+                            .toLowerCase() === "kemps-corner"
+                            ? "#ffffff"
+                            : "#e7ebebff",
+                        cursor:
+                          String(currentLocation || "")
+                            .trim()
+                            .toLowerCase() === "kemps-corner"
+                            ? "text"
+                            : "not-allowed",
                         border: "2px solid rgb(77, 208, 225)",
                         fontSize: "12px",
                         borderRadius: "10px",
@@ -4228,7 +4474,9 @@ export default function OpdPatientList() {
                         Healing Hands Clinic Branch
                       </option>
                       <option value="aggregators">Aggregators</option>
-                      <option value="dr_privilege_card">Doctor's Privilege Card</option>
+                      <option value="dr_privilege_card">
+                        Doctor's Privilege Card
+                      </option>
                       <option value="campaign">Campaign</option>
                       <option value="brand_ambassador">Brand Ambassador</option>
                       <option value="other">Other</option>
@@ -4350,7 +4598,9 @@ export default function OpdPatientList() {
                       <Column
                         header="Sr No"
                         body={(rowData, { rowIndex }) => (
-                          <span className="selectable-text">{rowIndex + 1}</span>
+                          <span className="selectable-text">
+                            {rowIndex + 1}
+                          </span>
                         )}
                         headerClassName="datatable-header-center"
                         style={{
@@ -4364,7 +4614,11 @@ export default function OpdPatientList() {
                       <Column
                         field="date"
                         header="Date"
-                        body={(rowData) => <span className="selectable-text">{formatDate(rowData.date) || "-"}</span>}
+                        body={(rowData) => (
+                          <span className="selectable-text">
+                            {formatDate(rowData.date) || "-"}
+                          </span>
+                        )}
                         headerClassName="datatable-header-center"
                         style={{
                           border: "1px solid #90caf9",
@@ -4383,22 +4637,26 @@ export default function OpdPatientList() {
                               <span
                                 className="badge"
                                 style={{
-                                  fontSize: '11px',
-                                  backgroundColor: '#fff3e0',
-                                  color: '#e65100',
-                                  padding: '4px 8px',
-                                  borderRadius: '4px',
-                                  border: '1px solid #ffe0b2',
-                                  fontWeight: '650',
-                                  whiteSpace: 'normal',
-                                  display: 'inline-block'
+                                  fontSize: "11px",
+                                  backgroundColor: "#fff3e0",
+                                  color: "#e65100",
+                                  padding: "4px 8px",
+                                  borderRadius: "4px",
+                                  border: "1px solid #ffe0b2",
+                                  fontWeight: "650",
+                                  whiteSpace: "normal",
+                                  display: "inline-block",
                                 }}
                               >
                                 Other/Lab Receipt Entry
                               </span>
                             );
                           }
-                          return <span className="selectable-text">{rowData.Uid_no || "-"}</span>;
+                          return (
+                            <span className="selectable-text">
+                              {rowData.Uid_no || "-"}
+                            </span>
+                          );
                         }}
                         headerClassName="datatable-header-center"
                         style={{
@@ -4419,14 +4677,17 @@ export default function OpdPatientList() {
                             <span className="selectable-text">
                               {(rowData.patient_type === 1 ||
                                 rowData.patient_type === true) && (
-                                  <span className="me-1" title="VIP Patient">
-                                    <FeatherIcon
-                                      icon="star"
-                                      size="16"
-                                      style={{ color: "#ffc107", fill: "#ffc107" }}
-                                    />
-                                  </span>
-                                )}
+                                <span className="me-1" title="VIP Patient">
+                                  <FeatherIcon
+                                    icon="star"
+                                    size="16"
+                                    style={{
+                                      color: "#ffc107",
+                                      fill: "#ffc107",
+                                    }}
+                                  />
+                                </span>
+                              )}
                               {fullName}
                             </span>
                           );
@@ -4444,7 +4705,11 @@ export default function OpdPatientList() {
                         field="phone"
                         header="Contact No"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => <span className="selectable-text">{rowData.phone || "-"}</span>}
+                        body={(rowData) => (
+                          <span className="selectable-text">
+                            {rowData.phone || "-"}
+                          </span>
+                        )}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -4458,7 +4723,11 @@ export default function OpdPatientList() {
                         field="mobile_2"
                         header="Alternate Contact No"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => <span className="selectable-text">{rowData.mobile_2 || "-"}</span>}
+                        body={(rowData) => (
+                          <span className="selectable-text">
+                            {rowData.mobile_2 || "-"}
+                          </span>
+                        )}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -4472,7 +4741,11 @@ export default function OpdPatientList() {
                         field="address"
                         header="Patient Address"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => <span className="selectable-text">{rowData.address || "-"}</span>}
+                        body={(rowData) => (
+                          <span className="selectable-text">
+                            {rowData.address || "-"}
+                          </span>
+                        )}
                         style={{
                           border: "1px solid #90caf9",
                           padding: "0.75rem",
@@ -4486,7 +4759,9 @@ export default function OpdPatientList() {
                         header="Gender"
                         headerClassName="datatable-header-center"
                         body={(rowData) => (
-                          <span className="selectable-text">{rowData.sex || "-"}</span>
+                          <span className="selectable-text">
+                            {rowData.sex || "-"}
+                          </span>
                         )}
                         style={{
                           border: "1px solid #90caf9",
@@ -4500,7 +4775,11 @@ export default function OpdPatientList() {
                         field="birth_date"
                         header="DOB"
                         headerClassName="datatable-header-center"
-                        body={(rowData) => <span className="selectable-text">{rowData.birth_date || "-"}</span>}
+                        body={(rowData) => (
+                          <span className="selectable-text">
+                            {rowData.birth_date || "-"}
+                          </span>
+                        )}
                         style={{
                           border: "1px solid #90caf9",
                           textAlign: "center",
@@ -4523,11 +4802,19 @@ export default function OpdPatientList() {
                             displayAge = rowData.age;
                           } else {
                             const calculated = calculateAge(rowData.birth_date);
-                            if (calculated !== null && calculated !== undefined && calculated !== "") {
+                            if (
+                              calculated !== null &&
+                              calculated !== undefined &&
+                              calculated !== ""
+                            ) {
                               displayAge = calculated;
                             }
                           }
-                          return <span className="selectable-text">{displayAge}</span>;
+                          return (
+                            <span className="selectable-text">
+                              {displayAge}
+                            </span>
+                          );
                         }}
                         style={{
                           border: "1px solid #90caf9",

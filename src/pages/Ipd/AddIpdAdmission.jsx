@@ -23,7 +23,7 @@ const BASE_URL = "http://194.195.117.79:5100/api";
 
 const getLocalDateString = (date) => {
   const offset = date.getTimezoneOffset();
-  const localDate = new Date(date.getTime() - (offset * 60 * 1000));
+  const localDate = new Date(date.getTime() - offset * 60 * 1000);
   return localDate.toISOString().split("T")[0];
 };
 
@@ -139,7 +139,8 @@ export default function AddIpdAdmission() {
         const data = await response.json();
         if (Array.isArray(data)) {
           const confirmedData = data.filter(
-            (p) => p.ConfirmPatient === undefined || Number(p.ConfirmPatient) === 1
+            (p) =>
+              p.ConfirmPatient === undefined || Number(p.ConfirmPatient) === 1,
           );
           setSearchResults(confirmedData);
           if (!isPatientSelectedRef.current) {
@@ -194,7 +195,9 @@ export default function AddIpdAdmission() {
         const data = await response.json();
         const confirmedData = Array.isArray(data)
           ? data.filter(
-              (p) => p.ConfirmPatient === undefined || Number(p.ConfirmPatient) === 1
+              (p) =>
+                p.ConfirmPatient === undefined ||
+                Number(p.ConfirmPatient) === 1,
             )
           : [];
         if (confirmedData && confirmedData.length > 0) {
@@ -296,7 +299,11 @@ export default function AddIpdAdmission() {
 
   const handleVerifyAndSubmit = async () => {
     if (isPendingAdmission) {
-      Swal.fire("Blocked", "Cannot book admission. This patient already has a pending admission.", "error");
+      Swal.fire(
+        "Blocked",
+        "Cannot book admission. This patient already has a pending admission.",
+        "error",
+      );
       return;
     }
     const hasTime = (val) => {
@@ -322,17 +329,31 @@ export default function AddIpdAdmission() {
     };
 
     const formattedTime = convertTo12Hour(admissionTime);
-    const combinedAdmissionDatetime = admissionDate && formattedTime ? `${dayjs(admissionDate).format("YYYY-MM-DD")} ${formattedTime}` : "";
+    const combinedAdmissionDatetime =
+      admissionDate && formattedTime
+        ? `${dayjs(admissionDate).format("YYYY-MM-DD")} ${formattedTime}`
+        : "";
 
     const formattedSurgeryTime = convertTo12Hour(surgeryTime);
-    const combinedSurgeryDatetime = surgeryDate && formattedSurgeryTime ? `${dayjs(surgeryDate).format("YYYY-MM-DD")} ${formattedSurgeryTime}` : "";
+    const combinedSurgeryDatetime =
+      surgeryDate && formattedSurgeryTime
+        ? `${dayjs(surgeryDate).format("YYYY-MM-DD")} ${formattedSurgeryTime}`
+        : "";
 
     if (!combinedAdmissionDatetime || !hasTime(combinedAdmissionDatetime)) {
-      Swal.fire("Required", "Please select a valid Admission Date & Time (both Date and Time are required)", "warning");
+      Swal.fire(
+        "Required",
+        "Please select a valid Admission Date & Time (both Date and Time are required)",
+        "warning",
+      );
       return;
     }
     if (!combinedSurgeryDatetime || !hasTime(combinedSurgeryDatetime)) {
-      Swal.fire("Required", "Please select a valid Surgery Date & Time (both Date and Time are required)", "warning");
+      Swal.fire(
+        "Required",
+        "Please select a valid Surgery Date & Time (both Date and Time are required)",
+        "warning",
+      );
       return;
     }
     if (!roomType) {
@@ -561,7 +582,10 @@ export default function AddIpdAdmission() {
                               style={{
                                 padding: "10px 15px",
                                 cursor: "pointer",
-                                borderBottom: index < searchResults.length - 1 ? "1px solid #f1f3f5" : "none",
+                                borderBottom:
+                                  index < searchResults.length - 1
+                                    ? "1px solid #f1f3f5"
+                                    : "none",
                                 fontSize: "0.85rem",
                                 display: "flex",
                                 justifyContent: "space-between",
@@ -569,13 +593,21 @@ export default function AddIpdAdmission() {
                                 transition: "background-color 0.2s",
                               }}
                               className="patient-search-item"
-                              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#e0f7fa")}
-                              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "white")}
+                              onMouseEnter={(e) =>
+                                (e.currentTarget.style.backgroundColor =
+                                  "#e0f7fa")
+                              }
+                              onMouseLeave={(e) =>
+                                (e.currentTarget.style.backgroundColor =
+                                  "white")
+                              }
                             >
                               <div>
-                                <strong>{patient.name}</strong> ({patient.sex}, {patient.age} yrs)
+                                <strong>{patient.name}</strong> ({patient.sex},{" "}
+                                {patient.age} yrs)
                                 <div style={{ fontSize: "0.75rem" }}>
-                                  <strong>UID No:</strong> {patient.Uid_no} | <strong>Contact No:</strong> {patient.phone}
+                                  <strong>UID No:</strong> {patient.Uid_no} |{" "}
+                                  <strong>Contact No:</strong> {patient.phone}
                                 </div>
                               </div>
                               <Button
@@ -605,7 +637,7 @@ export default function AddIpdAdmission() {
           </Row>
 
           {patientData && (
-            <Row >
+            <Row>
               <Col md={12}>
                 <Card
                   style={{
@@ -644,7 +676,10 @@ export default function AddIpdAdmission() {
                   <Card.Body className="p-3">
                     {isPendingAdmission && (
                       <div className="alert alert-danger p-2 mb-3 text-center small fw-bold">
-                        Warning: This patient already has an unconfirmed pending admission in the list. Please confirm the existing entry in Manage Admission list to allow adding a new admission.
+                        Warning: This patient already has an unconfirmed pending
+                        admission in the list. Please confirm the existing entry
+                        in Manage Admission list to allow adding a new
+                        admission.
                       </div>
                     )}
                     <Row>
@@ -709,7 +744,8 @@ export default function AddIpdAdmission() {
                                 className={labelStyle}
                                 style={{ fontSize: "0.75rem" }}
                               >
-                                Admission Date <span className="text-danger">*</span>
+                                Admission Date{" "}
+                                <span className="text-danger">*</span>
                               </Form.Label>
                               <Form.Control
                                 required
@@ -725,7 +761,9 @@ export default function AddIpdAdmission() {
                                 min={minDate}
                                 max={maxDate}
                                 value={admissionDate}
-                                onChange={(e) => setAdmissionDate(e.target.value)}
+                                onChange={(e) =>
+                                  setAdmissionDate(e.target.value)
+                                }
                                 onKeyDown={(e) => e.preventDefault()}
                                 onPaste={(e) => e.preventDefault()}
                                 onWheel={(e) => e.target.blur()}
@@ -739,7 +777,8 @@ export default function AddIpdAdmission() {
                                 className={labelStyle}
                                 style={{ fontSize: "0.75rem" }}
                               >
-                                Admission Time <span className="text-danger">*</span>
+                                Admission Time{" "}
+                                <span className="text-danger">*</span>
                               </Form.Label>
                               <Form.Select
                                 required
@@ -752,7 +791,9 @@ export default function AddIpdAdmission() {
                                 }}
                                 value={admissionTime}
                                 name="admission_time"
-                                onChange={(e) => setAdmissionTime(e.target.value)}
+                                onChange={(e) =>
+                                  setAdmissionTime(e.target.value)
+                                }
                               >
                                 <option value="">Select Time</option>
                                 {timeOptions.map((time) => {
@@ -778,7 +819,8 @@ export default function AddIpdAdmission() {
                                 className={labelStyle}
                                 style={{ fontSize: "0.75rem" }}
                               >
-                                Surgery Date <span className="text-danger">*</span>
+                                Surgery Date{" "}
+                                <span className="text-danger">*</span>
                               </Form.Label>
                               <Form.Control
                                 required
@@ -807,7 +849,8 @@ export default function AddIpdAdmission() {
                                 className={labelStyle}
                                 style={{ fontSize: "0.75rem" }}
                               >
-                                Surgery Time <span className="text-danger">*</span>
+                                Surgery Time{" "}
+                                <span className="text-danger">*</span>
                               </Form.Label>
                               <Form.Select
                                 required
@@ -846,7 +889,8 @@ export default function AddIpdAdmission() {
                                 className={labelStyle}
                                 style={{ fontSize: "0.75rem" }}
                               >
-                                Bed Category <span className="text-danger">*</span>
+                                Bed Category{" "}
+                                <span className="text-danger">*</span>
                               </Form.Label>
                               <Form.Select
                                 required
@@ -869,7 +913,9 @@ export default function AddIpdAdmission() {
                                 </option>
                                 <option value="Private">Private</option>
                                 <option value="Deluxe">Deluxe</option>
-                                <option value="Super Deluxe">Super Deluxe</option>
+                                <option value="Super Deluxe">
+                                  Super Deluxe
+                                </option>
                                 <option value="Suite">Suite</option>
                               </Form.Select>
                             </Form.Group>
@@ -881,7 +927,8 @@ export default function AddIpdAdmission() {
                                 className={labelStyle}
                                 style={{ fontSize: "0.75rem" }}
                               >
-                                Room Number <span className="text-danger">*</span>
+                                Room Number{" "}
+                                <span className="text-danger">*</span>
                               </Form.Label>
                               <Form.Control
                                 required
@@ -968,7 +1015,8 @@ export default function AddIpdAdmission() {
                                 className={labelStyle}
                                 style={{ fontSize: "0.75rem" }}
                               >
-                                Surgeon Name <span className="text-danger">*</span>
+                                Surgeon Name{" "}
+                                <span className="text-danger">*</span>
                               </Form.Label>
                               <Form.Select
                                 required
@@ -1028,7 +1076,9 @@ export default function AddIpdAdmission() {
                         style={{
                           borderRadius: "8px",
                           fontWeight: "600",
-                          backgroundColor: isPendingAdmission ? "#6c757d" : "#28a745",
+                          backgroundColor: isPendingAdmission
+                            ? "#6c757d"
+                            : "#28a745",
                           border: "none",
                         }}
                       >

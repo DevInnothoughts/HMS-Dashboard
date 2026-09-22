@@ -35,7 +35,7 @@ const BASE_URL = "http://194.195.117.79:5100/api";
 
 const getLocalDateString = (date) => {
   const offset = date.getTimezoneOffset();
-  const localDate = new Date(date.getTime() - (offset * 60 * 1000));
+  const localDate = new Date(date.getTime() - offset * 60 * 1000);
   return localDate.toISOString().split("T")[0];
 };
 
@@ -68,8 +68,8 @@ const getDynamicRowsFromInvoice = (invoice) => {
 
   const rowSource =
     invoice.package &&
-      typeof invoice.package === "string" &&
-      invoice.package !== ""
+    typeof invoice.package === "string" &&
+    invoice.package !== ""
       ? invoice.package
       : invoice.title && typeof invoice.title === "string"
         ? invoice.title
@@ -86,7 +86,8 @@ const getDynamicRowsFromInvoice = (invoice) => {
     // Legacy format: Label, Value, Label, Value
     for (let i = 0; i < entries.length; i += 2) {
       const label = entries[i];
-      const value = parseFloat(String(entries[i + 1] || "").replace(/,/g, "")) || 0;
+      const value =
+        parseFloat(String(entries[i + 1] || "").replace(/,/g, "")) || 0;
       if (label) {
         dynamicRows.push({
           label,
@@ -102,7 +103,12 @@ const getDynamicRowsFromInvoice = (invoice) => {
       const parts = entry.split(":");
       if (parts.length >= 2) {
         const label = parts[0].trim();
-        const value = parseFloat(String(parts[1] || "").trim().replace(/,/g, "")) || 0;
+        const value =
+          parseFloat(
+            String(parts[1] || "")
+              .trim()
+              .replace(/,/g, ""),
+          ) || 0;
         if (label) {
           dynamicRows.push({
             label,
@@ -124,7 +130,9 @@ const getDynamicRowsFromInvoice = (invoice) => {
   const Sub_Total =
     titleCalculatedTotal > 0
       ? titleCalculatedTotal
-      : parseFloat(String(invoice.totalamt || invoice.totalAmt || 0).replace(/,/g, "")) || 0;
+      : parseFloat(
+          String(invoice.totalamt || invoice.totalAmt || 0).replace(/,/g, ""),
+        ) || 0;
 
   return {
     dynamicRows:
@@ -166,9 +174,18 @@ const calculateActivePayableAmt = (
 };
 
 const calculatePayableAmt = (invoice) => {
-  const totalAmt = parseFloat(String(invoice.totalamt || invoice.total_amt || 0).replace(/,/g, "")) || 0;
-  const discount = parseFloat(String(invoice.discount || 0).replace(/,/g, "")) || 0;
-  const pdc = parseFloat(String(invoice.pdc || invoice.receivedamt || invoice.advance_amt || 0).replace(/,/g, "")) || 0;
+  const totalAmt =
+    parseFloat(
+      String(invoice.totalamt || invoice.total_amt || 0).replace(/,/g, ""),
+    ) || 0;
+  const discount =
+    parseFloat(String(invoice.discount || 0).replace(/,/g, "")) || 0;
+  const pdc =
+    parseFloat(
+      String(
+        invoice.pdc || invoice.receivedamt || invoice.advance_amt || 0,
+      ).replace(/,/g, ""),
+    ) || 0;
 
   const billMethod = (
     invoice.bill_method ||
@@ -179,7 +196,11 @@ const calculatePayableAmt = (invoice) => {
   const billType = (
     invoice.bill_Type ||
     invoice.bill_type ||
-    (invoice.status && (invoice.status.toLowerCase() === "interbranch" || invoice.status.toLowerCase() === "interbranch-bill") ? "interbranch" : "") ||
+    (invoice.status &&
+    (invoice.status.toLowerCase() === "interbranch" ||
+      invoice.status.toLowerCase() === "interbranch-bill")
+      ? "interbranch"
+      : "") ||
     ""
   ).toLowerCase();
 
@@ -189,7 +210,9 @@ const calculatePayableAmt = (invoice) => {
 
   if (
     billMethod === "cashless" &&
-    (billType === "insurance" || invoice.insurancecompany || invoice.insurance_company_name)
+    (billType === "insurance" ||
+      invoice.insurancecompany ||
+      invoice.insurance_company_name)
   ) {
     return "0";
   }
@@ -389,14 +412,23 @@ const IpdBillList = () => {
         headers["Authorization"] = `Bearer ${token}`;
       }
 
-      const res = await fetch(`${BASE_URL}/V1/invoice/insuranceSettlement?location=${currentLocation}`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(payload),
-      });
+      const res = await fetch(
+        `${BASE_URL}/V1/invoice/insuranceSettlement?location=${currentLocation}`,
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify(payload),
+        },
+      );
       const data = await res.json();
-      if (res.ok && (data.statusCode === 200 || data.description?.status || data.status)) {
-        Toast.fire({ icon: "success", title: "Cashless amounts updated successfully." });
+      if (
+        res.ok &&
+        (data.statusCode === 200 || data.description?.status || data.status)
+      ) {
+        Toast.fire({
+          icon: "success",
+          title: "Cashless amounts updated successfully.",
+        });
         setShowCashlessModal(false);
         fetchInvoices();
       } else {
@@ -499,8 +531,6 @@ const IpdBillList = () => {
         }
       });
 
-
-
       const response = await fetch(url.toString(), {
         method: "GET",
         headers: {
@@ -524,16 +554,23 @@ const IpdBillList = () => {
           const receivedamt =
             parseFloat(invoice.receivedamt || invoice.received_amt || 0) || 0;
           const discount = parseFloat(invoice.discount || 0) || 0;
-          const pdc = parseFloat(invoice.pdc || invoice.receivedamt || invoice.advance_amt || 0) || 0;
+          const pdc =
+            parseFloat(
+              invoice.pdc || invoice.receivedamt || invoice.advance_amt || 0,
+            ) || 0;
 
           const payable_amt =
-            (invoice.payable_amt !== undefined && invoice.payable_amt !== null)
+            invoice.payable_amt !== undefined && invoice.payable_amt !== null
               ? parseFloat(invoice.payable_amt)
-              : parseFloat(calculatePayableAmt({ ...invoice, totalamt, discount, pdc }));
+              : parseFloat(
+                  calculatePayableAmt({ ...invoice, totalamt, discount, pdc }),
+                );
           const due_amt =
             invoice.totaldue !== undefined
               ? parseFloat(invoice.totaldue)
-              : (invoice.status === "PDC" || invoice.bill_method === "PDC" ? totalamt : payable_amt - receivedamt);
+              : invoice.status === "PDC" || invoice.bill_method === "PDC"
+                ? totalamt
+                : payable_amt - receivedamt;
 
           return {
             ...invoice,
@@ -545,21 +582,21 @@ const IpdBillList = () => {
             payable_amt,
             pay_mode:
               invoice.status === "PDC" ||
-                invoice.bill_method === "PDC" ||
-                (invoice.chequeno && invoice.chequeno !== "NULL")
+              invoice.bill_method === "PDC" ||
+              (invoice.chequeno && invoice.chequeno !== "NULL")
                 ? "PDC"
                 : invoice.status === "Cashless" ||
-                  invoice.bill_method === "Cashless"
+                    invoice.bill_method === "Cashless"
                   ? "Cashless"
                   : invoice.status === "Reimbursement" ||
-                    invoice.bill_method === "Reimbursement"
+                      invoice.bill_method === "Reimbursement"
                     ? "Reimbursement"
                     : invoice.status === "Interbranch" ||
-                      invoice.status === "Interbranch-Bill" ||
-                      invoice.bill_Type === "interbranch"
+                        invoice.status === "Interbranch-Bill" ||
+                        invoice.bill_Type === "interbranch"
                       ? "Interbranch"
                       : invoice.bill_Type === "charity" ||
-                        invoice.status === "Charity"
+                          invoice.status === "Charity"
                         ? "Charity"
                         : "NonInsurance",
             patient_name: invoice.patient_name || invoice.name || "N/A",
@@ -611,15 +648,30 @@ const IpdBillList = () => {
                   ) || 0;
                 const discount = parseFloat(invoice.discount || 0) || 0;
                 const pdc =
-                  parseFloat(invoice.pdc || invoice.receivedamt || invoice.advance_amt || 0) || 0;
+                  parseFloat(
+                    invoice.pdc ||
+                      invoice.receivedamt ||
+                      invoice.advance_amt ||
+                      0,
+                  ) || 0;
                 const payable_amt =
-                  (invoice.payable_amt !== undefined && invoice.payable_amt !== null)
+                  invoice.payable_amt !== undefined &&
+                  invoice.payable_amt !== null
                     ? parseFloat(invoice.payable_amt)
-                    : parseFloat(calculatePayableAmt({ ...invoice, totalamt, discount, pdc }));
+                    : parseFloat(
+                        calculatePayableAmt({
+                          ...invoice,
+                          totalamt,
+                          discount,
+                          pdc,
+                        }),
+                      );
                 const due_amt =
                   invoice.totaldue !== undefined
                     ? parseFloat(invoice.totaldue)
-                    : (invoice.status === "PDC" || invoice.bill_method === "PDC" ? totalamt : payable_amt - receivedamt);
+                    : invoice.status === "PDC" || invoice.bill_method === "PDC"
+                      ? totalamt
+                      : payable_amt - receivedamt;
 
                 return {
                   ...invoice,
@@ -687,16 +739,26 @@ const IpdBillList = () => {
         const dateQuery = targetDate ? `&date=${targetDate}` : "";
 
         const endpoints = [
-          { url: `consultant_dropdown?location=${encodeURIComponent(currentLocation)}`, setter: setConsultants },
-          { url: `surgeon_dropdown?location=${encodeURIComponent(currentLocation)}`, setter: setSurgeons },
-          { url: `insurance_co_dropdown?location=${encodeURIComponent(currentLocation)}${dateQuery}`, setter: setInsurance },
-          { url: `tpa_dropdown?location=${encodeURIComponent(currentLocation)}${dateQuery}`, setter: setTpa },
+          {
+            url: `consultant_dropdown?location=${encodeURIComponent(currentLocation)}`,
+            setter: setConsultants,
+          },
+          {
+            url: `surgeon_dropdown?location=${encodeURIComponent(currentLocation)}`,
+            setter: setSurgeons,
+          },
+          {
+            url: `insurance_co_dropdown?location=${encodeURIComponent(currentLocation)}${dateQuery}`,
+            setter: setInsurance,
+          },
+          {
+            url: `tpa_dropdown?location=${encodeURIComponent(currentLocation)}${dateQuery}`,
+            setter: setTpa,
+          },
         ];
 
         for (const { url, setter } of endpoints) {
-          const response = await fetch(
-            `${BASE_URL}/V1/invoice/${url}`,
-          );
+          const response = await fetch(`${BASE_URL}/V1/invoice/${url}`);
 
           const data = await response.json();
           if (response.ok) {
@@ -706,7 +768,7 @@ const IpdBillList = () => {
 
         // Fetch FDE dropdown separately since its prefix is V1/appointment
         const fdeResponse = await fetch(
-          `${BASE_URL}/V1/appointment/fdeDropdown?location=${encodeURIComponent(currentLocation)}`
+          `${BASE_URL}/V1/appointment/fdeDropdown?location=${encodeURIComponent(currentLocation)}`,
         );
         const fdeData = await fdeResponse.json();
         if (fdeResponse.ok) {
@@ -763,7 +825,8 @@ const IpdBillList = () => {
     if (
       selectedClinicPatient &&
       selectedClinicPatient.Uid_no &&
-      selectedClinicPatient.Uid_no.toLowerCase().trim() === query.toLowerCase().trim()
+      selectedClinicPatient.Uid_no.toLowerCase().trim() ===
+        query.toLowerCase().trim()
     ) {
       setIsSearchingUid(false);
       return;
@@ -774,7 +837,7 @@ const IpdBillList = () => {
     const delayDebounce = setTimeout(async () => {
       try {
         const responseSelected = await fetch(
-          `${BASE_URL}/V1/patient/searchPatient?query=${query}&location=${selectedInvoice.interbranchLocation}`
+          `${BASE_URL}/V1/patient/searchPatient?query=${query}&location=${selectedInvoice.interbranchLocation}`,
         );
         const resultSelected = await responseSelected.json();
 
@@ -784,7 +847,7 @@ const IpdBillList = () => {
           resultSelected.data.length > 0
         ) {
           const matchedPatient = resultSelected.data.find(
-            (p) => p.Uid_no.toLowerCase().trim() === query.toLowerCase().trim()
+            (p) => p.Uid_no.toLowerCase().trim() === query.toLowerCase().trim(),
           );
           if (matchedPatient) {
             setSelectedClinicPatient(matchedPatient);
@@ -809,7 +872,8 @@ const IpdBillList = () => {
         setSelectedClinicPatient(null);
         setErrors((prev) => ({
           ...prev,
-          selectedClinicUid: "Error searching patient at selected clinic location.",
+          selectedClinicUid:
+            "Error searching patient at selected clinic location.",
         }));
       } finally {
         setIsSearchingUid(false);
@@ -1001,7 +1065,6 @@ const IpdBillList = () => {
   };
 
   const handleEditInvoice = (invoice) => {
-
     setOriginalInvoiceId(invoice.invoice_id);
     const { dynamicRows, Sub_Total } = getDynamicRowsFromInvoice(invoice);
 
@@ -1056,27 +1119,30 @@ const IpdBillList = () => {
         : statusVal === "reimbursement"
           ? "Reimbursement"
           : statusVal === "pdc" ||
-            (invoice.chequeno && invoice.chequeno !== "NULL")
+              (invoice.chequeno && invoice.chequeno !== "NULL")
             ? "PDC"
             : "NonInsurance");
 
     const bill_Type =
       invoice.bill_Type ||
       (statusVal === "cashless" ||
-        statusVal === "reimbursement" ||
-        statusVal === "pdc" ||
-        invoice.insurancecompany
+      statusVal === "reimbursement" ||
+      statusVal === "pdc" ||
+      invoice.insurancecompany
         ? "insurance"
         : statusVal === "charity"
           ? "charity"
-          : (statusVal === "interbranch" || statusVal === "interbranch-bill")
+          : statusVal === "interbranch" || statusVal === "interbranch-bill"
             ? "interbranch"
             : "non_insurance");
 
     const chequeno =
       invoice.chequeno === "NULL" || !invoice.chequeno ? "" : invoice.chequeno;
     const pdc =
-      invoice.pdc || (bill_method === "PDC" ? (invoice.receivedamt || invoice.advance_amt) : "0");
+      invoice.pdc ||
+      (bill_method === "PDC"
+        ? invoice.receivedamt || invoice.advance_amt
+        : "0");
 
     const isInterbranch =
       invoice.patient_location !== null &&
@@ -1100,7 +1166,11 @@ const IpdBillList = () => {
       // Ensure we have fallback for bed category from existing fields
       bed_no: invoice.bed_no || invoice.bed_desc || "",
       interbranchLocation: isInterbranch ? invoice.patient_location : "",
-      selectedClinicUid: isInterbranch ? (invoice.patient_location === "DP Road" ? "N/A" : (invoice.selectedClinicUid || "")) : "",
+      selectedClinicUid: isInterbranch
+        ? invoice.patient_location === "DP Road"
+          ? "N/A"
+          : invoice.selectedClinicUid || ""
+        : "",
     });
 
     setSelectedClinicPatient(null);
@@ -1115,7 +1185,9 @@ const IpdBillList = () => {
       ) {
         const targetLocation = invoice.patient_location;
         if (targetLocation) {
-          fetch(`${BASE_URL}/V1/invoice/searchByInvoiceId?invoice_id=${invoice.invoice_id}&location=${targetLocation}`)
+          fetch(
+            `${BASE_URL}/V1/invoice/searchByInvoiceId?invoice_id=${invoice.invoice_id}&location=${targetLocation}`,
+          )
             .then((res) => res.json())
             .then((data) => {
               if (data && data.length > 0) {
@@ -1131,7 +1203,9 @@ const IpdBillList = () => {
                 setSelectedClinicPatient(matched);
               }
             })
-            .catch((err) => console.error("Error fetching interbranch patient UID:", err));
+            .catch((err) =>
+              console.error("Error fetching interbranch patient UID:", err),
+            );
         }
       } else if (statusVal === "interbranch-bill") {
         const uid = invoice.patient_uid || invoice.Uid_no || "";
@@ -1316,14 +1390,13 @@ const IpdBillList = () => {
       discount: Math.round(parseFloat(modalInvoiceData.discount || 0)),
       receivedamt: Math.round(parseFloat(modalInvoiceData.pdc || 0)), // Map PDC amount to receivedamt column
       advance_amt: null,
-      totaldue: (status === "PDC" || status === "pdc")
-        ? Math.round(parseFloat(modalInvoiceData.Sub_Total || 0))
-        : Math.round(parseFloat(modalInvoiceData.payableAmount || 0)),
+      totaldue:
+        status === "PDC" || status === "pdc"
+          ? Math.round(parseFloat(modalInvoiceData.Sub_Total || 0))
+          : Math.round(parseFloat(modalInvoiceData.payableAmount || 0)),
       admissiontime: convertTo12Hour(selectedInvoice.admissiontime),
       dischargetime: convertTo12Hour(selectedInvoice.dischargetime),
     };
-
-
 
     setLoading(true);
     try {
@@ -1345,7 +1418,9 @@ const IpdBillList = () => {
         if (!responseLoggedIn.ok) {
           Toast.fire({
             icon: "error",
-            title: resultLoggedIn.message || `Failed to update invoice at current clinic (${currentLocation})`,
+            title:
+              resultLoggedIn.message ||
+              `Failed to update invoice at current clinic (${currentLocation})`,
           });
           setLoading(false);
           return;
@@ -1377,7 +1452,9 @@ const IpdBillList = () => {
         if (!responseLoggedIn.ok) {
           Toast.fire({
             icon: "error",
-            title: resultLoggedIn.message || `Failed to update invoice at current clinic (${currentLocation})`,
+            title:
+              resultLoggedIn.message ||
+              `Failed to update invoice at current clinic (${currentLocation})`,
           });
           setLoading(false);
           return;
@@ -1424,7 +1501,9 @@ const IpdBillList = () => {
         if (!responseSelected.ok) {
           Toast.fire({
             icon: "error",
-            title: resultSelected.message || `Failed to update/create invoice at selected clinic (${selectedInvoice.interbranchLocation})`,
+            title:
+              resultSelected.message ||
+              `Failed to update/create invoice at selected clinic (${selectedInvoice.interbranchLocation})`,
           });
           setLoading(false);
           return;
@@ -1506,9 +1585,9 @@ const IpdBillList = () => {
     const trimmedLocation = currentLocation ? currentLocation.trim() : "";
     const clinicAddr = clinincLoc[trimmedLocation] ||
       clinincLoc[currentLocation] || {
-      invoiceAddress: "<b>Healing Hands Clinic</b>",
-      invoiceHelplineNo: "8888288884",
-    };
+        invoiceAddress: "<b>Healing Hands Clinic</b>",
+        invoiceHelplineNo: "8888288884",
+      };
 
     const { dynamicRows, Sub_Total } = getDynamicRowsFromInvoice(invoice);
 
@@ -1517,7 +1596,9 @@ const IpdBillList = () => {
     const isInsurance =
       (invoice.bill_Type || "").toLowerCase() === "insurance" ||
       (invoice.bill_type || "").toLowerCase() === "insurance" ||
-      ["cashless", "reimbursement", "pdc"].includes((invoice.status || "").toLowerCase()) ||
+      ["cashless", "reimbursement", "pdc"].includes(
+        (invoice.status || "").toLowerCase(),
+      ) ||
       !!invoice.insurancecompany ||
       !!invoice.insurance_company_name;
 
@@ -1666,15 +1747,15 @@ const IpdBillList = () => {
                 <td>Amount (INR)</td>
               </tr>
               ${dynamicRows
-        .map(
-          (row) => `
+                .map(
+                  (row) => `
                 <tr>
                   <td>${row.label}</td>
                   <td>${Math.round(parseFloat(row.value || 0)).toLocaleString("en-IN")}</td>
                 </tr>
               `,
-        )
-        .join("")}
+                )
+                .join("")}
             </table>
           </td>
       <td style="width: 50%; vertical-align: top; padding-left: 10px;">
@@ -1687,7 +1768,8 @@ const IpdBillList = () => {
       <td>Total</td>
       <td>${(Math.round(parseFloat(invoice.totalamt || Sub_Total)) || 0).toLocaleString("en-IN")}</td>
     </tr>
-    ${(Math.round(parseFloat(invoice.discount)) || 0) > 0
+    ${
+      (Math.round(parseFloat(invoice.discount)) || 0) > 0
         ? `
     <tr>
       <td>Discount</td>
@@ -1695,7 +1777,7 @@ const IpdBillList = () => {
     </tr>
     `
         : ""
-      }
+    }
   </table>
 </td>
         </tr>
@@ -1748,7 +1830,7 @@ const IpdBillList = () => {
         </table>
       </div>
 
-      <div class="btn-container" style="${showPrintBtn ? '' : 'display: none;'}">
+      <div class="btn-container" style="${showPrintBtn ? "" : "display: none;"}">
         <button class="print-btn" onclick="window.print()">Print Invoice</button>
       </div>
     </body>
@@ -1758,7 +1840,10 @@ const IpdBillList = () => {
   };
 
   const handlePrint = (invoice) => {
-    console.log("🖨️ [PRINT INVOICE] Full Data fetched from database/state:", invoice);
+    console.log(
+      "🖨️ [PRINT INVOICE] Full Data fetched from database/state:",
+      invoice,
+    );
     if (invoice && typeof invoice === "object") {
       const { dynamicRows, Sub_Total } = getDynamicRowsFromInvoice(invoice);
       console.log("📋 Invoice ID:", invoice.invoice_id);
@@ -1766,16 +1851,34 @@ const IpdBillList = () => {
       console.log("📞 Phone:", invoice.patient_phone);
       console.log("🆔 UID No:", invoice.patient_uid);
       console.log("🏥 Admission No:", invoice.admission_no);
-      console.log("🗓️ Admission Date & Time:", `${formatDateForDisplay(invoice.creation_date)} ${invoice.admissiontime || ""}`.trim());
-      console.log("🚪 Discharge Date & Time:", `${formatDateForDisplay(invoice.due_date)} ${invoice.dischargetime || ""}`.trim());
+      console.log(
+        "🗓️ Admission Date & Time:",
+        `${formatDateForDisplay(invoice.creation_date)} ${invoice.admissiontime || ""}`.trim(),
+      );
+      console.log(
+        "🚪 Discharge Date & Time:",
+        `${formatDateForDisplay(invoice.due_date)} ${invoice.dischargetime || ""}`.trim(),
+      );
       console.log("⏱️ Raw admissiontime field:", invoice.admissiontime);
       console.log("⏱️ Raw dischargetime field:", invoice.dischargetime);
-      console.log("👨‍⚕️ Consultant:", invoice.consultant_name || invoice.consultant);
-      console.log("🩺 Surgeon:", invoice.surgeon_name || invoice.prepared_doctor);
+      console.log(
+        "👨‍⚕️ Consultant:",
+        invoice.consultant_name || invoice.consultant,
+      );
+      console.log(
+        "🩺 Surgeon:",
+        invoice.surgeon_name || invoice.prepared_doctor,
+      );
       console.log("📅 Bill Date (creation_date):", invoice.creation_date);
       console.log("📅 Due Date:", invoice.due_date);
-      console.log("🏷️ Bill Type / Method:", invoice.bill_Type || invoice.bill_type || invoice.status);
-      console.log("🏢 Insurance Co:", invoice.insurance_company_name || invoice.insurancecompany);
+      console.log(
+        "🏷️ Bill Type / Method:",
+        invoice.bill_Type || invoice.bill_type || invoice.status,
+      );
+      console.log(
+        "🏢 Insurance Co:",
+        invoice.insurance_company_name || invoice.insurancecompany,
+      );
       console.log("🏢 TPA:", invoice.tpa_name || invoice.tpa);
       console.log("💵 Total Amount:", invoice.totalamt);
       console.log("🏷️ Discount Amount:", invoice.discount);
@@ -1820,7 +1923,10 @@ const IpdBillList = () => {
   };
 
   const handleViewInvoice = (invoice) => {
-    console.log("👁️ [VIEW INVOICE PREVIEW] Full Data fetched from database/state:", invoice);
+    console.log(
+      "👁️ [VIEW INVOICE PREVIEW] Full Data fetched from database/state:",
+      invoice,
+    );
     if (!invoice || typeof invoice !== "object" || !invoice.invoice_id) {
       return;
     }
@@ -1867,9 +1973,12 @@ const IpdBillList = () => {
       if (paymentCategoryFilter !== "All") {
         const itemStatus = invoice.status || invoice.pay_mode || "";
         if (paymentCategoryFilter === "NonInsurance") {
-          matchesCategory = itemStatus.toLowerCase() === "noninsurance" || itemStatus.toLowerCase() === "non_insurance";
+          matchesCategory =
+            itemStatus.toLowerCase() === "noninsurance" ||
+            itemStatus.toLowerCase() === "non_insurance";
         } else {
-          matchesCategory = itemStatus.toLowerCase() === paymentCategoryFilter.toLowerCase();
+          matchesCategory =
+            itemStatus.toLowerCase() === paymentCategoryFilter.toLowerCase();
         }
       }
 
@@ -2007,7 +2116,6 @@ const IpdBillList = () => {
             <FeatherIcon icon="calendar" size={12} className="me-1" />
             Today's IPD Bills
           </Button>
-
         </div>
         <div
           style={{
@@ -2122,7 +2230,6 @@ const IpdBillList = () => {
               }}
             >
               <Card.Body style={{ margin: "4px" }}>
-
                 {renderHeader()}
                 {loading ? (
                   <div
@@ -2205,8 +2312,15 @@ const IpdBillList = () => {
                         return (
                           <span>
                             {hasPatientLocation && (
-                              <small style={{ color: "red", fontWeight: "bold", marginRight: "5px" }}>
-                                (Interbranch: {rowData.patient_location})<br></br>
+                              <small
+                                style={{
+                                  color: "red",
+                                  fontWeight: "bold",
+                                  marginRight: "5px",
+                                }}
+                              >
+                                (Interbranch: {rowData.patient_location})
+                                <br></br>
                               </small>
                             )}
                             {rowData.prefix ? `${rowData.prefix} ` : ""}
@@ -2230,13 +2344,30 @@ const IpdBillList = () => {
                       headerClassName="datatable-header-center"
                       field="status"
                       header={
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                          <span style={{ marginBottom: '4px' }}>Payment Category</span>
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                          }}
+                        >
+                          <span style={{ marginBottom: "4px" }}>
+                            Payment Category
+                          </span>
                           <select
                             className="form-select form-select-sm"
-                            style={{ width: '110px', fontSize: '11px', padding: '2px 18px 2px 5px', borderRadius: '4px', border: '1px solid #4dd0e1', cursor: 'pointer' }}
+                            style={{
+                              width: "110px",
+                              fontSize: "11px",
+                              padding: "2px 18px 2px 5px",
+                              borderRadius: "4px",
+                              border: "1px solid #4dd0e1",
+                              cursor: "pointer",
+                            }}
                             value={paymentCategoryFilter}
-                            onChange={(e) => setPaymentCategoryFilter(e.target.value)}
+                            onChange={(e) =>
+                              setPaymentCategoryFilter(e.target.value)
+                            }
                             onClick={(e) => e.stopPropagation()}
                           >
                             <option value="All">All</option>
@@ -2261,9 +2392,9 @@ const IpdBillList = () => {
                             style={
                               isInteractive
                                 ? {
-                                  cursor: "pointer",
-                                  fontWeight: "bold",
-                                }
+                                    cursor: "pointer",
+                                    fontWeight: "bold",
+                                  }
                                 : {}
                             }
                             onClick={
@@ -2282,7 +2413,9 @@ const IpdBillList = () => {
                       field="payable_amt"
                       header="Payable Amount"
                       body={(rowData) => {
-                        const val = Math.round(parseFloat(rowData.payable_amt) || 0);
+                        const val = Math.round(
+                          parseFloat(rowData.payable_amt) || 0,
+                        );
                         return `₹ ${val.toLocaleString("en-IN")}`;
                       }}
                       style={{
@@ -2296,7 +2429,9 @@ const IpdBillList = () => {
                       field="due_amt"
                       header="Due Amount"
                       body={(rowData) => {
-                        const val = Math.round(parseFloat(rowData.due_amt) || 0);
+                        const val = Math.round(
+                          parseFloat(rowData.due_amt) || 0,
+                        );
                         return `₹ ${val.toLocaleString("en-IN")}`;
                       }}
                       style={{
@@ -2312,7 +2447,9 @@ const IpdBillList = () => {
                       body={(rowData) => {
                         if (rowData.madeby_name) return rowData.madeby_name;
                         if (rowData.madeby) {
-                          const found = fdeOptions.find((opt) => opt.FDEID == rowData.madeby);
+                          const found = fdeOptions.find(
+                            (opt) => opt.FDEID == rowData.madeby,
+                          );
                           if (found) return found.FDEName;
                           return rowData.madeby;
                         }
@@ -2329,7 +2466,13 @@ const IpdBillList = () => {
                       header="Actions"
                       style={{ width: "100px", border: "1px solid #4dd0e1" }}
                       body={(rowData) => {
-                        const isMirror = rowData.status === "Interbranch-Bill" || (rowData.interbranch_id !== null && rowData.interbranch_id !== undefined && rowData.interbranch_id !== "" && rowData.interbranch_id !== 0 && rowData.interbranch_id !== "0");
+                        const isMirror =
+                          rowData.status === "Interbranch-Bill" ||
+                          (rowData.interbranch_id !== null &&
+                            rowData.interbranch_id !== undefined &&
+                            rowData.interbranch_id !== "" &&
+                            rowData.interbranch_id !== 0 &&
+                            rowData.interbranch_id !== "0");
                         return (
                           <div className="d-flex justify-content-center gap-2">
                             {!isMirror && (
@@ -2346,9 +2489,25 @@ const IpdBillList = () => {
                                   title="Edit Bill Details"
                                   disabled={
                                     rowData.payment_count > 0 ||
-                                    (rowData.bill_method !== "PDC" && rowData.status !== "PDC" && parseFloat(rowData.receivedamt) > 0) ||
-                                    (moment().startOf("day").diff(moment(rowData.creation_date).startOf("day"), "days") > 2) ||
-                                    (moment().startOf("day").diff(moment(rowData.creation_date).startOf("day"), "days") < 0)
+                                    (rowData.bill_method !== "PDC" &&
+                                      rowData.status !== "PDC" &&
+                                      parseFloat(rowData.receivedamt) > 0) ||
+                                    moment()
+                                      .startOf("day")
+                                      .diff(
+                                        moment(rowData.creation_date).startOf(
+                                          "day",
+                                        ),
+                                        "days",
+                                      ) > 2 ||
+                                    moment()
+                                      .startOf("day")
+                                      .diff(
+                                        moment(rowData.creation_date).startOf(
+                                          "day",
+                                        ),
+                                        "days",
+                                      ) < 0
                                   }
                                   onClick={() => handleEditInvoice(rowData)}
                                 >
@@ -2359,10 +2518,19 @@ const IpdBillList = () => {
                                   state={{
                                     invoiceId: rowData.invoice_id,
                                     patientDetails: {
-                                      name: rowData.patient_name || rowData.name || "",
-                                      uhid: rowData.patient_uid || rowData.Uid_no || "",
+                                      name:
+                                        rowData.patient_name ||
+                                        rowData.name ||
+                                        "",
+                                      uhid:
+                                        rowData.patient_uid ||
+                                        rowData.Uid_no ||
+                                        "",
                                       patient_id: rowData.patient_id || "",
-                                      phone: rowData.patient_phone || rowData.phone || "",
+                                      phone:
+                                        rowData.patient_phone ||
+                                        rowData.phone ||
+                                        "",
                                     },
                                   }}
                                   className="btn btn-primary text-white"
@@ -2431,14 +2599,28 @@ const IpdBillList = () => {
         size="xl"
         centered
       >
-        <Modal.Header closeButton style={{ backgroundColor: "#e0f7fa", borderBottom: "1px solid #00bcd4" }}>
-          <Modal.Title style={{ color: "#00838f", fontWeight: "bold", fontSize: "1.1rem" }}>
+        <Modal.Header
+          closeButton
+          style={{
+            backgroundColor: "#e0f7fa",
+            borderBottom: "1px solid #00bcd4",
+          }}
+        >
+          <Modal.Title
+            style={{ color: "#00838f", fontWeight: "bold", fontSize: "1.1rem" }}
+          >
             <FeatherIcon icon="eye" className="me-2" size={18} />
             IPD Bill Preview
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body className="p-0 bg-light" style={{ maxHeight: "80vh", overflowY: "auto" }}>
-          <div className="p-4 bg-white shadow-sm mx-auto" style={{ width: "210mm", minHeight: "297mm" }}>
+        <Modal.Body
+          className="p-0 bg-light"
+          style={{ maxHeight: "80vh", overflowY: "auto" }}
+        >
+          <div
+            className="p-4 bg-white shadow-sm mx-auto"
+            style={{ width: "210mm", minHeight: "297mm" }}
+          >
             {previewContent ? (
               <iframe
                 id="invoice-preview-iframe"
@@ -2453,7 +2635,7 @@ const IpdBillList = () => {
         </Modal.Body>
       </Modal>
 
-      <Modal show={showModal} onHide={handleCloseModal} size="xl" centered >
+      <Modal show={showModal} onHide={handleCloseModal} size="xl" centered>
         <Modal.Header
           closeButton
           style={{
@@ -2671,7 +2853,10 @@ const IpdBillList = () => {
                         }}
                         value={
                           selectedInvoice.creation_date
-                            ? selectedInvoice.creation_date.split("-").reverse().join("-")
+                            ? selectedInvoice.creation_date
+                                .split("-")
+                                .reverse()
+                                .join("-")
                             : ""
                         }
                       />
@@ -2753,9 +2938,9 @@ const IpdBillList = () => {
                             due_date: e.target.value,
                           })
                         }
-                        onKeyDown={(e) => e.preventDefault()}   // ⛔ block typing
-                        onPaste={(e) => e.preventDefault()}     // ⛔ block paste
-                        onWheel={(e) => e.target.blur()}        // ⛔ prevent scroll change
+                        onKeyDown={(e) => e.preventDefault()} // ⛔ block typing
+                        onPaste={(e) => e.preventDefault()} // ⛔ block paste
+                        onWheel={(e) => e.target.blur()} // ⛔ prevent scroll change
                       />
                     </Col>
                     <Col md={3}>
@@ -2880,7 +3065,7 @@ const IpdBillList = () => {
                           consultants.find(
                             (c) =>
                               String(c.doctor_id) ===
-                              String(selectedInvoice?.consultant)
+                              String(selectedInvoice?.consultant),
                           )?.name ||
                           selectedInvoice?.consultant_name ||
                           selectedInvoice?.consultant ||
@@ -2941,7 +3126,10 @@ const IpdBillList = () => {
                         }}
                         className="text-muted"
                       >
-                        Made By <span style={{ color: "red" }} className="required">*</span>
+                        Made By{" "}
+                        <span style={{ color: "red" }} className="required">
+                          *
+                        </span>
                       </Form.Label>
                       <Form.Select
                         required
@@ -3072,8 +3260,12 @@ const IpdBillList = () => {
                             }}
                             type="text"
                             value={
-                              row.value !== "" && row.value !== null && row.value !== undefined
-                                ? Number(String(row.value).replace(/,/g, "")).toLocaleString("en-IN")
+                              row.value !== "" &&
+                              row.value !== null &&
+                              row.value !== undefined
+                                ? Number(
+                                    String(row.value).replace(/,/g, ""),
+                                  ).toLocaleString("en-IN")
                                 : ""
                             }
                             onKeyDown={(e) => {
@@ -3146,7 +3338,8 @@ const IpdBillList = () => {
                             color: "#e53935",
                           }}
                         >
-                          *Please select the checkbox if it is an Interbranch bill
+                          *Please select the checkbox if it is an Interbranch
+                          bill
                         </Form.Label>
                         <div
                           style={{
@@ -3177,15 +3370,24 @@ const IpdBillList = () => {
                             onChange={(e) => {
                               const checked = e.target.checked;
                               setSelectedClinicPatient(null);
-                              setErrors((prev) => ({ ...prev, selectedClinicUid: null }));
+                              setErrors((prev) => ({
+                                ...prev,
+                                selectedClinicUid: null,
+                              }));
                               setSelectedInvoice((prev) => {
                                 if (!prev) return null;
                                 return {
                                   ...prev,
                                   isInterbranch: checked,
-                                  interbranchLocation: checked ? prev.interbranchLocation : "",
-                                  selectedClinicUid: checked ? prev.selectedClinicUid : "",
-                                  selectedClinicInvoiceId: checked ? prev.selectedClinicInvoiceId : null,
+                                  interbranchLocation: checked
+                                    ? prev.interbranchLocation
+                                    : "",
+                                  selectedClinicUid: checked
+                                    ? prev.selectedClinicUid
+                                    : "",
+                                  selectedClinicInvoiceId: checked
+                                    ? prev.selectedClinicInvoiceId
+                                    : null,
                                 };
                               });
                             }}
@@ -3209,7 +3411,8 @@ const IpdBillList = () => {
                           }}
                           className="text-muted"
                         >
-                          Payment Category <span className="text-danger">*</span>
+                          Payment Category{" "}
+                          <span className="text-danger">*</span>
                         </Form.Label>
                         <Form.Select
                           required
@@ -3285,7 +3488,8 @@ const IpdBillList = () => {
                               }}
                               className="text-muted"
                             >
-                              Patient Origin Clinic <span className="text-danger">*</span>
+                              Patient Origin Clinic{" "}
+                              <span className="text-danger">*</span>
                             </Form.Label>
                             <Form.Select
                               required
@@ -3302,15 +3506,26 @@ const IpdBillList = () => {
                                 setSelectedInvoice({
                                   ...selectedInvoice,
                                   interbranchLocation: val,
-                                  selectedClinicUid: val === "DP Road" ? "N/A" : "",
+                                  selectedClinicUid:
+                                    val === "DP Road" ? "N/A" : "",
                                 });
                               }}
                             >
                               <option value="">SELECT LOCATION</option>
                               {clinicLocations
-                                .filter((loc) => (typeof loc === "object" ? loc.value : loc) !== currentLocation)
+                                .filter(
+                                  (loc) =>
+                                    (typeof loc === "object"
+                                      ? loc.value
+                                      : loc) !== currentLocation,
+                                )
                                 .map((loc, idx) => (
-                                  <option key={idx} value={typeof loc === "object" ? loc.value : loc}>
+                                  <option
+                                    key={idx}
+                                    value={
+                                      typeof loc === "object" ? loc.value : loc
+                                    }
+                                  >
                                     {typeof loc === "object" ? loc.label : loc}
                                   </option>
                                 ))}
@@ -3328,27 +3543,38 @@ const IpdBillList = () => {
                                 className="text-muted"
                               >
                                 Patient UID at Origin Clinic{" "}
-                                {selectedInvoice.interbranchLocation !== "DP Road" && (
+                                {selectedInvoice.interbranchLocation !==
+                                  "DP Road" && (
                                   <span className="text-danger">*</span>
                                 )}
                               </Form.Label>
                               <div style={{ position: "relative" }}>
                                 <Form.Control
-                                  required={selectedInvoice.interbranchLocation !== "DP Road"}
-                                  disabled={selectedInvoice.interbranchLocation === "DP Road"}
+                                  required={
+                                    selectedInvoice.interbranchLocation !==
+                                    "DP Road"
+                                  }
+                                  disabled={
+                                    selectedInvoice.interbranchLocation ===
+                                    "DP Road"
+                                  }
                                   size="sm"
                                   name="selectedClinicUid"
                                   style={{
                                     borderRadius: "10px",
                                     fontSize: "12px",
-                                    paddingRight: isSearchingUid ? "30px" : "12px",
+                                    paddingRight: isSearchingUid
+                                      ? "30px"
+                                      : "12px",
                                     border:
-                                      selectedInvoice.interbranchLocation !== "DP Road" &&
-                                        !!errors.selectedClinicUid
+                                      selectedInvoice.interbranchLocation !==
+                                        "DP Road" && !!errors.selectedClinicUid
                                         ? "1px solid red"
                                         : "1px solid #4dd0e1",
                                   }}
-                                  value={selectedInvoice.selectedClinicUid || ""}
+                                  value={
+                                    selectedInvoice.selectedClinicUid || ""
+                                  }
                                   onChange={(e) =>
                                     setSelectedInvoice({
                                       ...selectedInvoice,
@@ -3366,7 +3592,7 @@ const IpdBillList = () => {
                                       transform: "translateY(-50%)",
                                       zIndex: 10,
                                       display: "flex",
-                                      alignItems: "center"
+                                      alignItems: "center",
                                     }}
                                   >
                                     <div
@@ -3374,7 +3600,9 @@ const IpdBillList = () => {
                                       role="status"
                                       style={{ width: "1rem", height: "1rem" }}
                                     >
-                                      <span className="visually-hidden">Loading...</span>
+                                      <span className="visually-hidden">
+                                        Loading...
+                                      </span>
                                     </div>
                                   </div>
                                 )}
@@ -3400,7 +3628,10 @@ const IpdBillList = () => {
                                     fontWeight: "600",
                                   }}
                                 >
-                                  <strong> *Patient Found: </strong> {selectedClinicPatient.name} - {selectedClinicPatient.phone || "N/A"} - {selectedClinicPatient.Uid_no || "N/A"}
+                                  <strong> *Patient Found: </strong>{" "}
+                                  {selectedClinicPatient.name} -{" "}
+                                  {selectedClinicPatient.phone || "N/A"} -{" "}
+                                  {selectedClinicPatient.Uid_no || "N/A"}
                                 </div>
                               )}
                             </Col>
@@ -3411,103 +3642,106 @@ const IpdBillList = () => {
                       {/* 1. Show Insurance Company Dropdown */}
                       {(selectedInvoice.bill_Type === "insurance" ||
                         selectedInvoice.insurancecompany) && (
-                          <Col md={4}>
-                            <Form.Label
-                              style={{
-                                fontSize: "12px",
-                                fontWeight: "600",
-                                marginBottom: "2px",
-                              }}
-                              className="text-muted"
-                            >
-                              Insurance Company <span style={{ color: "red" }} className="required">*</span>
-                            </Form.Label>
-                            <Form.Select
-                              required
-                              size="sm"
-                              style={{
-                                borderRadius: "10px",
-                                fontSize: "12px",
-                                border: "1px solid #4dd0e1",
-                              }}
-                              value={selectedInvoice.insurancecompany || ""}
-                              onChange={(e) =>
-                                setSelectedInvoice({
-                                  ...selectedInvoice,
-                                  insurancecompany: e.target.value,
-                                })
-                              }
-                            >
-                              <option value="">Select Company</option>
-                              {insurance.map((co, idx) => (
-                                <option key={idx} value={co.comapny_id}>
-                                  {co.companyname}
+                        <Col md={4}>
+                          <Form.Label
+                            style={{
+                              fontSize: "12px",
+                              fontWeight: "600",
+                              marginBottom: "2px",
+                            }}
+                            className="text-muted"
+                          >
+                            Insurance Company{" "}
+                            <span style={{ color: "red" }} className="required">
+                              *
+                            </span>
+                          </Form.Label>
+                          <Form.Select
+                            required
+                            size="sm"
+                            style={{
+                              borderRadius: "10px",
+                              fontSize: "12px",
+                              border: "1px solid #4dd0e1",
+                            }}
+                            value={selectedInvoice.insurancecompany || ""}
+                            onChange={(e) =>
+                              setSelectedInvoice({
+                                ...selectedInvoice,
+                                insurancecompany: e.target.value,
+                              })
+                            }
+                          >
+                            <option value="">Select Company</option>
+                            {insurance.map((co, idx) => (
+                              <option key={idx} value={co.comapny_id}>
+                                {co.companyname}
+                              </option>
+                            ))}
+                            {selectedInvoice.insurancecompany &&
+                              !insurance.some(
+                                (co) =>
+                                  co.comapny_id ==
+                                  selectedInvoice.insurancecompany,
+                              ) && (
+                                <option
+                                  value={selectedInvoice.insurancecompany}
+                                >
+                                  {selectedInvoice.insurance_company_name ||
+                                    selectedInvoice.insurancecompany}
                                 </option>
-                              ))}
-                              {selectedInvoice.insurancecompany &&
-                                !insurance.some(
-                                  (co) =>
-                                    co.comapny_id ==
-                                    selectedInvoice.insurancecompany,
-                                ) && (
-                                  <option
-                                    value={selectedInvoice.insurancecompany}
-                                  >
-                                    {selectedInvoice.insurance_company_name ||
-                                      selectedInvoice.insurancecompany}
-                                  </option>
-                                )}
-                            </Form.Select>
-                          </Col>
-                        )}
+                              )}
+                          </Form.Select>
+                        </Col>
+                      )}
 
                       {/* 2. Show TPA Dropdown */}
                       {(selectedInvoice.bill_Type === "insurance" ||
                         selectedInvoice.tpa) && (
-                          <Col md={4}>
-                            <Form.Label
-                              style={{
-                                fontSize: "12px",
-                                fontWeight: "600",
-                                marginBottom: "2px",
-                              }}
-                              className="text-muted"
-                            >
-                              TPA
-                            </Form.Label>
-                            <Form.Select
-                              size="sm"
-                              style={{
-                                borderRadius: "10px",
-                                fontSize: "12px",
-                                border: "1px solid #4dd0e1",
-                              }}
-                              value={selectedInvoice.tpa || ""}
-                              onChange={(e) =>
-                                setSelectedInvoice({
-                                  ...selectedInvoice,
-                                  tpa: e.target.value,
-                                })
-                              }
-                            >
-                              <option value="">Select TPA</option>
-                              {tpa.map((t, idx) => (
-                                <option key={idx} value={t.comapny_id}>
-                                  {t.companyname}
+                        <Col md={4}>
+                          <Form.Label
+                            style={{
+                              fontSize: "12px",
+                              fontWeight: "600",
+                              marginBottom: "2px",
+                            }}
+                            className="text-muted"
+                          >
+                            TPA
+                          </Form.Label>
+                          <Form.Select
+                            size="sm"
+                            style={{
+                              borderRadius: "10px",
+                              fontSize: "12px",
+                              border: "1px solid #4dd0e1",
+                            }}
+                            value={selectedInvoice.tpa || ""}
+                            onChange={(e) =>
+                              setSelectedInvoice({
+                                ...selectedInvoice,
+                                tpa: e.target.value,
+                              })
+                            }
+                          >
+                            <option value="">Select TPA</option>
+                            {tpa.map((t, idx) => (
+                              <option key={idx} value={t.comapny_id}>
+                                {t.companyname}
+                              </option>
+                            ))}
+                            {selectedInvoice.tpa &&
+                              !tpa.some(
+                                (t) => t.comapny_id == selectedInvoice.tpa,
+                              ) && (
+                                <option value={selectedInvoice.tpa}>
+                                  {selectedInvoice.tpa_name ||
+                                    selectedInvoice.tpa}
                                 </option>
-                              ))}
-                              {selectedInvoice.tpa &&
-                                !tpa.some(
-                                  (t) => t.comapny_id == selectedInvoice.tpa,
-                                ) && (
-                                  <option value={selectedInvoice.tpa}>
-                                    {selectedInvoice.tpa_name ||
-                                      selectedInvoice.tpa}
-                                  </option>
-                                )}
-                            </Form.Select>
-                          </Col>
-                        )}
+                              )}
+                          </Form.Select>
+                        </Col>
+                      )}
 
                       {/* 3. Bill Method - Only shown if type is insurance */}
                       {selectedInvoice.bill_Type === "insurance" && (
@@ -3520,7 +3754,10 @@ const IpdBillList = () => {
                             }}
                             className="text-muted"
                           >
-                            Bill Method <span style={{ color: "red" }} className="required">*</span>
+                            Bill Method{" "}
+                            <span style={{ color: "red" }} className="required">
+                              *
+                            </span>
                           </Form.Label>
                           <Form.Select
                             required
@@ -3563,78 +3800,87 @@ const IpdBillList = () => {
                       {/* 4. Deduction Fields (Discount/PDC) based on type/method */}
                       {(selectedInvoice.bill_Type === "non_insurance" ||
                         selectedInvoice.bill_Type === "charity") && (
-                          <Col md={4}>
-                            <Form.Label
+                        <Col md={4}>
+                          <Form.Label
+                            style={{
+                              fontSize: "12px",
+                              fontWeight: "600",
+                              marginBottom: "2px",
+                            }}
+                            className="text-muted"
+                          >
+                            {selectedInvoice.bill_Type === "charity"
+                              ? "Charity Discount Amount (₹)"
+                              : "Non-Insurance Discount Amount (₹)"}
+                          </Form.Label>
+                          <InputGroup size="sm" style={{ flexWrap: "nowrap" }}>
+                            <InputGroup.Text
                               style={{
+                                borderRadius: "10px",
                                 fontSize: "12px",
-                                fontWeight: "600",
-                                marginBottom: "2px",
+                                border: "1px solid #4dd0e1",
+                                borderRight: "none",
+                                backgroundColor: "#f8f9fa",
+                                borderTopRightRadius: 0,
+                                borderBottomRightRadius: 0,
+                                paddingRight: "5px",
                               }}
-                              className="text-muted"
                             >
-                              {selectedInvoice.bill_Type === "charity" ? "Charity Discount Amount (₹)" : "Non-Insurance Discount Amount (₹)"}
-                            </Form.Label>
-                            <InputGroup size="sm" style={{ flexWrap: "nowrap" }}>
-                              <InputGroup.Text
-                                style={{
-                                  borderRadius: "10px",
-                                  fontSize: "12px",
-                                  border: "1px solid #4dd0e1",
-                                  borderRight: "none",
-                                  backgroundColor: "#f8f9fa",
-                                  borderTopRightRadius: 0,
-                                  borderBottomRightRadius: 0,
-                                  paddingRight: "5px",
-                                }}
-                              >
-                                ₹
-                              </InputGroup.Text>
-                              <Form.Control
-                                size="sm"
-                                type="text"
-                                min="0"
-                                onWheel={(e) => e.target.blur()}
-                                onKeyDown={(e) => {
-                                  if (["e", "E", "+", "-", "."].includes(e.key)) {
-                                    e.preventDefault();
-                                  }
-                                }}
-                                style={{
-                                  borderRadius: "10px",
-                                  fontSize: "12px",
-                                  border: "1px solid #4dd0e1",
-                                  borderLeft: "none",
-                                  borderTopLeftRadius: 0,
-                                  borderBottomLeftRadius: 0,
-                                  paddingLeft: "5px",
-                                }}
-                                value={
-                                  modalInvoiceData.discount !== "" && modalInvoiceData.discount !== null && modalInvoiceData.discount !== undefined
-                                    ? Number(String(modalInvoiceData.discount).replace(/,/g, "")).toLocaleString("en-IN")
-                                    : ""
+                              ₹
+                            </InputGroup.Text>
+                            <Form.Control
+                              size="sm"
+                              type="text"
+                              min="0"
+                              onWheel={(e) => e.target.blur()}
+                              onKeyDown={(e) => {
+                                if (["e", "E", "+", "-", "."].includes(e.key)) {
+                                  e.preventDefault();
                                 }
-                                onChange={(e) => {
-                                  const val = e.target.value.replace(
-                                    /[^0-9]/g,
-                                    "",
-                                  );
-                                  setModalInvoiceData((prev) => ({
-                                    ...prev,
-                                    discount: val,
-                                    payableAmount: calculateActivePayableAmt(
-                                      selectedInvoice,
-                                      prev.Sub_Total,
-                                      val,
-                                      prev.pdc,
-                                      prev.bill_Type,
-                                      prev.bill_method,
-                                    ),
-                                  }));
-                                }}
-                              />
-                            </InputGroup>
-                          </Col>
-                        )}
+                              }}
+                              style={{
+                                borderRadius: "10px",
+                                fontSize: "12px",
+                                border: "1px solid #4dd0e1",
+                                borderLeft: "none",
+                                borderTopLeftRadius: 0,
+                                borderBottomLeftRadius: 0,
+                                paddingLeft: "5px",
+                              }}
+                              value={
+                                modalInvoiceData.discount !== "" &&
+                                modalInvoiceData.discount !== null &&
+                                modalInvoiceData.discount !== undefined
+                                  ? Number(
+                                      String(modalInvoiceData.discount).replace(
+                                        /,/g,
+                                        "",
+                                      ),
+                                    ).toLocaleString("en-IN")
+                                  : ""
+                              }
+                              onChange={(e) => {
+                                const val = e.target.value.replace(
+                                  /[^0-9]/g,
+                                  "",
+                                );
+                                setModalInvoiceData((prev) => ({
+                                  ...prev,
+                                  discount: val,
+                                  payableAmount: calculateActivePayableAmt(
+                                    selectedInvoice,
+                                    prev.Sub_Total,
+                                    val,
+                                    prev.pdc,
+                                    prev.bill_Type,
+                                    prev.bill_method,
+                                  ),
+                                }));
+                              }}
+                            />
+                          </InputGroup>
+                        </Col>
+                      )}
 
                       {selectedInvoice.bill_Type === "insurance" &&
                         selectedInvoice.bill_method === "PDC" && (
@@ -3689,8 +3935,15 @@ const IpdBillList = () => {
                                   paddingLeft: "5px",
                                 }}
                                 value={
-                                  modalInvoiceData.pdc !== "" && modalInvoiceData.pdc !== null && modalInvoiceData.pdc !== undefined
-                                    ? Number(String(modalInvoiceData.pdc).replace(/,/g, "")).toLocaleString("en-IN")
+                                  modalInvoiceData.pdc !== "" &&
+                                  modalInvoiceData.pdc !== null &&
+                                  modalInvoiceData.pdc !== undefined
+                                    ? Number(
+                                        String(modalInvoiceData.pdc).replace(
+                                          /,/g,
+                                          "",
+                                        ),
+                                      ).toLocaleString("en-IN")
                                     : ""
                                 }
                                 onChange={(e) => {
@@ -3815,7 +4068,7 @@ const IpdBillList = () => {
                           fontSize: "15px",
                           textAlign: "left",
                           color: "#00838f",
-                          fontWeight: "600"
+                          fontWeight: "600",
                         }}
                       >
                         Charge Breakdown
@@ -3835,7 +4088,10 @@ const IpdBillList = () => {
                           >
                             <span>{row.label || "Service"} :</span>
                             <span>
-                              ₹ {Math.round(parseFloat(row.value || 0)).toLocaleString("en-IN")}
+                              ₹{" "}
+                              {Math.round(
+                                parseFloat(row.value || 0),
+                              ).toLocaleString("en-IN")}
                             </span>
                           </div>
                         ))}
@@ -3853,7 +4109,10 @@ const IpdBillList = () => {
                       <div>
                         Total Amount:{" "}
                         <strong>
-                          ₹ {Math.round(parseFloat(modalInvoiceData.Sub_Total || 0)).toLocaleString("en-IN")}
+                          ₹{" "}
+                          {Math.round(
+                            parseFloat(modalInvoiceData.Sub_Total || 0),
+                          ).toLocaleString("en-IN")}
                         </strong>
                       </div>
                       {selectedInvoice.bill_Type === "interbranch" ? (
@@ -3864,10 +4123,11 @@ const IpdBillList = () => {
                             fontSize: "13px",
                             marginTop: "3px",
                             textAlign: "right",
-                            fontWeight: "600"
+                            fontWeight: "600",
                           }}
                         >
-                          * Interbranch bill will be synchronized across both clinic locations.
+                          * Interbranch bill will be synchronized across both
+                          clinic locations.
                         </div>
                       ) : (
                         <div style={{ color: "#d32f2f" }}>
@@ -3878,11 +4138,14 @@ const IpdBillList = () => {
                               : "Discount"}{" "}
                           (₹):{" "}
                           <strong>
-                            - ₹ {Math.round(parseFloat(
-                              (selectedInvoice.bill_method === "PDC"
-                                ? modalInvoiceData.pdc
-                                : modalInvoiceData.discount) || 0,
-                            )).toLocaleString("en-IN")}
+                            - ₹{" "}
+                            {Math.round(
+                              parseFloat(
+                                (selectedInvoice.bill_method === "PDC"
+                                  ? modalInvoiceData.pdc
+                                  : modalInvoiceData.discount) || 0,
+                              ),
+                            ).toLocaleString("en-IN")}
                           </strong>
                         </div>
                       )}
@@ -3898,7 +4161,10 @@ const IpdBillList = () => {
                           textAlign: "right",
                         }}
                       >
-                        Total Payable: ₹ {Math.round(parseFloat(modalInvoiceData.payableAmount || 0)).toLocaleString("en-IN")}
+                        Total Payable: ₹{" "}
+                        {Math.round(
+                          parseFloat(modalInvoiceData.payableAmount || 0),
+                        ).toLocaleString("en-IN")}
                       </div>
                     </div>
                   </Card.Body>
@@ -3962,7 +4228,12 @@ const IpdBillList = () => {
           <Form onSubmit={submitCashless} id="cashless-form">
             <Form.Group className="mb-10 d-flex align-items-center">
               <Form.Label
-                style={{ width: "35%", margin: 0, fontWeight: "600", fontSize: "13px" }}
+                style={{
+                  width: "35%",
+                  margin: 0,
+                  fontWeight: "600",
+                  fontSize: "13px",
+                }}
               >
                 Claim Number
               </Form.Label>
@@ -3988,7 +4259,12 @@ const IpdBillList = () => {
             </Form.Group>
             <Form.Group className="mb-10 d-flex align-items-center">
               <Form.Label
-                style={{ width: "35%", margin: 0, fontWeight: "600", fontSize: "13px" }}
+                style={{
+                  width: "35%",
+                  margin: 0,
+                  fontWeight: "600",
+                  fontSize: "13px",
+                }}
               >
                 Total Amount
               </Form.Label>
@@ -4012,7 +4288,13 @@ const IpdBillList = () => {
                 <Form.Control
                   type="text"
                   readOnly
-                  value={cashlessData.totalamt ? Number(String(cashlessData.totalamt).replace(/,/g, "")).toLocaleString("en-IN") : ""}
+                  value={
+                    cashlessData.totalamt
+                      ? Number(
+                          String(cashlessData.totalamt).replace(/,/g, ""),
+                        ).toLocaleString("en-IN")
+                      : ""
+                  }
                   style={{
                     backgroundColor: "#e9ecef",
                     cursor: "not-allowed",
@@ -4030,7 +4312,12 @@ const IpdBillList = () => {
             </Form.Group>
             <Form.Group className="mb-10 d-flex align-items-center">
               <Form.Label
-                style={{ width: "35%", margin: 0, fontWeight: "600", fontSize: "13px" }}
+                style={{
+                  width: "35%",
+                  margin: 0,
+                  fontWeight: "600",
+                  fontSize: "13px",
+                }}
               >
                 Approved Amount <span className="text-danger">*</span>
               </Form.Label>
@@ -4054,9 +4341,18 @@ const IpdBillList = () => {
                 <Form.Control
                   type="text"
                   required
-                  value={cashlessData.receivedamt ? Number(String(cashlessData.receivedamt).replace(/,/g, "")).toLocaleString("en-IN") : ""}
+                  value={
+                    cashlessData.receivedamt
+                      ? Number(
+                          String(cashlessData.receivedamt).replace(/,/g, ""),
+                        ).toLocaleString("en-IN")
+                      : ""
+                  }
                   onChange={(e) =>
-                    handleCashlessChange("receivedamt", e.target.value.replace(/[^0-9]/g, ""))
+                    handleCashlessChange(
+                      "receivedamt",
+                      e.target.value.replace(/[^0-9]/g, ""),
+                    )
                   }
                   style={{
                     border: "1px solid rgb(77, 208, 225)",
@@ -4073,7 +4369,12 @@ const IpdBillList = () => {
             </Form.Group>
             <Form.Group className="mb-10 d-flex align-items-center">
               <Form.Label
-                style={{ width: "35%", margin: 0, fontWeight: "600", fontSize: "13px" }}
+                style={{
+                  width: "35%",
+                  margin: 0,
+                  fontWeight: "600",
+                  fontSize: "13px",
+                }}
               >
                 CoPay <span className="text-danger">*</span>
               </Form.Label>
@@ -4097,8 +4398,19 @@ const IpdBillList = () => {
                 <Form.Control
                   type="text"
                   required
-                  value={cashlessData.coopay ? Number(String(cashlessData.coopay).replace(/,/g, "")).toLocaleString("en-IN") : ""}
-                  onChange={(e) => handleCashlessChange("coopay", e.target.value.replace(/[^0-9]/g, ""))}
+                  value={
+                    cashlessData.coopay
+                      ? Number(
+                          String(cashlessData.coopay).replace(/,/g, ""),
+                        ).toLocaleString("en-IN")
+                      : ""
+                  }
+                  onChange={(e) =>
+                    handleCashlessChange(
+                      "coopay",
+                      e.target.value.replace(/[^0-9]/g, ""),
+                    )
+                  }
                   style={{
                     border: "1px solid rgb(77, 208, 225)",
                     borderLeft: "none",
@@ -4114,7 +4426,12 @@ const IpdBillList = () => {
             </Form.Group>
             <Form.Group className="mb-10 d-flex align-items-center">
               <Form.Label
-                style={{ width: "35%", margin: 0, fontWeight: "600", fontSize: "13px" }}
+                style={{
+                  width: "35%",
+                  margin: 0,
+                  fontWeight: "600",
+                  fontSize: "13px",
+                }}
               >
                 Deduction Amount
               </Form.Label>
@@ -4138,7 +4455,13 @@ const IpdBillList = () => {
                 <Form.Control
                   type="text"
                   readOnly
-                  value={cashlessData.deductionamt ? Number(String(cashlessData.deductionamt).replace(/,/g, "")).toLocaleString("en-IN") : ""}
+                  value={
+                    cashlessData.deductionamt
+                      ? Number(
+                          String(cashlessData.deductionamt).replace(/,/g, ""),
+                        ).toLocaleString("en-IN")
+                      : ""
+                  }
                   style={{
                     backgroundColor: "#e9ecef",
                     cursor: "not-allowed",
@@ -4156,7 +4479,12 @@ const IpdBillList = () => {
             </Form.Group>
             <Form.Group className="mb-3 d-flex align-items-center">
               <Form.Label
-                style={{ width: "35%", margin: 0, fontWeight: "600", fontSize: "13px" }}
+                style={{
+                  width: "35%",
+                  margin: 0,
+                  fontWeight: "600",
+                  fontSize: "13px",
+                }}
               >
                 Payable Amount
               </Form.Label>
@@ -4180,7 +4508,13 @@ const IpdBillList = () => {
                 <Form.Control
                   type="text"
                   readOnly
-                  value={cashlessData.payableamt ? Number(String(cashlessData.payableamt).replace(/,/g, "")).toLocaleString("en-IN") : ""}
+                  value={
+                    cashlessData.payableamt
+                      ? Number(
+                          String(cashlessData.payableamt).replace(/,/g, ""),
+                        ).toLocaleString("en-IN")
+                      : ""
+                  }
                   style={{
                     backgroundColor: "#e9ecef",
                     cursor: "not-allowed",

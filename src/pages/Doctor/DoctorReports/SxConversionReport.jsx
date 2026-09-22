@@ -21,7 +21,15 @@ import { decodeJwt } from "../../Utility/decode-jwt";
 const BASE_URL = "http://194.195.117.79:5100/api";
 
 const formatValue = (val) => {
-  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+  if (
+    val === null ||
+    val === undefined ||
+    val === "" ||
+    val === "N/A" ||
+    val === 0 ||
+    val === "0" ||
+    val === "-"
+  ) {
     return "-";
   }
   return val;
@@ -66,7 +74,9 @@ const SxConversionReport = () => {
   const fetchDoctorList = async (locationStr) => {
     try {
       const loc = locationStr || currentLocation || "DP Road";
-      const res = await fetch(`${BASE_URL}/V1/doctor/reports/getDoctors?location=${encodeURIComponent(loc)}`);
+      const res = await fetch(
+        `${BASE_URL}/V1/doctor/reports/getDoctors?location=${encodeURIComponent(loc)}`,
+      );
       const result = await res.json();
       if (result.statusCode === 200 && Array.isArray(result.data)) {
         setDoctorOptions(result.data);
@@ -94,20 +104,23 @@ const SxConversionReport = () => {
         loc = payload?.jobLocation || "DP Road";
       }
 
-      const res = await fetch(`${BASE_URL}/V1/doctor/reports/getSxConversionReport`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const res = await fetch(
+        `${BASE_URL}/V1/doctor/reports/getSxConversionReport`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            location: loc || "DP Road",
+            Fromdate: fDate,
+            Todate: tDate,
+            doctorId: selectedDoctor,
+            role: selectedRole,
+          }),
         },
-        body: JSON.stringify({
-          location: loc || "DP Road",
-          Fromdate: fDate,
-          Todate: tDate,
-          doctorId: selectedDoctor,
-          role: selectedRole,
-        }),
-      });
+      );
 
       const result = await res.json();
       if (result.statusCode === 200 && Array.isArray(result.data)) {
@@ -150,7 +163,7 @@ const SxConversionReport = () => {
     const excelData = reportData.map((item, index) => ({
       "Sr No": index + 1,
       "Doctor Name": item.DoctorName || "-",
-      "Role": item.role || "-",
+      Role: item.role || "-",
       "Total Consultations": item.totalConsultations ?? 0,
       "Surgeries Advised": item.surgeriesAdvised ?? 0,
       "Surgeries Done": item.surgeriesDone ?? 0,
@@ -161,7 +174,10 @@ const SxConversionReport = () => {
     const worksheet = XLSX.utils.json_to_sheet(excelData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "SX Conversion Report");
-    XLSX.writeFile(workbook, `SX_Conversion_Report_${fromDate}_to_${toDate}.xlsx`);
+    XLSX.writeFile(
+      workbook,
+      `SX_Conversion_Report_${fromDate}_to_${toDate}.xlsx`,
+    );
   };
 
   const handlePrint = () => {
@@ -178,22 +194,64 @@ const SxConversionReport = () => {
     );
   });
 
-  const totalConsultationsSum = filteredData.reduce((sum, r) => sum + (Number(r.totalConsultations) || 0), 0);
-  const surgeriesAdvisedSum = filteredData.reduce((sum, r) => sum + (Number(r.surgeriesAdvised) || 0), 0);
-  const surgeriesDoneSum = filteredData.reduce((sum, r) => sum + (Number(r.surgeriesDone) || 0), 0);
+  const totalConsultationsSum = filteredData.reduce(
+    (sum, r) => sum + (Number(r.totalConsultations) || 0),
+    0,
+  );
+  const surgeriesAdvisedSum = filteredData.reduce(
+    (sum, r) => sum + (Number(r.surgeriesAdvised) || 0),
+    0,
+  );
+  const surgeriesDoneSum = filteredData.reduce(
+    (sum, r) => sum + (Number(r.surgeriesDone) || 0),
+    0,
+  );
 
-  const overallAdvSxPct = totalConsultationsSum > 0 ? ((surgeriesAdvisedSum / totalConsultationsSum) * 100).toFixed(1) : 0;
-  const overallSxConversionPct = surgeriesAdvisedSum > 0 ? ((surgeriesDoneSum / surgeriesAdvisedSum) * 100).toFixed(1) : 0;
+  const overallAdvSxPct =
+    totalConsultationsSum > 0
+      ? ((surgeriesAdvisedSum / totalConsultationsSum) * 100).toFixed(1)
+      : 0;
+  const overallSxConversionPct =
+    surgeriesAdvisedSum > 0
+      ? ((surgeriesDoneSum / surgeriesAdvisedSum) * 100).toFixed(1)
+      : 0;
 
   const footerGroup = (
     <ColumnGroup>
       <Row>
-        <Column footer="Total" colSpan={3} footerStyle={{ textAlign: "center", fontWeight: "bold" }} />
-        <Column footer={totalConsultationsSum} footerStyle={{ textAlign: "center", fontWeight: "bold" }} />
-        <Column footer={surgeriesAdvisedSum} footerStyle={{ textAlign: "center", fontWeight: "bold" }} />
-        <Column footer={surgeriesDoneSum} footerStyle={{ textAlign: "center", fontWeight: "bold" }} />
-        <Column footer={`${overallAdvSxPct}%`} footerStyle={{ textAlign: "center", fontWeight: "bold", color: "#006064" }} />
-        <Column footer={`${overallSxConversionPct}%`} footerStyle={{ textAlign: "center", fontWeight: "bold", color: "#2e7d32" }} />
+        <Column
+          footer="Total"
+          colSpan={3}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={totalConsultationsSum}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={surgeriesAdvisedSum}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={surgeriesDoneSum}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={`${overallAdvSxPct}%`}
+          footerStyle={{
+            textAlign: "center",
+            fontWeight: "bold",
+            color: "#006064",
+          }}
+        />
+        <Column
+          footer={`${overallSxConversionPct}%`}
+          footerStyle={{
+            textAlign: "center",
+            fontWeight: "bold",
+            color: "#2e7d32",
+          }}
+        />
       </Row>
     </ColumnGroup>
   );
@@ -250,7 +308,10 @@ const SxConversionReport = () => {
           </div>
         </div>
       </Col>
-      <Col style={{ padding: "0 5px" }} className="d-flex justify-content-end gap-2">
+      <Col
+        style={{ padding: "0 5px" }}
+        className="d-flex justify-content-end gap-2"
+      >
         <button
           className="btn btn-success btn-sm"
           onClick={exportToExcel}
@@ -317,8 +378,15 @@ const SxConversionReport = () => {
                 >
                   <h4 style={{ margin: 0 }}>Surgery (SX) Conversion Report</h4>
                   {fromDate && toDate && (
-                    <div style={{ fontSize: "13px", fontWeight: "normal", marginTop: "5px" }}>
-                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "normal",
+                        marginTop: "5px",
+                      }}
+                    >
+                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to{" "}
+                      <b>{formatDateDisplay(toDate)}</b>
                     </div>
                   )}
                 </Card.Header>
@@ -452,7 +520,11 @@ const SxConversionReport = () => {
                       </Col>
 
                       {/* Search & Reset Buttons */}
-                      <Col md={2} className="d-flex justify-content-end gap-2 mt-2" style={{ padding: "0 5px" }}>
+                      <Col
+                        md={2}
+                        className="d-flex justify-content-end gap-2 mt-2"
+                        style={{ padding: "0 5px" }}
+                      >
                         <button
                           className="btn btn-primary"
                           type="submit"
@@ -522,7 +594,11 @@ const SxConversionReport = () => {
                         field="role"
                         header="Role"
                         body={(rowData) => (
-                          <Badge bg={rowData.role === "Main" ? "primary" : "info"} className="text-white" style={{ color: "#ffffff", fontWeight: "600" }}>
+                          <Badge
+                            bg={rowData.role === "Main" ? "primary" : "info"}
+                            className="text-white"
+                            style={{ color: "#ffffff", fontWeight: "600" }}
+                          >
                             {rowData.role || "Main"}
                           </Badge>
                         )}
@@ -531,32 +607,56 @@ const SxConversionReport = () => {
                       <Column
                         field="totalConsultations"
                         header="Total Consultations"
-                        body={(rowData) => formatValue(rowData.totalConsultations)}
+                        body={(rowData) =>
+                          formatValue(rowData.totalConsultations)
+                        }
                         style={{ width: "140px", textAlign: "center" }}
                       />
                       <Column
                         field="surgeriesAdvised"
                         header="Surgeries Advised"
-                        body={(rowData) => formatValue(rowData.surgeriesAdvised)}
-                        style={{ width: "140px", textAlign: "center", color: "#006064", fontWeight: "600" }}
+                        body={(rowData) =>
+                          formatValue(rowData.surgeriesAdvised)
+                        }
+                        style={{
+                          width: "140px",
+                          textAlign: "center",
+                          color: "#006064",
+                          fontWeight: "600",
+                        }}
                       />
                       <Column
                         field="surgeriesDone"
                         header="Surgeries Done"
                         body={(rowData) => formatValue(rowData.surgeriesDone)}
-                        style={{ width: "130px", textAlign: "center", color: "#2e7d32", fontWeight: "600" }}
+                        style={{
+                          width: "130px",
+                          textAlign: "center",
+                          color: "#2e7d32",
+                          fontWeight: "600",
+                        }}
                       />
                       <Column
                         field="advSxPct"
                         header="Adv sx % (Advised/Consulted)"
                         body={(rowData) => `${rowData.advSxPct ?? 0}%`}
-                        style={{ width: "160px", textAlign: "center", fontWeight: "bold", color: "#006064" }}
+                        style={{
+                          width: "160px",
+                          textAlign: "center",
+                          fontWeight: "bold",
+                          color: "#006064",
+                        }}
                       />
                       <Column
                         field="sxConversionPct"
                         header="SX Conversion % (Done/Advised sx)"
                         body={(rowData) => `${rowData.sxConversionPct ?? 0}%`}
-                        style={{ width: "170px", textAlign: "center", fontWeight: "bold", color: "#2e7d32" }}
+                        style={{
+                          width: "170px",
+                          textAlign: "center",
+                          fontWeight: "bold",
+                          color: "#2e7d32",
+                        }}
                       />
                     </DataTable>
                   </div>
@@ -569,11 +669,17 @@ const SxConversionReport = () => {
                           <th style={{ width: "50px" }}>Sr No</th>
                           <th style={{ width: "160px" }}>Doctor Name</th>
                           <th style={{ width: "80px" }}>Role</th>
-                          <th style={{ width: "120px" }}>Total Consultations</th>
+                          <th style={{ width: "120px" }}>
+                            Total Consultations
+                          </th>
                           <th style={{ width: "120px" }}>Surgeries Advised</th>
                           <th style={{ width: "110px" }}>Surgeries Done</th>
-                          <th style={{ width: "140px" }}>Adv sx % (Adv/Consult)</th>
-                          <th style={{ width: "140px" }}>SX Conversion % (Done/Adv)</th>
+                          <th style={{ width: "140px" }}>
+                            Adv sx % (Adv/Consult)
+                          </th>
+                          <th style={{ width: "140px" }}>
+                            SX Conversion % (Done/Adv)
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
@@ -585,8 +691,12 @@ const SxConversionReport = () => {
                             <td>{formatValue(item.totalConsultations)}</td>
                             <td>{formatValue(item.surgeriesAdvised)}</td>
                             <td>{formatValue(item.surgeriesDone)}</td>
-                            <td style={{ fontWeight: "bold" }}>{item.advSxPct ?? 0}%</td>
-                            <td style={{ fontWeight: "bold" }}>{item.sxConversionPct ?? 0}%</td>
+                            <td style={{ fontWeight: "bold" }}>
+                              {item.advSxPct ?? 0}%
+                            </td>
+                            <td style={{ fontWeight: "bold" }}>
+                              {item.sxConversionPct ?? 0}%
+                            </td>
                           </tr>
                         ))}
                         <tr className="print-totals-row">

@@ -13,7 +13,15 @@ import { decodeJwt } from "../../Utility/decode-jwt";
 const BASE_URL = "http://194.195.117.79:5100/api";
 
 const formatValue = (val) => {
-  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+  if (
+    val === null ||
+    val === undefined ||
+    val === "" ||
+    val === "N/A" ||
+    val === 0 ||
+    val === "0" ||
+    val === "-"
+  ) {
     return "-";
   }
   return val;
@@ -286,8 +294,15 @@ const DNTReport = () => {
                     DNT / Cancelled Appointments Report
                   </h4>
                   {fromDate && toDate && (
-                    <div style={{ fontSize: "13px", fontWeight: "normal", marginTop: "5px" }}>
-                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "normal",
+                        marginTop: "5px",
+                      }}
+                    >
+                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to{" "}
+                      <b>{formatDateDisplay(toDate)}</b>
                     </div>
                   )}
                 </Card.Header>
@@ -489,7 +504,15 @@ const DNTReport = () => {
                           <th style={{ width: "18%" }}>Doctor</th>
                           <th style={{ width: "11%" }}>Scheduled Time</th>
                           {/* <th>Status</th> */}
-                          <th style={{ width: "15%", wordBreak: "break-word", whiteSpace: "normal" }}>Reason</th>
+                          <th
+                            style={{
+                              width: "15%",
+                              wordBreak: "break-word",
+                              whiteSpace: "normal",
+                            }}
+                          >
+                            Reason
+                          </th>
                           <th style={{ width: "9%" }}>Rebooked?</th>
                         </tr>
                       </thead>
@@ -504,7 +527,12 @@ const DNTReport = () => {
                               <td>{formatValue(item.doctor_name)}</td>
                               <td>{formatValue(item.scheduled_time)}</td>
                               {/* <td>{formatValue(item.status)}</td> */}
-                              <td style={{ wordBreak: "break-word", whiteSpace: "normal" }}>
+                              <td
+                                style={{
+                                  wordBreak: "break-word",
+                                  whiteSpace: "normal",
+                                }}
+                              >
                                 {formatValue(item.reason)}
                               </td>
                               <td>{formatValue(item.rebooked)}</td>

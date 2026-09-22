@@ -14,14 +14,29 @@ import { decodeJwt } from "../../Utility/decode-jwt";
 const BASE_URL = "http://194.195.117.79:5100/api";
 
 const formatValue = (val) => {
-  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+  if (
+    val === null ||
+    val === undefined ||
+    val === "" ||
+    val === "N/A" ||
+    val === 0 ||
+    val === "0" ||
+    val === "-"
+  ) {
     return "-";
   }
   return val;
 };
 
 const formatAmountValue = (val) => {
-  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0") {
+  if (
+    val === null ||
+    val === undefined ||
+    val === "" ||
+    val === "N/A" ||
+    val === 0 ||
+    val === "0"
+  ) {
     return "-";
   }
   const num = Math.round(parseFloat(String(val).replace(/,/g, "")) || 0);
@@ -80,7 +95,7 @@ const InsuranceDueReport = () => {
       acc.dueAmt += Number(curr.dueAmt) || 0;
       return acc;
     },
-    { totalAmt: 0, approvedAmt: 0, receivedAmt: 0, dueAmt: 0 }
+    { totalAmt: 0, approvedAmt: 0, receivedAmt: 0, dueAmt: 0 },
   );
 
   const [totals, setTotals] = useState({
@@ -361,8 +376,15 @@ const InsuranceDueReport = () => {
                 >
                   <h4 style={{ margin: 0 }}>Insurance Due Report</h4>
                   {fromDate && toDate && (
-                    <div style={{ fontSize: "13px", fontWeight: "normal", marginTop: "5px" }}>
-                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "normal",
+                        marginTop: "5px",
+                      }}
+                    >
+                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to{" "}
+                      <b>{formatDateDisplay(toDate)}</b>
                     </div>
                   )}
                 </Card.Header>
@@ -467,15 +489,45 @@ const InsuranceDueReport = () => {
                     <Column
                       field="date"
                       header="Date"
-                      body={(rowData) => formatValue(formatDateDisplay(rowData.date))}
+                      body={(rowData) =>
+                        formatValue(formatDateDisplay(rowData.date))
+                      }
                     />
-                    <Column field="patientName" header="Patient Name" body={(rowData) => formatValue(rowData.patientName)} />
-                    <Column field="companyName" header="Company Name" body={(rowData) => formatValue(rowData.companyName)} />
-                    <Column field="invoiceNo" header="Invoice No" body={(rowData) => formatValue(rowData.invoiceNo)} />
-                    <Column field="totalAmt" header="Total Amt" body={(rowData) => formatAmountValue(rowData.totalAmt)} />
-                    <Column field="approvedAmt" header="Approved Amt" body={(rowData) => formatAmountValue(rowData.approvedAmt)} />
-                    <Column field="receivedAmt" header="Received Amt" body={(rowData) => formatAmountValue(rowData.receivedAmt)} />
-                    <Column field="dueAmt" header="Due Amt" body={(rowData) => formatAmountValue(rowData.dueAmt)} />
+                    <Column
+                      field="patientName"
+                      header="Patient Name"
+                      body={(rowData) => formatValue(rowData.patientName)}
+                    />
+                    <Column
+                      field="companyName"
+                      header="Company Name"
+                      body={(rowData) => formatValue(rowData.companyName)}
+                    />
+                    <Column
+                      field="invoiceNo"
+                      header="Invoice No"
+                      body={(rowData) => formatValue(rowData.invoiceNo)}
+                    />
+                    <Column
+                      field="totalAmt"
+                      header="Total Amt"
+                      body={(rowData) => formatAmountValue(rowData.totalAmt)}
+                    />
+                    <Column
+                      field="approvedAmt"
+                      header="Approved Amt"
+                      body={(rowData) => formatAmountValue(rowData.approvedAmt)}
+                    />
+                    <Column
+                      field="receivedAmt"
+                      header="Received Amt"
+                      body={(rowData) => formatAmountValue(rowData.receivedAmt)}
+                    />
+                    <Column
+                      field="dueAmt"
+                      header="Due Amt"
+                      body={(rowData) => formatAmountValue(rowData.dueAmt)}
+                    />
                   </DataTable>
 
                   {/* Print-only container displaying all rows */}

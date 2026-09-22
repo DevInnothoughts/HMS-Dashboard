@@ -275,7 +275,10 @@ export default function Login() {
               >
                 <option value="">Select Location</option>
                 {LOCATIONS_LIST.map((loc, index) => (
-                  <option key={index} value={typeof loc === "object" ? loc.value : loc}>
+                  <option
+                    key={index}
+                    value={typeof loc === "object" ? loc.value : loc}
+                  >
                     {typeof loc === "object" ? loc.label : loc}
                   </option>
                 ))}

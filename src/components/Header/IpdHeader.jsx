@@ -29,8 +29,8 @@ export default function IpdHeader() {
       p.surgery_datetime && p.surgery_datetime !== "Not Scheduled"
         ? p.surgery_datetime
         : p.surgery_date
-        ? `${p.surgery_date} ${p.surgery_time || ""}`.trim()
-        : null;
+          ? `${p.surgery_date} ${p.surgery_time || ""}`.trim()
+          : null;
 
     const dateFormats = [
       "DD-MM-YYYY HH:mm",
@@ -87,7 +87,7 @@ export default function IpdHeader() {
       ];
 
       const responses = await Promise.allSettled(
-        endpoints.map((url) => fetch(url, { headers }))
+        endpoints.map((url) => fetch(url, { headers })),
       );
 
       let allRawData = [];
@@ -99,10 +99,10 @@ export default function IpdHeader() {
             const list = Array.isArray(json)
               ? json
               : Array.isArray(json?.data)
-              ? json.data
-              : Array.isArray(json?.result)
-              ? json.result
-              : [];
+                ? json.data
+                : Array.isArray(json?.result)
+                  ? json.result
+                  : [];
             if (Array.isArray(list) && list.length > 0) {
               allRawData.push(...list);
             }
@@ -116,29 +116,38 @@ export default function IpdHeader() {
       const getDedupeKey = (item) => {
         const uid = String(
           item.uid ||
-          item.uhid ||
-          item.patient_uid ||
-          item.uid_no ||
-          item.patient_id ||
-          ""
-        ).trim().toLowerCase();
+            item.uhid ||
+            item.patient_uid ||
+            item.uid_no ||
+            item.patient_id ||
+            "",
+        )
+          .trim()
+          .toLowerCase();
 
         const phone = String(
-          item.patient_phone || item.phone || item.contact || ""
-        ).replace(/\D/g, "").slice(-10);
+          item.patient_phone || item.phone || item.contact || "",
+        )
+          .replace(/\D/g, "")
+          .slice(-10);
 
         const name = String(
-          item.name || item.patient_name || item.patientName || ""
-        ).trim().toLowerCase();
+          item.name || item.patient_name || item.patientName || "",
+        )
+          .trim()
+          .toLowerCase();
 
         const admNo = String(
-          item.admission_no || item.adm_no || item.admissionNo || ""
-        ).trim().toLowerCase();
+          item.admission_no || item.adm_no || item.admissionNo || "",
+        )
+          .trim()
+          .toLowerCase();
 
         if (uid && uid !== "0") return `uid_${uid}`;
         if (phone && name) return `person_${phone}_${name}`;
         if (phone) return `phone_${phone}`;
-        if (admNo && admNo !== "0" && admNo !== "pending") return `adm_${admNo}`;
+        if (admNo && admNo !== "0" && admNo !== "pending")
+          return `adm_${admNo}`;
 
         return `id_${item.id || item.appointment_id || Math.random()}`;
       };
@@ -151,7 +160,8 @@ export default function IpdHeader() {
         } else {
           // Merge records for the same key, keeping valid admission numbers and cancellation status
           const existing = uniqueMap.get(key);
-          const existingAdm = existing.admission_no || existing.adm_no || existing.admissionNo;
+          const existingAdm =
+            existing.admission_no || existing.adm_no || existing.admissionNo;
           const newAdm = item.admission_no || item.adm_no || item.admissionNo;
 
           const existingHasAdm =
@@ -159,9 +169,7 @@ export default function IpdHeader() {
             String(existingAdm) !== "0" &&
             String(existingAdm).trim() !== "";
           const newHasAdm =
-            newAdm &&
-            String(newAdm) !== "0" &&
-            String(newAdm).trim() !== "";
+            newAdm && String(newAdm) !== "0" && String(newAdm).trim() !== "";
 
           const merged = { ...existing, ...item };
           if (existingHasAdm && !newHasAdm) {
@@ -200,8 +208,8 @@ export default function IpdHeader() {
           p.surgery_datetime && p.surgery_datetime !== "Not Scheduled"
             ? p.surgery_datetime
             : p.surgery_date
-            ? `${p.surgery_date} ${p.surgery_time || ""}`.trim()
-            : null;
+              ? `${p.surgery_date} ${p.surgery_time || ""}`.trim()
+              : null;
 
         if (sxVal) {
           const parsedSx = moment(sxVal, dateFormats);
@@ -214,10 +222,10 @@ export default function IpdHeader() {
           p.admission_datetime && p.admission_datetime !== "NOT ADMITTED"
             ? p.admission_datetime
             : p.adm_date
-            ? `${p.adm_date} ${p.adm_time || ""}`.trim()
-            : p.admission_date
-            ? `${p.admission_date}`.trim()
-            : p.created_at;
+              ? `${p.adm_date} ${p.adm_time || ""}`.trim()
+              : p.admission_date
+                ? `${p.admission_date}`.trim()
+                : p.created_at;
 
         if (admVal) {
           const parsedAdm = moment(admVal, dateFormats);
@@ -249,10 +257,7 @@ export default function IpdHeader() {
       const isConfirmedPatient = (p) => {
         const admNo = p.admission_no;
         return Boolean(
-          admNo &&
-          admNo !== 0 &&
-          admNo !== "0" &&
-          String(admNo).trim() !== ""
+          admNo && admNo !== 0 && admNo !== "0" && String(admNo).trim() !== "",
         );
       };
 
@@ -544,12 +549,12 @@ export default function IpdHeader() {
                                       cursor: "pointer",
                                     }}
                                     onMouseOver={(e) =>
-                                    (e.currentTarget.style.background =
-                                      "#f0fff4")
+                                      (e.currentTarget.style.background =
+                                        "#f0fff4")
                                     }
                                     onMouseOut={(e) =>
-                                    (e.currentTarget.style.background =
-                                      "transparent")
+                                      (e.currentTarget.style.background =
+                                        "transparent")
                                     }
                                   >
                                     <div
@@ -794,12 +799,12 @@ export default function IpdHeader() {
                                       cursor: "pointer",
                                     }}
                                     onMouseOver={(e) =>
-                                    (e.currentTarget.style.background =
-                                      "#fffbeb")
+                                      (e.currentTarget.style.background =
+                                        "#fffbeb")
                                     }
                                     onMouseOut={(e) =>
-                                    (e.currentTarget.style.background =
-                                      "transparent")
+                                      (e.currentTarget.style.background =
+                                        "transparent")
                                     }
                                   >
                                     <div
@@ -1038,12 +1043,12 @@ export default function IpdHeader() {
                                       cursor: "pointer",
                                     }}
                                     onMouseOver={(e) =>
-                                    (e.currentTarget.style.background =
-                                      "#fef2f2")
+                                      (e.currentTarget.style.background =
+                                        "#fef2f2")
                                     }
                                     onMouseOut={(e) =>
-                                    (e.currentTarget.style.background =
-                                      "transparent")
+                                      (e.currentTarget.style.background =
+                                        "transparent")
                                     }
                                   >
                                     <div

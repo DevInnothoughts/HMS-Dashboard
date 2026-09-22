@@ -66,7 +66,8 @@ const formatPatientType = (type) => {
   const upper = type.toUpperCase();
   if (upper === "NEW") return "New";
   if (upper === "FOLLOW") return "Follow";
-  if (upper === "POSTOPERATIVE" || upper === "POST OPERATIVE") return "Postoperative";
+  if (upper === "POSTOPERATIVE" || upper === "POST OPERATIVE")
+    return "Postoperative";
   if (upper === "MCDPA") return "MCDPA";
   if (upper === "OTHER") return "Other";
   return type;
@@ -141,18 +142,19 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
     padding: "1px 3px",
     minWidth: "33px",
     borderRadius: "4px",
-    border: `1px solid ${disabled
-      ? "#ddd"
-      : isDanger
-        ? "#dc3545"
-        : isEdit
-          ? "#007bff"
-          : isConfirm
-            ? "#28a745"
-            : isBlueAction
-              ? "#0babb9ff"
-              : defaultBorder
-      }`,
+    border: `1px solid ${
+      disabled
+        ? "#ddd"
+        : isDanger
+          ? "#dc3545"
+          : isEdit
+            ? "#007bff"
+            : isConfirm
+              ? "#28a745"
+              : isBlueAction
+                ? "#0babb9ff"
+                : defaultBorder
+    }`,
     backgroundColor: disabled ? "#f8f9fa" : defaultBg,
     color: disabled
       ? "#aaa"
@@ -206,16 +208,17 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
               ? "#15cbd8ff"
               : "#e0e0e0";
 
-      e.currentTarget.style.border = `1px solid ${isDanger
-        ? "#c82333"
-        : isEdit
-          ? "#007bff"
-          : isConfirm
-            ? "#218838"
-            : isBlueAction
-              ? "#007bff"
-              : "#b0b0b0"
-        }`;
+      e.currentTarget.style.border = `1px solid ${
+        isDanger
+          ? "#c82333"
+          : isEdit
+            ? "#007bff"
+            : isConfirm
+              ? "#218838"
+              : isBlueAction
+                ? "#007bff"
+                : "#b0b0b0"
+      }`;
 
       e.currentTarget.style.color = "white";
       if (e.currentTarget.children[0]) {
@@ -237,16 +240,17 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
               ? "#23adb2ff"
               : defaultColor;
 
-      e.currentTarget.style.border = `1px solid ${isDanger
-        ? "#dc3545"
-        : isEdit
-          ? "#007bff"
-          : isConfirm
-            ? "#28a745"
-            : isBlueAction
-              ? "#007bff"
-              : defaultBorder
-        }`;
+      e.currentTarget.style.border = `1px solid ${
+        isDanger
+          ? "#dc3545"
+          : isEdit
+            ? "#007bff"
+            : isConfirm
+              ? "#28a745"
+              : isBlueAction
+                ? "#007bff"
+                : defaultBorder
+      }`;
 
       if (e.currentTarget.children[0]) {
         e.currentTarget.children[0].style.stroke = iconColor;
@@ -299,52 +303,70 @@ export default function OpdAppointmentList() {
     if (!data) return;
     try {
       sessionStorage.setItem("masterPrintData", JSON.stringify(data));
-      window.open(`${window.location.origin}/hms/diagnosis-card-preview`, "_blank");
+      window.open(
+        `${window.location.origin}/hms/diagnosis-card-preview`,
+        "_blank",
+      );
     } catch (e) {
       console.error("Error opening diagnosis card preview in new tab:", e);
     }
   };
 
-  const normalizeLoc = (loc) => (loc ? String(loc).trim().toLowerCase().replace(/[^a-z0-9]/g, "") : "");
+  const normalizeLoc = (loc) =>
+    loc
+      ? String(loc)
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "")
+      : "";
 
-  const checkMasterVisitsForList = useCallback(async (list) => {
-    if (!list || list.length === 0) return;
-    const uniquePhones = Array.from(
-      new Set(
-        list
-          .map((app) => {
-            const p = app.patient_phone || app.phone;
-            return p ? String(p).replace(/\D/g, "").slice(-10) : "";
-          })
-          .filter((p) => p && p.length >= 10)
-      )
-    );
+  const checkMasterVisitsForList = useCallback(
+    async (list) => {
+      if (!list || list.length === 0) return;
+      const uniquePhones = Array.from(
+        new Set(
+          list
+            .map((app) => {
+              const p = app.patient_phone || app.phone;
+              return p ? String(p).replace(/\D/g, "").slice(-10) : "";
+            })
+            .filter((p) => p && p.length >= 10),
+        ),
+      );
 
-    if (uniquePhones.length === 0) return;
+      if (uniquePhones.length === 0) return;
 
-    const currNorm = normalizeLoc(currentLocation);
+      const currNorm = normalizeLoc(currentLocation);
 
-    const newMap = {};
-    await Promise.all(
-      uniquePhones.map(async (phone) => {
-        try {
-          const res = await fetch(`${BASE_URL}/V1/appointment/checkMasterPatient?patient_phone=${phone}`);
-          if (res.ok) {
-            const data = await res.json();
-            if (data.statusCode === 200 && data.data && data.data.masterPatient) {
-              const mp = data.data.masterPatient;
-              if (mp.location && normalizeLoc(mp.location) !== currNorm) {
-                newMap[phone] = mp;
+      const newMap = {};
+      await Promise.all(
+        uniquePhones.map(async (phone) => {
+          try {
+            const res = await fetch(
+              `${BASE_URL}/V1/appointment/checkMasterPatient?patient_phone=${phone}`,
+            );
+            if (res.ok) {
+              const data = await res.json();
+              if (
+                data.statusCode === 200 &&
+                data.data &&
+                data.data.masterPatient
+              ) {
+                const mp = data.data.masterPatient;
+                if (mp.location && normalizeLoc(mp.location) !== currNorm) {
+                  newMap[phone] = mp;
+                }
               }
             }
+          } catch (e) {
+            // ignore
           }
-        } catch (e) {
-          // ignore
-        }
-      })
-    );
-    setMasterVisitMap((prev) => ({ ...prev, ...newMap }));
-  }, [currentLocation]);
+        }),
+      );
+      setMasterVisitMap((prev) => ({ ...prev, ...newMap }));
+    },
+    [currentLocation],
+  );
 
   const triggerMasterPrint = useReactToPrint({
     contentRef: masterPrintRef,
@@ -416,10 +438,14 @@ export default function OpdAppointmentList() {
 
   const calculateTotals = () => {
     const subtotal = billingItems.reduce(
-      (acc, curr) => acc + (parseFloat(String(curr.amount || "").replace(/,/g, "")) || 0),
+      (acc, curr) =>
+        acc + (parseFloat(String(curr.amount || "").replace(/,/g, "")) || 0),
       0,
     );
-    const payable = subtotal - (parseFloat(String(receiptForm.discountAmt || "").replace(/,/g, "")) || 0);
+    const payable =
+      subtotal -
+      (parseFloat(String(receiptForm.discountAmt || "").replace(/,/g, "")) ||
+        0);
     return { subtotal, payable };
   };
 
@@ -434,7 +460,6 @@ export default function OpdAppointmentList() {
 
   const handleGenerateReceipt = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
-
 
     try {
       if (!selectedAppointment) {
@@ -454,14 +479,21 @@ export default function OpdAppointmentList() {
 
       const consultationData = billingItems
         .filter((item) => item.label)
-        .map((item) => [item.label, parseFloat(String(item.amount || "").replace(/,/g, "")) || 0]);
+        .map((item) => [
+          item.label,
+          parseFloat(String(item.amount || "").replace(/,/g, "")) || 0,
+        ]);
 
       const payload = {
         appointment_id: selectedAppointment.appointment_id,
         doctor_id: receiptForm.doctor_id,
-        appointment_date: (selectedAppointment.appointment_timestamp && moment(selectedAppointment.appointment_timestamp).isValid())
-          ? moment(selectedAppointment.appointment_timestamp).format("DD-MM-YYYY")
-          : moment(new Date()).format("DD-MM-YYYY"),
+        appointment_date:
+          selectedAppointment.appointment_timestamp &&
+          moment(selectedAppointment.appointment_timestamp).isValid()
+            ? moment(selectedAppointment.appointment_timestamp).format(
+                "DD-MM-YYYY",
+              )
+            : moment(new Date()).format("DD-MM-YYYY"),
         consultations: consultationData,
         paymentmode:
           receiptForm.paymentMode === "card"
@@ -476,15 +508,15 @@ export default function OpdAppointmentList() {
             ? "Registration"
             : receiptForm.registrationType,
         expectedamt: parseFloat(payable) || 0,
-        discountamt: parseFloat(String(receiptForm.discountAmt || "").replace(/,/g, "")) || 0,
+        discountamt:
+          parseFloat(String(receiptForm.discountAmt || "").replace(/,/g, "")) ||
+          0,
         discountnote: receiptForm.discountNote || "",
         comment: receiptForm.regComment || "",
         PosMachine: receiptForm.posTerminal,
         MachineType: "OPD",
         madeby: receiptForm.madeby || null,
       };
-
-
 
       const response = await fetch(
         `${BASE_URL}/V1/appointment/saveReceipt?location=${currentLocation}`,
@@ -503,7 +535,7 @@ export default function OpdAppointmentList() {
         navigate("/receipt-list", {
           state: {
             printReceiptId: result.data?.receipt_id,
-            receipt_generated: true,     // ← tells OpdAppointmentList to refresh on back-nav
+            receipt_generated: true, // ← tells OpdAppointmentList to refresh on back-nav
             returnTo: "/opd-appointment-list",
           },
         });
@@ -575,7 +607,6 @@ export default function OpdAppointmentList() {
       showLoaderOnConfirm: true,
       preConfirm: async () => {
         try {
-
           const response = await fetch(
             `${BASE_URL}/V1/appointment/checkPaymentStatus?location=${currentLocation}`,
             {
@@ -654,7 +685,7 @@ export default function OpdAppointmentList() {
               Swal.fire(
                 "Error",
                 cancelResult?.message ||
-                "Remote cancel failed. Please cancel manually on machine.",
+                  "Remote cancel failed. Please cancel manually on machine.",
                 "error",
               );
             }
@@ -689,14 +720,20 @@ export default function OpdAppointmentList() {
       }));
     } else if (name === "discountAmt") {
       const cleanValue = value.replace(/[^0-9]/g, "");
-      const formattedValue = cleanValue ? Number(cleanValue).toLocaleString("en-IN") : "";
+      const formattedValue = cleanValue
+        ? Number(cleanValue).toLocaleString("en-IN")
+        : "";
       setReceiptForm((prev) => ({ ...prev, discountAmt: formattedValue }));
     } else if (name === "paymentMode") {
       const isCash = value?.toLowerCase() === "cash";
       setReceiptForm((prev) => ({
         ...prev,
         paymentMode: value,
-        ...(isCash ? { posTerminal: "OFFLINE" } : (prev.posTerminal === "OFFLINE" && !isCash ? { posTerminal: "" } : {})),
+        ...(isCash
+          ? { posTerminal: "OFFLINE" }
+          : prev.posTerminal === "OFFLINE" && !isCash
+            ? { posTerminal: "" }
+            : {}),
       }));
     } else {
       setReceiptForm((prev) => ({ ...prev, [name]: value }));
@@ -726,7 +763,6 @@ export default function OpdAppointmentList() {
       if (payload && payload.jobLocation) {
         setCurrentLocation(payload.jobLocation);
       }
-
     }
   }, []);
 
@@ -781,9 +817,13 @@ export default function OpdAppointmentList() {
 
             const isExistingPatient =
               isConfirmed &&
-              ["Follow", "Postoperative", "Post Operative", "MCDPA", "Other"].includes(
-                app.patient_type,
-              );
+              [
+                "Follow",
+                "Postoperative",
+                "Post Operative",
+                "MCDPA",
+                "Other",
+              ].includes(app.patient_type);
 
             const isHistoryDone = hasHistory || isExistingPatient;
             const isExecutionDone =
@@ -857,17 +897,16 @@ export default function OpdAppointmentList() {
         // 2. Otherwise, if it's the 'Today' view, we want to show pending records from the past (as previously requested).
         // 3. If it's a specific date range (not today), we want strict filtering (showPending = false).
         const showPending =
-          manualShowPending !== null ? manualShowPending : (isToday && showPendingPast);
+          manualShowPending !== null
+            ? manualShowPending
+            : isToday && showPendingPast;
 
         const url = `${BASE_URL}/V1/appointment/listAppointments?from=${formattedFromDate}&to=${formattedToDate}&location=${currentLocation}&showPending=${showPending}&_t=${Date.now()}`;
-
-
 
         const response = await fetch(url, { method: "GET" });
         const data = await response.json();
 
         if (response.ok && data.data) {
-
           const sortedData = data.data.sort((a, b) => {
             const timeA = a.appointment_time
               ? moment(a.appointment_time, ["HH:mm:ss", "hh:mm A"]).valueOf()
@@ -887,9 +926,13 @@ export default function OpdAppointmentList() {
 
             const isExistingPatient =
               isConfirmed &&
-              ["Follow", "Postoperative", "Post Operative", "MCDPA", "Other"].includes(
-                app.patient_type,
-              );
+              [
+                "Follow",
+                "Postoperative",
+                "Post Operative",
+                "MCDPA",
+                "Other",
+              ].includes(app.patient_type);
 
             const isHistoryDone = hasHistory || isExistingPatient;
             const isExecutionDone =
@@ -1040,9 +1083,9 @@ export default function OpdAppointmentList() {
 
     const finalAppointmentTime = selectedAppointment.appointment_time
       ? moment(selectedAppointment.appointment_time, [
-        "HH:mm:ss",
-        "hh:mm A",
-      ]).format("HH:mm")
+          "HH:mm:ss",
+          "hh:mm A",
+        ]).format("HH:mm")
       : null;
 
     const updatePayload = {
@@ -1161,14 +1204,12 @@ export default function OpdAppointmentList() {
     successMessage = "Confirmed!",
   ) => {
     try {
-
       let response = "";
       if (!patient_phone && !patient_type) {
         response = await fetch(
           `${BASE_URL}/V1/appointment/${endpoint}?appId=${appId}&location=${currentLocation}`,
           { method: "PUT", headers: { "Content-Type": "application/json" } },
         );
-
       } else {
         const mappedPatientType =
           patient_type === "Post Operative" ? "Postoperative" : patient_type;
@@ -1176,7 +1217,6 @@ export default function OpdAppointmentList() {
           `${BASE_URL}/V1/appointment/${endpoint}?appId=${appId}&location=${currentLocation}&patientType=${mappedPatientType}&patientPhone=${patient_phone}`,
           { method: "PUT", headers: { "Content-Type": "application/json" } },
         );
-
       }
       const data = await response.json();
 
@@ -1214,7 +1254,10 @@ export default function OpdAppointmentList() {
     }
   };
 
-  const checkDailyClosing = async (appointmentTimestamp, actionVerb = "confirming") => {
+  const checkDailyClosing = async (
+    appointmentTimestamp,
+    actionVerb = "confirming",
+  ) => {
     if (!appointmentTimestamp) {
       Swal.fire({
         icon: "error",
@@ -1272,14 +1315,21 @@ export default function OpdAppointmentList() {
     }
   };
 
-  const checkAndShowMasterPatientVisit = async (patientPhone, isReadOnlyNotice = false) => {
+  const checkAndShowMasterPatientVisit = async (
+    patientPhone,
+    isReadOnlyNotice = false,
+  ) => {
     if (!patientPhone) return { showed: false, confirmed: false };
     try {
       const cleanPhone = String(patientPhone).replace(/\D/g, "");
-      const last10 = cleanPhone.length > 10 ? cleanPhone.slice(-10) : cleanPhone;
-      if (!last10 || last10.length < 10) return { showed: false, confirmed: false };
+      const last10 =
+        cleanPhone.length > 10 ? cleanPhone.slice(-10) : cleanPhone;
+      if (!last10 || last10.length < 10)
+        return { showed: false, confirmed: false };
 
-      const res = await fetch(`${BASE_URL}/V1/appointment/checkMasterPatient?patient_phone=${last10}`);
+      const res = await fetch(
+        `${BASE_URL}/V1/appointment/checkMasterPatient?patient_phone=${last10}`,
+      );
       if (!res.ok) return { showed: false, confirmed: false };
 
       const data = await res.json();
@@ -1325,8 +1375,12 @@ export default function OpdAppointmentList() {
             showCancelButton: false,
             didOpen: () => {
               const container = Swal.getHtmlContainer();
-              const closeBtn = container.querySelector("#close-master-notice-btn");
-              const viewBtn = container.querySelector("#view-master-history-btn");
+              const closeBtn = container.querySelector(
+                "#close-master-notice-btn",
+              );
+              const viewBtn = container.querySelector(
+                "#view-master-history-btn",
+              );
               if (closeBtn) {
                 closeBtn.addEventListener("click", () => Swal.close());
               }
@@ -1377,7 +1431,9 @@ export default function OpdAppointmentList() {
           cancelButtonColor: "#dc3545",
           reverseButtons: true,
           didOpen: () => {
-            const viewBtn = Swal.getHtmlContainer().querySelector("#view-master-history-btn");
+            const viewBtn = Swal.getHtmlContainer().querySelector(
+              "#view-master-history-btn",
+            );
             if (viewBtn) {
               viewBtn.addEventListener("click", () => {
                 Swal.close();
@@ -1408,7 +1464,10 @@ export default function OpdAppointmentList() {
       appointment_timestamp,
     } = rowData;
 
-    const checkPassed = await checkDailyClosing(appointment_timestamp, "confirming");
+    const checkPassed = await checkDailyClosing(
+      appointment_timestamp,
+      "confirming",
+    );
     if (!checkPassed) return;
 
     const masterResult = await checkAndShowMasterPatientVisit(patient_phone);
@@ -1596,7 +1655,7 @@ export default function OpdAppointmentList() {
           <>
             <ActionButton
               title="History"
-              onClick={() => { }}
+              onClick={() => {}}
               disabled={isHistoryDone || isReceiptDone}
               icon="book-open"
               style={{ cursor: "not-allowed" }}
@@ -1604,7 +1663,7 @@ export default function OpdAppointmentList() {
 
             <ActionButton
               title="Diagnosis"
-              onClick={() => { }}
+              onClick={() => {}}
               disabled={!isHistoryDone || isExecutionDone || isReceiptDone}
               icon="activity"
               style={{ cursor: "not-allowed" }}
@@ -1612,7 +1671,7 @@ export default function OpdAppointmentList() {
 
             <ActionButton
               title="Prescription"
-              onClick={() => { }}
+              onClick={() => {}}
               disabled={!isExecutionDone || isConsultationDone || isReceiptDone}
               icon="clipboard"
               style={{ cursor: "not-allowed" }}
@@ -1657,11 +1716,11 @@ export default function OpdAppointmentList() {
           borderColor: name === "Pending Appointment" ? "#b6bbc1ff" : bgColor,
           ...(isSelected
             ? {
-              backgroundColor: `${bgColor}25`,
-              transform: "translateY(-1.5px)",
-              boxShadow:
-                "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
-            }
+                backgroundColor: `${bgColor}25`,
+                transform: "translateY(-1.5px)",
+                boxShadow:
+                  "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
+              }
             : {}),
         }}
       >
@@ -2106,9 +2165,9 @@ export default function OpdAppointmentList() {
                       value={
                         selectedAppointment.appointment_time
                           ? moment(selectedAppointment.appointment_time, [
-                            "HH:mm:ss",
-                            "hh:mm A",
-                          ]).format("hh:mm A")
+                              "HH:mm:ss",
+                              "hh:mm A",
+                            ]).format("hh:mm A")
                           : ""
                       }
                       onChange={handleEditModalInputChange}
@@ -2193,11 +2252,10 @@ export default function OpdAppointmentList() {
                       }}
                     >
                       <option value="">Select Type</option>
-                      {(
-                        (selectedAppointment.patient_type === "New" ||
-                          selectedAppointment.patient_type === "NEW")
-                          ? NEW_PATIENT_TYPES
-                          : EXISTING_PATIENT_TYPES
+                      {(selectedAppointment.patient_type === "New" ||
+                      selectedAppointment.patient_type === "NEW"
+                        ? NEW_PATIENT_TYPES
+                        : EXISTING_PATIENT_TYPES
                       ).map((type, index) => (
                         <option key={index} value={type}>
                           {type}
@@ -2210,51 +2268,51 @@ export default function OpdAppointmentList() {
                 {(selectedAppointment.patient_type === "Other" ||
                   selectedAppointment.treatment ||
                   selectedAppointment.treatment_name) && (
-                    <Col md={4}>
-                      <Form.Group className="mb-2">
-                        <Form.Label
-                          style={{
-                            fontSize: "12px",
-                            fontWeight: "600",
-                            marginBottom: "4px",
-                          }}
-                        >
-                          Treatment <span className="text-danger">*</span>
-                        </Form.Label>
-                        <Form.Select
-                          required
-                          name="treatment"
-                          value={
-                            selectedAppointment.treatment ||
-                            selectedAppointment.treatment_name ||
-                            ""
-                          }
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            setSelectedAppointment((prev) => ({
-                              ...prev,
-                              treatment: val,
-                              treatment_name: val,
-                            }));
-                          }}
-                          style={{
-                            border: "2px solid rgb(77, 208, 225)",
-                            fontSize: "12px",
-                          }}
-                        >
-                          <option value="">Select Treatment</option>
-                          {treatmentList?.map((t) => (
-                            <option
-                              key={t.treatment_name}
-                              value={t.treatment_name}
-                            >
-                              {t.treatment_name}
-                            </option>
-                          ))}
-                        </Form.Select>
-                      </Form.Group>
-                    </Col>
-                  )}
+                  <Col md={4}>
+                    <Form.Group className="mb-2">
+                      <Form.Label
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: "600",
+                          marginBottom: "4px",
+                        }}
+                      >
+                        Treatment <span className="text-danger">*</span>
+                      </Form.Label>
+                      <Form.Select
+                        required
+                        name="treatment"
+                        value={
+                          selectedAppointment.treatment ||
+                          selectedAppointment.treatment_name ||
+                          ""
+                        }
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setSelectedAppointment((prev) => ({
+                            ...prev,
+                            treatment: val,
+                            treatment_name: val,
+                          }));
+                        }}
+                        style={{
+                          border: "2px solid rgb(77, 208, 225)",
+                          fontSize: "12px",
+                        }}
+                      >
+                        <option value="">Select Treatment</option>
+                        {treatmentList?.map((t) => (
+                          <option
+                            key={t.treatment_name}
+                            value={t.treatment_name}
+                          >
+                            {t.treatment_name}
+                          </option>
+                        ))}
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+                )}
 
                 <Col md={4}>
                   <Form.Group className="mb-2">
@@ -2281,8 +2339,12 @@ export default function OpdAppointmentList() {
                         fontSize: "12px",
                         borderRadius: "9px",
                         border: "2px solid rgb(77, 208, 225)",
-                        backgroundColor: selectedAppointment.patient_id ? "#e7ebebff" : undefined,
-                        cursor: selectedAppointment.patient_id ? "not-allowed" : "default",
+                        backgroundColor: selectedAppointment.patient_id
+                          ? "#e7ebebff"
+                          : undefined,
+                        cursor: selectedAppointment.patient_id
+                          ? "not-allowed"
+                          : "default",
                       }}
                     />
                   </Form.Group>
@@ -2442,9 +2504,12 @@ export default function OpdAppointmentList() {
                         </option>
                       ))}
                       {selectedAppointment.reference &&
-                        !REFERENCE_OPTIONS.includes(selectedAppointment.reference) && (
+                        !REFERENCE_OPTIONS.includes(
+                          selectedAppointment.reference,
+                        ) && (
                           <option value={selectedAppointment.reference}>
-                            {REFERENCE_MAP[selectedAppointment.reference] || selectedAppointment.reference}
+                            {REFERENCE_MAP[selectedAppointment.reference] ||
+                              selectedAppointment.reference}
                           </option>
                         )}
                     </Form.Select>
@@ -2563,8 +2628,8 @@ export default function OpdAppointmentList() {
                           <span className="selectable-text">
                             {rowData.appointment_timestamp
                               ? moment(rowData.appointment_timestamp).format(
-                                "DD-MM-YYYY",
-                              )
+                                  "DD-MM-YYYY",
+                                )
                               : "-"}
                           </span>
                         )}
@@ -2582,9 +2647,9 @@ export default function OpdAppointmentList() {
                           <span className="selectable-text">
                             {rowData.appointment_time
                               ? moment(rowData.appointment_time, [
-                                "hh:mm A",
-                                "HH:mm",
-                              ]).format("HH:mm")
+                                  "hh:mm A",
+                                  "HH:mm",
+                                ]).format("HH:mm")
                               : "-"}
                           </span>
                         )}
@@ -2598,7 +2663,11 @@ export default function OpdAppointmentList() {
                           ...getColumnStyle("65px"),
                           border: "1px solid #90caf9",
                         }}
-                        body={(rowData) => <span className="selectable-text">{rowData.confirm_time || "-"}</span>}
+                        body={(rowData) => (
+                          <span className="selectable-text">
+                            {rowData.confirm_time || "-"}
+                          </span>
+                        )}
                         headerClassName="datatable-header-center"
                       />
 
@@ -2640,7 +2709,11 @@ export default function OpdAppointmentList() {
                           border: "1px solid #90caf9",
                           padding: "0",
                         }}
-                        body={(rowData) => <span className="selectable-text">{formatPatientType(rowData.patient_type) || "-"}</span>}
+                        body={(rowData) => (
+                          <span className="selectable-text">
+                            {formatPatientType(rowData.patient_type) || "-"}
+                          </span>
+                        )}
                         headerClassName="datatable-header-center"
                       />
 
@@ -2658,7 +2731,9 @@ export default function OpdAppointmentList() {
                         }}
                         body={(rowData) => {
                           const cleanP = rowData.patient_phone
-                            ? String(rowData.patient_phone).replace(/\D/g, "").slice(-10)
+                            ? String(rowData.patient_phone)
+                                .replace(/\D/g, "")
+                                .slice(-10)
                             : "";
                           const masterData = masterVisitMap[cleanP];
                           const isConfirmed =
@@ -2668,7 +2743,14 @@ export default function OpdAppointmentList() {
                             rowData.computedStatus !== "Pending Appointment";
 
                           return (
-                            <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
+                            <span
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "4px",
+                              }}
+                            >
                               <span className="selectable-text">
                                 {rowData.prefix ? `${rowData.prefix} ` : ""}
                                 {rowData.patient_name || "-"}
@@ -2698,7 +2780,10 @@ export default function OpdAppointmentList() {
                                   title={`Patient already visited ${masterData.location || "another"} location`}
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    checkAndShowMasterPatientVisit(rowData.patient_phone, true);
+                                    checkAndShowMasterPatientVisit(
+                                      rowData.patient_phone,
+                                      true,
+                                    );
                                   }}
                                 >
                                   i
@@ -2717,7 +2802,11 @@ export default function OpdAppointmentList() {
                           ...getColumnStyle("110px"),
                           border: "1px solid #90caf9",
                         }}
-                        body={(rowData) => <span className="selectable-text">{rowData.patient_phone || "-"}</span>}
+                        body={(rowData) => (
+                          <span className="selectable-text">
+                            {rowData.patient_phone || "-"}
+                          </span>
+                        )}
                         headerClassName="datatable-header-center"
                       />
 
@@ -2728,7 +2817,11 @@ export default function OpdAppointmentList() {
                           ...getColumnStyle("110px"),
                           border: "1px solid #90caf9",
                         }}
-                        body={(rowData) => <span className="selectable-text">{rowData.doctor_name || "-"}</span>}
+                        body={(rowData) => (
+                          <span className="selectable-text">
+                            {rowData.doctor_name || "-"}
+                          </span>
+                        )}
                         headerClassName="datatable-header-center"
                       />
 
@@ -2739,7 +2832,11 @@ export default function OpdAppointmentList() {
                           ...getColumnStyle("90px"),
                           border: "1px solid #90caf9",
                         }}
-                        body={(rowData) => <span className="selectable-text">{rowData.FDE_Name || "-"}</span>}
+                        body={(rowData) => (
+                          <span className="selectable-text">
+                            {rowData.FDE_Name || "-"}
+                          </span>
+                        )}
                         headerClassName="datatable-header-center"
                       />
                       <Column
@@ -3033,7 +3130,7 @@ export default function OpdAppointmentList() {
                         }}
                         value={
                           receiptForm.registrationType &&
-                            receiptForm.registrationType !== "Only Registration"
+                          receiptForm.registrationType !== "Only Registration"
                             ? 0
                             : item.amount
                         }
@@ -3042,8 +3139,13 @@ export default function OpdAppointmentList() {
                           receiptForm.registrationType !== "Only Registration"
                         }
                         onChange={(e) => {
-                          const cleanValue = e.target.value.replace(/[^0-9]/g, "");
-                          const formattedValue = cleanValue ? Number(cleanValue).toLocaleString("en-IN") : "";
+                          const cleanValue = e.target.value.replace(
+                            /[^0-9]/g,
+                            "",
+                          );
+                          const formattedValue = cleanValue
+                            ? Number(cleanValue).toLocaleString("en-IN")
+                            : "";
                           const newItems = [...billingItems];
                           newItems[index].amount = formattedValue;
                           setBillingItems(newItems);
@@ -3117,7 +3219,7 @@ export default function OpdAppointmentList() {
                       }}
                       value={
                         receiptForm.registrationType &&
-                          receiptForm.registrationType !== "Only Registration"
+                        receiptForm.registrationType !== "Only Registration"
                           ? 0
                           : receiptForm.discountAmt
                       }
@@ -3275,7 +3377,13 @@ export default function OpdAppointmentList() {
                         marginTop: "5px",
                       }}
                     >
-                      Total Amount: <strong>₹ {Math.round(calculateTotals().subtotal).toLocaleString("en-IN")}</strong>
+                      Total Amount:{" "}
+                      <strong>
+                        ₹{" "}
+                        {Math.round(calculateTotals().subtotal).toLocaleString(
+                          "en-IN",
+                        )}
+                      </strong>
                     </div>
                     <div
                       style={{
@@ -3295,7 +3403,10 @@ export default function OpdAppointmentList() {
                         marginTop: "5px",
                       }}
                     >
-                      Payable Amount: ₹ {Math.round(calculateTotals().payable).toLocaleString("en-IN")}
+                      Payable Amount: ₹{" "}
+                      {Math.round(calculateTotals().payable).toLocaleString(
+                        "en-IN",
+                      )}
                     </div>
                   </Col>
                 </Row>
@@ -3343,7 +3454,8 @@ export default function OpdAppointmentList() {
             style={{
               backgroundColor:
                 calculateTotals().subtotal > 10000 ? "#cccccc" : "#00bcd4",
-              cursor: calculateTotals().subtotal > 10000 ? "not-allowed" : "pointer",
+              cursor:
+                calculateTotals().subtotal > 10000 ? "not-allowed" : "pointer",
               border: "none",
               fontSize: "12px",
               borderRadius: "10px",

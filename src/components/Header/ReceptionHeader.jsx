@@ -358,12 +358,12 @@ export default function ReceptionHeader() {
                                       cursor: "pointer",
                                     }}
                                     onMouseOver={(e) =>
-                                    (e.currentTarget.style.background =
-                                      "#f0fff4")
+                                      (e.currentTarget.style.background =
+                                        "#f0fff4")
                                     }
                                     onMouseOut={(e) =>
-                                    (e.currentTarget.style.background =
-                                      "transparent")
+                                      (e.currentTarget.style.background =
+                                        "transparent")
                                     }
                                   >
                                     <div
@@ -608,12 +608,12 @@ export default function ReceptionHeader() {
                                       cursor: "pointer",
                                     }}
                                     onMouseOver={(e) =>
-                                    (e.currentTarget.style.background =
-                                      "#fffbeb")
+                                      (e.currentTarget.style.background =
+                                        "#fffbeb")
                                     }
                                     onMouseOut={(e) =>
-                                    (e.currentTarget.style.background =
-                                      "transparent")
+                                      (e.currentTarget.style.background =
+                                        "transparent")
                                     }
                                   >
                                     <div
@@ -852,12 +852,12 @@ export default function ReceptionHeader() {
                                       cursor: "pointer",
                                     }}
                                     onMouseOver={(e) =>
-                                    (e.currentTarget.style.background =
-                                      "#fff5f5")
+                                      (e.currentTarget.style.background =
+                                        "#fff5f5")
                                     }
                                     onMouseOut={(e) =>
-                                    (e.currentTarget.style.background =
-                                      "transparent")
+                                      (e.currentTarget.style.background =
+                                        "transparent")
                                     }
                                   >
                                     <div
@@ -1028,7 +1028,9 @@ export default function ReceptionHeader() {
                 </button>
                 <button
                   onClick={() =>
-                    navigate("/recp-enquiries-navbar", { state: { activeTab: "addEnquiry" } })
+                    navigate("/recp-enquiries-navbar", {
+                      state: { activeTab: "addEnquiry" },
+                    })
                   }
                   style={{
                     display: "flex",

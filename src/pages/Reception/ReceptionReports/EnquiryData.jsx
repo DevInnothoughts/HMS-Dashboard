@@ -20,7 +20,15 @@ const formatDateDisplay = (dateStr) => {
 };
 
 const formatValue = (val) => {
-  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+  if (
+    val === null ||
+    val === undefined ||
+    val === "" ||
+    val === "N/A" ||
+    val === 0 ||
+    val === "0" ||
+    val === "-"
+  ) {
     return "-";
   }
   return val;
@@ -92,7 +100,6 @@ const EnquiryData = () => {
 
     setLoading(true);
     try {
-      
       // Your controller expects Fromdate and Todate in the body via POST
       const response = await fetch(
         `${BASE_URL}/V1/managereports/getEnquiryReport`,
@@ -116,7 +123,7 @@ const EnquiryData = () => {
       }
 
       const data = await response.json();
-      
+
       const formattedData = data.map((item, index) => {
         let displayDate = "N/A";
 
@@ -294,8 +301,15 @@ const EnquiryData = () => {
                 >
                   <h4 style={{ margin: 0 }}>Enquiry Data Report</h4>
                   {fromDate && toDate && (
-                    <div style={{ fontSize: "13px", fontWeight: "normal", marginTop: "5px" }}>
-                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "normal",
+                        marginTop: "5px",
+                      }}
+                    >
+                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to{" "}
+                      <b>{formatDateDisplay(toDate)}</b>
                     </div>
                   )}
                 </Card.Header>

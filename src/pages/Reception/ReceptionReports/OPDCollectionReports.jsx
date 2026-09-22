@@ -89,7 +89,7 @@ const OPDCollectionReports = () => {
         if (
           window.confirm(
             msg.serachdata2.message +
-            "\n\nDo you want to download the backup file?",
+              "\n\nDo you want to download the backup file?",
           )
         ) {
           window.location.href = msg.serachdata2.file_url;
@@ -111,16 +111,20 @@ const OPDCollectionReports = () => {
 
       const processedData = rawData.map((row) => {
         const total = isNaN(Number(row.total)) ? 0 : Number(row.total);
-        
+
         let discount = 0;
         if (row.receipt_id) {
           if (!seenReceipts.has(row.receipt_id)) {
-            discount = isNaN(Number(row.discountamt)) ? 0 : Number(row.discountamt);
+            discount = isNaN(Number(row.discountamt))
+              ? 0
+              : Number(row.discountamt);
             seenReceipts.add(row.receipt_id);
           }
         } else {
           // Fallback if receipt_id is missing
-          discount = isNaN(Number(row.discountamt)) ? 0 : Number(row.discountamt);
+          discount = isNaN(Number(row.discountamt))
+            ? 0
+            : Number(row.discountamt);
         }
 
         const paymentMode = row.payment_mode || "";
@@ -351,21 +355,43 @@ const OPDCollectionReports = () => {
   };
 
   const formatValue = (val) => {
-    if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0") {
+    if (
+      val === null ||
+      val === undefined ||
+      val === "" ||
+      val === "N/A" ||
+      val === 0 ||
+      val === "0"
+    ) {
       return "-";
     }
-    if (typeof val === "string" && (val.trim() === "OTHERS ()" || val.trim() === "OTHERS" || val.trim() === "-")) {
+    if (
+      typeof val === "string" &&
+      (val.trim() === "OTHERS ()" ||
+        val.trim() === "OTHERS" ||
+        val.trim() === "-")
+    ) {
       return "-";
     }
     return val;
   };
 
   const formatAmount = (val) => {
-    if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+    if (
+      val === null ||
+      val === undefined ||
+      val === "" ||
+      val === "N/A" ||
+      val === 0 ||
+      val === "0" ||
+      val === "-"
+    ) {
       return "-";
     }
     const parsed = parseFloat(val);
-    return isNaN(parsed) ? val : `₹ ${Math.round(parsed).toLocaleString("en-IN")}`;
+    return isNaN(parsed)
+      ? val
+      : `₹ ${Math.round(parsed).toLocaleString("en-IN")}`;
   };
 
   const footerGroup = (
@@ -442,7 +468,7 @@ const OPDCollectionReports = () => {
       acc.discount += Number(curr.discount) || 0;
       return acc;
     },
-    { cash: 0, card: 0, paytm: 0, online: 0, discount: 0 }
+    { cash: 0, card: 0, paytm: 0, online: 0, discount: 0 },
   );
 
   const header = renderHeader();
@@ -486,8 +512,15 @@ const OPDCollectionReports = () => {
                 >
                   <h4 style={{ margin: 0 }}>OPD Collection Report</h4>
                   {fromDate && toDate && (
-                    <div style={{ fontSize: "13px", fontWeight: "normal", marginTop: "5px" }}>
-                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "normal",
+                        marginTop: "5px",
+                      }}
+                    >
+                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to{" "}
+                      <b>{formatDateDisplay(toDate)}</b>
                     </div>
                   )}
                 </Card.Header>
@@ -664,7 +697,11 @@ const OPDCollectionReports = () => {
                           <tr key={index}>
                             <td>{index + 1}</td>
                             <td>{formatValue(item.patientName)}</td>
-                            <td>{formatValue(formatDateDisplay(item.receipt_date))}</td>
+                            <td>
+                              {formatValue(
+                                formatDateDisplay(item.receipt_date),
+                              )}
+                            </td>
                             <td>{formatValue(item.consultation)}</td>
                             <td>{formatValue(item.cashamt)}</td>
                             <td>{formatValue(item.cardamt)}</td>

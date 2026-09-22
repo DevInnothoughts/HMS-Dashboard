@@ -79,12 +79,12 @@ export default function AddLabReceipt() {
       ];
 
       const [doctorRes, consultationRes, posRes, fdeRes] = await Promise.all(
-        endpoints.map((url) => fetch(url).then((res) => res.json()))
+        endpoints.map((url) => fetch(url).then((res) => res.json())),
       );
 
       setDoctors(Array.isArray(doctorRes.data) ? doctorRes.data : []);
       setConsultationTypesList(
-        Array.isArray(consultationRes.data) ? consultationRes.data : []
+        Array.isArray(consultationRes.data) ? consultationRes.data : [],
       );
       setPosTerminalList(Array.isArray(posRes.data) ? posRes.data : []);
       setFdeList(Array.isArray(fdeRes.data) ? fdeRes.data : []);
@@ -101,7 +101,12 @@ export default function AddLabReceipt() {
   useEffect(() => {
     const searchPatient = async () => {
       const phone = formData.patient_phone;
-      if (!phone || phone.length !== 10 || !currentLocation || currentLocation === "default") {
+      if (
+        !phone ||
+        phone.length !== 10 ||
+        !currentLocation ||
+        currentLocation === "default"
+      ) {
         setRegisteredPatient(null);
         return;
       }
@@ -109,12 +114,13 @@ export default function AddLabReceipt() {
       try {
         const response = await fetch(
           `${BASE_URL}/V1/patient/searchPatient?query=${encodeURIComponent(
-            phone
-          )}&location=${currentLocation}`
+            phone,
+          )}&location=${currentLocation}`,
         );
         if (response.ok) {
           const resData = await response.json();
-          const match = resData.data && resData.data.find((p) => p.phone === phone);
+          const match =
+            resData.data && resData.data.find((p) => p.phone === phone);
           if (match) {
             setRegisteredPatient(match);
             setFormData((prev) => ({
@@ -145,15 +151,22 @@ export default function AddLabReceipt() {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-      ...(name === "paymentMode" && value?.toLowerCase() === "cash" ? { posTerminal: "OFFLINE" } : {}),
-      ...(name === "paymentMode" && value?.toLowerCase() !== "cash" && prev.posTerminal === "OFFLINE" ? { posTerminal: "" } : {}),
+      ...(name === "paymentMode" && value?.toLowerCase() === "cash"
+        ? { posTerminal: "OFFLINE" }
+        : {}),
+      ...(name === "paymentMode" &&
+      value?.toLowerCase() !== "cash" &&
+      prev.posTerminal === "OFFLINE"
+        ? { posTerminal: "" }
+        : {}),
     }));
   };
 
   const calculateTotals = () => {
     const subtotal = billingItems.reduce(
-      (acc, curr) => acc + (parseFloat(String(curr.amount || "").replace(/,/g, "")) || 0),
-      0
+      (acc, curr) =>
+        acc + (parseFloat(String(curr.amount || "").replace(/,/g, "")) || 0),
+      0,
     );
     return { subtotal, payable: subtotal };
   };
@@ -186,14 +199,24 @@ export default function AddLabReceipt() {
     if (!formData.paymentMode) {
       newErrors.paymentMode = "Payment mode is required";
     }
-    if (formData.paymentMode && formData.paymentMode !== "Cash" && !formData.posTerminal) {
+    if (
+      formData.paymentMode &&
+      formData.paymentMode !== "Cash" &&
+      !formData.posTerminal
+    ) {
       newErrors.posTerminal = "POS Terminal is required for payments";
     }
 
     // Validate billing items
-    const invalidItems = billingItems.some((item) => !item.label || item.amount === "" || parseFloat(String(item.amount || "").replace(/,/g, "")) < 0);
+    const invalidItems = billingItems.some(
+      (item) =>
+        !item.label ||
+        item.amount === "" ||
+        parseFloat(String(item.amount || "").replace(/,/g, "")) < 0,
+    );
     if (invalidItems) {
-      newErrors.billingItems = "Please select consultation type and enter valid amount for all rows";
+      newErrors.billingItems =
+        "Please select consultation type and enter valid amount for all rows";
     }
 
     return newErrors;
@@ -228,7 +251,7 @@ export default function AddLabReceipt() {
             MachineType: originalPayload.MachineType,
             apidata: apidata,
           }),
-        }
+        },
       );
       return await response.json();
     } catch (err) {
@@ -270,7 +293,7 @@ export default function AddLabReceipt() {
                 PosMachine: originalPayload.PosMachine,
                 MachineType: originalPayload.MachineType,
               }),
-            }
+            },
           );
 
           const result = await response.json();
@@ -278,7 +301,7 @@ export default function AddLabReceipt() {
             return result;
           } else {
             Swal.showValidationMessage(
-              result.message || "Swipe not detected yet"
+              result.message || "Swipe not detected yet",
             );
             return false;
           }
@@ -319,7 +342,7 @@ export default function AddLabReceipt() {
             const cancelResult = await cancelPayment(
               referenceId,
               originalPayload,
-              apidata
+              apidata,
             );
             if (cancelResult?.success || cancelResult?.status) {
               await Swal.fire("Cancelled", "POS request stopped.", "success");
@@ -327,8 +350,8 @@ export default function AddLabReceipt() {
               Swal.fire(
                 "Error",
                 cancelResult?.message ||
-                "Remote cancel failed. Please cancel manually on machine.",
-                "error"
+                  "Remote cancel failed. Please cancel manually on machine.",
+                "error",
               );
             }
           } catch (err) {
@@ -375,7 +398,7 @@ export default function AddLabReceipt() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(patientPayload),
-          }
+          },
         );
 
         if (!patientRes.ok) {
@@ -393,7 +416,10 @@ export default function AddLabReceipt() {
       const { payable } = calculateTotals();
       const consultationData = billingItems
         .filter((item) => item.label)
-        .map((item) => [item.label, parseFloat(String(item.amount || "").replace(/,/g, "")) || 0]);
+        .map((item) => [
+          item.label,
+          parseFloat(String(item.amount || "").replace(/,/g, "")) || 0,
+        ]);
 
       const receiptPayload = {
         appointment_id: null, // Manual receipt has no appointment
@@ -418,7 +444,7 @@ export default function AddLabReceipt() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(receiptPayload),
-        }
+        },
       );
 
       const result = await receiptRes.json();
@@ -440,7 +466,7 @@ export default function AddLabReceipt() {
         showPaymentPendingPopup(
           result.data.reference_id || result.data.transaction_id,
           { ...receiptPayload, transaction_id: result.data.transaction_id },
-          result.data
+          result.data,
         );
       } else {
         Swal.fire({
@@ -572,7 +598,9 @@ export default function AddLabReceipt() {
                             placeholder="Enter 10-Digit Mobile Number"
                             style={{
                               ...inputStyle,
-                              paddingRight: isSearchingPatient ? "30px" : "10px",
+                              paddingRight: isSearchingPatient
+                                ? "30px"
+                                : "10px",
                             }}
                           />
                           {isSearchingPatient && (
@@ -597,12 +625,18 @@ export default function AddLabReceipt() {
                           )}
                         </div>
                         {errors.patient_phone && (
-                          <p className="text-danger mt-1" style={{ fontSize: "11px" }}>
+                          <p
+                            className="text-danger mt-1"
+                            style={{ fontSize: "11px" }}
+                          >
                             {errors.patient_phone}
                           </p>
                         )}
                         {registeredPatient && (
-                          <p className="text-success mt-1" style={{ fontSize: "11px", fontWeight: "600" }}>
+                          <p
+                            className="text-success mt-1"
+                            style={{ fontSize: "11px", fontWeight: "600" }}
+                          >
                             ✓ Registered Patient Found: {registeredPatient.name}
                           </p>
                         )}
@@ -629,7 +663,10 @@ export default function AddLabReceipt() {
                           disabled={!!registeredPatient}
                         />
                         {errors.patient_name && (
-                          <p className="text-danger mt-1" style={{ fontSize: "11px" }}>
+                          <p
+                            className="text-danger mt-1"
+                            style={{ fontSize: "11px" }}
+                          >
                             {errors.patient_name}
                           </p>
                         )}
@@ -638,7 +675,8 @@ export default function AddLabReceipt() {
                     <Col md={2}>
                       <Form.Group>
                         <Form.Label style={labelStyle}>
-                          Consultant Doctor <span className="text-danger">*</span>
+                          Consultant Doctor{" "}
+                          <span className="text-danger">*</span>
                         </Form.Label>
                         <Form.Select
                           required
@@ -655,7 +693,10 @@ export default function AddLabReceipt() {
                           ))}
                         </Form.Select>
                         {errors.doctor_id && (
-                          <p className="text-danger mt-1" style={{ fontSize: "11px" }}>
+                          <p
+                            className="text-danger mt-1"
+                            style={{ fontSize: "11px" }}
+                          >
                             {errors.doctor_id}
                           </p>
                         )}
@@ -682,7 +723,10 @@ export default function AddLabReceipt() {
                           ))}
                         </Form.Select>
                         {errors.madeby && (
-                          <p className="text-danger mt-1" style={{ fontSize: "11px" }}>
+                          <p
+                            className="text-danger mt-1"
+                            style={{ fontSize: "11px" }}
+                          >
                             {errors.madeby}
                           </p>
                         )}
@@ -720,8 +764,11 @@ export default function AddLabReceipt() {
                   {billingItems.map((item, index) => (
                     <Row key={index} className="g-3 mb-2 align-items-end">
                       <Col md={5}>
-                        <Form.Label style={{ fontSize: "12px", fontWeight: "600" }}>
-                          Consultation Type <span className="text-danger">*</span>
+                        <Form.Label
+                          style={{ fontSize: "12px", fontWeight: "600" }}
+                        >
+                          Consultation Type{" "}
+                          <span className="text-danger">*</span>
                         </Form.Label>
                         <Form.Select
                           style={{
@@ -738,7 +785,10 @@ export default function AddLabReceipt() {
                         >
                           <option value="">Select Type</option>
                           {consultationTypesList.map((c) => (
-                            <option key={c.consultation_id} value={c.consultation_name}>
+                            <option
+                              key={c.consultation_id}
+                              value={c.consultation_name}
+                            >
                               {c.consultation_name}
                             </option>
                           ))}
@@ -746,7 +796,9 @@ export default function AddLabReceipt() {
                       </Col>
 
                       <Col md={3}>
-                        <Form.Label style={{ fontSize: "12px", fontWeight: "600" }}>
+                        <Form.Label
+                          style={{ fontSize: "12px", fontWeight: "600" }}
+                        >
                           Amount <span className="text-danger">*</span>
                         </Form.Label>
                         <InputGroup>
@@ -773,8 +825,13 @@ export default function AddLabReceipt() {
                             }}
                             value={item.amount}
                             onChange={(e) => {
-                              const cleanValue = e.target.value.replace(/[^0-9]/g, "");
-                              const formattedValue = cleanValue ? Number(cleanValue).toLocaleString("en-IN") : "";
+                              const cleanValue = e.target.value.replace(
+                                /[^0-9]/g,
+                                "",
+                              );
+                              const formattedValue = cleanValue
+                                ? Number(cleanValue).toLocaleString("en-IN")
+                                : "";
                               const newItems = [...billingItems];
                               newItems[index].amount = formattedValue;
                               setBillingItems(newItems);
@@ -816,11 +873,13 @@ export default function AddLabReceipt() {
                     </Row>
                   ))}
                   {errors.billingItems && (
-                    <p className="text-danger mt-1" style={{ fontSize: "11px" }}>
+                    <p
+                      className="text-danger mt-1"
+                      style={{ fontSize: "11px" }}
+                    >
                       {errors.billingItems}
                     </p>
                   )}
-
 
                   <Row className="g-3 mb-3">
                     <Col md={2}>
@@ -841,7 +900,10 @@ export default function AddLabReceipt() {
                           <option value="UPI">UPI</option>
                         </Form.Select>
                         {errors.paymentMode && (
-                          <p className="text-danger mt-1" style={{ fontSize: "11px" }}>
+                          <p
+                            className="text-danger mt-1"
+                            style={{ fontSize: "11px" }}
+                          >
                             {errors.paymentMode}
                           </p>
                         )}
@@ -871,24 +933,29 @@ export default function AddLabReceipt() {
                           {[...new Set(["Federal", "OFFLINE"])]
                             .filter((opt) => formData.paymentMode?.toLowerCase() === "cash" ? opt !== "Federal" : true)
                         */}
-                        {[...new Set([...posTerminalList, "OFFLINE"])].map((opt) => (
-                          <Form.Check
-                            required
-                            inline
-                            key={opt}
-                            label={opt}
-                            name="posTerminal"
-                            type="radio"
-                            id={`pos-${opt}`}
-                            value={opt}
-                            checked={formData.posTerminal === opt}
-                            onChange={handleInputChange}
-                            style={{ fontSize: "12px", margin: "7px" }}
-                          />
-                        ))}
+                        {[...new Set([...posTerminalList, "OFFLINE"])].map(
+                          (opt) => (
+                            <Form.Check
+                              required
+                              inline
+                              key={opt}
+                              label={opt}
+                              name="posTerminal"
+                              type="radio"
+                              id={`pos-${opt}`}
+                              value={opt}
+                              checked={formData.posTerminal === opt}
+                              onChange={handleInputChange}
+                              style={{ fontSize: "12px", margin: "7px" }}
+                            />
+                          ),
+                        )}
                       </div>
                       {errors.posTerminal && (
-                        <p className="text-danger mt-1" style={{ fontSize: "11px" }}>
+                        <p
+                          className="text-danger mt-1"
+                          style={{ fontSize: "11px" }}
+                        >
                           {errors.posTerminal}
                         </p>
                       )}
@@ -906,8 +973,12 @@ export default function AddLabReceipt() {
                   >
                     <Row className="text-end font-weight-bold">
                       <Col>
-                        <h5 className="m-0" style={{ color: "#00838f", fontWeight: "700" }}>
-                          Total Amount: ₹ {Math.round(payable).toLocaleString("en-IN")}
+                        <h5
+                          className="m-0"
+                          style={{ color: "#00838f", fontWeight: "700" }}
+                        >
+                          Total Amount: ₹{" "}
+                          {Math.round(payable).toLocaleString("en-IN")}
                         </h5>
                       </Col>
                     </Row>
@@ -921,7 +992,6 @@ export default function AddLabReceipt() {
                         fontSize: "13px",
                         padding: "9px 25px",
                         marginTop: "10px",
-
                       }}
                       variant="secondary"
                       className="me-2"

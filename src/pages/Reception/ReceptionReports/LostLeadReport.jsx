@@ -19,7 +19,15 @@ const formatDateDisplay = (dateStr) => {
 };
 
 const formatValue = (val) => {
-  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+  if (
+    val === null ||
+    val === undefined ||
+    val === "" ||
+    val === "N/A" ||
+    val === 0 ||
+    val === "0" ||
+    val === "-"
+  ) {
     return "-";
   }
   return val;
@@ -55,7 +63,10 @@ const getColumnsConfig = (channel, activeTab) => {
       { field: "Note", header: "Note" },
     ];
     if (activeTab === "notConverted") {
-      return [...base, { field: "Days Since Last Call", header: "Days Since Last Call" }];
+      return [
+        ...base,
+        { field: "Days Since Last Call", header: "Days Since Last Call" },
+      ];
     } else {
       return [
         ...base,
@@ -101,7 +112,10 @@ const getColumnsConfig = (channel, activeTab) => {
     { field: "Note", header: "Note" },
   ];
   if (activeTab === "notConverted") {
-    return [...base, { field: "Days Since Enquiry", header: "Days Since Enquiry" }];
+    return [
+      ...base,
+      { field: "Days Since Enquiry", header: "Days Since Enquiry" },
+    ];
   } else {
     return [
       ...base,
@@ -137,16 +151,20 @@ const LostLeadReport = () => {
     const query = searchText.toLowerCase().trim();
     return dataset.filter((item) => {
       return Object.values(item).some((val) =>
-        String(val || "").toLowerCase().includes(query)
+        String(val || "")
+          .toLowerCase()
+          .includes(query),
       );
     });
   };
 
   const getFilteredData = () => {
     const dataToFilter =
-      activeTab === "notConverted" ? notConvertedData :
-        activeTab === "notVisited" ? notVisitedData :
-          summaryData;
+      activeTab === "notConverted"
+        ? notConvertedData
+        : activeTab === "notVisited"
+          ? notVisitedData
+          : summaryData;
     return getFilteredDataset(dataToFilter);
   };
 
@@ -405,8 +423,21 @@ const LostLeadReport = () => {
                 >
                   <h4 style={{ margin: 0 }}>Lost Lead Report</h4>
                   {fromDate && toDate && (
-                    <div style={{ fontSize: "13px", fontWeight: "normal", marginTop: "5px" }}>
-                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b> {channel && <> | Channel: <b>{channel.toUpperCase()}</b></>}
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "normal",
+                        marginTop: "5px",
+                      }}
+                    >
+                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to{" "}
+                      <b>{formatDateDisplay(toDate)}</b>{" "}
+                      {channel && (
+                        <>
+                          {" "}
+                          | Channel: <b>{channel.toUpperCase()}</b>
+                        </>
+                      )}
                     </div>
                   )}
                 </Card.Header>
@@ -523,7 +554,10 @@ const LostLeadReport = () => {
                   </Form>
 
                   {/* Tabs Switcher */}
-                  <div className="no-print d-flex justify-content-start mb-3" style={{ gap: "10px" }}>
+                  <div
+                    className="no-print d-flex justify-content-start mb-3"
+                    style={{ gap: "10px" }}
+                  >
                     <button
                       type="button"
                       className={`btn btn-sm ${activeTab === "notConverted" ? "btn-info text-white" : "btn-outline-info"}`}
@@ -580,7 +614,7 @@ const LostLeadReport = () => {
                             minWidth: isNote ? "100px" : "120px",
                             maxWidth: isNote ? "150px" : "none",
                             wordBreak: isNote ? "break-word" : "normal",
-                            whiteSpace: isNote ? "normal" : "nowrap"
+                            whiteSpace: isNote ? "normal" : "nowrap",
                           }}
                           field={col.field}
                           header={col.header}
@@ -592,110 +626,148 @@ const LostLeadReport = () => {
 
                   {/* Print-only container displaying all three tabs */}
                   <div className="print-table-container">
-                    <h3 className="print-section-title">Enquiry - No Appointment</h3>
+                    <h3 className="print-section-title">
+                      Enquiry - No Appointment
+                    </h3>
                     <table className="print-table">
                       <thead>
                         <tr>
                           <th>Sr No</th>
-                          {getColumnsConfig(channel, "notConverted").map((col) => {
-                            const isNote = col.field === "Note";
-                            return (
-                              <th
-                                key={col.field}
-                                style={{
-                                  width: isNote ? "120px" : "auto",
-                                  maxWidth: isNote ? "150px" : "none",
-                                  wordBreak: isNote ? "break-all" : "normal",
-                                }}
-                              >
-                                {col.header}
-                              </th>
-                            );
-                          })}
+                          {getColumnsConfig(channel, "notConverted").map(
+                            (col) => {
+                              const isNote = col.field === "Note";
+                              return (
+                                <th
+                                  key={col.field}
+                                  style={{
+                                    width: isNote ? "120px" : "auto",
+                                    maxWidth: isNote ? "150px" : "none",
+                                    wordBreak: isNote ? "break-all" : "normal",
+                                  }}
+                                >
+                                  {col.header}
+                                </th>
+                              );
+                            },
+                          )}
                         </tr>
                       </thead>
                       <tbody>
                         {notConvertedData.length === 0 ? (
                           <tr>
-                            <td colSpan={getColumnsConfig(channel, "notConverted").length + 1}>No records found.</td>
+                            <td
+                              colSpan={
+                                getColumnsConfig(channel, "notConverted")
+                                  .length + 1
+                              }
+                            >
+                              No records found.
+                            </td>
                           </tr>
                         ) : (
-                          getFilteredDataset(notConvertedData).map((item, index) => (
-                            <tr key={index}>
-                              <td>{index + 1}</td>
-                              {getColumnsConfig(channel, "notConverted").map((col) => {
-                                const isNote = col.field === "Note";
-                                return (
-                                  <td
-                                    key={col.field}
-                                    style={{
-                                      width: isNote ? "120px" : "auto",
-                                      maxWidth: isNote ? "150px" : "none",
-                                      wordBreak: isNote ? "break-all" : "normal",
-                                      whiteSpace: isNote ? "normal" : "normal",
-                                    }}
-                                  >
-                                    {formatValue(item[col.field])}
-                                  </td>
-                                );
-                              })}
-                            </tr>
-                          ))
+                          getFilteredDataset(notConvertedData).map(
+                            (item, index) => (
+                              <tr key={index}>
+                                <td>{index + 1}</td>
+                                {getColumnsConfig(channel, "notConverted").map(
+                                  (col) => {
+                                    const isNote = col.field === "Note";
+                                    return (
+                                      <td
+                                        key={col.field}
+                                        style={{
+                                          width: isNote ? "120px" : "auto",
+                                          maxWidth: isNote ? "150px" : "none",
+                                          wordBreak: isNote
+                                            ? "break-all"
+                                            : "normal",
+                                          whiteSpace: isNote
+                                            ? "normal"
+                                            : "normal",
+                                        }}
+                                      >
+                                        {formatValue(item[col.field])}
+                                      </td>
+                                    );
+                                  },
+                                )}
+                              </tr>
+                            ),
+                          )
                         )}
                       </tbody>
                     </table>
 
                     <div className="page-break"></div>
 
-                    <h3 className="print-section-title">Appointment - Not Visited</h3>
+                    <h3 className="print-section-title">
+                      Appointment - Not Visited
+                    </h3>
                     <table className="print-table">
                       <thead>
                         <tr>
                           <th>Sr No</th>
-                          {getColumnsConfig(channel, "notVisited").map((col) => {
-                            const isNote = col.field === "Note";
-                            return (
-                              <th
-                                key={col.field}
-                                style={{
-                                  width: isNote ? "120px" : "auto",
-                                  maxWidth: isNote ? "150px" : "none",
-                                  wordBreak: isNote ? "break-all" : "normal",
-                                }}
-                              >
-                                {col.header}
-                              </th>
-                            );
-                          })}
+                          {getColumnsConfig(channel, "notVisited").map(
+                            (col) => {
+                              const isNote = col.field === "Note";
+                              return (
+                                <th
+                                  key={col.field}
+                                  style={{
+                                    width: isNote ? "120px" : "auto",
+                                    maxWidth: isNote ? "150px" : "none",
+                                    wordBreak: isNote ? "break-all" : "normal",
+                                  }}
+                                >
+                                  {col.header}
+                                </th>
+                              );
+                            },
+                          )}
                         </tr>
                       </thead>
                       <tbody>
                         {notVisitedData.length === 0 ? (
                           <tr>
-                            <td colSpan={getColumnsConfig(channel, "notVisited").length + 1}>No records found.</td>
+                            <td
+                              colSpan={
+                                getColumnsConfig(channel, "notVisited").length +
+                                1
+                              }
+                            >
+                              No records found.
+                            </td>
                           </tr>
                         ) : (
-                          getFilteredDataset(notVisitedData).map((item, index) => (
-                            <tr key={index}>
-                              <td>{index + 1}</td>
-                              {getColumnsConfig(channel, "notVisited").map((col) => {
-                                const isNote = col.field === "Note";
-                                return (
-                                  <td
-                                    key={col.field}
-                                    style={{
-                                      width: isNote ? "120px" : "auto",
-                                      maxWidth: isNote ? "150px" : "none",
-                                      wordBreak: isNote ? "break-all" : "normal",
-                                      whiteSpace: isNote ? "normal" : "normal",
-                                    }}
-                                  >
-                                    {formatValue(item[col.field])}
-                                  </td>
-                                );
-                              })}
-                            </tr>
-                          ))
+                          getFilteredDataset(notVisitedData).map(
+                            (item, index) => (
+                              <tr key={index}>
+                                <td>{index + 1}</td>
+                                {getColumnsConfig(channel, "notVisited").map(
+                                  (col) => {
+                                    const isNote = col.field === "Note";
+                                    return (
+                                      <td
+                                        key={col.field}
+                                        style={{
+                                          width: isNote ? "120px" : "auto",
+                                          maxWidth: isNote ? "150px" : "none",
+                                          wordBreak: isNote
+                                            ? "break-all"
+                                            : "normal",
+                                          whiteSpace: isNote
+                                            ? "normal"
+                                            : "normal",
+                                        }}
+                                      >
+                                        {formatValue(item[col.field])}
+                                      </td>
+                                    );
+                                  },
+                                )}
+                              </tr>
+                            ),
+                          )
                         )}
                       </tbody>
                     </table>
@@ -715,15 +787,25 @@ const LostLeadReport = () => {
                       <tbody>
                         {summaryData.length === 0 ? (
                           <tr>
-                            <td colSpan={getColumnsConfig(channel, "summary").length + 1}>No records found.</td>
+                            <td
+                              colSpan={
+                                getColumnsConfig(channel, "summary").length + 1
+                              }
+                            >
+                              No records found.
+                            </td>
                           </tr>
                         ) : (
                           getFilteredDataset(summaryData).map((item, index) => (
                             <tr key={index}>
                               <td>{index + 1}</td>
-                              {getColumnsConfig(channel, "summary").map((col) => (
-                                <td key={col.field}>{formatValue(item[col.field])}</td>
-                              ))}
+                              {getColumnsConfig(channel, "summary").map(
+                                (col) => (
+                                  <td key={col.field}>
+                                    {formatValue(item[col.field])}
+                                  </td>
+                                ),
+                              )}
                             </tr>
                           ))
                         )}

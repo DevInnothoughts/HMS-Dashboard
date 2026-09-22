@@ -1,5 +1,16 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Row, Col, Card, Container, Form, Spinner, Button, Modal, InputGroup, Alert } from "react-bootstrap";
+import {
+  Row,
+  Col,
+  Card,
+  Container,
+  Form,
+  Spinner,
+  Button,
+  Modal,
+  InputGroup,
+  Alert,
+} from "react-bootstrap";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { FilterMatchMode } from "primereact/api";
@@ -42,13 +53,13 @@ const DailyExpense = () => {
   const [summary, setSummary] = useState({
     totalAdvance: 0,
     totalExpenses: 0,
-    remainingBalance: 0
+    remainingBalance: 0,
   });
 
   // Modal states for Adding Expenses
   const [showAddModal, setShowAddModal] = useState(false);
   const [newExpenses, setNewExpenses] = useState([
-    { date: new Date(), purpose: "", amount: "" }
+    { date: new Date(), purpose: "", amount: "" },
   ]);
 
   const [showAddFundsModal, setShowAddFundsModal] = useState(false);
@@ -89,8 +100,12 @@ const DailyExpense = () => {
     setLoading(true);
     try {
       const url = new URL(`${BASE_URL}/V1/managereports/dailyexpense-status`);
-      const finalFromDate = fromDate ? moment(fromDate).format("YYYY-MM-DD") : moment().format("YYYY-MM-DD");
-      const finalToDate = toDate ? moment(toDate).format("YYYY-MM-DD") : moment().format("YYYY-MM-DD");
+      const finalFromDate = fromDate
+        ? moment(fromDate).format("YYYY-MM-DD")
+        : moment().format("YYYY-MM-DD");
+      const finalToDate = toDate
+        ? moment(toDate).format("YYYY-MM-DD")
+        : moment().format("YYYY-MM-DD");
       const params = {
         from: finalFromDate,
         to: finalToDate,
@@ -98,7 +113,7 @@ const DailyExpense = () => {
       };
 
       Object.keys(params).forEach((key) =>
-        url.searchParams.append(key, params[key])
+        url.searchParams.append(key, params[key]),
       );
 
       const response = await fetch(url.toString(), {
@@ -112,16 +127,20 @@ const DailyExpense = () => {
       const resJson = await response.json();
       if (response.ok && resJson.data) {
         const responseData = resJson.data;
-        const formattedData = (Array.isArray(responseData.data) ? responseData.data : []).map(item => ({
+        const formattedData = (
+          Array.isArray(responseData.data) ? responseData.data : []
+        ).map((item) => ({
           ...item,
-          formatted_expenseamt: `₹ ${Math.round(parseFloat(item.expenseamt || 0)).toLocaleString("en-IN")}`
+          formatted_expenseamt: `₹ ${Math.round(parseFloat(item.expenseamt || 0)).toLocaleString("en-IN")}`,
         }));
         setExpenses(formattedData);
-        setSummary(responseData.summary || {
-          totalAdvance: 0,
-          totalExpenses: 0,
-          remainingBalance: 0
-        });
+        setSummary(
+          responseData.summary || {
+            totalAdvance: 0,
+            totalExpenses: 0,
+            remainingBalance: 0,
+          },
+        );
       } else {
         setExpenses([]);
         setSummary({ totalAdvance: 0, totalExpenses: 0, remainingBalance: 0 });
@@ -151,7 +170,7 @@ const DailyExpense = () => {
   const handleAddRow = () => {
     setNewExpenses([
       ...newExpenses,
-      { date: new Date(), purpose: "", amount: "" }
+      { date: new Date(), purpose: "", amount: "" },
     ]);
   };
 
@@ -172,7 +191,9 @@ const DailyExpense = () => {
   // Validate and restrict input in amount field to positive integers only with commas formatting
   const handleAmountChange = (index, value) => {
     const cleanValue = value.replace(/[^0-9]/g, "");
-    const formattedValue = cleanValue ? Number(cleanValue).toLocaleString("en-IN") : "";
+    const formattedValue = cleanValue
+      ? Number(cleanValue).toLocaleString("en-IN")
+      : "";
     const updated = [...newExpenses];
     updated[index].amount = formattedValue;
     setNewExpenses(updated);
@@ -184,12 +205,20 @@ const DailyExpense = () => {
     for (let i = 0; i < newExpenses.length; i++) {
       const exp = newExpenses[i];
       if (!exp.purpose.trim()) {
-        Swal.fire("Validation Error", `Please enter a purpose for Row ${i + 1}`, "warning");
+        Swal.fire(
+          "Validation Error",
+          `Please enter a purpose for Row ${i + 1}`,
+          "warning",
+        );
         return;
       }
       const rawAmount = exp.amount ? exp.amount.replace(/,/g, "") : "";
       if (!rawAmount || parseInt(rawAmount) <= 0) {
-        Swal.fire("Validation Error", `Please enter a valid amount for Row ${i + 1}`, "warning");
+        Swal.fire(
+          "Validation Error",
+          `Please enter a valid amount for Row ${i + 1}`,
+          "warning",
+        );
         return;
       }
     }
@@ -200,44 +229,59 @@ const DailyExpense = () => {
     }, 0);
 
     if (totalEnteredAmount > summary.remainingBalance) {
-      Swal.fire("Warning", `Total entered amount (₹ ${totalEnteredAmount.toLocaleString("en-IN")}) exceeds the remaining balance (₹ ${Math.round(summary.remainingBalance).toLocaleString("en-IN")})!`, "warning");
+      Swal.fire(
+        "Warning",
+        `Total entered amount (₹ ${totalEnteredAmount.toLocaleString("en-IN")}) exceeds the remaining balance (₹ ${Math.round(summary.remainingBalance).toLocaleString("en-IN")})!`,
+        "warning",
+      );
       return;
     }
 
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${BASE_URL}/V1/managereports/dailyexpense?location=${currentLocation}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+      const response = await fetch(
+        `${BASE_URL}/V1/managereports/dailyexpense?location=${currentLocation}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            expenses: newExpenses.map((exp) => ({
+              date: moment(exp.date).format("YYYY-MM-DD"),
+              purpose: exp.purpose,
+              amount: parseInt(exp.amount.replace(/,/g, "")),
+            })),
+            madeBy: userName,
+          }),
         },
-        body: JSON.stringify({
-          expenses: newExpenses.map(exp => ({
-            date: moment(exp.date).format("YYYY-MM-DD"),
-            purpose: exp.purpose,
-            amount: parseInt(exp.amount.replace(/,/g, ""))
-          })),
-          madeBy: userName
-        })
-      });
+      );
 
       const resJson = await response.json();
       if (response.ok) {
         Toast.fire({
           icon: "success",
-          title: resJson.message || "Expenses saved successfully!"
+          title: resJson.message || "Expenses saved successfully!",
         });
         setShowAddModal(false);
         // Refresh list
         fetchExpensesData();
       } else {
-        Swal.fire("Error", resJson.message || "Failed to save expenses.", "error");
+        Swal.fire(
+          "Error",
+          resJson.message || "Failed to save expenses.",
+          "error",
+        );
       }
     } catch (err) {
       console.error("Error saving expenses:", err);
-      Swal.fire("Error", "An unexpected error occurred while saving expenses.", "error");
+      Swal.fire(
+        "Error",
+        "An unexpected error occurred while saving expenses.",
+        "error",
+      );
     } finally {
       setLoading(false);
     }
@@ -251,7 +295,7 @@ const DailyExpense = () => {
       showCancelButton: true,
       confirmButtonColor: "#d33",
       cancelButtonColor: "#3085d6",
-      confirmButtonText: "Yes, delete it!"
+      confirmButtonText: "Yes, delete it!",
     }).then(async (result) => {
       if (result.isConfirmed) {
         setLoading(true);
@@ -262,24 +306,32 @@ const DailyExpense = () => {
             {
               method: "DELETE",
               headers: {
-                Authorization: `Bearer ${token}`
-              }
-            }
+                Authorization: `Bearer ${token}`,
+              },
+            },
           );
 
           const resJson = await response.json();
           if (response.ok) {
             Toast.fire({
               icon: "success",
-              title: resJson.message || "Expense deleted successfully"
+              title: resJson.message || "Expense deleted successfully",
             });
             fetchExpensesData();
           } else {
-            Swal.fire("Error", resJson.message || "Failed to delete expense.", "error");
+            Swal.fire(
+              "Error",
+              resJson.message || "Failed to delete expense.",
+              "error",
+            );
           }
         } catch (error) {
           console.error("Delete Error:", error);
-          Swal.fire("Error", "An unexpected error occurred while deleting the expense.", "error");
+          Swal.fire(
+            "Error",
+            "An unexpected error occurred while deleting the expense.",
+            "error",
+          );
         } finally {
           setLoading(false);
         }
@@ -298,7 +350,11 @@ const DailyExpense = () => {
     if (e) e.preventDefault();
     const cleanAmt = advanceAmount.replace(/,/g, "");
     if (!cleanAmt || parseInt(cleanAmt) <= 0) {
-      Swal.fire("Validation Error", "Please enter a valid advance amount.", "warning");
+      Swal.fire(
+        "Validation Error",
+        "Please enter a valid advance amount.",
+        "warning",
+      );
       return;
     }
 
@@ -311,39 +367,50 @@ const DailyExpense = () => {
       cancelButtonColor: "#dc3545",
       confirmButtonText: "Yes, add it!",
       cancelButtonText: "Cancel",
-      reverseButtons: true
+      reverseButtons: true,
     }).then(async (result) => {
       if (result.isConfirmed) {
         setLoading(true);
         try {
           const token = localStorage.getItem("token");
-          const response = await fetch(`${BASE_URL}/V1/managereports/expense-advance?location=${currentLocation}`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`
+          const response = await fetch(
+            `${BASE_URL}/V1/managereports/expense-advance?location=${currentLocation}`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                date: moment().format("YYYY-MM-DD"),
+                amount: parseInt(cleanAmt),
+              }),
             },
-            body: JSON.stringify({
-              date: moment().format("YYYY-MM-DD"),
-              amount: parseInt(cleanAmt)
-            })
-          });
+          );
 
           const resJson = await response.json();
           if (response.ok) {
             Toast.fire({
               icon: "success",
-              title: "Funds added successfully!"
+              title: "Funds added successfully!",
             });
             setShowAddFundsModal(false);
             setAdvanceAmount("");
             fetchExpensesData();
           } else {
-            Swal.fire("Error", resJson.message || "Failed to add funds.", "error");
+            Swal.fire(
+              "Error",
+              resJson.message || "Failed to add funds.",
+              "error",
+            );
           }
         } catch (err) {
           console.error("Error saving funds:", err);
-          Swal.fire("Error", "An unexpected error occurred while saving funds.", "error");
+          Swal.fire(
+            "Error",
+            "An unexpected error occurred while saving funds.",
+            "error",
+          );
         } finally {
           setLoading(false);
         }
@@ -369,7 +436,7 @@ const DailyExpense = () => {
             justifyContent: "space-between",
             alignItems: "center",
             gap: "10px",
-            flexWrap: "wrap"
+            flexWrap: "wrap",
           }}
         >
           <div
@@ -377,7 +444,7 @@ const DailyExpense = () => {
               display: "flex",
               alignItems: "center",
               gap: "15px",
-              flexWrap: "wrap"
+              flexWrap: "wrap",
             }}
           >
             <div style={{ display: "flex", alignItems: "center" }}>
@@ -457,7 +524,7 @@ const DailyExpense = () => {
               borderRadius: "8px",
               padding: "8px",
               backgroundColor: "#f5fcfd",
-              flexWrap: "wrap"
+              flexWrap: "wrap",
             }}
           >
             <div>
@@ -467,7 +534,7 @@ const DailyExpense = () => {
                   fontWeight: "500",
                   color: "#00838f",
                   marginBottom: "3px",
-                  textAlign: "left"
+                  textAlign: "left",
                 }}
               >
                 From Date
@@ -479,7 +546,11 @@ const DailyExpense = () => {
                 placeholderText="Select from date"
                 customInput={
                   <Form.Control
-                    style={{ padding: "5px 8px", fontSize: "12px", height: "30px" }}
+                    style={{
+                      padding: "5px 8px",
+                      fontSize: "12px",
+                      height: "30px",
+                    }}
                   />
                 }
               />
@@ -492,7 +563,7 @@ const DailyExpense = () => {
                   fontWeight: "500",
                   color: "#00838f",
                   marginBottom: "3px",
-                  textAlign: "left"
+                  textAlign: "left",
                 }}
               >
                 To Date
@@ -504,7 +575,11 @@ const DailyExpense = () => {
                 placeholderText="Select to date"
                 customInput={
                   <Form.Control
-                    style={{ padding: "5px 8px", fontSize: "12px", height: "30px" }}
+                    style={{
+                      padding: "5px 8px",
+                      fontSize: "12px",
+                      height: "30px",
+                    }}
                   />
                 }
               />
@@ -545,7 +620,13 @@ const DailyExpense = () => {
   };
 
   const formatValue = (val) => {
-    if (val === null || val === undefined || val === "" || val === 0 || val === "0") {
+    if (
+      val === null ||
+      val === undefined ||
+      val === "" ||
+      val === 0 ||
+      val === "0"
+    ) {
       return "-";
     }
     return val;
@@ -602,7 +683,7 @@ const DailyExpense = () => {
                     justifyContent: "space-between",
                     alignItems: "center",
                     flexWrap: "wrap",
-                    gap: "10px"
+                    gap: "10px",
                   }}
                 >
                   <h4 style={{ margin: 0 }}>Daily Expense List</h4>
@@ -611,26 +692,42 @@ const DailyExpense = () => {
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      backgroundColor: summary.remainingBalance <= 1000 ? "#d32f2f" : "#2e7d32",
+                      backgroundColor:
+                        summary.remainingBalance <= 1000
+                          ? "#d32f2f"
+                          : "#2e7d32",
                       borderRadius: "50px",
                       padding: "8px 16px",
                       fontSize: "14px",
                       fontWeight: "400",
                       color: "white",
                       margin: "0 auto",
-                      boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                     }}
                   >
                     {summary.remainingBalance <= 1000 ? (
-                      <FeatherIcon icon="alert-triangle" size={15} style={{ marginRight: "6px" }} />
+                      <FeatherIcon
+                        icon="alert-triangle"
+                        size={15}
+                        style={{ marginRight: "6px" }}
+                      />
                     ) : (
-                      <FeatherIcon icon="credit-card" size={15} style={{ marginRight: "6px" }} />
+                      <FeatherIcon
+                        icon="credit-card"
+                        size={15}
+                        style={{ marginRight: "6px" }}
+                      />
                     )}
                     <span style={{ marginRight: "6px", fontWeight: "500" }}>
-                      {summary.remainingBalance <= 1000 ? "Warning! Remaining Balance:" : "Remaining Balance:"}
+                      {summary.remainingBalance <= 1000
+                        ? "Warning! Remaining Balance:"
+                        : "Remaining Balance:"}
                     </span>
                     <span style={{ color: "white", fontWeight: "800" }}>
-                      ₹ {Math.round(summary.remainingBalance).toLocaleString("en-IN")}
+                      ₹{" "}
+                      {Math.round(summary.remainingBalance).toLocaleString(
+                        "en-IN",
+                      )}
                     </span>
                     <span
                       style={{
@@ -650,15 +747,21 @@ const DailyExpense = () => {
                       }}
                       title="Add Funds"
                       onMouseOver={(e) => {
-                        e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.4)";
+                        e.currentTarget.style.backgroundColor =
+                          "rgba(255, 255, 255, 0.4)";
                         e.currentTarget.style.transform = "scale(1.15)";
                       }}
                       onMouseOut={(e) => {
-                        e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.25)";
+                        e.currentTarget.style.backgroundColor =
+                          "rgba(255, 255, 255, 0.25)";
                         e.currentTarget.style.transform = "scale(1)";
                       }}
                     >
-                      <FeatherIcon icon="plus" size={13} style={{ strokeWidth: 3 }} />
+                      <FeatherIcon
+                        icon="plus"
+                        size={13}
+                        style={{ strokeWidth: 3 }}
+                      />
                     </span>
                   </div>
 
@@ -677,7 +780,9 @@ const DailyExpense = () => {
                       gap: "5px",
                     }}
                     onClick={() => {
-                      setNewExpenses([{ date: new Date(), purpose: "", amount: "" }]);
+                      setNewExpenses([
+                        { date: new Date(), purpose: "", amount: "" },
+                      ]);
                       setShowAddModal(true);
                     }}
                   >
@@ -686,7 +791,10 @@ const DailyExpense = () => {
                 </Card.Header>
                 <Card.Body style={{ marginTop: "-6px", padding: "5px" }}>
                   {loading ? (
-                    <div className="d-flex justify-content-center py-5" style={{ color: "#00bcd4" }}>
+                    <div
+                      className="d-flex justify-content-center py-5"
+                      style={{ color: "#00bcd4" }}
+                    >
                       <Spinner animation="border" role="status">
                         <span className="visually-hidden">Loading...</span>
                       </Spinner>
@@ -710,7 +818,17 @@ const DailyExpense = () => {
                       header={header}
                       paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
                       currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
-                      emptyMessage={<div style={{ textAlign: "center", padding: "10px", fontWeight: "bold" }}>No records found.</div>}
+                      emptyMessage={
+                        <div
+                          style={{
+                            textAlign: "center",
+                            padding: "10px",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          No records found.
+                        </div>
+                      }
                       className="datatable-compact-style datatable-medium-small"
                       rowClassName={(rowData, { rowIndex }) => ({
                         style: {
@@ -743,7 +861,9 @@ const DailyExpense = () => {
                       <Column
                         field="date"
                         header="Date"
-                        body={(rowData) => formatValue(formatDateDisplay(rowData.date))}
+                        body={(rowData) =>
+                          formatValue(formatDateDisplay(rowData.date))
+                        }
                         headerClassName="datatable-header-center"
                         headerStyle={{ fontWeight: "bold" }}
                         style={{
@@ -765,13 +885,15 @@ const DailyExpense = () => {
                           padding: "0.75rem",
                           wordBreak: "break-word",
                           whiteSpace: "normal",
-                          minWidth: "200px"
+                          minWidth: "200px",
                         }}
                       />
                       <Column
                         field="expenseamt"
                         header="Amount"
-                        body={(rowData) => `₹ ${Math.round(parseFloat(rowData.expenseamt || 0)).toLocaleString("en-IN")}`}
+                        body={(rowData) =>
+                          `₹ ${Math.round(parseFloat(rowData.expenseamt || 0)).toLocaleString("en-IN")}`
+                        }
                         headerClassName="datatable-header-center"
                         headerStyle={{ fontWeight: "bold" }}
                         style={{
@@ -792,16 +914,28 @@ const DailyExpense = () => {
                           width: "120px",
                         }}
                         body={(rowData) => {
-                          const isToday = moment(rowData.date).isSame(moment(), 'day');
+                          const isToday = moment(rowData.date).isSame(
+                            moment(),
+                            "day",
+                          );
                           return (
                             <div className="d-flex align-items-center justify-content-center">
                               <Button
-                                style={{ borderRadius: "8px", cursor: isToday ? "pointer" : "not-allowed" }}
-                                onClick={() => isToday && handleDeleteClick(rowData.id)}
+                                style={{
+                                  borderRadius: "8px",
+                                  cursor: isToday ? "pointer" : "not-allowed",
+                                }}
+                                onClick={() =>
+                                  isToday && handleDeleteClick(rowData.id)
+                                }
                                 disabled={!isToday}
                                 className="btn btn-extra-small btn-icon"
                                 variant={isToday ? "danger" : "secondary"}
-                                title={isToday ? "Delete Expense" : "Cannot delete previous date expenses"}
+                                title={
+                                  isToday
+                                    ? "Delete Expense"
+                                    : "Cannot delete previous date expenses"
+                                }
                               >
                                 <FeatherIcon icon="trash-2" size={14} />
                               </Button>
@@ -831,11 +965,20 @@ const DailyExpense = () => {
           style={{
             backgroundColor: "#e0f7fa",
             borderBottom: "2px solid #00bcd4",
-            padding: "10px"
+            padding: "10px",
           }}
         >
-          <Modal.Title style={{ color: "#006064", fontWeight: "bold", display: "flex", alignItems: "center", gap: "8px" }}>
-            <FeatherIcon icon="plus" size={20} />Add Expense Entry
+          <Modal.Title
+            style={{
+              color: "#006064",
+              fontWeight: "bold",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <FeatherIcon icon="plus" size={20} />
+            Add Expense Entry
           </Modal.Title>
         </Modal.Header>
         <Modal.Body style={{ padding: "15px" }}>
@@ -843,10 +986,11 @@ const DailyExpense = () => {
             <Row
               key={index}
               className="align-items-center mb-3 p-3 rounded position-relative"
-
             >
               <Col md={2} className="mb-2 mb-md-0">
-                <Form.Label className="small mb-3" style={{ fontSize: "13px" }}>Date</Form.Label>
+                <Form.Label className="small mb-3" style={{ fontSize: "13px" }}>
+                  Date
+                </Form.Label>
                 <DatePicker
                   selected={exp.date ? new Date(exp.date) : new Date()}
                   onChange={(date) => handleFieldChange(index, "date", date)}
@@ -862,7 +1006,7 @@ const DailyExpense = () => {
                         fontSize: "12px",
                         fontWeight: "500",
                         height: "35px",
-                        cursor: "pointer"
+                        cursor: "pointer",
                       }}
                     />
                   }
@@ -876,8 +1020,14 @@ const DailyExpense = () => {
                   type="text"
                   placeholder="Enter purpose"
                   value={exp.purpose}
-                  onChange={(e) => handleFieldChange(index, "purpose", e.target.value)}
-                  style={{ fontSize: "12px", height: "35px", border: "1px solid #90caf9", }}
+                  onChange={(e) =>
+                    handleFieldChange(index, "purpose", e.target.value)
+                  }
+                  style={{
+                    fontSize: "12px",
+                    height: "35px",
+                    border: "1px solid #90caf9",
+                  }}
                   required
                 />
               </Col>
@@ -886,19 +1036,38 @@ const DailyExpense = () => {
                   Amount <span style={{ color: "red" }}>*</span>
                 </Form.Label>
                 <InputGroup style={{ height: "35px" }}>
-                  <InputGroup.Text style={{ fontSize: "12px", border: "1px solid #90caf9", borderRight: "none", backgroundColor: "#e0f7fa" }}>₹</InputGroup.Text>
+                  <InputGroup.Text
+                    style={{
+                      fontSize: "12px",
+                      border: "1px solid #90caf9",
+                      borderRight: "none",
+                      backgroundColor: "#e0f7fa",
+                    }}
+                  >
+                    ₹
+                  </InputGroup.Text>
                   <Form.Control
                     type="text"
                     placeholder="Enter amount"
                     value={exp.amount}
                     onChange={(e) => handleAmountChange(index, e.target.value)}
-                    style={{ fontSize: "12px", height: "35px", border: "1px solid #90caf9", borderLeft: "none" }}
+                    style={{
+                      fontSize: "12px",
+                      height: "35px",
+                      border: "1px solid #90caf9",
+                      borderLeft: "none",
+                    }}
                     required
                   />
                 </InputGroup>
               </Col>
               <Col md={2} className="mb-2 mb-md-0">
-                <Form.Label className="small mb-3 d-block" style={{ fontSize: "11px" }}>&nbsp;</Form.Label>
+                <Form.Label
+                  className="small mb-3 d-block"
+                  style={{ fontSize: "11px" }}
+                >
+                  &nbsp;
+                </Form.Label>
                 <div className="d-flex gap-2">
                   <Button
                     variant="danger"
@@ -912,7 +1081,7 @@ const DailyExpense = () => {
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      padding: 0
+                      padding: 0,
                     }}
                     title="Delete Row"
                   >
@@ -930,7 +1099,7 @@ const DailyExpense = () => {
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        padding: 0
+                        padding: 0,
                       }}
                       title="Add Row"
                     >
@@ -942,13 +1111,65 @@ const DailyExpense = () => {
             </Row>
           ))}
         </Modal.Body>
-        <Modal.Footer style={{ backgroundColor: "#f1f4f6", padding: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ flex: 1, marginRight: "15px", display: "flex", justifyContent: "flex-start" }}>
-            {newExpenses.reduce((sum, exp) => sum + (parseInt(exp.amount ? exp.amount.replace(/,/g, "") : "0") || 0), 0) > summary.remainingBalance && (
-              <Alert variant="danger" className="mb-0" style={{ fontSize: "11px", fontWeight: "bold", display: "flex", alignItems: "center", gap: "6px", padding: "10px 10px", margin: 0, width: "100%", maxWidth: "500px" }}>
-                <FeatherIcon icon="alert-triangle" size={14} style={{ flexShrink: 0 }} />
+        <Modal.Footer
+          style={{
+            backgroundColor: "#f1f4f6",
+            padding: "8px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <div
+            style={{
+              flex: 1,
+              marginRight: "15px",
+              display: "flex",
+              justifyContent: "flex-start",
+            }}
+          >
+            {newExpenses.reduce(
+              (sum, exp) =>
+                sum +
+                (parseInt(exp.amount ? exp.amount.replace(/,/g, "") : "0") ||
+                  0),
+              0,
+            ) > summary.remainingBalance && (
+              <Alert
+                variant="danger"
+                className="mb-0"
+                style={{
+                  fontSize: "11px",
+                  fontWeight: "bold",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "10px 10px",
+                  margin: 0,
+                  width: "100%",
+                  maxWidth: "500px",
+                }}
+              >
+                <FeatherIcon
+                  icon="alert-triangle"
+                  size={14}
+                  style={{ flexShrink: 0 }}
+                />
                 <span>
-                  Warning: Entered ₹ {newExpenses.reduce((sum, exp) => sum + (parseInt(exp.amount ? exp.amount.replace(/,/g, "") : "0") || 0), 0).toLocaleString("en-IN")} amount exceeds remaining balance ₹ {Math.round(summary.remainingBalance).toLocaleString("en-IN")}.
+                  Warning: Entered ₹{" "}
+                  {newExpenses
+                    .reduce(
+                      (sum, exp) =>
+                        sum +
+                        (parseInt(
+                          exp.amount ? exp.amount.replace(/,/g, "") : "0",
+                        ) || 0),
+                      0,
+                    )
+                    .toLocaleString("en-IN")}{" "}
+                  amount exceeds remaining balance ₹{" "}
+                  {Math.round(summary.remainingBalance).toLocaleString("en-IN")}
+                  .
                 </span>
               </Alert>
             )}
@@ -957,7 +1178,12 @@ const DailyExpense = () => {
             <Button
               variant="secondary"
               onClick={() => setShowAddModal(false)}
-              style={{ borderRadius: "8px", fontSize: "12px", fontWeight: "bold", padding: "10px 12px" }}
+              style={{
+                borderRadius: "8px",
+                fontSize: "12px",
+                fontWeight: "bold",
+                padding: "10px 12px",
+              }}
             >
               Cancel
             </Button>
@@ -971,7 +1197,7 @@ const DailyExpense = () => {
                 fontWeight: "bold",
                 padding: "12px 35px",
                 backgroundColor: "#00bcd4",
-                borderColor: "#00bcd4"
+                borderColor: "#00bcd4",
               }}
             >
               {loading ? "Adding..." : "Add"}
@@ -993,18 +1219,29 @@ const DailyExpense = () => {
           style={{
             backgroundColor: "#e0f7fa",
             borderBottom: "2px solid #00bcd4",
-            padding: "10px"
+            padding: "10px",
           }}
         >
-          <Modal.Title style={{ color: "#006064", fontWeight: "bold", display: "flex", alignItems: "center", gap: "8px" }}>
-            <FeatherIcon icon="plus" size={20} />Add Advance Amount
+          <Modal.Title
+            style={{
+              color: "#006064",
+              fontWeight: "bold",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <FeatherIcon icon="plus" size={20} />
+            Add Advance Amount
           </Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleSaveFunds}>
           <Modal.Body style={{ padding: "15px" }}>
             <Row className="mb-3">
               <Col md={5}>
-                <Form.Label className="small mb-2" style={{ fontSize: "13px" }}>Date</Form.Label>
+                <Form.Label className="small mb-2" style={{ fontSize: "13px" }}>
+                  Date
+                </Form.Label>
                 <Form.Control
                   type="text"
                   value={moment().format("DD-MM-YYYY")}
@@ -1015,7 +1252,7 @@ const DailyExpense = () => {
                     cursor: "not-allowed",
                     fontSize: "12px",
                     fontWeight: "500",
-                    height: "35px"
+                    height: "35px",
                   }}
                 />
               </Col>
@@ -1024,7 +1261,16 @@ const DailyExpense = () => {
                   Advance Amount <span style={{ color: "red" }}>*</span>
                 </Form.Label>
                 <InputGroup style={{ height: "35px" }}>
-                  <InputGroup.Text style={{ fontSize: "12px", border: "1px solid #90caf9", borderRight: "none", backgroundColor: "#e0f7fa" }}>₹</InputGroup.Text>
+                  <InputGroup.Text
+                    style={{
+                      fontSize: "12px",
+                      border: "1px solid #90caf9",
+                      borderRight: "none",
+                      backgroundColor: "#e0f7fa",
+                    }}
+                  >
+                    ₹
+                  </InputGroup.Text>
                   <Form.Control
                     type="text"
                     placeholder="Enter advance amount"
@@ -1035,7 +1281,7 @@ const DailyExpense = () => {
                       borderLeft: "none",
                       fontSize: "12px",
                       fontWeight: "500",
-                      height: "35px"
+                      height: "35px",
                     }}
                     required
                   />
@@ -1043,11 +1289,23 @@ const DailyExpense = () => {
               </Col>
             </Row>
           </Modal.Body>
-          <Modal.Footer style={{ backgroundColor: "#f1f4f6", padding: "8px", display: "flex", justifyContent: "flex-end" }}>
+          <Modal.Footer
+            style={{
+              backgroundColor: "#f1f4f6",
+              padding: "8px",
+              display: "flex",
+              justifyContent: "flex-end",
+            }}
+          >
             <Button
               variant="secondary"
               onClick={() => setShowAddFundsModal(false)}
-              style={{ borderRadius: "8px", fontSize: "12px", fontWeight: "bold", padding: "12px 12px" }}
+              style={{
+                borderRadius: "8px",
+                fontSize: "12px",
+                fontWeight: "bold",
+                padding: "12px 12px",
+              }}
             >
               Cancel
             </Button>
@@ -1061,7 +1319,7 @@ const DailyExpense = () => {
                 fontWeight: "bold",
                 padding: "12px 35px",
                 backgroundColor: "#00bcd4",
-                borderColor: "#00bcd4"
+                borderColor: "#00bcd4",
               }}
             >
               {loading ? "Adding..." : "Add"}

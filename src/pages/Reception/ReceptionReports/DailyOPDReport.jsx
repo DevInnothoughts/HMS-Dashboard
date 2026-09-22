@@ -30,22 +30,30 @@ const formatDateIST = (date) => {
   const istOffsetMs = 5.5 * 60 * 60 * 1000;
   const istTime = new Date(date.getTime() + istOffsetMs);
   const year = istTime.getUTCFullYear();
-  const month = String(istTime.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(istTime.getUTCDate()).padStart(2, '0');
+  const month = String(istTime.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(istTime.getUTCDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 };
 
 const formatDisplayDateIST = (date) => {
   const istOffsetMs = 5.5 * 60 * 60 * 1000;
   const istTime = new Date(date.getTime() + istOffsetMs);
-  const day = String(istTime.getUTCDate()).padStart(2, '0');
-  const month = String(istTime.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(istTime.getUTCDate()).padStart(2, "0");
+  const month = String(istTime.getUTCMonth() + 1).padStart(2, "0");
   const year = istTime.getUTCFullYear();
   return `${day}-${month}-${year}`;
 };
 
 const formatAmount = (val) => {
-  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+  if (
+    val === null ||
+    val === undefined ||
+    val === "" ||
+    val === "N/A" ||
+    val === 0 ||
+    val === "0" ||
+    val === "-"
+  ) {
     return "-";
   }
   const num = Number(val);
@@ -56,7 +64,14 @@ const formatAmount = (val) => {
 };
 
 const formatCount = (val) => {
-  if (val === null || val === undefined || val === "" || val === 0 || val === "0" || val === "-") {
+  if (
+    val === null ||
+    val === undefined ||
+    val === "" ||
+    val === 0 ||
+    val === "0" ||
+    val === "-"
+  ) {
     return "-";
   }
   const num = Number(val);
@@ -193,8 +208,8 @@ const DailyOPDReport = () => {
         </thead>
         <tbody>
           ${data
-        .map(
-          (item) => `
+            .map(
+              (item) => `
             <tr>
               <td style="text-align:left;padding-left:10px;width:70%;
                   font-weight:${item.method?.toUpperCase() === "TOTAL" ? "bold" : "normal"};">
@@ -206,8 +221,8 @@ const DailyOPDReport = () => {
               </td>
             </tr>
           `,
-        )
-        .join("")}
+            )
+            .join("")}
         </tbody>
       </table>
     `;
@@ -292,15 +307,15 @@ const DailyOPDReport = () => {
                 </thead>
                 <tbody style="font-size:12px;">
                   ${reportData.opdCounts
-        .map(
-          (i) => `
+                    .map(
+                      (i) => `
                     <tr>
                       <td style="font-weight:${i.type === "TOTAL" ? "bold" : "normal"};">${i.type}</td>
                       <td style="font-weight:${i.type === "TOTAL" ? "bold" : "normal"};">${formatCount(i.count)}</td>
                     </tr>
                   `,
-        )
-        .join("")}
+                    )
+                    .join("")}
                 </tbody>
               </table>
             </div>
@@ -323,8 +338,8 @@ const DailyOPDReport = () => {
                 </thead>
                 <tbody style="font-size:12px;">
                   ${reportData.opdDetails
-        .map(
-          (i) => `
+                    .map(
+                      (i) => `
                     <tr>
                       <td style="color:#000 !important;">${i.type}</td>
                       <td>${formatCount(i.new)}</td>
@@ -334,8 +349,8 @@ const DailyOPDReport = () => {
                       <td>${formatCount(i.total)}</td>
                     </tr>
                   `,
-        )
-        .join("")}
+                    )
+                    .join("")}
                 </tbody>
               </table>
             </div>
@@ -354,15 +369,15 @@ const DailyOPDReport = () => {
                 </thead>
                 <tbody style="font-size:12px;">
                   ${(reportData.opdReportDetails || [])
-        .map(
-          (i) => `
+                    .map(
+                      (i) => `
                     <tr>
                        <td style="color:#000 !important;">${i.name}</td>
                        <td>${formatAmount(i.amount)}</td>
                      </tr>
                   `,
-        )
-        .join("")}
+                    )
+                    .join("")}
                 </tbody>
               </table>
             </div>
@@ -377,15 +392,15 @@ const DailyOPDReport = () => {
                 </thead>
                 <tbody style="font-size:12px;">
                   ${reportData.testDetails
-        .map(
-          (i) => `
+                    .map(
+                      (i) => `
                     <tr>
                        <td style="color:#000 !important;">${i.testName}</td>
                        <td>${formatAmount(i.amount)}</td>
                      </tr>
                   `,
-        )
-        .join("")}
+                    )
+                    .join("")}
                 </tbody>
               </table>
             </div>
@@ -508,7 +523,9 @@ const DailyOPDReport = () => {
                 }}
               >
                 <div style={{ width: "120px" }}></div>
-                <div style={{ flexGrow: 1, textAlign: "center" }}>DAILY OPD REPORT</div>
+                <div style={{ flexGrow: 1, textAlign: "center" }}>
+                  DAILY OPD REPORT
+                </div>
                 <Button
                   variant="warning"
                   size="sm"
@@ -569,10 +586,14 @@ const DailyOPDReport = () => {
                       <tbody style={{ fontSize: "12px" }}>
                         {reportData.opdCounts.map((item, index) => (
                           <tr key={index}>
-                            <td className={item.type === "TOTAL" ? "fw-bold" : ""}>
+                            <td
+                              className={item.type === "TOTAL" ? "fw-bold" : ""}
+                            >
                               {item.type}
                             </td>
-                            <td className={item.type === "TOTAL" ? "fw-bold" : ""}>
+                            <td
+                              className={item.type === "TOTAL" ? "fw-bold" : ""}
+                            >
                               {formatCount(item.count)}
                             </td>
                           </tr>
@@ -648,7 +669,12 @@ const DailyOPDReport = () => {
                           >
                             MCDPA
                           </th>
-                          <th style={{ width: "13%", borderRight: "1px solid #00bcd4" }}>
+                          <th
+                            style={{
+                              width: "13%",
+                              borderRight: "1px solid #00bcd4",
+                            }}
+                          >
                             Total
                           </th>
                         </tr>
@@ -656,9 +682,7 @@ const DailyOPDReport = () => {
                       <tbody style={{ fontSize: "12px" }}>
                         {reportData.opdDetails.map((item, index) => (
                           <tr key={index}>
-                            <td>
-                              {item.type}
-                            </td>
+                            <td>{item.type}</td>
                             <td>{formatCount(item.new)}</td>
                             <td>{formatCount(item.followUp)}</td>
                             <td>{formatCount(item.po)}</td>
@@ -703,20 +727,25 @@ const DailyOPDReport = () => {
                           >
                             OPD
                           </th>
-                          <th style={{ width: "40%", borderRight: "1px solid #00bcd4" }}>
+                          <th
+                            style={{
+                              width: "40%",
+                              borderRight: "1px solid #00bcd4",
+                            }}
+                          >
                             Amount (₹)
                           </th>
                         </tr>
                       </thead>
                       <tbody style={{ fontSize: "12px" }}>
-                        {(reportData.opdReportDetails || []).map((item, index) => (
-                          <tr key={index}>
-                             <td>
-                               {item.name}
-                             </td>
-                             <td>{formatAmount(item.amount)}</td>
-                           </tr>
-                        ))}
+                        {(reportData.opdReportDetails || []).map(
+                          (item, index) => (
+                            <tr key={index}>
+                              <td>{item.name}</td>
+                              <td>{formatAmount(item.amount)}</td>
+                            </tr>
+                          ),
+                        )}
                       </tbody>
                     </Table>
                   </Col>
@@ -752,7 +781,12 @@ const DailyOPDReport = () => {
                           >
                             Lab
                           </th>
-                          <th style={{ width: "40%", borderRight: "1px solid #00bcd4" }}>
+                          <th
+                            style={{
+                              width: "40%",
+                              borderRight: "1px solid #00bcd4",
+                            }}
+                          >
                             Amount (₹)
                           </th>
                         </tr>
@@ -760,11 +794,9 @@ const DailyOPDReport = () => {
                       <tbody style={{ fontSize: "12px" }}>
                         {reportData.testDetails.map((item, index) => (
                           <tr key={index}>
-                             <td>
-                               {item.testName}
-                             </td>
-                             <td>{formatAmount(item.amount)}</td>
-                           </tr>
+                            <td>{item.testName}</td>
+                            <td>{formatAmount(item.amount)}</td>
+                          </tr>
                         ))}
                       </tbody>
                     </Table>
@@ -804,7 +836,11 @@ const DailyOPDReport = () => {
                         {reportData.opdCollectionDetails.map((item, index) => (
                           <tr key={index}>
                             <td
-                              className={item.method?.toUpperCase() === "TOTAL" ? "fw-bold" : ""}
+                              className={
+                                item.method?.toUpperCase() === "TOTAL"
+                                  ? "fw-bold"
+                                  : ""
+                              }
                               style={{
                                 textAlign: "left",
                                 paddingLeft: "10px",
@@ -817,7 +853,9 @@ const DailyOPDReport = () => {
                               style={{
                                 width: "30%",
                                 fontWeight:
-                                  item.method?.toUpperCase() === "TOTAL" ? "bold" : "normal",
+                                  item.method?.toUpperCase() === "TOTAL"
+                                    ? "bold"
+                                    : "normal",
                               }}
                             >
                               {formatAmount(item.amount)}
@@ -861,7 +899,11 @@ const DailyOPDReport = () => {
                         {reportData.labCollectionDetails.map((item, index) => (
                           <tr key={index}>
                             <td
-                              className={item.method?.toUpperCase() === "TOTAL" ? "fw-bold" : ""}
+                              className={
+                                item.method?.toUpperCase() === "TOTAL"
+                                  ? "fw-bold"
+                                  : ""
+                              }
                               style={{
                                 textAlign: "left",
                                 paddingLeft: "10px",
@@ -874,7 +916,9 @@ const DailyOPDReport = () => {
                               style={{
                                 width: "30%",
                                 fontWeight:
-                                  item.method?.toUpperCase() === "TOTAL" ? "bold" : "normal",
+                                  item.method?.toUpperCase() === "TOTAL"
+                                    ? "bold"
+                                    : "normal",
                               }}
                             >
                               {formatAmount(item.amount)}
@@ -894,7 +938,7 @@ const DailyOPDReport = () => {
                         textAlign: "center",
                         fontSize: "13px",
                         backgroundColor: "white",
-                        marginTop: "20px"
+                        marginTop: "20px",
                       }}
                     >
                       <thead>
@@ -913,29 +957,37 @@ const DailyOPDReport = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {reportData.overallCollectionDetails.map((item, index) => (
-                          <tr key={index}>
-                            <td
-                              className={item.method?.toUpperCase() === "TOTAL" ? "fw-bold" : ""}
-                              style={{
-                                textAlign: "left",
-                                paddingLeft: "10px",
-                                width: "70%",
-                              }}
-                            >
-                              {item.method}
-                            </td>
-                            <td
-                              style={{
-                                width: "30%",
-                                fontWeight:
-                                  item.method?.toUpperCase() === "TOTAL" ? "bold" : "normal",
-                              }}
-                            >
-                              {formatAmount(item.amount)}
-                            </td>
-                          </tr>
-                        ))}
+                        {reportData.overallCollectionDetails.map(
+                          (item, index) => (
+                            <tr key={index}>
+                              <td
+                                className={
+                                  item.method?.toUpperCase() === "TOTAL"
+                                    ? "fw-bold"
+                                    : ""
+                                }
+                                style={{
+                                  textAlign: "left",
+                                  paddingLeft: "10px",
+                                  width: "70%",
+                                }}
+                              >
+                                {item.method}
+                              </td>
+                              <td
+                                style={{
+                                  width: "30%",
+                                  fontWeight:
+                                    item.method?.toUpperCase() === "TOTAL"
+                                      ? "bold"
+                                      : "normal",
+                                }}
+                              >
+                                {formatAmount(item.amount)}
+                              </td>
+                            </tr>
+                          ),
+                        )}
                       </tbody>
                     </Table>
                   </Col>
@@ -969,34 +1021,41 @@ const DailyOPDReport = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {reportData.pharmacyCollectionDetails.map((item, index) => (
-                          <tr key={index}>
-                            <td
-                              className={item.method?.toUpperCase() === "TOTAL" ? "fw-bold" : ""}
-                              style={{
-                                textAlign: "left",
-                                paddingLeft: "10px",
-                                width: "70%",
-                              }}
-                            >
-                              {item.method}
-                            </td>
-                            <td
-                              style={{
-                                width: "30%",
-                                fontWeight:
-                                  item.method?.toUpperCase() === "TOTAL" ? "bold" : "normal",
-                              }}
-                            >
-                              {formatAmount(item.amount)}
-                            </td>
-                          </tr>
-                        ))}
+                        {reportData.pharmacyCollectionDetails.map(
+                          (item, index) => (
+                            <tr key={index}>
+                              <td
+                                className={
+                                  item.method?.toUpperCase() === "TOTAL"
+                                    ? "fw-bold"
+                                    : ""
+                                }
+                                style={{
+                                  textAlign: "left",
+                                  paddingLeft: "10px",
+                                  width: "70%",
+                                }}
+                              >
+                                {item.method}
+                              </td>
+                              <td
+                                style={{
+                                  width: "30%",
+                                  fontWeight:
+                                    item.method?.toUpperCase() === "TOTAL"
+                                      ? "bold"
+                                      : "normal",
+                                }}
+                              >
+                                {formatAmount(item.amount)}
+                              </td>
+                            </tr>
+                          ),
+                        )}
                       </tbody>
                     </Table>
                   </Col>
                 </Row>
-
               </Card.Body>
             </Card>
           </Col>

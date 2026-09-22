@@ -76,7 +76,9 @@ const DailyExpenseReport = () => {
       if (!response.ok) throw new Error("Failed to fetch expense report data");
 
       const resJson = await response.json();
-      const rawExpenses = Array.isArray(resJson.expenses) ? resJson.expenses : [];
+      const rawExpenses = Array.isArray(resJson.expenses)
+        ? resJson.expenses
+        : [];
       const rawFunds = Array.isArray(resJson.funds) ? resJson.funds : [];
       const backendStartBal = parseFloat(resJson.startingBalance || 0);
 
@@ -96,7 +98,7 @@ const DailyExpenseReport = () => {
             purpose: item.reason,
             credit: 0,
             debit: Math.round(parseFloat(item.expenseamt || 0)),
-            type: "expense"
+            type: "expense",
           };
         }),
         ...rawFunds.map((item) => {
@@ -111,9 +113,9 @@ const DailyExpenseReport = () => {
             purpose: "Advance Funds Deposited",
             credit: Math.round(parseFloat(item.advanceamt || 0)),
             debit: 0,
-            type: "fund"
+            type: "fund",
           };
-        })
+        }),
       ];
 
       // Sort chronologically (earliest to latest) to calculate running balance
@@ -124,7 +126,7 @@ const DailyExpenseReport = () => {
         currentBal = currentBal + item.credit - item.debit;
         return {
           ...item,
-          balance: currentBal
+          balance: currentBal,
         };
       });
 
@@ -144,11 +146,21 @@ const DailyExpenseReport = () => {
     const lowerSearch = searchText.toLowerCase();
     return reportData.filter((item) => {
       return (
-        String(item.displayDate || "").toLowerCase().includes(lowerSearch) ||
-        String(item.purpose || "").toLowerCase().includes(lowerSearch) ||
-        String(item.credit || "").toLowerCase().includes(lowerSearch) ||
-        String(item.debit || "").toLowerCase().includes(lowerSearch) ||
-        String(item.balance || "").toLowerCase().includes(lowerSearch)
+        String(item.displayDate || "")
+          .toLowerCase()
+          .includes(lowerSearch) ||
+        String(item.purpose || "")
+          .toLowerCase()
+          .includes(lowerSearch) ||
+        String(item.credit || "")
+          .toLowerCase()
+          .includes(lowerSearch) ||
+        String(item.debit || "")
+          .toLowerCase()
+          .includes(lowerSearch) ||
+        String(item.balance || "")
+          .toLowerCase()
+          .includes(lowerSearch)
       );
     });
   };
@@ -167,22 +179,25 @@ const DailyExpenseReport = () => {
       "Particulars / Purpose": "Opening Balance",
       "Credit (Funds Added)": "-",
       "Debit (Expenses)": "-",
-      "Remaining Balance": startingBalance
+      "Remaining Balance": startingBalance,
     });
 
-    filteredReportData.slice().reverse().forEach((item, index) => {
-      excelRows.push({
-        "Sr No": index + 1,
-        Date: item.displayDate,
-        "Particulars / Purpose": item.purpose,
-        "Credit (Funds Added)": item.credit || 0,
-        "Debit (Expenses)": item.debit || 0,
-        "Remaining Balance": item.balance
+    filteredReportData
+      .slice()
+      .reverse()
+      .forEach((item, index) => {
+        excelRows.push({
+          "Sr No": index + 1,
+          Date: item.displayDate,
+          "Particulars / Purpose": item.purpose,
+          "Credit (Funds Added)": item.credit || 0,
+          "Debit (Expenses)": item.debit || 0,
+          "Remaining Balance": item.balance,
+        });
       });
-    });
 
     const ws = XLSX.utils.json_to_sheet(excelRows);
-    const wb = { Sheets: { "Ledger": ws }, SheetNames: ["Ledger"] };
+    const wb = { Sheets: { Ledger: ws }, SheetNames: ["Ledger"] };
     const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
     const data = new Blob([excelBuffer], { type: fileType });
     saveAs(data, "Daily_Expense_Ledger_Report" + fileExtension);
@@ -195,11 +210,21 @@ const DailyExpenseReport = () => {
   };
 
   const formatAmount = (val) => {
-    if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+    if (
+      val === null ||
+      val === undefined ||
+      val === "" ||
+      val === "N/A" ||
+      val === 0 ||
+      val === "0" ||
+      val === "-"
+    ) {
       return "-";
     }
     const parsed = parseFloat(val);
-    return isNaN(parsed) ? val : `₹ ${Math.round(parsed).toLocaleString("en-IN")}`;
+    return isNaN(parsed)
+      ? val
+      : `₹ ${Math.round(parsed).toLocaleString("en-IN")}`;
   };
 
   const handlePrint = () => {
@@ -289,18 +314,37 @@ const DailyExpenseReport = () => {
 
   const header = renderHeader();
 
-  const totalCredit = filteredReportData.reduce((sum, item) => sum + (item.credit || 0), 0);
-  const totalDebit = filteredReportData.reduce((sum, item) => sum + (item.debit || 0), 0);
+  const totalCredit = filteredReportData.reduce(
+    (sum, item) => sum + (item.credit || 0),
+    0,
+  );
+  const totalDebit = filteredReportData.reduce(
+    (sum, item) => sum + (item.debit || 0),
+    0,
+  );
 
   const finalRemainingBalance = reportData[0]?.balance ?? startingBalance;
 
   const ledgerFooterGroup = (
     <ColumnGroup>
       <tr>
-        <Column footer="Total:" colSpan={3} footerStyle={{ textAlign: "right", fontWeight: "bold" }} />
-        <Column footer={formatAmount(totalCredit)} footerStyle={{ textAlign: "center", fontWeight: "bold" }} />
-        <Column footer={formatAmount(totalDebit)} footerStyle={{ textAlign: "center", fontWeight: "bold" }} />
-        <Column footer={formatAmount(finalRemainingBalance)} footerStyle={{ textAlign: "center", fontWeight: "bold" }} />
+        <Column
+          footer="Total:"
+          colSpan={3}
+          footerStyle={{ textAlign: "right", fontWeight: "bold" }}
+        />
+        <Column
+          footer={formatAmount(totalCredit)}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={formatAmount(totalDebit)}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={formatAmount(finalRemainingBalance)}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
       </tr>
     </ColumnGroup>
   );
@@ -344,8 +388,15 @@ const DailyExpenseReport = () => {
                 >
                   <h4 style={{ margin: 0 }}>Daily Expense Report</h4>
                   {fromDate && toDate && (
-                    <div style={{ fontSize: "13px", fontWeight: "normal", marginTop: "5px" }}>
-                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "normal",
+                        marginTop: "5px",
+                      }}
+                    >
+                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to{" "}
+                      <b>{formatDateDisplay(toDate)}</b>
                     </div>
                   )}
                 </Card.Header>
@@ -431,9 +482,7 @@ const DailyExpenseReport = () => {
                   </Form>
 
                   {/* Header containing search & export actions */}
-                  <div className="no-print mb-3">
-                    {header}
-                  </div>
+                  <div className="no-print mb-3">{header}</div>
 
                   <div className="no-print">
                     <DataTable
@@ -460,7 +509,11 @@ const DailyExpenseReport = () => {
                         field="displayDate"
                         header="Date"
                         style={{ textAlign: "center", width: "120px" }}
-                        body={(rowData) => <span style={{ color: "#212529", fontWeight: "500" }}>{rowData.displayDate}</span>}
+                        body={(rowData) => (
+                          <span style={{ color: "#212529", fontWeight: "500" }}>
+                            {rowData.displayDate}
+                          </span>
+                        )}
                       />
                       <Column
                         field="purpose"
@@ -469,17 +522,25 @@ const DailyExpenseReport = () => {
                           wordBreak: "break-word",
                           whiteSpace: "normal",
                           minWidth: "220px",
-                          textAlign: "left"
+                          textAlign: "left",
                         }}
                         body={(rowData) => {
                           if (rowData.type === "fund") {
                             return (
-                              <span style={{ fontWeight: "600", color: "#2e7d32" }}>
+                              <span
+                                style={{ fontWeight: "600", color: "#2e7d32" }}
+                              >
                                 {rowData.purpose}
                               </span>
                             );
                           } else {
-                            return <span style={{ color: "#212529", fontWeight: "500" }}>{rowData.purpose}</span>;
+                            return (
+                              <span
+                                style={{ color: "#212529", fontWeight: "500" }}
+                              >
+                                {rowData.purpose}
+                              </span>
+                            );
                           }
                         }}
                       />
@@ -487,31 +548,39 @@ const DailyExpenseReport = () => {
                         field="credit"
                         header="Credit (Funds Added)"
                         style={{ textAlign: "center", width: "160px" }}
-                        body={(rowData) => (
+                        body={(rowData) =>
                           rowData.credit > 0 ? (
                             <span style={{ color: "#2e7d32" }}>
                               + {formatAmount(rowData.credit)}
                             </span>
-                          ) : "-"
-                        )}
+                          ) : (
+                            "-"
+                          )
+                        }
                       />
                       <Column
                         field="debit"
                         header="Debit (Expenses Incurred)"
                         style={{ textAlign: "center", width: "180px" }}
-                        body={(rowData) => (
+                        body={(rowData) =>
                           rowData.debit > 0 ? (
                             <span style={{ color: "#c62828" }}>
                               - {formatAmount(rowData.debit)}
                             </span>
-                          ) : "-"
-                        )}
+                          ) : (
+                            "-"
+                          )
+                        }
                       />
                       <Column
                         field="balance"
                         header="Remaining Balance"
                         style={{ textAlign: "center", width: "160px" }}
-                        body={(rowData) => <span style={{ color: "#212529", fontWeight: "500" }}>{formatAmount(rowData.balance)}</span>}
+                        body={(rowData) => (
+                          <span style={{ color: "#212529", fontWeight: "500" }}>
+                            {formatAmount(rowData.balance)}
+                          </span>
+                        )}
                       />
                     </DataTable>
                   </div>
@@ -548,25 +617,50 @@ const DailyExpenseReport = () => {
                             <tr key={index}>
                               <td>{index + 1}</td>
                               <td>{item.displayDate}</td>
-                              <td style={{ wordBreak: "break-word", whiteSpace: "normal", textAlign: "left" }}>
+                              <td
+                                style={{
+                                  wordBreak: "break-word",
+                                  whiteSpace: "normal",
+                                  textAlign: "left",
+                                }}
+                              >
                                 {item.purpose}
                               </td>
-                              <td className={item.credit > 0 ? "text-success-print" : ""}>
-                                {item.credit > 0 ? `+ ${formatAmount(item.credit)}` : "-"}
+                              <td
+                                className={
+                                  item.credit > 0 ? "text-success-print" : ""
+                                }
+                              >
+                                {item.credit > 0
+                                  ? `+ ${formatAmount(item.credit)}`
+                                  : "-"}
                               </td>
-                              <td className={item.debit > 0 ? "text-danger-print" : ""}>
-                                {item.debit > 0 ? `- ${formatAmount(item.debit)}` : "-"}
+                              <td
+                                className={
+                                  item.debit > 0 ? "text-danger-print" : ""
+                                }
+                              >
+                                {item.debit > 0
+                                  ? `- ${formatAmount(item.debit)}`
+                                  : "-"}
                               </td>
                               <td>{formatAmount(item.balance)}</td>
                             </tr>
                           ))}
                         {/* Totals row inside tbody to avoid page repetition on multiple pages */}
                         <tr className="print-totals-row">
-                          <td colSpan={3} style={{ fontWeight: "bold", textAlign: "right" }}>
+                          <td
+                            colSpan={3}
+                            style={{ fontWeight: "bold", textAlign: "right" }}
+                          >
                             Total:
                           </td>
-                          <td style={{ fontWeight: "bold" }}>{formatAmount(totalCredit)}</td>
-                          <td style={{ fontWeight: "bold" }}>{formatAmount(totalDebit)}</td>
+                          <td style={{ fontWeight: "bold" }}>
+                            {formatAmount(totalCredit)}
+                          </td>
+                          <td style={{ fontWeight: "bold" }}>
+                            {formatAmount(totalDebit)}
+                          </td>
                           <td style={{ fontWeight: "bold" }}>
                             {formatAmount(finalRemainingBalance)}
                           </td>

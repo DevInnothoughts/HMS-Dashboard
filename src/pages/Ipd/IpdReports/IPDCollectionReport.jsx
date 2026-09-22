@@ -147,17 +147,29 @@ const IPDCollectionReport = () => {
     );
   };
 
-
-
   const formatValue = (val) => {
-    if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0") {
+    if (
+      val === null ||
+      val === undefined ||
+      val === "" ||
+      val === "N/A" ||
+      val === 0 ||
+      val === "0"
+    ) {
       return "-";
     }
     return val;
   };
 
   const formatAmountValue = (val) => {
-    if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0") {
+    if (
+      val === null ||
+      val === undefined ||
+      val === "" ||
+      val === "N/A" ||
+      val === 0 ||
+      val === "0"
+    ) {
       return "-";
     }
     const num = Math.round(parseFloat(String(val).replace(/,/g, "")) || 0);
@@ -236,7 +248,7 @@ const IPDCollectionReport = () => {
       acc.discount += Number(curr.discountamt) || 0;
       return acc;
     },
-    { cash: 0, card: 0, cheque: 0, online: 0, discount: 0 }
+    { cash: 0, card: 0, cheque: 0, online: 0, discount: 0 },
   );
 
   const header = (
@@ -351,8 +363,15 @@ const IPDCollectionReport = () => {
                 >
                   <h4 style={{ margin: 0 }}>IPD Collection Report</h4>
                   {fromDate && toDate && (
-                    <div style={{ fontSize: "13px", fontWeight: "normal", marginTop: "5px" }}>
-                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "normal",
+                        marginTop: "5px",
+                      }}
+                    >
+                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to{" "}
+                      <b>{formatDateDisplay(toDate)}</b>
                     </div>
                   )}
                 </Card.Header>
@@ -464,7 +483,9 @@ const IPDCollectionReport = () => {
                     <Column
                       field="invoicedate"
                       header="Invoice Date"
-                      body={(rowData) => formatValue(formatDateDisplay(rowData.invoicedate))}
+                      body={(rowData) =>
+                        formatValue(formatDateDisplay(rowData.invoicedate))
+                      }
                     />
                     <Column
                       field="receipt_date"
@@ -521,8 +542,14 @@ const IPDCollectionReport = () => {
                           <tr key={index}>
                             <td>{index + 1}</td>
                             <td>{formatValue(item.patient)}</td>
-                            <td>{formatValue(formatDateDisplay(item.invoicedate))}</td>
-                            <td>{formatValue(formatDateDisplay(item.receipt_date))}</td>
+                            <td>
+                              {formatValue(formatDateDisplay(item.invoicedate))}
+                            </td>
+                            <td>
+                              {formatValue(
+                                formatDateDisplay(item.receipt_date),
+                              )}
+                            </td>
                             <td>{formatAmountValue(item.cashamt)}</td>
                             <td>{formatAmountValue(item.cardamt)}</td>
                             <td>{formatAmountValue(item.chequeamt)}</td>
@@ -533,11 +560,23 @@ const IPDCollectionReport = () => {
                         {/* Totals row inside tbody to avoid page repetition on multiple pages */}
                         <tr className="print-totals-row">
                           <td colSpan={4}>Total</td>
-                          <td>{(printTotals.cash || 0).toLocaleString("en-IN")}</td>
-                          <td>{(printTotals.card || 0).toLocaleString("en-IN")}</td>
-                          <td>{(printTotals.cheque || 0).toLocaleString("en-IN")}</td>
-                          <td>{(printTotals.online || 0).toLocaleString("en-IN")}</td>
-                          <td>{(printTotals.discount || 0).toLocaleString("en-IN")}</td>
+                          <td>
+                            {(printTotals.cash || 0).toLocaleString("en-IN")}
+                          </td>
+                          <td>
+                            {(printTotals.card || 0).toLocaleString("en-IN")}
+                          </td>
+                          <td>
+                            {(printTotals.cheque || 0).toLocaleString("en-IN")}
+                          </td>
+                          <td>
+                            {(printTotals.online || 0).toLocaleString("en-IN")}
+                          </td>
+                          <td>
+                            {(printTotals.discount || 0).toLocaleString(
+                              "en-IN",
+                            )}
+                          </td>
                         </tr>
                       </tbody>
                     </table>

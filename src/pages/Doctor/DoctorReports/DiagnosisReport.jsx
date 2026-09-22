@@ -13,7 +13,15 @@ import { decodeJwt } from "../../Utility/decode-jwt";
 const BASE_URL = "http://194.195.117.79:5100/api";
 
 const formatValue = (val) => {
-  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+  if (
+    val === null ||
+    val === undefined ||
+    val === "" ||
+    val === "N/A" ||
+    val === 0 ||
+    val === "0" ||
+    val === "-"
+  ) {
     return "-";
   }
   return val;
@@ -42,7 +50,7 @@ const DiagnosisReport = () => {
   const [selectedDoctor, setSelectedDoctor] = useState("All");
   const [selectedCondition, setSelectedCondition] = useState("All");
   const [selectedAdviceType, setSelectedAdviceType] = useState("All");
-  
+
   const [doctorsList, setDoctorsList] = useState([]);
   const [tableData, setTableData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -71,11 +79,14 @@ const DiagnosisReport = () => {
 
   const fetchDoctors = async (location) => {
     try {
-      const response = await fetch(`${BASE_URL}/V1/doctorreports/getDoctors?location=${location}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+      const response = await fetch(
+        `${BASE_URL}/V1/doctorreports/getDoctors?location=${location}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         },
-      });
+      );
       const result = await response.json();
       if (result.statusCode === 200 && Array.isArray(result.data)) {
         setDoctorsList(result.data);
@@ -102,21 +113,24 @@ const DiagnosisReport = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}/V1/doctorreports/getDiagnosisReport`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+      const response = await fetch(
+        `${BASE_URL}/V1/doctorreports/getDiagnosisReport`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            location: currentLocation,
+            Fromdate: fromDate,
+            Todate: toDate,
+            doctorId: selectedDoctor,
+            condition: selectedCondition,
+            adviceType: selectedAdviceType,
+          }),
         },
-        body: JSON.stringify({
-          location: currentLocation,
-          Fromdate: fromDate,
-          Todate: toDate,
-          doctorId: selectedDoctor,
-          condition: selectedCondition,
-          adviceType: selectedAdviceType,
-        }),
-      });
+      );
 
       const result = await response.json();
       if (result.statusCode === 200 && Array.isArray(result.data)) {
@@ -323,10 +337,19 @@ const DiagnosisReport = () => {
                     fontSize: "16px",
                   }}
                 >
-                  <h4 style={{ margin: 0, fontSize: "18px" }}>Diagnosis Report</h4>
+                  <h4 style={{ margin: 0, fontSize: "18px" }}>
+                    Diagnosis Report
+                  </h4>
                   {fromDate && toDate && (
-                    <div style={{ fontSize: "13px", fontWeight: "normal", marginTop: "5px" }}>
-                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "normal",
+                        marginTop: "5px",
+                      }}
+                    >
+                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to{" "}
+                      <b>{formatDateDisplay(toDate)}</b>
                     </div>
                   )}
                 </Card.Header>
@@ -430,7 +453,9 @@ const DiagnosisReport = () => {
                           </Form.Label>
                           <Form.Select
                             value={selectedCondition}
-                            onChange={(e) => setSelectedCondition(e.target.value)}
+                            onChange={(e) =>
+                              setSelectedCondition(e.target.value)
+                            }
                             style={{
                               border: "2px solid #4dd0e1",
                               borderRadius: "8px",
@@ -443,7 +468,9 @@ const DiagnosisReport = () => {
                             <option value="Piles">Piles</option>
                             <option value="Fistula">Fistula</option>
                             <option value="Hernia">Hernia</option>
-                            <option value="Varicose Vein">Varicose Veins</option>
+                            <option value="Varicose Vein">
+                              Varicose Veins
+                            </option>
                             <option value="Prolapse">Prolapse</option>
                             <option value="Circumcision">Circumcision</option>
                             <option value="Abscess">Abscess</option>
@@ -466,7 +493,9 @@ const DiagnosisReport = () => {
                           </Form.Label>
                           <Form.Select
                             value={selectedAdviceType}
-                            onChange={(e) => setSelectedAdviceType(e.target.value)}
+                            onChange={(e) =>
+                              setSelectedAdviceType(e.target.value)
+                            }
                             style={{
                               border: "2px solid #4dd0e1",
                               borderRadius: "8px",
@@ -500,7 +529,11 @@ const DiagnosisReport = () => {
                               fontSize: "13px",
                             }}
                           >
-                            {loading ? <Spinner animation="border" size="sm" /> : "Search"}
+                            {loading ? (
+                              <Spinner animation="border" size="sm" />
+                            ) : (
+                              "Search"
+                            )}
                           </button>
                           <button
                             className="btn btn-secondary"

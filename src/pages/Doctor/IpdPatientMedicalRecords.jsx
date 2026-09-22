@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import {
-  Container,
-  Row,
-  Col,
-  Card,
-  Button,
-} from "react-bootstrap";
+import { Container, Row, Col, Card, Button } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 import IpdFeedbackForm from "../Ipd/IpdFeedbackForm";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
@@ -21,7 +15,8 @@ const IpdPatientMedicalRecords = () => {
 
   const [activeTab, setActiveTab] = useState("menu");
   const [currentLocation, setCurrentLocation] = useState("default");
-  const getActiveLoc = () => patient?.patient_location || currentLocation || "default";
+  const getActiveLoc = () =>
+    patient?.patient_location || currentLocation || "default";
   const [hasFetchedPatient, setHasFetchedPatient] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -61,7 +56,7 @@ const IpdPatientMedicalRecords = () => {
     if (!uidNo) return;
     try {
       const response = await fetch(
-        `${BASE_URL}/V1/doctor/admission/get-feedback?uidNo=${encodeURIComponent(uidNo)}&location=${getActiveLoc()}`
+        `${BASE_URL}/V1/doctor/admission/get-feedback?uidNo=${encodeURIComponent(uidNo)}&location=${getActiveLoc()}`,
       );
       const result = await response.json();
       if (result.statusCode === 200 && result.data) {
@@ -76,7 +71,13 @@ const IpdPatientMedicalRecords = () => {
 
   useEffect(() => {
     const fetchPatientDetails = async () => {
-      const patientId = state?.patient?.Uid_no || state?.patient?.uid_no || patient?.Uid_no || patient?.uid_no || state?.patient?.patient_id || patient?.patient_id;
+      const patientId =
+        state?.patient?.Uid_no ||
+        state?.patient?.uid_no ||
+        patient?.Uid_no ||
+        patient?.uid_no ||
+        state?.patient?.patient_id ||
+        patient?.patient_id;
       if (!patientId || hasFetchedPatient) return;
 
       let resolvedLocation = "default";
@@ -136,7 +137,8 @@ const IpdPatientMedicalRecords = () => {
 
       setFormData({
         Uid_no: patient.Uid_no || patient.uid || patient.uid_no || "",
-        adm_no: patient.adm_no || patient.admissionNo || patient.admission_no || "",
+        adm_no:
+          patient.adm_no || patient.admissionNo || patient.admission_no || "",
         date: patient.date || "",
         prefix: finalPrefix,
         name: patient.name || "",
@@ -289,12 +291,25 @@ const IpdPatientMedicalRecords = () => {
                         IPD Patient Medical Records
                       </h4>
                       {formData.name && (
-                        <div className="d-flex flex-wrap gap-2 align-items-center" style={{ fontSize: "13px" }}>
-                          <span><strong>Admission No:</strong> {formData.adm_no || "N/A"}</span>
+                        <div
+                          className="d-flex flex-wrap gap-2 align-items-center"
+                          style={{ fontSize: "13px" }}
+                        >
+                          <span>
+                            <strong>Admission No:</strong>{" "}
+                            {formData.adm_no || "N/A"}
+                          </span>
                           <span className="opacity-50">|</span>
-                          <span><strong>Patient Name:</strong> {formData.prefix ? `${formData.prefix} ` : ""}{formData.name}</span>
+                          <span>
+                            <strong>Patient Name:</strong>{" "}
+                            {formData.prefix ? `${formData.prefix} ` : ""}
+                            {formData.name}
+                          </span>
                           <span className="opacity-50">|</span>
-                          <span><strong>Contact No:</strong> {formData.phone || "N/A"}</span>
+                          <span>
+                            <strong>Contact No:</strong>{" "}
+                            {formData.phone || "N/A"}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -338,8 +353,7 @@ const IpdPatientMedicalRecords = () => {
                           setActiveTab(tab.id);
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.transform =
-                            "translateY(-4px)";
+                          e.currentTarget.style.transform = "translateY(-4px)";
                           e.currentTarget.style.boxShadow =
                             "0 8px 16px rgba(0, 0, 0, 0.08)";
                         }}
@@ -461,12 +475,24 @@ const IpdPatientMedicalRecords = () => {
                       {tabs.find((t) => t.id === activeTab)?.label}
                     </h4>
                     {formData.name && (
-                      <div className="d-flex flex-wrap gap-2 align-items-center text-muted" style={{ fontSize: "12px", marginTop: "2px" }}>
-                        <span><strong>Admission No:</strong> {formData.adm_no || "N/A"}</span>
+                      <div
+                        className="d-flex flex-wrap gap-2 align-items-center text-muted"
+                        style={{ fontSize: "12px", marginTop: "2px" }}
+                      >
+                        <span>
+                          <strong>Admission No:</strong>{" "}
+                          {formData.adm_no || "N/A"}
+                        </span>
                         <span className="opacity-50">|</span>
-                        <span><strong>Patient:</strong> {formData.prefix ? `${formData.prefix} ` : ""}{formData.name}</span>
+                        <span>
+                          <strong>Patient:</strong>{" "}
+                          {formData.prefix ? `${formData.prefix} ` : ""}
+                          {formData.name}
+                        </span>
                         <span className="opacity-50">|</span>
-                        <span><strong>Contact:</strong> {formData.phone || "N/A"}</span>
+                        <span>
+                          <strong>Contact:</strong> {formData.phone || "N/A"}
+                        </span>
                       </div>
                     )}
                   </div>

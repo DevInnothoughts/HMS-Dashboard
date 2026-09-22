@@ -73,7 +73,7 @@ const PendingSurgeryReport = () => {
         {
           method: "GET",
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
 
       if (!response.ok) {
@@ -83,18 +83,23 @@ const PendingSurgeryReport = () => {
       const msg = await response.json();
       const rawData = msg.data || msg.serachdata1 || [];
 
-      setTableData(rawData.map((row) => ({
-        ...row,
-        patientName: row.patientName || row.patient || "N/A",
-        waiting_no: row.waiting_no || row.token_no || "N/A",
-        uhid: row.uhid || "N/A",
-        contact: row.contact || "N/A",
-        department: row.department || "N/A",
-        status: row.status || "N/A",
-        waiting_date: row.waiting_date || row.item_date || "N/A",
-      })));
+      setTableData(
+        rawData.map((row) => ({
+          ...row,
+          patientName: row.patientName || row.patient || "N/A",
+          waiting_no: row.waiting_no || row.token_no || "N/A",
+          uhid: row.uhid || "N/A",
+          contact: row.contact || "N/A",
+          department: row.department || "N/A",
+          status: row.status || "N/A",
+          waiting_date: row.waiting_date || row.item_date || "N/A",
+        })),
+      );
     } catch (error) {
-      console.warn("API fetch error, falling back to mock data demonstration:", error.message);
+      console.warn(
+        "API fetch error, falling back to mock data demonstration:",
+        error.message,
+      );
 
       // Fallback data for demonstration and manual testing
       const mockData = [
@@ -121,7 +126,7 @@ const PendingSurgeryReport = () => {
           patientName: "Emily Davis",
           contact: "6543210987",
           waiting_date: toDate,
-        }
+        },
       ];
       setTableData(mockData);
     } finally {
@@ -256,7 +261,14 @@ const PendingSurgeryReport = () => {
   };
 
   const formatValue = (val) => {
-    if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0") {
+    if (
+      val === null ||
+      val === undefined ||
+      val === "" ||
+      val === "N/A" ||
+      val === 0 ||
+      val === "0"
+    ) {
       return "-";
     }
     return val;
@@ -337,10 +349,19 @@ const PendingSurgeryReport = () => {
                     fontSize: "16px",
                   }}
                 >
-                  <h4 style={{ margin: 0 }}>Surgery Advised but Surgery Not Done Report</h4>
+                  <h4 style={{ margin: 0 }}>
+                    Surgery Advised but Surgery Not Done Report
+                  </h4>
                   {fromDate && toDate && (
-                    <div style={{ fontSize: "13px", fontWeight: "normal", marginTop: "5px" }}>
-                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "normal",
+                        marginTop: "5px",
+                      }}
+                    >
+                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to{" "}
+                      <b>{formatDateDisplay(toDate)}</b>
                     </div>
                   )}
                 </Card.Header>
@@ -489,7 +510,11 @@ const PendingSurgeryReport = () => {
                             <td>{formatValue(item.uhid)}</td>
                             <td>{formatValue(item.patientName)}</td>
                             <td>{formatValue(item.contact)}</td>
-                            <td>{formatValue(formatDateDisplay(item.waiting_date))}</td>
+                            <td>
+                              {formatValue(
+                                formatDateDisplay(item.waiting_date),
+                              )}
+                            </td>
                           </tr>
                         ))}
                         <tr className="print-totals-row">
@@ -505,7 +530,8 @@ const PendingSurgeryReport = () => {
           </Row>
         </Container>
       </SimpleBar>
-      <style>{`
+      <style>
+        {`
         .print-table-container {
           display: none;
         }

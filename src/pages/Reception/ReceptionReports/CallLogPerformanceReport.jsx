@@ -14,7 +14,15 @@ import { decodeJwt } from "../../Utility/decode-jwt";
 const BASE_URL = "http://194.195.117.79:5100/api";
 
 const formatValue = (val) => {
-  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+  if (
+    val === null ||
+    val === undefined ||
+    val === "" ||
+    val === "N/A" ||
+    val === 0 ||
+    val === "0" ||
+    val === "-"
+  ) {
     return "0";
   }
   return val;
@@ -82,16 +90,19 @@ const CallLogPerformanceReport = () => {
     };
 
     try {
-      const res = await fetch(`${BASE_URL}/V1/managereports/getCallLogPerformanceReport`, {
-        method: "POST",
-        headers: authHeaders,
-        body: JSON.stringify({
-          location: currentLocation,
-          Fromdate: fromDate,
-          Todate: toDate,
-          status: statusFilter,
-        }),
-      });
+      const res = await fetch(
+        `${BASE_URL}/V1/managereports/getCallLogPerformanceReport`,
+        {
+          method: "POST",
+          headers: authHeaders,
+          body: JSON.stringify({
+            location: currentLocation,
+            Fromdate: fromDate,
+            Todate: toDate,
+            status: statusFilter,
+          }),
+        },
+      );
 
       if (!res.ok) {
         throw new Error("Failed to fetch Call Log Performance Report data");
@@ -101,7 +112,9 @@ const CallLogPerformanceReport = () => {
       setReportData(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Fetch error:", error);
-      alert("Error fetching Call Log Performance Report data. Please try again.");
+      alert(
+        "Error fetching Call Log Performance Report data. Please try again.",
+      );
       setReportData([]);
     } finally {
       setLoading(false);
@@ -144,18 +157,39 @@ const CallLogPerformanceReport = () => {
   const filteredData = getFilteredData();
 
   // Compute grand totals
-  const totalInboundSum = filteredData.reduce((acc, curr) => acc + (Number(curr.totalInbound) || 0), 0);
-  const totalAnsweredSum = filteredData.reduce((acc, curr) => acc + (Number(curr.answered) || 0), 0);
-  const totalMissedSum = filteredData.reduce((acc, curr) => acc + (Number(curr.missed) || 0), 0);
-  const totalCalledBackSum = filteredData.reduce((acc, curr) => acc + (Number(curr.calledBackWithin1Hour) || 0), 0);
+  const totalInboundSum = filteredData.reduce(
+    (acc, curr) => acc + (Number(curr.totalInbound) || 0),
+    0,
+  );
+  const totalAnsweredSum = filteredData.reduce(
+    (acc, curr) => acc + (Number(curr.answered) || 0),
+    0,
+  );
+  const totalMissedSum = filteredData.reduce(
+    (acc, curr) => acc + (Number(curr.missed) || 0),
+    0,
+  );
+  const totalCalledBackSum = filteredData.reduce(
+    (acc, curr) => acc + (Number(curr.calledBackWithin1Hour) || 0),
+    0,
+  );
 
-  const overallAvgDurationSec = totalAnsweredSum > 0
-    ? Math.round(
-      filteredData.reduce((acc, curr) => acc + ((Number(curr.avgDurationSec) || 0) * (Number(curr.answered) || 0)), 0) / totalAnsweredSum
-    )
-    : 0;
+  const overallAvgDurationSec =
+    totalAnsweredSum > 0
+      ? Math.round(
+          filteredData.reduce(
+            (acc, curr) =>
+              acc +
+              (Number(curr.avgDurationSec) || 0) * (Number(curr.answered) || 0),
+            0,
+          ) / totalAnsweredSum,
+        )
+      : 0;
 
-  const overallMins = String(Math.floor(overallAvgDurationSec / 60)).padStart(2, "0");
+  const overallMins = String(Math.floor(overallAvgDurationSec / 60)).padStart(
+    2,
+    "0",
+  );
   const overallSecs = String(overallAvgDurationSec % 60).padStart(2, "0");
   const overallAvgDurationStr = `${overallMins}m ${overallSecs}s`;
 
@@ -340,8 +374,15 @@ const CallLogPerformanceReport = () => {
                     Call Log Performance Report
                   </h4>
                   {fromDate && toDate && (
-                    <div style={{ fontSize: "13px", fontWeight: "normal", marginTop: "5px" }}>
-                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "normal",
+                        marginTop: "5px",
+                      }}
+                    >
+                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to{" "}
+                      <b>{formatDateDisplay(toDate)}</b>
                     </div>
                   )}
                 </Card.Header>
@@ -449,7 +490,11 @@ const CallLogPerformanceReport = () => {
                               fontSize: "13px",
                             }}
                           >
-                            {loading ? <Spinner animation="border" size="sm" /> : "Search"}
+                            {loading ? (
+                              <Spinner animation="border" size="sm" />
+                            ) : (
+                              "Search"
+                            )}
                           </button>
                           <button
                             className="btn btn-secondary"
@@ -542,7 +587,9 @@ const CallLogPerformanceReport = () => {
                           <th style={{ width: "16%" }}>Total Inbound Calls</th>
                           <th style={{ width: "14%" }}>Answered</th>
                           <th style={{ width: "14%" }}>Missed</th>
-                          <th style={{ width: "22%" }}>Called Back Within 1 Hour</th>
+                          <th style={{ width: "22%" }}>
+                            Called Back Within 1 Hour
+                          </th>
                           <th style={{ width: "14%" }}>Avg. Call Duration</th>
                         </tr>
                       </thead>

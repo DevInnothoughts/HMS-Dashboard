@@ -2,7 +2,16 @@ import React, { useState, useEffect, useCallback } from "react";
 import moment from "moment";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Container, Row, Col, Card, Form, InputGroup, Button, Spinner } from "react-bootstrap";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Form,
+  InputGroup,
+  Button,
+  Spinner,
+} from "react-bootstrap";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { FilterMatchMode } from "primereact/api";
@@ -91,7 +100,8 @@ const AggregatorBills = () => {
           reference_type_display: "Aggregators",
           sub_reference_display: item.sub_reference || "-",
           patient_uid_display: item.patient_uid || "-",
-          patient_name_display: (item.prefix ? `${item.prefix} ` : "") + (item.patient_name || "-"),
+          patient_name_display:
+            (item.prefix ? `${item.prefix} ` : "") + (item.patient_name || "-"),
           patient_phone_display: item.patient_phone || "-",
           ipd_bill_amount_num: parseFloat(item.ipd_bill_amount || 0),
           due_amt_num: parseFloat(item.due_amt || 0),

@@ -14,14 +14,28 @@ import { decodeJwt } from "../../Utility/decode-jwt";
 const BASE_URL = "http://194.195.117.79:5100/api";
 
 const formatValue = (val) => {
-  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0") {
+  if (
+    val === null ||
+    val === undefined ||
+    val === "" ||
+    val === "N/A" ||
+    val === 0 ||
+    val === "0"
+  ) {
     return "-";
   }
   return val;
 };
 
 const formatAmountValue = (val) => {
-  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0") {
+  if (
+    val === null ||
+    val === undefined ||
+    val === "" ||
+    val === "N/A" ||
+    val === 0 ||
+    val === "0"
+  ) {
     return "-";
   }
   const num = Math.round(parseFloat(String(val).replace(/,/g, "")) || 0);
@@ -87,7 +101,15 @@ const IPDDueReport = () => {
       acc.totalDue += Number(curr.totalDue) || 0;
       return acc;
     },
-    { totalPackage: 0, cash: 0, card: 0, cheque: 0, online: 0, discount: 0, totalDue: 0 }
+    {
+      totalPackage: 0,
+      cash: 0,
+      card: 0,
+      cheque: 0,
+      online: 0,
+      discount: 0,
+      totalDue: 0,
+    },
   );
 
   const footerGroup = (
@@ -351,8 +373,15 @@ const IPDDueReport = () => {
                 >
                   <h4 style={{ margin: 0 }}>IPD Due Report</h4>
                   {fromDate && toDate && (
-                    <div style={{ fontSize: "13px", fontWeight: "normal", marginTop: "5px" }}>
-                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "normal",
+                        marginTop: "5px",
+                      }}
+                    >
+                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to{" "}
+                      <b>{formatDateDisplay(toDate)}</b>
                     </div>
                   )}
                 </Card.Header>

@@ -14,14 +14,26 @@ import { decodeJwt } from "../../Utility/decode-jwt";
 const BASE_URL = "http://194.195.117.79:5100/api";
 
 const formatValue = (val) => {
-  if (val === null || val === undefined || val === "" || val === "N/A" || val === "-") {
+  if (
+    val === null ||
+    val === undefined ||
+    val === "" ||
+    val === "N/A" ||
+    val === "-"
+  ) {
     return "-";
   }
   return val;
 };
 
 const formatAmount = (val) => {
-  if (val === null || val === undefined || val === "" || val === "N/A" || val === "-") {
+  if (
+    val === null ||
+    val === undefined ||
+    val === "" ||
+    val === "N/A" ||
+    val === "-"
+  ) {
     return "₹ 0";
   }
   const parsed = parseFloat(val);
@@ -101,7 +113,7 @@ const CashDepositReport = () => {
             Todate: toDate,
             status: statusFilter,
           }),
-        }
+        },
       );
 
       const result = await response.json();
@@ -162,10 +174,22 @@ const CashDepositReport = () => {
   const filteredData = getFilteredData();
 
   // Grand totals
-  const totalOpdCash = filteredData.reduce((acc, curr) => acc + (Number(curr.opd_cash) || 0), 0);
-  const totalIpdCash = filteredData.reduce((acc, curr) => acc + (Number(curr.ipd_cash) || 0), 0);
-  const totalExpectedSum = filteredData.reduce((acc, curr) => acc + (Number(curr.total_expected) || 0), 0);
-  const totalDepositedSum = filteredData.reduce((acc, curr) => acc + (Number(curr.cash_deposited) || 0), 0);
+  const totalOpdCash = filteredData.reduce(
+    (acc, curr) => acc + (Number(curr.opd_cash) || 0),
+    0,
+  );
+  const totalIpdCash = filteredData.reduce(
+    (acc, curr) => acc + (Number(curr.ipd_cash) || 0),
+    0,
+  );
+  const totalExpectedSum = filteredData.reduce(
+    (acc, curr) => acc + (Number(curr.total_expected) || 0),
+    0,
+  );
+  const totalDepositedSum = filteredData.reduce(
+    (acc, curr) => acc + (Number(curr.cash_deposited) || 0),
+    0,
+  );
   const totalDifferenceSum = totalDepositedSum - totalExpectedSum;
 
   const exportToExcel = () => {
@@ -234,10 +258,7 @@ const CashDepositReport = () => {
           footer={formatAmount(totalDifferenceSum)}
           footerStyle={{ textAlign: "center", fontWeight: "bold" }}
         />
-        <Column
-          footer=""
-          footerStyle={{ textAlign: "center" }}
-        />
+        <Column footer="" footerStyle={{ textAlign: "center" }} />
       </Row>
     </ColumnGroup>
   );
@@ -366,8 +387,15 @@ const CashDepositReport = () => {
                     Daily Cash Reconciliation Report
                   </h4>
                   {fromDate && toDate && (
-                    <div style={{ fontSize: "13px", fontWeight: "normal", marginTop: "5px" }}>
-                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "normal",
+                        marginTop: "5px",
+                      }}
+                    >
+                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to{" "}
+                      <b>{formatDateDisplay(toDate)}</b>
                     </div>
                   )}
                 </Card.Header>
@@ -476,7 +504,11 @@ const CashDepositReport = () => {
                               fontSize: "13px",
                             }}
                           >
-                            {loading ? <Spinner animation="border" size="sm" /> : "Search"}
+                            {loading ? (
+                              <Spinner animation="border" size="sm" />
+                            ) : (
+                              "Search"
+                            )}
                           </button>
                           <button
                             className="btn btn-secondary"

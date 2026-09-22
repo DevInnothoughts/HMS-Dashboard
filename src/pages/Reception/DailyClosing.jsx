@@ -49,7 +49,8 @@ const DailyClosing = () => {
   const [pharmacySystemCash, setPharmacySystemCash] = useState(0);
   const [ipdSystemCash, setIpdSystemCash] = useState(0);
 
-  const isPreviousDate = currentDate && currentDate !== moment().format("DD-MM-YYYY");
+  const isPreviousDate =
+    currentDate && currentDate !== moment().format("DD-MM-YYYY");
 
   const [cashDepositFile, setCashDepositFile] = useState(null);
   const [cardSettlementFile, setCardSettlementFile] = useState(null);
@@ -62,7 +63,8 @@ const DailyClosing = () => {
 
   // Local file previews
   const [cashDepositPreviewUrl, setCashDepositPreviewUrl] = useState(null);
-  const [cardSettlementPreviewUrl, setCardSettlementPreviewUrl] = useState(null);
+  const [cardSettlementPreviewUrl, setCardSettlementPreviewUrl] =
+    useState(null);
 
   // Active focus tracking for row container highlight
   const [focusedField, setFocusedField] = useState(null);
@@ -220,9 +222,9 @@ const DailyClosing = () => {
             manualCIH:
               dbData.manualCIH !== null && dbData.manualCIH !== undefined
                 ? formatToIndianCommas(dbData.manualCIH)
-                : (dbData.manualcih !== null && dbData.manualcih !== undefined
+                : dbData.manualcih !== null && dbData.manualcih !== undefined
                   ? formatToIndianCommas(dbData.manualcih)
-                  : ""),
+                  : "",
             comment: dbData.comment || "",
             cashDepositReceipt: dbData.cash_deposit_receipt || "",
             cardSettlementSlip: dbData.card_settlement_slip || "",
@@ -371,7 +373,9 @@ const DailyClosing = () => {
     ];
     if (numericFields.includes(name)) {
       const cleanValue = value.replace(/\D/g, "");
-      const formattedValue = cleanValue ? Number(cleanValue).toLocaleString("en-IN") : "";
+      const formattedValue = cleanValue
+        ? Number(cleanValue).toLocaleString("en-IN")
+        : "";
       setFormData((prev) => ({
         ...prev,
         [name]: formattedValue,
@@ -393,7 +397,11 @@ const DailyClosing = () => {
     "bankDeposit",
   ];
   const allEntered = checkFields.every((key) => formData[key] !== "");
-  const totalSum = checkFields.reduce((sum, key) => sum + Number(String(formData[key] || "").replace(/,/g, "") || 0), 0);
+  const totalSum = checkFields.reduce(
+    (sum, key) =>
+      sum + Number(String(formData[key] || "").replace(/,/g, "") || 0),
+    0,
+  );
   const isSumZero = allEntered && totalSum === 0;
 
   const isSaveDisabled =
@@ -410,17 +418,18 @@ const DailyClosing = () => {
       { name: "upiSettlement", label: "UPI Settlement" },
       { name: "cardSettlement", label: "Card Settlement" },
       { name: "bankDeposit", label: "Bank Deposit" },
-      { name: "manualCIH", label: "Cash in Hand" }
+      { name: "manualCIH", label: "Cash in Hand" },
     ];
 
     for (const field of requiredFields) {
       const val = formData[field.name];
-      const cleanVal = val !== null && val !== undefined ? String(val).trim() : "";
+      const cleanVal =
+        val !== null && val !== undefined ? String(val).trim() : "";
       if (cleanVal === "") {
         return Swal.fire(
           "Required Field Missing",
           `Please fill the ${field.label} field (enter 0 if there is no amount)`,
-          "warning"
+          "warning",
         );
       }
     }
@@ -429,7 +438,7 @@ const DailyClosing = () => {
       return Swal.fire(
         "Required Field Missing",
         "Please upload the Card Settlement Slip file.",
-        "warning"
+        "warning",
       );
     }
 
@@ -538,31 +547,45 @@ const DailyClosing = () => {
                   borderRadius: "5px",
                 }}
               >
-                {isYesterdayFilled !== null && (isYesterdayFilled || isPreviousDate) && (
-                  <Alert
-                    variant={isYesterdayFilled ? "success" : "warning"}
-                    className="mb-3 d-flex align-items-center gap-2"
-                    style={{
-                      fontSize: "13px",
-                      fontWeight: "600",
-                      borderRadius: "6px",
-                      border: isYesterdayFilled ? "1px solid #c3e6cb" : "1px solid #ffeeba",
-                      backgroundColor: isYesterdayFilled ? "#d4edda" : "#fff3cd",
-                      color: isYesterdayFilled ? "#155724" : "#856404",
-                    }}
-                  >
-                    <FeatherIcon
-                      icon={isYesterdayFilled ? "check-circle" : "alert-triangle"}
-                      size="16"
-                    />
-                    <div>
-                      {isYesterdayFilled
-                        ? "Yesterday's daily closing has been submitted. Showing today's date for entry."
-                        : "Yesterday's daily closing is pending submission! Defaulted to yesterday's date to fill. Please submit the closing data for this date."}
-                    </div>
-                  </Alert>
-                )}
-                <div style={{ display: "flex", flexDirection: "column", gap: "15px", padding: "10px" }}>
+                {isYesterdayFilled !== null &&
+                  (isYesterdayFilled || isPreviousDate) && (
+                    <Alert
+                      variant={isYesterdayFilled ? "success" : "warning"}
+                      className="mb-3 d-flex align-items-center gap-2"
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "600",
+                        borderRadius: "6px",
+                        border: isYesterdayFilled
+                          ? "1px solid #c3e6cb"
+                          : "1px solid #ffeeba",
+                        backgroundColor: isYesterdayFilled
+                          ? "#d4edda"
+                          : "#fff3cd",
+                        color: isYesterdayFilled ? "#155724" : "#856404",
+                      }}
+                    >
+                      <FeatherIcon
+                        icon={
+                          isYesterdayFilled ? "check-circle" : "alert-triangle"
+                        }
+                        size="16"
+                      />
+                      <div>
+                        {isYesterdayFilled
+                          ? "Yesterday's daily closing has been submitted. Showing today's date for entry."
+                          : "Yesterday's daily closing is pending submission! Defaulted to yesterday's date to fill. Please submit the closing data for this date."}
+                      </div>
+                    </Alert>
+                  )}
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "15px",
+                    padding: "10px",
+                  }}
+                >
                   {/* Date Banner */}
                   <div
                     style={{
@@ -576,17 +599,54 @@ const DailyClosing = () => {
                       boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                      <i className="fa fa-calendar" style={{ fontSize: "15px", color: "#006064" }}></i>
-                      <span style={{ fontWeight: "500", color: "#006064", fontSize: "13.5px" }}>Closing Date:</span>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                      }}
+                    >
+                      <i
+                        className="fa fa-calendar"
+                        style={{ fontSize: "15px", color: "#006064" }}
+                      ></i>
+                      <span
+                        style={{
+                          fontWeight: "500",
+                          color: "#006064",
+                          fontSize: "13.5px",
+                        }}
+                      >
+                        Closing Date:
+                      </span>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                      <span style={{ fontSize: "14px", fontWeight: "700", color: isPreviousDate ? "#d84315" : "#2e7d32" }}>{currentDate}</span>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: "14px",
+                          fontWeight: "700",
+                          color: isPreviousDate ? "#d84315" : "#2e7d32",
+                        }}
+                      >
+                        {currentDate}
+                      </span>
                     </div>
                   </div>
 
                   {/* Form Grid / Card list */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "10px",
+                    }}
+                  >
                     {[
                       {
                         label: "OPD Cash",
@@ -699,35 +759,67 @@ const DailyClosing = () => {
                             transform: isFocused ? "translateY(-1px)" : "none",
                           }}
                         >
-                          <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: "200px" }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "10px",
+                              minWidth: "200px",
+                            }}
+                          >
                             <div
                               style={{
                                 width: "28px",
                                 height: "28px",
                                 borderRadius: "50%",
-                                backgroundColor: isFocused ? field.iconColor : `${field.iconColor}18`,
+                                backgroundColor: isFocused
+                                  ? field.iconColor
+                                  : `${field.iconColor}18`,
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
                                 color: isFocused ? "#ffffff" : field.iconColor,
                                 transition: "all 0.2s ease",
-                                boxShadow: isFocused ? `0 2px 6px ${field.iconColor}40` : "none",
+                                boxShadow: isFocused
+                                  ? `0 2px 6px ${field.iconColor}40`
+                                  : "none",
                               }}
                             >
-                              <i className={field.icon} style={{ fontSize: "13px" }}></i>
+                              <i
+                                className={field.icon}
+                                style={{ fontSize: "13px" }}
+                              ></i>
                             </div>
-                            <span style={{ fontWeight: "700", color: isFocused ? field.iconColor : "#37474f", fontSize: "12.5px", transition: "color 0.2s ease" }}>
+                            <span
+                              style={{
+                                fontWeight: "700",
+                                color: isFocused ? field.iconColor : "#37474f",
+                                fontSize: "12.5px",
+                                transition: "color 0.2s ease",
+                              }}
+                            >
                               {field.label}
                             </span>
                           </div>
-                          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "flex-end",
+                              gap: "4px",
+                            }}
+                          >
                             <InputGroup style={{ width: "240px" }}>
                               <InputGroup.Text
                                 style={{
                                   border: `1px solid ${isFocused ? field.iconColor : "#4dd0e1"}`,
                                   borderRight: "none",
-                                  backgroundColor: isFocused ? `${field.iconColor}15` : "#f8f9fa",
-                                  color: isFocused ? field.iconColor : "inherit",
+                                  backgroundColor: isFocused
+                                    ? `${field.iconColor}15`
+                                    : "#f8f9fa",
+                                  color: isFocused
+                                    ? field.iconColor
+                                    : "inherit",
                                   fontWeight: isFocused ? "bold" : "normal",
                                   fontSize: "12px",
                                   borderTopLeftRadius: "6px",
@@ -746,7 +838,9 @@ const DailyClosing = () => {
                                 onWheel={(e) => e.target.blur()}
                                 value={field.value}
                                 onChange={handleChange}
-                                onFocus={() => !isSubmitted && setFocusedField(field.name)}
+                                onFocus={() =>
+                                  !isSubmitted && setFocusedField(field.name)
+                                }
                                 onBlur={() => setFocusedField(null)}
                                 readOnly={isSubmitted}
                                 style={{
@@ -759,14 +853,25 @@ const DailyClosing = () => {
                                   fontSize: "12.5px",
                                   fontWeight: "600",
                                   transition: "all 0.3s ease",
-                                  boxShadow: isFocused ? `0 0 0 3px ${field.iconColor}25` : "none",
+                                  boxShadow: isFocused
+                                    ? `0 0 0 3px ${field.iconColor}25`
+                                    : "none",
                                   cursor: isSubmitted ? "not-allowed" : "text",
-                                  backgroundColor: isSubmitted ? "#f8f9fa" : "white",
+                                  backgroundColor: isSubmitted
+                                    ? "#f8f9fa"
+                                    : "white",
                                 }}
                               />
                             </InputGroup>
                             {field.showWarning && (
-                              <div style={{ color: "#d32f2f", fontSize: "11px", fontWeight: "600", marginRight: "5px" }}>
+                              <div
+                                style={{
+                                  color: "#d32f2f",
+                                  fontSize: "11px",
+                                  fontWeight: "600",
+                                  marginRight: "5px",
+                                }}
+                              >
                                 <i className="fa fa-warning me-1"></i>0 entered
                               </div>
                             )}
@@ -789,7 +894,14 @@ const DailyClosing = () => {
                         gap: "10px",
                       }}
                     >
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: "200px" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px",
+                          minWidth: "200px",
+                        }}
+                      >
                         <div
                           style={{
                             width: "28px",
@@ -802,16 +914,34 @@ const DailyClosing = () => {
                             color: "#00bcd4",
                           }}
                         >
-                          <i className="fa fa-credit-card" style={{ fontSize: "13px" }}></i>
+                          <i
+                            className="fa fa-credit-card"
+                            style={{ fontSize: "13px" }}
+                          ></i>
                         </div>
-                        <span style={{ fontWeight: "700", color: "#37474f", fontSize: "12.5px" }}>
+                        <span
+                          style={{
+                            fontWeight: "700",
+                            color: "#37474f",
+                            fontSize: "12.5px",
+                          }}
+                        >
                           Card Settlement Slip
                         </span>
                       </div>
-                      <div style={{ width: "240px", display: "flex", justifyContent: "flex-end" }}>
+                      <div
+                        style={{
+                          width: "240px",
+                          display: "flex",
+                          justifyContent: "flex-end",
+                        }}
+                      >
                         {isSubmitted ? (
                           formData.cardSettlementSlip ? (
-                            <div className="d-flex align-items-center justify-content-end gap-2" style={{ width: "100%" }}>
+                            <div
+                              className="d-flex align-items-center justify-content-end gap-2"
+                              style={{ width: "100%" }}
+                            >
                               <Form.Control
                                 type="text"
                                 readOnly
@@ -829,13 +959,26 @@ const DailyClosing = () => {
                               />
                               <Button
                                 variant="outline-info"
-                                style={{ fontSize: "12px", padding: "5px 12px", whiteSpace: "nowrap", display: "inline-flex", alignItems: "center" }}
+                                style={{
+                                  fontSize: "12px",
+                                  padding: "5px 12px",
+                                  whiteSpace: "nowrap",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                }}
                                 onClick={(e) => {
                                   e.preventDefault();
                                   const url = `${BASE_URL.replace("/api", "")}${formData.cardSettlementSlip}`;
                                   setPreviewUrl(url);
                                   setPreviewName("Card Settlement Slip");
-                                  setPreviewType(url.toLowerCase().split("?")[0].endsWith(".pdf") ? "pdf" : "image");
+                                  setPreviewType(
+                                    url
+                                      .toLowerCase()
+                                      .split("?")[0]
+                                      .endsWith(".pdf")
+                                      ? "pdf"
+                                      : "image",
+                                  );
                                   setShowPreview(true);
                                 }}
                               >
@@ -843,148 +986,177 @@ const DailyClosing = () => {
                               </Button>
                             </div>
                           ) : (
-                            <span className="text-muted" style={{ fontSize: "12px" }}>-</span>
-                          )
-                        ) : (<div className="d-flex align-items-center justify-content-end gap-2" style={{ width: "100%" }}>
-                          {cardSettlementFile && cardSettlementPreviewUrl && (
-                            <div
-                              style={{
-                                padding: "6px",
-                                borderRadius: "8px",
-                                backgroundColor: "#f0fdfa",
-                                border: "1px dashed #00acc1",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "8px",
-                                flex: 1,
-                                minWidth: 0,
-                              }}
+                            <span
+                              className="text-muted"
+                              style={{ fontSize: "12px" }}
                             >
-                              {cardSettlementFile.type === "application/pdf" || cardSettlementFile.name.toLowerCase().endsWith(".pdf") ? (
+                              -
+                            </span>
+                          )
+                        ) : (
+                          <div
+                            className="d-flex align-items-center justify-content-end gap-2"
+                            style={{ width: "100%" }}
+                          >
+                            {cardSettlementFile && cardSettlementPreviewUrl && (
+                              <div
+                                style={{
+                                  padding: "6px",
+                                  borderRadius: "8px",
+                                  backgroundColor: "#f0fdfa",
+                                  border: "1px dashed #00acc1",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "8px",
+                                  flex: 1,
+                                  minWidth: 0,
+                                }}
+                              >
+                                {cardSettlementFile.type ===
+                                  "application/pdf" ||
+                                cardSettlementFile.name
+                                  .toLowerCase()
+                                  .endsWith(".pdf") ? (
+                                  <div
+                                    style={{
+                                      width: "30px",
+                                      height: "30px",
+                                      borderRadius: "4px",
+                                      backgroundColor: "#ffebee",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      color: "#c62828",
+                                      fontSize: "14px",
+                                      fontWeight: "bold",
+                                      boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
+                                    }}
+                                  >
+                                    <i className="fa fa-file-pdf-o"></i>
+                                  </div>
+                                ) : (
+                                  <img
+                                    src={cardSettlementPreviewUrl}
+                                    alt="Selected preview"
+                                    style={{
+                                      width: "30px",
+                                      height: "30px",
+                                      objectFit: "cover",
+                                      borderRadius: "4px",
+                                      boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
+                                      border: "1px solid #e0e0e0",
+                                    }}
+                                  />
+                                )}
                                 <div
                                   style={{
-                                    width: "30px",
-                                    height: "30px",
-                                    borderRadius: "4px",
-                                    backgroundColor: "#ffebee",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    color: "#c62828",
-                                    fontSize: "14px",
-                                    fontWeight: "bold",
-                                    boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
+                                    flex: 1,
+                                    textAlign: "left",
+                                    minWidth: 0,
                                   }}
                                 >
-                                  <i className="fa fa-file-pdf-o"></i>
-                                </div>
-                              ) : (
-                                <img
-                                  src={cardSettlementPreviewUrl}
-                                  alt="Selected preview"
-                                  style={{
-                                    width: "30px",
-                                    height: "30px",
-                                    objectFit: "cover",
-                                    borderRadius: "4px",
-                                    boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
-                                    border: "1px solid #e0e0e0",
-                                  }}
-                                />
-                              )}
-                              <div style={{ flex: 1, textAlign: "left", minWidth: 0 }}>
-                                <div
-                                  style={{
-                                    fontSize: "10px",
-                                    fontWeight: "600",
-                                    color: "#37474f",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    whiteSpace: "nowrap",
-                                  }}
-                                  title={cardSettlementFile.name}
-                                >
-                                  {cardSettlementFile.name}
+                                  <div
+                                    style={{
+                                      fontSize: "10px",
+                                      fontWeight: "600",
+                                      color: "#37474f",
+                                      overflow: "hidden",
+                                      textOverflow: "ellipsis",
+                                      whiteSpace: "nowrap",
+                                    }}
+                                    title={cardSettlementFile.name}
+                                  >
+                                    {cardSettlementFile.name}
+                                  </div>
+                                  <Button
+                                    variant="link"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      setPreviewUrl(cardSettlementPreviewUrl);
+                                      setPreviewName(cardSettlementFile.name);
+                                      setPreviewType(
+                                        cardSettlementFile.type ===
+                                          "application/pdf" ||
+                                          cardSettlementFile.name
+                                            .toLowerCase()
+                                            .endsWith(".pdf")
+                                          ? "pdf"
+                                          : "image",
+                                      );
+                                      setShowPreview(true);
+                                    }}
+                                    style={{
+                                      color: "#00acc1",
+                                      fontWeight: "bold",
+                                      textDecoration: "underline",
+                                      padding: 0,
+                                      fontSize: "9px",
+                                      border: "none",
+                                      background: "none",
+                                      lineHeight: 1,
+                                      marginTop: "2px",
+                                    }}
+                                  >
+                                    Preview
+                                  </Button>
                                 </div>
                                 <Button
                                   variant="link"
                                   onClick={(e) => {
                                     e.preventDefault();
-                                    setPreviewUrl(cardSettlementPreviewUrl);
-                                    setPreviewName(cardSettlementFile.name);
-                                    setPreviewType(
-                                      cardSettlementFile.type === "application/pdf" || cardSettlementFile.name.toLowerCase().endsWith(".pdf")
-                                        ? "pdf"
-                                        : "image"
+                                    setCardSettlementFile(null);
+                                    const input = document.getElementById(
+                                      "cardSettlementSlipFile",
                                     );
-                                    setShowPreview(true);
+                                    if (input) input.value = "";
                                   }}
                                   style={{
-                                    color: "#00acc1",
-                                    fontWeight: "bold",
-                                    textDecoration: "underline",
-                                    padding: 0,
-                                    fontSize: "9px",
+                                    color: "#d32f2f",
+                                    padding: "2px",
+                                    fontSize: "13px",
                                     border: "none",
                                     background: "none",
-                                    lineHeight: 1,
-                                    marginTop: "2px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    marginLeft: "auto",
                                   }}
+                                  title="Remove file"
                                 >
-                                  Preview
+                                  <i className="fa fa-times-circle"></i>
                                 </Button>
                               </div>
-                              <Button
-                                variant="link"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  setCardSettlementFile(null);
-                                  const input = document.getElementById("cardSettlementSlipFile");
-                                  if (input) input.value = "";
-                                }}
-                                style={{
-                                  color: "#d32f2f",
-                                  padding: "2px",
-                                  fontSize: "13px",
-                                  border: "none",
-                                  background: "none",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  marginLeft: "auto",
-                                }}
-                                title="Remove file"
-                              >
-                                <i className="fa fa-times-circle"></i>
-                              </Button>
-                            </div>
-                          )}
-                          <input
-                            type="file"
-                            accept="image/*,application/pdf"
-                            id="cardSettlementSlipFile"
-                            style={{ display: "none" }}
-                            onChange={(e) => {
-                              const file = e.target.files[0] || null;
-                              setCardSettlementFile(file);
-                            }}
-                          />
-                          <label
-                            htmlFor="cardSettlementSlipFile"
-                            className="btn btn-sm btn-info text-white mb-0"
-                            style={{
-                              cursor: "pointer",
-                              fontSize: "11px",
-                              padding: "5px 10px",
-                              borderRadius: "6px",
-                              backgroundColor: cardSettlementFile ? "#0097a7" : "#00bcd4",
-                              borderColor: cardSettlementFile ? "#0097a7" : "#00bcd4",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {cardSettlementFile ? "Change" : "Choose File"}
-                          </label>
-                        </div>
+                            )}
+                            <input
+                              type="file"
+                              accept="image/*,application/pdf"
+                              id="cardSettlementSlipFile"
+                              style={{ display: "none" }}
+                              onChange={(e) => {
+                                const file = e.target.files[0] || null;
+                                setCardSettlementFile(file);
+                              }}
+                            />
+                            <label
+                              htmlFor="cardSettlementSlipFile"
+                              className="btn btn-sm btn-info text-white mb-0"
+                              style={{
+                                cursor: "pointer",
+                                fontSize: "11px",
+                                padding: "5px 10px",
+                                borderRadius: "6px",
+                                backgroundColor: cardSettlementFile
+                                  ? "#0097a7"
+                                  : "#00bcd4",
+                                borderColor: cardSettlementFile
+                                  ? "#0097a7"
+                                  : "#00bcd4",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {cardSettlementFile ? "Change" : "Choose File"}
+                            </label>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -1003,7 +1175,14 @@ const DailyClosing = () => {
                         gap: "10px",
                       }}
                     >
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: "200px" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px",
+                          minWidth: "200px",
+                        }}
+                      >
                         <div
                           style={{
                             width: "28px",
@@ -1016,14 +1195,34 @@ const DailyClosing = () => {
                             color: "#00bcd4",
                           }}
                         >
-                          <i className="fa fa-file-image-o" style={{ fontSize: "13px" }}></i>
+                          <i
+                            className="fa fa-file-image-o"
+                            style={{ fontSize: "13px" }}
+                          ></i>
                         </div>
-                        <span style={{ fontWeight: "700", color: "#37474f", fontSize: "12.5px" }}>Cash Deposit Receipt</span>
+                        <span
+                          style={{
+                            fontWeight: "700",
+                            color: "#37474f",
+                            fontSize: "12.5px",
+                          }}
+                        >
+                          Cash Deposit Receipt
+                        </span>
                       </div>
-                      <div style={{ width: "240px", display: "flex", justifyContent: "flex-end" }}>
+                      <div
+                        style={{
+                          width: "240px",
+                          display: "flex",
+                          justifyContent: "flex-end",
+                        }}
+                      >
                         {isSubmitted ? (
                           formData.cashDepositReceipt ? (
-                            <div className="d-flex align-items-center justify-content-end gap-2" style={{ width: "100%" }}>
+                            <div
+                              className="d-flex align-items-center justify-content-end gap-2"
+                              style={{ width: "100%" }}
+                            >
                               <Form.Control
                                 type="text"
                                 readOnly
@@ -1041,13 +1240,26 @@ const DailyClosing = () => {
                               />
                               <Button
                                 variant="outline-info"
-                                style={{ fontSize: "12px", padding: "5px 12px", whiteSpace: "nowrap", display: "inline-flex", alignItems: "center" }}
+                                style={{
+                                  fontSize: "12px",
+                                  padding: "5px 12px",
+                                  whiteSpace: "nowrap",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                }}
                                 onClick={(e) => {
                                   e.preventDefault();
                                   const url = `${BASE_URL.replace("/api", "")}${formData.cashDepositReceipt}`;
                                   setPreviewUrl(url);
                                   setPreviewName("Cash Deposit Receipt");
-                                  setPreviewType(url.toLowerCase().split("?")[0].endsWith(".pdf") ? "pdf" : "image");
+                                  setPreviewType(
+                                    url
+                                      .toLowerCase()
+                                      .split("?")[0]
+                                      .endsWith(".pdf")
+                                      ? "pdf"
+                                      : "image",
+                                  );
                                   setShowPreview(true);
                                 }}
                               >
@@ -1055,148 +1267,176 @@ const DailyClosing = () => {
                               </Button>
                             </div>
                           ) : (
-                            <span className="text-muted" style={{ fontSize: "12px" }}>-</span>
-                          )
-                        ) : (<div className="d-flex align-items-center justify-content-end gap-2" style={{ width: "100%" }}>
-                          {cashDepositFile && cashDepositPreviewUrl && (
-                            <div
-                              style={{
-                                padding: "6px",
-                                borderRadius: "8px",
-                                backgroundColor: "#f0fdfa",
-                                border: "1px dashed #00acc1",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "8px",
-                                flex: 1,
-                                minWidth: 0,
-                              }}
+                            <span
+                              className="text-muted"
+                              style={{ fontSize: "12px" }}
                             >
-                              {cashDepositFile.type === "application/pdf" || cashDepositFile.name.toLowerCase().endsWith(".pdf") ? (
+                              -
+                            </span>
+                          )
+                        ) : (
+                          <div
+                            className="d-flex align-items-center justify-content-end gap-2"
+                            style={{ width: "100%" }}
+                          >
+                            {cashDepositFile && cashDepositPreviewUrl && (
+                              <div
+                                style={{
+                                  padding: "6px",
+                                  borderRadius: "8px",
+                                  backgroundColor: "#f0fdfa",
+                                  border: "1px dashed #00acc1",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "8px",
+                                  flex: 1,
+                                  minWidth: 0,
+                                }}
+                              >
+                                {cashDepositFile.type === "application/pdf" ||
+                                cashDepositFile.name
+                                  .toLowerCase()
+                                  .endsWith(".pdf") ? (
+                                  <div
+                                    style={{
+                                      width: "30px",
+                                      height: "30px",
+                                      borderRadius: "4px",
+                                      backgroundColor: "#ffebee",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      color: "#c62828",
+                                      fontSize: "14px",
+                                      fontWeight: "bold",
+                                      boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
+                                    }}
+                                  >
+                                    <i className="fa fa-file-pdf-o"></i>
+                                  </div>
+                                ) : (
+                                  <img
+                                    src={cashDepositPreviewUrl}
+                                    alt="Selected preview"
+                                    style={{
+                                      width: "30px",
+                                      height: "30px",
+                                      objectFit: "cover",
+                                      borderRadius: "4px",
+                                      boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
+                                      border: "1px solid #e0e0e0",
+                                    }}
+                                  />
+                                )}
                                 <div
                                   style={{
-                                    width: "30px",
-                                    height: "30px",
-                                    borderRadius: "4px",
-                                    backgroundColor: "#ffebee",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    color: "#c62828",
-                                    fontSize: "14px",
-                                    fontWeight: "bold",
-                                    boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
+                                    flex: 1,
+                                    textAlign: "left",
+                                    minWidth: 0,
                                   }}
                                 >
-                                  <i className="fa fa-file-pdf-o"></i>
-                                </div>
-                              ) : (
-                                <img
-                                  src={cashDepositPreviewUrl}
-                                  alt="Selected preview"
-                                  style={{
-                                    width: "30px",
-                                    height: "30px",
-                                    objectFit: "cover",
-                                    borderRadius: "4px",
-                                    boxShadow: "0px 1px 3px rgba(0,0,0,0.1)",
-                                    border: "1px solid #e0e0e0",
-                                  }}
-                                />
-                              )}
-                              <div style={{ flex: 1, textAlign: "left", minWidth: 0 }}>
-                                <div
-                                  style={{
-                                    fontSize: "10px",
-                                    fontWeight: "600",
-                                    color: "#37474f",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    whiteSpace: "nowrap",
-                                  }}
-                                  title={cashDepositFile.name}
-                                >
-                                  {cashDepositFile.name}
+                                  <div
+                                    style={{
+                                      fontSize: "10px",
+                                      fontWeight: "600",
+                                      color: "#37474f",
+                                      overflow: "hidden",
+                                      textOverflow: "ellipsis",
+                                      whiteSpace: "nowrap",
+                                    }}
+                                    title={cashDepositFile.name}
+                                  >
+                                    {cashDepositFile.name}
+                                  </div>
+                                  <Button
+                                    variant="link"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      setPreviewUrl(cashDepositPreviewUrl);
+                                      setPreviewName(cashDepositFile.name);
+                                      setPreviewType(
+                                        cashDepositFile.type ===
+                                          "application/pdf" ||
+                                          cashDepositFile.name
+                                            .toLowerCase()
+                                            .endsWith(".pdf")
+                                          ? "pdf"
+                                          : "image",
+                                      );
+                                      setShowPreview(true);
+                                    }}
+                                    style={{
+                                      color: "#00acc1",
+                                      fontWeight: "bold",
+                                      textDecoration: "underline",
+                                      padding: 0,
+                                      fontSize: "9px",
+                                      border: "none",
+                                      background: "none",
+                                      lineHeight: 1,
+                                      marginTop: "2px",
+                                    }}
+                                  >
+                                    Preview
+                                  </Button>
                                 </div>
                                 <Button
                                   variant="link"
                                   onClick={(e) => {
                                     e.preventDefault();
-                                    setPreviewUrl(cashDepositPreviewUrl);
-                                    setPreviewName(cashDepositFile.name);
-                                    setPreviewType(
-                                      cashDepositFile.type === "application/pdf" || cashDepositFile.name.toLowerCase().endsWith(".pdf")
-                                        ? "pdf"
-                                        : "image"
+                                    setCashDepositFile(null);
+                                    const input = document.getElementById(
+                                      "cashDepositReceiptFile",
                                     );
-                                    setShowPreview(true);
+                                    if (input) input.value = "";
                                   }}
                                   style={{
-                                    color: "#00acc1",
-                                    fontWeight: "bold",
-                                    textDecoration: "underline",
-                                    padding: 0,
-                                    fontSize: "9px",
+                                    color: "#d32f2f",
+                                    padding: "2px",
+                                    fontSize: "13px",
                                     border: "none",
                                     background: "none",
-                                    lineHeight: 1,
-                                    marginTop: "2px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    marginLeft: "auto",
                                   }}
+                                  title="Remove file"
                                 >
-                                  Preview
+                                  <i className="fa fa-times-circle"></i>
                                 </Button>
                               </div>
-                              <Button
-                                variant="link"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  setCashDepositFile(null);
-                                  const input = document.getElementById("cashDepositReceiptFile");
-                                  if (input) input.value = "";
-                                }}
-                                style={{
-                                  color: "#d32f2f",
-                                  padding: "2px",
-                                  fontSize: "13px",
-                                  border: "none",
-                                  background: "none",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  marginLeft: "auto",
-                                }}
-                                title="Remove file"
-                              >
-                                <i className="fa fa-times-circle"></i>
-                              </Button>
-                            </div>
-                          )}
-                          <input
-                            type="file"
-                            accept="image/*,application/pdf"
-                            id="cashDepositReceiptFile"
-                            style={{ display: "none" }}
-                            onChange={(e) => {
-                              const file = e.target.files[0] || null;
-                              setCashDepositFile(file);
-                            }}
-                          />
-                          <label
-                            htmlFor="cashDepositReceiptFile"
-                            className="btn btn-sm btn-info text-white mb-0"
-                            style={{
-                              cursor: "pointer",
-                              fontSize: "11px",
-                              padding: "5px 10px",
-                              borderRadius: "6px",
-                              backgroundColor: cashDepositFile ? "#0097a7" : "#00bcd4",
-                              borderColor: cashDepositFile ? "#0097a7" : "#00bcd4",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {cashDepositFile ? "Change" : "Choose File"}
-                          </label>
-                        </div>
+                            )}
+                            <input
+                              type="file"
+                              accept="image/*,application/pdf"
+                              id="cashDepositReceiptFile"
+                              style={{ display: "none" }}
+                              onChange={(e) => {
+                                const file = e.target.files[0] || null;
+                                setCashDepositFile(file);
+                              }}
+                            />
+                            <label
+                              htmlFor="cashDepositReceiptFile"
+                              className="btn btn-sm btn-info text-white mb-0"
+                              style={{
+                                cursor: "pointer",
+                                fontSize: "11px",
+                                padding: "5px 10px",
+                                borderRadius: "6px",
+                                backgroundColor: cashDepositFile
+                                  ? "#0097a7"
+                                  : "#00bcd4",
+                                borderColor: cashDepositFile
+                                  ? "#0097a7"
+                                  : "#00bcd4",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {cashDepositFile ? "Change" : "Choose File"}
+                            </label>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -1206,10 +1446,18 @@ const DailyClosing = () => {
                       <div
                         style={{
                           padding: "10px 10px",
-                          backgroundColor: focusedField === "comment" ? "#00bcd418" : formData.comment ? "#00bcd40a" : "#fff5f5",
+                          backgroundColor:
+                            focusedField === "comment"
+                              ? "#00bcd418"
+                              : formData.comment
+                                ? "#00bcd40a"
+                                : "#fff5f5",
                           borderRadius: "8px",
                           border: `1px solid ${focusedField === "comment" ? "#00bcd4" : "#ffe3e3"}`,
-                          boxShadow: focusedField === "comment" ? "0 4px 12px rgba(0,188,212,0.2)" : "0 1px 3px rgba(0,0,0,0.02)",
+                          boxShadow:
+                            focusedField === "comment"
+                              ? "0 4px 12px rgba(0,188,212,0.2)"
+                              : "0 1px 3px rgba(0,0,0,0.02)",
                           transition: "all 0.25s ease",
                           marginTop: "5px",
                         }}
@@ -1225,7 +1473,8 @@ const DailyClosing = () => {
                           >
                             <i className="fa fa-exclamation-triangle me-2"></i>A
                             zero balance is recorded in all fields. Please
-                            provide a justification below to save the daily closing.
+                            provide a justification below to save the daily
+                            closing.
                           </div>
                         )}
                         <Form.Group>
@@ -1235,7 +1484,9 @@ const DailyClosing = () => {
                             name="comment"
                             value={formData.comment}
                             onChange={handleChange}
-                            onFocus={() => !isSubmitted && setFocusedField("comment")}
+                            onFocus={() =>
+                              !isSubmitted && setFocusedField("comment")
+                            }
                             onBlur={() => setFocusedField(null)}
                             readOnly={isSubmitted}
                             placeholder="Enter justification or remarks..."
@@ -1244,7 +1495,10 @@ const DailyClosing = () => {
                               border: `1px solid ${focusedField === "comment" ? "#00bcd4" : "#cbd5e0"}`,
                               borderRadius: "6px",
                               transition: "all 0.3s ease",
-                              boxShadow: focusedField === "comment" ? "0 0 0 3px rgba(0,188,212,0.25)" : "none",
+                              boxShadow:
+                                focusedField === "comment"
+                                  ? "0 0 0 3px rgba(0,188,212,0.25)"
+                                  : "none",
                             }}
                           />
                         </Form.Group>
@@ -1270,7 +1524,9 @@ const DailyClosing = () => {
                           fontWeight: "bold",
                           backgroundColor: isSaveDisabled ? "#ccc" : "#00bcd4",
                           borderColor: isSaveDisabled ? "#ccc" : "#00bcd4",
-                          boxShadow: isSaveDisabled ? "none" : "0 3px 6px rgba(0,0,0,0.12)",
+                          boxShadow: isSaveDisabled
+                            ? "none"
+                            : "0 3px 6px rgba(0,0,0,0.12)",
                           transition: "all 0.3s ease",
                           display: "inline-flex",
                           alignItems: "center",
@@ -1283,7 +1539,9 @@ const DailyClosing = () => {
                           size="15"
                           className="me-2"
                         />
-                        {isSubmitted ? "SUBMITTED TO DATABASE" : "SAVE DAILY CLOSING"}
+                        {isSubmitted
+                          ? "SUBMITTED TO DATABASE"
+                          : "SAVE DAILY CLOSING"}
                       </Button>
                     </div>
                   </div>
@@ -1300,12 +1558,23 @@ const DailyClosing = () => {
         size="lg"
         centered
       >
-        <Modal.Header closeButton style={{ background: "#e0f7fa", borderBottom: "2px solid #00bcd4" }}>
-          <Modal.Title style={{ color: "#006064", fontWeight: "bold", fontSize: "16px" }}>
+        <Modal.Header
+          closeButton
+          style={{ background: "#e0f7fa", borderBottom: "2px solid #00bcd4" }}
+        >
+          <Modal.Title
+            style={{ color: "#006064", fontWeight: "bold", fontSize: "16px" }}
+          >
             <i className="fa fa-eye me-2"></i> {previewName} Preview
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body style={{ textAlign: "center", backgroundColor: "#f5fcfd", padding: "15px" }}>
+        <Modal.Body
+          style={{
+            textAlign: "center",
+            backgroundColor: "#f5fcfd",
+            padding: "15px",
+          }}
+        >
           {previewType === "pdf" ? (
             <iframe
               src={previewUrl}

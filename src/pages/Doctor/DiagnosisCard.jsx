@@ -62,18 +62,24 @@ const DiagnosisCard = ({
       .replace(/[^a-z0-9]/g, "");
   };
 
-  const effectivePhone = patientPhone || (patient && patient.phone) || (diagnosisData && (diagnosisData.phone || diagnosisData.patient_phone));
+  const effectivePhone =
+    patientPhone ||
+    (patient && patient.phone) ||
+    (diagnosisData && (diagnosisData.phone || diagnosisData.patient_phone));
 
   React.useEffect(() => {
     const checkMaster = async () => {
       if (!effectivePhone) return;
       try {
         const cleanPhone = String(effectivePhone).replace(/\D/g, "");
-        const last10 = cleanPhone.length > 10 ? cleanPhone.slice(-10) : cleanPhone;
+        const last10 =
+          cleanPhone.length > 10 ? cleanPhone.slice(-10) : cleanPhone;
         if (!last10 || last10.length < 10) return;
 
         const BASE_URL = "http://194.195.117.79:5100/api";
-        const res = await fetch(`${BASE_URL}/V1/appointment/checkMasterPatient?patient_phone=${last10}`);
+        const res = await fetch(
+          `${BASE_URL}/V1/appointment/checkMasterPatient?patient_phone=${last10}`,
+        );
         if (res.ok) {
           const data = await res.json();
           if (data.statusCode === 200 && data.data && data.data.masterPatient) {
@@ -88,7 +94,10 @@ const DiagnosisCard = ({
               currentLocation = localStorage.getItem("location") || "Kolhapur";
             }
 
-            if (mp.location && normalizeLoc(mp.location) !== normalizeLoc(currentLocation)) {
+            if (
+              mp.location &&
+              normalizeLoc(mp.location) !== normalizeLoc(currentLocation)
+            ) {
               setMasterPatientInfo(data.data);
             } else {
               setMasterPatientInfo(null);
@@ -114,7 +123,10 @@ const DiagnosisCard = ({
     };
     try {
       sessionStorage.setItem("masterPrintData", JSON.stringify(printData));
-      window.open(`${window.location.origin}/hms/diagnosis-card-preview`, "_blank");
+      window.open(
+        `${window.location.origin}/hms/diagnosis-card-preview`,
+        "_blank",
+      );
     } catch (e) {
       console.error("Error opening diagnosis card preview in new tab:", e);
     }
@@ -839,11 +851,26 @@ const DiagnosisCard = ({
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <svg width="22" height="22" fill="#d97706" viewBox="0 0 16 16" style={{ flexShrink: 0 }}>
+              <svg
+                width="22"
+                height="22"
+                fill="#d97706"
+                viewBox="0 0 16 16"
+                style={{ flexShrink: 0 }}
+              >
                 <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z" />
               </svg>
-              <h6 style={{ margin: 0, color: "#856404", fontSize: "14px", fontWeight: "600" }}>
-                This patient has already visited <strong>HHC {masterPatientInfo.masterPatient.location}</strong> location
+              <h6
+                style={{
+                  margin: 0,
+                  color: "#856404",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                }}
+              >
+                This patient has already visited{" "}
+                <strong>HHC {masterPatientInfo.masterPatient.location}</strong>{" "}
+                location
               </h6>
             </div>
             <Button
@@ -863,7 +890,12 @@ const DiagnosisCard = ({
                 whiteSpace: "nowrap",
               }}
             >
-              <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
+              <svg
+                width="15"
+                height="15"
+                fill="currentColor"
+                viewBox="0 0 16 16"
+              >
                 <path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z" />
                 <path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" />
               </svg>
@@ -907,12 +939,18 @@ const DiagnosisCard = ({
                   className="fw-bold mb-0"
                   style={{ fontSize: "13px", color: "#006064" }}
                 >
-                  Select Specialty Type & Findings <span className="text-danger">*</span>
+                  Select Specialty Type & Findings{" "}
+                  <span className="text-danger">*</span>
                 </Form.Label>
               </div>
               <Card
                 className="shadow-sm border-0 overflow-hidden"
-                style={{ borderRadius: "15px", border: validationErrors.speciality_data ? "2px solid red" : "2px solid #a7d4d2ff" }}
+                style={{
+                  borderRadius: "15px",
+                  border: validationErrors.speciality_data
+                    ? "2px solid red"
+                    : "2px solid #a7d4d2ff",
+                }}
               >
                 {/* Specialty Nav stays clickable even while locked (Nav.Link is an <a>),
                     so a saved record can still be browsed across specialties. */}
@@ -970,22 +1008,22 @@ const DiagnosisCard = ({
                               transition: "all 0.3s ease-in-out",
                               backgroundColor:
                                 diagnosisData.active_speciality === sub.id ||
-                                  isFilled
+                                isFilled
                                   ? "#00838f"
                                   : "#ffffff",
                               color:
                                 diagnosisData.active_speciality === sub.id ||
-                                  isFilled
+                                isFilled
                                   ? "#ffffff"
                                   : "#006064",
                               border:
                                 diagnosisData.active_speciality === sub.id ||
-                                  isFilled
+                                isFilled
                                   ? "1px solid #00838f"
                                   : "1px solid #e0f2f1",
                               boxShadow:
                                 diagnosisData.active_speciality === sub.id ||
-                                  isFilled
+                                isFilled
                                   ? "0 4px 10px rgba(0, 131, 143, 0.4)"
                                   : "0 2px 4px rgba(0,0,0,0.05)",
                               cursor: "pointer",
@@ -993,12 +1031,12 @@ const DiagnosisCard = ({
                           >
                             {(diagnosisData.active_speciality === sub.id ||
                               isFilled) && (
-                                <FeatherIcon
-                                  icon="check-circle"
-                                  size="14"
-                                  className="me-1"
-                                />
-                              )}
+                              <FeatherIcon
+                                icon="check-circle"
+                                size="14"
+                                className="me-1"
+                              />
+                            )}
                             {sub.label}
                           </Nav.Link>
                         </Nav.Item>
@@ -1046,98 +1084,98 @@ const DiagnosisCard = ({
                         {diagnosisData.speciality_data.piles.some((g) =>
                           g.startsWith("Grade "),
                         ) && (
-                            <div className="d-flex align-items-center gap-2 mt-2 ms-2 animate__animated animate__fadeIn">
-                              <Form.Label
-                                className="mb-0 fw-bold"
-                                style={{ fontSize: "11px", color: "#006064" }}
-                              >
-                                Haemorrhoids Position:
-                              </Form.Label>
-                              <Form.Control
-                                type="text"
-                                size="sm"
-                                placeholder="e.g. 3,7,11"
-                                value={
-                                  diagnosisData.speciality_data
-                                    .haemorrhoids_position || ""
-                                }
-                                onChange={(e) => {
-                                  userInteracted.current = true;
-                                  setDiagnosisData((prev) => ({
-                                    ...prev,
-                                    speciality_data: {
-                                      ...prev.speciality_data,
-                                      haemorrhoids_position: e.target.value,
-                                    },
-                                  }));
-                                }}
-                                style={{
-                                  width: "80px",
-                                  height: "25px",
-                                  borderRadius: "5px",
-                                  border: "2px solid #b2ebf2",
-                                  fontSize: "11px",
-                                }}
-                              />
-                              <span
-                                style={{
-                                  fontSize: "11px",
-                                  fontWeight: "700",
-                                  color: "#006064",
-                                }}
-                              >
-                                o'clock
-                              </span>
-                            </div>
-                          )}
+                          <div className="d-flex align-items-center gap-2 mt-2 ms-2 animate__animated animate__fadeIn">
+                            <Form.Label
+                              className="mb-0 fw-bold"
+                              style={{ fontSize: "11px", color: "#006064" }}
+                            >
+                              Haemorrhoids Position:
+                            </Form.Label>
+                            <Form.Control
+                              type="text"
+                              size="sm"
+                              placeholder="e.g. 3,7,11"
+                              value={
+                                diagnosisData.speciality_data
+                                  .haemorrhoids_position || ""
+                              }
+                              onChange={(e) => {
+                                userInteracted.current = true;
+                                setDiagnosisData((prev) => ({
+                                  ...prev,
+                                  speciality_data: {
+                                    ...prev.speciality_data,
+                                    haemorrhoids_position: e.target.value,
+                                  },
+                                }));
+                              }}
+                              style={{
+                                width: "80px",
+                                height: "25px",
+                                borderRadius: "5px",
+                                border: "2px solid #b2ebf2",
+                                fontSize: "11px",
+                              }}
+                            />
+                            <span
+                              style={{
+                                fontSize: "11px",
+                                fontWeight: "700",
+                                color: "#006064",
+                              }}
+                            >
+                              o'clock
+                            </span>
+                          </div>
+                        )}
 
                         {diagnosisData.speciality_data.piles.includes(
                           "Skin Tag",
                         ) && (
-                            <div className="d-flex align-items-center gap-2 mt-2 ms-2 animate__animated animate__fadeIn">
-                              <Form.Label
-                                className="mb-0 fw-bold"
-                                style={{ fontSize: "11px", color: "#006064" }}
-                              >
-                                Skin Tag Position:
-                              </Form.Label>
-                              <Form.Control
-                                type="text"
-                                size="sm"
-                                placeholder="e.g. 6"
-                                value={
-                                  diagnosisData.speciality_data
-                                    .skin_tag_position || ""
-                                }
-                                onChange={(e) => {
-                                  userInteracted.current = true;
-                                  setDiagnosisData((prev) => ({
-                                    ...prev,
-                                    speciality_data: {
-                                      ...prev.speciality_data,
-                                      skin_tag_position: e.target.value,
-                                    },
-                                  }));
-                                }}
-                                style={{
-                                  width: "60px",
-                                  height: "25px",
-                                  borderRadius: "5px",
-                                  border: "2px solid #b2ebf2",
-                                  fontSize: "11px",
-                                }}
-                              />
-                              <span
-                                style={{
-                                  fontSize: "11px",
-                                  fontWeight: "700",
-                                  color: "#006064",
-                                }}
-                              >
-                                o'clock
-                              </span>
-                            </div>
-                          )}
+                          <div className="d-flex align-items-center gap-2 mt-2 ms-2 animate__animated animate__fadeIn">
+                            <Form.Label
+                              className="mb-0 fw-bold"
+                              style={{ fontSize: "11px", color: "#006064" }}
+                            >
+                              Skin Tag Position:
+                            </Form.Label>
+                            <Form.Control
+                              type="text"
+                              size="sm"
+                              placeholder="e.g. 6"
+                              value={
+                                diagnosisData.speciality_data
+                                  .skin_tag_position || ""
+                              }
+                              onChange={(e) => {
+                                userInteracted.current = true;
+                                setDiagnosisData((prev) => ({
+                                  ...prev,
+                                  speciality_data: {
+                                    ...prev.speciality_data,
+                                    skin_tag_position: e.target.value,
+                                  },
+                                }));
+                              }}
+                              style={{
+                                width: "60px",
+                                height: "25px",
+                                borderRadius: "5px",
+                                border: "2px solid #b2ebf2",
+                                fontSize: "11px",
+                              }}
+                            />
+                            <span
+                              style={{
+                                fontSize: "11px",
+                                fontWeight: "700",
+                                color: "#006064",
+                              }}
+                            >
+                              o'clock
+                            </span>
+                          </div>
+                        )}
                       </div>
                     )}
                     {diagnosisData.active_speciality === "fistula" && (
@@ -1660,7 +1698,9 @@ const DiagnosisCard = ({
                 required
                 style={{
                   borderRadius: "10px",
-                  border: validationErrors.diagnosis_text ? "2px solid red" : "2px solid #eda6a6ff",
+                  border: validationErrors.diagnosis_text
+                    ? "2px solid red"
+                    : "2px solid #eda6a6ff",
                   fontSize: "12px",
                   padding: "6px 12px",
                 }}
@@ -1910,7 +1950,8 @@ const DiagnosisCard = ({
             padding: "5px",
           }}
         >
-          Payment Category {isSurgeryOrMedsSx && <span className="text-danger">*</span>}
+          Payment Category{" "}
+          {isSurgeryOrMedsSx && <span className="text-danger">*</span>}
         </h5>
         <fieldset disabled={isReadOnly} style={lockStyle}>
           <style>
@@ -1928,35 +1969,37 @@ const DiagnosisCard = ({
             `}
           </style>
           <div className="d-flex flex-wrap gap-4 align-items-center mb-3 px-1">
-            {["Cashless", "Reimbursement", "Charity", "No Insurance"].map((cat) => {
-              const isChecked = diagnosisData.categories.includes(cat);
-              return (
-                <Form.Check
-                  key={cat}
-                  type="radio"
-                  name="payment_category"
-                  id={`payment-cat-${cat.replace(/\s+/g, "-")}`}
-                  label={cat}
-                  checked={isChecked}
-                  disabled={isReferredToAnotherDoctor}
-                  onClick={() => {
-                    if (isChecked) {
-                      handleDiagnosisCheckboxChange("categories", cat);
-                    }
-                  }}
-                  onChange={() => {
-                    if (!isChecked) {
-                      handleDiagnosisCheckboxChange("categories", cat);
-                    }
-                  }}
-                  className="mb-0 custom-payment-radio d-flex align-items-center gap-2"
-                  style={{
-                    fontSize: "14px",
-                    fontWeight: "600",
-                  }}
-                />
-              );
-            })}
+            {["Cashless", "Reimbursement", "Charity", "No Insurance"].map(
+              (cat) => {
+                const isChecked = diagnosisData.categories.includes(cat);
+                return (
+                  <Form.Check
+                    key={cat}
+                    type="radio"
+                    name="payment_category"
+                    id={`payment-cat-${cat.replace(/\s+/g, "-")}`}
+                    label={cat}
+                    checked={isChecked}
+                    disabled={isReferredToAnotherDoctor}
+                    onClick={() => {
+                      if (isChecked) {
+                        handleDiagnosisCheckboxChange("categories", cat);
+                      }
+                    }}
+                    onChange={() => {
+                      if (!isChecked) {
+                        handleDiagnosisCheckboxChange("categories", cat);
+                      }
+                    }}
+                    className="mb-0 custom-payment-radio d-flex align-items-center gap-2"
+                    style={{
+                      fontSize: "14px",
+                      fontWeight: "600",
+                    }}
+                  />
+                );
+              },
+            )}
 
             <div className="d-flex align-items-center gap-2 ms-auto">
               <label
@@ -1967,7 +2010,10 @@ const DiagnosisCard = ({
                   whiteSpace: "nowrap",
                 }}
               >
-                Insurance Company {isInsuranceCompanyRequired && <span className="text-danger">*</span>}
+                Insurance Company{" "}
+                {isInsuranceCompanyRequired && (
+                  <span className="text-danger">*</span>
+                )}
               </label>
               <Form.Select
                 value={diagnosisData.insurance_company_id || ""}
@@ -2022,7 +2068,10 @@ const DiagnosisCard = ({
               >
                 <option value="">Select TPA</option>
                 {tpaCompanies.map((t) => (
-                  <option key={t.comapny_id || t.tpaid} value={t.comapny_id || t.tpaid}>
+                  <option
+                    key={t.comapny_id || t.tpaid}
+                    value={t.comapny_id || t.tpaid}
+                  >
                     {t.companyname || t.tpaname}
                   </option>
                 ))}
@@ -2038,10 +2087,11 @@ const DiagnosisCard = ({
                 fontWeight: "800",
                 marginBottom: "4px",
                 display: "block",
-                marginTop: "15px"
+                marginTop: "15px",
               }}
             >
-              Estimate Package/Insurance Details {isSurgeryOrMedsSx && <span className="text-danger">*</span>}
+              Estimate Package/Insurance Details{" "}
+              {isSurgeryOrMedsSx && <span className="text-danger">*</span>}
             </label>
             <Form.Control
               as="textarea"
@@ -2197,7 +2247,9 @@ const DiagnosisCard = ({
                 }
                 style={{
                   borderRadius: "10px",
-                  border: validationErrors.consultant_doctor ? "2px solid red" : "2px solid #b2ebf2",
+                  border: validationErrors.consultant_doctor
+                    ? "2px solid red"
+                    : "2px solid #b2ebf2",
                   padding: "6px 12px",
                   fontSize: "12px",
                 }}
@@ -2228,7 +2280,9 @@ const DiagnosisCard = ({
                 }
                 style={{
                   borderRadius: "10px",
-                  border: validationErrors.assistance_doctor ? "2px solid red" : "2px solid #b2ebf2",
+                  border: validationErrors.assistance_doctor
+                    ? "2px solid red"
+                    : "2px solid #b2ebf2",
                   padding: "6px 12px",
                   fontSize: "12px",
                 }}

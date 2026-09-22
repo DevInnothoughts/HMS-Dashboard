@@ -21,18 +21,36 @@ const formatDateDisplay = (dateStr) => {
 };
 
 const formatValue = (val) => {
-  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+  if (
+    val === null ||
+    val === undefined ||
+    val === "" ||
+    val === "N/A" ||
+    val === 0 ||
+    val === "0" ||
+    val === "-"
+  ) {
     return "-";
   }
   return val;
 };
 
 const formatAmount = (val) => {
-  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+  if (
+    val === null ||
+    val === undefined ||
+    val === "" ||
+    val === "N/A" ||
+    val === 0 ||
+    val === "0" ||
+    val === "-"
+  ) {
     return "-";
   }
   const parsed = parseFloat(val);
-  return isNaN(parsed) ? val : `₹ ${Math.round(parsed).toLocaleString("en-IN")}`;
+  return isNaN(parsed)
+    ? val
+    : `₹ ${Math.round(parsed).toLocaleString("en-IN")}`;
 };
 
 const OPDReceiptsReport = () => {
@@ -58,7 +76,7 @@ const OPDReceiptsReport = () => {
       if (!currentLocation || currentLocation === "default") return;
       try {
         const response = await fetch(
-          `${BASE_URL}/V1/managereports/consultationDetailsDropdown?location=${currentLocation}`
+          `${BASE_URL}/V1/managereports/consultationDetailsDropdown?location=${currentLocation}`,
         );
         const resData = await response.json();
         if (response.ok && Array.isArray(resData.data)) {
@@ -99,7 +117,9 @@ const OPDReceiptsReport = () => {
       // const patientStatus = (item.chargeCondition || "").toLowerCase();
       // const sprayQty = String(item.sprayqty || "").toLowerCase();
       const paymentMode = (item.payment_mode || "").toLowerCase();
-      const amount = String((Number(item.total || 0) - Number(item.discountamt || 0))).toLowerCase();
+      const amount = String(
+        Number(item.total || 0) - Number(item.discountamt || 0),
+      ).toLowerCase();
 
       return (
         displayDate.includes(query) ||
@@ -117,10 +137,10 @@ const OPDReceiptsReport = () => {
 
   const printTotals = filteredData.reduce(
     (acc, curr) => {
-      acc.amount += (Number(curr.total || 0) - Number(curr.discountamt || 0));
+      acc.amount += Number(curr.total || 0) - Number(curr.discountamt || 0);
       return acc;
     },
-    { amount: 0 }
+    { amount: 0 },
   );
 
   const footerGroup = (
@@ -150,7 +170,9 @@ const OPDReceiptsReport = () => {
   const fetchReceiptsData = async () => {
     setLoading(true);
     try {
-      const url = new URL(`${BASE_URL}/V1/managereports/OpdCollectionReportDetails`);
+      const url = new URL(
+        `${BASE_URL}/V1/managereports/OpdCollectionReportDetails`,
+      );
       const today = new Date();
 
       const formatToDDMMYYYY = (date) => {
@@ -354,8 +376,15 @@ const OPDReceiptsReport = () => {
                 >
                   <h4 style={{ margin: 0 }}>OPD Receipts Report</h4>
                   {fromDate && toDate && (
-                    <div style={{ fontSize: "13px", fontWeight: "normal", marginTop: "5px" }}>
-                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "normal",
+                        marginTop: "5px",
+                      }}
+                    >
+                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to{" "}
+                      <b>{formatDateDisplay(toDate)}</b>
                     </div>
                   )}
                 </Card.Header>
@@ -558,13 +587,40 @@ const OPDReceiptsReport = () => {
                       body={(rowData, { rowIndex }) => rowIndex + 1}
                       style={{ width: "60px", textAlign: "center" }}
                     />
-                    <Column field="item_date" header="Date" body={(rowData) => formatValue(formatDateDisplay(rowData.item_date))} />
-                    <Column field="patient" header="Patient Name" body={(rowData) => formatValue(rowData.patient)} />
-                    <Column field="consultation" header="Consultation" body={(rowData) => formatValue(rowData.consultation)} />
+                    <Column
+                      field="item_date"
+                      header="Date"
+                      body={(rowData) =>
+                        formatValue(formatDateDisplay(rowData.item_date))
+                      }
+                    />
+                    <Column
+                      field="patient"
+                      header="Patient Name"
+                      body={(rowData) => formatValue(rowData.patient)}
+                    />
+                    <Column
+                      field="consultation"
+                      header="Consultation"
+                      body={(rowData) => formatValue(rowData.consultation)}
+                    />
                     {/* <Column field="chargeCondition" header="Patient Status" body={(rowData) => formatValue(rowData.chargeCondition)} /> */}
                     {/* <Column field="sprayqty" header="Spray Qty" body={(rowData) => formatValue(rowData.sprayqty)} /> */}
-                    <Column field="payment_mode" header="Payment Mode" body={(rowData) => formatValue(rowData.payment_mode)} />
-                    <Column field="amount" header="Amount" body={(rowData) => formatAmount(Number(rowData.total || 0) - Number(rowData.discountamt || 0))} />
+                    <Column
+                      field="payment_mode"
+                      header="Payment Mode"
+                      body={(rowData) => formatValue(rowData.payment_mode)}
+                    />
+                    <Column
+                      field="amount"
+                      header="Amount"
+                      body={(rowData) =>
+                        formatAmount(
+                          Number(rowData.total || 0) -
+                            Number(rowData.discountamt || 0),
+                        )
+                      }
+                    />
                   </DataTable>
 
                   {/* Print-only container displaying all rows */}
@@ -586,13 +642,20 @@ const OPDReceiptsReport = () => {
                         {filteredData.map((item, index) => (
                           <tr key={index}>
                             <td>{index + 1}</td>
-                            <td>{formatValue(formatDateDisplay(item.item_date))}</td>
+                            <td>
+                              {formatValue(formatDateDisplay(item.item_date))}
+                            </td>
                             <td>{formatValue(item.patient)}</td>
                             <td>{formatValue(item.consultation)}</td>
                             {/* <td>{formatValue(item.chargeCondition)}</td> */}
                             {/* <td>{formatValue(item.sprayqty)}</td> */}
                             <td>{formatValue(item.payment_mode)}</td>
-                            <td>{formatAmount(Number(item.total || 0) - Number(item.discountamt || 0))}</td>
+                            <td>
+                              {formatAmount(
+                                Number(item.total || 0) -
+                                  Number(item.discountamt || 0),
+                              )}
+                            </td>
                           </tr>
                         ))}
                         {/* Totals row inside tbody to avoid page repetition on multiple pages */}

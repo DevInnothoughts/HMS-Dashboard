@@ -53,8 +53,6 @@ const BedAllotmentList = () => {
     setBedAllotments([]); // Ensure it's empty as requested
   }, []);
 
-
-
   const renderHeader = () => (
     <div
       style={{
@@ -294,7 +292,13 @@ const BedAllotmentList = () => {
                     field="contact_number"
                     header="Contact number"
                     headerClassName="datatable-header-center"
-                    body={(rowData) => rowData.contact_number || rowData.contact || rowData.phone || rowData.patient_phone || "-"}
+                    body={(rowData) =>
+                      rowData.contact_number ||
+                      rowData.contact ||
+                      rowData.phone ||
+                      rowData.patient_phone ||
+                      "-"
+                    }
                     style={{ border: "1px solid #4dd0e1" }}
                   />
                   <Column
@@ -309,15 +313,12 @@ const BedAllotmentList = () => {
                     headerClassName="datatable-header-center"
                     style={{ border: "1px solid #4dd0e1" }}
                   />
-
                 </DataTable>
               </Card.Body>
             </Card>
           </Col>
         </Row>
       </Container>
-
-
     </div>
   );
 };

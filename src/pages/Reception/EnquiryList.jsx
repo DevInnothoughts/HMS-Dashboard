@@ -138,12 +138,14 @@ export default function EnquiryList({ isTab = false }) {
         {
           method: "GET",
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
 
       if (treatmentResponse.ok) {
         const treatmentData = await treatmentResponse.json();
-        setTreatmentList(Array.isArray(treatmentData.data) ? treatmentData.data : []);
+        setTreatmentList(
+          Array.isArray(treatmentData.data) ? treatmentData.data : [],
+        );
       }
     } catch (error) {
       console.error("Error fetching dropdown data:", error.message);
@@ -317,7 +319,10 @@ export default function EnquiryList({ isTab = false }) {
           ? "Postoperative"
           : appointmentFormData.patient_type,
       appointment_time: appointmentFormData.appointmentTime
-        ? moment(appointmentFormData.appointmentTime, ["hh:mm A", "HH:mm"]).format("HH:mm")
+        ? moment(appointmentFormData.appointmentTime, [
+            "hh:mm A",
+            "HH:mm",
+          ]).format("HH:mm")
         : "",
       treatment_name: appointmentFormData.treatment,
       FDE_Name: appointmentFormData.FDE_Name,
@@ -408,7 +413,6 @@ export default function EnquiryList({ isTab = false }) {
         to: finalToDate,
         location: currentLocation,
       };
-
 
       Object.keys(params).forEach((key) =>
         url.searchParams.append(key, params[key]),
@@ -616,7 +620,9 @@ export default function EnquiryList({ isTab = false }) {
     const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
     const data = new Blob([excelBuffer], { type: fileType });
 
-    const formattedFromDate = fromDate ? moment(fromDate).format("DD-MM-YYYY") : "";
+    const formattedFromDate = fromDate
+      ? moment(fromDate).format("DD-MM-YYYY")
+      : "";
     const formattedToDate = toDate ? moment(toDate).format("DD-MM-YYYY") : "";
     const fileName = `Enquiry_List_${formattedFromDate}_to_${formattedToDate}${fileExtension}`;
 
@@ -851,16 +857,18 @@ export default function EnquiryList({ isTab = false }) {
         isTab
           ? { fontFamily: "'Poppins', Arial, sans-serif" }
           : {
-            background: "linear-gradient(to right, #e0f7fa, #80deea)",
-            fontFamily: "'Poppins', Arial, sans-serif",
-            minHeight: "100vh",
-            padding: "10px",
-          }
+              background: "linear-gradient(to right, #e0f7fa, #80deea)",
+              fontFamily: "'Poppins', Arial, sans-serif",
+              minHeight: "100vh",
+              padding: "10px",
+            }
       }
     >
       {!isTab && <PageBreadcrumb pagename="Enquiry List" />}
       {!isTab && (
-        <AppointmentNavbar pagename={`Enquiry List (${currentLocation.toUpperCase()})`} />
+        <AppointmentNavbar
+          pagename={`Enquiry List (${currentLocation.toUpperCase()})`}
+        />
       )}
 
       <div className={isTab ? "" : "theme-body"}>
@@ -1236,7 +1244,8 @@ export default function EnquiryList({ isTab = false }) {
                   </Form.Select>
                 </Form.Group>
               </Col>
-              {(appointmentFormData.patient_type === "Other" || appointmentFormData.treatment) && (
+              {(appointmentFormData.patient_type === "Other" ||
+                appointmentFormData.treatment) && (
                 <Col md={6} className="mb-10">
                   <Form.Group>
                     <Form.Label
@@ -1274,7 +1283,15 @@ export default function EnquiryList({ isTab = false }) {
                   </Form.Group>
                 </Col>
               )}
-              <Col md={6} className={(appointmentFormData.patient_type === "Other" || appointmentFormData.treatment) ? "mt-3" : ""}>
+              <Col
+                md={6}
+                className={
+                  appointmentFormData.patient_type === "Other" ||
+                  appointmentFormData.treatment
+                    ? "mt-3"
+                    : ""
+                }
+              >
                 <Form.Group>
                   <Form.Label
                     style={{
@@ -1300,8 +1317,12 @@ export default function EnquiryList({ isTab = false }) {
                       border: "2px solid rgb(77, 208, 225)",
                       fontSize: "11px",
                       borderRadius: "10px",
-                      cursor: appointmentFormData.patient_id ? "not-allowed" : "default",
-                      backgroundColor: appointmentFormData.patient_id ? "#e7ebebff" : undefined,
+                      cursor: appointmentFormData.patient_id
+                        ? "not-allowed"
+                        : "default",
+                      backgroundColor: appointmentFormData.patient_id
+                        ? "#e7ebebff"
+                        : undefined,
                     }}
                   />
                 </Form.Group>

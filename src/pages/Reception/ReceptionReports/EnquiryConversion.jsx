@@ -13,7 +13,15 @@ import { decodeJwt } from "../../Utility/decode-jwt";
 const BASE_URL = "http://194.195.117.79:5100/api";
 
 const formatValue = (val) => {
-  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+  if (
+    val === null ||
+    val === undefined ||
+    val === "" ||
+    val === "N/A" ||
+    val === 0 ||
+    val === "0" ||
+    val === "-"
+  ) {
     return "0";
   }
   return val;
@@ -42,7 +50,7 @@ const EnquiryConversion = () => {
   const [fdeFilter, setFdeFilter] = useState("All");
   const [sourceFilter, setSourceFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
-  
+
   const [fdeOptions, setFdeOptions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [reportData, setReportData] = useState([]);
@@ -69,7 +77,7 @@ const EnquiryConversion = () => {
     const fetchFDEs = async () => {
       try {
         const res = await fetch(
-          `${BASE_URL}/V1/managereports/getFDEDropdownList?location=${currentLocation || "default"}`
+          `${BASE_URL}/V1/managereports/getFDEDropdownList?location=${currentLocation || "default"}`,
         );
         if (res.ok) {
           const data = await res.json();
@@ -104,18 +112,21 @@ const EnquiryConversion = () => {
     };
 
     try {
-      const res = await fetch(`${BASE_URL}/V1/managereports/getEnquiryConversionReport`, {
-        method: "POST",
-        headers: authHeaders,
-        body: JSON.stringify({
-          location: currentLocation,
-          Fromdate: fromDate,
-          Todate: toDate,
-          fdeId: fdeFilter,
-          source: sourceFilter,
-          status: statusFilter,
-        }),
-      });
+      const res = await fetch(
+        `${BASE_URL}/V1/managereports/getEnquiryConversionReport`,
+        {
+          method: "POST",
+          headers: authHeaders,
+          body: JSON.stringify({
+            location: currentLocation,
+            Fromdate: fromDate,
+            Todate: toDate,
+            fdeId: fdeFilter,
+            source: sourceFilter,
+            status: statusFilter,
+          }),
+        },
+      );
 
       if (!res.ok) {
         throw new Error("Failed to fetch conversion report data");
@@ -324,8 +335,15 @@ const EnquiryConversion = () => {
                     Enquiry Conversion Report
                   </h4>
                   {fromDate && toDate && (
-                    <div style={{ fontSize: "13px", fontWeight: "normal", marginTop: "5px" }}>
-                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "normal",
+                        marginTop: "5px",
+                      }}
+                    >
+                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to{" "}
+                      <b>{formatDateDisplay(toDate)}</b>
                     </div>
                   )}
                 </Card.Header>
@@ -443,8 +461,12 @@ const EnquiryConversion = () => {
                             }}
                           >
                             <option value="All">All Sources</option>
-                            <option value="Web">Web (WebFormEnquiryList)</option>
-                            <option value="Bot">Bot (ChatbotEnquiryList)</option>
+                            <option value="Web">
+                              Web (WebFormEnquiryList)
+                            </option>
+                            <option value="Bot">
+                              Bot (ChatbotEnquiryList)
+                            </option>
                             <option value="IVR">IVR (IvrEnquiryList)</option>
                             <option value="Direct">Direct (EnquiryList)</option>
                             <option value="Helpline">Helpline</option>

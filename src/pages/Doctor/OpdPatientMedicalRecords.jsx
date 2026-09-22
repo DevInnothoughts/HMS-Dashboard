@@ -53,9 +53,196 @@ const BASE_URL = "http://194.195.117.79:5100/api";
 const UPLOAD_BASE_URL = "http://194.195.117.79:5100/uploads";
 
 const countries = [
-  "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria",
-  "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany",
-  "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guyana", "Haiti", "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Ivory Coast", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "Norway", "Oman", "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Samoa", "San Marino", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe",];
+  "Afghanistan",
+  "Albania",
+  "Algeria",
+  "Andorra",
+  "Angola",
+  "Antigua and Barbuda",
+  "Argentina",
+  "Armenia",
+  "Australia",
+  "Austria",
+  "Azerbaijan",
+  "Bahamas",
+  "Bahrain",
+  "Bangladesh",
+  "Barbados",
+  "Belarus",
+  "Belgium",
+  "Belize",
+  "Benin",
+  "Bhutan",
+  "Bolivia",
+  "Bosnia and Herzegovina",
+  "Botswana",
+  "Brazil",
+  "Brunei",
+  "Bulgaria",
+  "Burkina Faso",
+  "Burundi",
+  "Cabo Verde",
+  "Cambodia",
+  "Cameroon",
+  "Canada",
+  "Central African Republic",
+  "Chad",
+  "Chile",
+  "China",
+  "Colombia",
+  "Comoros",
+  "Congo",
+  "Costa Rica",
+  "Croatia",
+  "Cuba",
+  "Cyprus",
+  "Czech Republic",
+  "Denmark",
+  "Djibouti",
+  "Dominica",
+  "Dominican Republic",
+  "Ecuador",
+  "Egypt",
+  "El Salvador",
+  "Equatorial Guinea",
+  "Eritrea",
+  "Estonia",
+  "Eswatini",
+  "Ethiopia",
+  "Fiji",
+  "Finland",
+  "France",
+  "Gabon",
+  "Gambia",
+  "Georgia",
+  "Germany",
+  "Ghana",
+  "Greece",
+  "Grenada",
+  "Guatemala",
+  "Guinea",
+  "Guyana",
+  "Haiti",
+  "Honduras",
+  "Hungary",
+  "Iceland",
+  "India",
+  "Indonesia",
+  "Iran",
+  "Iraq",
+  "Ireland",
+  "Israel",
+  "Italy",
+  "Ivory Coast",
+  "Jamaica",
+  "Japan",
+  "Jordan",
+  "Kazakhstan",
+  "Kenya",
+  "Kiribati",
+  "Kuwait",
+  "Kyrgyzstan",
+  "Laos",
+  "Latvia",
+  "Lebanon",
+  "Lesotho",
+  "Liberia",
+  "Libya",
+  "Liechtenstein",
+  "Lithuania",
+  "Luxembourg",
+  "Madagascar",
+  "Malawi",
+  "Malaysia",
+  "Maldives",
+  "Mali",
+  "Malta",
+  "Mauritania",
+  "Mauritius",
+  "Mexico",
+  "Micronesia",
+  "Moldova",
+  "Monaco",
+  "Mongolia",
+  "Montenegro",
+  "Morocco",
+  "Mozambique",
+  "Myanmar",
+  "Namibia",
+  "Nauru",
+  "Nepal",
+  "Netherlands",
+  "New Zealand",
+  "Nicaragua",
+  "Niger",
+  "Nigeria",
+  "North Korea",
+  "Norway",
+  "Oman",
+  "Pakistan",
+  "Palau",
+  "Palestine",
+  "Panama",
+  "Papua New Guinea",
+  "Paraguay",
+  "Peru",
+  "Philippines",
+  "Poland",
+  "Portugal",
+  "Qatar",
+  "Romania",
+  "Russia",
+  "Rwanda",
+  "Saint Kitts and Nevis",
+  "Saint Lucia",
+  "Samoa",
+  "San Marino",
+  "Saudi Arabia",
+  "Senegal",
+  "Serbia",
+  "Seychelles",
+  "Sierra Leone",
+  "Singapore",
+  "Slovakia",
+  "Slovenia",
+  "Solomon Islands",
+  "Somalia",
+  "South Africa",
+  "South Korea",
+  "South Sudan",
+  "Spain",
+  "Sri Lanka",
+  "Sudan",
+  "Suriname",
+  "Sweden",
+  "Switzerland",
+  "Syria",
+  "Taiwan",
+  "Tajikistan",
+  "Tanzania",
+  "Thailand",
+  "Togo",
+  "Tonga",
+  "Trinidad and Tobago",
+  "Tunisia",
+  "Turkey",
+  "Turkmenistan",
+  "Tuvalu",
+  "Uganda",
+  "Ukraine",
+  "United Arab Emirates",
+  "United Kingdom",
+  "United States",
+  "Uruguay",
+  "Uzbekistan",
+  "Vanuatu",
+  "Vatican City",
+  "Venezuela",
+  "Vietnam",
+  "Yemen",
+  "Zambia",
+  "Zimbabwe",
+];
 
 const Toast = Swal.mixin({
   toast: true,
@@ -364,7 +551,8 @@ const OpdPatientMedicalRecords = () => {
       }
       Toast.fire({
         icon: "warning",
-        title: "Please fill all mandatory/required fields which are not filled yet",
+        title:
+          "Please fill all mandatory/required fields which are not filled yet",
       });
       setValidationErrors(errors);
       return;
@@ -458,9 +646,9 @@ const OpdPatientMedicalRecords = () => {
         const toArray = (str) =>
           str
             ? str
-              .split(",")
-              .map((s) => s.trim())
-              .filter(Boolean)
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean)
             : [];
         const symptomsArr = toArray(d.symptoms);
 
@@ -696,10 +884,16 @@ const OpdPatientMedicalRecords = () => {
           pilonidal_comment: d.pilonidalsinus || "",
           circumcision_comment: d.circumcision || "",
 
-          urinary_duration: d.Urinary_incontinence_duration || d.urinary_incontinence_duration || "",
+          urinary_duration:
+            d.Urinary_incontinence_duration ||
+            d.urinary_incontinence_duration ||
+            "",
           urinary_incontinence: symptomsArr.includes("Urinary Incontinence"),
 
-          fecal_duration: d.Fecal_incontinence_duration || d.fecal_incontinence_duration || "",
+          fecal_duration:
+            d.Fecal_incontinence_duration ||
+            d.fecal_incontinence_duration ||
+            "",
           fecal_incontinence: symptomsArr.includes("Fecal Incontinence"),
 
           ods_bowel_habits: parsedOdsBowelHabits,
@@ -1032,7 +1226,8 @@ const OpdPatientMedicalRecords = () => {
       }
       Toast.fire({
         icon: "warning",
-        title: "Please fill all mandatory/required fields which are not filled/selected yet",
+        title:
+          "Please fill all mandatory/required fields which are not filled/selected yet",
       });
       setValidationErrors(errors);
       return;
@@ -1834,7 +2029,6 @@ const OpdPatientMedicalRecords = () => {
       const apiDate = moment(selected.date, "DD-MM-YYYY").format("YYYY-MM-DD");
       const url = `${BASE_URL}/V1/doctor/get-surgery-details/${formData.patient_id}?date=${apiDate}&location=${currentLocation}`;
 
-
       const response = await fetch(url, {
         headers: {
           location: currentLocation,
@@ -2211,7 +2405,8 @@ const OpdPatientMedicalRecords = () => {
     if (Object.keys(errors).length > 0) {
       Toast.fire({
         icon: "warning",
-        title: "Please fill all mandatory/required fields which are not filled/selected yet",
+        title:
+          "Please fill all mandatory/required fields which are not filled/selected yet",
       });
       setValidationErrors(errors);
       return;
@@ -2349,7 +2544,6 @@ const OpdPatientMedicalRecords = () => {
     }
     setShowDischargePrintModal(true);
   };
-
 
   const fetchPrescriptionDates = async () => {
     const patientId = formData.patient_id || patient?.patient_id;
@@ -2578,7 +2772,10 @@ const OpdPatientMedicalRecords = () => {
           updated = updated.filter(
             (item) => item !== "Medication" && item !== "Surgery",
           );
-        } else if ((value === "Medication" || value === "Surgery") && !isRemoving) {
+        } else if (
+          (value === "Medication" || value === "Surgery") &&
+          !isRemoving
+        ) {
           updated = updated.filter((item) => item !== "Meds -> Sx");
         } else if (value === "Test" && isRemoving) {
           nextState.diagnosis_comment = "";
@@ -2597,8 +2794,6 @@ const OpdPatientMedicalRecords = () => {
       const updatedList = isRemoving
         ? currentSpecialityData.filter((item) => item !== value)
         : [...currentSpecialityData, value];
-
-
 
       return {
         ...prev,
@@ -2654,7 +2849,8 @@ const OpdPatientMedicalRecords = () => {
       setValidationErrors({ present_complaints: true });
       Toast.fire({
         icon: "warning",
-        title: "Please fill all mandatory/required fields which are not filled/selected yet",
+        title:
+          "Please fill all mandatory/required fields which are not filled/selected yet",
       });
       return;
     }
@@ -2854,13 +3050,13 @@ const OpdPatientMedicalRecords = () => {
       setValidationErrors(errors);
       Toast.fire({
         icon: "warning",
-        title: "Please fill all mandatory/required fields which are not filled/selected yet",
+        title:
+          "Please fill all mandatory/required fields which are not filled/selected yet",
       });
       return;
     }
 
     setValidationErrors({});
-
 
     setLoading(true);
     try {
@@ -3196,12 +3392,24 @@ const OpdPatientMedicalRecords = () => {
                         OPD Patient Medical Records
                       </h4>
                       {formData.name && (
-                        <div className="d-flex flex-wrap gap-2 align-items-center" style={{ fontSize: "13px" }}>
-                          <span><strong>UID No:</strong> {formData.Uid_no || "N/A"}</span>
+                        <div
+                          className="d-flex flex-wrap gap-2 align-items-center"
+                          style={{ fontSize: "13px" }}
+                        >
+                          <span>
+                            <strong>UID No:</strong> {formData.Uid_no || "N/A"}
+                          </span>
                           <span className="opacity-50">|</span>
-                          <span><strong>Patient Name:</strong> {formData.prefix ? `${formData.prefix} ` : ""}{formData.name}</span>
+                          <span>
+                            <strong>Patient Name:</strong>{" "}
+                            {formData.prefix ? `${formData.prefix} ` : ""}
+                            {formData.name}
+                          </span>
                           <span className="opacity-50">|</span>
-                          <span><strong>Contact No:</strong> {formData.phone || "N/A"}</span>
+                          <span>
+                            <strong>Contact No:</strong>{" "}
+                            {formData.phone || "N/A"}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -3313,7 +3521,8 @@ const OpdPatientMedicalRecords = () => {
                                 placement="top"
                                 overlay={
                                   <Tooltip id={`tooltip-locked-${tab.id}`}>
-                                    Fill history and diagnosis forms to be able to edit discharge card.
+                                    Fill history and diagnosis forms to be able
+                                    to edit discharge card.
                                   </Tooltip>
                                 }
                               >
@@ -3397,12 +3606,23 @@ const OpdPatientMedicalRecords = () => {
                       {tabs.find((t) => t.id === activeTab)?.label}
                     </h4>
                     {formData.name && (
-                      <div className="d-flex flex-wrap gap-2 align-items-center text-muted" style={{ fontSize: "12px", marginTop: "2px" }}>
-                        <span><strong>UID:</strong> {formData.Uid_no || "N/A"}</span>
+                      <div
+                        className="d-flex flex-wrap gap-2 align-items-center text-muted"
+                        style={{ fontSize: "12px", marginTop: "2px" }}
+                      >
+                        <span>
+                          <strong>UID:</strong> {formData.Uid_no || "N/A"}
+                        </span>
                         <span className="opacity-50">|</span>
-                        <span><strong>Patient:</strong> {formData.prefix ? `${formData.prefix} ` : ""}{formData.name}</span>
+                        <span>
+                          <strong>Patient:</strong>{" "}
+                          {formData.prefix ? `${formData.prefix} ` : ""}
+                          {formData.name}
+                        </span>
                         <span className="opacity-50">|</span>
-                        <span><strong>Contact:</strong> {formData.phone || "N/A"}</span>
+                        <span>
+                          <strong>Contact:</strong> {formData.phone || "N/A"}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -3430,7 +3650,10 @@ const OpdPatientMedicalRecords = () => {
                             handlePrescriptionChange("medicines", []);
                             handlePrescriptionChange("next-appo-date", "");
                             handlePrescriptionChange("patient_type", "");
-                            handlePrescriptionChange("prescription_type", "OPD_Type");
+                            handlePrescriptionChange(
+                              "prescription_type",
+                              "OPD_Type",
+                            );
                           } else {
                             handlePrescriptionChange("prescription_type", "");
                           }
@@ -3615,24 +3838,24 @@ const OpdPatientMedicalRecords = () => {
                   "surgery-details",
                   "discharge-card",
                 ].includes(activeTab) && (
-                    <div className="text-center py-5 animate__animated animate__fadeIn">
-                      <div
-                        className="d-inline-flex p-4 rounded-circle mb-4"
-                        style={{ backgroundColor: "#f0f4f8" }}
-                      >
-                        <FeatherIcon
-                          icon="clock"
-                          size="48"
-                          className="text-muted"
-                        />
-                      </div>
-                      <h4 className="text-muted fw-bold">Coming Soon</h4>
-                      <p className="text-muted">
-                        The {tabs.find((t) => t.id === activeTab).label} section
-                        is under development.
-                      </p>
+                  <div className="text-center py-5 animate__animated animate__fadeIn">
+                    <div
+                      className="d-inline-flex p-4 rounded-circle mb-4"
+                      style={{ backgroundColor: "#f0f4f8" }}
+                    >
+                      <FeatherIcon
+                        icon="clock"
+                        size="48"
+                        className="text-muted"
+                      />
                     </div>
-                  )}
+                    <h4 className="text-muted fw-bold">Coming Soon</h4>
+                    <p className="text-muted">
+                      The {tabs.find((t) => t.id === activeTab).label} section
+                      is under development.
+                    </p>
+                  </div>
+                )}
               </Card.Body>
             </Card>
           )}

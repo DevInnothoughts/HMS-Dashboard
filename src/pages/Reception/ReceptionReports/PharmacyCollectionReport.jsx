@@ -14,18 +14,36 @@ import { decodeJwt } from "../../Utility/decode-jwt";
 const BASE_URL = "http://194.195.117.79:5100/api";
 
 const formatValue = (val) => {
-  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+  if (
+    val === null ||
+    val === undefined ||
+    val === "" ||
+    val === "N/A" ||
+    val === 0 ||
+    val === "0" ||
+    val === "-"
+  ) {
     return "-";
   }
   return val;
 };
 
 const formatAmount = (val) => {
-  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+  if (
+    val === null ||
+    val === undefined ||
+    val === "" ||
+    val === "N/A" ||
+    val === 0 ||
+    val === "0" ||
+    val === "-"
+  ) {
     return "₹ 0";
   }
   const parsed = parseFloat(val);
-  return isNaN(parsed) ? val : `₹ ${Math.round(parsed).toLocaleString("en-IN")}`;
+  return isNaN(parsed)
+    ? val
+    : `₹ ${Math.round(parsed).toLocaleString("en-IN")}`;
 };
 
 const formatDateDisplay = (dateStr) => {
@@ -84,7 +102,7 @@ const PharmacyCollectionReport = () => {
             Fromdate: fromDate,
             Todate: toDate,
           }),
-        }
+        },
       );
 
       if (!response.ok) throw new Error("Failed to fetch data");
@@ -179,7 +197,7 @@ const PharmacyCollectionReport = () => {
       card: acc.card + (parseFloat(curr.cardamt) || 0),
       discount: acc.discount + (parseFloat(curr.discount) || 0),
     }),
-    { cash: 0, onlineUpi: 0, card: 0, discount: 0 }
+    { cash: 0, onlineUpi: 0, card: 0, discount: 0 },
   );
 
   const exportToExcel = () => {
@@ -346,10 +364,19 @@ const PharmacyCollectionReport = () => {
                     padding: "0.8rem",
                   }}
                 >
-                  <h4 style={{ margin: 0, fontSize: "18px" }}>Pharmacy Collection Report</h4>
+                  <h4 style={{ margin: 0, fontSize: "18px" }}>
+                    Pharmacy Collection Report
+                  </h4>
                   {fromDate && toDate && (
-                    <div style={{ fontSize: "13px", fontWeight: "normal", marginTop: "5px" }}>
-                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "normal",
+                        marginTop: "5px",
+                      }}
+                    >
+                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to{" "}
+                      <b>{formatDateDisplay(toDate)}</b>
                     </div>
                   )}
                 </Card.Header>
@@ -474,7 +501,9 @@ const PharmacyCollectionReport = () => {
                     <Column
                       field="date"
                       header="Date"
-                      body={(rowData) => formatValue(formatDateDisplay(rowData.date))}
+                      body={(rowData) =>
+                        formatValue(formatDateDisplay(rowData.date))
+                      }
                       style={{ width: "110px", textAlign: "center" }}
                     />
                     <Column

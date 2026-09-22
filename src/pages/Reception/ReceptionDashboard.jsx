@@ -92,7 +92,8 @@ const getPatientStatus = (app) => {
     "OTHER",
   ].includes(app.patientType?.toUpperCase());
   const hasHistory = Number(app.historychk) === 3;
-  const hasExecution = Number(app.executivechk) === 1 || Number(app.executivechk) === 2;
+  const hasExecution =
+    Number(app.executivechk) === 1 || Number(app.executivechk) === 2;
   const hasConsultation = Number(app.consultationchk) === 4;
   const hasReceipt = Number(app.executivechk) === 2;
 
@@ -193,52 +194,70 @@ export default function ReceptionDashboard() {
     if (!data) return;
     try {
       sessionStorage.setItem("masterPrintData", JSON.stringify(data));
-      window.open(`${window.location.origin}/hms/diagnosis-card-preview`, "_blank");
+      window.open(
+        `${window.location.origin}/hms/diagnosis-card-preview`,
+        "_blank",
+      );
     } catch (e) {
       console.error("Error opening diagnosis card preview in new tab:", e);
     }
   };
 
-  const normalizeLoc = (loc) => (loc ? String(loc).trim().toLowerCase().replace(/[^a-z0-9]/g, "") : "");
+  const normalizeLoc = (loc) =>
+    loc
+      ? String(loc)
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "")
+      : "";
 
-  const checkMasterVisitsForList = useCallback(async (list) => {
-    if (!list || list.length === 0) return;
-    const uniquePhones = Array.from(
-      new Set(
-        list
-          .map((app) => {
-            const p = app.phone || app.patient_phone;
-            return p ? String(p).replace(/\D/g, "").slice(-10) : "";
-          })
-          .filter((p) => p && p.length >= 10)
-      )
-    );
+  const checkMasterVisitsForList = useCallback(
+    async (list) => {
+      if (!list || list.length === 0) return;
+      const uniquePhones = Array.from(
+        new Set(
+          list
+            .map((app) => {
+              const p = app.phone || app.patient_phone;
+              return p ? String(p).replace(/\D/g, "").slice(-10) : "";
+            })
+            .filter((p) => p && p.length >= 10),
+        ),
+      );
 
-    if (uniquePhones.length === 0) return;
+      if (uniquePhones.length === 0) return;
 
-    const currNorm = normalizeLoc(currentLocation);
+      const currNorm = normalizeLoc(currentLocation);
 
-    const newMap = {};
-    await Promise.all(
-      uniquePhones.map(async (phone) => {
-        try {
-          const res = await fetch(`${BASE_URL}/V1/appointment/checkMasterPatient?patient_phone=${phone}`);
-          if (res.ok) {
-            const data = await res.json();
-            if (data.statusCode === 200 && data.data && data.data.masterPatient) {
-              const mp = data.data.masterPatient;
-              if (mp.location && normalizeLoc(mp.location) !== currNorm) {
-                newMap[phone] = mp;
+      const newMap = {};
+      await Promise.all(
+        uniquePhones.map(async (phone) => {
+          try {
+            const res = await fetch(
+              `${BASE_URL}/V1/appointment/checkMasterPatient?patient_phone=${phone}`,
+            );
+            if (res.ok) {
+              const data = await res.json();
+              if (
+                data.statusCode === 200 &&
+                data.data &&
+                data.data.masterPatient
+              ) {
+                const mp = data.data.masterPatient;
+                if (mp.location && normalizeLoc(mp.location) !== currNorm) {
+                  newMap[phone] = mp;
+                }
               }
             }
+          } catch (e) {
+            // ignore
           }
-        } catch (e) {
-          // ignore
-        }
-      })
-    );
-    setMasterVisitMap((prev) => ({ ...prev, ...newMap }));
-  }, [currentLocation]);
+        }),
+      );
+      setMasterVisitMap((prev) => ({ ...prev, ...newMap }));
+    },
+    [currentLocation],
+  );
 
   const triggerMasterPrint = useReactToPrint({
     contentRef: masterPrintRef,
@@ -459,14 +478,21 @@ export default function ReceptionDashboard() {
     setSelectedEvent(event);
   };
 
-  const checkAndShowMasterPatientVisit = async (patientPhone, isReadOnlyNotice = false) => {
+  const checkAndShowMasterPatientVisit = async (
+    patientPhone,
+    isReadOnlyNotice = false,
+  ) => {
     if (!patientPhone) return { showed: false, confirmed: false };
     try {
       const cleanPhone = String(patientPhone).replace(/\D/g, "");
-      const last10 = cleanPhone.length > 10 ? cleanPhone.slice(-10) : cleanPhone;
-      if (!last10 || last10.length < 10) return { showed: false, confirmed: false };
+      const last10 =
+        cleanPhone.length > 10 ? cleanPhone.slice(-10) : cleanPhone;
+      if (!last10 || last10.length < 10)
+        return { showed: false, confirmed: false };
 
-      const res = await fetch(`${BASE_URL}/V1/appointment/checkMasterPatient?patient_phone=${last10}`);
+      const res = await fetch(
+        `${BASE_URL}/V1/appointment/checkMasterPatient?patient_phone=${last10}`,
+      );
       if (!res.ok) return { showed: false, confirmed: false };
 
       const data = await res.json();
@@ -518,8 +544,12 @@ export default function ReceptionDashboard() {
             showCancelButton: false,
             didOpen: () => {
               const container = Swal.getHtmlContainer();
-              const closeBtn = container.querySelector("#close-master-notice-btn");
-              const viewBtn = container.querySelector("#view-master-history-btn");
+              const closeBtn = container.querySelector(
+                "#close-master-notice-btn",
+              );
+              const viewBtn = container.querySelector(
+                "#view-master-history-btn",
+              );
               if (closeBtn) {
                 closeBtn.addEventListener("click", () => Swal.close());
               }
@@ -570,7 +600,9 @@ export default function ReceptionDashboard() {
           cancelButtonColor: "#dc3545",
           reverseButtons: true,
           didOpen: () => {
-            const viewBtn = Swal.getHtmlContainer().querySelector("#view-master-history-btn");
+            const viewBtn = Swal.getHtmlContainer().querySelector(
+              "#view-master-history-btn",
+            );
             if (viewBtn) {
               viewBtn.addEventListener("click", () => {
                 Swal.close();
@@ -1038,7 +1070,10 @@ export default function ReceptionDashboard() {
             backgroundColor: "#475569",
             borderRadius: "50%",
             ...(isSelected
-              ? { transform: "scale(1.25)", boxShadow: "0 0 8px rgba(71,85,105,0.4)" }
+              ? {
+                  transform: "scale(1.25)",
+                  boxShadow: "0 0 8px rgba(71,85,105,0.4)",
+                }
               : {}),
           }}
         ></div>
@@ -1055,10 +1090,7 @@ export default function ReceptionDashboard() {
           }}
         >
           {name}{" "}
-          <span
-            className="cnt"
-            style={{ fontSize: "11px", color: "#000000" }}
-          >
+          <span className="cnt" style={{ fontSize: "11px", color: "#000000" }}>
             ({count || 0})
           </span>
         </p>
@@ -1379,8 +1411,18 @@ margin-left: 1px;
                       "Today's Appointment Overview"
                     ) : (
                       <>
-                        <span style={{ fontWeight: "700", fontSize: "20px", color: "#000000ff" }}>Patient Appointment Calendar for</span>{" "}
-                        <span style={{ fontWeight: "700", color: "#007e8bff" }}>{moment(selectedDate).format("MMMM YYYY")}</span>
+                        <span
+                          style={{
+                            fontWeight: "700",
+                            fontSize: "20px",
+                            color: "#000000ff",
+                          }}
+                        >
+                          Patient Appointment Calendar for
+                        </span>{" "}
+                        <span style={{ fontWeight: "700", color: "#007e8bff" }}>
+                          {moment(selectedDate).format("MMMM YYYY")}
+                        </span>
                       </>
                     )}
                   </h4>
@@ -1678,25 +1720,27 @@ margin-left: 1px;
 
                             const itemStyle = isPending
                               ? {
-                                position: "relative",
-                                backgroundColor: isActive ? "#f0f9ff" : "#ffffff",
-                                border: isActive
-                                  ? "1.5px solid #0284c7"
-                                  : "1px solid #cbd5e1",
-                                boxShadow: isActive
-                                  ? "0 4px 6px -1px rgba(2, 132, 199, 0.15)"
-                                  : "0 1px 3px rgba(0,0,0,0.02)",
-                              }
+                                  position: "relative",
+                                  backgroundColor: isActive
+                                    ? "#f0f9ff"
+                                    : "#ffffff",
+                                  border: isActive
+                                    ? "1.5px solid #0284c7"
+                                    : "1px solid #cbd5e1",
+                                  boxShadow: isActive
+                                    ? "0 4px 6px -1px rgba(2, 132, 199, 0.15)"
+                                    : "0 1px 3px rgba(0,0,0,0.02)",
+                                }
                               : {
-                                position: "relative",
-                                backgroundColor: listStatus.rowBg,
-                                border: isActive
-                                  ? `2px solid ${listStatus.rowBorder}`
-                                  : `1.5px solid ${listStatus.rowBorder}80`,
-                                boxShadow: isActive
-                                  ? `0 4px 8px -1px ${listStatus.color}40`
-                                  : `0 1px 3px ${listStatus.color}20`,
-                              };
+                                  position: "relative",
+                                  backgroundColor: listStatus.rowBg,
+                                  border: isActive
+                                    ? `2px solid ${listStatus.rowBorder}`
+                                    : `1.5px solid ${listStatus.rowBorder}80`,
+                                  boxShadow: isActive
+                                    ? `0 4px 8px -1px ${listStatus.color}40`
+                                    : `0 1px 3px ${listStatus.color}20`,
+                                };
 
                             return (
                               <div
@@ -1716,14 +1760,26 @@ margin-left: 1px;
                                   }}
                                 ></div>
                                 <div className="patient-info">
-                                  <div className="patient-name-text" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                  <div
+                                    className="patient-name-text"
+                                    style={{
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      gap: "4px",
+                                    }}
+                                  >
                                     <span>{app.patientName}</span>
                                     {(() => {
                                       const cleanP = app.phone
-                                        ? String(app.phone).replace(/\D/g, "").slice(-10)
+                                        ? String(app.phone)
+                                            .replace(/\D/g, "")
+                                            .slice(-10)
                                         : "";
                                       const masterData = masterVisitMap[cleanP];
-                                      const isConfirmed = app.confirmTime && app.confirmTime !== "0" && app.confirmTime !== 0;
+                                      const isConfirmed =
+                                        app.confirmTime &&
+                                        app.confirmTime !== "0" &&
+                                        app.confirmTime !== 0;
                                       return masterData && isConfirmed ? (
                                         <span
                                           style={{
@@ -1742,13 +1798,17 @@ margin-left: 1px;
                                             cursor: "pointer",
                                             flexShrink: 0,
                                             marginLeft: "1px",
-                                            boxShadow: "0 2px 5px rgba(2,136,209,0.5)",
+                                            boxShadow:
+                                              "0 2px 5px rgba(2,136,209,0.5)",
                                             border: "1px solid #ffffff",
                                           }}
                                           title={`Patient already visited ${masterData.location || "another"} location`}
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            checkAndShowMasterPatientVisit(app.phone, true);
+                                            checkAndShowMasterPatientVisit(
+                                              app.phone,
+                                              true,
+                                            );
                                           }}
                                         >
                                           i
@@ -1826,17 +1886,17 @@ margin-left: 1px;
                       {filteredAppointments.filter((a) =>
                         moment(a.start).isSame(selectedDate, "day"),
                       ).length === 0 && (
-                          <div className="text-center py-5">
-                            <FeatherIcon
-                              icon="calendar"
-                              size={50}
-                              className="text-muted mb-3 opacity-25"
-                            />
-                            <p className="text-muted">
-                              No appointments scheduled for this day.
-                            </p>
-                          </div>
-                        )}
+                        <div className="text-center py-5">
+                          <FeatherIcon
+                            icon="calendar"
+                            size={50}
+                            className="text-muted mb-3 opacity-25"
+                          />
+                          <p className="text-muted">
+                            No appointments scheduled for this day.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </Card.Body>

@@ -138,18 +138,36 @@ const BillingReport = () => {
   };
 
   const formatValue = (val) => {
-    if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+    if (
+      val === null ||
+      val === undefined ||
+      val === "" ||
+      val === "N/A" ||
+      val === 0 ||
+      val === "0" ||
+      val === "-"
+    ) {
       return "-";
     }
     return val;
   };
 
   const formatAmount = (val) => {
-    if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+    if (
+      val === null ||
+      val === undefined ||
+      val === "" ||
+      val === "N/A" ||
+      val === 0 ||
+      val === "0" ||
+      val === "-"
+    ) {
       return "-";
     }
     const parsed = parseFloat(val);
-    return isNaN(parsed) ? val : `₹ ${Math.round(parsed).toLocaleString("en-IN")}`;
+    return isNaN(parsed)
+      ? val
+      : `₹ ${Math.round(parsed).toLocaleString("en-IN")}`;
   };
 
   const handlePrint = () => {
@@ -304,8 +322,15 @@ const BillingReport = () => {
                 >
                   <h4 style={{ margin: 0 }}>Billing Report</h4>
                   {fromDate && toDate && (
-                    <div style={{ fontSize: "13px", fontWeight: "normal", marginTop: "5px" }}>
-                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "normal",
+                        marginTop: "5px",
+                      }}
+                    >
+                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to{" "}
+                      <b>{formatDateDisplay(toDate)}</b>
                     </div>
                   )}
                 </Card.Header>

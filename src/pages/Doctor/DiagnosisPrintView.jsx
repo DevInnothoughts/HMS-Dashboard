@@ -38,12 +38,16 @@ const DiagnosisPrintView = React.forwardRef(
           if (tRes.ok && tData.data) {
             const tpaCombinedMap = {};
             tData.data.forEach((t) => {
-              tpaCombinedMap[String(t.comapny_id || t.tpaid)] = t.companyname || t.tpaname;
+              tpaCombinedMap[String(t.comapny_id || t.tpaid)] =
+                t.companyname || t.tpaname;
             });
             setTpaMap(tpaCombinedMap);
           }
         } catch (err) {
-          console.error("Failed to fetch insurance/TPA map in print view:", err);
+          console.error(
+            "Failed to fetch insurance/TPA map in print view:",
+            err,
+          );
         }
       };
       fetchCompanies();
@@ -73,11 +77,15 @@ const DiagnosisPrintView = React.forwardRef(
     const getReferralName = (patient) => {
       if (!patient) return "";
       if (patient.ref_doctor_name) {
-        return patient.ref_doctor_name + (patient.ref_doctor_phone ? ` (${patient.ref_doctor_phone})` : "");
+        return (
+          patient.ref_doctor_name +
+          (patient.ref_doctor_phone ? ` (${patient.ref_doctor_phone})` : "")
+        );
       }
       if (patient.reference_type === "dr_ref") {
         return patient.ref_doctor_name
-          ? patient.ref_doctor_name + (patient.ref_doctor_phone ? ` (${patient.ref_doctor_phone})` : "")
+          ? patient.ref_doctor_name +
+              (patient.ref_doctor_phone ? ` (${patient.ref_doctor_phone})` : "")
           : patient.ref || "";
       }
       if (patient.reference_type === "online") return "Online / Social Media";
@@ -204,7 +212,11 @@ const DiagnosisPrintView = React.forwardRef(
                     const prefix = (patient?.prefix || "").trim();
                     if (!prefix) return "";
                     const clean = prefix.replace(/\.$/, "");
-                    return clean.charAt(0).toUpperCase() + clean.slice(1).toLowerCase() + ". ";
+                    return (
+                      clean.charAt(0).toUpperCase() +
+                      clean.slice(1).toLowerCase() +
+                      ". "
+                    );
                   })()}
                   {patient?.name || ""}
                 </p>
@@ -711,7 +723,8 @@ const DiagnosisPrintView = React.forwardRef(
               {/* Family History */}
               {(() => {
                 const rawFam = row2.family_history;
-                const extraOther = row2.family_history_other || row2.family_other || "";
+                const extraOther =
+                  row2.family_history_other || row2.family_other || "";
                 if (!rawFam && !extraOther) return null;
 
                 const items = (
@@ -722,14 +735,21 @@ const DiagnosisPrintView = React.forwardRef(
                   .map((s) => String(s).trim())
                   .filter(Boolean);
 
-                const known = ["Piles", "Constipation", "DM", "HTN", "Heart Disease"];
+                const known = [
+                  "Piles",
+                  "Constipation",
+                  "DM",
+                  "HTN",
+                  "Heart Disease",
+                ];
                 const knownItems = items.filter((k) => known.includes(k));
                 const customItems = items.filter((k) => !known.includes(k));
                 if (extraOther && !customItems.includes(extraOther)) {
                   customItems.push(extraOther);
                 }
 
-                if (knownItems.length === 0 && customItems.length === 0) return null;
+                if (knownItems.length === 0 && customItems.length === 0)
+                  return null;
 
                 return (
                   <div className="row">
@@ -744,7 +764,13 @@ const DiagnosisPrintView = React.forwardRef(
                         </span>
                       )}
                       {customItems.length > 0 && (
-                        <span style={{ width: "100%", float: "left", paddingTop: knownItems.length > 0 ? "3px" : "0" }}>
+                        <span
+                          style={{
+                            width: "100%",
+                            float: "left",
+                            paddingTop: knownItems.length > 0 ? "3px" : "0",
+                          }}
+                        >
                           <b>Any Other :</b> {customItems.join(" , ")}
                         </span>
                       )}
@@ -778,13 +804,26 @@ const DiagnosisPrintView = React.forwardRef(
                   "Gas",
                   "Bloating",
                 ];
-                const knownItems = items.filter((g) => generalList.some((gl) => gl.toLowerCase() === g.toLowerCase()));
-                const customItems = items.filter((g) => !generalList.some((gl) => gl.toLowerCase() === g.toLowerCase()));
-                if (weightLossComment && !customItems.includes(weightLossComment)) {
+                const knownItems = items.filter((g) =>
+                  generalList.some(
+                    (gl) => gl.toLowerCase() === g.toLowerCase(),
+                  ),
+                );
+                const customItems = items.filter(
+                  (g) =>
+                    !generalList.some(
+                      (gl) => gl.toLowerCase() === g.toLowerCase(),
+                    ),
+                );
+                if (
+                  weightLossComment &&
+                  !customItems.includes(weightLossComment)
+                ) {
                   customItems.push(weightLossComment);
                 }
 
-                if (knownItems.length === 0 && customItems.length === 0) return null;
+                if (knownItems.length === 0 && customItems.length === 0)
+                  return null;
 
                 return (
                   <div className="row">
@@ -799,8 +838,15 @@ const DiagnosisPrintView = React.forwardRef(
                         </span>
                       )}
                       {customItems.length > 0 && (
-                        <span style={{ width: "100%", float: "left", paddingTop: knownItems.length > 0 ? "3px" : "0" }}>
-                          <b>Weight Loss / Other Comment :</b> {customItems.join(" , ")}
+                        <span
+                          style={{
+                            width: "100%",
+                            float: "left",
+                            paddingTop: knownItems.length > 0 ? "3px" : "0",
+                          }}
+                        >
+                          <b>Weight Loss / Other Comment :</b>{" "}
+                          {customItems.join(" , ")}
                         </span>
                       )}
                     </div>
@@ -813,9 +859,7 @@ const DiagnosisPrintView = React.forwardRef(
                 const pastVal = row2.past_history || row2.past_medical_history;
                 if (!pastVal) return null;
                 const items = (
-                  Array.isArray(pastVal)
-                    ? pastVal
-                    : String(pastVal).split(",")
+                  Array.isArray(pastVal) ? pastVal : String(pastVal).split(",")
                 )
                   .map((s) => String(s).trim())
                   .filter(Boolean);
@@ -874,9 +918,7 @@ const DiagnosisPrintView = React.forwardRef(
                 const rawHab = row2.habits;
                 if (!rawHab) return null;
                 const items = (
-                  Array.isArray(rawHab)
-                    ? rawHab
-                    : String(rawHab).split(",")
+                  Array.isArray(rawHab) ? rawHab : String(rawHab).split(",")
                 )
                   .map((s) => String(s).trim())
                   .filter(Boolean);
@@ -915,7 +957,8 @@ const DiagnosisPrintView = React.forwardRef(
                     medHist = [];
                   }
                 }
-                if (!Array.isArray(medHist) || medHist.length === 0) return null;
+                if (!Array.isArray(medHist) || medHist.length === 0)
+                  return null;
 
                 const validRows = medHist.filter(
                   (m) =>
@@ -947,7 +990,9 @@ const DiagnosisPrintView = React.forwardRef(
                           {validRows.map((m, i) => (
                             <tr key={i}>
                               <td>{i + 1}</td>
-                              <td>{m.medicine || m.name || m.medicine_name || ""}</td>
+                              <td>
+                                {m.medicine || m.name || m.medicine_name || ""}
+                              </td>
                               <td>{m.indication || ""}</td>
                               <td>{m.since || m.duration || ""}</td>
                             </tr>
@@ -972,13 +1017,19 @@ const DiagnosisPrintView = React.forwardRef(
               )}
 
               {/* Any Other Complaints */}
-              {(row2.complaints || row2.any_other_complaints || row2.other_complaints) && (
+              {(row2.complaints ||
+                row2.any_other_complaints ||
+                row2.other_complaints) && (
                 <div className="row">
                   <div className="symptom-label">
                     <b>Any Other Complaints :</b>
                   </div>
                   <div className="symptom-values">
-                    <p>{row2.complaints || row2.any_other_complaints || row2.other_complaints}</p>
+                    <p>
+                      {row2.complaints ||
+                        row2.any_other_complaints ||
+                        row2.other_complaints}
+                    </p>
                   </div>
                 </div>
               )}
@@ -1014,9 +1065,7 @@ const DiagnosisPrintView = React.forwardRef(
                 const rawInv = row2.newInvestigation;
                 if (!rawInv) return null;
                 const checksub = (
-                  Array.isArray(rawInv)
-                    ? rawInv
-                    : String(rawInv).split(",")
+                  Array.isArray(rawInv) ? rawInv : String(rawInv).split(",")
                 )
                   .map((s) => String(s).trim())
                   .filter(Boolean);
@@ -1055,13 +1104,14 @@ const DiagnosisPrintView = React.forwardRef(
                     <div className="symptom-values">
                       {checksub.map((test, idx) => {
                         let noteIndex = investigationTypes.findIndex(
-                          (t) => t.toLowerCase() === test.toLowerCase()
+                          (t) => t.toLowerCase() === test.toLowerCase(),
                         );
                         if (noteIndex === -1) noteIndex = idx;
                         const note = commentbox[noteIndex] || "";
                         return (
                           <span key={idx}>
-                            {test}{note ? ` - ${note}` : ""}
+                            {test}
+                            {note ? ` - ${note}` : ""}
                             {idx < checksub.length - 1 ? " , " : ""}
                           </span>
                         );
@@ -1103,7 +1153,7 @@ const DiagnosisPrintView = React.forwardRef(
                   row2.doctor_id ||
                   row2.assistance_doctor_id;
                 const asstDoc = doctors.find(
-                  (d) => String(d.doctor_id) === String(asstId)
+                  (d) => String(d.doctor_id) === String(asstId),
                 );
                 const asstName = asstDoc
                   ? asstDoc.name
@@ -1155,7 +1205,12 @@ const DiagnosisPrintView = React.forwardRef(
                           <b>Diagnosis: </b>
                         </div>
                         <div className="symptom-values">
-                          <p>{String(diagText).replace(/\bo clock\b/gi, "o'clock")}</p>
+                          <p>
+                            {String(diagText).replace(
+                              /\bo clock\b/gi,
+                              "o'clock",
+                            )}
+                          </p>
                         </div>
                       </div>
                     );
@@ -1163,7 +1218,8 @@ const DiagnosisPrintView = React.forwardRef(
 
                   {/* Investigation Orders */}
                   {(() => {
-                    const invOrders = row3.investigation_orders || row3.investigationorders;
+                    const invOrders =
+                      row3.investigation_orders || row3.investigationorders;
                     if (!invOrders) return null;
                     return (
                       <div className="row">
@@ -1185,14 +1241,24 @@ const DiagnosisPrintView = React.forwardRef(
                     if (!Array.isArray(adviceTypes) && row3.diagnosisAdvice) {
                       if (row3.diagnosisAdvice.includes("Comment:")) {
                         const parts = row3.diagnosisAdvice.split("Comment:");
-                        adviceTypes = (parts[0] || "").split(",").map((s) => s.trim()).filter(Boolean);
+                        adviceTypes = (parts[0] || "")
+                          .split(",")
+                          .map((s) => s.trim())
+                          .filter(Boolean);
                         if (!diagComment) diagComment = (parts[1] || "").trim();
                       } else {
-                        adviceTypes = row3.diagnosisAdvice.split(",").map((s) => s.trim()).filter(Boolean);
+                        adviceTypes = row3.diagnosisAdvice
+                          .split(",")
+                          .map((s) => s.trim())
+                          .filter(Boolean);
                       }
                     }
 
-                    if ((!adviceTypes || adviceTypes.length === 0) && !diagComment) return null;
+                    if (
+                      (!adviceTypes || adviceTypes.length === 0) &&
+                      !diagComment
+                    )
+                      return null;
 
                     return (
                       <div className="row">
@@ -1201,8 +1267,14 @@ const DiagnosisPrintView = React.forwardRef(
                         </div>
                         <div className="symptom-values">
                           <p>
-                            {Array.isArray(adviceTypes) ? adviceTypes.join(" , ") : ""}
-                            {Array.isArray(adviceTypes) && adviceTypes.length > 0 && diagComment ? " , " : ""}
+                            {Array.isArray(adviceTypes)
+                              ? adviceTypes.join(" , ")
+                              : ""}
+                            {Array.isArray(adviceTypes) &&
+                            adviceTypes.length > 0 &&
+                            diagComment
+                              ? " , "
+                              : ""}
                             {diagComment ? `Comment: ${diagComment}` : ""}
                           </p>
                         </div>
@@ -1235,9 +1307,15 @@ const DiagnosisPrintView = React.forwardRef(
                     const checksub = Array.isArray(row3.medical_advice)
                       ? row3.medical_advice
                       : typeof row3.medical_advice === "string"
-                        ? row3.medical_advice.split(",").map((s) => s.trim()).filter(Boolean)
+                        ? row3.medical_advice
+                            .split(",")
+                            .map((s) => s.trim())
+                            .filter(Boolean)
                         : typeof row3.medical_mx === "string"
-                          ? row3.medical_mx.split(",").map((s) => s.trim()).filter(Boolean)
+                          ? row3.medical_mx
+                              .split(",")
+                              .map((s) => s.trim())
+                              .filter(Boolean)
                           : [];
                     if (checksub.length > 0) {
                       return (
@@ -1249,10 +1327,15 @@ const DiagnosisPrintView = React.forwardRef(
                             <p>
                               {checksub
                                 .map((adv) => {
-                                  const noteKey = Object.keys(row3.medical_advice_notes || {}).find(
-                                    (k) => k.toLowerCase() === adv.toLowerCase()
-                                  ) || adv;
-                                  const note = row3.medical_advice_notes?.[noteKey];
+                                  const noteKey =
+                                    Object.keys(
+                                      row3.medical_advice_notes || {},
+                                    ).find(
+                                      (k) =>
+                                        k.toLowerCase() === adv.toLowerCase(),
+                                    ) || adv;
+                                  const note =
+                                    row3.medical_advice_notes?.[noteKey];
                                   return note ? `${adv} (${note})` : adv;
                                 })
                                 .join(" , ")}
@@ -1333,9 +1416,15 @@ const DiagnosisPrintView = React.forwardRef(
                     const checksub = Array.isArray(row3.categories)
                       ? row3.categories
                       : typeof row3.categories === "string"
-                        ? row3.categories.split(",").map((s) => s.trim()).filter(Boolean)
+                        ? row3.categories
+                            .split(",")
+                            .map((s) => s.trim())
+                            .filter(Boolean)
                         : typeof row3.other === "string"
-                          ? row3.other.split(",").map((s) => s.trim()).filter(Boolean)
+                          ? row3.other
+                              .split(",")
+                              .map((s) => s.trim())
+                              .filter(Boolean)
                           : [];
                     if (checksub.length > 0) {
                       return (
@@ -1358,7 +1447,11 @@ const DiagnosisPrintView = React.forwardRef(
                       row3.insuranceCompany ||
                       row3.insurance_company_id ||
                       row3.insurancecompany;
-                    if (!insId || String(insId).trim() === "" || String(insId) === "0") {
+                    if (
+                      !insId ||
+                      String(insId).trim() === "" ||
+                      String(insId) === "0"
+                    ) {
                       return null;
                     }
                     const insName =
@@ -1380,13 +1473,15 @@ const DiagnosisPrintView = React.forwardRef(
                   {/* TPA */}
                   {(() => {
                     const tpaId = row3.tpa_id || row3.tpa;
-                    if (!tpaId || String(tpaId).trim() === "" || String(tpaId) === "0") {
+                    if (
+                      !tpaId ||
+                      String(tpaId).trim() === "" ||
+                      String(tpaId) === "0"
+                    ) {
                       return null;
                     }
                     const tpaName =
-                      tpaMap[String(tpaId)] ||
-                      row3.tpa_name ||
-                      tpaId;
+                      tpaMap[String(tpaId)] || row3.tpa_name || tpaId;
                     return (
                       <div className="row">
                         <div className="symptom-label">
@@ -1401,7 +1496,8 @@ const DiagnosisPrintView = React.forwardRef(
 
                   {/* Estimate Package/Insurance Details */}
                   {(() => {
-                    const catComment = row3.category_comment || row3.categoryComment;
+                    const catComment =
+                      row3.category_comment || row3.categoryComment;
                     if (!catComment) return null;
                     return (
                       <div className="row">
@@ -1438,7 +1534,10 @@ const DiagnosisPrintView = React.forwardRef(
                     if (!consultName && !assistName) return null;
 
                     return (
-                      <div className="row align-items-center" style={{ width: "100%", margin: "0" }}>
+                      <div
+                        className="row align-items-center"
+                        style={{ width: "100%", margin: "0" }}
+                      >
                         <div className="col-md-6 p-0">
                           {consultName && (
                             <p className="mb-0">
@@ -1447,7 +1546,10 @@ const DiagnosisPrintView = React.forwardRef(
                             </p>
                           )}
                         </div>
-                        <div className="col-md-6 p-0 text-right text-end" style={{ textAlign: "right" }}>
+                        <div
+                          className="col-md-6 p-0 text-right text-end"
+                          style={{ textAlign: "right" }}
+                        >
                           {assistName && (
                             <p className="mb-0">
                               <b>Assistant Doctor: </b>

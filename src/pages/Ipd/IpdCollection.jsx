@@ -13,7 +13,16 @@ import {
   InputGroup,
 } from "react-bootstrap";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
-import { FaPrint, FaPlus, FaListUl, FaTasks, FaFileInvoiceDollar, FaInfoCircle, FaPlusCircle, FaSave } from "react-icons/fa";
+import {
+  FaPrint,
+  FaPlus,
+  FaListUl,
+  FaTasks,
+  FaFileInvoiceDollar,
+  FaInfoCircle,
+  FaPlusCircle,
+  FaSave,
+} from "react-icons/fa";
 import { decodeJwt } from "../Utility/decode-jwt";
 import Swal from "sweetalert2";
 import logo from "../../assets/images/3.png";
@@ -27,7 +36,7 @@ const IMAGE_BASE_URL = "http://194.195.117.79:5100";
 
 const getLocalDateString = (date) => {
   const offset = date.getTimezoneOffset();
-  const localDate = new Date(date.getTime() - (offset * 60 * 1000));
+  const localDate = new Date(date.getTime() - offset * 60 * 1000);
   return localDate.toISOString().split("T")[0];
 };
 
@@ -84,13 +93,13 @@ const convertToWords = (number) => {
       } else {
         str.push(
           words[Math.floor(n / 10) * 10] +
-          " " +
-          words[n % 10] +
-          " " +
-          digits[counter] +
-          plural +
-          " " +
-          hundred,
+            " " +
+            words[n % 10] +
+            " " +
+            digits[counter] +
+            plural +
+            " " +
+            hundred,
         );
       }
     } else {
@@ -107,7 +116,7 @@ const convertToWords = (number) => {
 const IpdCollection = () => {
   const location = useLocation();
   const [invoiceId, setInvoiceId] = useState(
-    () => location.state?.invoiceId || ""
+    () => location.state?.invoiceId || "",
   );
   const [patientDetails, setPatientDetails] = useState(() => ({
     name: location.state?.patientDetails?.name || "",
@@ -118,8 +127,13 @@ const IpdCollection = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showBillDetails, setShowBillDetails] = useState(false);
-  const [loading, setLoading] = useState(() => Boolean(location.state?.invoiceId));
+  const [loading, setLoading] = useState(() =>
+    Boolean(location.state?.invoiceId),
+  );
   const [selectedTerminal, setSelectedTerminal] = useState("");
+  // Terminals configured for IPD, loaded from pos_tid (machine_type='IPD').
+  // OFFLINE is appended below so cash/cheque is always available.
+  const [posTerminalList, setPosTerminalList] = useState([]);
   const [currentLocation, setCurrentLocation] = useState(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -181,8 +195,43 @@ const IpdCollection = () => {
     }
   }, [location.state]);
 
+  // Load the IPD PoS terminals. Adding a terminal is then a pos_tid row,
+  // not a code change — the same way the OPD receipt screen works.
   useEffect(() => {
-    if (location.state?.invoiceId && currentLocation && !initialLoadDone.current) {
+    if (!currentLocation) return;
+
+    const fetchIpdTerminals = async () => {
+      try {
+        const res = await fetch(
+          `${BASE_URL}/V1/invoice/posTerminalDropdownIPD?location=${currentLocation}`,
+        );
+        const json = await res.json();
+        setPosTerminalList(Array.isArray(json?.data) ? json.data : []);
+      } catch (err) {
+        // Non-fatal: the operator can still take cash via OFFLINE.
+        console.error("Failed to load IPD PoS terminals:", err);
+        setPosTerminalList([]);
+      }
+    };
+
+    fetchIpdTerminals();
+  }, [currentLocation]);
+
+  // Drop any selected terminal the moment the payment stops being digital,
+  // so a stale PosMachine is never submitted with a cash-only payment.
+  useEffect(() => {
+    const digital =
+      (Number(newPayment.card) || 0) > 0 ||
+      (Number(newPayment.online) || 0) > 0;
+    if (!digital && selectedTerminal) setSelectedTerminal("");
+  }, [newPayment.card, newPayment.online, selectedTerminal]);
+
+  useEffect(() => {
+    if (
+      location.state?.invoiceId &&
+      currentLocation &&
+      !initialLoadDone.current
+    ) {
       initialLoadDone.current = true;
       handleViewBillDetails(location.state.invoiceId, currentLocation);
     }
@@ -235,7 +284,10 @@ const IpdCollection = () => {
     setShowDropdown(false);
   };
 
-  const handleViewBillDetails = async (id = invoiceId, loc = currentLocation) => {
+  const handleViewBillDetails = async (
+    id = invoiceId,
+    loc = currentLocation,
+  ) => {
     setLoading(true);
     try {
       const resTotal = await fetch(
@@ -246,7 +298,8 @@ const IpdCollection = () => {
 
       if (financialInfo) {
         if (
-          (financialInfo.status || "").trim().toLowerCase() === "interbranch-bill" ||
+          (financialInfo.status || "").trim().toLowerCase() ===
+            "interbranch-bill" ||
           (financialInfo.interbranch_id !== null &&
             financialInfo.interbranch_id !== undefined &&
             financialInfo.interbranch_id !== "" &&
@@ -265,13 +318,17 @@ const IpdCollection = () => {
         }
 
         const isPdc = (financialInfo.status || "").toLowerCase() === "pdc";
-        const isCashless = (financialInfo.status || "").trim().toLowerCase() === "cashless";
-        const isCashlessNotSettled = isCashless && (parseFloat(financialInfo.receivedamt) || 0) === 0;
+        const isCashless =
+          (financialInfo.status || "").trim().toLowerCase() === "cashless";
+        const isCashlessNotSettled =
+          isCashless && (parseFloat(financialInfo.receivedamt) || 0) === 0;
         setSummary({
           totalBill: financialInfo.totalamt || 0,
-          insuranceApproved: isPdc ? (financialInfo.receivedamt || financialInfo.advance_amt || 0) : (financialInfo.receivedamt || 0),
+          insuranceApproved: isPdc
+            ? financialInfo.receivedamt || financialInfo.advance_amt || 0
+            : financialInfo.receivedamt || 0,
           patientPayable: financialInfo.payableamt || 0,
-          totalDue: isCashlessNotSettled ? 0 : (financialInfo.totalduedamt || 0),
+          totalDue: isCashlessNotSettled ? 0 : financialInfo.totalduedamt || 0,
           status: financialInfo.status || "",
           isCashless: isCashless,
         });
@@ -297,15 +354,19 @@ const IpdCollection = () => {
   // 1. Updated cancelPayment logic to match IPD requirements
   const cancelPayment = async (referenceId, originalPayload, apidata) => {
     try {
-      // Prepare the specific cancellation payload for IPD
+      // NOTE ON NAMING: showPaymentPendingPopup is called with our own HHC…
+      // transaction number as `referenceId`, while the GATEWAY's reference
+      // lives on apidata.reference_id. The cancel API needs them this way
+      // round — Federal keys the cancel on urn (the gateway reference) and
+      // falls back to request_urn (our number).
       const cancelPayload = {
-        reference_id: referenceId,
-        transaction_id: originalPayload.transaction_id || referenceId,
+        reference_id: apidata?.reference_id ?? referenceId, // gateway ref (urn)
+        transaction_id: referenceId, // our HHC… number
         PosMachine: originalPayload.PosMachine,
-        MachineType: "IPD", // Explicitly set to IPD
-        // Pass along financial context if needed by backend cancel logic
-        InvoiceId: originalPayload.InvoiceId,
-        PatientId: originalPayload.PatientId,
+        MachineType: "IPD",
+        // receiptData is required: if the terminal refuses the cancel because
+        // the customer already paid, the backend saves this payment instead.
+        receiptData: originalPayload,
         apidata: apidata,
       };
 
@@ -359,8 +420,6 @@ const IpdCollection = () => {
             Totalinvoiceamt: originalPayload.Totalinvoiceamt,
           };
 
-          2;
-
           const response = await fetch(
             `${BASE_URL}/V1/invoice/checkIPDPaymentStatus?location=${currentLocation}`,
             {
@@ -383,7 +442,7 @@ const IpdCollection = () => {
           } else {
             Swal.showValidationMessage(
               result.message ||
-              "Swipe not detected yet. Please try again after swiping.",
+                "Swipe not detected yet. Please try again after swiping.",
             );
             return false;
           }
@@ -427,7 +486,23 @@ const IpdCollection = () => {
               apidata,
             );
 
-            if (cancelResult?.success || cancelResult?.statusCode === 200) {
+            // The terminal may REFUSE the cancel because the customer has
+            // already paid. The backend then verifies and records the
+            // payment, flagging it with data.paid. Reporting that as
+            // "cancelled" would lose a collected payment, so check it first.
+            if (cancelResult?.data?.paid) {
+              await Swal.fire(
+                "Already Paid",
+                cancelResult?.message ||
+                  "The customer had already paid. The payment is confirmed and has been recorded.",
+                "warning",
+              );
+              setSelectedTerminal("");
+              handleViewBillDetails(); // refresh the ledger and summary
+            } else if (
+              cancelResult?.success ||
+              cancelResult?.statusCode === 200
+            ) {
               await Swal.fire(
                 "Cancelled",
                 "Transaction has been cancelled successfully.",
@@ -437,7 +512,7 @@ const IpdCollection = () => {
               Swal.fire(
                 "Cancellation Error",
                 cancelResult?.message ||
-                "Remote cancel failed. Please cancel manually on the POS machine.",
+                  "Remote cancel failed. Please cancel manually on the POS machine.",
                 "error",
               );
             }
@@ -499,7 +574,6 @@ const IpdCollection = () => {
         location: currentLocation,
       };
 
-
       const response = await fetch(`${BASE_URL}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -553,14 +627,14 @@ const IpdCollection = () => {
     }
   };
 
-  const terminalOptions = [
-    // "HDFC",
-    // "PineLabs",
-    // "BharatPe1",
-    // "BharatPe2",
-    // "Federal",
-    "OFFLINE",
-  ];
+  // Configured IPD terminals + OFFLINE (cash / cheque / PDC), de-duplicated.
+  const terminalOptions = [...new Set([...posTerminalList, "OFFLINE"])];
+
+  // A PoS terminal is only involved when the payment goes through the
+  // machine — i.e. a Card or Online(UPI) amount has been entered. Cash,
+  // cheque, discount, TDS and PDC never touch a terminal.
+  const isDigitalPayment =
+    (Number(newPayment.card) || 0) > 0 || (Number(newPayment.online) || 0) > 0;
 
   const getBase64Image = (imgUrl) => {
     return new Promise((resolve) => {
@@ -589,10 +663,10 @@ const IpdCollection = () => {
     const trimmedLocation = currentLocation ? currentLocation.trim() : "";
     const invoiceInfo = clinincLoc[trimmedLocation] ||
       clinincLoc[currentLocation] || {
-      invoiceAddress: "<b>Healing Hands Clinic</b>",
-      invoiceHelplineNo: "8888288884",
-      EmergencySMS: "",
-    };
+        invoiceAddress: "<b>Healing Hands Clinic</b>",
+        invoiceHelplineNo: "8888288884",
+        EmergencySMS: "",
+      };
     const receiptInfo = receiptlocations[currentLocation] || {
       hospitalcode: "HHC",
     };
@@ -760,41 +834,69 @@ const IpdCollection = () => {
                   alignItems: "center",
                   fontSize: "14px",
                   fontWeight: "600",
-                  borderBottom: "1px solid #b2ebf2"
+                  borderBottom: "1px solid #b2ebf2",
                 }}
               >
                 <Link
                   to="/ipd-bill-list"
                   className="btn btn-sm text-white"
-                  style={{ backgroundColor: "#00838f", border: "none", fontSize: "12px", padding: "8px 12px", borderRadius: "6px" }}
+                  style={{
+                    backgroundColor: "#00838f",
+                    border: "none",
+                    fontSize: "12px",
+                    padding: "8px 12px",
+                    borderRadius: "6px",
+                  }}
                 >
                   <FeatherIcon icon="arrow-left" size="15" className="me-1" />
                   Back to IPD Bill List
                 </Link>
                 <div className="d-flex gap-4 flex-wrap">
-                  <span><strong>Invoice ID:</strong> {invoiceId}</span>
-                  <span><strong>UID Number:</strong> {patientDetails.uhid}</span>
-                  <span><strong>Patient Name:</strong> {patientDetails.name}</span>
-                  {patientDetails.phone && <span><strong>Contact No:</strong> {patientDetails.phone}</span>}
+                  <span>
+                    <strong>Invoice ID:</strong> {invoiceId}
+                  </span>
+                  <span>
+                    <strong>UID Number:</strong> {patientDetails.uhid}
+                  </span>
+                  <span>
+                    <strong>Patient Name:</strong> {patientDetails.name}
+                  </span>
+                  {patientDetails.phone && (
+                    <span>
+                      <strong>Contact No:</strong> {patientDetails.phone}
+                    </span>
+                  )}
                 </div>
               </div>
 
               <div className="summary-header" style={{ borderRadius: "0" }}>
                 <span>
                   <FaListUl className="me-1" />
-                  Total Bill: ₹ {Math.round(parseFloat(summary.totalBill || 0)).toLocaleString("en-IN")}
+                  Total Bill: ₹{" "}
+                  {Math.round(
+                    parseFloat(summary.totalBill || 0),
+                  ).toLocaleString("en-IN")}
                 </span>
                 <span>
                   <FaTasks className="me-1" />
-                  Insurance Approved: ₹ {Math.round(parseFloat(summary.insuranceApproved || 0)).toLocaleString("en-IN")}
+                  Insurance Approved: ₹{" "}
+                  {Math.round(
+                    parseFloat(summary.insuranceApproved || 0),
+                  ).toLocaleString("en-IN")}
                 </span>
                 <span>
                   <FaListUl className="me-1" />
-                  Patient Payable: ₹ {Math.round(parseFloat(summary.patientPayable || 0)).toLocaleString("en-IN")}
+                  Patient Payable: ₹{" "}
+                  {Math.round(
+                    parseFloat(summary.patientPayable || 0),
+                  ).toLocaleString("en-IN")}
                 </span>
                 <span>
                   <FaListUl className="me-1" />
-                  Total Due: ₹ {Math.round(parseFloat(summary.totalDue || 0)).toLocaleString("en-IN")}
+                  Total Due: ₹{" "}
+                  {Math.round(parseFloat(summary.totalDue || 0)).toLocaleString(
+                    "en-IN",
+                  )}
                 </span>
               </div>
               <Card.Body>
@@ -816,53 +918,69 @@ const IpdCollection = () => {
                       <th style={{ width: "11%", position: "relative" }}>
                         PDC Cheque{" "}
                         <span
-                          style={{ position: "relative", display: "inline-block", cursor: "pointer", verticalAlign: "middle" }}
+                          style={{
+                            position: "relative",
+                            display: "inline-block",
+                            cursor: "pointer",
+                            verticalAlign: "middle",
+                          }}
                           onMouseEnter={() => setShowPdcInfo(true)}
                           onMouseLeave={() => setShowPdcInfo(false)}
                         >
-                          <FaInfoCircle size={13} style={{ marginLeft: "2px", color: "#0f7b63" }} />
+                          <FaInfoCircle
+                            size={13}
+                            style={{ marginLeft: "2px", color: "#0f7b63" }}
+                          />
                           {showPdcInfo && (
-                            <div style={{
-                              position: "absolute",
-                              top: "125%",
-                              left: "50%",
-                              transform: "translateX(-50%)",
-                              backgroundColor: "#ffffff",
-                              color: "#1a2b26",
-                              padding: "8px 12px",
-                              borderRadius: "8px",
-                              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                              border: "1px solid #d4e8e3",
-                              fontSize: "11px",
-                              whiteSpace: "normal",
-                              width: "200px",
-                              zIndex: 1050,
-                              textAlign: "center",
-                              fontWeight: "normal",
-                              textTransform: "none",
-                              lineHeight: "1.4"
-                            }}>
-                              Amount of PDC Cheque taken during admission
-                              {/* Arrow */}
-                              <div style={{
+                            <div
+                              style={{
                                 position: "absolute",
-                                bottom: "100%",
+                                top: "125%",
                                 left: "50%",
                                 transform: "translateX(-50%)",
-                                borderWidth: "5px",
-                                borderStyle: "solid",
-                                borderColor: "transparent transparent #ffffff transparent"
-                              }}></div>
-                              <div style={{
-                                position: "absolute",
-                                bottom: "100%",
-                                left: "50%",
-                                transform: "translateX(-50%) translateY(1px)",
-                                borderWidth: "5px",
-                                borderStyle: "solid",
-                                borderColor: "transparent transparent #d4e8e3 transparent",
-                                zIndex: -1
-                              }}></div>
+                                backgroundColor: "#ffffff",
+                                color: "#1a2b26",
+                                padding: "8px 12px",
+                                borderRadius: "8px",
+                                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                                border: "1px solid #d4e8e3",
+                                fontSize: "11px",
+                                whiteSpace: "normal",
+                                width: "200px",
+                                zIndex: 1050,
+                                textAlign: "center",
+                                fontWeight: "normal",
+                                textTransform: "none",
+                                lineHeight: "1.4",
+                              }}
+                            >
+                              Amount of PDC Cheque taken during admission
+                              {/* Arrow */}
+                              <div
+                                style={{
+                                  position: "absolute",
+                                  bottom: "100%",
+                                  left: "50%",
+                                  transform: "translateX(-50%)",
+                                  borderWidth: "5px",
+                                  borderStyle: "solid",
+                                  borderColor:
+                                    "transparent transparent #ffffff transparent",
+                                }}
+                              ></div>
+                              <div
+                                style={{
+                                  position: "absolute",
+                                  bottom: "100%",
+                                  left: "50%",
+                                  transform: "translateX(-50%) translateY(1px)",
+                                  borderWidth: "5px",
+                                  borderStyle: "solid",
+                                  borderColor:
+                                    "transparent transparent #d4e8e3 transparent",
+                                  zIndex: -1,
+                                }}
+                              ></div>
                             </div>
                           )}
                         </span>
@@ -903,7 +1021,9 @@ const IpdCollection = () => {
                               <Form.Control
                                 className="table-input-group-control"
                                 readOnly
-                                value={Math.round(parseFloat(pay.cashamt || 0)).toLocaleString("en-IN")}
+                                value={Math.round(
+                                  parseFloat(pay.cashamt || 0),
+                                ).toLocaleString("en-IN")}
                               />
                             </InputGroup>
                           </td>
@@ -918,7 +1038,9 @@ const IpdCollection = () => {
                               <Form.Control
                                 className="table-input-group-control"
                                 readOnly
-                                value={Math.round(parseFloat(pay.cardamt || 0)).toLocaleString("en-IN")}
+                                value={Math.round(
+                                  parseFloat(pay.cardamt || 0),
+                                ).toLocaleString("en-IN")}
                               />
                             </InputGroup>
                           </td>
@@ -933,7 +1055,9 @@ const IpdCollection = () => {
                               <Form.Control
                                 className="table-input-group-control"
                                 readOnly
-                                value={Math.round(parseFloat(pay.chequeamt || 0)).toLocaleString("en-IN")}
+                                value={Math.round(
+                                  parseFloat(pay.chequeamt || 0),
+                                ).toLocaleString("en-IN")}
                               />
                             </InputGroup>
                           </td>
@@ -948,7 +1072,9 @@ const IpdCollection = () => {
                               <Form.Control
                                 className="table-input-group-control"
                                 readOnly
-                                value={Math.round(parseFloat(pay.onlineamt || 0)).toLocaleString("en-IN")}
+                                value={Math.round(
+                                  parseFloat(pay.onlineamt || 0),
+                                ).toLocaleString("en-IN")}
                               />
                             </InputGroup>
                           </td>
@@ -963,7 +1089,9 @@ const IpdCollection = () => {
                               <Form.Control
                                 className="table-input-group-control"
                                 readOnly
-                                value={Math.round(parseFloat(pay.discountamt || 0)).toLocaleString("en-IN")}
+                                value={Math.round(
+                                  parseFloat(pay.discountamt || 0),
+                                ).toLocaleString("en-IN")}
                               />
                             </InputGroup>
                           </td>
@@ -978,7 +1106,9 @@ const IpdCollection = () => {
                               <Form.Control
                                 className="table-input-group-control"
                                 readOnly
-                                value={Math.round(parseFloat(pay.tdsamt || 0)).toLocaleString("en-IN")}
+                                value={Math.round(
+                                  parseFloat(pay.tdsamt || 0),
+                                ).toLocaleString("en-IN")}
                               />
                             </InputGroup>
                           </td>
@@ -993,7 +1123,9 @@ const IpdCollection = () => {
                               <Form.Control
                                 className="table-input-group-control"
                                 readOnly
-                                value={Math.round(parseFloat(pay.pdcCheque || 0)).toLocaleString("en-IN")}
+                                value={Math.round(
+                                  parseFloat(pay.pdcCheque || 0),
+                                ).toLocaleString("en-IN")}
                               />
                             </InputGroup>
                           </td>
@@ -1022,11 +1154,19 @@ const IpdCollection = () => {
                               margin: "10px auto",
                             }}
                           >
-                            <div className="mb-3" style={{ fontSize: "2.5rem", color: "#00acc1" }}>
+                            <div
+                              className="mb-3"
+                              style={{ fontSize: "2.5rem", color: "#00acc1" }}
+                            >
                               <FaFileInvoiceDollar className="opacity-75" />
                             </div>
-                            <h5 className="fw-bold text-cyan-dark mb-1">No Payments Found</h5>
-                            <p className="text-secondary small mb-0">No payment entries have been recorded for this invoice yet.</p>
+                            <h5 className="fw-bold text-cyan-dark mb-1">
+                              No Payments Found
+                            </h5>
+                            <p className="text-secondary small mb-0">
+                              No payment entries have been recorded for this
+                              invoice yet.
+                            </p>
                           </div>
                         </td>
                       </tr>
@@ -1054,17 +1194,31 @@ const IpdCollection = () => {
                             <tr>
                               <td colSpan={10}>
                                 <div className="alert alert-danger p-5 mb-2 text-center small fw-bold">
-                                  <FeatherIcon icon="alert-triangle" size="16" className="me-2 align-middle" />
-                                  Warning: Entered amount (₹ {Math.round(currentTotal).toLocaleString("en-IN")})
-                                  exceeds the remaining due (₹ {Math.round(summary.totalDue).toLocaleString("en-IN")}).
-                                  Please correct the values.
+                                  <FeatherIcon
+                                    icon="alert-triangle"
+                                    size="16"
+                                    className="me-2 align-middle"
+                                  />
+                                  Warning: Entered amount (₹{" "}
+                                  {Math.round(currentTotal).toLocaleString(
+                                    "en-IN",
+                                  )}
+                                  ) exceeds the remaining due (₹{" "}
+                                  {Math.round(summary.totalDue).toLocaleString(
+                                    "en-IN",
+                                  )}
+                                  ). Please correct the values.
                                 </div>
                               </td>
                             </tr>
                           )}
                           <tr>
                             <td className="text-center">
-                              <FaPlusCircle size={22} color="#0f7b63" title="Add Entry" />
+                              <FaPlusCircle
+                                size={22}
+                                color="#0f7b63"
+                                title="Add Entry"
+                              />
                             </td>
                             <td>
                               <Form.Control
@@ -1103,11 +1257,23 @@ const IpdCollection = () => {
                                   }
                                   placeholder="Cash"
                                   className="input-group-control-rupee"
-                                  value={newPayment.cash ? Number(String(newPayment.cash).replace(/,/g, "")).toLocaleString("en-IN") : ""}
+                                  value={
+                                    newPayment.cash
+                                      ? Number(
+                                          String(newPayment.cash).replace(
+                                            /,/g,
+                                            "",
+                                          ),
+                                        ).toLocaleString("en-IN")
+                                      : ""
+                                  }
                                   onChange={(e) =>
                                     setNewPayment({
                                       ...newPayment,
-                                      cash: +e.target.value.replace(/[^0-9]/g, ""),
+                                      cash: +e.target.value.replace(
+                                        /[^0-9]/g,
+                                        "",
+                                      ),
                                     })
                                   }
                                 />
@@ -1131,11 +1297,15 @@ const IpdCollection = () => {
                                   placeholder="Card"
                                   className="input-group-control-rupee"
                                   value={newPayment.card || ""}
+                                  // Only one digital tender at a time — the
+                                  // terminal can be asked for Card OR UPI,
+                                  // never both in one transaction.
                                   disabled={newPayment.online > 0}
                                   onChange={(e) =>
                                     setNewPayment({
                                       ...newPayment,
                                       card: +e.target.value,
+                                      online: 0, // entering Card clears Online
                                     })
                                   }
                                 />
@@ -1186,11 +1356,13 @@ const IpdCollection = () => {
                                   placeholder="Online"
                                   className="input-group-control-rupee"
                                   value={newPayment.online || ""}
+                                  // Mirror of the Card field above.
                                   disabled={newPayment.card > 0}
                                   onChange={(e) =>
                                     setNewPayment({
                                       ...newPayment,
                                       online: +e.target.value,
+                                      card: 0, // entering Online clears Card
                                     })
                                   }
                                 />
@@ -1213,11 +1385,22 @@ const IpdCollection = () => {
                                   }
                                   placeholder="Internal Disc"
                                   className="input-group-control-rupee"
-                                  value={newPayment.internalDiscount ? Number(String(newPayment.internalDiscount).replace(/,/g, "")).toLocaleString("en-IN") : ""}
+                                  value={
+                                    newPayment.internalDiscount
+                                      ? Number(
+                                          String(
+                                            newPayment.internalDiscount,
+                                          ).replace(/,/g, ""),
+                                        ).toLocaleString("en-IN")
+                                      : ""
+                                  }
                                   onChange={(e) =>
                                     setNewPayment({
                                       ...newPayment,
-                                      internalDiscount: +e.target.value.replace(/[^0-9]/g, ""),
+                                      internalDiscount: +e.target.value.replace(
+                                        /[^0-9]/g,
+                                        "",
+                                      ),
                                     })
                                   }
                                 />
@@ -1240,11 +1423,23 @@ const IpdCollection = () => {
                                   }
                                   placeholder="Hospital Disc"
                                   className="input-group-control-rupee"
-                                  value={newPayment.tds ? Number(String(newPayment.tds).replace(/,/g, "")).toLocaleString("en-IN") : ""}
+                                  value={
+                                    newPayment.tds
+                                      ? Number(
+                                          String(newPayment.tds).replace(
+                                            /,/g,
+                                            "",
+                                          ),
+                                        ).toLocaleString("en-IN")
+                                      : ""
+                                  }
                                   onChange={(e) =>
                                     setNewPayment({
                                       ...newPayment,
-                                      tds: +e.target.value.replace(/[^0-9]/g, ""),
+                                      tds: +e.target.value.replace(
+                                        /[^0-9]/g,
+                                        "",
+                                      ),
                                     })
                                   }
                                 />
@@ -1268,7 +1463,10 @@ const IpdCollection = () => {
                                   placeholder="PDC Cheque"
                                   className="input-group-control-rupee"
                                   value={newPayment.pdcCheque || ""}
-                                  disabled={payments.some((pay) => (parseFloat(pay.pdcCheque) || 0) > 0)}
+                                  disabled={payments.some(
+                                    (pay) =>
+                                      (parseFloat(pay.pdcCheque) || 0) > 0,
+                                  )}
                                   onChange={(e) =>
                                     setNewPayment({
                                       ...newPayment,
@@ -1283,7 +1481,9 @@ const IpdCollection = () => {
                                 variant="primary"
                                 className="btn-save"
                                 onClick={handleSavePayment}
-                                disabled={loading || isOverpaid || summary.totalDue <= 0}
+                                disabled={
+                                  loading || isOverpaid || summary.totalDue <= 0
+                                }
                                 title="Save Payment"
                               >
                                 <FaSave size={16} />
@@ -1296,19 +1496,25 @@ const IpdCollection = () => {
                   </tbody>
                 </Table>
 
-                {summary.totalDue === 0 && (
-                  summary.isCashless && (parseFloat(summary.insuranceApproved || 0) === 0) ? (
+                {summary.totalDue === 0 &&
+                  (summary.isCashless &&
+                  parseFloat(summary.insuranceApproved || 0) === 0 ? (
                     <div
                       className="alert alert-warning mx-3 mt-3 text-center fw-bold"
                       style={{
                         borderRadius: "10px",
                         border: "2px solid #f59e0b",
                         color: "#92400e",
-                        backgroundColor: "#fef3c7"
+                        backgroundColor: "#fef3c7",
                       }}
                     >
-                      <FeatherIcon icon="alert-circle" size="18" className="me-2 align-middle" />
-                      To add entry to this bill, please first add approved amount.
+                      <FeatherIcon
+                        icon="alert-circle"
+                        size="18"
+                        className="me-2 align-middle"
+                      />
+                      To add entry to this bill, please first add approved
+                      amount.
                     </div>
                   ) : (
                     <div
@@ -1322,31 +1528,35 @@ const IpdCollection = () => {
                       This bill is already fully paid. No further payments are
                       required.
                     </div>
-                  )
-                )}
+                  ))}
 
-                <div className="mt-4 pt-4 border-top">
-                  <div className="pos-terminal-box">
-                    <span
-                      className="fw-bold text-cyan-dark"
-                      style={{ fontSize: "14px" }}
-                    >
-                      PoS Terminal<span className="text-danger">*</span> : {(newPayment.card > 0 || newPayment.online > 0)}
-                    </span>
-                    {terminalOptions.map((opt) => (
-                      <Form.Check
-                        key={opt}
-                        inline
-                        type="radio"
-                        label={opt}
-                        checked={selectedTerminal === opt}
-                        onChange={() => setSelectedTerminal(opt)}
-                        className="fw-bold text-secondary"
-                        style={{ cursor: "pointer", fontSize: "12px" }}
-                      />
-                    ))}
+                {/* Shown only when a Card or Online amount has been entered. */}
+                {isDigitalPayment && (
+                  <div className="mt-4 pt-4 border-top">
+                    <div className="pos-terminal-box">
+                      <span
+                        className="fw-bold text-cyan-dark"
+                        style={{ fontSize: "14px" }}
+                      >
+                        PoS Terminal<span className="text-danger">*</span> :
+                      </span>
+                      {terminalOptions.map((opt) => (
+                        <Form.Check
+                          key={opt}
+                          inline
+                          type="radio"
+                          name="ipdPosTerminal"
+                          id={`ipd-pos-${opt}`}
+                          label={opt}
+                          checked={selectedTerminal === opt}
+                          onChange={() => setSelectedTerminal(opt)}
+                          className="fw-bold text-secondary"
+                          style={{ cursor: "pointer", fontSize: "12px" }}
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </Card.Body>
             </Card>
           </Col>

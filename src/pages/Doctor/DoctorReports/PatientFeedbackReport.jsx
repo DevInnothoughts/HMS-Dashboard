@@ -21,7 +21,15 @@ import { decodeJwt } from "../../Utility/decode-jwt";
 const BASE_URL = "http://194.195.117.79:5100/api";
 
 const formatValue = (val) => {
-  if (val === null || val === undefined || val === "" || val === "N/A" || val === 0 || val === "0" || val === "-") {
+  if (
+    val === null ||
+    val === undefined ||
+    val === "" ||
+    val === "N/A" ||
+    val === 0 ||
+    val === "0" ||
+    val === "-"
+  ) {
     return "-";
   }
   return val;
@@ -41,19 +49,31 @@ const getNpsBadge = (score) => {
   const numScore = Number(score);
   if (numScore >= 9) {
     return (
-      <Badge bg="success" className="text-white" style={{ color: "#ffffff", fontWeight: "600", padding: "6px 12px" }}>
+      <Badge
+        bg="success"
+        className="text-white"
+        style={{ color: "#ffffff", fontWeight: "600", padding: "6px 12px" }}
+      >
         {score} (Promoter)
       </Badge>
     );
   } else if (numScore >= 7) {
     return (
-      <Badge bg="warning" className="text-white" style={{ color: "#ffffff", fontWeight: "600", padding: "6px 12px" }}>
+      <Badge
+        bg="warning"
+        className="text-white"
+        style={{ color: "#ffffff", fontWeight: "600", padding: "6px 12px" }}
+      >
         {score} (Passive)
       </Badge>
     );
   } else {
     return (
-      <Badge bg="danger" className="text-white" style={{ color: "#ffffff", fontWeight: "600", padding: "6px 12px" }}>
+      <Badge
+        bg="danger"
+        className="text-white"
+        style={{ color: "#ffffff", fontWeight: "600", padding: "6px 12px" }}
+      >
         {score} (Detractor)
       </Badge>
     );
@@ -66,7 +86,7 @@ const PatientFeedbackReport = () => {
   const [selectedDoctor, setSelectedDoctor] = useState("All");
   const [selectedNpsScore, setSelectedNpsScore] = useState("All");
   const [doctorOptions, setDoctorOptions] = useState([]);
-  
+
   const [reportData, setReportData] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [loading, setLoading] = useState(false);
@@ -93,7 +113,9 @@ const PatientFeedbackReport = () => {
   const fetchDoctorList = async (locationStr) => {
     try {
       const loc = locationStr || currentLocation || "DP Road";
-      const res = await fetch(`${BASE_URL}/V1/doctor/reports/getDoctors?location=${encodeURIComponent(loc)}`);
+      const res = await fetch(
+        `${BASE_URL}/V1/doctor/reports/getDoctors?location=${encodeURIComponent(loc)}`,
+      );
       const result = await res.json();
       if (result.statusCode === 200 && Array.isArray(result.data)) {
         setDoctorOptions(result.data);
@@ -121,20 +143,23 @@ const PatientFeedbackReport = () => {
         loc = payload?.jobLocation || "DP Road";
       }
 
-      const res = await fetch(`${BASE_URL}/V1/doctor/reports/getPatientFeedbackReport`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const res = await fetch(
+        `${BASE_URL}/V1/doctor/reports/getPatientFeedbackReport`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            location: loc || "DP Road",
+            Fromdate: fDate,
+            Todate: tDate,
+            doctorId: selectedDoctor,
+            npsScore: selectedNpsScore,
+          }),
         },
-        body: JSON.stringify({
-          location: loc || "DP Road",
-          Fromdate: fDate,
-          Todate: tDate,
-          doctorId: selectedDoctor,
-          npsScore: selectedNpsScore,
-        }),
-      });
+      );
 
       const result = await res.json();
       if (result.statusCode === 200 && Array.isArray(result.data)) {
@@ -179,13 +204,16 @@ const PatientFeedbackReport = () => {
       "Patient Name": item.patientName || "-",
       "Doctor Name": item.doctor || "-",
       "NPS Score": item.npsScore ?? "-",
-      "PSI": item.psi || (item.npsScore ? `${item.npsScore * 10}%` : "-"),
+      PSI: item.psi || (item.npsScore ? `${item.npsScore * 10}%` : "-"),
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(excelData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Patient Feedback NPS");
-    XLSX.writeFile(workbook, `Patient_Feedback_NPS_Report_${fromDate}_to_${toDate}.xlsx`);
+    XLSX.writeFile(
+      workbook,
+      `Patient_Feedback_NPS_Report_${fromDate}_to_${toDate}.xlsx`,
+    );
   };
 
   const handlePrint = () => {
@@ -204,22 +232,45 @@ const PatientFeedbackReport = () => {
   });
 
   const totalEntries = filteredData.length;
-  const promoterCount = filteredData.filter(r => r.npsScore >= 9).length;
-  const passiveCount = filteredData.filter(r => r.npsScore >= 7 && r.npsScore <= 8).length;
-  const detractorCount = filteredData.filter(r => r.npsScore <= 6).length;
-  const avgNpsScore = totalEntries > 0 
-    ? (filteredData.reduce((sum, r) => sum + Number(r.npsScore || 0), 0) / totalEntries).toFixed(1) 
-    : 0;
-  const avgPsiScore = totalEntries > 0 
-    ? `${(Number(avgNpsScore) * 10).toFixed(1)}%`
-    : "0%";
+  const promoterCount = filteredData.filter((r) => r.npsScore >= 9).length;
+  const passiveCount = filteredData.filter(
+    (r) => r.npsScore >= 7 && r.npsScore <= 8,
+  ).length;
+  const detractorCount = filteredData.filter((r) => r.npsScore <= 6).length;
+  const avgNpsScore =
+    totalEntries > 0
+      ? (
+          filteredData.reduce((sum, r) => sum + Number(r.npsScore || 0), 0) /
+          totalEntries
+        ).toFixed(1)
+      : 0;
+  const avgPsiScore =
+    totalEntries > 0 ? `${(Number(avgNpsScore) * 10).toFixed(1)}%` : "0%";
 
   const footerGroup = (
     <ColumnGroup>
       <Row>
-        <Column footer={`Total Entries: ${totalEntries} | Promoters: ${promoterCount} | Passives: ${passiveCount} | Detractors: ${detractorCount}`} colSpan={3} footerStyle={{ textAlign: "center", fontWeight: "bold" }} />
-        <Column footer={`Avg NPS: ${avgNpsScore}`} footerStyle={{ textAlign: "center", fontWeight: "bold", color: "#006064" }} />
-        <Column footer={`Avg PSI: ${avgPsiScore}`} footerStyle={{ textAlign: "center", fontWeight: "bold", color: "#0288d1" }} />
+        <Column
+          footer={`Total Entries: ${totalEntries} | Promoters: ${promoterCount} | Passives: ${passiveCount} | Detractors: ${detractorCount}`}
+          colSpan={3}
+          footerStyle={{ textAlign: "center", fontWeight: "bold" }}
+        />
+        <Column
+          footer={`Avg NPS: ${avgNpsScore}`}
+          footerStyle={{
+            textAlign: "center",
+            fontWeight: "bold",
+            color: "#006064",
+          }}
+        />
+        <Column
+          footer={`Avg PSI: ${avgPsiScore}`}
+          footerStyle={{
+            textAlign: "center",
+            fontWeight: "bold",
+            color: "#0288d1",
+          }}
+        />
       </Row>
     </ColumnGroup>
   );
@@ -276,7 +327,10 @@ const PatientFeedbackReport = () => {
           </div>
         </div>
       </Col>
-      <Col style={{ padding: "0 5px" }} className="d-flex justify-content-end gap-2">
+      <Col
+        style={{ padding: "0 5px" }}
+        className="d-flex justify-content-end gap-2"
+      >
         <button
           className="btn btn-success btn-sm"
           onClick={exportToExcel}
@@ -343,8 +397,15 @@ const PatientFeedbackReport = () => {
                 >
                   <h4 style={{ margin: 0 }}>Patient Feedback / NPS Report</h4>
                   {fromDate && toDate && (
-                    <div style={{ fontSize: "13px", fontWeight: "normal", marginTop: "5px" }}>
-                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b>
+                    <div
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: "normal",
+                        marginTop: "5px",
+                      }}
+                    >
+                      Date Range: <b>{formatDateDisplay(fromDate)}</b> to{" "}
+                      <b>{formatDateDisplay(toDate)}</b>
                     </div>
                   )}
                 </Card.Header>
@@ -461,7 +522,9 @@ const PatientFeedbackReport = () => {
                           </Form.Label>
                           <Form.Select
                             value={selectedNpsScore}
-                            onChange={(e) => setSelectedNpsScore(e.target.value)}
+                            onChange={(e) =>
+                              setSelectedNpsScore(e.target.value)
+                            }
                             style={{
                               border: "2px solid #4dd0e1",
                               borderRadius: "8px",
@@ -484,7 +547,11 @@ const PatientFeedbackReport = () => {
                       </Col>
 
                       {/* Search & Reset Buttons */}
-                      <Col md={2} className="d-flex justify-content-end gap-2 mt-2" style={{ padding: "0 5px" }}>
+                      <Col
+                        md={2}
+                        className="d-flex justify-content-end gap-2 mt-2"
+                        style={{ padding: "0 5px" }}
+                      >
                         <button
                           className="btn btn-primary"
                           type="submit"
@@ -565,8 +632,19 @@ const PatientFeedbackReport = () => {
                       <Column
                         field="psi"
                         header="PSI"
-                        body={(rowData) => formatValue(rowData.psi || (rowData.npsScore ? `${rowData.npsScore * 10}%` : "-"))}
-                        style={{ width: "160px", textAlign: "center", fontWeight: "bold" }}
+                        body={(rowData) =>
+                          formatValue(
+                            rowData.psi ||
+                              (rowData.npsScore
+                                ? `${rowData.npsScore * 10}%`
+                                : "-"),
+                          )
+                        }
+                        style={{
+                          width: "160px",
+                          textAlign: "center",
+                          fontWeight: "bold",
+                        }}
                       />
                     </DataTable>
                   </div>
@@ -590,11 +668,22 @@ const PatientFeedbackReport = () => {
                             <td>{formatValue(item.patientName)}</td>
                             <td>{formatValue(item.doctor)}</td>
                             <td>{item.npsScore ?? "-"}</td>
-                            <td>{formatValue(item.psi || (item.npsScore ? `${item.npsScore * 10}%` : "-"))}</td>
+                            <td>
+                              {formatValue(
+                                item.psi ||
+                                  (item.npsScore
+                                    ? `${item.npsScore * 10}%`
+                                    : "-"),
+                              )}
+                            </td>
                           </tr>
                         ))}
                         <tr className="print-totals-row">
-                          <td colSpan={3}>Total Entries: {totalEntries} | Promoters: {promoterCount} | Passives: {passiveCount} | Detractors: {detractorCount}</td>
+                          <td colSpan={3}>
+                            Total Entries: {totalEntries} | Promoters:{" "}
+                            {promoterCount} | Passives: {passiveCount} |
+                            Detractors: {detractorCount}
+                          </td>
                           <td>Avg NPS: {avgNpsScore}</td>
                           <td>Avg PSI: {avgPsiScore}</td>
                         </tr>
