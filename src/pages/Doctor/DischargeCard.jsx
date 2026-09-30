@@ -189,6 +189,16 @@ const DischargeCard = ({
       alert("Please select Discharge Time");
       return;
     }
+    if (
+      !dischargeData.surgery_type ||
+      (Array.isArray(dischargeData.surgery_type) &&
+        dischargeData.surgery_type.length === 0) ||
+      (!Array.isArray(dischargeData.surgery_type) &&
+        String(dischargeData.surgery_type).trim() === "")
+    ) {
+      alert("Please select Surgery Type");
+      return;
+    }
     if (!dischargeData.treating_by) {
       alert("Please select Treating Doctor");
       return;
@@ -595,7 +605,7 @@ const DischargeCard = ({
               className="fw-bold small mb-1"
               style={{ fontSize: "11px", color: "#006064" }}
             >
-              SURGERY TYPE
+              SURGERY TYPE <span className="text-danger">*</span>
             </Form.Label>
             <Dropdown className="shadow-sm border-0">
               <Dropdown.Toggle
@@ -604,12 +614,14 @@ const DischargeCard = ({
                 className="d-flex justify-content-between align-items-center bg-white text-dark"
                 style={{
                   borderRadius: "12px",
-                  border: "2px solid #b2ebf2",
+                  border: validationErrors.surgery_type
+                    ? "2px solid red"
+                    : "2px solid #b2ebf2",
                   padding: "5px 10px",
                   fontSize: "12px",
                   minHeight: "35px",
                   transition: "all 0.3s ease",
-                  width: "100%"
+                  width: "100%",
                 }}
               >
                 <div

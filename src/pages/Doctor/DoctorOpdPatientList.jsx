@@ -154,18 +154,33 @@ export default function DoctorOpdPatientList() {
   const calculateAge = (birthDate) => {
     if (!birthDate) return "";
 
-    let formattedDate = birthDate;
-    if (typeof birthDate === "string") {
-      if (birthDate.includes("/")) {
-        const [day, month, year] = birthDate.split("/");
-        formattedDate = `${year}-${month}-${day}`;
-      } else if (birthDate.includes("-")) {
-        const parts = birthDate.split("-");
-        if (parts[0].length !== 4) {
-          const [day, month, year] = parts;
-          formattedDate = `${year}-${month}-${day}`;
-        }
+    const trimmed = String(birthDate).trim();
+    if (/^\d{4}$/.test(trimmed)) {
+      const birthYear = parseInt(trimmed, 10);
+      const age = new Date().getFullYear() - birthYear;
+      return age >= 0 ? age : "";
+    }
+
+    let formattedDate = trimmed;
+    if (formattedDate.includes("/")) {
+      const parts = formattedDate.split("/");
+      if (parts[0].length === 4) {
+        formattedDate = `${parts[0]}-${parts[1]}-${parts[2]}`;
+      } else if (parts[2] && parts[2].length >= 4) {
+        formattedDate = `${parts[2].slice(0, 4)}-${parts[1]}-${parts[0]}`;
       }
+    } else if (formattedDate.includes("-")) {
+      const parts = formattedDate.split("-");
+      if (parts[0].length === 4) {
+        formattedDate = `${parts[0]}-${parts[1]}-${parts[2]}`;
+      } else if (parts[2] && parts[2].length >= 4) {
+        formattedDate = `${parts[2].slice(0, 4)}-${parts[1]}-${parts[0]}`;
+      }
+    } else if (/^\d{8}$/.test(formattedDate)) {
+      const dPart = formattedDate.substring(0, 2);
+      const mPart = formattedDate.substring(2, 4);
+      const yPart = formattedDate.substring(4, 8);
+      formattedDate = `${yPart}-${mPart}-${dPart}`;
     }
 
     const today = new Date();
@@ -1686,6 +1701,73 @@ export default function DoctorOpdPatientList() {
             </div>
           </div>
         );
+      case "hhc_team_member":
+      case "HHC Team Member":
+        return (
+          <div className="control-group">
+            <label
+              className="control-label"
+              style={{
+                marginTop: "20px",
+                fontSize: "12px",
+                fontWeight: "bold",
+                marginBottom: "5px",
+              }}
+            >
+              HHC Team Member Details
+            </label>
+            <div className="controls" style={{ display: "flex", gap: "10px" }}>
+              <input
+                className="form-control"
+                type="text"
+                name="hhc_team_member"
+                placeholder="Team Member Name"
+                style={{
+                  border: "2px solid rgb(77, 208, 225)",
+                  fontSize: "12px",
+                  borderRadius: "10px",
+                }}
+                value={referenceDetails.hhc_team_member || ""}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setReferenceDetails((prev) => ({
+                    ...prev,
+                    hhc_team_member: val,
+                  }));
+                  setFormData((prev) => ({
+                    ...prev,
+                    ref: `${val},${referenceDetails.hhc_team_member_no || ""}`,
+                    reference_type: "hhc_team_member",
+                  }));
+                }}
+              />
+              <input
+                className="form-control"
+                type="text"
+                name="hhc_team_member_no"
+                placeholder="Contact Number"
+                style={{
+                  border: "2px solid rgb(77, 208, 225)",
+                  fontSize: "12px",
+                  borderRadius: "10px",
+                }}
+                value={referenceDetails.hhc_team_member_no || ""}
+                onChange={(e) => {
+                  const no = e.target.value.replace(/\D/g, "");
+                  setReferenceDetails((prev) => ({
+                    ...prev,
+                    hhc_team_member_no: no,
+                  }));
+                  setFormData((prev) => ({
+                    ...prev,
+                    ref: `${referenceDetails.hhc_team_member || ""},${no}`,
+                    reference_type: "hhc_team_member",
+                  }));
+                }}
+              />
+            </div>
+          </div>
+        );
       default:
         return null;
     }
@@ -1702,6 +1784,8 @@ export default function DoctorOpdPatientList() {
   };
 
   const [selectedReference, setSelectedReference] = useState("");
+  4
+
   const [referenceDetails, setReferenceDetails] = useState({
     newspaper: "",
     internet: "",
@@ -1717,6 +1801,8 @@ export default function DoctorOpdPatientList() {
     friendno: "",
     other: "",
     WOM: "",
+    hhc_team_member: "",
+    hhc_team_member_no: "",
   });
 
   const [oldPatientDetails, setOldPatientDetails] = useState({
@@ -1768,6 +1854,7 @@ export default function DoctorOpdPatientList() {
         <option value="Surgery">Surgery</option>
         <option value="Test">Test</option>
         <option value="MCDPA">MCDPA</option>
+        <option value="Meds -> Sx">{"Meds -> Sx"}</option>
         <option value="Referred to another doctor">Referred to another doctor</option>
       </Form.Select>
     </div>
@@ -2251,17 +2338,15 @@ export default function DoctorOpdPatientList() {
                         headerClassName="datatable-header-center"
                         body={(rowData) => {
                           let ageStr = "-";
-                          if (
+                          const calculated = calculateAge(rowData.birth_date);
+                          if (calculated !== null && calculated !== undefined && calculated !== "" && !isNaN(calculated)) {
+                            ageStr = String(calculated);
+                          } else if (
                             rowData.age &&
                             !isNaN(rowData.age) &&
                             rowData.age < 150
                           ) {
                             ageStr = String(rowData.age);
-                          } else {
-                            const calculated = calculateAge(rowData.birth_date);
-                            if (calculated !== null && calculated !== undefined && calculated !== "") {
-                              ageStr = String(calculated);
-                            }
                           }
                           return <span className="selectable-text">{ageStr}</span>;
                         }}

@@ -1008,22 +1008,22 @@ const DiagnosisCard = ({
                               transition: "all 0.3s ease-in-out",
                               backgroundColor:
                                 diagnosisData.active_speciality === sub.id ||
-                                isFilled
+                                  isFilled
                                   ? "#00838f"
                                   : "#ffffff",
                               color:
                                 diagnosisData.active_speciality === sub.id ||
-                                isFilled
+                                  isFilled
                                   ? "#ffffff"
                                   : "#006064",
                               border:
                                 diagnosisData.active_speciality === sub.id ||
-                                isFilled
+                                  isFilled
                                   ? "1px solid #00838f"
                                   : "1px solid #e0f2f1",
                               boxShadow:
                                 diagnosisData.active_speciality === sub.id ||
-                                isFilled
+                                  isFilled
                                   ? "0 4px 10px rgba(0, 131, 143, 0.4)"
                                   : "0 2px 4px rgba(0,0,0,0.05)",
                               cursor: "pointer",
@@ -1031,12 +1031,12 @@ const DiagnosisCard = ({
                           >
                             {(diagnosisData.active_speciality === sub.id ||
                               isFilled) && (
-                              <FeatherIcon
-                                icon="check-circle"
-                                size="14"
-                                className="me-1"
-                              />
-                            )}
+                                <FeatherIcon
+                                  icon="check-circle"
+                                  size="14"
+                                  className="me-1"
+                                />
+                              )}
                             {sub.label}
                           </Nav.Link>
                         </Nav.Item>
@@ -1084,98 +1084,98 @@ const DiagnosisCard = ({
                         {diagnosisData.speciality_data.piles.some((g) =>
                           g.startsWith("Grade "),
                         ) && (
-                          <div className="d-flex align-items-center gap-2 mt-2 ms-2 animate__animated animate__fadeIn">
-                            <Form.Label
-                              className="mb-0 fw-bold"
-                              style={{ fontSize: "11px", color: "#006064" }}
-                            >
-                              Haemorrhoids Position:
-                            </Form.Label>
-                            <Form.Control
-                              type="text"
-                              size="sm"
-                              placeholder="e.g. 3,7,11"
-                              value={
-                                diagnosisData.speciality_data
-                                  .haemorrhoids_position || ""
-                              }
-                              onChange={(e) => {
-                                userInteracted.current = true;
-                                setDiagnosisData((prev) => ({
-                                  ...prev,
-                                  speciality_data: {
-                                    ...prev.speciality_data,
-                                    haemorrhoids_position: e.target.value,
-                                  },
-                                }));
-                              }}
-                              style={{
-                                width: "80px",
-                                height: "25px",
-                                borderRadius: "5px",
-                                border: "2px solid #b2ebf2",
-                                fontSize: "11px",
-                              }}
-                            />
-                            <span
-                              style={{
-                                fontSize: "11px",
-                                fontWeight: "700",
-                                color: "#006064",
-                              }}
-                            >
-                              o'clock
-                            </span>
-                          </div>
-                        )}
+                            <div className="d-flex align-items-center gap-2 mt-2 ms-2 animate__animated animate__fadeIn">
+                              <Form.Label
+                                className="mb-0 fw-bold"
+                                style={{ fontSize: "11px", color: "#006064" }}
+                              >
+                                Haemorrhoids Position:
+                              </Form.Label>
+                              <Form.Control
+                                type="text"
+                                size="sm"
+                                placeholder="e.g. 3,7,11"
+                                value={
+                                  diagnosisData.speciality_data
+                                    .haemorrhoids_position || ""
+                                }
+                                onChange={(e) => {
+                                  userInteracted.current = true;
+                                  setDiagnosisData((prev) => ({
+                                    ...prev,
+                                    speciality_data: {
+                                      ...prev.speciality_data,
+                                      haemorrhoids_position: e.target.value,
+                                    },
+                                  }));
+                                }}
+                                style={{
+                                  width: "80px",
+                                  height: "25px",
+                                  borderRadius: "5px",
+                                  border: "2px solid #b2ebf2",
+                                  fontSize: "11px",
+                                }}
+                              />
+                              <span
+                                style={{
+                                  fontSize: "11px",
+                                  fontWeight: "700",
+                                  color: "#006064",
+                                }}
+                              >
+                                o'clock
+                              </span>
+                            </div>
+                          )}
 
                         {diagnosisData.speciality_data.piles.includes(
                           "Skin Tag",
                         ) && (
-                          <div className="d-flex align-items-center gap-2 mt-2 ms-2 animate__animated animate__fadeIn">
-                            <Form.Label
-                              className="mb-0 fw-bold"
-                              style={{ fontSize: "11px", color: "#006064" }}
-                            >
-                              Skin Tag Position:
-                            </Form.Label>
-                            <Form.Control
-                              type="text"
-                              size="sm"
-                              placeholder="e.g. 6"
-                              value={
-                                diagnosisData.speciality_data
-                                  .skin_tag_position || ""
-                              }
-                              onChange={(e) => {
-                                userInteracted.current = true;
-                                setDiagnosisData((prev) => ({
-                                  ...prev,
-                                  speciality_data: {
-                                    ...prev.speciality_data,
-                                    skin_tag_position: e.target.value,
-                                  },
-                                }));
-                              }}
-                              style={{
-                                width: "60px",
-                                height: "25px",
-                                borderRadius: "5px",
-                                border: "2px solid #b2ebf2",
-                                fontSize: "11px",
-                              }}
-                            />
-                            <span
-                              style={{
-                                fontSize: "11px",
-                                fontWeight: "700",
-                                color: "#006064",
-                              }}
-                            >
-                              o'clock
-                            </span>
-                          </div>
-                        )}
+                            <div className="d-flex align-items-center gap-2 mt-2 ms-2 animate__animated animate__fadeIn">
+                              <Form.Label
+                                className="mb-0 fw-bold"
+                                style={{ fontSize: "11px", color: "#006064" }}
+                              >
+                                Skin Tag Position:
+                              </Form.Label>
+                              <Form.Control
+                                type="text"
+                                size="sm"
+                                placeholder="e.g. 6"
+                                value={
+                                  diagnosisData.speciality_data
+                                    .skin_tag_position || ""
+                                }
+                                onChange={(e) => {
+                                  userInteracted.current = true;
+                                  setDiagnosisData((prev) => ({
+                                    ...prev,
+                                    speciality_data: {
+                                      ...prev.speciality_data,
+                                      skin_tag_position: e.target.value,
+                                    },
+                                  }));
+                                }}
+                                style={{
+                                  width: "60px",
+                                  height: "25px",
+                                  borderRadius: "5px",
+                                  border: "2px solid #b2ebf2",
+                                  fontSize: "11px",
+                                }}
+                              />
+                              <span
+                                style={{
+                                  fontSize: "11px",
+                                  fontWeight: "700",
+                                  color: "#006064",
+                                }}
+                              >
+                                o'clock
+                              </span>
+                            </div>
+                          )}
                       </div>
                     )}
                     {diagnosisData.active_speciality === "fistula" && (
@@ -1866,7 +1866,7 @@ const DiagnosisCard = ({
 
         <fieldset disabled={isReadOnly} style={lockStyle}>
           <Row>
-            <Col md={6} className="mb-2">
+            <Col md={4} className="mb-2">
               <div className="d-flex justify-content-between align-items-end mb-1">
                 <Form.Label
                   className="fw-bold mb-0"
@@ -1906,7 +1906,7 @@ const DiagnosisCard = ({
                 }}
               />
             </Col>
-            <Col md={6} className="mb-10">
+            <Col md={3} className="mb-2">
               <Form.Label
                 className="fw-bold"
                 style={{ fontSize: "13px", color: "#006064" }}
@@ -1928,6 +1928,132 @@ const DiagnosisCard = ({
                   fontSize: "12px",
                 }}
               />
+            </Col>
+            <Col md={2} className="mb-2">
+              <Form.Label
+                className="fw-bold mb-1"
+                style={{ fontSize: "13px", color: "#006064", whiteSpace: "nowrap" }}
+              >
+                Video Proctoscopy Done? <span className="text-danger">*</span>
+              </Form.Label>
+              <div
+                className="d-flex align-items-center gap-3 px-3 py-2 rounded"
+                style={{
+                  border: validationErrors.video_proctoscopy
+                    ? "2px solid #dc3545"
+                    : "2px solid #b2ebf2",
+                  borderRadius: "10px",
+                  height: "46px",
+                  backgroundColor: "#ffffff",
+                }}
+              >
+                <Form.Check
+                  inline
+                  type="radio"
+                  id="video-proctoscopy-yes"
+                  name="video_proctoscopy"
+                  label={
+                    <span
+                      className="fw-bold"
+                      style={{ fontSize: "12px", color: "#006064" }}
+                    >
+                      Yes
+                    </span>
+                  }
+                  value="Yes"
+                  checked={diagnosisData.video_proctoscopy === "Yes"}
+                  onChange={() => {
+                    handleDiagnosisChange("video_proctoscopy", "Yes");
+                    handleDiagnosisChange("video_proctoscopy_reason", "");
+                  }}
+                  className="mb-0"
+                  style={{ cursor: "pointer" }}
+                />
+                <Form.Check
+                  inline
+                  type="radio"
+                  id="video-proctoscopy-no"
+                  name="video_proctoscopy"
+                  label={
+                    <span
+                      className="fw-bold"
+                      style={{ fontSize: "12px", color: "#006064" }}
+                    >
+                      No
+                    </span>
+                  }
+                  value="No"
+                  checked={diagnosisData.video_proctoscopy === "No"}
+                  onChange={() =>
+                    handleDiagnosisChange("video_proctoscopy", "No")
+                  }
+                  className="mb-0"
+                  style={{ cursor: "pointer" }}
+                />
+              </div>
+              {validationErrors.video_proctoscopy && (
+                <div
+                  className="text-danger mt-1"
+                  style={{ fontSize: "11px", fontWeight: "600" }}
+                >
+                  Please select Yes or No
+                </div>
+              )}
+            </Col>
+            <Col md={3} className="mb-2">
+              <Form.Label
+                className="fw-bold mb-1"
+                style={{ fontSize: "13px", color: "#006064" }}
+              >
+                Reason why not done{" "}
+                {diagnosisData.video_proctoscopy === "No" && (
+                  <span className="text-danger">*</span>
+                )}
+              </Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={2}
+                placeholder={
+                  diagnosisData.video_proctoscopy === "No"
+                    ? "Enter reason why not done..."
+                    : "Reason if No..."
+                }
+                disabled={diagnosisData.video_proctoscopy !== "No"}
+                value={diagnosisData.video_proctoscopy_reason || ""}
+                onChange={(e) =>
+                  handleDiagnosisChange(
+                    "video_proctoscopy_reason",
+                    e.target.value,
+                  )
+                }
+                isInvalid={
+                  diagnosisData.video_proctoscopy === "No" &&
+                  !!validationErrors.video_proctoscopy_reason
+                }
+                style={{
+                  borderRadius: "10px",
+                  border:
+                    diagnosisData.video_proctoscopy === "No" &&
+                      validationErrors.video_proctoscopy_reason
+                      ? "2px solid #dc3545"
+                      : "2px solid #b2ebf2",
+                  padding: "6px 12px",
+                  fontSize: "12px",
+                  backgroundColor:
+                    diagnosisData.video_proctoscopy !== "No"
+                      ? "#f8f9fa"
+                      : "#ffffff",
+                }}
+              />
+              {diagnosisData.video_proctoscopy === "No" &&
+                validationErrors.video_proctoscopy_reason && (
+                  <div
+                    className="text-danger mt-1"
+                    style={{ fontSize: "11px", fontWeight: "600" }}
+                  >
+                    Reason is required
+                  </div>
+                )}
             </Col>
           </Row>
         </fieldset>

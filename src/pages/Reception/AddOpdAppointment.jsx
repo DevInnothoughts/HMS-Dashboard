@@ -89,21 +89,22 @@ const countryNumberLimits = {
 };
 
 const referralSources = [
+  { id: "aggregators", label: "Aggregators" },
+  { id: "awareness_lecture", label: "Awareness Lecture" },
+  { id: "brand_ambassador", label: "Brand Ambassador" },
+  { id: "campaign", label: "Campaign" },
+  { id: "dr_privilege_card", label: "Doctor's Privilege Card" },
   { id: "family_friends", label: "Family/friends" },
+  { id: "hhc_branch", label: "Healing Hands Clinic Branch" },
+  { id: "hhc_board", label: "HHC Board on building" },
+  { id: "hhc_team_member", label: "HHC Team Member" },
+  { id: "self_old_pt", label: "I was treated here in past" },
+  { id: "internet", label: "Internet" },
+  { id: "newspaper", label: "Newspaper/Magazine" },
   { id: "dr_ref", label: "Referred by another doctor" },
   { id: "old_ref", label: "Referred by another patient" },
-  { id: "internet", label: "Internet" },
   { id: "socialMedia", label: "Social Media" },
   { id: "MediaRef", label: "TV Show/Radio" },
-  { id: "newspaper", label: "Newspaper/Magazine" },
-  { id: "awareness_lecture", label: "Awareness Lecture" },
-  { id: "hhc_board", label: "HHC Board on building" },
-  { id: "self_old_pt", label: "I was treated here in past" },
-  { id: "hhc_branch", label: "Healing Hands Clinic Branch" },
-  { id: "aggregators", label: "Aggregators" },
-  { id: "dr_privilege_card", label: "Doctor's Privilege Card" },
-  { id: "campaign", label: "Campaign" },
-  { id: "brand_ambassador", label: "Brand Ambassador" },
   { id: "other", label: "Other" },
 ];
 

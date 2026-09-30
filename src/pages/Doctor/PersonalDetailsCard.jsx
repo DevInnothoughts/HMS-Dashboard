@@ -86,6 +86,8 @@ const PersonalDetailsCard = ({
     friendno: "",
     other: "",
     WOM: "",
+    hhc_team_member: "",
+    hhc_team_member_no: "",
   });
 
   const [selectedReference, setSelectedReference] = useState("");
@@ -128,7 +130,10 @@ const PersonalDetailsCard = ({
 
       if (patient.reference_type) {
         setSelectedReference(patient.reference_type);
-        if (patient.reference_type === "old_ref") {
+        if (
+          patient.reference_type === "old_ref" ||
+          patient.reference_type === "brand_ambassador"
+        ) {
           const parts = (patient.ref || "").split(",");
           setOldPatientDetails({
             patient_ref_no: parts[0] || "",
@@ -187,6 +192,16 @@ const PersonalDetailsCard = ({
             friendname: parts[0] || "",
             friendno: parts[1] || "",
           }));
+        } else if (
+          patient.reference_type === "hhc_team_member" ||
+          patient.reference_type === "HHC Team Member"
+        ) {
+          const parts = (patient.ref || "").split(",");
+          setReferenceDetails((prev) => ({
+            ...prev,
+            hhc_team_member: parts[0] || "",
+            hhc_team_member_no: parts[1] || "",
+          }));
         } else {
           setReferenceDetails((prev) => ({
             ...prev,
@@ -199,17 +214,35 @@ const PersonalDetailsCard = ({
 
   const calculateAge = (birthDate) => {
     if (!birthDate) return "";
-    let formattedDate = birthDate;
+
+    const trimmed = String(birthDate).trim();
+    if (/^\d{4}$/.test(trimmed)) {
+      const birthYear = parseInt(trimmed, 10);
+      const age = new Date().getFullYear() - birthYear;
+      return age >= 0 ? age : "";
+    }
+
+    let formattedDate = trimmed;
     if (typeof birthDate === "string") {
       if (birthDate.includes("/")) {
-        const [day, month, year] = birthDate.split("/");
-        formattedDate = `${year}-${month}-${day}`;
+        const parts = birthDate.split("/");
+        if (parts[0].length === 4) {
+          formattedDate = `${parts[0]}-${parts[1]}-${parts[2]}`;
+        } else if (parts[2] && parts[2].length >= 4) {
+          formattedDate = `${parts[2].slice(0, 4)}-${parts[1]}-${parts[0]}`;
+        }
       } else if (birthDate.includes("-")) {
         const parts = birthDate.split("-");
-        if (parts[0].length !== 4) {
-          const [day, month, year] = parts;
-          formattedDate = `${year}-${month}-${day}`;
+        if (parts[0].length === 4) {
+          formattedDate = `${parts[0]}-${parts[1]}-${parts[2]}`;
+        } else if (parts[2] && parts[2].length >= 4) {
+          formattedDate = `${parts[2].slice(0, 4)}-${parts[1]}-${parts[0]}`;
         }
+      } else if (/^\d{8}$/.test(formattedDate)) {
+        const dPart = formattedDate.substring(0, 2);
+        const mPart = formattedDate.substring(2, 4);
+        const yPart = formattedDate.substring(4, 8);
+        formattedDate = `${yPart}-${mPart}-${dPart}`;
       }
     }
     const today = new Date();
@@ -325,7 +358,16 @@ const PersonalDetailsCard = ({
   const handleReferenceChange = (e) => {
     const { value } = e.target;
     setSelectedReference(value);
-    setFormData((prev) => ({ ...prev, reference_type: value }));
+    setFormData((prev) => ({
+      ...prev,
+      reference_type: value,
+      ...(value === "dr_privilege_card" && !prev.ref
+        ? { ref: "Doctor's Privilege Card" }
+        : {}),
+      ...(value === "hhc_team_member" && !prev.ref
+        ? { ref: "HHC Team Member" }
+        : {}),
+    }));
   };
 
   const handleReferenceDetailsChange = (e) => {
@@ -451,8 +493,9 @@ const PersonalDetailsCard = ({
         reference_type = "TVShow";
         ref = referenceDetails.TVShow || formData.ref || "";
         break;
+      case "brand_ambassador":
       case "old_ref":
-        reference_type = "old_ref";
+        reference_type = selectedReference;
         ref = `${oldPatientDetails.patient_ref_no || ""},${oldPatientDetails.old_patient_name || ""}`;
         break;
       case "family_friends":
@@ -498,6 +541,15 @@ const PersonalDetailsCard = ({
       case "campaign":
         reference_type = "campaign";
         ref = referenceDetails.campaign || formData.ref || "Campaign";
+        break;
+      case "hhc_team_member":
+      case "HHC Team Member":
+        reference_type = "hhc_team_member";
+        if (referenceDetails.hhc_team_member || referenceDetails.hhc_team_member_no) {
+          ref = `${referenceDetails.hhc_team_member?.trim() || ""},${referenceDetails.hhc_team_member_no?.trim() || ""}`;
+        } else {
+          ref = formData.ref?.trim() || "HHC Team Member";
+        }
         break;
       default:
         reference_type = selectedReference || null;
@@ -895,6 +947,7 @@ const PersonalDetailsCard = ({
             </Row>
           </div>
         );
+      case "brand_ambassador":
       case "old_ref":
         return (
           <div className="mt-2">
@@ -913,6 +966,11 @@ const PersonalDetailsCard = ({
                       setOldPatientDetails((prev) => ({
                         ...prev,
                         patient_ref_no: val,
+                      }));
+                      setFormData((prev) => ({
+                        ...prev,
+                        ref: `${val},${oldPatientDetails.old_patient_name || ""}`,
+                        reference_type: selectedReference || "old_ref",
                       }));
                       searchPatientByPhone(val);
                     }
@@ -951,6 +1009,7 @@ const PersonalDetailsCard = ({
                           setFormData((prev) => ({
                             ...prev,
                             ref: `${p.phone},${p.name}`,
+                            reference_type: selectedReference || "old_ref",
                           }));
                           setPatientSearchResults([]);
                         }}
@@ -974,7 +1033,8 @@ const PersonalDetailsCard = ({
                     }));
                     setFormData((prev) => ({
                       ...prev,
-                      reference_type: "old_ref",
+                      ref: `${oldPatientDetails.patient_ref_no || ""},${val}`,
+                      reference_type: selectedReference || "old_ref",
                     }));
                   }}
                   style={{
@@ -1253,6 +1313,69 @@ const PersonalDetailsCard = ({
                 fontSize: "12px",
               }}
             />
+          </div>
+        );
+      case "hhc_team_member":
+      case "HHC Team Member":
+        return (
+          <div className="mt-2">
+            <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>
+              HHC Team Member Details
+            </Form.Label>
+            <Row className="g-2">
+              <Col md={6}>
+                <Form.Control
+                  type="text"
+                  name="hhc_team_member"
+                  placeholder="Team Member Name"
+                  value={referenceDetails.hhc_team_member || ""}
+                  onChange={(e) => {
+                    const name = e.target.value;
+                    setReferenceDetails((prev) => ({
+                      ...prev,
+                      hhc_team_member: name,
+                    }));
+                    setFormData((prev) => ({
+                      ...prev,
+                      ref: `${name},${referenceDetails.hhc_team_member_no || ""}`,
+                      reference_type: "hhc_team_member",
+                    }));
+                  }}
+                  style={{
+                    border: "2px solid #b2ebf2",
+                    borderRadius: "8px",
+                    padding: "4px 10px",
+                    fontSize: "12px",
+                  }}
+                />
+              </Col>
+              <Col md={6}>
+                <Form.Control
+                  type="text"
+                  name="hhc_team_member_no"
+                  placeholder="Contact Number"
+                  value={referenceDetails.hhc_team_member_no || ""}
+                  onChange={(e) => {
+                    const no = e.target.value.replace(/\D/g, "");
+                    setReferenceDetails((prev) => ({
+                      ...prev,
+                      hhc_team_member_no: no,
+                    }));
+                    setFormData((prev) => ({
+                      ...prev,
+                      ref: `${referenceDetails.hhc_team_member || ""},${no}`,
+                      reference_type: "hhc_team_member",
+                    }));
+                  }}
+                  style={{
+                    border: "2px solid #b2ebf2",
+                    borderRadius: "8px",
+                    padding: "4px 10px",
+                    fontSize: "12px",
+                  }}
+                />
+              </Col>
+            </Row>
           </div>
         );
       default:
@@ -1909,25 +2032,31 @@ const PersonalDetailsCard = ({
                     }}
                   >
                     <option value="">Choose Reference</option>
-                    <option value="family_friends">Family / Friends</option>
-                    <option value="dr_ref">Referred By Another Doctor</option>
-                    <option value="old_ref">Referred By Another Patient</option>
-                    <option value="internet">Internet / Social Media</option>
-                    <option value="MediaRef">Entertainment Media</option>
-                    <option value="TVShow">Tv Show</option>
-                    <option value="newspaper">Newspaper / Magazine</option>
-                    <option value="awareness_lecture">Awareness Lecture</option>
-                    <option value="hhc_board">HHC Board On Building</option>
-                    <option value="treated_past">
-                      I Was Treated Here In Past
+                    <option value="aggregators">Aggregators</option>
+                    <option value="awareness_lecture">
+                      Awareness Lecture
                     </option>
+                    <option value="brand_ambassador">Brand Ambassador</option>
+                    <option value="campaign">Campaign</option>
+                    <option value="dr_privilege_card">Doctor's Privilege Card</option>
+                    <option value="MediaRef">Entertainment Media</option>
+                    <option value="family_friends">Family / Friends</option>
                     <option value="hhc_branch">
                       Healing Hands Clinic Branch
                     </option>
-                    <option value="aggregators">Aggregators</option>
-                    <option value="dr_privilege_card">Doctor's Privilege Card</option>
-                    <option value="campaign">Campaign</option>
+                    <option value="hhc_board">HHC Board On Building</option>
+                    <option value="hhc_team_member">HHC Team Member</option>
+                    <option value="treated_past">
+                      I Was Treated Here In Past
+                    </option>
+                    <option value="internet">Internet / Social Media</option>
+                    <option value="newspaper">Newspaper / Magazine</option>
                     <option value="other">Other</option>
+                    <option value="dr_ref">Referred By Another Doctor</option>
+                    <option value="old_ref">
+                      Referred By Another Patient
+                    </option>
+                    <option value="TVShow">Tv Show</option>
                   </Form.Select>
                   <div className="flex-grow-1">{renderReferenceDetails()}</div>
                 </div>

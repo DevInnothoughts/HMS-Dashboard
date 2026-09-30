@@ -73,22 +73,23 @@ const formatPatientType = (type) => {
   return type;
 };
 const REFERENCE_OPTIONS = [
+  "Aggregators",
+  "Awareness Lecture",
+  "Brand Ambassador",
+  "Campaign",
+  "Doctor's Privilege Card",
+  "Entertainment Media",
   "Family / Friends",
+  "Healing Hands Clinic Branch",
+  "HHC Board on building",
+  "HHC Team Member",
+  "I was treated here in past ",
+  "Internet",
+  "Newspaper / Magazine",
   "Referred By Another Doctor",
   "Referred By Another Patient",
-  "Internet",
   "Social Media",
-  "Entertainment Media",
   "TV Show",
-  "Newspaper / Magazine",
-  "Awareness Lecture",
-  "HHC Board on building",
-  "I was treated here in past ",
-  "Healing Hands Clinic Branch",
-  "Aggregators",
-  "Doctor's Privilege Card",
-  "Campaign",
-  "Brand Ambassador",
   "Other",
 ];
 
@@ -108,6 +109,8 @@ const REFERENCE_MAP = {
   dr_privilege_card: "Doctor's Privilege Card",
   campaign: "Campaign",
   brand_ambassador: "Brand Ambassador",
+  hhc_team_member: "HHC Team Member",
+  "HHC Team Member": "HHC Team Member",
   other: "Other",
 };
 

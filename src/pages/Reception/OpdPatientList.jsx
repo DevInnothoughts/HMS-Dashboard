@@ -518,17 +518,34 @@ export default function OpdPatientList() {
   const calculateAge = (birthDate) => {
     if (!birthDate) return "";
 
-    let formattedDate = birthDate;
+    const trimmed = String(birthDate).trim();
+    if (/^\d{4}$/.test(trimmed)) {
+      const birthYear = parseInt(trimmed, 10);
+      const age = new Date().getFullYear() - birthYear;
+      return age >= 0 ? age : "";
+    }
+
+    let formattedDate = trimmed;
     if (typeof birthDate === "string") {
       if (birthDate.includes("/")) {
-        const [day, month, year] = birthDate.split("/");
-        formattedDate = `${year}-${month}-${day}`;
+        const parts = birthDate.split("/");
+        if (parts[0].length === 4) {
+          formattedDate = `${parts[0]}-${parts[1]}-${parts[2]}`;
+        } else if (parts[2] && parts[2].length >= 4) {
+          formattedDate = `${parts[2].slice(0, 4)}-${parts[1]}-${parts[0]}`;
+        }
       } else if (birthDate.includes("-")) {
         const parts = birthDate.split("-");
-        if (parts[0].length !== 4) {
-          const [day, month, year] = parts;
-          formattedDate = `${year}-${month}-${day}`;
+        if (parts[0].length === 4) {
+          formattedDate = `${parts[0]}-${parts[1]}-${parts[2]}`;
+        } else if (parts[2] && parts[2].length >= 4) {
+          formattedDate = `${parts[2].slice(0, 4)}-${parts[1]}-${parts[0]}`;
         }
+      } else if (/^\d{8}$/.test(formattedDate)) {
+        const dPart = formattedDate.substring(0, 2);
+        const mPart = formattedDate.substring(2, 4);
+        const yPart = formattedDate.substring(4, 8);
+        formattedDate = `${yPart}-${mPart}-${dPart}`;
       }
     }
 
@@ -887,6 +904,16 @@ export default function OpdPatientList() {
         friendname: parts[0] || "",
         friendno: parts[1] || "",
       }));
+    } else if (
+      patient.reference_type === "hhc_team_member" ||
+      patient.reference_type === "HHC Team Member"
+    ) {
+      const parts = (patient.ref || "").split(",");
+      setReferenceDetails((prev) => ({
+        ...prev,
+        hhc_team_member: parts[0] || "",
+        hhc_team_member_no: parts[1] || "",
+      }));
     } else {
       const standardNewspapers = [
         "Sakal",
@@ -898,6 +925,9 @@ export default function OpdPatientList() {
       setReferenceDetails((prev) => ({
         ...prev,
         [patient.reference_type]: patient.ref || "",
+        ...(patient.reference_type === "HHC Team Member"
+          ? { hhc_team_member: patient.ref || "" }
+          : {}),
         Other_Newspaper:
           patient.reference_type === "newspaper" &&
           !standardNewspapers.includes(patient.ref)
@@ -905,6 +935,11 @@ export default function OpdPatientList() {
             : "",
       }));
     }
+
+    const patientRefType =
+      patient.reference_type === "HHC Team Member"
+        ? "hhc_team_member"
+        : patient.reference_type || "";
 
     setFormData({
       // Uid_no: patient.uid || "",
@@ -929,7 +964,7 @@ export default function OpdPatientList() {
       age: age,
       occupation: patient.occupation || "",
       companyname: patient.companyname || "",
-      reference_type: patient.reference_type || "",
+      reference_type: patientRefType,
       ref: patient.ref || "",
       // specific_work: Boolean(patient.specific_work) || "",
       specific_work: patient.specific_work || "",
@@ -946,7 +981,7 @@ export default function OpdPatientList() {
       ),
       "Mentally Stressful": workPatternsArray.includes("Mentally Stressful"),
     });
-    setSelectedReference(patient.reference_type || "");
+    setSelectedReference(patientRefType);
     setSelectedPatient(patient);
     setShowEditPatientModal(true);
   };
@@ -1209,12 +1244,26 @@ export default function OpdPatientList() {
         }
         ref = referenceDetails.campaign || formData.ref || "";
         break;
+      case "hhc_team_member":
+      case "HHC Team Member":
+        reference_type = "hhc_team_member";
+        if (referenceDetails.hhc_team_member || referenceDetails.hhc_team_member_no) {
+          ref = `${referenceDetails.hhc_team_member?.trim() || ""},${referenceDetails.hhc_team_member_no?.trim() || ""}`;
+        } else {
+          ref = formData.ref?.trim() || "HHC Team Member";
+        }
+        break;
       default:
         reference_type = null;
         ref = referenceDetails[selectedReference] || formData.ref;
     }
 
-    if (selectedReference && selectedReference !== "dr_privilege_card") {
+    if (
+      selectedReference &&
+      selectedReference !== "dr_privilege_card" &&
+      selectedReference !== "hhc_team_member" &&
+      selectedReference !== "HHC Team Member"
+    ) {
       const cleanRef = String(ref || "").trim();
       if (!cleanRef || cleanRef === ",") {
         toast.error("Please enter or select sub-reference details.");
@@ -2956,6 +3005,75 @@ export default function OpdPatientList() {
             </div>
           </div>
         );
+      case "hhc_team_member":
+      case "HHC Team Member":
+        return (
+          <div className="control-group">
+            <label
+              className="control-label"
+              style={{
+                marginTop: "20px",
+                fontSize: "12px",
+                fontWeight: "bold",
+                marginBottom: "5px",
+              }}
+            >
+              HHC Team Member Details <span className="text-danger">*</span>
+            </label>
+            <div className="controls" style={{ display: "flex", gap: "10px" }}>
+              <input
+                required
+                className="form-control"
+                type="text"
+                name="hhc_team_member"
+                placeholder="Team Member Name"
+                style={{
+                  border: "2px solid rgb(77, 208, 225)",
+                  fontSize: "12px",
+                  borderRadius: "10px",
+                }}
+                value={referenceDetails.hhc_team_member || ""}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setReferenceDetails((prev) => ({
+                    ...prev,
+                    hhc_team_member: val,
+                  }));
+                  setFormData((prev) => ({
+                    ...prev,
+                    ref: `${val},${referenceDetails.hhc_team_member_no || ""}`,
+                    reference_type: "hhc_team_member",
+                  }));
+                }}
+              />
+              <input
+                required
+                className="form-control"
+                type="text"
+                name="hhc_team_member_no"
+                placeholder="Contact Number"
+                style={{
+                  border: "2px solid rgb(77, 208, 225)",
+                  fontSize: "12px",
+                  borderRadius: "10px",
+                }}
+                value={referenceDetails.hhc_team_member_no || ""}
+                onChange={(e) => {
+                  const no = e.target.value.replace(/\D/g, "");
+                  setReferenceDetails((prev) => ({
+                    ...prev,
+                    hhc_team_member_no: no,
+                  }));
+                  setFormData((prev) => ({
+                    ...prev,
+                    ref: `${referenceDetails.hhc_team_member || ""},${no}`,
+                    reference_type: "hhc_team_member",
+                  }));
+                }}
+              />
+            </div>
+          </div>
+        );
       default:
         return null;
     }
@@ -2968,6 +3086,7 @@ export default function OpdPatientList() {
     setFormData((prev) => ({
       ...prev,
       reference_type: value,
+      ...(value === "hhc_team_member" && !prev.ref ? { ref: "HHC Team Member" } : {}),
     }));
   };
 
@@ -2988,6 +3107,8 @@ export default function OpdPatientList() {
     friendno: "",
     other: "",
     WOM: "",
+    hhc_team_member: "",
+    hhc_team_member_no: "",
   });
 
   const [oldPatientDetails, setOldPatientDetails] = useState({
@@ -4454,32 +4575,31 @@ export default function OpdPatientList() {
                       }}
                     >
                       <option value="">Choose Reference</option>
+                      <option value="aggregators">Aggregators</option>
+                      <option value="awareness_lecture">
+                        Awareness Lecture
+                      </option>
+                      <option value="brand_ambassador">Brand Ambassador</option>
+                      <option value="campaign">Campaign</option>
+                      <option value="dr_privilege_card">Doctor's Privilege Card</option>
+                      <option value="MediaRef">Entertainment Media</option>
                       <option value="family_friends">Family / Friends</option>
+                      <option value="hhc_branch">
+                        Healing Hands Clinic Branch
+                      </option>
+                      <option value="hhc_board">HHC Board On Building</option>
+                      <option value="hhc_team_member">HHC Team Member</option>
+                      <option value="treated_past">
+                        I Was Treated Here In Past
+                      </option>
+                      <option value="internet">Internet / Social Media</option>
+                      <option value="newspaper">Newspaper / Magazine</option>
+                      <option value="other">Other</option>
                       <option value="dr_ref">Referred By Another Doctor</option>
                       <option value="old_ref">
                         Referred By Another Patient
                       </option>
-                      <option value="internet">Internet / Social Media</option>
-                      <option value="MediaRef">Entertainment Media</option>
                       <option value="TVShow">Tv Show</option>
-                      <option value="newspaper">Newspaper / Magazine</option>
-                      <option value="awareness_lecture">
-                        Awareness Lecture
-                      </option>
-                      <option value="hhc_board">HHC Board On Building</option>
-                      <option value="treated_past">
-                        I Was Treated Here In Past
-                      </option>
-                      <option value="hhc_branch">
-                        Healing Hands Clinic Branch
-                      </option>
-                      <option value="aggregators">Aggregators</option>
-                      <option value="dr_privilege_card">
-                        Doctor's Privilege Card
-                      </option>
-                      <option value="campaign">Campaign</option>
-                      <option value="brand_ambassador">Brand Ambassador</option>
-                      <option value="other">Other</option>
                     </Form.Select>
                   </div>
                   <div className="flex">{renderReferenceDetails()}</div>
@@ -4794,21 +4914,20 @@ export default function OpdPatientList() {
                         headerClassName="datatable-header-center"
                         body={(rowData) => {
                           let displayAge = "-";
+                          const calculated = calculateAge(rowData.birth_date);
                           if (
+                            calculated !== null &&
+                            calculated !== undefined &&
+                            calculated !== "" &&
+                            !isNaN(calculated)
+                          ) {
+                            displayAge = calculated;
+                          } else if (
                             rowData.age &&
                             !isNaN(rowData.age) &&
                             rowData.age < 150
                           ) {
                             displayAge = rowData.age;
-                          } else {
-                            const calculated = calculateAge(rowData.birth_date);
-                            if (
-                              calculated !== null &&
-                              calculated !== undefined &&
-                              calculated !== ""
-                            ) {
-                              displayAge = calculated;
-                            }
                           }
                           return (
                             <span className="selectable-text">

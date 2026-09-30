@@ -70,6 +70,73 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors 
     return isNaN(parsed) ? 0 : Math.floor(parsed / 1000);
   };
 
+  const calculatePatientAge = (birthDate, targetDateStr, fallbackAge) => {
+    if (!birthDate) return fallbackAge || "";
+
+    let refDate = new Date();
+    if (targetDateStr) {
+      let normalizedTarget = targetDateStr;
+      if (typeof targetDateStr === "string" && /^\d{2}[-/]\d{2}[-/]\d{4}$/.test(targetDateStr)) {
+        const parts = targetDateStr.split(/[-/]/);
+        normalizedTarget = `${parts[2]}-${parts[1]}-${parts[0]}`;
+      }
+      const parsedRef = new Date(normalizedTarget);
+      if (!isNaN(parsedRef.getTime())) {
+        refDate = parsedRef;
+      }
+    }
+
+    const trimmed = String(birthDate).trim();
+
+    // If birthDate is just a 4-digit year like "2000"
+    if (/^\d{4}$/.test(trimmed)) {
+      const birthYear = parseInt(trimmed, 10);
+      const age = refDate.getFullYear() - birthYear;
+      return age >= 0 ? age : (fallbackAge || "");
+    }
+
+    let formattedDate = trimmed;
+    if (formattedDate.includes("/")) {
+      const parts = formattedDate.split("/");
+      if (parts[0].length === 4) {
+        formattedDate = `${parts[0]}-${parts[1]}-${parts[2]}`;
+      } else if (parts[2] && parts[2].length >= 4) {
+        formattedDate = `${parts[2].slice(0, 4)}-${parts[1]}-${parts[0]}`;
+      }
+    } else if (formattedDate.includes("-")) {
+      const parts = formattedDate.split("-");
+      if (parts[0].length === 4) {
+        formattedDate = `${parts[0]}-${parts[1]}-${parts[2]}`;
+      } else if (parts[2] && parts[2].length >= 4) {
+        formattedDate = `${parts[2].slice(0, 4)}-${parts[1]}-${parts[0]}`;
+      }
+    } else if (/^\d{8}$/.test(formattedDate)) {
+      const dPart = formattedDate.substring(0, 2);
+      const mPart = formattedDate.substring(2, 4);
+      const yPart = formattedDate.substring(4, 8);
+      formattedDate = `${yPart}-${mPart}-${dPart}`;
+    }
+
+    const birth = new Date(formattedDate);
+    if (isNaN(birth.getTime())) return fallbackAge || "";
+
+    let age = refDate.getFullYear() - birth.getFullYear();
+    const monthDiff = refDate.getMonth() - birth.getMonth();
+
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && refDate.getDate() < birth.getDate())
+    ) {
+      age--;
+    }
+
+    return age >= 0 ? age : (fallbackAge || "");
+  };
+
+  const birthDate = d.birth_date || d.patient_birth_date || formData?.birth_date || formData?.patient_birth_date;
+  const surgeryOrAdmissionDate = d.doa || d.DOA || d.dod || d.DOD || d.surgery_date;
+  const patientAge = calculatePatientAge(birthDate, surgeryOrAdmissionDate, d.patient_age || formData?.age);
+
   const qrData = {
     timeStamp: parseLocalDOAToUnix(d.doa || d.DOA),
     branchName: d.patient_location || formData.patient_location || sitelocation || "",
@@ -646,10 +713,10 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors 
                     })()}
                     {d.patient_name || formData.name || ""}
                   </td>
-                  <td style={{ width: "50%" }}><b>UHID. NO : </b>{d.Uid_no || formData.Uid_no || ""}</td>
+                  <td style={{ width: "50%" }}><b>UID NO. : </b>{d.Uid_no || formData.Uid_no || ""}</td>
                 </tr>
                 <tr>
-                  <td style={{ width: "50%", borderRight: "0px" }}><b>SEX : </b>{d.patient_sex || formData.sex || ""}&nbsp;&nbsp;<b>Age : </b>{d.patient_age || formData.age || ""}&nbsp;&nbsp;<b>Height : </b>{d.height || historyData?.height_feet || ""}cm&nbsp;&nbsp;<b> Weight : </b>{d.weight || historyData?.weight_kg || ""}kg</td>
+                  <td style={{ width: "50%", borderRight: "0px" }}><b>SEX : </b>{d.patient_sex || formData?.sex || ""}&nbsp;&nbsp;<b>Age : </b>{patientAge}&nbsp;&nbsp;<b>Height : </b>{d.height || historyData?.height_feet || ""}cm&nbsp;&nbsp;<b> Weight : </b>{d.weight || historyData?.weight_kg || ""}kg</td>
                   <td style={{ width: "50%" }}><b>PATIENT'S IPD NO. : </b>{d.ipd_no || d.IPDNo || ""}</td>
                 </tr>
                 <tr>

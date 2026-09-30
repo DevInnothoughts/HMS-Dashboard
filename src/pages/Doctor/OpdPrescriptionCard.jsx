@@ -363,7 +363,6 @@ const OpdPrescriptionCard = ({
                 Assistant Doctor <span className="text-danger">*</span>
               </Form.Label>
               <Form.Select
-                disabled={prescriptionData.no_medicines_prescribed}
                 value={
                   (prescriptionData.prescription_type === "Urology"
                     ? prescriptionData.udoctor_id
@@ -810,7 +809,6 @@ const OpdPrescriptionCard = ({
                 Next Appointment Type <span className="text-danger">*</span>
               </Form.Label>
               <Form.Select
-                disabled={prescriptionData.no_medicines_prescribed}
                 value={prescriptionData.patient_type || ""}
                 onChange={(e) =>
                   handlePrescriptionChange("patient_type", e.target.value)
@@ -849,7 +847,6 @@ const OpdPrescriptionCard = ({
                   handlePrescriptionChange("next-appo-date", e.target.value)
                 }
                 disabled={
-                  prescriptionData.no_medicines_prescribed ||
                   prescriptionData.patient_type === "surgery_patient" ||
                   prescriptionData.patient_type === "nofollowupappointment"
                 }

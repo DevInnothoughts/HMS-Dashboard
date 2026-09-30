@@ -18,12 +18,14 @@ import {
   Tooltip,
 } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
+import { FaStethoscope } from "react-icons/fa";
 import PatientHistoryCard from "./PatientHistoryCard";
 import PersonalDetailsCard from "./PersonalDetailsCard";
 import DiagnosisCard from "./DiagnosisCard";
 import DiagnosisPrintView from "./DiagnosisPrintView";
 import FollowUpPrintView from "./FollowUpPrintView";
 import FollowUpCard from "./FollowUpCard";
+import PostOpCard from "./PostOpCard";
 // import OtherTestsCard from "./OtherTestsCard";
 import ProctoscopyCard from "./ProctoscopyCard";
 import OpdPrescriptionCard from "./OpdPrescriptionCard";
@@ -251,6 +253,67 @@ const Toast = Swal.mixin({
   timer: 3000,
   timerProgressBar: true,
 });
+
+const calculateAge = (birthDate, referenceDate = null) => {
+  if (!birthDate) return "";
+
+  let refDate = new Date();
+  if (referenceDate) {
+    let normalizedTarget = referenceDate;
+    if (typeof referenceDate === "string" && /^\d{2}[-/]\d{2}[-/]\d{4}$/.test(referenceDate)) {
+      const parts = referenceDate.split(/[-/]/);
+      normalizedTarget = `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+    const parsedRef = new Date(normalizedTarget);
+    if (!isNaN(parsedRef.getTime())) {
+      refDate = parsedRef;
+    }
+  }
+
+  const trimmed = String(birthDate).trim();
+  if (/^\d{4}$/.test(trimmed)) {
+    const birthYear = parseInt(trimmed, 10);
+    const age = refDate.getFullYear() - birthYear;
+    return age >= 0 ? age : "";
+  }
+
+  let formattedDate = trimmed;
+  if (formattedDate.includes("/")) {
+    const parts = formattedDate.split("/");
+    if (parts[0].length === 4) {
+      formattedDate = `${parts[0]}-${parts[1]}-${parts[2]}`;
+    } else if (parts[2] && parts[2].length >= 4) {
+      formattedDate = `${parts[2].slice(0, 4)}-${parts[1]}-${parts[0]}`;
+    }
+  } else if (formattedDate.includes("-")) {
+    const parts = formattedDate.split("-");
+    if (parts[0].length === 4) {
+      formattedDate = `${parts[0]}-${parts[1]}-${parts[2]}`;
+    } else if (parts[2] && parts[2].length >= 4) {
+      formattedDate = `${parts[2].slice(0, 4)}-${parts[1]}-${parts[0]}`;
+    }
+  } else if (/^\d{8}$/.test(formattedDate)) {
+    const dPart = formattedDate.substring(0, 2);
+    const mPart = formattedDate.substring(2, 4);
+    const yPart = formattedDate.substring(4, 8);
+    formattedDate = `${yPart}-${mPart}-${dPart}`;
+  }
+
+  const birth = new Date(formattedDate);
+  if (isNaN(birth.getTime())) return "";
+
+  let age = refDate.getFullYear() - birth.getFullYear();
+  const monthDiff = refDate.getMonth() - birth.getMonth();
+
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && refDate.getDate() < birth.getDate())
+  ) {
+    age--;
+  }
+
+  return age >= 0 ? age : "";
+};
 
 const OpdPatientMedicalRecords = () => {
   const { state } = useLocation();
@@ -646,9 +709,9 @@ const OpdPatientMedicalRecords = () => {
         const toArray = (str) =>
           str
             ? str
-                .split(",")
-                .map((s) => s.trim())
-                .filter(Boolean)
+              .split(",")
+              .map((s) => s.trim())
+              .filter(Boolean)
             : [];
         const symptomsArr = toArray(d.symptoms);
 
@@ -1025,6 +1088,8 @@ const OpdPatientMedicalRecords = () => {
     other_meds: "",
     surgical_advice: "",
     general_comment: "",
+    video_proctoscopy: "",
+    video_proctoscopy_reason: "",
     has_surgical_date: false,
     surgical_date: "0000-00-00",
     categories: [], // Cashless, Reimbursement, Charity, No Insurance
@@ -1079,6 +1144,8 @@ const OpdPatientMedicalRecords = () => {
           medicines_prescribed: toArray(d.medicines_prescribed),
           categories: toArray(d.categories),
           surgical_advice: d.advice || "",
+          video_proctoscopy: d.video_proctoscopy || "",
+          video_proctoscopy_reason: d.video_proctoscopy_reason || "",
           speciality_data: {
             ...d.speciality_data,
             piles: toArray(d.speciality_data?.piles),
@@ -1216,6 +1283,21 @@ const OpdPatientMedicalRecords = () => {
       errors.insurance_company_id = true;
     }
 
+    if (
+      !diagnosisData.video_proctoscopy ||
+      String(diagnosisData.video_proctoscopy).trim() === ""
+    ) {
+      errors.video_proctoscopy = true;
+    }
+
+    if (
+      diagnosisData.video_proctoscopy === "No" &&
+      (!diagnosisData.video_proctoscopy_reason ||
+        String(diagnosisData.video_proctoscopy_reason).trim() === "")
+    ) {
+      errors.video_proctoscopy_reason = true;
+    }
+
     if (!hasData || Object.keys(errors).length > 0) {
       if (!hasData) {
         errors.diagnosis_text = true;
@@ -1223,6 +1305,7 @@ const OpdPatientMedicalRecords = () => {
         errors.consultant_doctor = true;
         errors.assistance_doctor = true;
         errors.speciality_data = true;
+        errors.video_proctoscopy = true;
       }
       Toast.fire({
         icon: "warning",
@@ -1248,6 +1331,10 @@ const OpdPatientMedicalRecords = () => {
           },
           body: JSON.stringify({
             ...diagnosisData,
+            videoproctoscopy: {
+              done: diagnosisData.video_proctoscopy || "",
+              reason: diagnosisData.video_proctoscopy_reason || "",
+            },
             speciality_data: Object.fromEntries(
               Object.entries(diagnosisData.speciality_data || {}).filter(
                 ([_, v]) =>
@@ -2305,6 +2392,11 @@ const OpdPatientMedicalRecords = () => {
         finalPrefix = "";
       }
 
+      const calculatedCurrentAge = calculateAge(patient.birth_date);
+      const effectiveAge = (calculatedCurrentAge !== "" && calculatedCurrentAge !== null && calculatedCurrentAge !== undefined && !isNaN(calculatedCurrentAge))
+        ? String(calculatedCurrentAge)
+        : (patient.age ? String(patient.age) : "");
+
       setFormData({
         Uid_no: patient.Uid_no || patient.uid || "",
         date: patient.date || "",
@@ -2321,7 +2413,7 @@ const OpdPatientMedicalRecords = () => {
         identity: patient.identity || "",
         identityNumber: patient.identityNumber || "",
         birth_date: patient.birth_date || "",
-        age: patient.age || "",
+        age: effectiveAge,
         occupation: patient.occupation || "",
         companyname: patient.companyname || "",
         reference_type: patient.reference_type || "",
@@ -2338,7 +2430,7 @@ const OpdPatientMedicalRecords = () => {
       setDischargeData((prev) => ({
         ...prev,
         patient_name: patient.name || "",
-        patient_age: patient.age || "",
+        patient_age: effectiveAge,
         patient_sex: patient.sex || "",
         address: patient.address || "",
       }));
@@ -2400,6 +2492,15 @@ const OpdPatientMedicalRecords = () => {
       String(dischargeData.discharge_type).trim() === ""
     ) {
       errors.discharge_type = true;
+    }
+    if (
+      !dischargeData.surgery_type ||
+      (Array.isArray(dischargeData.surgery_type) &&
+        dischargeData.surgery_type.length === 0) ||
+      (!Array.isArray(dischargeData.surgery_type) &&
+        String(dischargeData.surgery_type).trim() === "")
+    ) {
+      errors.surgery_type = true;
     }
 
     if (Object.keys(errors).length > 0) {
@@ -2605,35 +2706,6 @@ const OpdPatientMedicalRecords = () => {
       console.error("Error parsing date:", error);
       return null;
     }
-  };
-
-  const calculateAge = (birthDate) => {
-    if (!birthDate) return "";
-    let formattedDate = birthDate;
-    if (typeof birthDate === "string") {
-      if (birthDate.includes("/")) {
-        const [day, month, year] = birthDate.split("/");
-        formattedDate = `${year}-${month}-${day}`;
-      } else if (birthDate.includes("-")) {
-        const parts = birthDate.split("-");
-        if (parts[0].length !== 4) {
-          const [day, month, year] = parts;
-          formattedDate = `${year}-${month}-${day}`;
-        }
-      }
-    }
-    const today = new Date();
-    const birth = new Date(formattedDate);
-    if (isNaN(birth.getTime())) return "";
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < birth.getDate())
-    ) {
-      age--;
-    }
-    return age < 0 ? 0 : age;
   };
 
   useEffect(() => {
@@ -3044,6 +3116,16 @@ const OpdPatientMedicalRecords = () => {
           errors["next-appo-date"] = true;
         }
       }
+    } else {
+      if (
+        prescriptionData.patient_type &&
+        prescriptionData.patient_type !== "nofollowupappointment" &&
+        prescriptionData.patient_type !== "surgery_patient"
+      ) {
+        if (!prescriptionData["next-appo-date"]) {
+          errors["next-appo-date"] = true;
+        }
+      }
     }
 
     if (Object.keys(errors).length > 0) {
@@ -3130,6 +3212,14 @@ const OpdPatientMedicalRecords = () => {
 
   const handleDischargeChange = (field, value) => {
     setDischargeData((prev) => ({ ...prev, [field]: value }));
+    setValidationErrors((prev) => {
+      if (prev && prev[field]) {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      }
+      return prev;
+    });
 
     // Auto-populate local care and note/advice when surgery type is selected/deselected
     if (field === "surgery_type" && Array.isArray(value)) {
@@ -3240,9 +3330,10 @@ const OpdPatientMedicalRecords = () => {
 
   const tabs = [
     { id: "personal", label: "Personal", icon: "user" },
-    { id: "patient-history", label: "History", icon: "activity" },
+    { id: "patient-history", label: "History", icon: "stethoscope" },
     { id: "diagnosis", label: "Diagnosis", icon: "clipboard" },
     { id: "follow-up", label: "Follow Up", icon: "calendar" },
+    { id: "post-op", label: "Post Op", icon: "activity" },
     // { id: "other-tests", label: "Other Tests", icon: "file-text" },
     { id: "proctoscopy", label: "Proctoscopy", icon: "search" },
     { id: "opd-prescription", label: "Prescription", icon: "edit-3" },
@@ -3280,6 +3371,8 @@ const OpdPatientMedicalRecords = () => {
           followUpData.present_complaints &&
           followUpData.present_complaints.trim() !== ""
         );
+      case "post-op":
+        return false;
       case "other-tests":
         return previousTestsList && previousTestsList.length > 0;
       case "proctoscopy":
@@ -3488,7 +3581,11 @@ const OpdPatientMedicalRecords = () => {
                               color: completed ? "#10b981" : "#64748b",
                             }}
                           >
-                            <FeatherIcon icon={tab.icon} size="22" />
+                            {tab.icon === "stethoscope" ? (
+                              <FaStethoscope size={22} />
+                            ) : (
+                              <FeatherIcon icon={tab.icon} size={22} />
+                            )}
                           </div>
                           <div className="flex-grow-1">
                             <h6
@@ -3596,10 +3693,14 @@ const OpdPatientMedicalRecords = () => {
                       color: "#fff",
                     }}
                   >
-                    <FeatherIcon
-                      icon={tabs.find((t) => t.id === activeTab)?.icon}
-                      size="24"
-                    />
+                    {tabs.find((t) => t.id === activeTab)?.icon === "stethoscope" ? (
+                      <FaStethoscope size={22} />
+                    ) : (
+                      <FeatherIcon
+                        icon={tabs.find((t) => t.id === activeTab)?.icon}
+                        size="24"
+                      />
+                    )}
                   </div>
                   <div>
                     <h4 className="fw-bold m-0" style={{ color: "#2c3e50" }}>
@@ -3648,8 +3749,6 @@ const OpdPatientMedicalRecords = () => {
                           );
                           if (e.target.checked) {
                             handlePrescriptionChange("medicines", []);
-                            handlePrescriptionChange("next-appo-date", "");
-                            handlePrescriptionChange("patient_type", "");
                             handlePrescriptionChange(
                               "prescription_type",
                               "OPD_Type",
@@ -3734,6 +3833,12 @@ const OpdPatientMedicalRecords = () => {
                     onPrintFollowUp={handlePrintFollowUp}
                     loading={loading}
                     validationErrors={validationErrors}
+                  />
+                )}
+                {activeTab === "post-op" && (
+                  <PostOpCard
+                    formData={formData}
+                    loading={loading}
                   />
                 )}
                 {/* {activeTab === "other-tests" && (
@@ -3832,30 +3937,31 @@ const OpdPatientMedicalRecords = () => {
                   "patient-history",
                   "diagnosis",
                   "follow-up",
+                  "post-op",
                   "other-tests",
                   "proctoscopy",
                   "opd-prescription",
                   "surgery-details",
                   "discharge-card",
                 ].includes(activeTab) && (
-                  <div className="text-center py-5 animate__animated animate__fadeIn">
-                    <div
-                      className="d-inline-flex p-4 rounded-circle mb-4"
-                      style={{ backgroundColor: "#f0f4f8" }}
-                    >
-                      <FeatherIcon
-                        icon="clock"
-                        size="48"
-                        className="text-muted"
-                      />
+                    <div className="text-center py-5 animate__animated animate__fadeIn">
+                      <div
+                        className="d-inline-flex p-4 rounded-circle mb-4"
+                        style={{ backgroundColor: "#f0f4f8" }}
+                      >
+                        <FeatherIcon
+                          icon="clock"
+                          size="48"
+                          className="text-muted"
+                        />
+                      </div>
+                      <h4 className="text-muted fw-bold">Coming Soon</h4>
+                      <p className="text-muted">
+                        The {tabs.find((t) => t.id === activeTab).label} section
+                        is under development.
+                      </p>
                     </div>
-                    <h4 className="text-muted fw-bold">Coming Soon</h4>
-                    <p className="text-muted">
-                      The {tabs.find((t) => t.id === activeTab).label} section
-                      is under development.
-                    </p>
-                  </div>
-                )}
+                  )}
               </Card.Body>
             </Card>
           )}
