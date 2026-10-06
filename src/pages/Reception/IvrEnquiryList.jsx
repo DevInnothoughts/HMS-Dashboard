@@ -591,6 +591,9 @@ export default function IvrEnquiryList({ isTab = false }) {
     if (status === "Visited") {
       badgeBg = "#e0f2f1";
       badgeColor = "#004d40";
+    } else if (status === "Surgery Done") {
+      badgeBg = "#fffde7";
+      badgeColor = "#5d4037";
     } else if (status === "Not Visited") {
       badgeBg = "#efebe9";
       badgeColor = "#4e342e";
@@ -1187,6 +1190,14 @@ export default function IvrEnquiryList({ isTab = false }) {
                       currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
                       responsiveLayout="scroll"
                       className="datatable-compact-style datatable-medium-small"
+                      rowClassName={(rowData) => {
+                        const status =
+                          rowData.dynamic_status || rowData.enquiry_status;
+                        return {
+                          "enquiry-row-visited": status === "Visited",
+                          "enquiry-row-surgery-done": status === "Surgery Done",
+                        };
+                      }}
                     >
                       <Column
                         field="ivr_id"

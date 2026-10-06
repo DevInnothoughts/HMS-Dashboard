@@ -3839,6 +3839,9 @@ const OpdPatientMedicalRecords = () => {
                   <PostOpCard
                     formData={formData}
                     loading={loading}
+                    doctors={doctors}
+                    currentLocation={currentLocation}
+                    baseUrl={BASE_URL}
                   />
                 )}
                 {/* {activeTab === "other-tests" && (

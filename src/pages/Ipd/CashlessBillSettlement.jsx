@@ -359,31 +359,31 @@ const CashlessBillSettlement = () => {
           fetchedData.map(async (item) => {
             const rawComp =
               item.companyname &&
-              item.companyname !== "0" &&
-              item.companyname !== "NULL" &&
-              item.companyname !== "null"
+                item.companyname !== "0" &&
+                item.companyname !== "NULL" &&
+                item.companyname !== "null"
                 ? item.companyname
                 : item.companyName &&
-                    item.companyName !== "0" &&
-                    item.companyName !== "NULL"
+                  item.companyName !== "0" &&
+                  item.companyName !== "NULL"
                   ? item.companyName
                   : item.insurance_company_name &&
-                      item.insurance_company_name !== "0"
+                    item.insurance_company_name !== "0"
                     ? item.insurance_company_name
                     : item.invoice_insurancecompany &&
-                        item.invoice_insurancecompany !== "0"
+                      item.invoice_insurancecompany !== "0"
                       ? item.invoice_insurancecompany
                       : item.insurancecompany || item.insurance_name || "-";
 
             const rawTpa =
               item.tpaname &&
-              item.tpaname !== "0" &&
-              item.tpaname !== "NULL" &&
-              item.tpaname !== "null"
+                item.tpaname !== "0" &&
+                item.tpaname !== "NULL" &&
+                item.tpaname !== "null"
                 ? item.tpaname
                 : item.tpa_name &&
-                    item.tpa_name !== "0" &&
-                    item.tpa_name !== "NULL"
+                  item.tpa_name !== "0" &&
+                  item.tpa_name !== "NULL"
                   ? item.tpa_name
                   : item.invoice_tpa && item.invoice_tpa !== "0"
                     ? item.invoice_tpa
@@ -497,6 +497,43 @@ const CashlessBillSettlement = () => {
             };
           }),
         );
+        // Sort data: latest date first, and higher bill number at top
+        processed.sort((a, b) => {
+          const rawDateA = a.creationdate || a.creation_date || a.date;
+          const rawDateB = b.creationdate || b.creation_date || b.date;
+
+          const mA = rawDateA ? moment(rawDateA) : null;
+          const mB = rawDateB ? moment(rawDateB) : null;
+
+          const validA = mA && mA.isValid();
+          const validB = mB && mB.isValid();
+
+          if (validA && validB) {
+            const dayA = mA.format("YYYY-MM-DD");
+            const dayB = mB.format("YYYY-MM-DD");
+            if (dayA !== dayB) {
+              return dayB.localeCompare(dayA); // Latest date first
+            }
+          } else if (validA && !validB) {
+            return -1;
+          } else if (!validA && validB) {
+            return 1;
+          }
+
+          // Same date or both invalid: higher bill no at top
+          const billA =
+            parseInt(
+              String(a.invoiceid || a.invoice_id || "").replace(/\D/g, ""),
+              10,
+            ) || 0;
+          const billB =
+            parseInt(
+              String(b.invoiceid || b.invoice_id || "").replace(/\D/g, ""),
+              10,
+            ) || 0;
+          return billB - billA;
+        });
+
         setData(processed);
       } else {
         setData([]);
@@ -612,6 +649,29 @@ const CashlessBillSettlement = () => {
   };
 
   const handleOpenModal = (rowData) => {
+    const isMirror =
+      rowData.status === "Interbranch-Bill" ||
+      (rowData.interbranch_id !== null &&
+        rowData.interbranch_id !== undefined &&
+        rowData.interbranch_id !== "" &&
+        rowData.interbranch_id !== 0 &&
+        rowData.interbranch_id !== "0");
+
+    const isDpRoad =
+      String(currentLocation || getLocationFromStorage() || "")
+        .trim()
+        .toLowerCase() === "dp road";
+
+    if (isMirror && !isDpRoad) {
+      Swal.fire({
+        icon: "warning",
+        title: "Action Restricted",
+        text: "Settlement for interbranch bills can only be added at the billing branch or DP Road.",
+        confirmButtonColor: "#00acc1",
+      });
+      return;
+    }
+
     const invoiceId = rowData.invoiceid || rowData.invoice_id || "";
     const totalBill = rowData.totalamt || 0;
     const authoAmt =
@@ -1128,22 +1188,52 @@ const CashlessBillSettlement = () => {
                       header="Action"
                       headerClassName="datatable-header-center"
                       style={{ width: "90px", border: "1px solid #4dd0e1" }}
-                      body={(rowData) => (
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          style={{
-                            borderRadius: "6px",
-                            padding: "8px 10px",
-                            backgroundColor: "#e53935",
-                            borderColor: "#d32f2f",
-                          }}
-                          title="Add Cashless Details"
-                          onClick={() => handleOpenModal(rowData)}
-                        >
-                          <FeatherIcon icon="plus" size={14} />
-                        </Button>
-                      )}
+                      body={(rowData) => {
+                        const isMirror =
+                          rowData.status === "Interbranch-Bill" ||
+                          (rowData.interbranch_id !== null &&
+                            rowData.interbranch_id !== undefined &&
+                            rowData.interbranch_id !== "" &&
+                            rowData.interbranch_id !== 0 &&
+                            rowData.interbranch_id !== "0");
+
+                        const isDpRoad =
+                          String(
+                            currentLocation || getLocationFromStorage() || "",
+                          )
+                            .trim()
+                            .toLowerCase() === "dp road";
+
+                        const isDisabled = isMirror && !isDpRoad;
+
+                        return (
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            disabled={isDisabled}
+                            style={{
+                              borderRadius: "6px",
+                              padding: "8px 10px",
+                              backgroundColor: isDisabled
+                                ? "#b0bec5"
+                                : "#e53935",
+                              borderColor: isDisabled ? "#b0bec5" : "#d32f2f",
+                              cursor: isDisabled ? "not-allowed" : "pointer",
+                              opacity: isDisabled ? 0.65 : 1,
+                            }}
+                            title={
+                              isDisabled
+                                ? "Action restricted: Interbranch cashless settlements can only be added at the billing branch or DP Road."
+                                : "Add Cashless Details"
+                            }
+                            onClick={() =>
+                              !isDisabled && handleOpenModal(rowData)
+                            }
+                          >
+                            <FeatherIcon icon="plus" size={14} />
+                          </Button>
+                        );
+                      }}
                     />
                   </DataTable>
                 )}
@@ -1173,7 +1263,7 @@ const CashlessBillSettlement = () => {
             style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}
           >
             <FeatherIcon icon="edit" className="me-2" size="16" />
-            Add Cashless Bill Details
+            Add Cashless Bill Settlement Details
           </Modal.Title>
         </Modal.Header>
         <Form id="settlement-form" onSubmit={handleSettlementSubmit}>

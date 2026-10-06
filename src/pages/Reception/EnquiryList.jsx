@@ -515,22 +515,10 @@ export default function EnquiryList({ isTab = false }) {
   }, [fetchEnquiriesData, currentLocation]);
 
   const handleStatusFilterChange = (e) => {
-    const value = e.target.value;
-    const updatedFilters = {
-      ...filters1,
-    };
-
-    if (value) {
-      updatedFilters.enquiry_status = {
-        value,
-        matchMode: FilterMatchMode.EQUALS,
-      };
-    } else {
-      delete updatedFilters.enquiry_status;
-    }
-
-    setStatusFilter(value);
-    setFilters1(updatedFilters);
+    // Status is filtered on the data itself (see DataTable value) because the
+    // displayed status is dynamic_status, not the raw enquiry_status column.
+    setStatusFilter(e.target.value);
+    setFirst(0);
   };
 
   const renderStatusHeader = () => (
@@ -897,7 +885,15 @@ export default function EnquiryList({ isTab = false }) {
                     </div>
                   ) : (
                     <DataTable
-                      value={filteredEnquiries}
+                      value={
+                        statusFilter
+                          ? filteredEnquiries.filter(
+                              (item) =>
+                                (item.dynamic_status || item.enquiry_status) ===
+                                statusFilter,
+                            )
+                          : filteredEnquiries
+                      }
                       paginator
                       rows={rows}
                       first={first}
@@ -918,20 +914,14 @@ export default function EnquiryList({ isTab = false }) {
                       paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
                       currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
                       className="p-datatable-customers datatable-compact-style datatable-medium-small"
-                      rowClassName={(rowData, { rowIndex }) => ({
-                        style: {
-                          backgroundColor:
-                            rowIndex % 2 === 0 ? "#e0f7fa" : "white",
-                          transition: "background-color 0.3s ease",
-                        },
-                        onMouseOver: (e) => {
-                          e.currentTarget.style.backgroundColor = "#b2ebf2";
-                        },
-                        onMouseOut: (e) => {
-                          e.currentTarget.style.backgroundColor =
-                            rowIndex % 2 === 0 ? "#e0f7fa" : "white";
-                        },
-                      })}
+                      rowClassName={(rowData) => {
+                        const status =
+                          rowData.dynamic_status || rowData.enquiry_status;
+                        return {
+                          "enquiry-row-visited": status === "Visited",
+                          "enquiry-row-surgery-done": status === "Surgery Done",
+                        };
+                      }}
                     >
                       <Column
                         field="srNo"

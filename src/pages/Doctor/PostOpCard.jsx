@@ -1,8 +1,11 @@
 /* eslint-disable react/prop-types, no-unused-vars */
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Row, Col, Form, Button, Table, Spinner } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 import Swal from "sweetalert2";
+import { decodeJwt } from "../Utility/decode-jwt";
+
+const BASE_URL = "http://194.195.117.79:5100/api";
 
 // --- Clinical Data Constants ---
 const SYMPTOMS_LIST = [
@@ -144,36 +147,136 @@ const ADVICE_OPTIONS = [
   "Pelvic floor rest",
 ];
 
-const PostOpCard = ({ formData = {}, loading = false }) => {
-  const [historyList, setHistoryList] = useState([]);
+const getOrdinal = (n) => {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+};
 
-  const [currentVisit, setCurrentVisit] = useState({
-    visitNo: "1st PO",
-    date: new Date().toISOString().split("T")[0],
-    day: "Day 1",
-    complaints: [],
-    otherSymptom: "",
-    clinicalNotes: "",
-    painScore: null,
-    painLocation: "",
-    painNature: "",
-    painTrend: "",
-    painSinceLastVisit: "",
-    painInterferes: "",
-    woundGrade: "0",
-    woundSubgrade: "",
-    woundNotes: "",
-    medicinesStatus: [],
-    medicinesNotes: "",
-    investigations: [],
-    investigationSpecify: "",
-    ruleOutUnderlying: "",
-    ruleOutDetails: "",
-    adviceList: [],
-    adviceNotes: "",
-    reviewDays: "",
-    earlierReviewIfWorse: false,
-  });
+// Available post-op visit round options (1st PO to 15th PO)
+const PO_VISIT_ROUNDS = Array.from({ length: 15 }, (_, i) => `${getOrdinal(i + 1)} PO`);
+
+// Available post-op day options
+const POST_OP_DAYS = [
+  { value: "Day 1", label: "Day 1 (Post-Op)" },
+  { value: "Day 2", label: "Day 2" },
+  { value: "Day 3", label: "Day 3" },
+  { value: "Day 4", label: "Day 4" },
+  { value: "Day 5", label: "Day 5" },
+  { value: "Day 7", label: "Day 7 (1 Week)" },
+  { value: "Day 10", label: "Day 10" },
+  { value: "Day 14", label: "Day 14 (2 Weeks)" },
+  { value: "Day 21", label: "Day 21 (3 Weeks)" },
+  { value: "Day 30", label: "Day 30 (1 Month)" },
+  { value: "Day 60", label: "Day 60 (2 Months)" },
+  { value: "Day 90", label: "Day 90 (3 months)" },
+  { value: "Day 120", label: "Day 120 (4 months)" },
+  { value: "Day 180", label: "Day 180 (6 months)" },
+];
+
+const defaultVisitState = {
+  postop_id: null,
+  consultantDoctor: "",
+  visitNo: "1st PO",
+  date: new Date().toISOString().split("T")[0],
+  day: "Day 1",
+  complaints: [],
+  otherSymptom: "",
+  clinicalNotes: "",
+  painScore: null,
+  painLocation: "",
+  painNature: "",
+  painTrend: "",
+  painSinceLastVisit: "",
+  painInterferes: "",
+  woundGrade: "0",
+  woundSubgrade: "",
+  woundNotes: "",
+  medicinesStatus: [],
+  medicinesNotes: "",
+  investigations: [],
+  investigationSpecify: "",
+  ruleOutUnderlying: "No",
+  ruleOutDetails: "",
+  adviceList: [],
+  adviceNotes: "",
+  reviewDays: null,
+  earlierReviewIfWorse: false,
+};
+
+const PostOpCard = ({
+  formData = {},
+  loading: parentLoading = false,
+  doctors = [],
+  currentLocation: propLocation,
+  baseUrl: propBaseUrl,
+}) => {
+  const [historyList, setHistoryList] = useState([]);
+  const [currentVisit, setCurrentVisit] = useState(defaultVisitState);
+  const [isSaving, setIsSaving] = useState(false);
+  const [fetchingHistory, setFetchingHistory] = useState(false);
+
+  const effectiveBaseUrl = propBaseUrl || BASE_URL;
+
+  const currentLocation = useMemo(() => {
+    if (propLocation && propLocation !== "default") return propLocation;
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const payload = decodeJwt(token);
+        if (payload && payload.jobLocation) return payload.jobLocation;
+      } catch (e) {
+        // ignore
+      }
+    }
+    const storedLoc = localStorage.getItem("location");
+    if (storedLoc && storedLoc !== "default") return storedLoc;
+    return "default";
+  }, [propLocation]);
+
+  const patientId = formData.patient_id || formData.id;
+
+  const fetchPostOpHistory = async () => {
+    if (!patientId || !currentLocation || currentLocation === "default") return;
+
+    setFetchingHistory(true);
+    try {
+      const response = await fetch(
+        `${effectiveBaseUrl}/V1/doctor/list-post-op-history/${patientId}?location=${encodeURIComponent(currentLocation)}`,
+        {
+          headers: {
+            location: currentLocation,
+            "x-hms-location": currentLocation,
+          },
+        }
+      );
+      const result = await response.json();
+      if (result.statusCode === 200 && Array.isArray(result.data)) {
+        setHistoryList(result.data);
+      }
+    } catch (err) {
+      console.error("Error fetching post-op history:", err);
+    } finally {
+      setFetchingHistory(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPostOpHistory();
+  }, [patientId, currentLocation]);
+
+  const getDoctorName = (docVal) => {
+    if (!docVal) return "—";
+    const found = doctors.find(
+      (d) =>
+        String(d.doctor_id) === String(docVal) ||
+        String(d.id) === String(docVal) ||
+        d.name === docVal ||
+        d.doctor_name === docVal
+    );
+    if (found) return found.name || found.doctor_name || docVal;
+    return docVal;
+  };
 
   const previousVisit = historyList.length > 0 ? historyList[historyList.length - 1] : null;
 
@@ -221,6 +324,7 @@ const PostOpCard = ({ formData = {}, loading = false }) => {
         investigations: exists
           ? prev.investigations.filter((i) => i !== inv)
           : [...prev.investigations, inv],
+        ...(exists && inv === "Other Investigation" ? { investigationSpecify: "" } : {}),
       };
     });
   };
@@ -276,7 +380,25 @@ const PostOpCard = ({ formData = {}, loading = false }) => {
     return alerts;
   }, [currentVisit, previousVisit]);
 
-  const handleSaveVisit = () => {
+  const handleSaveVisit = async () => {
+    if (!patientId) {
+      Swal.fire({
+        icon: "warning",
+        title: "Patient Required",
+        text: "Please select or open a patient record first before saving.",
+      });
+      return;
+    }
+
+    if (!currentLocation || currentLocation === "default") {
+      Swal.fire({
+        icon: "warning",
+        title: "Branch Location Missing",
+        text: "Branch location could not be determined. Please ensure your hospital branch location is set before saving.",
+      });
+      return;
+    }
+
     if (!currentVisit.complaints.length) {
       Swal.fire({
         icon: "warning",
@@ -286,31 +408,63 @@ const PostOpCard = ({ formData = {}, loading = false }) => {
       return;
     }
 
-    const newRecord = {
-      ...currentVisit,
-      id: `po-${Date.now()}`,
-    };
+    setIsSaving(true);
+    try {
+      const response = await fetch(
+        `${effectiveBaseUrl}/V1/doctor/save-post-op/${patientId}?location=${encodeURIComponent(currentLocation)}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            location: currentLocation,
+            "x-hms-location": currentLocation,
+          },
+          body: JSON.stringify({
+            ...currentVisit,
+            location: currentLocation,
+          }),
+        }
+      );
 
-    setHistoryList((prev) => [...prev, newRecord]);
+      const result = await response.json();
+      if (result.statusCode === 200) {
+        if (result.data?.postop_id) {
+          setCurrentVisit((prev) => ({
+            ...prev,
+            postop_id: result.data.postop_id,
+          }));
+        }
 
-    Swal.fire({
-      icon: "success",
-      title: "Saved!",
-      text: `${currentVisit.visitNo} (${currentVisit.day}) recorded successfully.`,
-      timer: 1800,
-      showConfirmButton: false,
-    });
+        Swal.fire({
+          icon: "success",
+          title: "Saved!",
+          text: `${currentVisit.visitNo} (${currentVisit.day}) recorded successfully.`,
+          timer: 1800,
+          showConfirmButton: false,
+        });
+
+        await fetchPostOpHistory();
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Save Failed",
+          text: result.message || "Failed to save post-op record.",
+        });
+      }
+    } catch (error) {
+      console.error("Error saving post-op record:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.message || "An error occurred while saving.",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleNewVisit = () => {
-    const nextVisitNumber = `${historyList.length + 1}${historyList.length === 0
-      ? "st"
-      : historyList.length === 1
-        ? "nd"
-        : historyList.length === 2
-          ? "rd"
-          : "th"
-      } PO`;
+    const nextVisitNumber = `${getOrdinal(historyList.length + 1)} PO`;
 
     const nextDay =
       historyList.length === 0
@@ -318,32 +472,120 @@ const PostOpCard = ({ formData = {}, loading = false }) => {
         : `Day ${historyList.length * 5 + 5}`;
 
     setCurrentVisit({
+      ...defaultVisitState,
+      consultantDoctor: currentVisit.consultantDoctor || "",
       visitNo: nextVisitNumber,
       date: new Date().toISOString().split("T")[0],
       day: nextDay,
-      complaints: [],
-      otherSymptom: "",
-      clinicalNotes: "",
-      painScore: null,
-      painLocation: "",
-      painNature: "",
-      painTrend: "",
-      painSinceLastVisit: "",
-      painInterferes: "",
-      woundGrade: "0",
-      woundSubgrade: "",
-      woundNotes: "",
-      medicinesStatus: [],
-      medicinesNotes: "",
-      investigations: [],
-      investigationSpecify: "",
-      ruleOutUnderlying: "No",
-      ruleOutDetails: "",
-      adviceList: [],
-      adviceNotes: "",
-      reviewDays: 7,
-      earlierReviewIfWorse: true,
     });
+  };
+
+  const handleLoadVisit = (item) => {
+    setCurrentVisit({
+      postop_id: item.postop_id || item.id || null,
+      consultantDoctor: (() => {
+        const val = item.consultantDoctor || item.consultant_doctor;
+        if (!val) return "";
+        const matched = doctors.find(
+          (d) => String(d.doctor_id) === String(val) || String(d.id) === String(val) || d.name === val || d.doctor_name === val
+        );
+        return matched ? String(matched.doctor_id ?? matched.id) : String(val);
+      })(),
+      visitNo: item.visitNo || item.po_visit_round || "1st PO",
+      date: item.date || item.visit_date || new Date().toISOString().split("T")[0],
+      day: item.day || item.post_op_day || "Day 1",
+      complaints: Array.isArray(item.complaints) ? item.complaints : [],
+      otherSymptom: item.otherSymptom || item.other_symptom || "",
+      clinicalNotes: item.clinicalNotes || item.clinical_notes || "",
+      painScore: item.painScore !== null && item.painScore !== undefined ? item.painScore : null,
+      painLocation: item.painLocation || item.pain_location || "",
+      painNature: item.painNature || item.pain_nature || "",
+      painTrend: item.painTrend || item.pain_trend || "",
+      painSinceLastVisit: item.painSinceLastVisit || item.pain_since_last_visit || "",
+      painInterferes: item.painInterferes || item.pain_interferes || "",
+      woundGrade: item.woundGrade || (item.wound_assessment && item.wound_assessment.grade) || "0",
+      woundSubgrade: item.woundSubgrade || (item.wound_assessment && item.wound_assessment.subgrade) || "",
+      woundNotes: item.woundNotes || (item.wound_assessment && item.wound_assessment.observations) || "",
+      medicinesStatus: Array.isArray(item.medicinesStatus)
+        ? item.medicinesStatus
+        : Array.isArray(item.medication_plan?.status)
+          ? item.medication_plan.status
+          : [],
+      medicinesNotes: item.medicinesNotes || item.medication_plan?.notes || "",
+      investigations: Array.isArray(item.investigations)
+        ? item.investigations
+        : Array.isArray(item.investigations_advised?.investigations)
+          ? item.investigations_advised.investigations
+          : [],
+      investigationSpecify: item.investigationSpecify || item.investigations_advised?.other_specify || "",
+      ruleOutUnderlying: item.ruleOutUnderlying || item.investigations_advised?.rule_out_underlying || "No",
+      ruleOutDetails: item.ruleOutDetails || item.investigations_advised?.rule_out_details || "",
+      adviceList: Array.isArray(item.adviceList)
+        ? item.adviceList
+        : Array.isArray(item.general_advice?.advice_list)
+          ? item.general_advice.advice_list
+          : [],
+      adviceNotes: item.adviceNotes || item.general_advice?.notes || "",
+      reviewDays:
+        item.reviewDays !== null && item.reviewDays !== undefined && item.reviewDays !== ""
+          ? Number(item.reviewDays)
+          : null,
+      earlierReviewIfWorse: Boolean(item.earlierReviewIfWorse || item.earlier_review_if_worse),
+    });
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleDeleteVisit = async (item) => {
+    const postopId = item.postop_id || item.id;
+    if (!postopId) return;
+
+    const confirm = await Swal.fire({
+      title: "Delete Record?",
+      text: `Are you sure you want to delete ${item.visitNo || "this post-op record"}?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    });
+
+    if (confirm.isConfirmed) {
+      try {
+        const response = await fetch(
+          `${effectiveBaseUrl}/V1/doctor/delete-post-op/${patientId}/${postopId}?location=${encodeURIComponent(currentLocation)}`,
+          {
+            method: "DELETE",
+            headers: {
+              location: currentLocation,
+              "x-hms-location": currentLocation,
+            },
+          }
+        );
+        const result = await response.json();
+        if (result.statusCode === 200) {
+          Swal.fire({
+            icon: "success",
+            title: "Deleted!",
+            text: "Post-op record has been removed.",
+            timer: 1500,
+            showConfirmButton: false,
+          });
+          if (currentVisit.postop_id === postopId) {
+            handleNewVisit();
+          }
+          await fetchPostOpHistory();
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: result.message || "Could not delete record.",
+          });
+        }
+      } catch (err) {
+        console.error("Error deleting post-op record:", err);
+      }
+    }
   };
 
   const currentDvprs =
@@ -377,8 +619,23 @@ const PostOpCard = ({ formData = {}, loading = false }) => {
             Post-Operative Evaluation
           </h5>
           <div className="d-flex align-items-center gap-2">
+            {currentVisit.postop_id && (
+              <span
+                className="badge d-inline-flex align-items-center px-2 py-8"
+                style={{
+                  backgroundColor: "#fff3cd",
+                  color: "#856404",
+                  borderRadius: "12px",
+                  fontSize: "11px",
+                  fontWeight: "600",
+                }}
+              >
+                <FeatherIcon icon="edit-2" size="11" className="me-1" />
+                Editing #{currentVisit.postop_id}
+              </span>
+            )}
             <Button
-              variant="outline-info"
+              variant={currentVisit.postop_id ? "outline-secondary" : "outline-info"}
               size="sm"
               onClick={handleNewVisit}
               style={{
@@ -388,7 +645,7 @@ const PostOpCard = ({ formData = {}, loading = false }) => {
                 padding: "7px 12px",
               }}
             >
-              <FeatherIcon icon="plus" size="13" className="me-1" /> NEW RECORD
+              <FeatherIcon icon="plus" size="13" className="me-1" /> {currentVisit.postop_id ? "NEW / CLEAR" : "NEW RECORD"}
             </Button>
             {historyList.length > 0 && (
               <span
@@ -409,7 +666,7 @@ const PostOpCard = ({ formData = {}, loading = false }) => {
         </div>
 
         <Row className="g-3 align-items-center">
-          <Col md={4}>
+          <Col md={3}>
             <Form.Label className="fw-bold mb-1" style={{ fontSize: "13px", color: "#006064" }}>
               PO Visit Round
             </Form.Label>
@@ -425,17 +682,21 @@ const PostOpCard = ({ formData = {}, loading = false }) => {
                 fontWeight: "600",
               }}
             >
-              <option value="1st PO">1st PO Visit</option>
-              <option value="2nd PO">2nd PO Visit</option>
-              <option value="3rd PO">3rd PO Visit</option>
-              <option value="4th PO">4th PO Visit</option>
-              <option value="5th PO">5th PO Visit</option>
-              <option value="6th PO">6th PO Visit</option>
-              <option value="Follow-up PO">Follow-up PO Visit</option>
+              {PO_VISIT_ROUNDS.map((round) => (
+                <option key={round} value={round}>
+                  {round} Visit
+                </option>
+              ))}
+              {/* Preserves legacy round (e.g. historical "Follow-up PO") or visits above 15th if loaded from record */}
+              {currentVisit.visitNo && !PO_VISIT_ROUNDS.includes(currentVisit.visitNo) && (
+                <option value={currentVisit.visitNo}>
+                  {currentVisit.visitNo.includes("Visit") ? currentVisit.visitNo : `${currentVisit.visitNo} Visit`}
+                </option>
+              )}
             </Form.Select>
           </Col>
 
-          <Col md={4}>
+          <Col md={3}>
             <Form.Label className="fw-bold mb-1" style={{ fontSize: "13px", color: "#006064" }}>
               Visit Date
             </Form.Label>
@@ -452,7 +713,7 @@ const PostOpCard = ({ formData = {}, loading = false }) => {
             />
           </Col>
 
-          <Col md={4}>
+          <Col md={3}>
             <Form.Label className="fw-bold mb-1" style={{ fontSize: "13px", color: "#006064" }}>
               Post-Op Day
             </Form.Label>
@@ -468,17 +729,43 @@ const PostOpCard = ({ formData = {}, loading = false }) => {
                 fontWeight: "600",
               }}
             >
-              <option value="Day 1">Day 1 (Post-Op)</option>
-              <option value="Day 2">Day 2</option>
-              <option value="Day 3">Day 3</option>
-              <option value="Day 4">Day 4</option>
-              <option value="Day 5">Day 5</option>
-              <option value="Day 7">Day 7 (1 Week)</option>
-              <option value="Day 10">Day 10</option>
-              <option value="Day 14">Day 14 (2 Weeks)</option>
-              <option value="Day 21">Day 21 (3 Weeks)</option>
-              <option value="Day 30">Day 30 (1 Month)</option>
-              <option value="Day 60">Day 60 (2 Months)</option>
+              {POST_OP_DAYS.map((d) => (
+                <option key={d.value} value={d.value}>
+                  {d.label}
+                </option>
+              ))}
+              {currentVisit.day &&
+                !POST_OP_DAYS.some((d) => d.value === currentVisit.day) && (
+                  <option value={currentVisit.day}>{currentVisit.day}</option>
+                )}
+            </Form.Select>
+          </Col>
+
+          <Col md={3}>
+            <Form.Label className="fw-bold mb-1" style={{ fontSize: "13px", color: "#006064" }}>
+              Consultant Doctor
+            </Form.Label>
+            <Form.Select
+              value={currentVisit.consultantDoctor ? String(currentVisit.consultantDoctor) : ""}
+              onChange={(e) => setCurrentVisit({ ...currentVisit, consultantDoctor: e.target.value })}
+              style={{
+                borderRadius: "10px",
+                border: "2px solid #b2ebf2",
+                fontSize: "12px",
+                padding: "6px 12px",
+                color: "#006064",
+                fontWeight: "600",
+              }}
+            >
+              <option value="">Select Consultant Doctor</option>
+              {doctors.map((doc) => {
+                const docId = String(doc.doctor_id ?? doc.id);
+                return (
+                  <option key={docId} value={docId}>
+                    {doc.name || doc.doctor_name || `Dr. ${docId}`}
+                  </option>
+                );
+              })}
             </Form.Select>
           </Col>
         </Row>
@@ -640,8 +927,8 @@ const PostOpCard = ({ formData = {}, loading = false }) => {
                           <span
                             className="badge ms-1"
                             style={{
-                              backgroundColor: "#e0f2f1",
-                              color: "#006064",
+                              backgroundColor: "#ff4b4bff",
+                              color: "#ffffffff",
                               fontSize: "9px",
                               padding: "2px 5px",
                               fontWeight: "normal",
@@ -809,7 +1096,7 @@ const PostOpCard = ({ formData = {}, loading = false }) => {
 
         {/* Associated Pain Details Row */}
         <Row className="g-2">
-          <Col xs={6} md={3}>
+          <Col xs={4} md={3}>
             <Form.Label className="fw-bold mb-1" style={{ fontSize: "12px", color: "#006064" }}>
               Pain Location
             </Form.Label>
@@ -1105,22 +1392,56 @@ const PostOpCard = ({ formData = {}, loading = false }) => {
             style={{ backgroundColor: "#f1fcfd", border: "2px solid #b2ebf2" }}
           >
             <Row className="g-2">
-              {INVESTIGATION_OPTIONS.map((inv) => (
-                <Col xs={6} sm={4} md={3} key={inv}>
-                  <Form.Check
-                    type="checkbox"
-                    id={`inv-${inv.replace(/\s+/g, "-")}`}
-                    label={inv}
-                    checked={currentVisit.investigations.includes(inv)}
-                    onChange={() => handleInvestigationToggle(inv)}
-                    style={{
-                      fontSize: "13px",
-                      fontWeight: "600",
-                      color: "#006064",
-                    }}
-                  />
-                </Col>
-              ))}
+              {INVESTIGATION_OPTIONS.map((inv) => {
+                const isOther = inv === "Other Investigation";
+                const isChecked = currentVisit.investigations.includes(inv);
+                return (
+                  <Col
+                    xs={isOther && isChecked ? 12 : 6}
+                    sm={isOther && isChecked ? 8 : 4}
+                    md={isOther && isChecked ? 6 : 3}
+                    key={inv}
+                  >
+                    <div className="d-flex align-items-center gap-2 flex-wrap flex-sm-nowrap">
+                      <Form.Check
+                        type="checkbox"
+                        id={`inv-${inv.replace(/\s+/g, "-")}`}
+                        label={inv}
+                        checked={isChecked}
+                        onChange={() => handleInvestigationToggle(inv)}
+                        className={isOther && isChecked ? "text-nowrap mb-0" : ""}
+                        style={{
+                          fontSize: "13px",
+                          fontWeight: "600",
+                          color: "#006064",
+                        }}
+                      />
+                      {isOther && isChecked && (
+                        <Form.Control
+                          type="text"
+                          placeholder="Mention other inestigation"
+                          value={currentVisit.investigationSpecify}
+                          onChange={(e) =>
+                            setCurrentVisit({
+                              ...currentVisit,
+                              investigationSpecify: e.target.value,
+                            })
+                          }
+                          style={{
+                            borderRadius: "10px",
+                            border: "2px solid #b2ebf2",
+                            fontSize: "12px",
+                            padding: "4px 10px",
+                            height: "32px",
+                            minWidth: "180px",
+                            flex: 1,
+                          }}
+                        />
+                      )}
+                    </div>
+                  </Col>
+                );
+              })}
             </Row>
 
             {/* Rule out underlying toggle */}
@@ -1204,8 +1525,9 @@ const PostOpCard = ({ formData = {}, loading = false }) => {
                   type="number"
                   min={1}
                   max={60}
-                  value={currentVisit.reviewDays}
-                  onChange={(e) => setCurrentVisit({ ...currentVisit, reviewDays: Number(e.target.value) })}
+                  placeholder="Days"
+                  value={currentVisit.reviewDays !== null && currentVisit.reviewDays !== undefined ? currentVisit.reviewDays : ""}
+                  onChange={(e) => setCurrentVisit({ ...currentVisit, reviewDays: e.target.value === "" ? null : Number(e.target.value) })}
                   style={{
                     borderRadius: "10px",
                     border: "2px solid #b2ebf2",
@@ -1262,28 +1584,39 @@ const PostOpCard = ({ formData = {}, loading = false }) => {
                 <th style={{ width: "85px" }}>Visit</th>
                 <th style={{ width: "95px" }}>Date</th>
                 <th style={{ width: "75px" }}>Day</th>
+                <th style={{ width: "120px" }}>Doctor</th>
                 <th>Complaints</th>
-                <th style={{ width: "100px" }} className="text-center">Pain</th>
-                <th style={{ width: "120px" }} className="text-center">Wound</th>
+                <th style={{ width: "80px" }} className="text-center">Pain</th>
+                <th style={{ width: "110px" }} className="text-center">Wound</th>
                 <th>Investigations</th>
                 <th>Advice</th>
-                <th style={{ width: "75px" }} className="text-center">Action</th>
+                <th style={{ width: "130px" }} className="text-center">Action</th>
               </tr>
             </thead>
             <tbody>
-              {historyList.length === 0 ? (
+              {fetchingHistory ? (
                 <tr>
-                  <td colSpan={9} className="text-center text-muted py-4" style={{ fontSize: "13px" }}>
+                  <td colSpan={10} className="text-center py-4" style={{ fontSize: "13px", color: "#00838f" }}>
+                    <Spinner size="sm" animation="border" className="me-2" />
+                    Loading post-op history...
+                  </td>
+                </tr>
+              ) : historyList.length === 0 ? (
+                <tr>
+                  <td colSpan={10} className="text-center text-muted py-4" style={{ fontSize: "13px" }}>
                     <FeatherIcon icon="inbox" size="20" className="d-block mx-auto mb-2 text-muted" />
                     No prior post-op visits recorded yet.
                   </td>
                 </tr>
               ) : (
                 historyList.map((item, idx) => (
-                  <tr key={idx} className="align-middle">
+                  <tr key={item.postop_id || item.id || idx} className="align-middle">
                     <td className="fw-bold" style={{ color: "#00838f" }}>{item.visitNo}</td>
                     <td>{item.date}</td>
                     <td>{item.day}</td>
+                    <td className="text-truncate" style={{ maxWidth: "120px" }} title={getDoctorName(item.consultantDoctor || item.consultant_doctor)}>
+                      {getDoctorName(item.consultantDoctor || item.consultant_doctor)}
+                    </td>
                     <td>{item.complaints?.join(", ") || "—"}</td>
                     <td className="text-center">
                       <span
@@ -1293,7 +1626,7 @@ const PostOpCard = ({ formData = {}, loading = false }) => {
                           fontSize: "11px",
                         }}
                       >
-                        {item.painScore}/10
+                        {item.painScore !== null && item.painScore !== undefined ? `${item.painScore}/10` : "—"}
                       </span>
                     </td>
                     <td className="text-center">
@@ -1308,7 +1641,7 @@ const PostOpCard = ({ formData = {}, loading = false }) => {
                       </span>
                     </td>
                     <td>
-                      {item.investigations?.join(", ") || "—"}
+                      {item.investigations?.map((inv) => inv === "Other Investigation" && item.investigationSpecify ? `Other (${item.investigationSpecify})` : inv).join(", ") || "—"}
                       {item.ruleOutUnderlying === "Yes" && (
                         <div className="text-danger small mt-1" style={{ fontSize: "10px" }}>
                           Rule out: {item.ruleOutDetails}
@@ -1317,34 +1650,58 @@ const PostOpCard = ({ formData = {}, loading = false }) => {
                     </td>
                     <td>{item.adviceList?.slice(0, 2).join(", ") || "—"}</td>
                     <td className="text-center">
-                      <Button
-                        variant="outline-info"
-                        size="sm"
-                        className="py-0 px-2"
-                        style={{ fontSize: "11px", borderRadius: "12px" }}
-                        onClick={() => {
-                          Swal.fire({
-                            title: `${item.visitNo} (${item.date})`,
-                            html: `
-                              <div style="text-align: left; font-size: 13px; line-height: 1.6;">
-                                <p><strong>Post-Op Day:</strong> ${item.day}</p>
-                                <p><strong>Complaints:</strong> ${item.complaints?.join(", ") || "None"}</p>
-                                <p><strong>Pain Score:</strong> ${item.painScore}/10 (${DVPRS_SCALE[item.painScore]?.label})</p>
-                                <p><strong>Wound Grade:</strong> Grade ${item.woundGrade} ${item.woundSubgrade ? `(${item.woundSubgrade})` : ""}</p>
-                                <p><strong>Wound Observations:</strong> ${item.woundNotes || "None"}</p>
-                                <p><strong>Investigations:</strong> ${item.investigations?.join(", ") || "None"}</p>
-                                ${item.ruleOutUnderlying === "Yes" ? `<p style="color: #dc2626;"><strong>Rule out cause:</strong> ${item.ruleOutDetails}</p>` : ""}
-                                <p><strong>Advice:</strong> ${item.adviceList?.join(", ") || "Routine care"}</p>
-                                <p><strong>Review:</strong> After ${item.reviewDays} days</p>
-                              </div>
-                            `,
-                            confirmButtonText: "Close",
-                            confirmButtonColor: "#00838f",
-                          });
-                        }}
-                      >
-                        <FeatherIcon icon="eye" size="11" className="me-1" /> View
-                      </Button>
+                      <div className="d-inline-flex gap-1">
+                        <Button
+                          variant="outline-info"
+                          size="sm"
+                          className="py-0 px-2"
+                          style={{ fontSize: "11px", borderRadius: "10px" }}
+                          title="View Details"
+                          onClick={() => {
+                            Swal.fire({
+                              title: `${item.visitNo} (${item.date})`,
+                              html: `
+                                <div style="text-align: left; font-size: 13px; line-height: 1.6;">
+                                  <p><strong>Consultant Doctor:</strong> ${getDoctorName(item.consultantDoctor || item.consultant_doctor)}</p>
+                                  <p><strong>Post-Op Day:</strong> ${item.day}</p>
+                                  <p><strong>Complaints:</strong> ${item.complaints?.join(", ") || "None"}</p>
+                                  <p><strong>Pain Score:</strong> ${item.painScore !== null && item.painScore !== undefined ? `${item.painScore}/10 (${DVPRS_SCALE[item.painScore]?.label})` : "None"}</p>
+                                  <p><strong>Wound Grade:</strong> Grade ${item.woundGrade} ${item.woundSubgrade ? `(${item.woundSubgrade})` : ""}</p>
+                                  <p><strong>Wound Observations:</strong> ${item.woundNotes || "None"}</p>
+                                  <p><strong>Investigations:</strong> ${item.investigations?.map((inv) => inv === "Other Investigation" && item.investigationSpecify ? `Other (${item.investigationSpecify})` : inv).join(", ") || "None"}</p>
+                                  ${item.ruleOutUnderlying === "Yes" ? `<p style="color: #dc2626;"><strong>Rule out cause:</strong> ${item.ruleOutDetails}</p>` : ""}
+                                  <p><strong>Advice:</strong> ${item.adviceList?.join(", ") || "Routine care"}</p>
+                                  <p><strong>Review:</strong> ${item.reviewDays ? `After ${item.reviewDays} days` : "Not specified"}</p>
+                                </div>
+                              `,
+                              confirmButtonText: "Close",
+                              confirmButtonColor: "#00838f",
+                            });
+                          }}
+                        >
+                          <FeatherIcon icon="eye" size="11" />
+                        </Button>
+                        <Button
+                          variant="outline-primary"
+                          size="sm"
+                          className="py-5 px-2"
+                          style={{ fontSize: "11px", borderRadius: "10px" }}
+                          title="Edit Record"
+                          onClick={() => handleLoadVisit(item)}
+                        >
+                          <FeatherIcon icon="edit-2" size="11" />
+                        </Button>
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          className="py-0 px-2"
+                          style={{ fontSize: "11px", borderRadius: "10px" }}
+                          title="Delete Record"
+                          onClick={() => handleDeleteVisit(item)}
+                        >
+                          <FeatherIcon icon="trash-2" size="11" />
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -1355,10 +1712,27 @@ const PostOpCard = ({ formData = {}, loading = false }) => {
       </div>
 
       {/* Save Button */}
-      <div className="text-center mb-5 pb-5 mt-4">
+      <div className="text-center mb-5 pb-5 mt-4 d-flex justify-content-center gap-3">
+        {currentVisit.postop_id && (
+          <Button
+            variant="outline-secondary"
+            onClick={handleNewVisit}
+            disabled={isSaving || parentLoading}
+            style={{
+              padding: "10px 25px",
+              borderRadius: "50px",
+              fontWeight: "700",
+              fontSize: "13px",
+              textTransform: "uppercase",
+              letterSpacing: "1px",
+            }}
+          >
+            Cancel Edit
+          </Button>
+        )}
         <Button
           onClick={handleSaveVisit}
-          disabled={loading}
+          disabled={isSaving || parentLoading}
           style={{
             backgroundColor: "#00838f",
             borderColor: "#00838f",
@@ -1371,12 +1745,17 @@ const PostOpCard = ({ formData = {}, loading = false }) => {
             letterSpacing: "1px",
           }}
         >
-          {loading ? (
-            <Spinner size="sm" className="me-2" />
+          {isSaving ? (
+            <>
+              <Spinner size="sm" className="me-2" />
+              SAVING...
+            </>
           ) : (
-            <FeatherIcon icon="save" size="18" className="me-2" />
+            <>
+              <FeatherIcon icon="save" size="18" className="me-2" />
+              {currentVisit.postop_id ? "UPDATE POST-OP EVALUATION" : "SAVE POST-OP EVALUATION"}
+            </>
           )}
-          SAVE POST-OP EVALUATION
         </Button>
       </div>
     </div>

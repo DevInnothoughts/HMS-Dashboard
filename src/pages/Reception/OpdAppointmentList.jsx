@@ -145,19 +145,18 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
     padding: "1px 3px",
     minWidth: "33px",
     borderRadius: "4px",
-    border: `1px solid ${
-      disabled
-        ? "#ddd"
-        : isDanger
-          ? "#dc3545"
-          : isEdit
-            ? "#007bff"
-            : isConfirm
-              ? "#28a745"
-              : isBlueAction
-                ? "#0babb9ff"
-                : defaultBorder
-    }`,
+    border: `1px solid ${disabled
+      ? "#ddd"
+      : isDanger
+        ? "#dc3545"
+        : isEdit
+          ? "#007bff"
+          : isConfirm
+            ? "#28a745"
+            : isBlueAction
+              ? "#0babb9ff"
+              : defaultBorder
+      }`,
     backgroundColor: disabled ? "#f8f9fa" : defaultBg,
     color: disabled
       ? "#aaa"
@@ -211,17 +210,16 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
               ? "#15cbd8ff"
               : "#e0e0e0";
 
-      e.currentTarget.style.border = `1px solid ${
-        isDanger
-          ? "#c82333"
-          : isEdit
-            ? "#007bff"
-            : isConfirm
-              ? "#218838"
-              : isBlueAction
-                ? "#007bff"
-                : "#b0b0b0"
-      }`;
+      e.currentTarget.style.border = `1px solid ${isDanger
+        ? "#c82333"
+        : isEdit
+          ? "#007bff"
+          : isConfirm
+            ? "#218838"
+            : isBlueAction
+              ? "#007bff"
+              : "#b0b0b0"
+        }`;
 
       e.currentTarget.style.color = "white";
       if (e.currentTarget.children[0]) {
@@ -243,17 +241,16 @@ const ActionButton = ({ title, onClick, disabled, icon, ...props }) => {
               ? "#23adb2ff"
               : defaultColor;
 
-      e.currentTarget.style.border = `1px solid ${
-        isDanger
-          ? "#dc3545"
-          : isEdit
-            ? "#007bff"
-            : isConfirm
-              ? "#28a745"
-              : isBlueAction
-                ? "#007bff"
-                : defaultBorder
-      }`;
+      e.currentTarget.style.border = `1px solid ${isDanger
+        ? "#dc3545"
+        : isEdit
+          ? "#007bff"
+          : isConfirm
+            ? "#28a745"
+            : isBlueAction
+              ? "#007bff"
+              : defaultBorder
+        }`;
 
       if (e.currentTarget.children[0]) {
         e.currentTarget.children[0].style.stroke = iconColor;
@@ -318,9 +315,9 @@ export default function OpdAppointmentList() {
   const normalizeLoc = (loc) =>
     loc
       ? String(loc)
-          .trim()
-          .toLowerCase()
-          .replace(/[^a-z0-9]/g, "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "")
       : "";
 
   const checkMasterVisitsForList = useCallback(
@@ -471,11 +468,11 @@ export default function OpdAppointmentList() {
 
       const { subtotal, payable } = calculateTotals();
 
-      if (subtotal > 10000) {
+      if (subtotal > 25000) {
         Swal.fire({
           icon: "error",
           title: "Limit Exceeded",
-          text: "The subtotal exceeds the permissible limit of ₹10,000.",
+          text: "The subtotal exceeds the permissible limit of ₹25,000.",
         });
         return;
       }
@@ -492,10 +489,10 @@ export default function OpdAppointmentList() {
         doctor_id: receiptForm.doctor_id,
         appointment_date:
           selectedAppointment.appointment_timestamp &&
-          moment(selectedAppointment.appointment_timestamp).isValid()
+            moment(selectedAppointment.appointment_timestamp).isValid()
             ? moment(selectedAppointment.appointment_timestamp).format(
-                "DD-MM-YYYY",
-              )
+              "DD-MM-YYYY",
+            )
             : moment(new Date()).format("DD-MM-YYYY"),
         consultations: consultationData,
         paymentmode:
@@ -688,7 +685,7 @@ export default function OpdAppointmentList() {
               Swal.fire(
                 "Error",
                 cancelResult?.message ||
-                  "Remote cancel failed. Please cancel manually on machine.",
+                "Remote cancel failed. Please cancel manually on machine.",
                 "error",
               );
             }
@@ -1064,6 +1061,14 @@ export default function OpdAppointmentList() {
 
   const handleEditModalInputChange = (e) => {
     const { name, value } = e.target;
+    if (name === "patient_phone") {
+      const numericVal = value.replace(/\D/g, "").slice(0, 15);
+      setSelectedAppointment((prev) => ({
+        ...prev,
+        [name]: numericVal,
+      }));
+      return;
+    }
     setSelectedAppointment((prev) => ({
       ...prev,
       [name]: value,
@@ -1086,9 +1091,9 @@ export default function OpdAppointmentList() {
 
     const finalAppointmentTime = selectedAppointment.appointment_time
       ? moment(selectedAppointment.appointment_time, [
-          "HH:mm:ss",
-          "hh:mm A",
-        ]).format("HH:mm")
+        "HH:mm:ss",
+        "hh:mm A",
+      ]).format("HH:mm")
       : null;
 
     const updatePayload = {
@@ -1658,7 +1663,7 @@ export default function OpdAppointmentList() {
           <>
             <ActionButton
               title="History"
-              onClick={() => {}}
+              onClick={() => { }}
               disabled={isHistoryDone || isReceiptDone}
               icon="book-open"
               style={{ cursor: "not-allowed" }}
@@ -1666,7 +1671,7 @@ export default function OpdAppointmentList() {
 
             <ActionButton
               title="Diagnosis"
-              onClick={() => {}}
+              onClick={() => { }}
               disabled={!isHistoryDone || isExecutionDone || isReceiptDone}
               icon="activity"
               style={{ cursor: "not-allowed" }}
@@ -1674,7 +1679,7 @@ export default function OpdAppointmentList() {
 
             <ActionButton
               title="Prescription"
-              onClick={() => {}}
+              onClick={() => { }}
               disabled={!isExecutionDone || isConsultationDone || isReceiptDone}
               icon="clipboard"
               style={{ cursor: "not-allowed" }}
@@ -1719,11 +1724,11 @@ export default function OpdAppointmentList() {
           borderColor: name === "Pending Appointment" ? "#b6bbc1ff" : bgColor,
           ...(isSelected
             ? {
-                backgroundColor: `${bgColor}25`,
-                transform: "translateY(-1.5px)",
-                boxShadow:
-                  "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
-              }
+              backgroundColor: `${bgColor}25`,
+              transform: "translateY(-1.5px)",
+              boxShadow:
+                "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
+            }
             : {}),
         }}
       >
@@ -2168,9 +2173,9 @@ export default function OpdAppointmentList() {
                       value={
                         selectedAppointment.appointment_time
                           ? moment(selectedAppointment.appointment_time, [
-                              "HH:mm:ss",
-                              "hh:mm A",
-                            ]).format("hh:mm A")
+                            "HH:mm:ss",
+                            "hh:mm A",
+                          ]).format("hh:mm A")
                           : ""
                       }
                       onChange={handleEditModalInputChange}
@@ -2256,7 +2261,7 @@ export default function OpdAppointmentList() {
                     >
                       <option value="">Select Type</option>
                       {(selectedAppointment.patient_type === "New" ||
-                      selectedAppointment.patient_type === "NEW"
+                        selectedAppointment.patient_type === "NEW"
                         ? NEW_PATIENT_TYPES
                         : EXISTING_PATIENT_TYPES
                       ).map((type, index) => (
@@ -2271,51 +2276,51 @@ export default function OpdAppointmentList() {
                 {(selectedAppointment.patient_type === "Other" ||
                   selectedAppointment.treatment ||
                   selectedAppointment.treatment_name) && (
-                  <Col md={4}>
-                    <Form.Group className="mb-2">
-                      <Form.Label
-                        style={{
-                          fontSize: "12px",
-                          fontWeight: "600",
-                          marginBottom: "4px",
-                        }}
-                      >
-                        Treatment <span className="text-danger">*</span>
-                      </Form.Label>
-                      <Form.Select
-                        required
-                        name="treatment"
-                        value={
-                          selectedAppointment.treatment ||
-                          selectedAppointment.treatment_name ||
-                          ""
-                        }
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setSelectedAppointment((prev) => ({
-                            ...prev,
-                            treatment: val,
-                            treatment_name: val,
-                          }));
-                        }}
-                        style={{
-                          border: "2px solid rgb(77, 208, 225)",
-                          fontSize: "12px",
-                        }}
-                      >
-                        <option value="">Select Treatment</option>
-                        {treatmentList?.map((t) => (
-                          <option
-                            key={t.treatment_name}
-                            value={t.treatment_name}
-                          >
-                            {t.treatment_name}
-                          </option>
-                        ))}
-                      </Form.Select>
-                    </Form.Group>
-                  </Col>
-                )}
+                    <Col md={4}>
+                      <Form.Group className="mb-2">
+                        <Form.Label
+                          style={{
+                            fontSize: "12px",
+                            fontWeight: "600",
+                            marginBottom: "4px",
+                          }}
+                        >
+                          Treatment <span className="text-danger">*</span>
+                        </Form.Label>
+                        <Form.Select
+                          required
+                          name="treatment"
+                          value={
+                            selectedAppointment.treatment ||
+                            selectedAppointment.treatment_name ||
+                            ""
+                          }
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setSelectedAppointment((prev) => ({
+                              ...prev,
+                              treatment: val,
+                              treatment_name: val,
+                            }));
+                          }}
+                          style={{
+                            border: "2px solid rgb(77, 208, 225)",
+                            fontSize: "12px",
+                          }}
+                        >
+                          <option value="">Select Treatment</option>
+                          {treatmentList?.map((t) => (
+                            <option
+                              key={t.treatment_name}
+                              value={t.treatment_name}
+                            >
+                              {t.treatment_name}
+                            </option>
+                          ))}
+                        </Form.Select>
+                      </Form.Group>
+                    </Col>
+                  )}
 
                 <Col md={4}>
                   <Form.Group className="mb-2">
@@ -2369,28 +2374,11 @@ export default function OpdAppointmentList() {
                       name="patient_phone"
                       value={selectedAppointment.patient_phone || ""}
                       onChange={handleEditModalInputChange}
-                      readOnly={
-                        !(
-                          selectedAppointment.patient_type === "New" ||
-                          selectedAppointment.patient_type === "NEW"
-                        )
-                      }
+                      placeholder="Enter contact number"
                       style={{
                         fontSize: "12px",
                         borderRadius: "9px",
                         border: "2px solid rgb(77, 208, 225)",
-                        backgroundColor: !(
-                          selectedAppointment.patient_type === "New" ||
-                          selectedAppointment.patient_type === "NEW"
-                        )
-                          ? "#e7ebebff"
-                          : undefined,
-                        cursor: !(
-                          selectedAppointment.patient_type === "New" ||
-                          selectedAppointment.patient_type === "NEW"
-                        )
-                          ? "not-allowed"
-                          : "default",
                       }}
                     />
                   </Form.Group>
@@ -2631,8 +2619,8 @@ export default function OpdAppointmentList() {
                           <span className="selectable-text">
                             {rowData.appointment_timestamp
                               ? moment(rowData.appointment_timestamp).format(
-                                  "DD-MM-YYYY",
-                                )
+                                "DD-MM-YYYY",
+                              )
                               : "-"}
                           </span>
                         )}
@@ -2650,9 +2638,9 @@ export default function OpdAppointmentList() {
                           <span className="selectable-text">
                             {rowData.appointment_time
                               ? moment(rowData.appointment_time, [
-                                  "hh:mm A",
-                                  "HH:mm",
-                                ]).format("HH:mm")
+                                "hh:mm A",
+                                "HH:mm",
+                              ]).format("HH:mm")
                               : "-"}
                           </span>
                         )}
@@ -2735,8 +2723,8 @@ export default function OpdAppointmentList() {
                         body={(rowData) => {
                           const cleanP = rowData.patient_phone
                             ? String(rowData.patient_phone)
-                                .replace(/\D/g, "")
-                                .slice(-10)
+                              .replace(/\D/g, "")
+                              .slice(-10)
                             : "";
                           const masterData = masterVisitMap[cleanP];
                           const isConfirmed =
@@ -3133,7 +3121,7 @@ export default function OpdAppointmentList() {
                         }}
                         value={
                           receiptForm.registrationType &&
-                          receiptForm.registrationType !== "Only Registration"
+                            receiptForm.registrationType !== "Only Registration"
                             ? 0
                             : item.amount
                         }
@@ -3222,7 +3210,7 @@ export default function OpdAppointmentList() {
                       }}
                       value={
                         receiptForm.registrationType &&
-                        receiptForm.registrationType !== "Only Registration"
+                          receiptForm.registrationType !== "Only Registration"
                           ? 0
                           : receiptForm.discountAmt
                       }
@@ -3425,7 +3413,7 @@ export default function OpdAppointmentList() {
             padding: "5px",
           }}
         >
-          {calculateTotals().subtotal > 10000 && (
+          {calculateTotals().subtotal > 25000 && (
             <span
               className="text-danger fw-bold me-auto d-flex align-items-center"
               style={{ fontSize: "14px", marginRight: "10px" }}
@@ -3435,7 +3423,7 @@ export default function OpdAppointmentList() {
                 size="16"
                 style={{ marginRight: "5px" }}
               />
-              Warning: The subtotal exceeds the permissible limit of ₹10,000.
+              Warning: The subtotal exceeds the permissible limit of ₹25,000.
             </span>
           )}
           <Button
@@ -3453,12 +3441,12 @@ export default function OpdAppointmentList() {
             variant="success"
             type="submit"
             form="opd-receipt-form"
-            disabled={calculateTotals().subtotal > 10000}
+            disabled={calculateTotals().subtotal > 25000}
             style={{
               backgroundColor:
-                calculateTotals().subtotal > 10000 ? "#cccccc" : "#00bcd4",
+                calculateTotals().subtotal > 25000 ? "#cccccc" : "#00bcd4",
               cursor:
-                calculateTotals().subtotal > 10000 ? "not-allowed" : "pointer",
+                calculateTotals().subtotal > 25000 ? "not-allowed" : "pointer",
               border: "none",
               fontSize: "12px",
               borderRadius: "10px",

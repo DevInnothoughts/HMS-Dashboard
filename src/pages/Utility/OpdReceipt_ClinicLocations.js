@@ -280,4 +280,10 @@ export const receiptlocations = {
     phone: "8956748767",
     hospitalcode: "RP",
   },
+  "Kalyannagar": {
+    address:
+      "<b>Kalyan Nagar:</b> <br>Healing Hands Clinic<br> 3rd Floor, No. 5AC-959, Outer Ring Road Service Road, Next to Karnataka Bank, HRBR Layout 1st Block, Banaswadi, Bengaluru – 560043.",
+    phone: "8956512401",
+    hospitalcode: "KN",
+  },
 };

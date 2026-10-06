@@ -103,7 +103,7 @@
   -ms-user-select: all !important;
 }
 
-.datatable-compact-style .p-datatable-tbody > tr {
+.datatable-compact-style .p-datatable-tbody>tr {
   user-select: none !important;
   -webkit-user-select: none !important;
   -moz-user-select: none !important;
@@ -126,7 +126,7 @@
   gap: 6px;
   position: relative;
   max-width: 100%;
-  
+
   .copy-text-val {
     user-select: text !important;
     -webkit-user-select: text !important;
@@ -135,7 +135,7 @@
     cursor: text;
     word-break: break-all;
   }
-  
+
   .copy-btn-trigger {
     display: inline-flex;
     align-items: center;
@@ -150,14 +150,14 @@
     background-color: rgba(0, 188, 212, 0.1);
     vertical-align: middle;
     line-height: 1;
-    
+
     &:hover {
       background-color: #00bcd4;
       color: #ffffff;
       transform: scale(1.1);
     }
   }
-  
+
   &:hover {
     .copy-btn-trigger {
       opacity: 1;
@@ -187,6 +187,26 @@
 .datatable-compact-style .p-datatable-tbody>tr {
   height: auto !important;
   min-height: 0;
+}
+
+/* Enquiry status row highlighting (whole row) */
+html body .p-datatable.p-component .p-datatable-tbody>tr.enquiry-row-visited,
+html body .p-datatable.p-component .p-datatable-tbody>tr.enquiry-row-visited:nth-child(n):not(.x-y)>td,
+html body .p-datatable.p-component .p-datatable-tbody>tr.enquiry-row-visited:hover:nth-child(n)>td {
+  background: #28a745 !important;
+  background-color: #28a745 !important;
+}
+
+html body .p-datatable.p-component .p-datatable-tbody>tr.enquiry-row-visited:nth-child(n):not(.x-y)>td,
+html body .p-datatable.p-component .p-datatable-tbody>tr.enquiry-row-visited:nth-child(n):not(.x-y)>td *:not([style*="background-color"]) {
+  color: #ffffff !important;
+}
+
+html body .p-datatable.p-component .p-datatable-tbody>tr.enquiry-row-surgery-done,
+html body .p-datatable.p-component .p-datatable-tbody>tr.enquiry-row-surgery-done:nth-child(n):not(.x-y)>td,
+html body .p-datatable.p-component .p-datatable-tbody>tr.enquiry-row-surgery-done:hover:nth-child(n)>td {
+  background: #ffe922 !important;
+  background-color: #ffe922 !important;
 }
 
 .btn-extra-small {

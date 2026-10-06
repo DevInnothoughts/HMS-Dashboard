@@ -422,9 +422,11 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors 
     },
     "Mysore": {
       AssistantSurgeon: "8884884485",
-      Physiotherapist: "8884884496",
+      // Physiotherapist: "8884884496",
+      Physiotherapist: "8884884216",
       Insurance: "8884884418",
-      Nutritionist: "8884884496",
+      // Nutritionist: "8884884496",
+      Nutritionist: "Harishitha M M (8884884816)",
       QueriesSMS: "8884884496",
       Helpline: "8884884496",
       Address: "<b>Healing Hands Clinic </b><br> 1st and 2nd Floor, 13/2,Scarlet Towers, Temple Road,Jayalakshmipuram, Mysore,Karnataka - 570012."

@@ -856,6 +856,7 @@ export default function WebCallEnquiryList({ isTab = false }) {
         <option value="">All</option>
         <option value="Visited">Visited</option>
         <option value="Not Visited">Not Visited</option>
+        <option value="Surgery Done">Surgery Done</option>
       </Form.Select>
     </div>
   );
@@ -867,6 +868,9 @@ export default function WebCallEnquiryList({ isTab = false }) {
     if (status === "Visited") {
       badgeBg = "#e0f2f1";
       badgeColor = "#004d40";
+    } else if (status === "Surgery Done") {
+      badgeBg = "#fffde7";
+      badgeColor = "#5d4037";
     } else if (status === "Not Visited") {
       badgeBg = "#efebe9";
       badgeColor = "#4e342e";
@@ -956,6 +960,13 @@ export default function WebCallEnquiryList({ isTab = false }) {
               responsiveLayout="scroll"
               className="datatable-compact-style datatable-medium-small"
               emptyMessage="No web call leads found."
+              rowClassName={(rowData) => {
+                const status = rowData.dynamic_status || rowData.enquiry_status;
+                return {
+                  "enquiry-row-visited": status === "Visited",
+                  "enquiry-row-surgery-done": status === "Surgery Done",
+                };
+              }}
             >
               <Column
                 field="created_at"

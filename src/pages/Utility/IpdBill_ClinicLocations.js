@@ -281,4 +281,10 @@ export const clinincLoc = {
     invoiceHelplineNo: "8956748767",
     EmergencySMS: "",
   },
+  "Kalyan Nagar": {
+    invoiceAddress:
+      "<b>Healing Hands Clinic</b><br> 3rd Floor, No. 5AC-959, Outer Ring Road Service Road, Next to Karnataka Bank, HRBR Layout 1st Block, Banaswadi, Bengaluru – 560043",
+    invoiceHelplineNo: "8956512401",
+    EmergencySMS: "",
+  },
 };
