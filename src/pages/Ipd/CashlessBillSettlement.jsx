@@ -24,6 +24,7 @@ import { decodeJwt } from "../Utility/decode-jwt";
 import "../../styles/styles.css";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
+const CUTOFF_DATE = "2026-06-30";
 
 const Toast = Swal.mixin({
   toast: true,
@@ -89,6 +90,8 @@ const CashlessBillSettlement = () => {
   );
   const [insuranceOptions, setInsuranceOptions] = useState([]);
   const [tpaOptions, setTpaOptions] = useState([]);
+  const [masterInsuranceOptions, setMasterInsuranceOptions] = useState([]);
+  const [masterTpaOptions, setMasterTpaOptions] = useState([]);
 
   const [filters, setFilters] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -99,6 +102,7 @@ const CashlessBillSettlement = () => {
   const [settlementForm, setSettlementForm] = useState({
     invoice_id: "",
     patientname: "",
+    patient_location: "",
     totalbill: "0",
     authoamt: "0",
     receivedamt: "",
@@ -120,29 +124,43 @@ const CashlessBillSettlement = () => {
     }
   }, []);
 
-  // Fetch Insurance Co and TPA dropdown options for resolving numeric IDs to names
+  // Fetch Insurance Co and TPA dropdown options (both local and master) for resolving numeric IDs to names
   useEffect(() => {
     const loc = currentLocation || getLocationFromStorage();
     if (!loc) return;
 
     const fetchDropdowns = async () => {
       try {
-        const [iRes, tRes] = await Promise.all([
+        const [localIRep, localTRep, masterIRep, masterTRep] = await Promise.all([
           fetch(
-            `${BASE_URL}/V1/invoice/insurance_co_dropdown?location=${encodeURIComponent(loc)}`,
+            `${BASE_URL}/V1/invoice/insurance_co_dropdown?location=${encodeURIComponent(loc)}&date=2026-06-30`,
           ),
           fetch(
-            `${BASE_URL}/V1/invoice/tpa_dropdown?location=${encodeURIComponent(loc)}`,
+            `${BASE_URL}/V1/invoice/tpa_dropdown?location=${encodeURIComponent(loc)}&date=2026-06-30`,
+          ),
+          fetch(
+            `${BASE_URL}/V1/invoice/insurance_co_dropdown?location=${encodeURIComponent(loc)}&date=2026-07-01`,
+          ),
+          fetch(
+            `${BASE_URL}/V1/invoice/tpa_dropdown?location=${encodeURIComponent(loc)}&date=2026-07-01`,
           ),
         ]);
 
-        if (iRes.ok) {
-          const iData = await iRes.json();
+        if (localIRep.ok) {
+          const iData = await localIRep.json();
           setInsuranceOptions(iData.data || []);
         }
-        if (tRes.ok) {
-          const tData = await tRes.json();
+        if (localTRep.ok) {
+          const tData = await localTRep.json();
           setTpaOptions(tData.data || []);
+        }
+        if (masterIRep.ok) {
+          const miData = await masterIRep.json();
+          setMasterInsuranceOptions(miData.data || []);
+        }
+        if (masterTRep.ok) {
+          const mtData = await masterTRep.json();
+          setMasterTpaOptions(mtData.data || []);
         }
       } catch (err) {
         console.error("Error fetching insurance/TPA dropdowns:", err);
@@ -153,35 +171,63 @@ const CashlessBillSettlement = () => {
   }, [currentLocation]);
 
   const resolveInsuranceName = useCallback(
-    (val) => {
+    (val, date) => {
       if (!val || val === "0" || val === 0 || val === "NULL" || val === "null")
         return "-";
       const strVal = String(val).trim();
-      const match = insuranceOptions.find(
-        (i) =>
-          String(i.comapny_id) === strVal ||
-          String(i.company_id) === strVal ||
-          String(i.id) === strVal,
-      );
+      const isMaster =
+        date && moment(date).isValid() && moment(date).isAfter(CUTOFF_DATE);
+
+      const primaryList = isMaster ? masterInsuranceOptions : insuranceOptions;
+      const secondaryList = isMaster ? insuranceOptions : masterInsuranceOptions;
+
+      const match =
+        primaryList.find(
+          (i) =>
+            String(i.comapny_id) === strVal ||
+            String(i.company_id) === strVal ||
+            String(i.id) === strVal,
+        ) ||
+        secondaryList.find(
+          (i) =>
+            String(i.comapny_id) === strVal ||
+            String(i.company_id) === strVal ||
+            String(i.id) === strVal,
+        );
+
       if (match)
         return match.companyname || match.company_name || match.name || strVal;
       return strVal;
     },
-    [insuranceOptions],
+    [insuranceOptions, masterInsuranceOptions],
   );
 
   const resolveTpaName = useCallback(
-    (val) => {
+    (val, date) => {
       if (!val || val === "0" || val === 0 || val === "NULL" || val === "null")
         return "-";
       const strVal = String(val).trim();
-      const match = tpaOptions.find(
-        (t) =>
-          String(t.comapny_id) === strVal ||
-          String(t.company_id) === strVal ||
-          String(t.id) === strVal ||
-          String(t.tpa_id) === strVal,
-      );
+      const isMaster =
+        date && moment(date).isValid() && moment(date).isAfter(CUTOFF_DATE);
+
+      const primaryList = isMaster ? masterTpaOptions : tpaOptions;
+      const secondaryList = isMaster ? tpaOptions : masterTpaOptions;
+
+      const match =
+        primaryList.find(
+          (t) =>
+            String(t.comapny_id) === strVal ||
+            String(t.company_id) === strVal ||
+            String(t.id) === strVal ||
+            String(t.tpa_id) === strVal,
+        ) ||
+        secondaryList.find(
+          (t) =>
+            String(t.comapny_id) === strVal ||
+            String(t.company_id) === strVal ||
+            String(t.id) === strVal,
+        );
+
       if (match)
         return (
           match.companyname ||
@@ -192,42 +238,63 @@ const CashlessBillSettlement = () => {
         );
       return strVal;
     },
-    [tpaOptions],
+    [tpaOptions, masterTpaOptions],
   );
 
   const dropdownCache = useRef({});
 
-  const getDropdownsForDate = useCallback(async (loc, dateStr) => {
-    const key = `${loc}_${dateStr || "all"}`;
-    if (dropdownCache.current[key]) {
-      return dropdownCache.current[key];
-    }
+  const getDropdownsForDate = useCallback(
+    async (loc, dateStr) => {
+      const isMaster =
+        dateStr &&
+        moment(dateStr).isValid() &&
+        moment(dateStr).isAfter(CUTOFF_DATE);
 
-    try {
-      const dateQuery = dateStr ? `&date=${encodeURIComponent(dateStr)}` : "";
-      const [iRes, tRes] = await Promise.all([
-        fetch(
-          `${BASE_URL}/V1/invoice/insurance_co_dropdown?location=${encodeURIComponent(loc)}${dateQuery}`,
-        ),
-        fetch(
-          `${BASE_URL}/V1/invoice/tpa_dropdown?location=${encodeURIComponent(loc)}${dateQuery}`,
-        ),
-      ]);
+      if (isMaster && masterInsuranceOptions.length > 0) {
+        return {
+          insurance: masterInsuranceOptions,
+          tpa: masterTpaOptions,
+        };
+      }
+      if (!isMaster && insuranceOptions.length > 0) {
+        return {
+          insurance: insuranceOptions,
+          tpa: tpaOptions,
+        };
+      }
 
-      const iData = iRes.ok ? await iRes.json() : {};
-      const tData = tRes.ok ? await tRes.json() : {};
+      const key = `${loc}_${isMaster ? "master" : "local"}`;
+      if (dropdownCache.current[key]) {
+        return dropdownCache.current[key];
+      }
 
-      const result = {
-        insurance: iData.data || [],
-        tpa: tData.data || [],
-      };
-      dropdownCache.current[key] = result;
-      return result;
-    } catch (e) {
-      console.error("Error fetching date dropdowns:", e);
-      return { insurance: [], tpa: [] };
-    }
-  }, []);
+      try {
+        const dateQuery = isMaster ? `&date=2026-07-01` : `&date=2026-06-30`;
+        const [iRes, tRes] = await Promise.all([
+          fetch(
+            `${BASE_URL}/V1/invoice/insurance_co_dropdown?location=${encodeURIComponent(loc)}${dateQuery}`,
+          ),
+          fetch(
+            `${BASE_URL}/V1/invoice/tpa_dropdown?location=${encodeURIComponent(loc)}${dateQuery}`,
+          ),
+        ]);
+
+        const iData = iRes.ok ? await iRes.json() : {};
+        const tData = tRes.ok ? await tRes.json() : {};
+
+        const result = {
+          insurance: iData.data || [],
+          tpa: tData.data || [],
+        };
+        dropdownCache.current[key] = result;
+        return result;
+      } catch (e) {
+        console.error("Error fetching date dropdowns:", e);
+        return { insurance: [], tpa: [] };
+      }
+    },
+    [insuranceOptions, masterInsuranceOptions, tpaOptions, masterTpaOptions],
+  );
 
   const formatApiDate = (date) => {
     if (!date) return "";
@@ -394,55 +461,93 @@ const CashlessBillSettlement = () => {
             let finalComp = rawComp;
             let finalTpa = rawTpa;
 
+            const isPostCutoff =
+              creationDate &&
+              moment(creationDate).isValid() &&
+              moment(creationDate).isAfter(CUTOFF_DATE);
+
             const isCompNumeric = /^\d+$/.test(String(rawComp).trim());
             const isTpaNumeric = /^\d+$/.test(String(rawTpa).trim());
 
-            if (isCompNumeric || isTpaNumeric) {
-              const dateDropdowns = await getDropdownsForDate(
-                loc,
-                creationDate,
+            const dateDropdowns = await getDropdownsForDate(
+              loc,
+              creationDate,
+            );
+
+            if (isCompNumeric) {
+              const match = dateDropdowns.insurance.find(
+                (i) =>
+                  String(i.comapny_id) === String(rawComp).trim() ||
+                  String(i.company_id) === String(rawComp).trim() ||
+                  String(i.id) === String(rawComp).trim(),
               );
-
-              if (isCompNumeric) {
-                const match = dateDropdowns.insurance.find(
-                  (i) =>
-                    String(i.comapny_id) === String(rawComp).trim() ||
-                    String(i.company_id) === String(rawComp).trim() ||
-                    String(i.id) === String(rawComp).trim(),
-                );
-                if (match) {
-                  finalComp =
-                    match.companyname ||
-                    match.company_name ||
-                    match.name ||
-                    rawComp;
-                } else {
-                  finalComp = resolveInsuranceName(rawComp);
-                }
+              if (match) {
+                finalComp =
+                  match.companyname ||
+                  match.company_name ||
+                  match.name ||
+                  rawComp;
+              } else {
+                finalComp = resolveInsuranceName(rawComp, creationDate);
               }
-
-              if (isTpaNumeric) {
-                const match = dateDropdowns.tpa.find(
-                  (t) =>
-                    String(t.comapny_id) === String(rawTpa).trim() ||
-                    String(t.company_id) === String(rawTpa).trim() ||
-                    String(t.id) === String(rawTpa).trim() ||
-                    String(t.tpa_id) === String(rawTpa).trim(),
-                );
-                if (match) {
-                  finalTpa =
-                    match.companyname ||
-                    match.company_name ||
-                    match.name ||
-                    match.tpaname ||
-                    rawTpa;
-                } else {
-                  finalTpa = resolveTpaName(rawTpa);
-                }
+            } else if (isPostCutoff && item.invoice_insurancecompany) {
+              const match = dateDropdowns.insurance.find(
+                (i) =>
+                  String(i.comapny_id) === String(item.invoice_insurancecompany).trim() ||
+                  String(i.company_id) === String(item.invoice_insurancecompany).trim() ||
+                  String(i.id) === String(item.invoice_insurancecompany).trim(),
+              );
+              if (match) {
+                finalComp =
+                  match.companyname ||
+                  match.company_name ||
+                  match.name ||
+                  finalComp;
+              } else {
+                finalComp = resolveInsuranceName(rawComp, creationDate);
               }
             } else {
-              finalComp = resolveInsuranceName(rawComp);
-              finalTpa = resolveTpaName(rawTpa);
+              finalComp = resolveInsuranceName(rawComp, creationDate);
+            }
+
+            if (isTpaNumeric) {
+              const match = dateDropdowns.tpa.find(
+                (t) =>
+                  String(t.comapny_id) === String(rawTpa).trim() ||
+                  String(t.company_id) === String(rawTpa).trim() ||
+                  String(t.id) === String(rawTpa).trim() ||
+                  String(t.tpa_id) === String(rawTpa).trim(),
+              );
+              if (match) {
+                finalTpa =
+                  match.companyname ||
+                  match.company_name ||
+                  match.name ||
+                  match.tpaname ||
+                  rawTpa;
+              } else {
+                finalTpa = resolveTpaName(rawTpa, creationDate);
+              }
+            } else if (isPostCutoff && item.invoice_tpa) {
+              const match = dateDropdowns.tpa.find(
+                (t) =>
+                  String(t.comapny_id) === String(item.invoice_tpa).trim() ||
+                  String(t.company_id) === String(item.invoice_tpa).trim() ||
+                  String(t.id) === String(item.invoice_tpa).trim() ||
+                  String(t.tpa_id) === String(item.invoice_tpa).trim(),
+              );
+              if (match) {
+                finalTpa =
+                  match.companyname ||
+                  match.company_name ||
+                  match.name ||
+                  match.tpaname ||
+                  finalTpa;
+              } else {
+                finalTpa = resolveTpaName(rawTpa, creationDate);
+              }
+            } else {
+              finalTpa = resolveTpaName(rawTpa, creationDate);
             }
 
             const totalAmt = parseFloat(
@@ -482,10 +587,18 @@ const CashlessBillSettlement = () => {
               creationdate: creationDate,
               patientname:
                 item.patientname ||
-                item.patient_name ||
+                (item.prefix && item.patient_name
+                  ? `${item.prefix} ${item.patient_name}`
+                  : item.patient_name) ||
                 item.patientName ||
                 item.name ||
                 "-",
+              patient_location:
+                item.patient_location !== undefined &&
+                  item.patient_location !== null &&
+                  item.patient_location !== "NULL"
+                  ? item.patient_location
+                  : item.patientLocation || "",
               companyname: finalComp,
               tpaname: finalTpa,
               totalamt: totalAmt,
@@ -590,16 +703,20 @@ const CashlessBillSettlement = () => {
       const term = searchTerm.toLowerCase();
       exportList = data.filter((item) => {
         const pName = String(item.patientname || "").toLowerCase();
+        const pLoc = String(item.patient_location || "").toLowerCase();
         const comp = String(
-          resolveInsuranceName(item.companyname) || "",
+          resolveInsuranceName(item.companyname, item.creationdate) || "",
         ).toLowerCase();
-        const tpa = String(resolveTpaName(item.tpaname) || "").toLowerCase();
+        const tpa = String(
+          resolveTpaName(item.tpaname, item.creationdate) || "",
+        ).toLowerCase();
         const dateStr = String(
           formatDateForDisplay(item.creationdate) || "",
         ).toLowerCase();
         const invId = String(item.invoiceid || "").toLowerCase();
         return (
           pName.includes(term) ||
+          pLoc.includes(term) ||
           comp.includes(term) ||
           tpa.includes(term) ||
           dateStr.includes(term) ||
@@ -623,8 +740,8 @@ const CashlessBillSettlement = () => {
       Date: formatDateForDisplay(item.creationdate),
       "Invoice ID": item.invoiceid || item.invoice_id || "-",
       "Patient Name": item.patientname || "-",
-      "Insurance Name": resolveInsuranceName(item.companyname),
-      "TPA Name": resolveTpaName(item.tpaname),
+      "Insurance Name": resolveInsuranceName(item.companyname, item.creationdate),
+      "TPA Name": resolveTpaName(item.tpaname, item.creationdate),
       "Total Bill": formatAmount(item.totalamt),
       "Authorised Amt": formatAmount(item.autoamt),
       "Received Amt": formatAmount(item.receivedamt),
@@ -690,6 +807,10 @@ const CashlessBillSettlement = () => {
     setSettlementForm({
       invoice_id: invoiceId,
       patientname: patientName,
+      patient_location:
+        rowData.patient_location && rowData.patient_location !== "NULL"
+          ? rowData.patient_location
+          : "",
       totalbill: totalBill,
       authoamt: authoAmt,
       totaldue: totalDue,
@@ -1118,29 +1239,66 @@ const CashlessBillSettlement = () => {
                       body={(rowData) =>
                         rowData.invoiceid || rowData.invoice_id || "-"
                       }
-                      style={{ width: "110px", border: "1px solid #4dd0e1" }}
+                      style={{ width: "100px", border: "1px solid #4dd0e1" }}
                     />
                     <Column
                       field="patientname"
                       header="Patient Name"
                       headerClassName="datatable-header-center"
-                      style={{ width: "160px", border: "1px solid #4dd0e1" }}
+                      body={(rowData) => {
+                        const hasPatientLocation =
+                          rowData.patient_location !== null &&
+                          rowData.patient_location !== undefined &&
+                          rowData.patient_location !== "" &&
+                          rowData.patient_location !== "NULL";
+                        return (
+                          <span>
+                            {hasPatientLocation && (
+                              <small
+                                style={{
+                                  color: "red",
+                                  fontWeight: "bold",
+                                  marginRight: "5px",
+                                }}
+                              >
+                                (Interbranch: {rowData.patient_location})
+                                <br></br>
+                              </small>
+                            )}
+                            {rowData.prefix &&
+                              !rowData.patientname?.startsWith(rowData.prefix)
+                              ? `${rowData.prefix} `
+                              : ""}
+                            {rowData.patientname || rowData.patient_name || "-"}
+                          </span>
+                        );
+                      }}
+                      style={{
+                        width: "200px",
+                        border: "1px solid #4dd0e1",
+                        wordBreak: "break-word",
+                      }}
                     />
                     <Column
                       field="companyname"
                       header="Insurance Name"
                       headerClassName="datatable-header-center"
                       body={(rowData) =>
-                        resolveInsuranceName(rowData.companyname)
+                        resolveInsuranceName(
+                          rowData.companyname,
+                          rowData.creationdate,
+                        )
                       }
-                      style={{ width: "150px", border: "1px solid #4dd0e1" }}
+                      style={{ width: "180px", border: "1px solid #4dd0e1" }}
                     />
                     <Column
                       field="tpaname"
                       header="TPA Name"
                       headerClassName="datatable-header-center"
-                      body={(rowData) => resolveTpaName(rowData.tpaname)}
-                      style={{ width: "130px", border: "1px solid #4dd0e1" }}
+                      body={(rowData) =>
+                        resolveTpaName(rowData.tpaname, rowData.creationdate)
+                      }
+                      style={{ width: "180px", border: "1px solid #4dd0e1" }}
                     />
                     <Column
                       field="totalamt"
@@ -1335,6 +1493,19 @@ const CashlessBillSettlement = () => {
                     fontWeight: "600",
                   }}
                 >
+                  {settlementForm.patient_location &&
+                    settlementForm.patient_location !== "NULL" && (
+                      <small
+                        style={{
+                          color: "red",
+                          fontWeight: "bold",
+                          marginRight: "5px",
+                          display: "block",
+                        }}
+                      >
+                        (Interbranch: {settlementForm.patient_location})
+                      </small>
+                    )}
                   {settlementForm.patientname || "-"}
                 </span>
               </div>
@@ -1393,7 +1564,7 @@ const CashlessBillSettlement = () => {
                 </Form.Group>
               </Col>
 
-              <Col md={6} className="mb-3">
+              <Col md={6} className="mb-15">
                 <Form.Group>
                   <Form.Label
                     className="small fw-bold mb-1"
@@ -1456,7 +1627,7 @@ const CashlessBillSettlement = () => {
                 </Form.Group>
               </Col>
 
-              <Col md={6} className="mb-12">
+              <Col md={6} className="mb-15">
                 <Form.Group>
                   <Form.Label
                     className="small fw-bold mb-1"

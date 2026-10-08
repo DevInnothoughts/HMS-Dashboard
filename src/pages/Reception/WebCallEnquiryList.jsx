@@ -854,9 +854,9 @@ export default function WebCallEnquiryList({ isTab = false }) {
         }}
       >
         <option value="">All</option>
-        <option value="Visited">Visited</option>
-        <option value="Not Visited">Not Visited</option>
-        <option value="Surgery Done">Surgery Done</option>
+        <option value="Visited">🟢 Visited</option>
+        <option value="Not Visited">⚪ Not Visited</option>
+        <option value="Surgery Done">🟡 Surgery Done</option>
       </Form.Select>
     </div>
   );

@@ -62,12 +62,12 @@ const IpdSidebar = ({ activeIndex, handleMenuClick, isCollapsed, location }) => 
             </li>
 
             {/* Aggregator Bills */}
-            <li className={`menu-item ${activeIndex === "/aggregator-bills" ? "active" : ""}`}>
+            {/* <li className={`menu-item ${activeIndex === "/aggregator-bills" ? "active" : ""}`}>
                 <Link to="/aggregator-bills" data-label="Aggregator Bills">
                     <div className="icon-wrap"><FeatherIcon icon="file-text" /></div>
                     {!isCollapsed && <span>Aggregator Bills</span>}
                 </Link>
-            </li>
+            </li> */}
 
             {/* Cashless Bill Settlement */}
             <li className={`menu-item ${activeIndex === "/cashless-bill-settlement" ? "active" : ""}`}>
@@ -77,15 +77,13 @@ const IpdSidebar = ({ activeIndex, handleMenuClick, isCollapsed, location }) => 
                 </Link>
             </li>
 
-
-
             {/* Bed Allotment */}
-            <li className={`menu-item ${activeIndex === "/bed-allotment-list" ? "active" : ""}`}>
+            {/* <li className={`menu-item ${activeIndex === "/bed-allotment-list" ? "active" : ""}`}>
                 <Link to="/bed-allotment-list" data-label="Bed Allotment">
                     <div className="icon-wrap"><i className="fa fa-bed"></i></div>
                     {!isCollapsed && <span>Bed Allotment</span>}
                 </Link>
-            </li>
+            </li> */}
 
             {/* Reports (dropdown) */}
             <li className={`menu-item ${isReportActive ? "active" : ""}`}>
