@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import ReceptionHeader from "./Header/ReceptionHeader";
 import DoctorHeader from "./Header/DoctorHeader";
 import IpdHeader from "./Header/IpdHeader";
+import SuperAdminHeader from "./Header/SuperAdminHeader";
 import SidebarSetting from "./Sidebar/SidebarSetting";
 import Taptotop from "./Taptotop";
 import { SidebarProvider } from "../pages/api/useSidebarContext";
@@ -35,11 +36,19 @@ const AppLayout = ({ children }) => {
       <ActiveSessionTracker />
 
       {/* Conditionally render Header */}
-      {shouldRenderExtras && headerEnabled && (
-        localStorage.getItem("accountType")?.toLowerCase() === "doctor"
-          ? <DoctorHeader />
-          : (localStorage.getItem("accountType")?.toLowerCase() === "ipd" ? <IpdHeader /> : <ReceptionHeader />)
-      )}
+      {shouldRenderExtras && headerEnabled && (() => {
+        const accType = localStorage.getItem("accountType")?.toLowerCase();
+        if (accType === "superadmin" || accType === "super admin") {
+          return <SuperAdminHeader />;
+        }
+        if (accType === "doctor") {
+          return <DoctorHeader />;
+        }
+        if (accType === "ipd") {
+          return <IpdHeader />;
+        }
+        return <ReceptionHeader />;
+      })()}
       {/* Conditionally render Sidebar */}
       {shouldRenderExtras && sidebarEnabled && <SidebarSetting />}
 

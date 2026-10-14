@@ -8,6 +8,7 @@ import logo from "/src/assets/images/logo/icon-logo.png";
 import DoctorSidebar from "./DoctorSidebar";
 import IpdSidebar from "./IpdSidebar";
 import ReceptionSidebar from "./ReceptionSidebar";
+import SuperAdminSidebar from "./SuperAdminSidebar";
 
 const SidebarCSS = () => (
   <style>{`
@@ -378,7 +379,12 @@ export default function SidebarSetting() {
   const [isHovered, setIsHovered] = useState(false);
   const accountType = localStorage.getItem("accountType");
   const department = localStorage.getItem("department");
-  const dashboardLink = accountType?.toLowerCase() === "doctor"
+  const isSuperAdmin =
+    accountType?.toLowerCase() === "superadmin" ||
+    accountType?.toLowerCase() === "super admin";
+  const dashboardLink = isSuperAdmin
+    ? "/superadmin-dashboard"
+    : accountType?.toLowerCase() === "doctor"
     ? "/doctor-dashboard"
     : (department === "IPD" ? "/ipd-dashboard" : "/reception-dashboard");
   const { toggleSidebar, isCompact } = useSidebarContext();
@@ -406,6 +412,9 @@ export default function SidebarSetting() {
       location
     };
 
+    if (isSuperAdmin) {
+      return <SuperAdminSidebar {...props} />;
+    }
     if (accountType?.toLowerCase() === "ipd" || (department === "IPD" && accountType?.toLowerCase() === "reception")) {
       return <IpdSidebar {...props} />;
     }

@@ -108,7 +108,10 @@ export default function Login() {
     let backendAccountType = "";
     let departmentVal = "";
 
-    if (accountType === "Reception") {
+    if (accountType === "Super Admin") {
+      backendAccountType = "superadmin";
+      departmentVal = "SuperAdmin";
+    } else if (accountType === "Reception") {
       backendAccountType = "reception";
       departmentVal = "OPD";
     } else if (accountType === "Doctor") {
@@ -145,6 +148,12 @@ export default function Login() {
 
         if (data.data.role === "doctor") {
           navigate("/doctor-dashboard", { replace: true });
+        } else if (
+          data.data.role?.toLowerCase() === "superadmin" ||
+          data.data.role?.toLowerCase() === "super admin" ||
+          accountType === "Super Admin"
+        ) {
+          navigate("/superadmin-dashboard", { replace: true });
         } else {
           if (departmentVal === "IPD") {
             navigate("/ipd-dashboard", { replace: true });
@@ -238,6 +247,7 @@ export default function Login() {
                 }}
               >
                 <option value="">Select Account Type</option>
+                <option value="Super Admin">Super Admin</option>
                 <option value="Reception">Reception</option>
                 <option value="Doctor">Doctor</option>
                 <option value="IPD">IPD</option>

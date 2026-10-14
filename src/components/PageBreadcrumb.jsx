@@ -18,7 +18,12 @@ export default function PageBreadcrumb(props) {
 
     const accountType = localStorage.getItem("accountType");
     const department = localStorage.getItem("department");
-    const dashboardLink = accountType?.toLowerCase() === "doctor"
+    const isSuperAdmin =
+        accountType?.toLowerCase() === "superadmin" ||
+        accountType?.toLowerCase() === "super admin";
+    const dashboardLink = isSuperAdmin
+        ? "/superadmin-dashboard"
+        : accountType?.toLowerCase() === "doctor"
         ? "/doctor-dashboard"
         : (department === "IPD" ? "/ipd-dashboard" : "/reception-dashboard");
 
