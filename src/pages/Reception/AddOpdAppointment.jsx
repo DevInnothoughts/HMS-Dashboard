@@ -18,6 +18,7 @@ import "../../styles/styles.css";
 import { toast } from "react-hot-toast";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import { decodeJwt } from "../Utility/decode-jwt";
+import SlotQuickViewPicker from "../../components/Reception/SlotQuickViewPicker";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
 const BASE_URL = "http://194.195.117.79:5100/api";
@@ -44,13 +45,16 @@ const getCountryCode = (patient_phone) => {
 };
 
 function to24HourFormat(time12h) {
-  const [time, modifier] = time12h.trim().split(" ");
+  if (!time12h) return "";
+  const trimmed = time12h.trim();
+  if (!trimmed.includes(" ")) return trimmed;
+  const [time, modifier] = trimmed.split(" ");
   let [hours, minutes] = time.split(":").map(Number);
 
-  if (modifier.toUpperCase() === "PM" && hours !== 12) {
+  if (modifier && modifier.toUpperCase() === "PM" && hours !== 12) {
     hours += 12;
   }
-  if (modifier.toUpperCase() === "AM" && hours === 12) {
+  if (modifier && modifier.toUpperCase() === "AM" && hours === 12) {
     hours = 0;
   }
 
@@ -166,11 +170,7 @@ export default function AddOpdAppointment() {
           patientName: "",
           patient_location: "",
           patient_id: "",
-          appointmentTime: new Date().toLocaleTimeString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: true,
-          }),
+          appointmentTime: "",
           note: "",
           FDE_Name: "",
           departmentName: "",
@@ -342,11 +342,7 @@ export default function AddOpdAppointment() {
       patient_phone: "",
       patient_location: "",
       patient_type: "",
-      appointmentTime: new Date().toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      }),
+      appointmentTime: "",
       note: "",
       FDE_Name: "",
       departmentName: "",
@@ -370,14 +366,7 @@ export default function AddOpdAppointment() {
     }
   }, [phone, currentLocation, fetchPatientDetails]);
 
-  useEffect(() => {
-    const currentTime = new Date().toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-    setFormData((prev) => ({ ...prev, appointmentTime: currentTime }));
-  }, []);
+
 
   useEffect(() => {
     if (currentLocation) fetchDropdownData();
@@ -709,20 +698,17 @@ export default function AddOpdAppointment() {
                       <Form.Label style={labelStyle}>
                         Appointment Time <span className="text-danger">*</span>
                       </Form.Label>
-                      <Form.Select
+                      <SlotQuickViewPicker
                         required
+                        hideDropdown
                         style={inputStyle}
                         name="appointmentTime"
                         value={formData.appointmentTime}
+                        date={formData.date}
+                        location={currentLocation}
+                        format="12h"
                         onChange={handleInputChange}
-                      >
-                        <option value="">Select Time</option>
-                        {timeSlots.map((t) => (
-                          <option key={t} value={t}>
-                            {t}
-                          </option>
-                        ))}
-                      </Form.Select>
+                      />
                     </Col>
                   </Row>
 

@@ -88,6 +88,7 @@ const PersonalDetailsCard = ({
     WOM: "",
     hhc_team_member: "",
     hhc_team_member_no: "",
+    hhc_employee_id: "",
   });
 
   const [selectedReference, setSelectedReference] = useState("");
@@ -201,6 +202,7 @@ const PersonalDetailsCard = ({
             ...prev,
             hhc_team_member: parts[0] || "",
             hhc_team_member_no: parts[1] || "",
+            hhc_employee_id: parts[2] || "",
           }));
         } else {
           setReferenceDetails((prev) => ({
@@ -545,11 +547,22 @@ const PersonalDetailsCard = ({
       case "hhc_team_member":
       case "HHC Team Member":
         reference_type = "hhc_team_member";
-        if (referenceDetails.hhc_team_member || referenceDetails.hhc_team_member_no) {
-          ref = `${referenceDetails.hhc_team_member?.trim() || ""},${referenceDetails.hhc_team_member_no?.trim() || ""}`;
-        } else {
-          ref = formData.ref?.trim() || "HHC Team Member";
+        if (
+          !referenceDetails.hhc_team_member?.trim() ||
+          !referenceDetails.hhc_team_member_no?.trim() ||
+          !referenceDetails.hhc_employee_id?.trim()
+        ) {
+          if (!referenceDetails.hhc_team_member?.trim()) {
+            toast.error("Please enter HHC team member name.");
+          } else if (!referenceDetails.hhc_team_member_no?.trim()) {
+            toast.error("Please enter HHC team member contact number.");
+          } else {
+            toast.error("Please enter HHC team member employee ID.");
+          }
+          setLoading(false);
+          return;
         }
+        ref = `${referenceDetails.hhc_team_member.trim()},${referenceDetails.hhc_team_member_no.trim()},${referenceDetails.hhc_employee_id.trim()}`;
         break;
       default:
         reference_type = selectedReference || null;
@@ -1320,24 +1333,28 @@ const PersonalDetailsCard = ({
         return (
           <div className="mt-2">
             <Form.Label className="fw-bold mb-1" style={{ fontSize: "11px" }}>
-              HHC Team Member Details
+              HHC Team Member Details <span className="text-danger">*</span>
             </Form.Label>
             <Row className="g-2">
-              <Col md={6}>
+              <Col md={4}>
                 <Form.Control
+                  required
                   type="text"
                   name="hhc_team_member"
                   placeholder="Team Member Name"
                   value={referenceDetails.hhc_team_member || ""}
                   onChange={(e) => {
                     const name = e.target.value;
+                    const empId = referenceDetails.hhc_employee_id || "";
                     setReferenceDetails((prev) => ({
                       ...prev,
                       hhc_team_member: name,
                     }));
                     setFormData((prev) => ({
                       ...prev,
-                      ref: `${name},${referenceDetails.hhc_team_member_no || ""}`,
+                      ref: empId
+                        ? `${name},${referenceDetails.hhc_team_member_no || ""},${empId}`
+                        : `${name},${referenceDetails.hhc_team_member_no || ""}`,
                       reference_type: "hhc_team_member",
                     }));
                   }}
@@ -1349,21 +1366,54 @@ const PersonalDetailsCard = ({
                   }}
                 />
               </Col>
-              <Col md={6}>
+              <Col md={4}>
                 <Form.Control
+                  required
                   type="text"
                   name="hhc_team_member_no"
                   placeholder="Contact Number"
                   value={referenceDetails.hhc_team_member_no || ""}
                   onChange={(e) => {
                     const no = e.target.value.replace(/\D/g, "");
+                    const empId = referenceDetails.hhc_employee_id || "";
                     setReferenceDetails((prev) => ({
                       ...prev,
                       hhc_team_member_no: no,
                     }));
                     setFormData((prev) => ({
                       ...prev,
-                      ref: `${referenceDetails.hhc_team_member || ""},${no}`,
+                      ref: empId
+                        ? `${referenceDetails.hhc_team_member || ""},${no},${empId}`
+                        : `${referenceDetails.hhc_team_member || ""},${no}`,
+                      reference_type: "hhc_team_member",
+                    }));
+                  }}
+                  style={{
+                    border: "2px solid #b2ebf2",
+                    borderRadius: "8px",
+                    padding: "4px 10px",
+                    fontSize: "12px",
+                  }}
+                />
+              </Col>
+              <Col md={4}>
+                <Form.Control
+                  required
+                  type="text"
+                  name="hhc_employee_id"
+                  placeholder="Employee ID"
+                  value={referenceDetails.hhc_employee_id || ""}
+                  onChange={(e) => {
+                    const empId = e.target.value.replace(/[^a-zA-Z0-9]/g, "");
+                    setReferenceDetails((prev) => ({
+                      ...prev,
+                      hhc_employee_id: empId,
+                    }));
+                    setFormData((prev) => ({
+                      ...prev,
+                      ref: empId
+                        ? `${referenceDetails.hhc_team_member || ""},${referenceDetails.hhc_team_member_no || ""},${empId}`
+                        : `${referenceDetails.hhc_team_member || ""},${referenceDetails.hhc_team_member_no || ""}`,
                       reference_type: "hhc_team_member",
                     }));
                   }}

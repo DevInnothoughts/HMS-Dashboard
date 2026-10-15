@@ -24,6 +24,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import moment from "moment";
 import { useReactToPrint } from "react-to-print";
 import DiagnosisPrintView from "../Doctor/DiagnosisPrintView";
+import SlotQuickViewPicker from "../../components/Reception/SlotQuickViewPicker";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
 const BASE_URL = "http://194.195.117.79:5100/api";
@@ -1093,6 +1094,7 @@ export default function OpdAppointmentList() {
       ? moment(selectedAppointment.appointment_time, [
         "HH:mm:ss",
         "hh:mm A",
+        "HH:mm",
       ]).format("HH:mm")
       : null;
 
@@ -2168,29 +2170,25 @@ export default function OpdAppointmentList() {
                     >
                       Appointment Time
                     </Form.Label>
-                    <Form.Select
+                    <SlotQuickViewPicker
+                      required
+                      hideDropdown
                       name="appointment_time"
-                      value={
-                        selectedAppointment.appointment_time
-                          ? moment(selectedAppointment.appointment_time, [
-                            "HH:mm:ss",
-                            "hh:mm A",
-                          ]).format("hh:mm A")
-                          : ""
+                      value={selectedAppointment?.appointment_time || ""}
+                      date={
+                        selectedAppointment?.appointment_timestamp
+                          ? moment(selectedAppointment.appointment_timestamp).format("YYYY-MM-DD")
+                          : moment().format("YYYY-MM-DD")
                       }
+                      location={currentLocation}
+                      format="12h"
                       onChange={handleEditModalInputChange}
                       style={{
                         border: "2px solid rgb(77, 208, 225)",
                         fontSize: "12px",
+                        borderRadius: "10px",
                       }}
-                    >
-                      <option value="">Select Time</option>
-                      {timeSlots.map((time, index) => (
-                        <option key={index} value={time}>
-                          {time}
-                        </option>
-                      ))}
-                    </Form.Select>
+                    />
                   </Form.Group>
                 </Col>
 

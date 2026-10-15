@@ -24,6 +24,7 @@ import "../../styles/styles.css";
 import { toast } from "react-hot-toast";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import SlotQuickViewPicker from "../../components/Reception/SlotQuickViewPicker";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
 
@@ -611,6 +612,7 @@ export default function WebFormEnquiryList({ isTab = false }) {
         text: "The appointment has been recorded successfully.",
         confirmButtonColor: "#00bcd4",
       });
+      window.dispatchEvent(new CustomEvent("refreshApptCounts"));
       setShowAddModal(false);
     } catch (error) {
       console.error("Error adding appointment:", error.message);
@@ -1437,21 +1439,27 @@ export default function WebFormEnquiryList({ isTab = false }) {
                     >
                       <option value="">Select Enquiry Type</option>
                       {[
-                        "Call for Refund Amount",
-                        "Wrong Enquiry or Spam Call",
-                        "Enquiry for Test Charges",
-                        "Accounts Department",
-                        "Call for Another Branches",
-                        "Call for IPD Doctors",
-                        "Call for Assistant Doctors",
-                        "Call Regarding Job Vacancy",
-                        "Appointment Consultation",
-                        "Online Consultation",
-                        "SX Cost Enquiry",
-                        "Call for Lab Test Enquiry",
-                        "Medicines Availability at Pharmacy",
-                        "Patient is Coming Late for Appointment",
-                        "Insurance Related Queries",
+                        "Hot",
+                        "Mild",
+                        "Cold",
+                        "Other",
+                        "Appointment",
+                        "Visited",
+                        // "Call for Refund Amount",
+                        // "Wrong Enquiry or Spam Call",
+                        // "Enquiry for Test Charges",
+                        // "Accounts Department",
+                        // "Call for Another Branches",
+                        // "Call for IPD Doctors",
+                        // "Call for Assistant Doctors",
+                        // "Call Regarding Job Vacancy",
+                        // "Appointment Consultation",
+                        // "Online Consultation",
+                        // "SX Cost Enquiry",
+                        // "Call for Lab Test Enquiry",
+                        // "Medicines Availability at Pharmacy",
+                        // "Patient is Coming Late for Appointment",
+                        // "Insurance Related Queries",
                       ].map((type) => (
                         <option key={type} value={type}>
                           {type}
@@ -1707,24 +1715,21 @@ export default function WebFormEnquiryList({ isTab = false }) {
                   >
                     Appointment Time <span className="text-danger">*</span>
                   </Form.Label>
-                  <Form.Select
+                  <SlotQuickViewPicker
                     required
+                    hideDropdown
                     name="appointmentTime"
                     value={formData.appointmentTime}
+                    date={formData.date}
+                    location={currentLocation}
+                    format="24h"
                     onChange={handleInputChange}
                     style={{
                       border: "2px solid rgb(77, 208, 225)",
                       fontSize: "12px",
                       borderRadius: "10px",
                     }}
-                  >
-                    <option value="">Select Time</option>
-                    {timeSlots.map((time, index) => (
-                      <option key={index} value={time.value}>
-                        {time.label}
-                      </option>
-                    ))}
-                  </Form.Select>
+                  />
                 </Form.Group>
               </Col>
               <Col md={6}>
@@ -2510,25 +2515,21 @@ export default function WebFormEnquiryList({ isTab = false }) {
                   >
                     Time Slot <span className="text-danger">*</span>
                   </Form.Label>
-                  <Form.Select
+                  <SlotQuickViewPicker
                     required
-                    size="sm"
+                    hideDropdown
                     name="appointmentTime"
                     value={formData.appointmentTime}
+                    date={formData.date}
+                    location={currentLocation}
+                    format="24h"
                     onChange={handleInputChange}
                     style={{
                       border: "2px solid rgb(77, 208, 225)",
                       fontSize: "12px",
                       borderRadius: "10px",
                     }}
-                  >
-                    <option value="">Select Time Slot</option>
-                    {timeSlots.map((slot, index) => (
-                      <option key={index} value={slot.value}>
-                        {slot.label}
-                      </option>
-                    ))}
-                  </Form.Select>
+                  />
                 </Form.Group>
               </Col>
 

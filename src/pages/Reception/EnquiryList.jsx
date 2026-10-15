@@ -25,6 +25,7 @@ import moment from "moment";
 import Swal from "sweetalert2";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import SlotQuickViewPicker from "../../components/Reception/SlotQuickViewPicker";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
 
@@ -1165,29 +1166,26 @@ export default function EnquiryList({ isTab = false }) {
                   >
                     Appointment Time <span style={{ color: "red" }}>*</span>
                   </Form.Label>
-                  <Form.Select
-                    size="sm"
+                  <SlotQuickViewPicker
+                    required
+                    hideDropdown
+                    name="appointmentTime"
                     value={appointmentFormData.appointmentTime}
+                    date={appointmentFormData.date}
+                    location={currentLocation}
+                    format="12h"
                     onChange={(e) =>
-                      setAppointmentFormData({
-                        ...appointmentFormData,
-                        appointmentTime: e.target.value,
-                      })
+                      setAppointmentFormData((prev) => ({
+                        ...prev,
+                        appointmentTime: e.target ? e.target.value : e,
+                      }))
                     }
                     style={{
                       border: "2px solid rgb(77, 208, 225)",
                       fontSize: "12px",
                       borderRadius: "10px",
                     }}
-                    required
-                  >
-                    <option value="">Select Time</option>
-                    {timeSlots.map((time, index) => (
-                      <option key={index} value={time}>
-                        {time}
-                      </option>
-                    ))}
-                  </Form.Select>
+                  />
                 </Form.Group>
               </Col>
             </Row>

@@ -316,6 +316,7 @@ const OpdPrescriptionPrintView = React.forwardRef(
               <p>
                 <span className="fw-bold">Next Appointment :</span>{" "}
                 {nextAppoDate}
+                {d["next-appo-time"] ? ` (${d["next-appo-time"]})` : ""}
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 <span className="fw-bold">Assistant Doctor :</span> {doctorName}{" "}
                 ({doctorPhone})

@@ -24,6 +24,7 @@ import "../../styles/styles.css";
 import { toast } from "react-hot-toast";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import SlotQuickViewPicker from "../../components/Reception/SlotQuickViewPicker";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
 const BASE_URL = "http://194.195.117.79:5100/api";
@@ -124,7 +125,7 @@ export default function IvrEnquiryList({ isTab = false }) {
       ...prev,
       date: moment(today).format("YYYY-MM-DD"),
       caller_no: patient_phone,
-      appointmentTime: rowData.call_time || "",
+      appointmentTime: "",
       note: rowData.note || "",
       patientName: "",
       doctor_id: "",
@@ -1480,24 +1481,21 @@ export default function IvrEnquiryList({ isTab = false }) {
                   >
                     Appointment Time <span className="text-danger">*</span>
                   </Form.Label>
-                  <Form.Select
+                  <SlotQuickViewPicker
                     required
+                    hideDropdown
                     name="appointmentTime"
                     value={formData.appointmentTime}
+                    date={formData.date}
+                    location={currentLocation}
+                    format="24h"
                     onChange={handleInputChange}
                     style={{
                       border: "2px solid rgb(77, 208, 225)",
                       fontSize: "12px",
                       borderRadius: "10px",
                     }}
-                  >
-                    <option value="">Select Time</option>
-                    {timeSlots.map((time, index) => (
-                      <option key={index} value={time.value}>
-                        {time.label}
-                      </option>
-                    ))}
-                  </Form.Select>
+                  />
                 </Form.Group>
               </Col>
               <Col md={6}>
@@ -1562,7 +1560,7 @@ export default function IvrEnquiryList({ isTab = false }) {
                     <option value="">Select Type</option>
 
                     {formData.patient_type === "New" ||
-                    formData.patient_id === undefined ? (
+                      formData.patient_id === undefined ? (
                       <option value="New">NEW</option>
                     ) : (
                       <>
@@ -1888,7 +1886,7 @@ export default function IvrEnquiryList({ isTab = false }) {
                         marginBottom: "4px",
                       }}
                     >
-                      Call Back Date{" "}
+                      Enquiry Date{" "}
                       <span style={{ color: "red" }} className="required">
                         *
                       </span>
@@ -1965,6 +1963,7 @@ export default function IvrEnquiryList({ isTab = false }) {
                         "Medicines Availability at Pharmacy",
                         "Patient is Coming Late for Appointment",
                         "Insurance Related Queries",
+
                       ].map((type) => (
                         <option key={type} value={type}>
                           {type}

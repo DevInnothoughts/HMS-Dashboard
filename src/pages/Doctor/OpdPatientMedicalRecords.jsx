@@ -1935,6 +1935,7 @@ const OpdPatientMedicalRecords = () => {
     admmisionnote: "",
     patient_type: "",
     "next-appo-date": "",
+    "next-appo-time": "",
     doctor_comment: "",
     medicines: [],
     // Urology Fields
@@ -2006,6 +2007,7 @@ const OpdPatientMedicalRecords = () => {
               safeDate(d.creation_timestamp) ||
               new Date().toISOString().split("T")[0],
             "next-appo-date": safeDate(d["next-appo-date"]),
+            "next-appo-time": d["next-appo-time"] || d.appointment_time || "",
             surgical_advice: toArray(d.surgical_advice),
             uroadvice: toArray(d.uroadvice),
             preopinvestigation: toArray(d.preopinvestigation),
@@ -2287,6 +2289,7 @@ const OpdPatientMedicalRecords = () => {
   const [dischargeData, setDischargeData] = useState(initialDischargeState);
   const [previousDischargesList, setPreviousDischargesList] = useState([]);
   const [selectedDischargeId, setSelectedDischargeId] = useState(null);
+  const [previousPostOpList, setPreviousPostOpList] = useState([]);
 
   const handleSelectDischarge = async (id) => {
     setSelectedDischargeId(id);
@@ -2443,6 +2446,7 @@ const OpdPatientMedicalRecords = () => {
       fetchDischargeDates();
       fetchProctoscopyDates();
       fetchFollowUpDetails();
+      fetchPostOpHistory();
     }
   }, [patient, formData.patient_id, currentLocation]);
 
@@ -2476,6 +2480,33 @@ const OpdPatientMedicalRecords = () => {
       }
     } catch (error) {
       console.error("Error fetching discharge dates:", error);
+    }
+  };
+
+  const fetchPostOpHistory = async () => {
+    const patientId = formData.patient_id || patient?.patient_id;
+    if (!patientId || !currentLocation || currentLocation === "default") return [];
+
+    try {
+      const response = await fetch(
+        `${BASE_URL}/V1/doctor/list-post-op-history/${patientId}?location=${encodeURIComponent(currentLocation)}`,
+        {
+          headers: {
+            location: currentLocation,
+            "x-hms-location": currentLocation,
+          },
+        }
+      );
+      if (!response.ok) return [];
+      const data = await response.json();
+      if (data.statusCode === 200 && Array.isArray(data.data)) {
+        setPreviousPostOpList(data.data);
+        return data.data;
+      }
+      return [];
+    } catch (error) {
+      console.error("Error fetching post-op history:", error);
+      return [];
     }
   };
 
@@ -2993,6 +3024,14 @@ const OpdPatientMedicalRecords = () => {
   };
 
   const handlePrescriptionChange = (field, value) => {
+    setValidationErrors((prev) => {
+      if (prev[field]) {
+        const copy = { ...prev };
+        delete copy[field];
+        return copy;
+      }
+      return prev;
+    });
     setPrescriptionData((prev) => {
       const updated = { ...prev, [field]: value };
       if (
@@ -3000,6 +3039,7 @@ const OpdPatientMedicalRecords = () => {
         ["surgery_patient", "nofollowupappointment"].includes(value)
       ) {
         updated["next-appo-date"] = null;
+        updated["next-appo-time"] = null;
       }
       return updated;
     });
@@ -3115,6 +3155,9 @@ const OpdPatientMedicalRecords = () => {
         if (!prescriptionData["next-appo-date"]) {
           errors["next-appo-date"] = true;
         }
+        if (!prescriptionData["next-appo-time"]) {
+          errors["next-appo-time"] = true;
+        }
       }
     } else {
       if (
@@ -3124,6 +3167,9 @@ const OpdPatientMedicalRecords = () => {
       ) {
         if (!prescriptionData["next-appo-date"]) {
           errors["next-appo-date"] = true;
+        }
+        if (!prescriptionData["next-appo-time"]) {
+          errors["next-appo-time"] = true;
         }
       }
     }
@@ -3372,7 +3418,7 @@ const OpdPatientMedicalRecords = () => {
           followUpData.present_complaints.trim() !== ""
         );
       case "post-op":
-        return false;
+        return previousPostOpList && previousPostOpList.length > 0;
       case "other-tests":
         return previousTestsList && previousTestsList.length > 0;
       case "proctoscopy":
@@ -3418,6 +3464,8 @@ const OpdPatientMedicalRecords = () => {
     setSelectedPrescriptionId(null);
     setSelectedProctoscopyId(null);
     setSelectedDischargeId(null);
+
+    setPreviousPostOpList([]);
 
     setHistoryForPrint(null);
 
@@ -3842,6 +3890,13 @@ const OpdPatientMedicalRecords = () => {
                     doctors={doctors}
                     currentLocation={currentLocation}
                     baseUrl={BASE_URL}
+                    onSaveSuccess={(list) => {
+                      if (Array.isArray(list)) {
+                        setPreviousPostOpList(list);
+                      } else {
+                        fetchPostOpHistory();
+                      }
+                    }}
                   />
                 )}
                 {/* {activeTab === "other-tests" && (

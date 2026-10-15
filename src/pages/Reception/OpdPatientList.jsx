@@ -22,6 +22,7 @@ import {
 import { toast } from "react-hot-toast";
 import DatePicker from "react-datepicker";
 import logo from "../../assets/images/3.png";
+import SlotQuickViewPicker from "../../components/Reception/SlotQuickViewPicker";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
 
@@ -913,6 +914,7 @@ export default function OpdPatientList() {
         ...prev,
         hhc_team_member: parts[0] || "",
         hhc_team_member_no: parts[1] || "",
+        hhc_employee_id: parts[2] || "",
       }));
     } else {
       const standardNewspapers = [
@@ -1247,11 +1249,22 @@ export default function OpdPatientList() {
       case "hhc_team_member":
       case "HHC Team Member":
         reference_type = "hhc_team_member";
-        if (referenceDetails.hhc_team_member || referenceDetails.hhc_team_member_no) {
-          ref = `${referenceDetails.hhc_team_member?.trim() || ""},${referenceDetails.hhc_team_member_no?.trim() || ""}`;
-        } else {
-          ref = formData.ref?.trim() || "HHC Team Member";
+        if (
+          !referenceDetails.hhc_team_member?.trim() ||
+          !referenceDetails.hhc_team_member_no?.trim() ||
+          !referenceDetails.hhc_employee_id?.trim()
+        ) {
+          if (!referenceDetails.hhc_team_member?.trim()) {
+            toast.error("Please enter HHC team member name.");
+          } else if (!referenceDetails.hhc_team_member_no?.trim()) {
+            toast.error("Please enter HHC team member contact number.");
+          } else {
+            toast.error("Please enter HHC team member employee ID.");
+          }
+          setLoading(false);
+          return;
         }
+        ref = `${referenceDetails.hhc_team_member.trim()},${referenceDetails.hhc_team_member_no.trim()},${referenceDetails.hhc_employee_id.trim()}`;
         break;
       default:
         reference_type = null;
@@ -1466,6 +1479,7 @@ export default function OpdPatientList() {
         text: "Appointment booked successfully",
         timer: 2000,
       });
+      window.dispatchEvent(new CustomEvent("refreshApptCounts"));
       setShowAddModal(false);
     } catch (error) {
       console.error("Error adding appointment:", error.message);
@@ -3035,13 +3049,16 @@ export default function OpdPatientList() {
                 value={referenceDetails.hhc_team_member || ""}
                 onChange={(e) => {
                   const val = e.target.value;
+                  const empId = referenceDetails.hhc_employee_id || "";
                   setReferenceDetails((prev) => ({
                     ...prev,
                     hhc_team_member: val,
                   }));
                   setFormData((prev) => ({
                     ...prev,
-                    ref: `${val},${referenceDetails.hhc_team_member_no || ""}`,
+                    ref: empId
+                      ? `${val},${referenceDetails.hhc_team_member_no || ""},${empId}`
+                      : `${val},${referenceDetails.hhc_team_member_no || ""}`,
                     reference_type: "hhc_team_member",
                   }));
                 }}
@@ -3060,13 +3077,43 @@ export default function OpdPatientList() {
                 value={referenceDetails.hhc_team_member_no || ""}
                 onChange={(e) => {
                   const no = e.target.value.replace(/\D/g, "");
+                  const empId = referenceDetails.hhc_employee_id || "";
                   setReferenceDetails((prev) => ({
                     ...prev,
                     hhc_team_member_no: no,
                   }));
                   setFormData((prev) => ({
                     ...prev,
-                    ref: `${referenceDetails.hhc_team_member || ""},${no}`,
+                    ref: empId
+                      ? `${referenceDetails.hhc_team_member || ""},${no},${empId}`
+                      : `${referenceDetails.hhc_team_member || ""},${no}`,
+                    reference_type: "hhc_team_member",
+                  }));
+                }}
+              />
+              <input
+                required
+                className="form-control"
+                type="text"
+                name="hhc_employee_id"
+                placeholder="Employee ID"
+                style={{
+                  border: "2px solid rgb(77, 208, 225)",
+                  fontSize: "12px",
+                  borderRadius: "10px",
+                }}
+                value={referenceDetails.hhc_employee_id || ""}
+                onChange={(e) => {
+                  const empId = e.target.value.replace(/[^a-zA-Z0-9]/g, "");
+                  setReferenceDetails((prev) => ({
+                    ...prev,
+                    hhc_employee_id: empId,
+                  }));
+                  setFormData((prev) => ({
+                    ...prev,
+                    ref: empId
+                      ? `${referenceDetails.hhc_team_member || ""},${referenceDetails.hhc_team_member_no || ""},${empId}`
+                      : `${referenceDetails.hhc_team_member || ""},${referenceDetails.hhc_team_member_no || ""}`,
                     reference_type: "hhc_team_member",
                   }));
                 }}
@@ -3109,6 +3156,7 @@ export default function OpdPatientList() {
     WOM: "",
     hhc_team_member: "",
     hhc_team_member_no: "",
+    hhc_employee_id: "",
   });
 
   const [oldPatientDetails, setOldPatientDetails] = useState({
@@ -3548,24 +3596,21 @@ export default function OpdPatientList() {
                   >
                     Appointment Time <span style={{ color: "red" }}>*</span>
                   </Form.Label>
-                  <Form.Select
+                  <SlotQuickViewPicker
                     required
+                    hideDropdown
                     name="appointmentTime"
                     value={formData.appointmentTime}
+                    date={formData.date}
+                    location={currentLocation}
+                    format="12h"
                     onChange={handleInputChange}
                     style={{
                       border: "2px solid rgb(77, 208, 225)",
                       fontSize: "12px",
                       borderRadius: "10px",
                     }}
-                  >
-                    <option value="">Select Time</option>
-                    {timeSlots.map((time, index) => (
-                      <option key={index} value={time}>
-                        {time}
-                      </option>
-                    ))}
-                  </Form.Select>
+                  />
                 </Form.Group>
               </Col>
             </Row>

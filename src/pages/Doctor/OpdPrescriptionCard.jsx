@@ -10,6 +10,7 @@ import {
   Tooltip,
 } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
+import SlotQuickViewPicker from "../../components/Reception/SlotQuickViewPicker";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
 
@@ -863,6 +864,61 @@ const OpdPrescriptionCard = ({
                       : "white",
                 }}
               />
+            </Col>
+            <Col md={3} className="mb-3">
+              <Form.Label className="fw-bold" style={{ fontSize: "11px" }}>
+                Next Appointment Time <span className="text-danger">*</span>
+                {prescriptionData.patient_type &&
+                  prescriptionData.patient_type !== "nofollowupappointment" &&
+                  prescriptionData.patient_type !== "surgery_patient" && (
+                    <span className="text-danger"> *</span>
+                  )}
+              </Form.Label>
+              <SlotQuickViewPicker
+                required
+                hideDropdown
+                name="next-appo-time"
+                value={prescriptionData["next-appo-time"] || ""}
+                date={prescriptionData["next-appo-date"] || ""}
+                location={location}
+                format="12h"
+                disabled={
+                  isReadOnly ||
+                  prescriptionData.patient_type === "surgery_patient" ||
+                  prescriptionData.patient_type === "nofollowupappointment"
+                }
+                onChange={(e) =>
+                  handlePrescriptionChange(
+                    "next-appo-time",
+                    e?.target ? e.target.value : e,
+                  )
+                }
+                style={{
+                  borderRadius: "10px",
+                  border: validationErrors["next-appo-time"]
+                    ? "2px solid #dc3545"
+                    : prescriptionData["next-appo-time"]
+                    ? "2px solid #10b981"
+                    : "2px solid #b2ebf2",
+                  height: "33px",
+                  fontSize: "12px",
+                  backgroundColor:
+                    prescriptionData.patient_type === "surgery_patient" ||
+                    prescriptionData.patient_type === "nofollowupappointment"
+                      ? "#e9ecef"
+                      : prescriptionData["next-appo-time"]
+                      ? "#f0fdf4"
+                      : "white",
+                }}
+              />
+              {validationErrors["next-appo-time"] && (
+                <div
+                  className="text-danger"
+                  style={{ fontSize: "11px", marginTop: "2px" }}
+                >
+                  Please select appointment time
+                </div>
+              )}
             </Col>
             <Col md={3} className="mb-3">
               <Form.Label className="fw-bold" style={{ fontSize: "12px" }}>

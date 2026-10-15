@@ -210,6 +210,7 @@ const PostOpCard = ({
   doctors = [],
   currentLocation: propLocation,
   baseUrl: propBaseUrl,
+  onSaveSuccess,
 }) => {
   const [historyList, setHistoryList] = useState([]);
   const [currentVisit, setCurrentVisit] = useState(defaultVisitState);
@@ -253,6 +254,9 @@ const PostOpCard = ({
       const result = await response.json();
       if (result.statusCode === 200 && Array.isArray(result.data)) {
         setHistoryList(result.data);
+        if (typeof onSaveSuccess === "function") {
+          onSaveSuccess(result.data);
+        }
       }
     } catch (err) {
       console.error("Error fetching post-op history:", err);
@@ -444,6 +448,9 @@ const PostOpCard = ({
         });
 
         await fetchPostOpHistory();
+        if (typeof onSaveSuccess === "function") {
+          onSaveSuccess();
+        }
       } else {
         Swal.fire({
           icon: "error",
@@ -575,6 +582,9 @@ const PostOpCard = ({
             handleNewVisit();
           }
           await fetchPostOpHistory();
+          if (typeof onSaveSuccess === "function") {
+            onSaveSuccess();
+          }
         } else {
           Swal.fire({
             icon: "error",

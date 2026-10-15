@@ -24,6 +24,7 @@ import "../../styles/styles.css";
 import { toast } from "react-hot-toast";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import SlotQuickViewPicker from "../../components/Reception/SlotQuickViewPicker";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
 
@@ -1691,24 +1692,21 @@ export default function UnattendedEnquiryList({ isTab = false }) {
                   >
                     Appointment Time <span className="text-danger">*</span>
                   </Form.Label>
-                  <Form.Select
+                  <SlotQuickViewPicker
                     required
+                    hideDropdown
                     name="appointmentTime"
                     value={formData.appointmentTime}
+                    date={formData.date}
+                    location={currentLocation}
+                    format="24h"
                     onChange={handleInputChange}
                     style={{
                       border: "2px solid rgb(77, 208, 225)",
                       fontSize: "12px",
                       borderRadius: "10px",
                     }}
-                  >
-                    <option value="">Select Time</option>
-                    {timeSlots.map((time, index) => (
-                      <option key={index} value={time.value}>
-                        {time.label}
-                      </option>
-                    ))}
-                  </Form.Select>
+                  />
                 </Form.Group>
               </Col>
               <Col md={6}>
