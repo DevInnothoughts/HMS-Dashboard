@@ -25,6 +25,14 @@ const SuperAdminSidebar = ({
     activeIndex === "/superadmin-hospital-certificates" ||
     location.pathname === "/superadmin-hospital-certificates";
 
+  const ipdDuePath = "/superadmin-ipd-bills-due-list";
+
+  const isIpdDueActive =
+    activeIndex === ipdDuePath ||
+    location.pathname === ipdDuePath ||
+    activeIndex === "/ipd-bills-due-list" ||
+    location.pathname === "/ipd-bills-due-list";
+
   return (
     <ul className="sidebar-menu-list">
       {/* Role Badge */}
@@ -64,6 +72,16 @@ const SuperAdminSidebar = ({
             <i className="fa fa-certificate"></i>
           </div>
           {!isCollapsed && <span>Hospital Certificates</span>}
+        </Link>
+      </li>
+
+      {/* IPD Bills Due List */}
+      <li className={`menu-item ${isIpdDueActive ? "active" : ""}`}>
+        <Link to={ipdDuePath} data-label="IPD Bills Due List">
+          <div className="icon-wrap">
+            <i className="fa fa-file-text-o"></i>
+          </div>
+          {!isCollapsed && <span>IPD Bills Due List</span>}
         </Link>
       </li>
     </ul>

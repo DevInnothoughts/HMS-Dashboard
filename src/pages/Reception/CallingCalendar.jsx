@@ -52,6 +52,41 @@ export default function CallingCalendar() {
     moment().format("YYYY-MM-DD"),
   );
   const [hoveredCard, setHoveredCard] = useState(null);
+  const [cardCounts, setCardCounts] = useState({
+    Enquiry: { toBeCalled: 0, pending: 0, called: 0 },
+    todayAppointments: { toBeCalled: 0, pending: 0, called: 0 },
+    tomorrowAppointments: { toBeCalled: 0, pending: 0, called: 0 },
+    Surgery: { toBeCalled: 0, pending: 0, called: 0 },
+    Medication: { toBeCalled: 0, pending: 0, called: 0 },
+    Test: { toBeCalled: 0, pending: 0, called: 0 },
+    Dischargecard: { toBeCalled: 0, pending: 0, called: 0 },
+  });
+
+  const fetchTodayCounts = async () => {
+    if (!currentLocation || currentLocation === "default") return;
+    try {
+      const response = await fetch(
+        `${BASE_URL}/V1/calling-calendar/today-counts?_t=${Date.now()}`,
+        {
+          method: "GET",
+          headers: {
+            "x-hms-location": currentLocation,
+          },
+        }
+      );
+      if (response.ok) {
+        const resData = await response.json();
+        if (resData.statusCode === 200 && resData.data) {
+          setCardCounts((prev) => ({
+            ...prev,
+            ...resData.data,
+          }));
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching reception calling counts:", err);
+    }
+  };
 
   // Today & Tomorrow Pending Appointments State
   const [todayAppointments, setTodayAppointments] = useState([]);
@@ -144,6 +179,7 @@ export default function CallingCalendar() {
     if (currentLocation !== "default") {
       fetchPendingAppointments();
       fetchDropdownData();
+      fetchTodayCounts();
     }
   }, [currentLocation]);
 
@@ -204,9 +240,9 @@ export default function CallingCalendar() {
 
     const finalAppointmentTime = selectedAppointment.appointment_time
       ? moment(selectedAppointment.appointment_time, [
-          "HH:mm:ss",
-          "hh:mm A",
-        ]).format("HH:mm")
+        "HH:mm:ss",
+        "hh:mm A",
+      ]).format("HH:mm")
       : null;
 
     const updatePayload = {
@@ -395,6 +431,8 @@ export default function CallingCalendar() {
     setSelectedView("dashboard");
     setRecords([]);
     setNoNotesRecords([]);
+    fetchTodayCounts();
+    fetchPendingAppointments();
   };
 
   // Open modals
@@ -458,6 +496,7 @@ export default function CallingCalendar() {
         } else {
           fetchAdvisedData(selectedType, selectedDays);
         }
+        fetchTodayCounts();
       } else {
         Swal.fire("Error", "Failed to save note.", "error");
       }
@@ -508,6 +547,7 @@ export default function CallingCalendar() {
         });
         // Refresh local data
         fetchAdvisedData(selectedType, selectedDays);
+        fetchTodayCounts();
       } else {
         Swal.fire("Error", "Failed to save callback date.", "error");
       }
@@ -524,7 +564,7 @@ export default function CallingCalendar() {
     const daysString = "3,7,15,30,0";
     const typeValue =
       selectedView === "todayAppointments" ||
-      selectedView === "tomorrowAppointments"
+        selectedView === "tomorrowAppointments"
         ? selectedView
         : selectedType;
 
@@ -541,6 +581,117 @@ export default function CallingCalendar() {
 
     const downloadUrl = `${BASE_URL}/V1/calling-calendar/download-excel?Frdate=${fromDateValue}&date=${toDateValue}&days=${daysString}&type=${typeValue}&location=${currentLocation}`;
     window.location.href = downloadUrl;
+  };
+
+  const getAppointmentCounts = (list) => {
+    const total = list.length;
+    const todayStrDDMM = moment().format("DD-MM-YYYY");
+    const todayStrYYYYMM = moment().format("YYYY-MM-DD");
+    let called = 0;
+    list.forEach((app) => {
+      if (app.calling_notes) {
+        const str =
+          typeof app.calling_notes === "string"
+            ? app.calling_notes
+            : JSON.stringify(app.calling_notes);
+        if (str.includes(todayStrDDMM) || str.includes(todayStrYYYYMM)) {
+          called++;
+        }
+      }
+    });
+    return { toBeCalled: total, pending: Math.max(0, total - called), called };
+  };
+
+  const renderCountBadges = (type) => {
+    let counts = { toBeCalled: 0, pending: 0, called: 0 };
+    if (type === "todayAppointments") {
+      counts = getAppointmentCounts(todayAppointments);
+    } else if (type === "tomorrowAppointments") {
+      counts = getAppointmentCounts(tomorrowAppointments);
+    } else {
+      counts = cardCounts[type] || { toBeCalled: 0, pending: 0, called: 0 };
+    }
+
+    return (
+      <div
+        style={{
+          position: "absolute",
+          top: "14px",
+          right: "14px",
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          gap: "6px",
+          maxWidth: "calc(100% - 75px)",
+          zIndex: 2,
+        }}
+      >
+        <span
+          style={{
+            fontSize: "11px",
+            fontWeight: "700",
+            backgroundColor: "#e8f5e9",
+            color: "#2e7d32",
+            padding: "3px 8px",
+            borderRadius: "12px",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "4px",
+            border: "1px solid #c8e6c9",
+            boxShadow: "0 1px 2px rgba(46,125,50,0.08)",
+            whiteSpace: "nowrap",
+          }}
+          title={`${counts.toBeCalled} patients scheduled to be called today`}
+        >
+          <i className="fa fa-phone" style={{ fontSize: "10px" }}></i>
+          <span>{counts.toBeCalled} To Call</span>
+        </span>
+
+        <span
+          style={{
+            fontSize: "11px",
+            fontWeight: "700",
+            backgroundColor: counts.pending > 0 ? "#fff3e0" : "#f8fafc",
+            color: counts.pending > 0 ? "#e65100" : "#64748b",
+            padding: "3px 8px",
+            borderRadius: "12px",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "4px",
+            border: counts.pending > 0 ? "1px solid #ffe0b2" : "1px solid #e2e8f0",
+            boxShadow: counts.pending > 0 ? "0 1px 2px rgba(230,81,0,0.08)" : "none",
+            whiteSpace: "nowrap",
+          }}
+          title={`${counts.pending} patients pending to be called today`}
+        >
+          <i className="fa fa-clock-o" style={{ fontSize: "10px" }}></i>
+          <span>{counts.pending} Pending</span>
+        </span>
+
+        {counts.called > 0 && (
+          <span
+            style={{
+              fontSize: "11px",
+              fontWeight: "700",
+              backgroundColor: "#e0f2fe",
+              color: "#0369a1",
+              padding: "3px 8px",
+              borderRadius: "12px",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "4px",
+              border: "1px solid #bae6fd",
+              whiteSpace: "nowrap",
+            }}
+            title={`${counts.called} patients called today`}
+          >
+            <i className="fa fa-check" style={{ fontSize: "10px" }}></i>
+            <span>{counts.called} Called</span>
+          </span>
+        )}
+      </div>
+    );
   };
 
   const renderResultsHeader = () => (
@@ -624,7 +775,7 @@ export default function CallingCalendar() {
         } else {
           try {
             parsed = JSON.parse(parsed);
-          } catch (e) {}
+          } catch (e) { }
         }
       }
 
@@ -968,7 +1119,7 @@ export default function CallingCalendar() {
         } else {
           try {
             parsed = JSON.parse(parsed);
-          } catch (e) {}
+          } catch (e) { }
         }
       }
 
@@ -1095,9 +1246,9 @@ export default function CallingCalendar() {
                 <span>
                   {app.appointment_time
                     ? moment(app.appointment_time, [
-                        "HH:mm:ss",
-                        "hh:mm A",
-                      ]).format("HH:mm")
+                      "HH:mm:ss",
+                      "hh:mm A",
+                    ]).format("HH:mm")
                     : "-"}
                 </span>
               </div>
@@ -1137,10 +1288,10 @@ export default function CallingCalendar() {
                 parsedNotes.map((note, index) => {
                   const formattedNoteDate = note.date
                     ? moment(note.date, [
-                        "DD-MM-YYYY HH:mm:ss",
-                        "YYYY-MM-DDTHH:mm:ss.SSSZ",
-                        "YYYY-MM-DD HH:mm:ss",
-                      ]).format("DD-MM-YYYY HH:mm")
+                      "DD-MM-YYYY HH:mm:ss",
+                      "YYYY-MM-DDTHH:mm:ss.SSSZ",
+                      "YYYY-MM-DD HH:mm:ss",
+                    ]).format("DD-MM-YYYY HH:mm")
                     : "";
                   return (
                     <div
@@ -1505,6 +1656,7 @@ export default function CallingCalendar() {
                               >
                                 View surgery recommendations
                               </p>
+                              {renderCountBadges("Surgery")}
                             </div>
                             <div
                               style={{
@@ -1598,6 +1750,7 @@ export default function CallingCalendar() {
                               >
                                 Track prescribed medications
                               </p>
+                              {renderCountBadges("Medication")}
                             </div>
                             <div
                               style={{
@@ -1691,6 +1844,7 @@ export default function CallingCalendar() {
                               >
                                 Diagnostic tests overview
                               </p>
+                              {renderCountBadges("Test")}
                             </div>
                             <div
                               style={{
@@ -1782,6 +1936,7 @@ export default function CallingCalendar() {
                               >
                                 Follow-up discharge calls
                               </p>
+                              {renderCountBadges("Dischargecard")}
                             </div>
                             <div
                               style={{
@@ -1877,6 +2032,7 @@ export default function CallingCalendar() {
                           >
                             Follow-up appointment enquiries
                           </p>
+                          {renderCountBadges("Enquiry")}
                         </div>
                         <div
                           style={{
@@ -1954,7 +2110,7 @@ export default function CallingCalendar() {
                               margin: "0 0 4px 0",
                             }}
                           >
-                            Today's Appointment ({todayAppointments.length})
+                            Today's Pending Appointment ({todayAppointments.length})
                           </h5>
                           <p
                             style={{
@@ -2044,7 +2200,7 @@ export default function CallingCalendar() {
                               margin: "0 0 4px 0",
                             }}
                           >
-                            Tomorrow's Appointment (
+                            Tomorrow's Pending Appointment (
                             {tomorrowAppointments.length})
                           </h5>
                           <p
@@ -2734,9 +2890,9 @@ export default function CallingCalendar() {
                       value={
                         selectedAppointment.appointment_time
                           ? moment(selectedAppointment.appointment_time, [
-                              "HH:mm:ss",
-                              "hh:mm A",
-                            ]).format("hh:mm A")
+                            "HH:mm:ss",
+                            "hh:mm A",
+                          ]).format("hh:mm A")
                           : ""
                       }
                       onChange={handleEditModalInputChange}

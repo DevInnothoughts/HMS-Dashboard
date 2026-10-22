@@ -49,6 +49,13 @@ export default function DoctorCallingCalendar() {
   const [noteComment, setNoteComment] = useState("");
   const [callbackDate, setCallbackDate] = useState("");
   const [hoveredCard, setHoveredCard] = useState(null);
+  const [cardCounts, setCardCounts] = useState({
+    Surgery: { toBeCalled: 0, pending: 0, called: 0 },
+    Medication: { toBeCalled: 0, pending: 0, called: 0 },
+    Test: { toBeCalled: 0, pending: 0, called: 0 },
+    Dischargecard: { toBeCalled: 0, pending: 0, called: 0 },
+    MCDPA: { toBeCalled: 0, pending: 0, called: 0 },
+  });
 
   // Fetch Location from JWT
   useEffect(() => {
@@ -60,6 +67,35 @@ export default function DoctorCallingCalendar() {
       }
     }
   }, []);
+
+  const fetchTodayCounts = async () => {
+    if (!currentLocation || currentLocation === "default") return;
+    try {
+      const response = await fetch(
+        `${BASE_URL}/V1/doctor/calling-calendar/today-counts?_t=${Date.now()}`,
+        {
+          method: "GET",
+          headers: {
+            "x-hms-location": currentLocation,
+          },
+        }
+      );
+      if (response.ok) {
+        const resData = await response.json();
+        if (resData.statusCode === 200 && resData.data) {
+          setCardCounts(resData.data);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching doctor calling counts:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (currentLocation && currentLocation !== "default") {
+      fetchTodayCounts();
+    }
+  }, [currentLocation]);
 
   // Refetch when toDate or currentLocation changes in advised view
   useEffect(() => {
@@ -190,6 +226,7 @@ export default function DoctorCallingCalendar() {
     setRecords([]);
     setNoNotesRecords([]);
     setMcdpaData({});
+    fetchTodayCounts();
   };
 
   // Open modals
@@ -250,6 +287,7 @@ export default function DoctorCallingCalendar() {
         } else {
           fetchAdvisedData(selectedType, selectedDays);
         }
+        fetchTodayCounts();
       } else {
         Swal.fire("Error", "Failed to save note.", "error");
       }
@@ -304,6 +342,7 @@ export default function DoctorCallingCalendar() {
         } else {
           fetchAdvisedData(selectedType, selectedDays);
         }
+        fetchTodayCounts();
       } else {
         Swal.fire("Error", "Failed to save callback date.", "error");
       }
@@ -325,6 +364,90 @@ export default function DoctorCallingCalendar() {
   const displayedRecords = selectedType === "MCDPA"
     ? (selectedDays === 0 ? (mcdpaData.callback || []) : (mcdpaData[selectedDays] || []))
     : records;
+
+  const renderCountBadges = (type) => {
+    const counts = cardCounts[type] || { toBeCalled: 0, pending: 0, called: 0 };
+    return (
+      <div
+        style={{
+          position: "absolute",
+          top: "14px",
+          right: "14px",
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          gap: "6px",
+          maxWidth: "calc(100% - 75px)",
+          zIndex: 2,
+        }}
+      >
+        <span
+          style={{
+            fontSize: "11px",
+            fontWeight: "700",
+            backgroundColor: "#e8f5e9",
+            color: "#2e7d32",
+            padding: "3px 8px",
+            borderRadius: "12px",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "4px",
+            border: "1px solid #c8e6c9",
+            boxShadow: "0 1px 2px rgba(46,125,50,0.08)",
+            whiteSpace: "nowrap",
+          }}
+          title={`${counts.toBeCalled} patients scheduled to be called today`}
+        >
+          <i className="fa fa-phone" style={{ fontSize: "10px" }}></i>
+          <span>{counts.toBeCalled} To Call</span>
+        </span>
+
+        <span
+          style={{
+            fontSize: "11px",
+            fontWeight: "700",
+            backgroundColor: counts.pending > 0 ? "#fff3e0" : "#f8fafc",
+            color: counts.pending > 0 ? "#e65100" : "#64748b",
+            padding: "3px 8px",
+            borderRadius: "12px",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "4px",
+            border: counts.pending > 0 ? "1px solid #ffe0b2" : "1px solid #e2e8f0",
+            boxShadow: counts.pending > 0 ? "0 1px 2px rgba(230,81,0,0.08)" : "none",
+            whiteSpace: "nowrap",
+          }}
+          title={`${counts.pending} patients pending to be called today`}
+        >
+          <i className="fa fa-clock-o" style={{ fontSize: "10px" }}></i>
+          <span>{counts.pending} Pending</span>
+        </span>
+
+        {counts.called > 0 && (
+          <span
+            style={{
+              fontSize: "11px",
+              fontWeight: "700",
+              backgroundColor: "#e0f2fe",
+              color: "#0369a1",
+              padding: "3px 8px",
+              borderRadius: "12px",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "4px",
+              border: "1px solid #bae6fd",
+              whiteSpace: "nowrap",
+            }}
+            title={`${counts.called} patients called today`}
+          >
+            <i className="fa fa-check" style={{ fontSize: "10px" }}></i>
+            <span>{counts.called} Called</span>
+          </span>
+        )}
+      </div>
+    );
+  };
 
   const renderResultsHeader = () => (
     <div
@@ -717,6 +840,7 @@ export default function DoctorCallingCalendar() {
                           >
                             View surgery recommendations
                           </p>
+                          {renderCountBadges("Surgery")}
                         </div>
                         <div
                           style={{
@@ -806,6 +930,7 @@ export default function DoctorCallingCalendar() {
                           >
                             Track prescribed medications
                           </p>
+                          {renderCountBadges("Medication")}
                         </div>
                         <div
                           style={{
@@ -899,6 +1024,7 @@ export default function DoctorCallingCalendar() {
                           >
                             Diagnostic tests overview
                           </p>
+                          {renderCountBadges("Test")}
                         </div>
                         <div
                           style={{
@@ -987,6 +1113,7 @@ export default function DoctorCallingCalendar() {
                           >
                             Follow-up discharge calls
                           </p>
+                          {renderCountBadges("Dischargecard")}
                         </div>
                         <div
                           style={{
@@ -1081,6 +1208,7 @@ export default function DoctorCallingCalendar() {
                           >
                             MCDPA Patients list
                           </p>
+                          {renderCountBadges("MCDPA")}
                         </div>
                         <div
                           style={{

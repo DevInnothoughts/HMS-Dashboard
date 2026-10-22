@@ -22,7 +22,7 @@ import {
 import { toast } from "react-hot-toast";
 import DatePicker from "react-datepicker";
 import logo from "../../assets/images/3.png";
-import SlotQuickViewPicker from "../../components/Reception/SlotQuickViewPicker";
+import SlotQuickViewPicker from "./SlotQuickViewPicker";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
 

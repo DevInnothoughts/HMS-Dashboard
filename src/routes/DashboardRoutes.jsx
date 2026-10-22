@@ -5,6 +5,7 @@ import IpdDashboard from "../pages/Ipd/IpdDashboard";
 import DoctorDashboard from "../pages/Doctor/DoctorDashboard";
 import SuperAdminDashboard from "../pages/Superadmin/SuperAdminDashboard";
 import SuperAdminHC from "../pages/Superadmin/SuperAdminHC";
+import IpdBillsDueList from "../pages/Superadmin/IpdBillsDueList";
 
 const DashboardHome = () => {
   const accountType = localStorage.getItem("accountType");
@@ -30,6 +31,8 @@ export const DashboardRoutes = (
     <Route path="/superadmin-dashboard" element={<SuperAdminDashboard />} />
     <Route path="/superadmin-hc" element={<SuperAdminHC />} />
     <Route path="/superadmin-hospital-certificates" element={<SuperAdminHC />} />
+    <Route path="/superadmin-ipd-bills-due-list" element={<IpdBillsDueList />} />
+    <Route path="/ipd-bills-due-list" element={<IpdBillsDueList />} />
     <Route path="/ipd-dashboard" element={<IpdDashboard />} />
     <Route path="/reception-dashboard" element={<ReceptionDashboard />} />
     <Route path="/doctor-dashboard" element={<DoctorDashboard />} />

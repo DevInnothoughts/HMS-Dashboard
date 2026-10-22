@@ -18,7 +18,7 @@ import "../../styles/styles.css";
 import { toast } from "react-hot-toast";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import { decodeJwt } from "../Utility/decode-jwt";
-import SlotQuickViewPicker from "../../components/Reception/SlotQuickViewPicker";
+import SlotQuickViewPicker from "./SlotQuickViewPicker";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
 const BASE_URL = "http://194.195.117.79:5100/api";
@@ -181,6 +181,13 @@ export default function AddOpdAppointment() {
         return;
       }
 
+      const cleanDigits = String(patient_phone).replace(/\D/g, "");
+      if (cleanDigits.length < 10) {
+        setIsExistingPatient(false);
+        setNoPendingAppt(true);
+        return;
+      }
+
       setIsSearchingPatient(true);
       try {
         const url = `${BASE_URL}/V1/appointment/getPatientByMobile?patient_phone=${patient_phone}&location=${currentLocation}`;
@@ -209,11 +216,84 @@ export default function AddOpdAppointment() {
         if (latestPhoneRef.current !== patient_phone) return;
 
         if (data.statusCode === 200 && data.data) {
+          // If matched as secondary / alternative number
+          if (data.data.matchType === "SECONDARY") {
+            const secondaryPatient = data.data;
+            const popResult = await Swal.fire({
+              icon: "question",
+              iconColor: "#f59e0b",
+              title: "Secondary Number Detected",
+              html: `
+                <div style="font-family: inherit; text-align: left; font-size: 13px; color: #334155;">
+                  <p style="margin-bottom: 12px; font-size: 14px; text-align: center; color: #475569;">
+                    This contact number was found as the <strong>secondary / alternative number</strong> of:
+                  </p>
+                  <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px;">
+                    <!-- Row 1: Patient Name & Primary Contact -->
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; margin-bottom: 12px;">
+                      <div style="flex: 1; min-width: 0;">
+                        <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 600; display: block; margin-bottom: 2px;">Patient Name</span>
+                        <div style="font-weight: 700; font-size: 15px; color: #0f172a; word-break: break-word;">${secondaryPatient.name || "-"}</div>
+                      </div>
+                      <div style="flex: 1; min-width: 0; text-align: right;">
+                        <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 600; display: block; margin-bottom: 2px;">Primary Contact</span>
+                        <div style="font-weight: 700; font-size: 15px; color: #0f172a;">${secondaryPatient.phone || "-"}</div>
+                      </div>
+                    </div>
+                    <!-- Row 2: UID No & Address -->
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; border-top: 1px dashed #e2e8f0; padding-top: 10px;">
+                      <div style="flex: 1; min-width: 0;">
+                        <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 600; display: block; margin-bottom: 2px;">UID No</span>
+                        <div style="font-weight: 600; font-size: 13px; color: #334155; word-break: break-word;">${secondaryPatient.Uid_no || "-"}</div>
+                      </div>
+                      <div style="flex: 1; min-width: 0; text-align: right;">
+                        <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 600; display: block; margin-bottom: 2px;">Address</span>
+                        <div style="font-weight: 600; font-size: 13px; color: #334155; word-break: break-word;">${secondaryPatient.address || "-"}</div>
+                      </div>
+                    </div>
+                  </div>
+                  <p style="margin: 0; font-weight: 600; text-align: center; color: #0f7b63; font-size: 14px;">
+                    Is this appointment for <u>${secondaryPatient.name || "this patient"}</u>, or should we mark it as a <u>New Patient</u>?
+                  </p>
+                </div>
+              `,
+              showCancelButton: true,
+              confirmButtonText: `Same Patient (${secondaryPatient.name || "Existing"})`,
+              cancelButtonText: "Mark as New Patient",
+              confirmButtonColor: "#00bcd4",
+              cancelButtonColor: "#64748b",
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+            });
+
+            if (latestPhoneRef.current !== patient_phone) return;
+
+            if (!popResult.isConfirmed) {
+              // User chose "Mark as New Patient"
+              setIsExistingPatient(false);
+              setFormData((prevForm) => ({
+                ...prevForm,
+                patientName: "",
+                patient_id: "",
+                patient_location: "",
+                patient_type: "New",
+                doctor_id: "",
+              }));
+              setNoPendingAppt(true);
+              Toast.fire({
+                icon: "info",
+                title: "Marked as New Patient",
+              });
+              return;
+            }
+          }
+
           setIsExistingPatient(true);
 
           let hasPendingAppt = false;
           try {
-            const confirmUrl = `${BASE_URL}/V1/appointment/getPatientByApptConfirm?patient_phone=${patient_phone}&location=${currentLocation}`;
+            const checkPhone = data.data.phone || patient_phone;
+            const confirmUrl = `${BASE_URL}/V1/appointment/getPatientByApptConfirm?patient_phone=${checkPhone}&location=${currentLocation}`;
             const confirmResponse = await fetch(confirmUrl, {
               method: "GET",
               headers: { "Content-Type": "application/json" },
@@ -249,13 +329,20 @@ export default function AddOpdAppointment() {
           if (latestPhoneRef.current !== patient_phone) return;
 
           if (!hasPendingAppt) {
-            Swal.fire({
-              icon: "info",
-              title: "Patient Found",
-              text: `${data.data.name} is already registered.`,
-              confirmButtonColor: "#00bcd4",
-              timer: 3000,
-            });
+            if (data.data.matchType === "SECONDARY") {
+              Toast.fire({
+                icon: "success",
+                title: `Loaded existing patient: ${data.data.name}`,
+              });
+            } else {
+              Swal.fire({
+                icon: "info",
+                title: "Patient Found",
+                text: `${data.data.name} is already registered.`,
+                confirmButtonColor: "#00bcd4",
+                timer: 3000,
+              });
+            }
           }
 
           setFormData((prev) => ({

@@ -24,7 +24,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import moment from "moment";
 import { useReactToPrint } from "react-to-print";
 import DiagnosisPrintView from "../Doctor/DiagnosisPrintView";
-import SlotQuickViewPicker from "../../components/Reception/SlotQuickViewPicker";
+import SlotQuickViewPicker from "./SlotQuickViewPicker";
 
 // const BASE_URL_ENV = import.meta.env.VITE_FRONTEND_SERVER_URL;
 const BASE_URL = "http://194.195.117.79:5100/api";

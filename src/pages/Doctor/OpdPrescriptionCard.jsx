@@ -10,7 +10,7 @@ import {
   Tooltip,
 } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
-import SlotQuickViewPicker from "../../components/Reception/SlotQuickViewPicker";
+import SlotQuickViewPicker from "../Reception/SlotQuickViewPicker";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
 
