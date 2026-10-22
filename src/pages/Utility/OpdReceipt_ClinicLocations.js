@@ -286,4 +286,10 @@ export const receiptlocations = {
     phone: "8956512401",
     hospitalcode: "KN",
   },
+  "Gachibowli": {
+    address:
+      "<b>Gachibowli:</b> <br>Healing Hands Clinic<br> 3rd floor, Survey No: 135, Anvi's Eco Grand 136, Nanakramguda Rd, beside Wipro Lake, Financial District, Gachibowli, Hyderabad, Telangana - 500032",
+    phone: "8956512402",
+    hospitalcode: "GB",
+  },
 };

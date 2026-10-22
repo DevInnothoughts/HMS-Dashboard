@@ -287,4 +287,9 @@ export const clinincLoc = {
     invoiceHelplineNo: "8956512401",
     EmergencySMS: "",
   },
+  "Gachibowli": {
+    invoiceAddress: "<b>Healing Hands Clinic</b><br> 3rd floor, Survey No: 135, Anvi's Eco Grand 136, Nanakramguda Rd, beside Wipro Lake, Financial District, Gachibowli, Hyderabad, Telangana - 500032",
+    invoiceHelplineNo: "8956512402",
+    EmergencySMS: "",
+  }
 };

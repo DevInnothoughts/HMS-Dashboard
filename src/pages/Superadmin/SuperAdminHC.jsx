@@ -45,7 +45,9 @@ const SuperAdminHC = () => {
 
   const certificateOptions = [
     "Bio Medical Certificate",
+    "Drug License",
     "Fire NOC",
+    "Franchise Certificate",
     "Hospital License",
     "ISO Certificate",
     "NABH Certificate",
@@ -325,40 +327,52 @@ const SuperAdminHC = () => {
   const actionBodyTemplate = (rowData) => {
     return (
       <div className="d-flex justify-content-center align-items-center gap-2">
-        <Button
-          variant="outline-info"
-          size="sm"
-          style={{
-            borderRadius: "8px",
-            fontSize: "11px",
-            fontWeight: "bold",
-            padding: "5px 9px",
-          }}
-          title="Preview Certificate"
-          onClick={() => {
-            const url = getFileUrl(rowData.certificate_path);
-            if (url) {
-              setPreviewUrl(url);
-              setPreviewName(rowData.certificate_name);
-              setPreviewLocation(rowData.location || "");
-              setPreviewType(
-                url.toLowerCase().split("?")[0].endsWith(".pdf")
-                  ? "pdf"
-                  : "image"
-              );
-              setShowPreview(true);
-            } else {
-              Swal.fire({
-                icon: "error",
-                title: "Not Found",
-                text: "No file path found.",
-                confirmButtonColor: "#00acc1",
-              });
-            }
-          }}
-        >
-          <i className="fa fa-eye"></i>
-        </Button>
+        {rowData.certificate_path ? (
+          <Button
+            variant="outline-info"
+            size="sm"
+            style={{
+              borderRadius: "8px",
+              fontSize: "11px",
+              fontWeight: "bold",
+              padding: "5px 9px",
+            }}
+            title="Preview Certificate"
+            onClick={() => {
+              const url = getFileUrl(rowData.certificate_path);
+              if (url) {
+                setPreviewUrl(url);
+                setPreviewName(rowData.certificate_name);
+                setPreviewLocation(rowData.location || "");
+                setPreviewType(
+                  url.toLowerCase().split("?")[0].endsWith(".pdf")
+                    ? "pdf"
+                    : "image"
+                );
+                setShowPreview(true);
+              } else {
+                Swal.fire({
+                  icon: "error",
+                  title: "Not Found",
+                  text: "No file path found.",
+                  confirmButtonColor: "#00acc1",
+                });
+              }
+            }}
+          >
+            <i className="fa fa-eye"></i>
+          </Button>
+        ) : (
+          <span
+            style={{
+              color: "#78909c",
+              fontSize: "12px",
+              fontStyle: "italic",
+            }}
+          >
+            No file
+          </span>
+        )}
         {/* 
         <Button
           variant="outline-success"

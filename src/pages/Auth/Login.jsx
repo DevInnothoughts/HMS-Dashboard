@@ -22,6 +22,7 @@ export const LOCATIONS_LIST = [
   "Dighi",
   "DP Road",
   "Electronic City",
+  "Gachibowli",
   "Gurgaon-14",
   "Gurgaon-49",
   "Hadapsar",

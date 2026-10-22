@@ -23,6 +23,9 @@ import Swal from "sweetalert2";
 import { decodeJwt } from "../Utility/decode-jwt";
 import { Link } from "react-router-dom";
 import logo from "../../assets/images/logo/hhc.png";
+import receiptMainLogo from "../../assets/images/3.png";
+import receiptSideLogo from "../../assets/images/4.png";
+import { receiptlocations } from "../Utility/OpdReceipt_ClinicLocations";
 import { toast } from "react-hot-toast";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
@@ -58,6 +61,76 @@ const Toast = Swal.mixin({
   },
 });
 
+const convertToWords = (number) => {
+  if (number === 0) return "Zero";
+  const words = {
+    0: "",
+    1: "One",
+    2: "Two",
+    3: "Three",
+    4: "Four",
+    5: "Five",
+    6: "Six",
+    7: "Seven",
+    8: "Eight",
+    9: "Nine",
+    10: "Ten",
+    11: "Eleven",
+    12: "Twelve",
+    13: "Thirteen",
+    14: "Fourteen",
+    15: "Fifteen",
+    16: "Sixteen",
+    17: "Seventeen",
+    18: "Eighteen",
+    19: "Nineteen",
+    20: "Twenty",
+    30: "Thirty",
+    40: "Forty",
+    50: "Fifty",
+    60: "Sixty",
+    70: "Seventy",
+    80: "Eighty",
+    90: "Ninety",
+  };
+  const digits = ["", "Hundred", "Thousand", "Lakh", "Crore"];
+  let no = Math.floor(number);
+  let str = [];
+  let i = 0;
+  while (i < 9) {
+    let divider = i === 2 ? 10 : 100;
+    let n = Math.floor(no % divider);
+    no = Math.floor(no / divider);
+    i += divider === 10 ? 1 : 2;
+    if (n) {
+      let counter = str.length;
+      let plural = counter > 0 && n > 9 ? "s" : "";
+      let hundred = counter === 1 && str[0] ? " and " : "";
+      if (n < 21) {
+        str.push(words[n] + " " + digits[counter] + plural + " " + hundred);
+      } else {
+        str.push(
+          words[Math.floor(n / 10) * 10] +
+          " " +
+          words[n % 10] +
+          " " +
+          digits[counter] +
+          plural +
+          " " +
+          hundred,
+        );
+      }
+    } else {
+      str.push(null);
+    }
+  }
+  return str
+    .reverse()
+    .filter((x) => x)
+    .join("")
+    .trim();
+};
+
 import { LOCATIONS_LIST } from "../Auth/Login";
 
 const FALLBACK_LOCATIONS = LOCATIONS_LIST;
@@ -68,8 +141,8 @@ const getDynamicRowsFromInvoice = (invoice) => {
 
   const rowSource =
     invoice.package &&
-    typeof invoice.package === "string" &&
-    invoice.package !== ""
+      typeof invoice.package === "string" &&
+      invoice.package !== ""
       ? invoice.package
       : invoice.title && typeof invoice.title === "string"
         ? invoice.title
@@ -131,8 +204,8 @@ const getDynamicRowsFromInvoice = (invoice) => {
     titleCalculatedTotal > 0
       ? titleCalculatedTotal
       : parseFloat(
-          String(invoice.totalamt || invoice.totalAmt || 0).replace(/,/g, ""),
-        ) || 0;
+        String(invoice.totalamt || invoice.totalAmt || 0).replace(/,/g, ""),
+      ) || 0;
 
   return {
     dynamicRows:
@@ -197,8 +270,8 @@ const calculatePayableAmt = (invoice) => {
     invoice.bill_Type ||
     invoice.bill_type ||
     (invoice.status &&
-    (invoice.status.toLowerCase() === "interbranch" ||
-      invoice.status.toLowerCase() === "interbranch-bill")
+      (invoice.status.toLowerCase() === "interbranch" ||
+        invoice.status.toLowerCase() === "interbranch-bill")
       ? "interbranch"
       : "") ||
     ""
@@ -563,8 +636,8 @@ const IpdBillList = () => {
             invoice.payable_amt !== undefined && invoice.payable_amt !== null
               ? parseFloat(invoice.payable_amt)
               : parseFloat(
-                  calculatePayableAmt({ ...invoice, totalamt, discount, pdc }),
-                );
+                calculatePayableAmt({ ...invoice, totalamt, discount, pdc }),
+              );
           const due_amt =
             invoice.totaldue !== undefined
               ? parseFloat(invoice.totaldue)
@@ -582,21 +655,21 @@ const IpdBillList = () => {
             payable_amt,
             pay_mode:
               invoice.status === "PDC" ||
-              invoice.bill_method === "PDC" ||
-              (invoice.chequeno && invoice.chequeno !== "NULL")
+                invoice.bill_method === "PDC" ||
+                (invoice.chequeno && invoice.chequeno !== "NULL")
                 ? "PDC"
                 : invoice.status === "Cashless" ||
-                    invoice.bill_method === "Cashless"
+                  invoice.bill_method === "Cashless"
                   ? "Cashless"
                   : invoice.status === "Reimbursement" ||
-                      invoice.bill_method === "Reimbursement"
+                    invoice.bill_method === "Reimbursement"
                     ? "Reimbursement"
                     : invoice.status === "Interbranch" ||
-                        invoice.status === "Interbranch-Bill" ||
-                        invoice.bill_Type === "interbranch"
+                      invoice.status === "Interbranch-Bill" ||
+                      invoice.bill_Type === "interbranch"
                       ? "Interbranch"
                       : invoice.bill_Type === "charity" ||
-                          invoice.status === "Charity"
+                        invoice.status === "Charity"
                         ? "Charity"
                         : "NonInsurance",
             patient_name: invoice.patient_name || invoice.name || "N/A",
@@ -650,22 +723,22 @@ const IpdBillList = () => {
                 const pdc =
                   parseFloat(
                     invoice.pdc ||
-                      invoice.receivedamt ||
-                      invoice.advance_amt ||
-                      0,
+                    invoice.receivedamt ||
+                    invoice.advance_amt ||
+                    0,
                   ) || 0;
                 const payable_amt =
                   invoice.payable_amt !== undefined &&
-                  invoice.payable_amt !== null
+                    invoice.payable_amt !== null
                     ? parseFloat(invoice.payable_amt)
                     : parseFloat(
-                        calculatePayableAmt({
-                          ...invoice,
-                          totalamt,
-                          discount,
-                          pdc,
-                        }),
-                      );
+                      calculatePayableAmt({
+                        ...invoice,
+                        totalamt,
+                        discount,
+                        pdc,
+                      }),
+                    );
                 const due_amt =
                   invoice.totaldue !== undefined
                     ? parseFloat(invoice.totaldue)
@@ -826,7 +899,7 @@ const IpdBillList = () => {
       selectedClinicPatient &&
       selectedClinicPatient.Uid_no &&
       selectedClinicPatient.Uid_no.toLowerCase().trim() ===
-        query.toLowerCase().trim()
+      query.toLowerCase().trim()
     ) {
       setIsSearchingUid(false);
       return;
@@ -1119,16 +1192,16 @@ const IpdBillList = () => {
         : statusVal === "reimbursement"
           ? "Reimbursement"
           : statusVal === "pdc" ||
-              (invoice.chequeno && invoice.chequeno !== "NULL")
+            (invoice.chequeno && invoice.chequeno !== "NULL")
             ? "PDC"
             : "NonInsurance");
 
     const bill_Type =
       invoice.bill_Type ||
       (statusVal === "cashless" ||
-      statusVal === "reimbursement" ||
-      statusVal === "pdc" ||
-      invoice.insurancecompany
+        statusVal === "reimbursement" ||
+        statusVal === "pdc" ||
+        invoice.insurancecompany
         ? "insurance"
         : statusVal === "charity"
           ? "charity"
@@ -1585,9 +1658,9 @@ const IpdBillList = () => {
     const trimmedLocation = currentLocation ? currentLocation.trim() : "";
     const clinicAddr = clinincLoc[trimmedLocation] ||
       clinincLoc[currentLocation] || {
-        invoiceAddress: "<b>Healing Hands Clinic</b>",
-        invoiceHelplineNo: "8888288884",
-      };
+      invoiceAddress: "<b>Healing Hands Clinic</b>",
+      invoiceHelplineNo: "8888288884",
+    };
 
     const { dynamicRows, Sub_Total } = getDynamicRowsFromInvoice(invoice);
 
@@ -1747,15 +1820,15 @@ const IpdBillList = () => {
                 <td>Amount (INR)</td>
               </tr>
               ${dynamicRows
-                .map(
-                  (row) => `
+        .map(
+          (row) => `
                 <tr>
                   <td>${row.label}</td>
                   <td>${Math.round(parseFloat(row.value || 0)).toLocaleString("en-IN")}</td>
                 </tr>
               `,
-                )
-                .join("")}
+        )
+        .join("")}
             </table>
           </td>
       <td style="width: 50%; vertical-align: top; padding-left: 10px;">
@@ -1768,8 +1841,7 @@ const IpdBillList = () => {
       <td>Total</td>
       <td>${(Math.round(parseFloat(invoice.totalamt || Sub_Total)) || 0).toLocaleString("en-IN")}</td>
     </tr>
-    ${
-      (Math.round(parseFloat(invoice.discount)) || 0) > 0
+    ${(Math.round(parseFloat(invoice.discount)) || 0) > 0
         ? `
     <tr>
       <td>Discount</td>
@@ -1777,7 +1849,7 @@ const IpdBillList = () => {
     </tr>
     `
         : ""
-    }
+      }
   </table>
 </td>
         </tr>
@@ -1922,6 +1994,187 @@ const IpdBillList = () => {
     });
   };
 
+  const handlePrintPdcReceipt = async (invoice) => {
+    if (!invoice || typeof invoice !== "object") return;
+
+    const pay = {
+      ...invoice,
+      patientprefix:
+        invoice.patientprefix ||
+        invoice.patient_prefix ||
+        invoice.prefix ||
+        "Mr/Ms",
+    };
+    const totalAmt =
+      parseFloat(String(invoice.totalamt || 0).replace(/,/g, "")) || 0;
+    const words = convertToWords(totalAmt);
+    const loc = invoice.location || invoice.patient_location || currentLocation;
+    const trimmedLocation = loc ? loc.trim() : "";
+    const invoiceInfo = clinincLoc[trimmedLocation] ||
+      clinincLoc[currentLocation] || {
+      invoiceAddress: "<b>Healing Hands Clinic</b>",
+      invoiceHelplineNo: "8888288884",
+      EmergencySMS: "",
+    };
+    const receiptInfo = receiptlocations[trimmedLocation] ||
+      receiptlocations[currentLocation] || {
+      hospitalcode: "HHC",
+    };
+    const hospitalCode = receiptInfo.hospitalcode || "HHC";
+    const year = new Date().getFullYear();
+    const paymentId = invoice.ipdpaymentid || invoice.invoice_id || "";
+    const receiptNo = `HHC/${hospitalCode}/${year}/${paymentId}`;
+    const rawDate =
+      invoice.receipt_date || invoice.creation_date || invoice.date || new Date();
+    const dateFormatted = formatDateForDisplay(rawDate);
+
+    const patientDetails = {
+      name: invoice.patient_name || invoice.name || "",
+      uhid: invoice.patient_uid || invoice.Uid_no || "",
+      phone: invoice.patient_phone || invoice.phone || "",
+    };
+
+    const getBase64Image = (imgUrl) => {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL("image/png"));
+        };
+        img.onerror = () => resolve("");
+        img.src = imgUrl;
+      });
+    };
+
+    const [mainLogoBase64, horizontalReceiptLogoBase64] = await Promise.all([
+      getBase64Image(receiptMainLogo),
+      getBase64Image(receiptSideLogo),
+    ]);
+
+    const printWindow = window.open("", "_blank", "width=800,height=800");
+    if (!printWindow) {
+      alert("Please allow popups to print the receipt.");
+      return;
+    }
+    printWindow.document.write(`
+            <html>
+            <head>
+                <title>Healing Hands Clinic</title>
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+                <style>
+                    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; box-sizing: border-box; }
+                    body, table, tr, td, p { font-size: 11px !important; margin: 0; padding: 0; font-family: sans-serif; }
+                    .print-container { width: 630px; margin: 20px auto; }
+                    .bgdiv { background: #2b9163 !important; padding: 15px; width: 100%; }
+                    .maindiv { background: white !important; border: 1px solid #ccc; border-radius: 15px; padding: 10px; width: 100%; }
+                    .HHClogo { width: 160px; border-color: #ccc; padding-right: 20px; }
+                    .fa-phone { padding: 3px 4px; border: 1px solid grey; border-radius: 50%; font-size: 10px; }
+                    .receipt { width: 100%; height: auto; display: block; }
+                    .print-btn {
+                        background-color: #2b9163;
+                        color: white;
+                        border: none;
+                        padding: 12px 25px;
+                        font-size: 15px;
+                        font-weight: bold;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        margin: 20px auto;
+                        display: block;
+                        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                    }
+                    .print-btn:hover {
+                        background-color: #237a53;
+                    }
+                    @media print {
+                        body { margin: 0; padding: 0; background: white; width: 100%; }
+                        .print-container { width: 100% !important; margin: 0 !important; padding: 0 !important; border: none !important; }
+                        .bgdiv { padding: 10px !important; margin: 0 !important; border-radius: 0 !important; width: 100% !important; }
+                        .maindiv { border: 1px solid #eee !important; border-radius: 12px !important; width: 100% !important; }
+                        .no-print { display: none !important; }
+                        @page { size: auto; margin: 10mm; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="print-container">
+                    <div class="bgdiv">
+                        <div class="maindiv">
+                            <table width="100%" border="0">
+                                <tr>
+                                    <td style="width:50%;"><img src="${mainLogoBase64}" class="HHClogo"></td>
+                                    <td style="width:50%; text-align: right;">
+                                        <table width="100%" border="0">
+                                            <tr><td style="text-align: right;">Receipt No:&nbsp;<b>${receiptNo}</b></td></tr>
+                                        </table><br>
+                                        <table width="100%" border="0">
+                                            <tr><td style="text-align: right;">Date:&nbsp;<b>${dateFormatted}</b></td></tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table><br>
+                            <table width="100%" border="0">
+                                <tr>
+                                    <td style="width:9%; vertical-align: top;"><img src="${horizontalReceiptLogoBase64}" class="receipt"></td>
+                                    <td style="width:88%; padding-left: 10px; vertical-align: top;">
+                                        <table width="100%" border="0">
+                                            <tr>
+                                                <td style="width:1%; white-space: nowrap; line-height:30px;">Received From ${pay.patientprefix || "Mr/Ms"} : &nbsp;</td>
+                                                <td><p style="border-bottom: dotted; border-color: #ccc; font-weight: 600; text-transform: uppercase;">${patientDetails.name}</p></td>
+                                            </tr>
+                                        </table>
+                                        <table width="100%" border="0">
+                                            <tr>
+                                                <td><div style="width:100%; display: inline-block;">For <span style="font-weight:600; text-transform:uppercase; border-bottom: dotted; border-color: #ccc;">IPD Payment</span></div></td>
+                                            </tr>
+                                        </table>
+                                        <table width="100%" border="0">
+                                            <tr>
+                                                <td style="line-height:30px;">
+                                                    <i class="fa fa-phone"></i>&nbsp; ${invoiceInfo.invoiceHelplineNo}
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        <table width="100%" border="0">
+                                            <tr><td>Email : <b>info@healinghandsclinic.co.in</b> | Website : <b>www.healinghandsclinic.co.in</b></td></tr>
+                                        </table><br>
+                                        <table width="100%" border="0">
+                                            <tr>
+                                                <td style="width:60%; vertical-align: top;">
+                                                    Payment Mode :&nbsp;<b>Cash / Cheque</b><br>
+                                                    In Words :&nbsp;<b>${words} Rupees Only.</b>
+                                                </td>
+                                                <td style="width:30%;"><p style="padding:10px; border:1px solid grey; border-radius:10px; font-weight:600;">Rs.&nbsp;${Math.round(totalAmt).toLocaleString("en-IN")} /-</p></td>
+                                                <td style="width:10%"></td>
+                                            </tr>
+                                        </table>
+                                        <table width="100%" border="0">
+                                            <tr>
+                                                <td style="width:60%;">${invoiceInfo.invoiceAddress}</td>
+                                                 <td style="width:40%; vertical-align: bottom; font-weight:500; text-align: center; padding-top: 50px;"><b>Signature</b></td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="3"><br><p>In case you have not received the correct receipt for the paid amount, or for any discrepancies in transaction please write us on <b>info@healinghandsclinic.co.in</b> or whatsapp on <b>${invoiceInfo.EmergencySMS}</b></p></td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <button onclick="window.print()" class="print-btn no-print">Print Receipt</button>
+                </div>
+            </body>
+            </html>
+        `);
+    printWindow.document.close();
+  };
+
   const handleViewInvoice = (invoice) => {
     console.log(
       "👁️ [VIEW INVOICE PREVIEW] Full Data fetched from database/state:",
@@ -1976,6 +2229,14 @@ const IpdBillList = () => {
           matchesCategory =
             itemStatus.toLowerCase() === "noninsurance" ||
             itemStatus.toLowerCase() === "non_insurance";
+        } else if (paymentCategoryFilter === "PDC") {
+          matchesCategory =
+            itemStatus.toLowerCase() === "pdc" ||
+            (invoice.bill_method || "").toLowerCase() === "pdc";
+        } else if (paymentCategoryFilter === "Charity") {
+          matchesCategory =
+            itemStatus.toLowerCase() === "charity" ||
+            (invoice.bill_Type || "").toLowerCase() === "charity";
         } else {
           matchesCategory =
             itemStatus.toLowerCase() === paymentCategoryFilter.toLowerCase();
@@ -2372,7 +2633,9 @@ const IpdBillList = () => {
                           >
                             <option value="All">All</option>
                             <option value="Cashless">Cashless</option>
+                            <option value="Charity">Charity</option>
                             <option value="NonInsurance">NonInsurance</option>
+                            <option value="PDC">PDC</option>
                             <option value="Reimbursement">Reimbursement</option>
                           </select>
                         </div>
@@ -2392,9 +2655,9 @@ const IpdBillList = () => {
                             style={
                               isInteractive
                                 ? {
-                                    cursor: "pointer",
-                                    fontWeight: "bold",
-                                  }
+                                  cursor: "pointer",
+                                  fontWeight: "bold",
+                                }
                                 : {}
                             }
                             onClick={
@@ -2473,46 +2736,50 @@ const IpdBillList = () => {
                             rowData.interbranch_id !== "" &&
                             rowData.interbranch_id !== 0 &&
                             rowData.interbranch_id !== "0");
+                        const canEdit =
+                          !isMirror &&
+                          !(
+                            rowData.payment_count > 0 ||
+                            (rowData.bill_method !== "PDC" &&
+                              rowData.status !== "PDC" &&
+                              parseFloat(rowData.receivedamt) > 0) ||
+                            moment()
+                              .startOf("day")
+                              .diff(
+                                moment(rowData.creation_date).startOf(
+                                  "day",
+                                ),
+                                "days",
+                              ) > 2 ||
+                            moment()
+                              .startOf("day")
+                              .diff(
+                                moment(rowData.creation_date).startOf(
+                                  "day",
+                                ),
+                                "days",
+                              ) < 0
+                          );
                         return (
                           <div className="d-flex justify-content-center gap-2">
                             {!isMirror && (
                               <>
-                                <Button
-                                  style={{
-                                    borderRadius: "8px",
-                                    padding: "7px 11px",
-                                    fontSize: "14px",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                  }}
-                                  variant="primary"
-                                  title="Edit Bill Details"
-                                  disabled={
-                                    rowData.payment_count > 0 ||
-                                    (rowData.bill_method !== "PDC" &&
-                                      rowData.status !== "PDC" &&
-                                      parseFloat(rowData.receivedamt) > 0) ||
-                                    moment()
-                                      .startOf("day")
-                                      .diff(
-                                        moment(rowData.creation_date).startOf(
-                                          "day",
-                                        ),
-                                        "days",
-                                      ) > 2 ||
-                                    moment()
-                                      .startOf("day")
-                                      .diff(
-                                        moment(rowData.creation_date).startOf(
-                                          "day",
-                                        ),
-                                        "days",
-                                      ) < 0
-                                  }
-                                  onClick={() => handleEditInvoice(rowData)}
-                                >
-                                  <FeatherIcon icon="edit" size="15" />
-                                </Button>
+                                {canEdit && (
+                                  <Button
+                                    style={{
+                                      borderRadius: "8px",
+                                      padding: "7px 11px",
+                                      fontSize: "14px",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                    }}
+                                    variant="primary"
+                                    title="Edit Bill Details"
+                                    onClick={() => handleEditInvoice(rowData)}
+                                  >
+                                    <FeatherIcon icon="edit" size="15" />
+                                  </Button>
+                                )}
                                 <Link
                                   to="/ipd-collection"
                                   state={{
@@ -2565,20 +2832,41 @@ const IpdBillList = () => {
                                 <FeatherIcon icon="eye" size="15" />
                               </Button>
                             ) : (
-                              <Button
-                                style={{
-                                  variant: "primary",
-                                  borderRadius: "8px",
-                                  padding: "7px 11px",
-                                  fontSize: "14px",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                }}
-                                title="Print IPD Bill"
-                                onClick={() => handlePrint(rowData)}
-                              >
-                                <FeatherIcon icon="printer" size="15" />
-                              </Button>
+                              <>
+                                <Button
+                                  style={{
+                                    borderRadius: "8px",
+                                    padding: "7px 11px",
+                                    fontSize: "14px",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                  }}
+                                  variant="primary"
+                                  title="Print IPD Bill"
+                                  onClick={() => handlePrint(rowData)}
+                                >
+                                  <FeatherIcon icon="printer" size="15" />
+                                </Button>
+                                {(rowData.status || "").trim().toUpperCase() === "PDC" && (
+                                  <Button
+                                    style={{
+                                      borderRadius: "8px",
+                                      padding: "7px 11px",
+                                      fontSize: "14px",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      backgroundColor: "#2b9163",
+                                      borderColor: "#2b9163",
+                                      color: "#fff",
+                                    }}
+                                    title="Print PDC Receipt"
+                                    onClick={() => handlePrintPdcReceipt(rowData)}
+                                    variant="secondary"
+                                  >
+                                    <FeatherIcon icon="download" size="15" />
+                                  </Button>
+                                )}
+                              </>
                             )}
                           </div>
                         );
@@ -2854,9 +3142,9 @@ const IpdBillList = () => {
                         value={
                           selectedInvoice.creation_date
                             ? selectedInvoice.creation_date
-                                .split("-")
-                                .reverse()
-                                .join("-")
+                              .split("-")
+                              .reverse()
+                              .join("-")
                             : ""
                         }
                       />
@@ -3261,11 +3549,11 @@ const IpdBillList = () => {
                             type="text"
                             value={
                               row.value !== "" &&
-                              row.value !== null &&
-                              row.value !== undefined
+                                row.value !== null &&
+                                row.value !== undefined
                                 ? Number(
-                                    String(row.value).replace(/,/g, ""),
-                                  ).toLocaleString("en-IN")
+                                  String(row.value).replace(/,/g, ""),
+                                ).toLocaleString("en-IN")
                                 : ""
                             }
                             onKeyDown={(e) => {
@@ -3545,8 +3833,8 @@ const IpdBillList = () => {
                                 Patient UID at Origin Clinic{" "}
                                 {selectedInvoice.interbranchLocation !==
                                   "DP Road" && (
-                                  <span className="text-danger">*</span>
-                                )}
+                                    <span className="text-danger">*</span>
+                                  )}
                               </Form.Label>
                               <div style={{ position: "relative" }}>
                                 <Form.Control
@@ -3642,106 +3930,106 @@ const IpdBillList = () => {
                       {/* 1. Show Insurance Company Dropdown */}
                       {(selectedInvoice.bill_Type === "insurance" ||
                         selectedInvoice.insurancecompany) && (
-                        <Col md={4}>
-                          <Form.Label
-                            style={{
-                              fontSize: "12px",
-                              fontWeight: "600",
-                              marginBottom: "2px",
-                            }}
-                            className="text-muted"
-                          >
-                            Insurance Company{" "}
-                            <span style={{ color: "red" }} className="required">
-                              *
-                            </span>
-                          </Form.Label>
-                          <Form.Select
-                            required
-                            size="sm"
-                            style={{
-                              borderRadius: "10px",
-                              fontSize: "12px",
-                              border: "1px solid #4dd0e1",
-                            }}
-                            value={selectedInvoice.insurancecompany || ""}
-                            onChange={(e) =>
-                              setSelectedInvoice({
-                                ...selectedInvoice,
-                                insurancecompany: e.target.value,
-                              })
-                            }
-                          >
-                            <option value="">Select Company</option>
-                            {insurance.map((co, idx) => (
-                              <option key={idx} value={co.comapny_id}>
-                                {co.companyname}
-                              </option>
-                            ))}
-                            {selectedInvoice.insurancecompany &&
-                              !insurance.some(
-                                (co) =>
-                                  co.comapny_id ==
-                                  selectedInvoice.insurancecompany,
-                              ) && (
-                                <option
-                                  value={selectedInvoice.insurancecompany}
-                                >
-                                  {selectedInvoice.insurance_company_name ||
-                                    selectedInvoice.insurancecompany}
+                          <Col md={4}>
+                            <Form.Label
+                              style={{
+                                fontSize: "12px",
+                                fontWeight: "600",
+                                marginBottom: "2px",
+                              }}
+                              className="text-muted"
+                            >
+                              Insurance Company{" "}
+                              <span style={{ color: "red" }} className="required">
+                                *
+                              </span>
+                            </Form.Label>
+                            <Form.Select
+                              required
+                              size="sm"
+                              style={{
+                                borderRadius: "10px",
+                                fontSize: "12px",
+                                border: "1px solid #4dd0e1",
+                              }}
+                              value={selectedInvoice.insurancecompany || ""}
+                              onChange={(e) =>
+                                setSelectedInvoice({
+                                  ...selectedInvoice,
+                                  insurancecompany: e.target.value,
+                                })
+                              }
+                            >
+                              <option value="">Select Company</option>
+                              {insurance.map((co, idx) => (
+                                <option key={idx} value={co.comapny_id}>
+                                  {co.companyname}
                                 </option>
-                              )}
-                          </Form.Select>
-                        </Col>
-                      )}
+                              ))}
+                              {selectedInvoice.insurancecompany &&
+                                !insurance.some(
+                                  (co) =>
+                                    co.comapny_id ==
+                                    selectedInvoice.insurancecompany,
+                                ) && (
+                                  <option
+                                    value={selectedInvoice.insurancecompany}
+                                  >
+                                    {selectedInvoice.insurance_company_name ||
+                                      selectedInvoice.insurancecompany}
+                                  </option>
+                                )}
+                            </Form.Select>
+                          </Col>
+                        )}
 
                       {/* 2. Show TPA Dropdown */}
                       {(selectedInvoice.bill_Type === "insurance" ||
                         selectedInvoice.tpa) && (
-                        <Col md={4}>
-                          <Form.Label
-                            style={{
-                              fontSize: "12px",
-                              fontWeight: "600",
-                              marginBottom: "2px",
-                            }}
-                            className="text-muted"
-                          >
-                            TPA
-                          </Form.Label>
-                          <Form.Select
-                            size="sm"
-                            style={{
-                              borderRadius: "10px",
-                              fontSize: "12px",
-                              border: "1px solid #4dd0e1",
-                            }}
-                            value={selectedInvoice.tpa || ""}
-                            onChange={(e) =>
-                              setSelectedInvoice({
-                                ...selectedInvoice,
-                                tpa: e.target.value,
-                              })
-                            }
-                          >
-                            <option value="">Select TPA</option>
-                            {tpa.map((t, idx) => (
-                              <option key={idx} value={t.comapny_id}>
-                                {t.companyname}
-                              </option>
-                            ))}
-                            {selectedInvoice.tpa &&
-                              !tpa.some(
-                                (t) => t.comapny_id == selectedInvoice.tpa,
-                              ) && (
-                                <option value={selectedInvoice.tpa}>
-                                  {selectedInvoice.tpa_name ||
-                                    selectedInvoice.tpa}
+                          <Col md={4}>
+                            <Form.Label
+                              style={{
+                                fontSize: "12px",
+                                fontWeight: "600",
+                                marginBottom: "2px",
+                              }}
+                              className="text-muted"
+                            >
+                              TPA
+                            </Form.Label>
+                            <Form.Select
+                              size="sm"
+                              style={{
+                                borderRadius: "10px",
+                                fontSize: "12px",
+                                border: "1px solid #4dd0e1",
+                              }}
+                              value={selectedInvoice.tpa || ""}
+                              onChange={(e) =>
+                                setSelectedInvoice({
+                                  ...selectedInvoice,
+                                  tpa: e.target.value,
+                                })
+                              }
+                            >
+                              <option value="">Select TPA</option>
+                              {tpa.map((t, idx) => (
+                                <option key={idx} value={t.comapny_id}>
+                                  {t.companyname}
                                 </option>
-                              )}
-                          </Form.Select>
-                        </Col>
-                      )}
+                              ))}
+                              {selectedInvoice.tpa &&
+                                !tpa.some(
+                                  (t) => t.comapny_id == selectedInvoice.tpa,
+                                ) && (
+                                  <option value={selectedInvoice.tpa}>
+                                    {selectedInvoice.tpa_name ||
+                                      selectedInvoice.tpa}
+                                  </option>
+                                )}
+                            </Form.Select>
+                          </Col>
+                        )}
 
                       {/* 3. Bill Method - Only shown if type is insurance */}
                       {selectedInvoice.bill_Type === "insurance" && (
@@ -3800,87 +4088,87 @@ const IpdBillList = () => {
                       {/* 4. Deduction Fields (Discount/PDC) based on type/method */}
                       {(selectedInvoice.bill_Type === "non_insurance" ||
                         selectedInvoice.bill_Type === "charity") && (
-                        <Col md={4}>
-                          <Form.Label
-                            style={{
-                              fontSize: "12px",
-                              fontWeight: "600",
-                              marginBottom: "2px",
-                            }}
-                            className="text-muted"
-                          >
-                            {selectedInvoice.bill_Type === "charity"
-                              ? "Charity Discount Amount (₹)"
-                              : "Non-Insurance Discount Amount (₹)"}
-                          </Form.Label>
-                          <InputGroup size="sm" style={{ flexWrap: "nowrap" }}>
-                            <InputGroup.Text
+                          <Col md={4}>
+                            <Form.Label
                               style={{
-                                borderRadius: "10px",
                                 fontSize: "12px",
-                                border: "1px solid #4dd0e1",
-                                borderRight: "none",
-                                backgroundColor: "#f8f9fa",
-                                borderTopRightRadius: 0,
-                                borderBottomRightRadius: 0,
-                                paddingRight: "5px",
+                                fontWeight: "600",
+                                marginBottom: "2px",
                               }}
+                              className="text-muted"
                             >
-                              ₹
-                            </InputGroup.Text>
-                            <Form.Control
-                              size="sm"
-                              type="text"
-                              min="0"
-                              onWheel={(e) => e.target.blur()}
-                              onKeyDown={(e) => {
-                                if (["e", "E", "+", "-", "."].includes(e.key)) {
-                                  e.preventDefault();
-                                }
-                              }}
-                              style={{
-                                borderRadius: "10px",
-                                fontSize: "12px",
-                                border: "1px solid #4dd0e1",
-                                borderLeft: "none",
-                                borderTopLeftRadius: 0,
-                                borderBottomLeftRadius: 0,
-                                paddingLeft: "5px",
-                              }}
-                              value={
-                                modalInvoiceData.discount !== "" &&
-                                modalInvoiceData.discount !== null &&
-                                modalInvoiceData.discount !== undefined
-                                  ? Number(
+                              {selectedInvoice.bill_Type === "charity"
+                                ? "Charity Discount Amount (₹)"
+                                : "Non-Insurance Discount Amount (₹)"}
+                            </Form.Label>
+                            <InputGroup size="sm" style={{ flexWrap: "nowrap" }}>
+                              <InputGroup.Text
+                                style={{
+                                  borderRadius: "10px",
+                                  fontSize: "12px",
+                                  border: "1px solid #4dd0e1",
+                                  borderRight: "none",
+                                  backgroundColor: "#f8f9fa",
+                                  borderTopRightRadius: 0,
+                                  borderBottomRightRadius: 0,
+                                  paddingRight: "5px",
+                                }}
+                              >
+                                ₹
+                              </InputGroup.Text>
+                              <Form.Control
+                                size="sm"
+                                type="text"
+                                min="0"
+                                onWheel={(e) => e.target.blur()}
+                                onKeyDown={(e) => {
+                                  if (["e", "E", "+", "-", "."].includes(e.key)) {
+                                    e.preventDefault();
+                                  }
+                                }}
+                                style={{
+                                  borderRadius: "10px",
+                                  fontSize: "12px",
+                                  border: "1px solid #4dd0e1",
+                                  borderLeft: "none",
+                                  borderTopLeftRadius: 0,
+                                  borderBottomLeftRadius: 0,
+                                  paddingLeft: "5px",
+                                }}
+                                value={
+                                  modalInvoiceData.discount !== "" &&
+                                    modalInvoiceData.discount !== null &&
+                                    modalInvoiceData.discount !== undefined
+                                    ? Number(
                                       String(modalInvoiceData.discount).replace(
                                         /,/g,
                                         "",
                                       ),
                                     ).toLocaleString("en-IN")
-                                  : ""
-                              }
-                              onChange={(e) => {
-                                const val = e.target.value.replace(
-                                  /[^0-9]/g,
-                                  "",
-                                );
-                                setModalInvoiceData((prev) => ({
-                                  ...prev,
-                                  discount: val,
-                                  payableAmount: calculateActivePayableAmt(
-                                    selectedInvoice,
-                                    prev.Sub_Total,
-                                    val,
-                                    prev.pdc,
-                                    prev.bill_Type,
-                                    prev.bill_method,
-                                  ),
-                                }));
-                              }}
-                            />
-                          </InputGroup>
-                        </Col>
-                      )}
+                                    : ""
+                                }
+                                onChange={(e) => {
+                                  const val = e.target.value.replace(
+                                    /[^0-9]/g,
+                                    "",
+                                  );
+                                  setModalInvoiceData((prev) => ({
+                                    ...prev,
+                                    discount: val,
+                                    payableAmount: calculateActivePayableAmt(
+                                      selectedInvoice,
+                                      prev.Sub_Total,
+                                      val,
+                                      prev.pdc,
+                                      prev.bill_Type,
+                                      prev.bill_method,
+                                    ),
+                                  }));
+                                }}
+                              />
+                            </InputGroup>
+                          </Col>
+                        )}
 
                       {selectedInvoice.bill_Type === "insurance" &&
                         selectedInvoice.bill_method === "PDC" && (
@@ -3936,14 +4224,14 @@ const IpdBillList = () => {
                                 }}
                                 value={
                                   modalInvoiceData.pdc !== "" &&
-                                  modalInvoiceData.pdc !== null &&
-                                  modalInvoiceData.pdc !== undefined
+                                    modalInvoiceData.pdc !== null &&
+                                    modalInvoiceData.pdc !== undefined
                                     ? Number(
-                                        String(modalInvoiceData.pdc).replace(
-                                          /,/g,
-                                          "",
-                                        ),
-                                      ).toLocaleString("en-IN")
+                                      String(modalInvoiceData.pdc).replace(
+                                        /,/g,
+                                        "",
+                                      ),
+                                    ).toLocaleString("en-IN")
                                     : ""
                                 }
                                 onChange={(e) => {
@@ -4291,8 +4579,8 @@ const IpdBillList = () => {
                   value={
                     cashlessData.totalamt
                       ? Number(
-                          String(cashlessData.totalamt).replace(/,/g, ""),
-                        ).toLocaleString("en-IN")
+                        String(cashlessData.totalamt).replace(/,/g, ""),
+                      ).toLocaleString("en-IN")
                       : ""
                   }
                   style={{
@@ -4344,8 +4632,8 @@ const IpdBillList = () => {
                   value={
                     cashlessData.receivedamt
                       ? Number(
-                          String(cashlessData.receivedamt).replace(/,/g, ""),
-                        ).toLocaleString("en-IN")
+                        String(cashlessData.receivedamt).replace(/,/g, ""),
+                      ).toLocaleString("en-IN")
                       : ""
                   }
                   onChange={(e) =>
@@ -4401,8 +4689,8 @@ const IpdBillList = () => {
                   value={
                     cashlessData.coopay
                       ? Number(
-                          String(cashlessData.coopay).replace(/,/g, ""),
-                        ).toLocaleString("en-IN")
+                        String(cashlessData.coopay).replace(/,/g, ""),
+                      ).toLocaleString("en-IN")
                       : ""
                   }
                   onChange={(e) =>
@@ -4458,8 +4746,8 @@ const IpdBillList = () => {
                   value={
                     cashlessData.deductionamt
                       ? Number(
-                          String(cashlessData.deductionamt).replace(/,/g, ""),
-                        ).toLocaleString("en-IN")
+                        String(cashlessData.deductionamt).replace(/,/g, ""),
+                      ).toLocaleString("en-IN")
                       : ""
                   }
                   style={{
@@ -4511,8 +4799,8 @@ const IpdBillList = () => {
                   value={
                     cashlessData.payableamt
                       ? Number(
-                          String(cashlessData.payableamt).replace(/,/g, ""),
-                        ).toLocaleString("en-IN")
+                        String(cashlessData.payableamt).replace(/,/g, ""),
+                      ).toLocaleString("en-IN")
                       : ""
                   }
                   style={{

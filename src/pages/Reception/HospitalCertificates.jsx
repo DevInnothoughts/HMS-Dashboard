@@ -58,7 +58,9 @@ const HospitalCertificates = () => {
 
   const certificateOptions = [
     "Bio Medical Certificate",
+    "Drug License",
     "Fire NOC",
+    "Franchise Certificate",
     "Hospital License",
     "ISO Certificate",
     "NABH Certificate",
@@ -102,13 +104,19 @@ const HospitalCertificates = () => {
     }
   }, [currentLocation]);
 
+  const isFileRequired =
+    newCertName !== "Franchise Certificate" &&
+    newCertName !== "FranchiseCertificate";
+
   const handleAddSubmit = async (e) => {
     e.preventDefault();
-    if (!newCertName || !newExpiryDate || !newCertFile) {
+    if (!newCertName || !newExpiryDate || (isFileRequired && !newCertFile)) {
       Swal.fire({
         icon: "warning",
         title: "Required Fields",
-        text: "Please fill all fields and upload a certificate file.",
+        text: isFileRequired
+          ? "Please fill all fields and upload a certificate file."
+          : "Please select certificate name and expiry date.",
         confirmButtonColor: "#00acc1",
       });
       return;
@@ -128,7 +136,9 @@ const HospitalCertificates = () => {
     const formData = new FormData();
     formData.append("certificate_name", newCertName);
     formData.append("certificate_expiry", newExpiryDate);
-    formData.append("certificate_file", newCertFile);
+    if (newCertFile) {
+      formData.append("certificate_file", newCertFile);
+    }
 
     try {
       const response = await fetch(
@@ -215,38 +225,51 @@ const HospitalCertificates = () => {
   const actionBodyTemplate = (rowData) => {
     return (
       <div className="d-flex justify-content-center">
-        <Button
-          variant="outline-info"
-          size="sm"
-          style={{
-            borderRadius: "10px",
-            fontSize: "11px",
-            fontWeight: "bold",
-            padding: "6px 8px",
-          }}
-          onClick={() => {
-            const url = getFileUrl(rowData.certificate_path);
-            if (url) {
-              setPreviewUrl(url);
-              setPreviewName(rowData.certificate_name);
-              setPreviewType(
-                url.toLowerCase().split("?")[0].endsWith(".pdf")
-                  ? "pdf"
-                  : "image",
-              );
-              setShowPreview(true);
-            } else {
-              Swal.fire({
-                icon: "error",
-                title: "Not Found",
-                text: "No file path found.",
-                confirmButtonColor: "#00acc1",
-              });
-            }
-          }}
-        >
-          <i className="fa fa-eye"></i>
-        </Button>
+        {rowData.certificate_path ? (
+          <Button
+            variant="outline-info"
+            size="sm"
+            style={{
+              borderRadius: "10px",
+              fontSize: "11px",
+              fontWeight: "bold",
+              padding: "6px 8px",
+            }}
+            title="Preview Certificate"
+            onClick={() => {
+              const url = getFileUrl(rowData.certificate_path);
+              if (url) {
+                setPreviewUrl(url);
+                setPreviewName(rowData.certificate_name);
+                setPreviewType(
+                  url.toLowerCase().split("?")[0].endsWith(".pdf")
+                    ? "pdf"
+                    : "image",
+                );
+                setShowPreview(true);
+              } else {
+                Swal.fire({
+                  icon: "error",
+                  title: "Not Found",
+                  text: "No file path found.",
+                  confirmButtonColor: "#00acc1",
+                });
+              }
+            }}
+          >
+            <i className="fa fa-eye"></i>
+          </Button>
+        ) : (
+          <span
+            style={{
+              color: "#78909c",
+              fontSize: "12px",
+              fontStyle: "italic",
+            }}
+          >
+            No file
+          </span>
+        )}
       </div>
     );
   };
@@ -366,7 +389,21 @@ const HospitalCertificates = () => {
                           <tr>
                             <th style={{ width: "30%" }}>Certificate Name</th>
                             <th style={{ width: "25%" }}>Expiry Date</th>
-                            <th style={{ width: "30%" }}>Certificate File</th>
+                            <th style={{ width: "30%" }}>
+                              Certificate File
+                              {!isFileRequired && newCertName && (
+                                <span
+                                  style={{
+                                    fontSize: "11px",
+                                    fontWeight: "normal",
+                                    color: "#004d40",
+                                    marginLeft: "5px",
+                                  }}
+                                >
+                                  (Optional)
+                                </span>
+                              )}
+                            </th>
                             <th style={{ width: "15%" }}>Action</th>
                           </tr>
                         </thead>
@@ -413,7 +450,7 @@ const HospitalCertificates = () => {
                             <td style={{ verticalAlign: "middle" }}>
                               <Form.Control
                                 type="file"
-                                required
+                                required={isFileRequired}
                                 accept="image/*,application/pdf"
                                 ref={fileInputRef}
                                 onChange={handleFileChange}
