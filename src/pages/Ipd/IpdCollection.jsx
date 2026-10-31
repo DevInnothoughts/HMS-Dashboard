@@ -11,6 +11,7 @@ import {
   Table,
   Spinner,
   InputGroup,
+  Modal,
 } from "react-bootstrap";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import {
@@ -25,6 +26,14 @@ import {
 } from "react-icons/fa";
 import { decodeJwt } from "../Utility/decode-jwt";
 import Swal from "sweetalert2";
+
+const Toast = Swal.mixin({
+  toast: true,
+  position: "top-end",
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+});
 import logo from "../../assets/images/3.png";
 import receiptLogo from "../../assets/images/4.png";
 import { clinincLoc } from "../Utility/IpdBill_ClinicLocations";
@@ -93,13 +102,13 @@ const convertToWords = (number) => {
       } else {
         str.push(
           words[Math.floor(n / 10) * 10] +
-            " " +
-            words[n % 10] +
-            " " +
-            digits[counter] +
-            plural +
-            " " +
-            hundred,
+          " " +
+          words[n % 10] +
+          " " +
+          digits[counter] +
+          plural +
+          " " +
+          hundred,
         );
       }
     } else {
@@ -162,6 +171,20 @@ const IpdCollection = () => {
     pdcCheque: 0,
   });
   const [showPdcInfo, setShowPdcInfo] = useState(false);
+  const [showSettlementModal, setShowSettlementModal] = useState(false);
+  const [settlementData, setSettlementData] = useState({
+    invoiceid: "",
+    totalamt: "0",
+    receivedamt: "",
+    coopay: "",
+    deductionamt: "0",
+    payableamt: "0",
+    claimNo: "",
+    status: "",
+    settlementLetter: null,
+    existingSettlementLetter: null,
+  });
+  const [hasSettlementSubmitted, setHasSettlementSubmitted] = useState(false);
 
   const dropdownRef = useRef(null);
   const isManualSelection = useRef(false);
@@ -294,12 +317,17 @@ const IpdCollection = () => {
         `${BASE_URL}/V1/invoice/searchInvoiceTotal?invoice_id=${id}&location=${loc}`,
       );
       const totalData = await resTotal.json();
+      if (!resTotal.ok || (totalData && totalData.status === false && !totalData.totalamt)) {
+        Swal.fire("Error", totalData?.message || "Failed to fetch bill totals", "error");
+        setLoading(false);
+        return;
+      }
       const financialInfo = Array.isArray(totalData) ? totalData[0] : totalData;
 
-      if (financialInfo) {
+      if (financialInfo && (financialInfo.totalamt !== undefined || financialInfo.invoice_id)) {
         if (
           (financialInfo.status || "").trim().toLowerCase() ===
-            "interbranch-bill" ||
+          "interbranch-bill" ||
           (financialInfo.interbranch_id !== null &&
             financialInfo.interbranch_id !== undefined &&
             financialInfo.interbranch_id !== "" &&
@@ -333,6 +361,34 @@ const IpdCollection = () => {
           isCashless: isCashless,
         });
 
+        const existingLetter =
+          financialInfo.settlementLetter ||
+          financialInfo.settlementletter ||
+          null;
+        const hasSettled = Boolean(
+          existingLetter && (parseFloat(financialInfo.receivedamt) || 0) > 0,
+        );
+        setHasSettlementSubmitted(hasSettled);
+
+        const total = parseFloat(financialInfo.totalamt || 0);
+        const received = parseFloat(financialInfo.receivedamt || 0);
+        const coopay = parseFloat(financialInfo.coopay || 0);
+        const payable = total - received;
+        const deduction = payable - coopay;
+
+        setSettlementData({
+          invoiceid: financialInfo.invoice_id || id,
+          totalamt: total.toFixed(0),
+          receivedamt: received > 0 ? received.toFixed(0) : "",
+          coopay: coopay > 0 ? coopay.toFixed(0) : "",
+          deductionamt: deduction.toFixed(0),
+          payableamt: payable.toFixed(0),
+          claimNo: financialInfo.claim_no || "",
+          status: financialInfo.status || financialInfo.bill_method || "",
+          settlementLetter: null,
+          existingSettlementLetter: existingLetter,
+        });
+
         const resHistory = await fetch(
           `${BASE_URL}/V1/invoice/searchInvoiceDetails?invoice_id=${id}&location=${loc}`,
         );
@@ -348,6 +404,211 @@ const IpdCollection = () => {
       setLoading(false);
     }
   };
+
+  const openSettlementModal = () => {
+    const total = parseFloat(summary.totalBill || 0);
+    const received = parseFloat(summary.insuranceApproved || settlementData.receivedamt || 0);
+    const coopay = parseFloat(settlementData.coopay || 0);
+    const payable = total - received;
+    const deduction = payable - coopay;
+
+    setSettlementData((prev) => ({
+      ...prev,
+      invoiceid: invoiceId,
+      totalamt: total.toFixed(0),
+      receivedamt: received > 0 ? received.toFixed(0) : prev.receivedamt || "",
+      coopay: coopay > 0 ? coopay.toFixed(0) : prev.coopay || "",
+      deductionamt: deduction.toFixed(0),
+      payableamt: payable.toFixed(0),
+      status: summary.status || prev.status || "",
+    }));
+    setShowSettlementModal(true);
+  };
+
+  const handleCloseSettlementModal = () => {
+    setShowSettlementModal(false);
+    setSettlementData((prev) => ({
+      ...prev,
+      settlementLetter: null,
+    }));
+    const fileInput = document.getElementById(
+      "collectionSettlementLetterInput",
+    );
+    if (fileInput) fileInput.value = "";
+  };
+
+  const handleSettlementChange = (field, value) => {
+    const newVal = value.replace(/[^0-9]/g, "");
+    setSettlementData((prev) => {
+      const updated = { ...prev, [field]: newVal };
+      const received = parseInt(updated.receivedamt) || 0;
+      const coopay = parseInt(updated.coopay) || 0;
+      const total = parseInt(updated.totalamt) || 0;
+
+      const payable = total - received;
+      const deduction = payable - coopay;
+
+      updated.payableamt = payable.toFixed(0);
+      updated.deductionamt = deduction.toFixed(0);
+      return updated;
+    });
+  };
+
+  const submitSettlement = async (e) => {
+    e.preventDefault();
+    if (!settlementData.receivedamt || !settlementData.coopay) {
+      alert("Please Enter the details..");
+      return;
+    }
+
+    const isReimbursement =
+      String(settlementData.status).toLowerCase() === "reimbursement";
+    const isPdc =
+      String(settlementData.status).toLowerCase() === "pdc";
+
+    if (
+      (isReimbursement || isPdc) &&
+      !settlementData.settlementLetter &&
+      !settlementData.existingSettlementLetter
+    ) {
+      Swal.fire({
+        icon: "warning",
+        title: "Settlement Letter Required",
+        text: `Settlement letter PDF is compulsory for ${isPdc ? "PDC" : "reimbursement"}. Please upload the PDF.`,
+        confirmButtonColor: "#00acc1",
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("invoice_id", settlementData.invoiceid || invoiceId);
+      formData.append("receivedamt", parseFloat(settlementData.receivedamt) || 0);
+      formData.append("coopay", parseFloat(settlementData.coopay) || 0);
+      formData.append("deductionamt", parseFloat(settlementData.deductionamt) || 0);
+      formData.append("claim_no", settlementData.claimNo || "");
+      formData.append("status", settlementData.status || summary.status || "");
+      if (settlementData.settlementLetter) {
+        formData.append("settlementletter", settlementData.settlementLetter);
+      }
+
+      const token = localStorage.getItem("token");
+      const headers = {};
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const res = await fetch(
+        `${BASE_URL}/V1/invoice/insuranceSettlement?location=${currentLocation}`,
+        {
+          method: "POST",
+          headers,
+          body: formData,
+        },
+      );
+      const data = await res.json();
+      if (
+        res.ok &&
+        (data.statusCode === 200 || data.description?.status || data.status)
+      ) {
+        setHasSettlementSubmitted(true);
+        Toast.fire({
+          icon: "success",
+          title: isReimbursement
+            ? "Reimbursement amounts updated successfully."
+            : "PDC amounts updated successfully.",
+        });
+        handleCloseSettlementModal();
+        await handleViewBillDetails();
+      } else {
+        alert(data.message || "Failed to update settlement amounts.");
+      }
+    } catch (err) {
+      console.error("Settlement submission error:", err);
+      alert("Error saving settlement amounts. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const lastAlertedSumRef = useRef(null);
+
+  useEffect(() => {
+    const billStatus = (summary.status || "").toLowerCase().trim();
+    const isPdcOrReimbursement =
+      billStatus === "pdc" || billStatus === "reimbursement";
+
+    if (!isPdcOrReimbursement || hasSettlementSubmitted) return;
+
+    const totalBillNum = Math.round(Number(summary.totalBill) || 0);
+    if (totalBillNum <= 0) return;
+
+    const currentTotal =
+      (parseFloat(newPayment.cash) || 0) +
+      (parseFloat(newPayment.card) || 0) +
+      (parseFloat(newPayment.cheque) || 0) +
+      (parseFloat(newPayment.online) || 0) +
+      (parseFloat(newPayment.internalDiscount) || 0) +
+      (parseFloat(newPayment.tds) || 0) +
+      (parseFloat(newPayment.pdcCheque) || 0);
+
+    const existingPaid = payments.reduce(
+      (acc, p) =>
+        acc +
+        (parseFloat(p.cashamt) || 0) +
+        (parseFloat(p.cardamt) || 0) +
+        (parseFloat(p.chequeamt) || 0) +
+        (parseFloat(p.onlineamt) || 0) +
+        (parseFloat(p.discountamt) || 0) +
+        (parseFloat(p.tdsamt) || 0),
+      0,
+    );
+
+    const isSumEqualToTotal =
+      Math.round(currentTotal) === totalBillNum ||
+      Math.round(existingPaid + currentTotal) === totalBillNum;
+
+    if (isSumEqualToTotal) {
+      if (lastAlertedSumRef.current === currentTotal) return;
+      lastAlertedSumRef.current = currentTotal;
+
+      const timer = setTimeout(() => {
+        if (Swal.isVisible()) return;
+        Swal.fire({
+          title: "Sum of inputs equals Total Bill",
+          text: `Sum of payment inputs equals Total Bill (₹ ${totalBillNum.toLocaleString(
+            "en-IN",
+          )}). Please first fill and submit the ${billStatus === "pdc" ? "Add PDC Amount" : "Add Reimbursement Amount"
+            } modal with settlement letter.`,
+          icon: "warning",
+          showCancelButton: true,
+          cancelButtonColor: "#dc3545",
+          cancelButtonText: "Cancel",
+          confirmButtonColor: "#28a745",
+          confirmButtonText:
+            billStatus === "pdc"
+              ? "Fill PDC Settlement"
+              : "Fill Reimbursement Settlement",
+          allowOutsideClick: false,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            openSettlementModal();
+          }
+        });
+      }, 350);
+
+      return () => clearTimeout(timer);
+    } else {
+      lastAlertedSumRef.current = null;
+    }
+  }, [
+    newPayment,
+    summary.totalBill,
+    summary.status,
+    hasSettlementSubmitted,
+    payments,
+  ]);
 
   // ... inside your IpdCollections component ...
 
@@ -442,7 +703,7 @@ const IpdCollection = () => {
           } else {
             Swal.showValidationMessage(
               result.message ||
-                "Swipe not detected yet. Please try again after swiping.",
+              "Swipe not detected yet. Please try again after swiping.",
             );
             return false;
           }
@@ -494,7 +755,7 @@ const IpdCollection = () => {
               await Swal.fire(
                 "Already Paid",
                 cancelResult?.message ||
-                  "The customer had already paid. The payment is confirmed and has been recorded.",
+                "The customer had already paid. The payment is confirmed and has been recorded.",
                 "warning",
               );
               setSelectedTerminal("");
@@ -512,7 +773,7 @@ const IpdCollection = () => {
               Swal.fire(
                 "Cancellation Error",
                 cancelResult?.message ||
-                  "Remote cancel failed. Please cancel manually on the POS machine.",
+                "Remote cancel failed. Please cancel manually on the POS machine.",
                 "error",
               );
             }
@@ -542,6 +803,61 @@ const IpdCollection = () => {
         "Please enter a payment value",
         "warning",
       );
+
+    const billStatus = (summary.status || "").trim().toLowerCase();
+    const isPdcOrReimbursement =
+      billStatus === "pdc" || billStatus === "reimbursement";
+
+    const currentInputSum =
+      (Number(newPayment.cash) || 0) +
+      (Number(newPayment.card) || 0) +
+      (Number(newPayment.cheque) || 0) +
+      (Number(newPayment.online) || 0) +
+      (Number(newPayment.internalDiscount) || 0) +
+      (Number(newPayment.tds) || 0);
+
+    const existingPaid = payments.reduce(
+      (acc, p) =>
+        acc +
+        (parseFloat(p.cashamt) || 0) +
+        (parseFloat(p.cardamt) || 0) +
+        (parseFloat(p.chequeamt) || 0) +
+        (parseFloat(p.onlineamt) || 0) +
+        (parseFloat(p.discountamt) || 0) +
+        (parseFloat(p.tdsamt) || 0),
+      0,
+    );
+
+    const totalBillNum = Math.round(Number(summary.totalBill) || 0);
+    const isSumEqualToTotal =
+      totalBillNum > 0 &&
+      (Math.round(currentInputSum) === totalBillNum ||
+        Math.round(existingPaid + currentInputSum) === totalBillNum);
+
+    if (isPdcOrReimbursement && isSumEqualToTotal && !hasSettlementSubmitted) {
+      Swal.fire({
+        icon: "warning",
+        title: "Sum of inputs equals Total Bill",
+        text: `Sum of payment inputs equals Total Bill (₹ ${totalBillNum.toLocaleString(
+          "en-IN",
+        )}). Please first fill and submit the ${billStatus === "pdc" ? "Add PDC Amount" : "Add Reimbursement Amount"
+          } modal and upload the settlement letter before recording this payment entry.`,
+        showCancelButton: true,
+        cancelButtonColor: "#dc3545",
+        cancelButtonText: "Cancel",
+        confirmButtonColor: "#28a745",
+        confirmButtonText:
+          billStatus === "pdc"
+            ? "Fill PDC Settlement"
+            : "Fill Reimbursement Settlement",
+        allowOutsideClick: false,
+      }).then((result) => {
+        if (result.isConfirmed) {
+          openSettlementModal();
+        }
+      });
+      return;
+    }
 
     if ((newPayment.card > 0 || newPayment.online > 0) && !selectedTerminal) {
       return Swal.fire(
@@ -654,20 +970,32 @@ const IpdCollection = () => {
   };
 
   const handlePrintReceipt = async (pay) => {
-    const totalAmt =
-      Number(pay.cashamt || 0) +
+    const isPdcCheque =
+      parseFloat(pay.pdcCheque || pay.PdcCheque || pay.pdc_cheque || 0) > 0;
+
+    const totalBillAmount = parseFloat(
+      summary.totalBill || pay.payableamt || pay.totalamt || 0,
+    );
+
+    const totalAmt = isPdcCheque
+      ? totalBillAmount > 0
+        ? totalBillAmount
+        : parseFloat(pay.pdcCheque || pay.PdcCheque || pay.pdc_cheque || 0)
+      : Number(pay.cashamt || 0) +
       Number(pay.cardamt || 0) +
       Number(pay.chequeamt || 0) +
       Number(pay.onlineamt || 0);
+
     const words = convertToWords(totalAmt);
     const trimmedLocation = currentLocation ? currentLocation.trim() : "";
     const invoiceInfo = clinincLoc[trimmedLocation] ||
       clinincLoc[currentLocation] || {
-        invoiceAddress: "<b>Healing Hands Clinic</b>",
-        invoiceHelplineNo: "8888288884",
-        EmergencySMS: "",
-      };
-    const receiptInfo = receiptlocations[currentLocation] || {
+      invoiceAddress: "<b>Healing Hands Clinic</b>",
+      invoiceHelplineNo: "8888288884",
+      EmergencySMS: "",
+    };
+    const receiptInfo = receiptlocations[trimmedLocation] ||
+      receiptlocations[currentLocation] || {
       hospitalcode: "HHC",
     };
     const hospitalCode = receiptInfo.hospitalcode;
@@ -679,6 +1007,9 @@ const IpdCollection = () => {
     const cardPayment = pay.cardamt != 0 ? "Card " : "";
     const onlinePayment = pay.onlineamt != 0 ? "Online " : "";
     const chequePayment = pay.chequeamt != 0 ? "Cheque " : "";
+    const paymentModeText = isPdcCheque
+      ? "Cash / Cheque"
+      : `${cashPayment}${cardPayment}${onlinePayment}${chequePayment}`;
 
     const [mainLogoBase64, horizontalReceiptLogoBase64] = await Promise.all([
       getBase64Image(logo),
@@ -771,7 +1102,7 @@ const IpdCollection = () => {
                                         <table width="100%" border="0">
                                             <tr>
                                                 <td style="width:60%; vertical-align: top;">
-                                                    Payment Mode :&nbsp;<b>${cashPayment}${cardPayment}${onlinePayment}${chequePayment}</b><br>
+                                                    Payment Mode :&nbsp;<b>${paymentModeText}</b><br>
                                                     In Words :&nbsp;<b>${words} Rupees Only.</b>
                                                 </td>
                                                 <td style="width:30%;"><p style="padding:10px; border:1px solid grey; border-radius:10px; font-weight:600;">Rs.&nbsp;${Math.round(totalAmt).toLocaleString("en-IN")} /-</p></td>
@@ -1188,6 +1519,28 @@ const IpdCollection = () => {
                         (Number(newPayment.tds) || 0);
                       const isOverpaid = currentTotal > summary.totalDue;
 
+                      const billStatus = (summary.status || "").trim().toLowerCase();
+                      const isPdcOrReimbursement =
+                        billStatus === "pdc" || billStatus === "reimbursement";
+                      const totalBillNum = Math.round(Number(summary.totalBill) || 0);
+
+                      const existingPaid = payments.reduce(
+                        (acc, p) =>
+                          acc +
+                          (parseFloat(p.cashamt) || 0) +
+                          (parseFloat(p.cardamt) || 0) +
+                          (parseFloat(p.chequeamt) || 0) +
+                          (parseFloat(p.onlineamt) || 0) +
+                          (parseFloat(p.discountamt) || 0) +
+                          (parseFloat(p.tdsamt) || 0),
+                        0,
+                      );
+
+                      const isSumEqualToTotal =
+                        totalBillNum > 0 &&
+                        (Math.round(currentTotal) === totalBillNum ||
+                          Math.round(existingPaid + currentTotal) === totalBillNum);
+
                       return (
                         <>
                           {isOverpaid && (
@@ -1260,11 +1613,11 @@ const IpdCollection = () => {
                                   value={
                                     newPayment.cash
                                       ? Number(
-                                          String(newPayment.cash).replace(
-                                            /,/g,
-                                            "",
-                                          ),
-                                        ).toLocaleString("en-IN")
+                                        String(newPayment.cash).replace(
+                                          /,/g,
+                                          "",
+                                        ),
+                                      ).toLocaleString("en-IN")
                                       : ""
                                   }
                                   onChange={(e) =>
@@ -1388,10 +1741,10 @@ const IpdCollection = () => {
                                   value={
                                     newPayment.internalDiscount
                                       ? Number(
-                                          String(
-                                            newPayment.internalDiscount,
-                                          ).replace(/,/g, ""),
-                                        ).toLocaleString("en-IN")
+                                        String(
+                                          newPayment.internalDiscount,
+                                        ).replace(/,/g, ""),
+                                      ).toLocaleString("en-IN")
                                       : ""
                                   }
                                   onChange={(e) =>
@@ -1426,11 +1779,11 @@ const IpdCollection = () => {
                                   value={
                                     newPayment.tds
                                       ? Number(
-                                          String(newPayment.tds).replace(
-                                            /,/g,
-                                            "",
-                                          ),
-                                        ).toLocaleString("en-IN")
+                                        String(newPayment.tds).replace(
+                                          /,/g,
+                                          "",
+                                        ),
+                                      ).toLocaleString("en-IN")
                                       : ""
                                   }
                                   onChange={(e) =>
@@ -1482,9 +1835,23 @@ const IpdCollection = () => {
                                 className="btn-save"
                                 onClick={handleSavePayment}
                                 disabled={
-                                  loading || isOverpaid || summary.totalDue <= 0
+                                  loading ||
+                                  isOverpaid ||
+                                  summary.totalDue <= 0 ||
+                                  (isPdcOrReimbursement &&
+                                    isSumEqualToTotal &&
+                                    !hasSettlementSubmitted)
                                 }
-                                title="Save Payment"
+                                title={
+                                  isPdcOrReimbursement &&
+                                    isSumEqualToTotal &&
+                                    !hasSettlementSubmitted
+                                    ? `Please fill and submit ${billStatus === "pdc"
+                                      ? "Add PDC Amount"
+                                      : "Add Reimbursement Amount"
+                                    } first`
+                                    : "Save Payment"
+                                }
                               >
                                 <FaSave size={16} />
                               </Button>
@@ -1498,7 +1865,7 @@ const IpdCollection = () => {
 
                 {summary.totalDue === 0 &&
                   (summary.isCashless &&
-                  parseFloat(summary.insuranceApproved || 0) === 0 ? (
+                    parseFloat(summary.insuranceApproved || 0) === 0 ? (
                     <div
                       className="alert alert-warning mx-3 mt-3 text-center fw-bold"
                       style={{
@@ -1529,6 +1896,46 @@ const IpdCollection = () => {
                       required.
                     </div>
                   ))}
+
+                {Boolean(
+                  (summary.status || "").toLowerCase() === "pdc" ||
+                  (summary.status || "").toLowerCase() === "reimbursement"
+                ) && hasSettlementSubmitted && (
+                    <div className="mx-3 mt-3">
+                      <div
+                        className="alert alert-info p-3 d-flex align-items-center justify-content-between flex-wrap gap-2 fw-bold"
+                        style={{
+                          borderRadius: "10px",
+                          border: "1px solid #4dd0e1",
+                          backgroundColor: "#e0f7fa",
+                          color: "#006064",
+                        }}
+                      >
+                        <div>
+                          <i className="fa fa-check-circle text-success me-2"></i>
+                          {(summary.status || "").toLowerCase() === "pdc"
+                            ? "PDC"
+                            : "Reimbursement"}{" "}
+                          Settlement details & letter submitted.
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="info"
+                          style={{
+                            fontSize: "12px",
+                            color: "#fff",
+                            backgroundColor: "#00acc1",
+                            borderColor: "#00acc1",
+                            borderRadius: "8px",
+                            fontWeight: "600",
+                          }}
+                          onClick={openSettlementModal}
+                        >
+                          View / Edit Settlement Details
+                        </Button>
+                      </div>
+                    </div>
+                  )}
 
                 {/* Shown only when a Card or Online amount has been entered. */}
                 {isDigitalPayment && (
@@ -1562,6 +1969,468 @@ const IpdCollection = () => {
           </Col>
         </Row>
       </Container>
+
+      {/* PDC / Reimbursement Settlement Modal */}
+      <Modal
+        show={showSettlementModal}
+        onHide={handleCloseSettlementModal}
+        centered
+        backdrop="static"
+        keyboard={false}
+      >
+        <Modal.Header
+          closeButton
+          style={{
+            backgroundColor: "#e0f7fa",
+            borderBottom: "2px solid #4dd0e1",
+            padding: "10px 15px",
+          }}
+        >
+          <Modal.Title
+            style={{ fontSize: "16px", fontWeight: "600", color: "#00838f" }}
+          >
+            {(settlementData.status || summary.status || "").toLowerCase() === "pdc"
+              ? "Add PDC Amount"
+              : "Add Reimbursement Amount"}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ padding: "18px 20px" }}>
+          <Form onSubmit={submitSettlement} id="collection-settlement-form">
+            <Form.Group className="mb-10 d-flex align-items-center">
+              <Form.Label
+                style={{
+                  width: "35%",
+                  margin: 0,
+                  fontWeight: "600",
+                  fontSize: "13px",
+                  color: "#006064",
+                }}
+              >
+                Claim Number
+              </Form.Label>
+              <InputGroup style={{ width: "65%", flexWrap: "nowrap" }}>
+                <Form.Control
+                  type="text"
+                  placeholder="Enter Claim Number"
+                  value={settlementData.claimNo || ""}
+                  onChange={(e) =>
+                    setSettlementData((prev) => ({
+                      ...prev,
+                      claimNo: e.target.value,
+                    }))
+                  }
+                  style={{
+                    border: "1px solid rgb(77, 208, 225)",
+                    borderRadius: "10px",
+                    height: "32px",
+                    fontSize: "13px",
+                  }}
+                />
+              </InputGroup>
+            </Form.Group>
+
+            <Form.Group className="mb-10 d-flex align-items-center">
+              <Form.Label
+                style={{
+                  width: "35%",
+                  margin: 0,
+                  fontWeight: "600",
+                  fontSize: "13px",
+                  color: "#006064",
+                }}
+              >
+                Total Amount
+              </Form.Label>
+              <InputGroup style={{ width: "65%", flexWrap: "nowrap" }}>
+                <InputGroup.Text
+                  style={{
+                    backgroundColor: "#e9ecef",
+                    border: "1px solid rgb(77, 208, 225)",
+                    borderRight: "none",
+                    borderTopLeftRadius: "10px",
+                    borderBottomLeftRadius: "10px",
+                    borderTopRightRadius: 0,
+                    borderBottomRightRadius: 0,
+                    fontWeight: "500",
+                    height: "32px",
+                    fontSize: "13px",
+                  }}
+                >
+                  ₹
+                </InputGroup.Text>
+                <Form.Control
+                  type="text"
+                  readOnly
+                  value={
+                    settlementData.totalamt
+                      ? Number(
+                        String(settlementData.totalamt).replace(/,/g, ""),
+                      ).toLocaleString("en-IN")
+                      : ""
+                  }
+                  style={{
+                    backgroundColor: "#e9ecef",
+                    cursor: "not-allowed",
+                    border: "1px solid rgb(77, 208, 225)",
+                    borderLeft: "none",
+                    borderTopLeftRadius: 0,
+                    borderBottomLeftRadius: 0,
+                    borderTopRightRadius: "10px",
+                    borderBottomRightRadius: "10px",
+                    height: "32px",
+                    fontSize: "13px",
+                  }}
+                />
+              </InputGroup>
+            </Form.Group>
+
+            <Form.Group className="mb-10 d-flex align-items-center">
+              <Form.Label
+                style={{
+                  width: "35%",
+                  margin: 0,
+                  fontWeight: "600",
+                  fontSize: "13px",
+                  color: "#006064",
+                }}
+              >
+                Approved Amount <span className="text-danger">*</span>
+              </Form.Label>
+              <InputGroup style={{ width: "65%", flexWrap: "nowrap" }}>
+                <InputGroup.Text
+                  style={{
+                    backgroundColor: "#f8f9fa",
+                    border: "1px solid rgb(77, 208, 225)",
+                    borderRight: "none",
+                    borderTopLeftRadius: "10px",
+                    borderBottomLeftRadius: "10px",
+                    borderTopRightRadius: 0,
+                    borderBottomRightRadius: 0,
+                    fontWeight: "500",
+                    height: "32px",
+                    fontSize: "13px",
+                  }}
+                >
+                  ₹
+                </InputGroup.Text>
+                <Form.Control
+                  type="text"
+                  required
+                  value={
+                    settlementData.receivedamt
+                      ? Number(
+                        String(settlementData.receivedamt).replace(/,/g, ""),
+                      ).toLocaleString("en-IN")
+                      : ""
+                  }
+                  onChange={(e) =>
+                    handleSettlementChange("receivedamt", e.target.value)
+                  }
+                  style={{
+                    border: "1px solid rgb(77, 208, 225)",
+                    borderLeft: "none",
+                    borderTopLeftRadius: 0,
+                    borderBottomLeftRadius: 0,
+                    borderTopRightRadius: "10px",
+                    borderBottomRightRadius: "10px",
+                    height: "32px",
+                    fontSize: "13px",
+                  }}
+                />
+              </InputGroup>
+            </Form.Group>
+
+            <Form.Group className="mb-10 d-flex align-items-center">
+              <Form.Label
+                style={{
+                  width: "35%",
+                  margin: 0,
+                  fontWeight: "600",
+                  fontSize: "13px",
+                  color: "#006064",
+                }}
+              >
+                CoPay <span className="text-danger">*</span>
+              </Form.Label>
+              <InputGroup style={{ width: "65%", flexWrap: "nowrap" }}>
+                <InputGroup.Text
+                  style={{
+                    backgroundColor: "#f8f9fa",
+                    border: "1px solid rgb(77, 208, 225)",
+                    borderRight: "none",
+                    borderTopLeftRadius: "10px",
+                    borderBottomLeftRadius: "10px",
+                    borderTopRightRadius: 0,
+                    borderBottomRightRadius: 0,
+                    fontWeight: "500",
+                    height: "32px",
+                    fontSize: "13px",
+                  }}
+                >
+                  ₹
+                </InputGroup.Text>
+                <Form.Control
+                  type="text"
+                  required
+                  value={
+                    settlementData.coopay
+                      ? Number(
+                        String(settlementData.coopay).replace(/,/g, ""),
+                      ).toLocaleString("en-IN")
+                      : ""
+                  }
+                  onChange={(e) =>
+                    handleSettlementChange("coopay", e.target.value)
+                  }
+                  style={{
+                    border: "1px solid rgb(77, 208, 225)",
+                    borderLeft: "none",
+                    borderTopLeftRadius: 0,
+                    borderBottomLeftRadius: 0,
+                    borderTopRightRadius: "10px",
+                    borderBottomRightRadius: "10px",
+                    height: "32px",
+                    fontSize: "13px",
+                  }}
+                />
+              </InputGroup>
+            </Form.Group>
+
+            <Form.Group className="mb-10 d-flex align-items-center">
+              <Form.Label
+                style={{
+                  width: "35%",
+                  margin: 0,
+                  fontWeight: "600",
+                  fontSize: "13px",
+                  color: "#006064",
+                }}
+              >
+                Deduction Amount
+              </Form.Label>
+              <InputGroup style={{ width: "65%", flexWrap: "nowrap" }}>
+                <InputGroup.Text
+                  style={{
+                    backgroundColor: "#e9ecef",
+                    border: "1px solid rgb(77, 208, 225)",
+                    borderRight: "none",
+                    borderTopLeftRadius: "10px",
+                    borderBottomLeftRadius: "10px",
+                    borderTopRightRadius: 0,
+                    borderBottomRightRadius: 0,
+                    fontWeight: "500",
+                    height: "32px",
+                    fontSize: "13px",
+                  }}
+                >
+                  ₹
+                </InputGroup.Text>
+                <Form.Control
+                  type="text"
+                  readOnly
+                  value={
+                    settlementData.deductionamt
+                      ? Number(
+                        String(settlementData.deductionamt).replace(/,/g, ""),
+                      ).toLocaleString("en-IN")
+                      : ""
+                  }
+                  style={{
+                    backgroundColor: "#e9ecef",
+                    cursor: "not-allowed",
+                    border: "1px solid rgb(77, 208, 225)",
+                    borderLeft: "none",
+                    borderTopLeftRadius: 0,
+                    borderBottomLeftRadius: 0,
+                    borderTopRightRadius: "10px",
+                    borderBottomRightRadius: "10px",
+                    height: "32px",
+                    fontSize: "13px",
+                  }}
+                />
+              </InputGroup>
+            </Form.Group>
+
+            <Form.Group className="mb-10 d-flex align-items-center">
+              <Form.Label
+                style={{
+                  width: "35%",
+                  margin: 0,
+                  fontWeight: "600",
+                  fontSize: "13px",
+                  color: "#006064",
+                }}
+              >
+                Payable Amount
+              </Form.Label>
+              <InputGroup style={{ width: "65%", flexWrap: "nowrap" }}>
+                <InputGroup.Text
+                  style={{
+                    backgroundColor: "#e9ecef",
+                    border: "1px solid rgb(77, 208, 225)",
+                    borderRight: "none",
+                    borderTopLeftRadius: "10px",
+                    borderBottomLeftRadius: "10px",
+                    borderTopRightRadius: 0,
+                    borderBottomRightRadius: 0,
+                    fontWeight: "500",
+                    height: "32px",
+                    fontSize: "13px",
+                  }}
+                >
+                  ₹
+                </InputGroup.Text>
+                <Form.Control
+                  type="text"
+                  readOnly
+                  value={
+                    settlementData.payableamt
+                      ? Number(
+                        String(settlementData.payableamt).replace(/,/g, ""),
+                      ).toLocaleString("en-IN")
+                      : ""
+                  }
+                  style={{
+                    backgroundColor: "#e9ecef",
+                    cursor: "not-allowed",
+                    border: "1px solid rgb(77, 208, 225)",
+                    borderLeft: "none",
+                    borderTopLeftRadius: 0,
+                    borderBottomLeftRadius: 0,
+                    borderTopRightRadius: "10px",
+                    borderBottomRightRadius: "10px",
+                    height: "32px",
+                    fontSize: "13px",
+                  }}
+                />
+              </InputGroup>
+            </Form.Group>
+
+            {/* Settlement Letter Upload */}
+            <Form.Group className="mb-3 d-flex align-items-start">
+              <Form.Label
+                style={{
+                  width: "35%",
+                  margin: 0,
+                  fontWeight: "600",
+                  fontSize: "13px",
+                  paddingTop: "6px",
+                  color: "#006064",
+                }}
+              >
+                Settlement Letter <span className="text-danger">*</span>
+              </Form.Label>
+              <div style={{ width: "65%" }}>
+                <Form.Control
+                  id="collectionSettlementLetterInput"
+                  type="file"
+                  accept="application/pdf"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      if (file.type !== "application/pdf") {
+                        Swal.fire({
+                          icon: "error",
+                          title: "Invalid File Type",
+                          text: "Only PDF files are allowed for settlement letters.",
+                          confirmButtonColor: "#00acc1",
+                        });
+                        e.target.value = "";
+                        setSettlementData((prev) => ({
+                          ...prev,
+                          settlementLetter: null,
+                        }));
+                        return;
+                      }
+                      setSettlementData((prev) => ({
+                        ...prev,
+                        settlementLetter: file,
+                      }));
+                    }
+                  }}
+                  style={{
+                    border: "1px solid rgb(77, 208, 225)",
+                    borderRadius: "10px",
+                    fontSize: "13px",
+                  }}
+                />
+
+
+                {settlementData.settlementLetter && (
+                  <div className="mt-2 d-flex align-items-center gap-2">
+                    <span className="badge bg-success" style={{ fontSize: "11px" }}>
+                      Selected: {settlementData.settlementLetter.name}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline-danger"
+                      style={{ padding: "1px 6px", fontSize: "11px", borderRadius: "4px" }}
+                      onClick={() => {
+                        const el = document.getElementById("collectionSettlementLetterInput");
+                        if (el) el.value = "";
+                        setSettlementData((prev) => ({ ...prev, settlementLetter: null }));
+                      }}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                )}
+
+                {!settlementData.settlementLetter && settlementData.existingSettlementLetter && (
+                  <div className="mt-2 d-flex align-items-center gap-2">
+                    <span className="badge bg-info text-dark" style={{ fontSize: "11px" }}>
+                      Existing Letter on Record
+                    </span>
+                    <a
+                      href={
+                        settlementData.existingSettlementLetter.startsWith("http")
+                          ? settlementData.existingSettlementLetter
+                          : `${IMAGE_BASE_URL}${settlementData.existingSettlementLetter}`
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-sm btn-outline-info"
+                      style={{ padding: "2px 8px", fontSize: "11px", borderRadius: "5px" }}
+                    >
+                      <i className="fa fa-eye me-1"></i> View Letter
+                    </a>
+                  </div>
+                )}
+              </div>
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer
+          style={{
+            backgroundColor: "#f8f9fa",
+            borderTop: "1px solid #dee2e6",
+            padding: "10px 20px",
+          }}
+        >
+          <Button
+            style={{ borderRadius: "10px", fontSize: "13px", padding: "8px 16px" }}
+            variant="secondary"
+            onClick={handleCloseSettlementModal}
+          >
+            Close
+          </Button>
+          <Button
+            variant="primary"
+            type="submit"
+            disabled={loading}
+            form="collection-settlement-form"
+            style={{
+              backgroundColor: "teal",
+              border: "none",
+              borderRadius: "10px",
+              fontSize: "13px",
+              padding: "9px 18px",
+            }}
+          >
+            {loading ? "Saving..." : "Save Settlement"}
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       <style>{`
                 .custom-ipd-styles {

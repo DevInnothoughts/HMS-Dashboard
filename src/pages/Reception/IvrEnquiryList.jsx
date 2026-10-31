@@ -87,8 +87,6 @@ export default function IvrEnquiryList({ isTab = false }) {
   const [statusFilter, setStatusFilter] = useState("");
   const [loading, setLoading] = useState(false);
   const [isDbSearching, setIsDbSearching] = useState(false);
-  const [showNoteModal, setShowNoteModal] = useState(false);
-  const [selectedNote, setSelectedNote] = useState("");
   const [showEnquiryModal, setShowEnquiryModal] = useState(false);
   const [selectedCallLog, setSelectedCallLog] = useState(null);
   const [timeSlots, setTimeSlots] = useState([]);
@@ -117,6 +115,7 @@ export default function IvrEnquiryList({ isTab = false }) {
   }, []);
 
   const handleAddAppointmentClick = async (rowData) => {
+    setSelectedCallLog(rowData);
     const today = new Date();
     const patient_phone = rowData.caller_no || "";
     setNoPendingAppt(true);
@@ -536,71 +535,6 @@ export default function IvrEnquiryList({ isTab = false }) {
     setShowEnquiryModal(true);
   };
 
-  const handleNoteClick = (note, rowData) => {
-    setSelectedCallLog(rowData);
-    setFormData((prev) => ({
-      ...prev,
-      note: note || "",
-    }));
-    setShowNoteModal(true);
-  };
-
-  const handleSaveNote = async (e) => {
-    if (e && e.preventDefault) e.preventDefault();
-    if (!selectedCallLog || !selectedCallLog.ivr_id) {
-      toast.error("Error: IVR ID is missing.");
-      return;
-    }
-
-    if (!formData.note || formData.note.trim() === "") {
-      toast.error("Error: Note cannot be empty.");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const payload = {
-        ivr_id: selectedCallLog.ivr_id,
-        note: formData.note.trim(),
-      };
-
-      const response = await fetch(
-        `${BASE_URL}/V1/ivrdata/editNote/${selectedCallLog.ivr_id}?location=${currentLocation}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        },
-      );
-
-      const responseData = await response.json();
-
-      if (response.ok && responseData.statusCode === 200) {
-        setCallLogs((prevLogs) =>
-          prevLogs.map((log) =>
-            log.ivr_id === selectedCallLog.ivr_id
-              ? { ...log, note: formData.note.trim() }
-              : log,
-          ),
-        );
-
-        setShowNoteModal(false);
-        Swal.fire({
-          icon: "success",
-          title: "Note Saved",
-          text: "The note has been updated successfully.",
-          timer: 2000,
-        });
-      } else {
-        Toast.fire({ icon: "error", title: "Failed to update note" });
-      }
-    } catch (error) {
-      console.error("Error updating note:", error);
-      Toast.fire({ icon: "error", title: "An error occurred while updating" });
-    } finally {
-      setLoading(false);
-    }
-  };
   const handleStatusFilterChange = (e) => {
     const value = e.target.value;
     const updatedFilters = { ...filters1 };
@@ -691,19 +625,10 @@ export default function IvrEnquiryList({ isTab = false }) {
       <Button
         variant="primary"
         onClick={() => handleAddAppointmentClick(rowData)}
-        className="appointment-btn btn-primary btn-extra-small btn-icon me-2"
+        className="appointment-btn btn-primary btn-extra-small btn-icon"
         title="Add Appointment"
       >
         <FeatherIcon icon="plus-square" size="16" />
-      </Button>
-
-      <Button
-        variant="primary"
-        onClick={() => handleNoteClick(rowData.note, rowData)}
-        className="note-btn btn-primary btn-extra-small btn-icon"
-        title="Add Note"
-      >
-        <FeatherIcon icon="file-text" size="16" />
       </Button>
     </div>
   );
@@ -1080,6 +1005,11 @@ export default function IvrEnquiryList({ isTab = false }) {
       treatment_name: formData.treatment,
       patientName: formData.patientName,
       patient_id: formData.patient_id,
+      source_name: "IVR",
+      record_type: "Appointment",
+      branch_name: currentLocation,
+      received_location: currentLocation,
+      ivr_id: selectedCallLog?.ivr_id,
     };
 
     try {
@@ -1106,6 +1036,7 @@ export default function IvrEnquiryList({ isTab = false }) {
         confirmButtonColor: "#00bcd4",
       });
       setShowAddModal(false);
+      fetchCallLogsData();
     } catch (error) {
       console.error("Error adding appointment:", error.message);
       Swal.fire({
@@ -1134,19 +1065,20 @@ export default function IvrEnquiryList({ isTab = false }) {
       patient_location: currentLocation,
       patient_type: "New",
       date: moment(enquiryForm.date).format("YYYY-MM-DD"),
-      // time: enquiryForm.time,
-      time: "0",
-      // doctor_id: enquiryForm.doctor_id || null,
+      time: moment().format("HH:mm"),
       doctor_id: "0",
       patient_name: enquiryForm.patient_name,
       patient_phone: enquiryForm.caller_no,
-      // patient_type: "New",
       enquirytype: enquiryForm.enquirytype,
       fdeId: enquiryForm.FDE_Name || null,
       FDE_Name: enquiryForm.fdeName || null, // ✅ Send Name instead of ID
-      // reference: enquiryForm.reference || null,
       reference: "0",
       note: enquiryForm.note || "",
+      source_name: "IVR",
+      record_type: "Enquiry",
+      branch_name: currentLocation,
+      received_location: currentLocation,
+      ivr_id: selectedCallLog?.ivr_id,
     };
 
     setLoading(true);
@@ -1185,6 +1117,7 @@ export default function IvrEnquiryList({ isTab = false }) {
       });
 
       setShowEnquiryModal(false);
+      fetchCallLogsData();
     } catch (error) {
       console.error("Error adding enquiry:", error.message);
       Swal.fire({
@@ -1830,89 +1763,6 @@ export default function IvrEnquiryList({ isTab = false }) {
       </Modal>
 
       <Modal
-        show={showNoteModal}
-        onHide={() => setShowNoteModal(false)}
-        size="md"
-        centered
-      >
-        <Modal.Header
-          closeButton
-          style={{
-            backgroundColor: "#e0f7fa",
-            borderBottom: "2px solid #00bcd4",
-            padding: "10px 15px",
-          }}
-        >
-          <Modal.Title
-            style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}
-          >
-            <FeatherIcon icon="file-text" className="me-2" size="16" />
-            Add Note
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body style={{ padding: "10px" }}>
-          <Form onSubmit={handleSaveNote}>
-            <Form.Group>
-              <Form.Label
-                style={{
-                  fontSize: "12px",
-                  fontWeight: "600",
-                  marginBottom: "4px",
-                }}
-              >
-                Note <span className="text-danger">*</span>
-              </Form.Label>
-              <Form.Control
-                required
-                style={{
-                  border: "2px solid rgb(77, 208, 225)",
-                  fontSize: "12px",
-                  borderRadius: "10px",
-                }}
-                as="textarea"
-                rows={4}
-                name="note"
-                value={formData.note || ""}
-                onChange={handleInputChange}
-                placeholder="Enter note here..."
-              />
-            </Form.Group>
-            <Modal.Footer style={{ borderTop: "none", padding: "10px 0 0 0" }}>
-              <Button
-                size="sm"
-                className="px-3"
-                style={{
-                  borderRadius: "10px",
-                  fontSize: "12px",
-                  padding: "10px",
-                }}
-                variant="secondary"
-                onClick={() => setShowNoteModal(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                className="px-4"
-                type="submit"
-                disabled={loading}
-                style={{
-                  borderRadius: "10px",
-                  fontSize: "12px",
-                  backgroundColor: "#00bcd4",
-                  border: "none",
-                  padding: "10px",
-                }}
-                variant="primary"
-              >
-                {loading ? "Saving..." : "Add Note"}
-              </Button>
-            </Modal.Footer>
-          </Form>
-        </Modal.Body>
-      </Modal>
-
-      <Modal
         show={showEnquiryModal}
         onHide={() => setShowEnquiryModal(false)}
         size="lg"
@@ -2008,22 +1858,12 @@ export default function IvrEnquiryList({ isTab = false }) {
                     >
                       <option value="">Select Enquiry Type</option>
                       {[
-                        "Call for Refund Amount",
-                        "Wrong Enquiry or Spam Call",
-                        "Enquiry for Test Charges",
-                        "Accounts Department",
-                        "Call for Another Branches",
-                        "Call for IPD Doctors",
-                        "Call for Assistant Doctors",
-                        "Call Regarding Job Vacancy",
-                        "Appointment Consultation",
-                        "Online Consultation",
-                        "SX Cost Enquiry",
-                        "Call for Lab Test Enquiry",
-                        "Medicines Availability at Pharmacy",
-                        "Patient is Coming Late for Appointment",
-                        "Insurance Related Queries",
-
+                        "Hot",
+                        "Mild",
+                        "Cold",
+                        "Other",
+                        "Appointment",
+                        "Visited",
                       ].map((type) => (
                         <option key={type} value={type}>
                           {type}

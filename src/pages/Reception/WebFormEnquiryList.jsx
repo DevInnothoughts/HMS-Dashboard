@@ -79,8 +79,6 @@ export default function WebFormEnquiryList({ isTab = false }) {
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEnquiryModal, setShowEnquiryModal] = useState(false);
-  const [showNoteModal, setShowNoteModal] = useState(false);
-  const [selectedLead, setSelectedLead] = useState(null);
 
   // Forms state
   const [treatmentList, setTreatmentList] = useState([]);
@@ -314,17 +312,7 @@ export default function WebFormEnquiryList({ isTab = false }) {
   }, [filters1.global.value, currentLocation, fetchWebLeads]);
 
   // Modal Triggers
-  const handleNoteClick = (rowData) => {
-    setSelectedLead(rowData);
-    setFormData((prev) => ({
-      ...prev,
-      note: rowData.note || "",
-    }));
-    setShowNoteModal(true);
-  };
-
   const handleEnquiryClick = (rowData) => {
-    setSelectedLead(rowData);
     const today = new Date();
     setSelectedDate(today);
     setEnquiryForm({
@@ -340,7 +328,6 @@ export default function WebFormEnquiryList({ isTab = false }) {
   };
 
   const handleAddAppointmentClick = async (rowData) => {
-    setSelectedLead(rowData);
     const today = new Date();
     const patient_phone = rowData.phoneno || "";
     setNoPendingAppt(true);
@@ -496,55 +483,6 @@ export default function WebFormEnquiryList({ isTab = false }) {
   };
 
   // Submit Handlers
-  const handleSaveNote = async (e) => {
-    if (e && e.preventDefault) e.preventDefault();
-    if (!selectedLead) return;
-
-    if (!formData.note || formData.note.trim() === "") {
-      Toast.fire({ icon: "error", title: "Note cannot be empty." });
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const response = await fetch(
-        `${BASE_URL}/V1/webleads/editNote/${selectedLead.appointment_id}?location=${currentLocation}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ note: formData.note.trim() }),
-        },
-      );
-      const resData = await response.json();
-      if (response.ok && resData.statusCode === 200) {
-        setWebLeads((prev) =>
-          prev.map((lead) =>
-            lead.appointment_id === selectedLead.appointment_id
-              ? { ...lead, note: formData.note.trim() }
-              : lead,
-          ),
-        );
-        setShowNoteModal(false);
-        Swal.fire({
-          icon: "success",
-          title: "Note Saved",
-          text: "The note has been updated successfully.",
-          timer: 2000,
-        });
-      } else {
-        Toast.fire({ icon: "error", title: "Failed to update note" });
-      }
-    } catch (err) {
-      console.error(err);
-      Toast.fire({
-        icon: "error",
-        title: "An error occurred while saving note",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   const handleEnquirySubmit = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     if (
@@ -561,7 +499,7 @@ export default function WebFormEnquiryList({ isTab = false }) {
       patient_location: currentLocation,
       patient_type: "New",
       date: moment(enquiryForm.date).format("YYYY-MM-DD"),
-      time: "0",
+      time: moment().format("HH:mm"),
       doctor_id: "0",
       patient_name: enquiryForm.patient_name,
       patient_phone: enquiryForm.caller_no,
@@ -570,6 +508,10 @@ export default function WebFormEnquiryList({ isTab = false }) {
       FDE_Name: enquiryForm.fdeName || null,
       reference: "0",
       note: enquiryForm.note || "",
+      source_name: "Web Lead",
+      record_type: "Enquiry",
+      branch_name: currentLocation,
+      received_location: currentLocation,
     };
 
     setIsSubmitting(true);
@@ -648,6 +590,10 @@ export default function WebFormEnquiryList({ isTab = false }) {
       treatment_name: formData.treatment,
       patientName: formData.patientName,
       patient_id: formData.patient_id,
+      source_name: "Web Lead",
+      record_type: "Appointment",
+      branch_name: currentLocation,
+      received_location: currentLocation,
     };
 
     setIsSubmitting(true);
@@ -1078,7 +1024,7 @@ export default function WebFormEnquiryList({ isTab = false }) {
       <Button
         variant="primary"
         onClick={() => handleAddAppointmentClick(rowData)}
-        className="appointment-btn btn-primary btn-extra-small btn-icon me-2"
+        className="appointment-btn btn-primary btn-extra-small btn-icon"
         title="Add Appointment"
         style={{
           padding: "4px 8px",
@@ -1087,20 +1033,6 @@ export default function WebFormEnquiryList({ isTab = false }) {
         }}
       >
         <FeatherIcon icon="plus-square" size="16" />
-      </Button>
-
-      <Button
-        variant="primary"
-        onClick={() => handleNoteClick(rowData)}
-        className="note-btn btn-primary btn-extra-small btn-icon"
-        title="Add Note"
-        style={{
-          padding: "4px 8px",
-          backgroundColor: "#00bcd4",
-          border: "none",
-        }}
-      >
-        <FeatherIcon icon="file-text" size="16" />
       </Button>
     </div>
   );
@@ -1317,90 +1249,6 @@ export default function WebFormEnquiryList({ isTab = false }) {
           </div>
         </Card.Body>
       </Card>
-
-      {/* Note Edit Modal */}
-      <Modal
-        show={showNoteModal}
-        onHide={() => setShowNoteModal(false)}
-        size="md"
-        centered
-      >
-        <Modal.Header
-          closeButton
-          style={{
-            backgroundColor: "#e0f7fa",
-            borderBottom: "2px solid #00bcd4",
-            padding: "10px 15px",
-          }}
-        >
-          <Modal.Title
-            style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}
-          >
-            <FeatherIcon icon="file-text" className="me-2" size="16" />
-            Add Note
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body style={{ padding: "10px" }}>
-          <Form onSubmit={handleSaveNote}>
-            <Form.Group>
-              <Form.Label
-                style={{
-                  fontSize: "12px",
-                  fontWeight: "600",
-                  marginBottom: "4px",
-                }}
-              >
-                Note <span className="text-danger">*</span>
-              </Form.Label>
-              <Form.Control
-                required
-                style={{
-                  border: "2px solid rgb(77, 208, 225)",
-                  fontSize: "12px",
-                  borderRadius: "10px",
-                }}
-                as="textarea"
-                rows={4}
-                name="note"
-                value={formData.note || ""}
-                onChange={handleInputChange}
-                placeholder="Enter note here..."
-              />
-            </Form.Group>
-            <Modal.Footer style={{ borderTop: "none", padding: "10px 0 0 0" }}>
-              <Button
-                size="sm"
-                className="px-3"
-                style={{
-                  borderRadius: "10px",
-                  fontSize: "12px",
-                  padding: "10px",
-                }}
-                variant="secondary"
-                onClick={() => setShowNoteModal(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                className="px-4"
-                type="submit"
-                disabled={isSubmitting}
-                style={{
-                  borderRadius: "10px",
-                  fontSize: "12px",
-                  backgroundColor: "#00bcd4",
-                  border: "none",
-                  padding: "10px",
-                }}
-                variant="primary"
-              >
-                {isSubmitting ? "Saving..." : "Add Note"}
-              </Button>
-            </Modal.Footer>
-          </Form>
-        </Modal.Body>
-      </Modal>
 
       {/* Add Enquiry Modal */}
       <Modal
@@ -2206,78 +2054,6 @@ export default function WebFormEnquiryList({ isTab = false }) {
           </div>
         </Card.Body>
       </Card>
-
-      {/* Note Edit Modal */}
-      <Modal
-        show={showNoteModal}
-        onHide={() => setShowNoteModal(false)}
-        size="md"
-        centered
-      >
-        <Modal.Header
-          closeButton
-          style={{
-            backgroundColor: "#e0f7fa",
-            borderBottom: "2px solid #00bcd4",
-            padding: "10px 15px",
-          }}
-        >
-          <Modal.Title
-            style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}
-          >
-            <FeatherIcon icon="file-text" className="me-2" size="16" />
-            Add Note
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body style={{ padding: "10px" }}>
-          <Form onSubmit={handleSaveNote}>
-            <Form.Group>
-              <Form.Label
-                style={{
-                  fontSize: "12px",
-                  fontWeight: "600",
-                  marginBottom: "4px",
-                }}
-              >
-                Note <span className="text-danger">*</span>
-              </Form.Label>
-              <Form.Control
-                required
-                size="sm"
-                as="textarea"
-                rows={4}
-                name="note"
-                placeholder="Enter note..."
-                value={formData.note}
-                onChange={handleInputChange}
-                style={{
-                  border: "2px solid rgb(77, 208, 225)",
-                  fontSize: "12px",
-                  borderRadius: "10px",
-                }}
-              />
-            </Form.Group>
-            <div className="d-flex justify-content-end pt-3">
-              <Button
-                variant="danger"
-                size="sm"
-                className="me-2"
-                onClick={() => setShowNoteModal(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                type="submit"
-                style={{ backgroundColor: "#00bcd4", border: "none" }}
-              >
-                Save Note
-              </Button>
-            </div>
-          </Form>
-        </Modal.Body>
-      </Modal>
 
       {/* Add Enquiry Modal */}
       <Modal

@@ -110,6 +110,8 @@ const CashlessBillSettlement = () => {
     utrno: "",
     paymentdate: "",
     settlementletter: null,
+    isReceivedAmtSubmitted: false,
+    isUtrSubmitted: false,
   });
 
   const [showPreview, setShowPreview] = useState(false);
@@ -804,6 +806,19 @@ const CashlessBillSettlement = () => {
         ? rowData.totaldue
         : 0;
 
+    const hasSubmittedReceivedAmt = Boolean(
+      rowData.receivedamt !== undefined &&
+      rowData.receivedamt !== null &&
+      parseFloat(String(rowData.receivedamt).replace(/,/g, "")) > 0
+    );
+    const hasSubmittedUtr = Boolean(
+      rowData.utrno !== undefined &&
+      rowData.utrno !== null &&
+      String(rowData.utrno).trim() !== "" &&
+      String(rowData.utrno).trim().toLowerCase() !== "null" &&
+      String(rowData.utrno).trim().toLowerCase() !== "undefined"
+    );
+
     setSettlementForm({
       invoice_id: invoiceId,
       patientname: patientName,
@@ -818,10 +833,26 @@ const CashlessBillSettlement = () => {
         ? formatNumberWithCommas(rowData.receivedamt)
         : "",
       tdsamt: rowData.tdsamt ? formatNumberWithCommas(rowData.tdsamt) : "",
-      utrno: rowData.utrno || "",
-      paymentdate: "",
+      utrno:
+        rowData.utrno &&
+          String(rowData.utrno).trim().toLowerCase() !== "null" &&
+          String(rowData.utrno).trim().toLowerCase() !== "undefined"
+          ? String(rowData.utrno).trim()
+          : "",
+      paymentdate:
+        rowData.paymentdate &&
+          rowData.paymentdate !== "0000-00-00" &&
+          moment(rowData.paymentdate).isValid()
+          ? moment(rowData.paymentdate).format("YYYY-MM-DD")
+          : rowData.payment_date &&
+            rowData.payment_date !== "0000-00-00" &&
+            moment(rowData.payment_date).isValid()
+            ? moment(rowData.payment_date).format("YYYY-MM-DD")
+            : "",
       settlementletter: null,
       existingSettlementLetter: existingLetter,
+      isReceivedAmtSubmitted: hasSubmittedReceivedAmt,
+      isUtrSubmitted: hasSubmittedUtr,
     });
     setShowModal(true);
   };
@@ -1139,6 +1170,9 @@ const CashlessBillSettlement = () => {
     settlementForm.totaldue !== undefined &&
     settlementForm.totaldue !== null &&
     totalDueNum <= 0;
+
+  const isReceivedAmtDisabled = Boolean(settlementForm.isReceivedAmtSubmitted);
+  const isUtrDisabled = Boolean(settlementForm.isUtrSubmitted);
 
   return (
     <div
@@ -1571,14 +1605,32 @@ const CashlessBillSettlement = () => {
                     style={{ fontSize: "12px", color: "#333" }}
                   >
                     Received Amount <span className="text-danger">*</span>
+                    {/* {isReceivedAmtDisabled && (
+                      <span
+                        className="badge ms-2"
+                        style={{
+                          backgroundColor: "#6c757d",
+                          color: "#ffffff",
+                          fontSize: "10px",
+                          fontWeight: "500",
+                          padding: "3px 7px",
+                          borderRadius: "4px",
+                        }}
+                      >
+                        <FeatherIcon icon="lock" size={10} className="me-1" />
+                        Submitted
+                      </span>
+                    )} */}
                   </Form.Label>
                   <InputGroup>
                     <InputGroup.Text
                       style={{
-                        backgroundColor: "#e0f7fa",
+                        backgroundColor: isReceivedAmtDisabled
+                          ? "#eceff1"
+                          : "#e0f7fa",
                         border: "1px solid #4dd0e1",
                         borderRight: "none",
-                        color: "#00838f",
+                        color: isReceivedAmtDisabled ? "#78909c" : "#00838f",
                         fontWeight: "bold",
                         fontSize: "13px",
                       }}
@@ -1590,7 +1642,10 @@ const CashlessBillSettlement = () => {
                       inputMode="numeric"
                       placeholder="Enter Received Amount"
                       value={settlementForm.receivedamt}
+                      disabled={isReceivedAmtDisabled}
+                      readOnly={isReceivedAmtDisabled}
                       onChange={(e) => {
+                        if (isReceivedAmtDisabled) return;
                         const val = formatNumberWithCommas(e.target.value);
                         setSettlementForm((prev) => ({
                           ...prev,
@@ -1598,6 +1653,10 @@ const CashlessBillSettlement = () => {
                         }));
                       }}
                       onKeyDown={(e) => {
+                        if (isReceivedAmtDisabled) {
+                          e.preventDefault();
+                          return;
+                        }
                         if (
                           !/[0-9]/.test(e.key) &&
                           ![
@@ -1620,6 +1679,11 @@ const CashlessBillSettlement = () => {
                         borderLeft: "none",
                         borderTopRightRadius: "6px",
                         borderBottomRightRadius: "6px",
+                        backgroundColor: isReceivedAmtDisabled
+                          ? "#f1f3f5"
+                          : "#ffffff",
+                        cursor: isReceivedAmtDisabled ? "not-allowed" : "text",
+                        color: isReceivedAmtDisabled ? "#495057" : "#000000",
                       }}
                       required
                     />
@@ -1696,23 +1760,51 @@ const CashlessBillSettlement = () => {
                     className="small fw-bold mb-1"
                     style={{ fontSize: "12px", color: "#333" }}
                   >
-                    UTR No <span className="text-danger">*</span>
+                    UTR Number <span className="text-danger">*</span>
+                    {/* {isUtrDisabled && (
+                      <span
+                        className="badge ms-2"
+                        style={{
+                          backgroundColor: "#6c757d",
+                          color: "#ffffff",
+                          fontSize: "10px",
+                          fontWeight: "500",
+                          padding: "3px 7px",
+                          borderRadius: "4px",
+                        }}
+                      >
+                        <FeatherIcon icon="lock" size={10} className="me-1" />
+                        Submitted
+                      </span>
+                    )} */}
                   </Form.Label>
                   <Form.Control
                     type="text"
                     placeholder="Enter UTR Number"
                     value={settlementForm.utrno}
-                    onChange={(e) =>
+                    disabled={isUtrDisabled}
+                    readOnly={isUtrDisabled}
+                    onChange={(e) => {
+                      if (isUtrDisabled) return;
                       setSettlementForm((prev) => ({
                         ...prev,
                         utrno: e.target.value,
-                      }))
-                    }
+                      }));
+                    }}
+                    onKeyDown={(e) => {
+                      if (isUtrDisabled) {
+                        e.preventDefault();
+                        return;
+                      }
+                    }}
                     style={{
                       height: "35px",
                       fontSize: "12px",
                       border: "1px solid #4dd0e1",
                       borderRadius: "6px",
+                      backgroundColor: isUtrDisabled ? "#f1f3f5" : "#ffffff",
+                      cursor: isUtrDisabled ? "not-allowed" : "text",
+                      color: isUtrDisabled ? "#495057" : "#000000",
                     }}
                     required
                   />
@@ -1952,6 +2044,20 @@ const CashlessBillSettlement = () => {
                 >
                   <FeatherIcon icon="check-circle" size={14} />
                   Total Due is ₹ 0. Settlement is already completed.
+                </span>
+              ) : isReceivedAmtDisabled && isUtrDisabled ? (
+                <span
+                  style={{
+                    color: "#006064",
+                    fontWeight: "600",
+                    fontSize: "12px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "5px",
+                  }}
+                >
+                  <FeatherIcon icon="lock" size={14} />
+                  Received Amount and UTR Number are submitted and locked.
                 </span>
               ) : null}
             </div>

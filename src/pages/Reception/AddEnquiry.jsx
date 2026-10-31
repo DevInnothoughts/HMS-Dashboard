@@ -67,7 +67,6 @@ export default function AddEnquiry({ isTab = false }) {
   const [currentLocation, setCurrentLocation] = useState(null);
   const [formData, setFormData] = useState({
     date: formatDate(new Date()),
-    doctorId: "",
     enquirytype: "",
     patient_type: "New",
     patient_name: "",
@@ -76,8 +75,6 @@ export default function AddEnquiry({ isTab = false }) {
       hour: "2-digit",
       minute: "2-digit",
     }),
-    patient_location: "",
-    reference: "",
     FDE_Name: "",
     note: "",
   });
@@ -86,7 +83,6 @@ export default function AddEnquiry({ isTab = false }) {
   const [loading, setLoading] = useState(false);
   const [isPatientRegistered, setIsPatientRegistered] = useState(false);
   const [isCheckingPhone, setIsCheckingPhone] = useState(false);
-  const [doctors, setDoctors] = useState([]);
   const [fdeList, setFdeList] = useState([]);
   const phoneRegex = /^[0-9]{7,15}$/;
 
@@ -145,12 +141,9 @@ export default function AddEnquiry({ isTab = false }) {
     const newErrors = {};
     const requiredFields = [
       "date",
-      "doctorId",
       "enquirytype",
       "patient_name",
       "patient_phone",
-      "patient_location",
-      "reference",
       "FDE_Name",
       "time",
     ];
@@ -158,7 +151,6 @@ export default function AddEnquiry({ isTab = false }) {
     requiredFields.forEach((field) => {
       if (!formData[field]) {
         let displayName = field.replace(/([A-Z])/g, " $1");
-        if (field === "doctorId") displayName = "Doctor Name";
         if (field === "FDE_Name") displayName = "FDE Name";
         newErrors[field] = `${displayName} is required`;
       }
@@ -190,13 +182,10 @@ export default function AddEnquiry({ isTab = false }) {
   const handleReset = () => {
     setFormData({
       date: formatDate(new Date()),
-      doctorId: "",
       enquirytype: "",
       patient_type: "New",
       patient_name: "",
       patient_phone: "",
-      patient_location: "",
-      reference: "",
       FDE_Name: "",
       note: "",
       time: new Date().toLocaleTimeString("en-GB", {
@@ -216,19 +205,23 @@ export default function AddEnquiry({ isTab = false }) {
     if (Object.keys(validationErrors).length === 0) {
       setLoading(true);
       const payload = {
-        doctor_id: formData.doctorId,
+        doctor_id: null,
         patient_type: formData.patient_type,
         enquirytype: formData.enquirytype,
         patient_name: formData.patient_name,
         patient_phone: formData.patient_phone,
         date: formData.date,
         time: formData.time,
-        patient_location: formData.patient_location,
-        reference: formData.reference,
+        patient_location: "",
+        reference: "",
         FDE_Name: formData.FDE_Name,
         note: formData.note,
         clinic_location: currentLocation,
         countryCode: getCountryCode(formData.patient_phone),
+        source_name: "Unknown",
+        record_type: "Enquiry",
+        branch_name: currentLocation,
+        received_location: currentLocation,
       };
 
       try {
@@ -274,22 +267,15 @@ export default function AddEnquiry({ isTab = false }) {
   const fetchDropdownData = useCallback(async () => {
     if (!currentLocation) return;
     try {
-      const fetchApi = async (endpoint, module = "appointment") => {
-        const url = `${BASE_URL}/V1/${module}/${endpoint}?location=${currentLocation}`;
-        const response = await fetch(url, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
-        return response.ok ? response.json() : { data: [] };
-      };
-
-      const [doctorData, fdeData] = await Promise.all([
-        fetchApi("doctorDropdown", "doctor").then((res) => res.data),
-        fetchApi("fdeDropdown", "appointment").then((res) => res.data),
-      ]);
-
-      setDoctors(Array.isArray(doctorData) ? doctorData : []);
-      setFdeList(Array.isArray(fdeData) ? fdeData : []);
+      const url = `${BASE_URL}/V1/appointment/fdeDropdown?location=${currentLocation}`;
+      const response = await fetch(url, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (response.ok) {
+        const result = await response.json();
+        setFdeList(Array.isArray(result.data) ? result.data : []);
+      }
     } catch (error) {
       console.error("Error fetching dropdown data:", error.message);
     }
@@ -433,21 +419,6 @@ export default function AddEnquiry({ isTab = false }) {
                             "Other",
                             "Appointment",
                             "Visited",
-                            // "Call for Refund Amount",
-                            // "Wrong Enquiry or Spam Call",
-                            // "Enquiry for Test Charges",
-                            // "Accounts Department",
-                            // "Call for Another Branches",
-                            // "Call for IPD Doctors",
-                            // "Call for Assistant Doctors",
-                            // "Call Regarding Job Vacancy",
-                            // "Appointment Consultation",
-                            // "Online Consultation",
-                            // "SX Cost Enquiry",
-                            // "Call for Lab Test Enquiry",
-                            // "Medicines Availability at Pharmacy",
-                            // "Patient is Coming Late for Appointment",
-                            // "Insurance Related Queries",
                           ].map((type) => (
                             <option key={type} value={type}>
                               {type}
@@ -468,32 +439,29 @@ export default function AddEnquiry({ isTab = false }) {
                     <Col md={4}>
                       <Form.Group>
                         <Form.Label style={labelStyle}>
-                          Doctor Name <span className="text-danger">*</span>
+                          FDE Name <span className="text-danger">*</span>
                         </Form.Label>
                         <Form.Select
                           required
-                          name="doctorId"
+                          name="FDE_Name"
                           style={inputStyle}
-                          value={formData.doctorId}
+                          value={formData.FDE_Name}
                           onChange={handleInputChange}
-                          disabled={!currentLocation || doctors.length === 0}
+                          disabled={!currentLocation || fdeList.length === 0}
                         >
-                          <option value="">Select a Doctor</option>
-                          {doctors.map((doctor) => (
-                            <option
-                              key={doctor.doctor_id}
-                              value={doctor.doctor_id}
-                            >
-                              {doctor.name}
+                          <option value="">Select FDE Name</option>
+                          {fdeList.map((fde) => (
+                            <option key={fde.FDEID} value={fde.FDEName}>
+                              {fde.FDEName}
                             </option>
                           ))}
                         </Form.Select>
-                        {errors.doctorId && (
+                        {errors.FDE_Name && (
                           <p
                             className="text-danger mt-1"
                             style={{ fontSize: "11px" }}
                           >
-                            {errors.doctorId}
+                            {errors.FDE_Name}
                           </p>
                         )}
                       </Form.Group>
@@ -561,117 +529,6 @@ export default function AddEnquiry({ isTab = false }) {
                             style={{ fontSize: "11px", fontWeight: "600" }}
                           >
                             *Contact Number already registered as a patient.
-                          </p>
-                        )}
-                      </Form.Group>
-                    </Col>
-
-                    <Col md={4}>
-                      <Form.Group>
-                        <Form.Label style={labelStyle}>
-                          Address <span className="text-danger">*</span>
-                        </Form.Label>
-                        <Form.Control
-                          required
-                          type="text"
-                          name="patient_location"
-                          placeholder="Enter Address"
-                          style={inputStyle}
-                          value={formData.patient_location}
-                          onChange={handleInputChange}
-                        />
-                        {errors.patient_location && (
-                          <p
-                            className="text-danger mt-1"
-                            style={{ fontSize: "11px" }}
-                          >
-                            {errors.patient_location}
-                          </p>
-                        )}
-                      </Form.Group>
-                    </Col>
-                  </Row>
-
-                  <Row className="g-3 mb-15">
-                    <Col md={4}>
-                      <Form.Group>
-                        <Form.Label style={labelStyle}>
-                          FDE Name <span className="text-danger">*</span>
-                        </Form.Label>
-                        <Form.Select
-                          required
-                          name="FDE_Name"
-                          style={inputStyle}
-                          value={formData.FDE_Name}
-                          onChange={handleInputChange}
-                          disabled={!currentLocation || fdeList.length === 0}
-                        >
-                          <option value="">Select FDE Name</option>
-                          {/* {fdeList.map((fde) => (
-                            <option key={fde.FDEID} value={fde.FDEID}>
-                              {fde.FDEName}
-                            </option>
-                          ))} */}
-                          {fdeList.map((fde) => (
-                            <option key={fde.FDEID} value={fde.FDEName}>
-                              {fde.FDEName}
-                            </option>
-                          ))}
-                        </Form.Select>
-                        {errors.FDE_Name && (
-                          <p
-                            className="text-danger mt-1"
-                            style={{ fontSize: "11px" }}
-                          >
-                            {errors.FDE_Name}
-                          </p>
-                        )}
-                      </Form.Group>
-                    </Col>
-
-                    <Col md={4}>
-                      <Form.Group>
-                        <Form.Label style={labelStyle}>
-                          Reference <span className="text-danger">*</span>
-                        </Form.Label>
-                        <Form.Select
-                          required
-                          name="reference"
-                          style={inputStyle}
-                          value={formData.reference}
-                          onChange={handleInputChange}
-                        >
-                          <option value="">Select Reference</option>
-                          {[
-                            "Family / Friends",
-                            "Referred By Another Doctor",
-                            "Referred By Another Patient",
-                            "Internet",
-                            "Social Media",
-                            "Entertainment Media",
-                            "TV Show",
-                            "Newspaper / Magazine",
-                            "Awareness Lecture",
-                            "HHC Board on building",
-                            "I was treated here in past ",
-                            "Healing Hands Clinic Branch",
-                            "Aggregators",
-                            "Doctor's Privilege Card",
-                            "Campaign",
-                            "Brand Ambassador",
-                            "Other",
-                          ].map((ref) => (
-                            <option key={ref} value={ref}>
-                              {ref}
-                            </option>
-                          ))}
-                        </Form.Select>
-                        {errors.reference && (
-                          <p
-                            className="text-danger mt-1"
-                            style={{ fontSize: "11px" }}
-                          >
-                            {errors.reference}
                           </p>
                         )}
                       </Form.Group>

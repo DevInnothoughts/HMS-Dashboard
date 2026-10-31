@@ -461,9 +461,10 @@ export default function WebCallEnquiryList({ isTab = false }) {
   const handleEnquirySubmit = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     const payload = {
+      patient_location: currentLocation,
       patient_type: "New",
       date: moment(enquiryForm.date).format("YYYY-MM-DD"),
-      time: "0",
+      time: moment().format("HH:mm"),
       doctor_id: "0",
       patient_name: enquiryForm.patient_name,
       patient_phone: enquiryForm.caller_no,
@@ -472,6 +473,10 @@ export default function WebCallEnquiryList({ isTab = false }) {
       FDE_Name: enquiryForm.fdeName || null,
       reference: "0",
       note: enquiryForm.note || "",
+      source_name: "Call Lead",
+      record_type: "Enquiry",
+      branch_name: currentLocation,
+      received_location: currentLocation,
     };
 
     setIsSubmitting(true);
@@ -550,6 +555,10 @@ export default function WebCallEnquiryList({ isTab = false }) {
       treatment_name: formData.treatment,
       patientName: formData.patientName,
       patient_id: formData.patient_id,
+      source_name: "Call Lead",
+      record_type: "Appointment",
+      branch_name: currentLocation,
+      received_location: currentLocation,
     };
 
     setIsSubmitting(true);

@@ -25,6 +25,7 @@ import { toast } from "react-hot-toast";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import SlotQuickViewPicker from "./SlotQuickViewPicker";
+import { LOCATIONS_LIST } from "../Auth/Login";
 
 const BASE_URL = "http://194.195.117.79:5100/api";
 
@@ -85,8 +86,10 @@ export default function ChatbotEnquiryList({ isTab = false }) {
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEnquiryModal, setShowEnquiryModal] = useState(false);
-  const [showNoteModal, setShowNoteModal] = useState(false);
-  const [selectedLead, setSelectedLead] = useState(null);
+  const [showRedirectModal, setShowRedirectModal] = useState(false);
+  const [selectedLeadForRedirect, setSelectedLeadForRedirect] = useState(null);
+  const [redirectBranch, setRedirectBranch] = useState("");
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   // Forms state
   const [treatmentList, setTreatmentList] = useState([]);
@@ -320,17 +323,71 @@ export default function ChatbotEnquiryList({ isTab = false }) {
   }, [filters1.global.value, currentLocation, fetchChatbotLeads]);
 
   // Modal Triggers
-  const handleNoteClick = (rowData) => {
-    setSelectedLead(rowData);
-    setFormData((prev) => ({
-      ...prev,
-      note: rowData.note || "",
-    }));
-    setShowNoteModal(true);
+  const handleRedirectClick = (rowData) => {
+    setSelectedLeadForRedirect(rowData);
+    setRedirectBranch("");
+    setShowRedirectModal(true);
+  };
+
+  const handleRedirectSubmit = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!redirectBranch) {
+      Toast.fire({
+        icon: "warning",
+        title: "Please select a branch to redirect",
+      });
+      return;
+    }
+
+    const leadId =
+      selectedLeadForRedirect?.appointment_id || selectedLeadForRedirect?.id;
+    if (!leadId) {
+      Toast.fire({ icon: "error", title: "Lead ID not found" });
+      return;
+    }
+
+    setIsRedirecting(true);
+    try {
+      const response = await fetch(
+        `${BASE_URL}/V1/chatbotleads/redirectBranch/${leadId}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ branch: redirectBranch }),
+        }
+      );
+
+      const resData = await response.json();
+      if (!response.ok) {
+        throw new Error(resData.message || "Failed to redirect lead");
+      }
+
+      Swal.fire({
+        icon: "success",
+        title: "Lead Redirected!",
+        text: `Lead has been redirected to ${redirectBranch}.`,
+        timer: 2000,
+        confirmButtonColor: "#00bcd4",
+      });
+
+      setShowRedirectModal(false);
+      setSelectedLeadForRedirect(null);
+      setRedirectBranch("");
+
+      fetchChatbotLeads();
+    } catch (err) {
+      console.error("Error redirecting lead:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Redirect Failed",
+        text: err.message || "Could not redirect the lead. Please try again.",
+      });
+    } finally {
+      setIsRedirecting(false);
+    }
   };
 
   const handleEnquiryClick = (rowData) => {
-    setSelectedLead(rowData);
     const today = new Date();
     setSelectedDate(today);
     setEnquiryForm({
@@ -346,7 +403,6 @@ export default function ChatbotEnquiryList({ isTab = false }) {
   };
 
   const handleAddAppointmentClick = async (rowData) => {
-    setSelectedLead(rowData);
     const today = new Date();
     const patient_phone = formatPhoneTo10Digits(rowData.phoneno);
     setNoPendingAppt(true);
@@ -502,55 +558,6 @@ export default function ChatbotEnquiryList({ isTab = false }) {
   };
 
   // Submit Handlers
-  const handleSaveNote = async (e) => {
-    if (e && e.preventDefault) e.preventDefault();
-    if (!selectedLead) return;
-
-    if (!formData.note || formData.note.trim() === "") {
-      Toast.fire({ icon: "error", title: "Note cannot be empty." });
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      const response = await fetch(
-        `${BASE_URL}/V1/chatbotleads/editNote/${selectedLead.appointment_id}?location=${currentLocation}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ note: formData.note.trim() }),
-        },
-      );
-      const resData = await response.json();
-      if (response.ok && resData.statusCode === 200) {
-        setChatbotLeads((prev) =>
-          prev.map((lead) =>
-            lead.appointment_id === selectedLead.appointment_id
-              ? { ...lead, note: formData.note.trim() }
-              : lead,
-          ),
-        );
-        setShowNoteModal(false);
-        Swal.fire({
-          icon: "success",
-          title: "Note Saved",
-          text: "The note has been updated successfully.",
-          timer: 2000,
-        });
-      } else {
-        Toast.fire({ icon: "error", title: "Failed to update note" });
-      }
-    } catch (err) {
-      console.error(err);
-      Toast.fire({
-        icon: "error",
-        title: "An error occurred while saving note",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   const handleEnquirySubmit = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     if (
@@ -567,7 +574,7 @@ export default function ChatbotEnquiryList({ isTab = false }) {
       patient_location: currentLocation,
       patient_type: "New",
       date: moment(enquiryForm.date).format("YYYY-MM-DD"),
-      time: "0",
+      time: moment().format("HH:mm"),
       doctor_id: "0",
       patient_name: enquiryForm.patient_name,
       patient_phone: formatPhoneTo10Digits(enquiryForm.caller_no),
@@ -576,6 +583,10 @@ export default function ChatbotEnquiryList({ isTab = false }) {
       FDE_Name: enquiryForm.fdeName || null,
       reference: "0",
       note: enquiryForm.note || "",
+      source_name: "Chatbot",
+      record_type: "Enquiry",
+      branch_name: currentLocation,
+      received_location: currentLocation,
     };
 
     setIsSubmitting(true);
@@ -654,6 +665,10 @@ export default function ChatbotEnquiryList({ isTab = false }) {
       treatment_name: formData.treatment,
       patientName: formData.patientName,
       patient_id: formData.patient_id,
+      source_name: "Chatbot",
+      record_type: "Appointment",
+      branch_name: currentLocation,
+      received_location: currentLocation,
     };
 
     setIsSubmitting(true);
@@ -1055,53 +1070,65 @@ export default function ChatbotEnquiryList({ isTab = false }) {
     );
   };
 
-  const actionBodyTemplate = (rowData) => (
-    <div className="d-flex align-items-center justify-content-center">
-      <Button
-        variant="primary"
-        onClick={() => handleEnquiryClick(rowData)}
-        className="enquiry-btn btn-primary btn-extra-small btn-icon me-2"
-        title="Add Enquiry"
-        style={{
-          padding: "4px 8px",
-          backgroundColor: "#00bcd4",
-          border: "none",
-        }}
-      >
-        <FeatherIcon icon="help-circle" size="16" />
-      </Button>
+  const actionBodyTemplate = (rowData) => {
+    const isBlankLocation =
+      (!rowData.branch || rowData.branch.trim() === "") &&
+      (!rowData.chat_whatsapp_branch ||
+        rowData.chat_whatsapp_branch.trim() === "") ||
+      (rowData.message &&
+        String(rowData.message).startsWith("OTHER BRANCH -"));
 
-      <Button
-        variant="primary"
-        onClick={() => handleAddAppointmentClick(rowData)}
-        className="appointment-btn btn-primary btn-extra-small btn-icon me-2"
-        title="Add Appointment"
-        style={{
-          padding: "4px 8px",
-          backgroundColor: "#00bcd4",
-          border: "none",
-        }}
-      >
-        <FeatherIcon icon="plus-square" size="16" />
-      </Button>
+    return (
+      <div className="d-flex align-items-center justify-content-center">
+        <Button
+          variant="primary"
+          onClick={() => handleEnquiryClick(rowData)}
+          className="enquiry-btn btn-primary btn-extra-small btn-icon me-2"
+          title="Add Enquiry"
+          style={{
+            padding: "4px 8px",
+            backgroundColor: "#00bcd4",
+            border: "none",
+          }}
+        >
+          <FeatherIcon icon="help-circle" size="16" />
+        </Button>
 
-      <Button
-        variant="primary"
-        onClick={() => handleNoteClick(rowData)}
-        className="note-btn btn-primary btn-extra-small btn-icon"
-        title="Add Note"
-        style={{
-          padding: "4px 8px",
-          backgroundColor: "#00bcd4",
-          border: "none",
-        }}
-      >
-        <FeatherIcon icon="file-text" size="16" />
-      </Button>
-    </div>
-  );
+        <Button
+          variant="primary"
+          onClick={() => handleAddAppointmentClick(rowData)}
+          className="appointment-btn btn-primary btn-extra-small btn-icon"
+          title="Add Appointment"
+          style={{
+            padding: "4px 8px",
+            backgroundColor: "#00bcd4",
+            border: "none",
+          }}
+        >
+          <FeatherIcon icon="plus-square" size="16" />
+        </Button>
 
-  return (
+        {isBlankLocation && (
+          <Button
+            variant="warning"
+            onClick={() => handleRedirectClick(rowData)}
+            className="redirect-btn btn-warning btn-extra-small btn-icon ms-2"
+            title="Redirect to Branch"
+            style={{
+              padding: "4px 8px",
+              backgroundColor: "#ff9800",
+              borderColor: "#ff9800",
+              color: "#ffffff",
+            }}
+          >
+            <FeatherIcon icon="corner-up-right" size="16" />
+          </Button>
+        )}
+      </div>
+    );
+  };
+
+  const chatbotPageContent = (
     <div style={{ animation: "fadeIn 0.5s ease-in-out", padding: "0 10px" }}>
       <Card
         style={{
@@ -1292,90 +1319,6 @@ export default function ChatbotEnquiryList({ isTab = false }) {
           </div>
         </Card.Body>
       </Card>
-
-      {/* Note Edit Modal */}
-      <Modal
-        show={showNoteModal}
-        onHide={() => setShowNoteModal(false)}
-        size="md"
-        centered
-      >
-        <Modal.Header
-          closeButton
-          style={{
-            backgroundColor: "#e0f7fa",
-            borderBottom: "2px solid #00bcd4",
-            padding: "10px 15px",
-          }}
-        >
-          <Modal.Title
-            style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}
-          >
-            <FeatherIcon icon="file-text" className="me-2" size="16" />
-            Add Note
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body style={{ padding: "10px" }}>
-          <Form onSubmit={handleSaveNote}>
-            <Form.Group>
-              <Form.Label
-                style={{
-                  fontSize: "12px",
-                  fontWeight: "600",
-                  marginBottom: "4px",
-                }}
-              >
-                Note <span className="text-danger">*</span>
-              </Form.Label>
-              <Form.Control
-                required
-                style={{
-                  border: "2px solid rgb(77, 208, 225)",
-                  fontSize: "12px",
-                  borderRadius: "10px",
-                }}
-                as="textarea"
-                rows={4}
-                name="note"
-                value={formData.note || ""}
-                onChange={handleInputChange}
-                placeholder="Enter note here..."
-              />
-            </Form.Group>
-            <Modal.Footer style={{ borderTop: "none", padding: "10px 0 0 0" }}>
-              <Button
-                size="sm"
-                className="px-3"
-                style={{
-                  borderRadius: "10px",
-                  fontSize: "12px",
-                  padding: "10px",
-                }}
-                variant="secondary"
-                onClick={() => setShowNoteModal(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                size="sm"
-                className="px-4"
-                type="submit"
-                disabled={isSubmitting}
-                style={{
-                  borderRadius: "10px",
-                  fontSize: "12px",
-                  backgroundColor: "#00bcd4",
-                  border: "none",
-                  padding: "10px",
-                }}
-                variant="primary"
-              >
-                {isSubmitting ? "Saving..." : "Add Note"}
-              </Button>
-            </Modal.Footer>
-          </Form>
-        </Modal.Body>
-      </Modal>
 
       {/* Add Enquiry Modal */}
       <Modal
@@ -2035,437 +1978,113 @@ export default function ChatbotEnquiryList({ isTab = false }) {
           </Form>
         </Modal.Body>
       </Modal>
-    </div>
-  );
-
-  const chatbotPageContent = (
-    <div style={{ animation: "fadeIn 0.5s ease-in-out", padding: "0 10px" }}>
-      <Card
-        style={{
-          borderRadius: "15px",
-          border: "1.5px solid #00bcd4",
-          boxShadow: "0px 8px 16px rgba(0,0,0,0.1)",
-          overflow: "hidden",
+      {/* Redirect Lead to Branch Modal */}
+      <Modal
+        show={showRedirectModal}
+        onHide={() => {
+          if (!isRedirecting) {
+            setShowRedirectModal(false);
+            setSelectedLeadForRedirect(null);
+            setRedirectBranch("");
+          }
         }}
+        centered
       >
-        <Card.Body style={{ padding: "0" }}>
-          <div className="table-responsive">
-            <DataTable
-              value={chatbotLeads}
-              paginator
-              rows={rows}
-              first={first}
-              onPage={(e) => {
-                setFirst(e.first);
-                setRows(e.rows);
+        <Modal.Header
+          closeButton
+          style={{
+            backgroundColor: "#e0f7fa",
+            borderBottom: "2px solid #00bcd4",
+            padding: "10px 15px",
+          }}
+        >
+          <Modal.Title
+            style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}
+          >
+            <FeatherIcon icon="corner-up-right" className="me-2" size="18" />
+            Redirect Lead to Branch
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body style={{ fontSize: "13px", padding: "20px" }}>
+          {selectedLeadForRedirect && (
+            <div
+              style={{
+                backgroundColor: "#f5fcfd",
+                border: "1px solid #b2ebf2",
+                borderRadius: "8px",
+                padding: "10px 12px",
+                marginBottom: "15px",
+                fontSize: "12px",
               }}
-              filters={filters1}
-              header={renderHeader()}
-              loading={loading}
-              globalFilterFields={[
-                "name",
-                "phoneno",
-                "disease",
-                "message",
-                "note",
-              ]}
-              paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink"
-              currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
-              responsiveLayout="scroll"
-              className="datatable-compact-style datatable-medium-small"
-              emptyMessage="No chatbot leads found."
             >
-              <Column
-                field="date"
-                header="Date"
-                body={(rowData) =>
-                  formatDate(rowData.date || rowData.created_at)
-                }
-                headerClassName="datatable-header-center"
-                style={{
-                  border: "1px solid #90caf9",
-                  textAlign: "center",
-                  padding: "0.75rem",
-                  width: "120px",
-                }}
-              />
-              <Column
-                field="name"
-                header="Patient Name"
-                headerClassName="datatable-header-center"
-                style={{
-                  border: "1px solid #90caf9",
-                  textAlign: "center",
-                  padding: "0.75rem",
-                }}
-              />
-              <Column
-                field="phoneno"
-                header="Phone No"
-                body={(rowData) =>
-                  formatPhoneTo10Digits(rowData.phoneno) || "-"
-                }
-                headerClassName="datatable-header-center"
-                style={{
-                  border: "1px solid #90caf9",
-                  textAlign: "center",
-                  padding: "0.75rem",
-                  width: "120px",
-                }}
-              />
-              <Column
-                field="disease"
-                header="Disease / Department"
-                headerClassName="datatable-header-center"
-                style={{
-                  border: "1px solid #90caf9",
-                  textAlign: "center",
-                  padding: "0.75rem",
-                }}
-              />
-              <Column
-                field="message"
-                header="Message"
-                body={(rowData) => (
-                  <div
-                    style={{
-                      whiteSpace: "normal",
-                      wordBreak: "break-word",
-                      fontSize: "12px",
-                    }}
-                  >
-                    {rowData.message}
-                  </div>
-                )}
-                headerClassName="datatable-header-center"
-                style={{
-                  border: "1px solid #90caf9",
-                  textAlign: "center",
-                  padding: "0.75rem",
-                }}
-              />
-              <Column
-                field="note"
-                header="Note"
-                body={(rowData) => <NoteCell note={rowData.note} />}
-                headerClassName="datatable-header-center"
-                style={{
-                  border: "1px solid #90caf9",
-                  textAlign: "center",
-                  padding: "0.75rem",
-                  width: "150px",
-                }}
-              />
-              <Column
-                field="dynamic_status"
-                header={renderStatusHeader}
-                body={statusBodyTemplate}
-                headerClassName="datatable-header-center"
-                style={{
-                  border: "1px solid #90caf9",
-                  textAlign: "center",
-                  padding: "0.75rem",
-                  width: "120px",
-                }}
-              />
-
-              <Column
-                header="Actions"
-                body={actionBodyTemplate}
-                headerClassName="datatable-header-center"
-                style={{
-                  border: "1px solid #90caf9",
-                  textAlign: "center",
-                  padding: "0.75rem",
-                  width: "140px",
-                }}
-              />
-            </DataTable>
-          </div>
-        </Card.Body>
-      </Card>
-
-      {/* Note Edit Modal */}
-      <Modal
-        show={showNoteModal}
-        onHide={() => setShowNoteModal(false)}
-        size="md"
-        centered
-      >
-        <Modal.Header
-          closeButton
-          style={{
-            backgroundColor: "#e0f7fa",
-            borderBottom: "2px solid #00bcd4",
-            padding: "10px 15px",
-          }}
-        >
-          <Modal.Title
-            style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}
-          >
-            <FeatherIcon icon="file-text" className="me-2" size="16" />
-            Add Note
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body style={{ padding: "10px" }}>
-          <Form onSubmit={handleSaveNote}>
-            <Form.Group>
-              <Form.Label
-                style={{
-                  fontSize: "12px",
-                  fontWeight: "600",
-                  marginBottom: "4px",
-                }}
-              >
-                Note <span className="text-danger">*</span>
-              </Form.Label>
-              <Form.Control
-                required
-                size="sm"
-                as="textarea"
-                rows={4}
-                name="note"
-                placeholder="Enter note..."
-                value={formData.note}
-                onChange={handleInputChange}
-                style={{
-                  border: "2px solid rgb(77, 208, 225)",
-                  fontSize: "12px",
-                  borderRadius: "10px",
-                }}
-              />
-            </Form.Group>
-            <div className="d-flex justify-content-end pt-3">
-              <Button
-                variant="danger"
-                size="sm"
-                className="me-2"
-                onClick={() => setShowNoteModal(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                type="submit"
-                style={{ backgroundColor: "#00bcd4", border: "none" }}
-              >
-                Save Note
-              </Button>
+              <div>
+                <strong>Patient:</strong> {selectedLeadForRedirect.name || "-"} (
+                {formatPhoneTo10Digits(selectedLeadForRedirect.phoneno)})
+              </div>
+              {selectedLeadForRedirect.disease && (
+                <div className="mt-1">
+                  <strong>Disease:</strong> {selectedLeadForRedirect.disease}
+                </div>
+              )}
             </div>
-          </Form>
-        </Modal.Body>
-      </Modal>
+          )}
 
-      {/* Add Enquiry Modal */}
-      <Modal
-        show={showEnquiryModal}
-        onHide={() => setShowEnquiryModal(false)}
-        size="lg"
-        centered
-      >
-        <Modal.Header
-          closeButton
-          style={{
-            backgroundColor: "#e0f7fa",
-            borderBottom: "2px solid #00bcd4",
-            padding: "10px 15px",
-          }}
-        >
-          <Modal.Title
-            style={{ color: "#00838f", fontWeight: "bold", fontSize: "16px" }}
-          >
-            <FeatherIcon icon="plus-circle" className="me-2" size="16" />
-            Register Enquiry
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body style={{ padding: "15px" }}>
-          <Form onSubmit={handleEnquirySubmit}>
-            <Row>
-              <Col md={6}>
-                <Form.Group className="mb-2">
-                  <Form.Label
-                    style={{
-                      fontSize: "12px",
-                      fontWeight: "600",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    Enquiry Date <span className="text-danger">*</span>
-                  </Form.Label>
-                  <Form.Control
-                    required
-                    size="sm"
-                    type="date"
-                    name="date"
-                    value={enquiryForm.date}
-                    onChange={handleEnquiryInputChange}
-                    style={{
-                      border: "2px solid rgb(77, 208, 225)",
-                      fontSize: "12px",
-                      borderRadius: "10px",
-                    }}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group className="mb-2">
-                  <Form.Label
-                    style={{
-                      fontSize: "12px",
-                      fontWeight: "600",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    Enquiry Type <span className="text-danger">*</span>
-                  </Form.Label>
-                  <Form.Select
-                    required
-                    size="sm"
-                    name="enquirytype"
-                    value={enquiryForm.enquirytype}
-                    onChange={handleEnquiryInputChange}
-                    style={{
-                      border: "2px solid rgb(77, 208, 225)",
-                      fontSize: "12px",
-                      borderRadius: "10px",
-                    }}
-                  >
-                    <option value="">Select Enquiry Type</option>
-                    <option value="OPD">OPD</option>
-                    <option value="IPD">IPD</option>
-                    <option value="Surgery">Surgery</option>
-                    <option value="Diagnostic">Diagnostic</option>
-                    <option value="General">General</option>
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-            </Row>
-
-            <Row>
-              <Col md={6}>
-                <Form.Group className="mb-2">
-                  <Form.Label
-                    style={{
-                      fontSize: "12px",
-                      fontWeight: "600",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    Patient Name <span className="text-danger">*</span>
-                  </Form.Label>
-                  <Form.Control
-                    required
-                    size="sm"
-                    type="text"
-                    name="patient_name"
-                    placeholder="Patient Name"
-                    value={enquiryForm.patient_name}
-                    onChange={handleEnquiryInputChange}
-                    style={{
-                      border: "2px solid rgb(77, 208, 225)",
-                      fontSize: "12px",
-                      borderRadius: "10px",
-                    }}
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group className="mb-2">
-                  <Form.Label
-                    style={{
-                      fontSize: "12px",
-                      fontWeight: "600",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    Phone Number <span className="text-danger">*</span>
-                  </Form.Label>
-                  <Form.Control
-                    required
-                    size="sm"
-                    type="text"
-                    name="caller_no"
-                    placeholder="Phone Number"
-                    value={enquiryForm.caller_no}
-                    onChange={handleEnquiryInputChange}
-                    style={{
-                      border: "2px solid rgb(77, 208, 225)",
-                      fontSize: "12px",
-                      borderRadius: "10px",
-                    }}
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-
-            <Row>
-              <Col md={6}>
-                <Form.Group className="mb-2">
-                  <Form.Label
-                    style={{
-                      fontSize: "12px",
-                      fontWeight: "600",
-                      marginBottom: "4px",
-                    }}
-                  >
-                    FDE Name <span className="text-danger">*</span>
-                  </Form.Label>
-                  <Form.Select
-                    required
-                    size="sm"
-                    name="FDE_Name"
-                    value={enquiryForm.FDE_Name}
-                    onChange={handleEnquiryInputChange}
-                    style={{
-                      border: "2px solid rgb(77, 208, 225)",
-                      fontSize: "12px",
-                      borderRadius: "10px",
-                    }}
-                  >
-                    <option value="">Select FDE</option>
-                    {fdeList.map((fde) => (
-                      <option key={fde.FDEID} value={fde.FDEID}>
-                        {fde.FDEName}
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-            </Row>
-
+          <Form onSubmit={handleRedirectSubmit}>
             <Form.Group className="mb-3">
               <Form.Label
                 style={{
-                  fontSize: "12px",
+                  fontSize: "13px",
                   fontWeight: "600",
-                  marginBottom: "4px",
+                  marginBottom: "6px",
+                  color: "#333",
                 }}
               >
-                Note
+                Select branch to redirect the lead{" "}
+                <span style={{ color: "red" }} className="required">
+                  *
+                </span>
               </Form.Label>
-              <Form.Control
+              <Form.Select
+                required
                 size="sm"
-                as="textarea"
-                rows={2}
-                name="note"
-                placeholder="Additional details..."
-                value={enquiryForm.note}
-                onChange={handleEnquiryInputChange}
                 style={{
                   border: "2px solid rgb(77, 208, 225)",
-                  fontSize: "12px",
+                  fontSize: "13px",
                   borderRadius: "10px",
+                  padding: "6px 10px",
                 }}
-              />
+                value={redirectBranch}
+                onChange={(e) => setRedirectBranch(e.target.value)}
+              >
+                <option value="">-- Select Branch --</option>
+                {LOCATIONS_LIST.map((loc, idx) => {
+                  const val = typeof loc === "string" ? loc : loc.value;
+                  const label = typeof loc === "string" ? loc : loc.label;
+                  return (
+                    <option key={idx} value={val}>
+                      {label}
+                    </option>
+                  );
+                })}
+              </Form.Select>
             </Form.Group>
 
             <div className="d-flex justify-content-end pt-2">
               <Button
                 variant="danger"
                 size="sm"
-                className="me-2"
-                onClick={() => setShowEnquiryModal(false)}
+                className="me-2 px-3"
+                disabled={isRedirecting}
+                style={{
+                  borderRadius: "10px",
+                  fontSize: "12px",
+                  padding: "8px 14px",
+                }}
+                onClick={() => {
+                  setShowRedirectModal(false);
+                  setSelectedLeadForRedirect(null);
+                  setRedirectBranch("");
+                }}
               >
                 Cancel
               </Button>
@@ -2473,10 +2092,24 @@ export default function ChatbotEnquiryList({ isTab = false }) {
                 variant="primary"
                 size="sm"
                 type="submit"
-                disabled={isSubmitting}
-                style={{ backgroundColor: "#00bcd4", border: "none" }}
+                disabled={isRedirecting || !redirectBranch}
+                className="px-3"
+                style={{
+                  borderRadius: "10px",
+                  fontSize: "12px",
+                  backgroundColor: "#00bcd4",
+                  borderColor: "#00bcd4",
+                  padding: "8px 14px",
+                }}
               >
-                {isSubmitting ? "Registering..." : "Register Enquiry"}
+                {isRedirecting ? (
+                  <>
+                    <Spinner animation="border" size="sm" className="me-1" />
+                    Redirecting...
+                  </>
+                ) : (
+                  "Submit"
+                )}
               </Button>
             </div>
           </Form>

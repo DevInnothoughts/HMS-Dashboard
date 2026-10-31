@@ -28,7 +28,7 @@ const getLocalDateString = (date) => {
 };
 
 const today = new Date();
-const maxDate = getLocalDateString(today);
+const todayDate = getLocalDateString(today);
 
 const minDateObj = new Date();
 minDateObj.setDate(today.getDate() - 1);
@@ -758,8 +758,7 @@ export default function AddIpdAdmission() {
                                   height: "31px",
                                 }}
                                 name="admission_date"
-                                min={minDate}
-                                max={maxDate}
+                                min={todayDate}
                                 value={admissionDate}
                                 onChange={(e) =>
                                   setAdmissionDate(e.target.value)

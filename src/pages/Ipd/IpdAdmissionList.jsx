@@ -552,18 +552,13 @@ export default function IpdAdmissionList() {
       return;
     }
 
-    const requiredDocs = ["aadharCard", "panCard", "cancelledCheque"];
-    const hasExistingDocs = requiredDocs.some((docType) =>
-      Boolean(previews[docType]),
-    );
-    const hasNewFiles = requiredDocs.some((docType) =>
-      Boolean(documents[docType]),
-    );
+    const hasAadhar = Boolean(documents.aadharCard || previews.aadharCard);
+    const hasPan = Boolean(documents.panCard || previews.panCard);
 
-    if (!hasExistingDocs && !hasNewFiles) {
+    if (!hasAadhar && !hasPan) {
       Swal.fire(
         "Required",
-        "Please upload Aadhar, PAN, and Cancelled Cheque documents.",
+        "Please upload at least one document: Aadhar Card or Pan Card.",
         "warning",
       );
       return;
@@ -582,18 +577,18 @@ export default function IpdAdmissionList() {
       formData.append("uid", String(docPatient.uhid));
       formData.append("contact", String(docPatient.contact));
 
-      requiredDocs.forEach((docType) => {
+      const allDocKeys = [
+        "aadharCard",
+        "panCard",
+        "cancelledCheque",
+        "pdcCheque",
+        "policyCopy",
+      ];
+      allDocKeys.forEach((docType) => {
         if (documents[docType]) {
           formData.append(docType, documents[docType]);
         }
       });
-
-      if (documents.pdcCheque) {
-        formData.append("pdcCheque", documents.pdcCheque);
-      }
-      if (documents.policyCopy) {
-        formData.append("policyCopy", documents.policyCopy);
-      }
 
       const response = await fetch(
         `${BASE_URL}/V1/doctor/manage-admission/documents`,
@@ -1435,6 +1430,11 @@ export default function IpdAdmissionList() {
         <Form onSubmit={handleDocSubmit}>
           <Modal.Body style={{ fontSize: "13px", padding: "10px" }}>
             <Row>
+              <Col md={12} className="mb-2">
+                <small className="text-muted" style={{ fontSize: "11.5px" }}>
+                  * Either Aadhar Card or Pan Card is required.
+                </small>
+              </Col>
               <Col md={6} className="mb-15">
                 <Form.Group controlId="aadharCard">
                   <Form.Label
@@ -1449,7 +1449,17 @@ export default function IpdAdmissionList() {
                       size={14}
                       className="me-1"
                     />
-                    Aadharcard <span className="text-danger">*</span>
+                    Aadharcard{" "}
+                    {Boolean(documents.panCard || previews.panCard) ? (
+                      <span
+                        className="text-muted fw-normal"
+                        style={{ fontSize: "11px" }}
+                      >
+                        (Optional)
+                      </span>
+                    ) : (
+                      <span className="text-danger">*</span>
+                    )}
                   </Form.Label>
                   <Form.Control
                     type="file"
@@ -1513,7 +1523,17 @@ export default function IpdAdmissionList() {
                       size={14}
                       className="me-1"
                     />
-                    Pan Card <span className="text-danger">*</span>
+                    Pan Card{" "}
+                    {Boolean(documents.aadharCard || previews.aadharCard) ? (
+                      <span
+                        className="text-muted fw-normal"
+                        style={{ fontSize: "11px" }}
+                      >
+                        (Optional)
+                      </span>
+                    ) : (
+                      <span className="text-danger">*</span>
+                    )}
                   </Form.Label>
                   <Form.Control
                     type="file"
@@ -1573,7 +1593,7 @@ export default function IpdAdmissionList() {
                     }}
                   >
                     <FeatherIcon icon="file-text" size={14} className="me-1" />
-                    Cancelled Cheque <span className="text-danger">*</span>
+                    Cancelled Cheque (Optional)
                   </Form.Label>
                   <Form.Control
                     type="file"
