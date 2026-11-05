@@ -2361,6 +2361,53 @@ const OpdPatientMedicalRecords = () => {
           if (resData.statusCode === 200 && resData.data) {
             setPatient(resData.data);
             setHasFetchedPatient(true);
+
+            // Also check latest admission to auto-populate admission_no and DOA for Discharge Card
+            try {
+              const admRes = await fetch(
+                `${BASE_URL}/V1/doctor/manage-admission/list?location=${resolvedLocation}&search=${patientId}`,
+                {
+                  headers: {
+                    Authorization: `Bearer ${localStorage.getItem("token")}`,
+                  },
+                },
+              );
+              if (admRes.ok) {
+                const admList = await admRes.json();
+                if (Array.isArray(admList) && admList.length > 0) {
+                  const match =
+                    admList.find((a) => String(a.patient_id) === String(patientId)) ||
+                    admList[0];
+                  if (match) {
+                    setDischargeData((prev) => {
+                      const updates = {};
+                      if (
+                        !prev.ipd_no &&
+                        match.admission_no &&
+                        match.admission_no !== "PENDING" &&
+                        match.admission_no !== "0"
+                      ) {
+                        updates.ipd_no = match.admission_no;
+                      }
+                      if (match.admission_datetime) {
+                        const datePart = match.admission_datetime.split(" ")[0];
+                        if (datePart && datePart.includes("-")) {
+                          const parts = datePart.split("-");
+                          if (parts[0].length === 2 && parts[2]?.length === 4) {
+                            updates.doa = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                          } else if (parts[0].length === 4) {
+                            updates.doa = datePart;
+                          }
+                        }
+                      }
+                      return { ...prev, ...updates };
+                    });
+                  }
+                }
+              }
+            } catch (admErr) {
+              console.warn("Could not auto-fetch admission details for discharge card:", admErr);
+            }
           }
         }
       } catch (error) {
@@ -2430,12 +2477,14 @@ const OpdPatientMedicalRecords = () => {
         language: patient.additional_info?.language || patient.language || "",
       });
 
+      const resolvedAdmNo = patient.admission_no || patient.admissionNo || patient.ipd_no || patient.IPDNo || "";
       setDischargeData((prev) => ({
         ...prev,
         patient_name: patient.name || "",
         patient_age: effectiveAge,
         patient_sex: patient.sex || "",
         address: patient.address || "",
+        ipd_no: prev.ipd_no || (resolvedAdmNo !== "PENDING" && resolvedAdmNo !== "0" ? resolvedAdmNo : ""),
       }));
 
       fetchHistoryDates();

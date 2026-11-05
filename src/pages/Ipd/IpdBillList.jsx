@@ -350,7 +350,18 @@ const IpdBillList = () => {
     status: "",
     settlementLetter: null,
     existingSettlementLetter: null,
+    interbranch_id: null,
   });
+
+  const isCashlessInterbranch = Boolean(
+    cashlessData.status === "Interbranch-Bill" ||
+    (cashlessData.interbranch_id !== null &&
+      cashlessData.interbranch_id !== undefined &&
+      cashlessData.interbranch_id !== "" &&
+      cashlessData.interbranch_id !== 0 &&
+      cashlessData.interbranch_id !== "0" &&
+      String(cashlessData.interbranch_id).trim().toLowerCase() !== "null"),
+  );
 
   const handleCloseCashlessModal = () => {
     setShowCashlessModal(false);
@@ -358,6 +369,7 @@ const IpdBillList = () => {
       ...prev,
       settlementLetter: null,
       existingSettlementLetter: null,
+      interbranch_id: null,
     }));
     const fileInput = document.getElementById(
       "reimbursementSettlementLetterInput",
@@ -387,6 +399,8 @@ const IpdBillList = () => {
       settlementLetter: null,
       existingSettlementLetter:
         rowData.settlementLetter || rowData.settlementletter || null,
+      interbranch_id:
+        rowData.interbranch_id !== undefined ? rowData.interbranch_id : null,
     });
     setShowCashlessModal(true);
   };
@@ -410,6 +424,15 @@ const IpdBillList = () => {
 
   const submitCashless = async (e) => {
     e.preventDefault();
+    if (isCashlessInterbranch) {
+      Swal.fire({
+        icon: "warning",
+        title: "Action Restricted",
+        text: "Cannot submit cashless amount for interbranch patients.",
+        confirmButtonColor: "#00acc1",
+      });
+      return;
+    }
     if (!cashlessData.receivedamt || !cashlessData.coopay) {
       alert("Please Enter the details..");
       return;
@@ -1199,51 +1222,33 @@ const IpdBillList = () => {
     setErrors({});
 
     if (isInterbranch && invoice.patient_location !== "DP Road") {
-      if (
-        statusVal === "interbranch" ||
-        statusVal === "cashless" ||
-        statusVal === "reimbursement" ||
-        statusVal === "pdc"
-      ) {
-        const targetLocation = invoice.patient_location;
-        if (targetLocation) {
-          fetch(
-            `${BASE_URL}/V1/invoice/searchByInvoiceId?invoice_id=${invoice.invoice_id}&location=${targetLocation}`,
+      const targetLocation = invoice.patient_location;
+      if (targetLocation) {
+        setIsSearchingUid(true);
+        fetch(
+          `${BASE_URL}/V1/invoice/searchByInvoiceId?invoice_id=${invoice.invoice_id}&location=${targetLocation}`,
+        )
+          .then((res) => res.json())
+          .then((data) => {
+            if (data && data.length > 0) {
+              const matched = data[0];
+              setSelectedInvoice((prev) => {
+                if (!prev) return null;
+                return {
+                  ...prev,
+                  selectedClinicUid: matched.Uid_no || prev.selectedClinicUid || "",
+                  selectedClinicInvoiceId: matched.invoice_id,
+                };
+              });
+              setSelectedClinicPatient(matched);
+            }
+          })
+          .catch((err) =>
+            console.error("Error fetching interbranch patient UID:", err),
           )
-            .then((res) => res.json())
-            .then((data) => {
-              if (data && data.length > 0) {
-                const matched = data[0];
-                setSelectedInvoice((prev) => {
-                  if (!prev) return null;
-                  return {
-                    ...prev,
-                    selectedClinicUid: matched.Uid_no,
-                    selectedClinicInvoiceId: matched.invoice_id,
-                  };
-                });
-                setSelectedClinicPatient(matched);
-              }
-            })
-            .catch((err) =>
-              console.error("Error fetching interbranch patient UID:", err),
-            );
-        }
-      } else if (statusVal === "interbranch-bill") {
-        const uid = invoice.patient_uid || invoice.Uid_no || "";
-        setSelectedInvoice((prev) => {
-          if (!prev) return null;
-          return {
-            ...prev,
-            selectedClinicUid: uid,
-          };
-        });
-        setSelectedClinicPatient({
-          patient_id: invoice.patient_id,
-          name: invoice.patient_name || "",
-          phone: invoice.patient_phone || "",
-          Uid_no: uid,
-        });
+          .finally(() => {
+            setIsSearchingUid(false);
+          });
       }
     }
 
@@ -1284,6 +1289,11 @@ const IpdBillList = () => {
   const handleSaveChanges = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     if (!selectedInvoice) return;
+
+    if (isSearchingUid) {
+      toast.error("Please wait while verifying patient at origin clinic...");
+      return;
+    }
 
     if (!selectedInvoice.madeby) {
       Swal.fire({
@@ -1482,10 +1492,46 @@ const IpdBillList = () => {
           return;
         }
 
+        let targetInvoiceId = selectedInvoice.selectedClinicInvoiceId;
+        let mirrorInvoicesToClean = [];
+
+        // If targetInvoiceId is missing, check if a mirror invoice already exists at the origin clinic
+        if (
+          selectedInvoice.invoice_id &&
+          selectedInvoice.interbranchLocation !== "DP Road"
+        ) {
+          try {
+            const checkRes = await fetch(
+              `${BASE_URL}/V1/invoice/searchByInvoiceId?invoice_id=${selectedInvoice.invoice_id}&location=${selectedInvoice.interbranchLocation}`,
+            );
+            if (checkRes.ok) {
+              const checkData = await checkRes.json();
+              if (checkData && checkData.length > 0) {
+                if (!targetInvoiceId) {
+                  targetInvoiceId = checkData[0].invoice_id;
+                }
+                if (!selectedClinicPatient && checkData[0].patient_id) {
+                  setSelectedClinicPatient(checkData[0]);
+                }
+                // Check if previous edits created duplicate mirror rows with interbranch_id
+                const otherDuplicates = checkData.filter(
+                  (inv) =>
+                    inv.interbranch_id === selectedInvoice.invoice_id &&
+                    inv.invoice_id !== targetInvoiceId &&
+                    (!inv.payment_count || Number(inv.payment_count) === 0),
+                );
+                mirrorInvoicesToClean = otherDuplicates;
+              }
+            }
+          } catch (chkErr) {
+            console.error("Error looking up existing origin clinic invoice:", chkErr);
+          }
+        }
+
         let responseSelected;
         const payloadSelected = {
           ...payload,
-          invoice_id: selectedInvoice.selectedClinicInvoiceId || null,
+          invoice_id: targetInvoiceId || null,
           interbranch_id: selectedInvoice.invoice_id,
           status: status,
           patient_location: currentLocation,
@@ -1499,9 +1545,9 @@ const IpdBillList = () => {
           delete payloadSelected.patient_id;
         }
 
-        if (selectedInvoice.selectedClinicInvoiceId) {
+        if (targetInvoiceId) {
           responseSelected = await fetch(
-            `${BASE_URL}/V1/invoice/${selectedInvoice.selectedClinicInvoiceId}?location=${selectedInvoice.interbranchLocation}`,
+            `${BASE_URL}/V1/invoice/${targetInvoiceId}?location=${selectedInvoice.interbranchLocation}`,
             {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
@@ -1529,6 +1575,28 @@ const IpdBillList = () => {
           });
           setLoading(false);
           return;
+        }
+
+        // Clean up duplicate mirror invoices from previous edits if any exist
+        if (mirrorInvoicesToClean.length > 0) {
+          for (const dup of mirrorInvoicesToClean) {
+            try {
+              await fetch(
+                `${BASE_URL}/V1/invoice/${dup.invoice_id}?location=${selectedInvoice.interbranchLocation}`,
+                {
+                  method: "PUT",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ is_deleted: 1 }),
+                },
+              );
+            } catch (delErr) {
+              console.warn(
+                "Could not clean up duplicate mirror invoice:",
+                dup.invoice_id,
+                delErr,
+              );
+            }
+          }
         }
 
         Swal.fire({
@@ -3541,12 +3609,57 @@ const IpdBillList = () => {
                               value={selectedInvoice.interbranchLocation || ""}
                               onChange={(e) => {
                                 const val = e.target.value;
-                                setSelectedInvoice({
-                                  ...selectedInvoice,
-                                  interbranchLocation: val,
-                                  selectedClinicUid:
-                                    val === "DP Road" ? "N/A" : "",
+                                setSelectedClinicPatient(null);
+                                setErrors((prev) => ({
+                                  ...prev,
+                                  selectedClinicUid: null,
+                                }));
+                                setSelectedInvoice((prev) => {
+                                  if (!prev) return null;
+                                  const isOriginalTarget = val === prev.patient_location;
+                                  return {
+                                    ...prev,
+                                    interbranchLocation: val,
+                                    selectedClinicUid: val === "DP Road" ? "N/A" : "",
+                                    selectedClinicInvoiceId: isOriginalTarget
+                                      ? prev.selectedClinicInvoiceId
+                                      : null,
+                                  };
                                 });
+
+                                if (
+                                  val &&
+                                  val !== "DP Road" &&
+                                  val === selectedInvoice?.patient_location &&
+                                  selectedInvoice?.invoice_id
+                                ) {
+                                  setIsSearchingUid(true);
+                                  fetch(
+                                    `${BASE_URL}/V1/invoice/searchByInvoiceId?invoice_id=${selectedInvoice.invoice_id}&location=${val}`,
+                                  )
+                                    .then((res) => res.json())
+                                    .then((data) => {
+                                      if (data && data.length > 0) {
+                                        const matched = data[0];
+                                        setSelectedInvoice((prev) => {
+                                          if (!prev || prev.interbranchLocation !== val) return prev;
+                                          return {
+                                            ...prev,
+                                            selectedClinicUid:
+                                              matched.Uid_no || prev.selectedClinicUid || "",
+                                            selectedClinicInvoiceId: matched.invoice_id,
+                                          };
+                                        });
+                                        setSelectedClinicPatient(matched);
+                                      }
+                                    })
+                                    .catch((err) =>
+                                      console.error("Error fetching interbranch patient UID on location change:", err),
+                                    )
+                                    .finally(() => {
+                                      setIsSearchingUid(false);
+                                    });
+                                }
                               }}
                             >
                               <option value="">SELECT LOCATION</option>
@@ -4259,8 +4372,23 @@ const IpdBillList = () => {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
+          {isCashlessInterbranch && (
+            <div
+              className="alert alert-warning py-2 px-3 mb-3 d-flex align-items-center"
+              style={{
+                fontSize: "13px",
+                borderRadius: "8px",
+                gap: "8px"
+              }}
+            >
+              <FeatherIcon icon="alert-triangle" size={16} />
+              <span>
+                Action restricted: Cashless amount submission is disabled for interbranch bills.
+              </span>
+            </div>
+          )}
           <Form onSubmit={submitCashless} id="cashless-form">
-            <Form.Group className="mb-10 d-flex align-items-center">
+            <Form.Group className="mb-10 d-flex align-items-center" style={{ marginTop: "10px" }}>
               <Form.Label
                 style={{
                   width: "35%",
@@ -4276,6 +4404,7 @@ const IpdBillList = () => {
                   type="text"
                   placeholder="Enter Claim Number"
                   value={cashlessData.claimNo}
+                  disabled={isCashlessInterbranch}
                   onChange={(e) =>
                     setCashlessData((prev) => ({
                       ...prev,
@@ -4287,6 +4416,8 @@ const IpdBillList = () => {
                     borderRadius: "10px",
                     height: "32px",
                     fontSize: "13px",
+                    backgroundColor: isCashlessInterbranch ? "#e9ecef" : undefined,
+                    cursor: isCashlessInterbranch ? "not-allowed" : undefined,
                   }}
                 />
               </InputGroup>
@@ -4358,7 +4489,7 @@ const IpdBillList = () => {
               <InputGroup style={{ width: "65%", flexWrap: "nowrap" }}>
                 <InputGroup.Text
                   style={{
-                    backgroundColor: "#f8f9fa",
+                    backgroundColor: isCashlessInterbranch ? "#e9ecef" : "#f8f9fa",
                     border: "1px solid rgb(77, 208, 225)",
                     borderRight: "none",
                     borderTopLeftRadius: "10px",
@@ -4374,7 +4505,8 @@ const IpdBillList = () => {
                 </InputGroup.Text>
                 <Form.Control
                   type="text"
-                  required
+                  required={!isCashlessInterbranch}
+                  disabled={isCashlessInterbranch}
                   value={
                     cashlessData.receivedamt
                       ? Number(
@@ -4397,6 +4529,8 @@ const IpdBillList = () => {
                     borderBottomRightRadius: "10px",
                     height: "32px",
                     fontSize: "13px",
+                    backgroundColor: isCashlessInterbranch ? "#e9ecef" : undefined,
+                    cursor: isCashlessInterbranch ? "not-allowed" : undefined,
                   }}
                 />
               </InputGroup>
@@ -4415,7 +4549,7 @@ const IpdBillList = () => {
               <InputGroup style={{ width: "65%", flexWrap: "nowrap" }}>
                 <InputGroup.Text
                   style={{
-                    backgroundColor: "#f8f9fa",
+                    backgroundColor: isCashlessInterbranch ? "#e9ecef" : "#f8f9fa",
                     border: "1px solid rgb(77, 208, 225)",
                     borderRight: "none",
                     borderTopLeftRadius: "10px",
@@ -4431,7 +4565,8 @@ const IpdBillList = () => {
                 </InputGroup.Text>
                 <Form.Control
                   type="text"
-                  required
+                  required={!isCashlessInterbranch}
+                  disabled={isCashlessInterbranch}
                   value={
                     cashlessData.coopay
                       ? Number(
@@ -4454,6 +4589,8 @@ const IpdBillList = () => {
                     borderBottomRightRadius: "10px",
                     height: "32px",
                     fontSize: "13px",
+                    backgroundColor: isCashlessInterbranch ? "#e9ecef" : undefined,
+                    cursor: isCashlessInterbranch ? "not-allowed" : undefined,
                   }}
                 />
               </InputGroup>
@@ -4577,13 +4714,19 @@ const IpdBillList = () => {
           <Button
             variant="primary"
             type="submit"
-            disabled={loading}
+            disabled={loading || isCashlessInterbranch}
             form="cashless-form"
             style={{
-              backgroundColor: "teal",
+              backgroundColor: isCashlessInterbranch ? "#b0bec5" : "teal",
               border: "none",
               borderRadius: "10px",
+              cursor: isCashlessInterbranch ? "not-allowed" : "pointer",
             }}
+            title={
+              isCashlessInterbranch
+                ? "Cannot submit cashless amount for interbranch patients"
+                : undefined
+            }
           >
             {loading ? "Saving..." : "Save"}
           </Button>

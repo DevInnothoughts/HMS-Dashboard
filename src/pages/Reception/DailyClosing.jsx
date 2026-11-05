@@ -442,6 +442,14 @@ const DailyClosing = () => {
       );
     }
 
+    if (!cashDepositFile && !formData.cashDepositReceipt) {
+      return Swal.fire(
+        "Required Field Missing",
+        "Please upload the Cash Deposit Receipt file.",
+        "warning",
+      );
+    }
+
     if (isSumZero && (!formData.comment || !formData.comment.trim())) {
       return Swal.fire(
         "Justification Required",
@@ -926,7 +934,7 @@ const DailyClosing = () => {
                             fontSize: "12.5px",
                           }}
                         >
-                          Card Settlement Slip
+                          Card Settlement Slip{" "}
                         </span>
                       </div>
                       <div
@@ -1014,9 +1022,9 @@ const DailyClosing = () => {
                               >
                                 {cardSettlementFile.type ===
                                   "application/pdf" ||
-                                cardSettlementFile.name
-                                  .toLowerCase()
-                                  .endsWith(".pdf") ? (
+                                  cardSettlementFile.name
+                                    .toLowerCase()
+                                    .endsWith(".pdf") ? (
                                   <div
                                     style={{
                                       width: "30px",
@@ -1207,7 +1215,7 @@ const DailyClosing = () => {
                             fontSize: "12.5px",
                           }}
                         >
-                          Cash Deposit Receipt
+                          Cash Deposit Receipt{" "}
                         </span>
                       </div>
                       <div
@@ -1294,9 +1302,9 @@ const DailyClosing = () => {
                                 }}
                               >
                                 {cashDepositFile.type === "application/pdf" ||
-                                cashDepositFile.name
-                                  .toLowerCase()
-                                  .endsWith(".pdf") ? (
+                                  cashDepositFile.name
+                                    .toLowerCase()
+                                    .endsWith(".pdf") ? (
                                   <div
                                     style={{
                                       width: "30px",

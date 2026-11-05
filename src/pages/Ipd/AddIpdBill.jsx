@@ -66,6 +66,7 @@ const AddIpdBill = () => {
   const location = useLocation();
   const fromAdmissionList = location.state?.fromAdmissionList;
   const initialFormData = {
+    admission_id: "",
     invoice_id: "",
     admission_no: "",
     patient_id: "",
@@ -162,6 +163,7 @@ const AddIpdBill = () => {
 
       setFormData((prev) => ({
         ...prev,
+        admission_id: p.id || p.admission_id || "",
         patient_id: p.patient_id || "",
         patient_name: p.name || "",
         phone_number: p.contact || "",

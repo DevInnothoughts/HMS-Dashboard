@@ -44,6 +44,7 @@ export default function IpdAdmissionList() {
   });
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
+  const [activeTab, setActiveTab] = useState("active"); // "active" (pending) | "completed"
 
   // Initialize Location from JWT
   useEffect(() => {
@@ -176,6 +177,10 @@ export default function IpdAdmissionList() {
           cancelled_cheque: p.cancelled_cheque || null,
           pdc_cheque: p.pdc_cheque || null,
           policy_copy: p.policy_copy || null,
+          has_documents: Boolean(p.has_documents),
+          has_bill: Boolean(p.has_bill),
+          has_discharge_card: Boolean(p.has_discharge_card),
+          is_checklist_completed: Boolean(p.is_checklist_completed),
           admissionNo:
             p.admission_no === 0 || p.admission_no === "0"
               ? null
@@ -195,8 +200,23 @@ export default function IpdAdmissionList() {
     }
   }, [currentLocation, searchTerm]);
 
+  const activeCount = useMemo(() => {
+    return patients.filter((p) => !p.is_checklist_completed).length;
+  }, [patients]);
+
+  const completedCount = useMemo(() => {
+    return patients.filter((p) => p.is_checklist_completed).length;
+  }, [patients]);
+
   const filteredPatients = useMemo(() => {
     return patients.filter((patient) => {
+      if (activeTab === "active" && patient.is_checklist_completed) {
+        return false;
+      }
+      if (activeTab === "completed" && !patient.is_checklist_completed) {
+        return false;
+      }
+
       const patientSxDate = normalizeSurgeryDate(
         patient.surgeryDate || patient.surgery_datetime,
       );
@@ -215,7 +235,7 @@ export default function IpdAdmissionList() {
 
       return matchesFrom && matchesTo;
     });
-  }, [patients, fromDate, toDate]);
+  }, [patients, activeTab, fromDate, toDate]);
 
   const searchFromDatabase = async (query) => {
     if (!currentLocation || isDbSearching) return;
@@ -609,21 +629,43 @@ export default function IpdAdmissionList() {
       const savedResponse = await response.json();
       const savedDocuments = savedResponse?.data || {};
 
+      let justCompleted = false;
+
       setPatients((prev) =>
-        prev.map((patient) =>
-          patient.id === docPatient.id
-            ? {
-                ...patient,
-                aadharcard: savedDocuments.aadharcard || patient.aadharcard,
-                pancard: savedDocuments.pancard || patient.pancard,
-                cancelled_cheque:
-                  savedDocuments.cancelled_cheque || patient.cancelled_cheque,
-                pdc_cheque: savedDocuments.pdc_cheque || patient.pdc_cheque,
-                policy_copy: savedDocuments.policy_copy || patient.policy_copy,
-              }
-            : patient,
-        ),
+        prev.map((patient) => {
+          if (patient.id !== docPatient.id) return patient;
+          const updatedDocValues = {
+            aadharcard: savedDocuments.aadharcard || patient.aadharcard,
+            pancard: savedDocuments.pancard || patient.pancard,
+            cancelled_cheque:
+              savedDocuments.cancelled_cheque || patient.cancelled_cheque,
+            pdc_cheque: savedDocuments.pdc_cheque || patient.pdc_cheque,
+            policy_copy: savedDocuments.policy_copy || patient.policy_copy,
+          };
+          const hasDocsNow = Boolean(
+            (updatedDocValues.aadharcard && String(updatedDocValues.aadharcard).trim() !== "") ||
+            (updatedDocValues.pancard && String(updatedDocValues.pancard).trim() !== "") ||
+            (updatedDocValues.cancelled_cheque && String(updatedDocValues.cancelled_cheque).trim() !== "") ||
+            (updatedDocValues.pdc_cheque && String(updatedDocValues.pdc_cheque).trim() !== "") ||
+            (updatedDocValues.policy_copy && String(updatedDocValues.policy_copy).trim() !== "")
+          );
+          const isCompleteNow = Boolean(hasDocsNow && patient.has_bill && patient.has_discharge_card);
+          if (isCompleteNow && !patient.is_checklist_completed) {
+            justCompleted = true;
+          }
+
+          return {
+            ...patient,
+            ...updatedDocValues,
+            has_documents: hasDocsNow,
+            is_checklist_completed: isCompleteNow,
+          };
+        }),
       );
+
+      if (justCompleted) {
+        toast.success("Checklist complete! Admission moved to Completed records.");
+      }
 
       setDocPatient((prev) =>
         prev
@@ -663,13 +705,82 @@ export default function IpdAdmissionList() {
     <div
       style={{
         border: "1px solid #4dd0e1",
-        textAlign: "center",
         borderRadius: "8px",
-        padding: "10px",
+        padding: "10px 14px",
         backgroundColor: "#e0f7fa",
         boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
       }}
     >
+      {/* Tab Switcher: Active Admissions vs Completed Admissions */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "10px",
+          marginBottom: "10px",
+          paddingBottom: "8px",
+          borderBottom: "1px solid rgba(0, 151, 167, 0.25)",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <Button
+            size="sm"
+            variant={activeTab === "active" ? "info" : "outline-info"}
+            className={activeTab === "active" ? "text-white fw-bold shadow-sm" : "fw-medium"}
+            onClick={() => setActiveTab("active")}
+            style={{
+              borderRadius: "20px",
+              padding: "4px 14px",
+              fontSize: "12px",
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <FeatherIcon icon="clock" size={13} className="me-1" />
+            Active Admissions
+            <span
+              className={`badge ms-2 ${activeTab === "active" ? "bg-white text-info" : "bg-info text-white"}`}
+              style={{ fontSize: "10.5px", padding: "2px 7px" }}
+            >
+              {activeCount}
+            </span>
+          </Button>
+
+          <Button
+            size="sm"
+            variant={activeTab === "completed" ? "success" : "outline-success"}
+            className={activeTab === "completed" ? "text-white fw-bold shadow-sm" : "fw-medium"}
+            onClick={() => setActiveTab("completed")}
+            style={{
+              borderRadius: "20px",
+              padding: "4px 14px",
+              fontSize: "12px",
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <FeatherIcon icon="check-circle" size={13} className="me-1" />
+            Completed Admissions
+            <span
+              className={`badge ms-2 ${activeTab === "completed" ? "bg-white text-success" : "bg-success text-white"}`}
+              style={{ fontSize: "10.5px", padding: "2px 7px" }}
+            >
+              {completedCount}
+            </span>
+          </Button>
+        </div>
+
+        <div style={{ fontSize: "11.5px", color: "#006064", fontStyle: "italic" }}>
+          {activeTab === "active" ? (
+            <span>Admissions disappear automatically once Documents, IPD Bill & Discharge Card are completed</span>
+          ) : (
+            <span>Showing admissions where the 3-step checklist is completed</span>
+          )}
+        </div>
+      </div>
+
       <div
         style={{
           display: "flex",
@@ -1211,6 +1322,75 @@ export default function IpdAdmissionList() {
                           textAlign: "center",
                           padding: "0.75rem",
                           width: "150px",
+                        }}
+                      />
+
+                      <Column
+                        header="Checklist Status"
+                        headerClassName="datatable-header-center"
+                        body={(rowData) => {
+                          const hasDocs = Boolean(rowData.has_documents);
+                          const hasBill = Boolean(rowData.has_bill);
+                          const hasDC = Boolean(rowData.has_discharge_card);
+
+                          return (
+                            <div className="d-flex flex-column gap-1" style={{ fontSize: "10.5px" }}>
+                              <div
+                                className="d-flex align-items-center justify-content-between px-1"
+                                style={{
+                                  background: hasDocs ? "#e8f5e9" : "#fff3e0",
+                                  borderRadius: "4px",
+                                  padding: "2px 4px",
+                                }}
+                              >
+                                <span style={{ color: hasDocs ? "#2e7d32" : "#e65100", fontWeight: "600" }}>Docs:</span>
+                                <span
+                                  className={`badge ${hasDocs ? "bg-success" : "bg-warning text-dark"}`}
+                                  style={{ fontSize: "9.5px", padding: "1px 5px" }}
+                                >
+                                  {hasDocs ? "Uploaded" : "Pending"}
+                                </span>
+                              </div>
+                              <div
+                                className="d-flex align-items-center justify-content-between px-1"
+                                style={{
+                                  background: hasBill ? "#e8f5e9" : "#fff3e0",
+                                  borderRadius: "4px",
+                                  padding: "2px 4px",
+                                }}
+                              >
+                                <span style={{ color: hasBill ? "#2e7d32" : "#e65100", fontWeight: "600" }}>Bill:</span>
+                                <span
+                                  className={`badge ${hasBill ? "bg-success" : "bg-warning text-dark"}`}
+                                  style={{ fontSize: "9.5px", padding: "1px 5px" }}
+                                >
+                                  {hasBill ? "Created" : "Pending"}
+                                </span>
+                              </div>
+                              <div
+                                className="d-flex align-items-center justify-content-between px-1"
+                                style={{
+                                  background: hasDC ? "#e8f5e9" : "#fff3e0",
+                                  borderRadius: "4px",
+                                  padding: "2px 4px",
+                                }}
+                              >
+                                <span style={{ color: hasDC ? "#2e7d32" : "#e65100", fontWeight: "600" }}>DC:</span>
+                                <span
+                                  className={`badge ${hasDC ? "bg-success" : "bg-warning text-dark"}`}
+                                  style={{ fontSize: "9.5px", padding: "1px 5px" }}
+                                >
+                                  {hasDC ? "Created" : "Pending"}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        }}
+                        style={{
+                          border: "1px solid #90caf9",
+                          textAlign: "center",
+                          padding: "0.4rem",
+                          width: "140px",
                         }}
                       />
 
