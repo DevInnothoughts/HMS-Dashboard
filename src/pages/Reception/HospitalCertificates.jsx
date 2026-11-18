@@ -474,9 +474,9 @@ const HospitalCertificates = () => {
                                   }}
                                 >
                                   {newCertFile.type === "application/pdf" ||
-                                  newCertFile.name
-                                    .toLowerCase()
-                                    .endsWith(".pdf") ? (
+                                    newCertFile.name
+                                      .toLowerCase()
+                                      .endsWith(".pdf") ? (
                                     <div
                                       style={{
                                         width: "40px",
@@ -677,8 +677,8 @@ const HospitalCertificates = () => {
                       body={(rowData) =>
                         rowData.certificate_expiry
                           ? moment(rowData.certificate_expiry).format(
-                              "DD-MM-YYYY",
-                            )
+                            "DD-MM-YYYY",
+                          )
                           : "-"
                       }
                       style={{ width: "20%", textAlign: "center" }}

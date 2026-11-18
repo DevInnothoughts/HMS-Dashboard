@@ -29,6 +29,7 @@ const surgeryOptions = [
   "DLPL",
   "LPP",
   "Rhomboid Plasty",
+  "I&D"
 ];
 
 const DischargeCard = ({
