@@ -62,11 +62,12 @@ export default function CallingCalendar() {
     Dischargecard: { toBeCalled: 0, pending: 0, called: 0 },
   });
 
-  const fetchTodayCounts = async () => {
+  const fetchTodayCounts = async (dateStr = toDate) => {
     if (!currentLocation || currentLocation === "default") return;
     try {
+      const dateParam = dateStr ? `&date=${dateStr}` : "";
       const response = await fetch(
-        `${BASE_URL}/V1/calling-calendar/today-counts?_t=${Date.now()}`,
+        `${BASE_URL}/V1/calling-calendar/today-counts?_t=${Date.now()}${dateParam}`,
         {
           method: "GET",
           headers: {
@@ -114,7 +115,7 @@ export default function CallingCalendar() {
     }
   }, []);
 
-  const fetchPendingAppointments = async () => {
+  const fetchPendingAppointments = async (baseDate = toDate) => {
     if (!currentLocation || currentLocation === "default") return;
 
     const fetchForDate = async (dateStr) => {
@@ -125,7 +126,9 @@ export default function CallingCalendar() {
           const res = await response.json();
           if (res.data) {
             const filtered = res.data.filter(
-              (app) => app.confirm_time == 0 && app.is_deleted === 0,
+              (app) =>
+                (!app.confirm_time || app.confirm_time == 0 || app.confirm_time === "0") &&
+                (app.is_deleted === 0 || app.is_deleted === null || !app.is_deleted || app.is_deleted != 1),
             );
             return filtered.sort((a, b) => {
               const timeA = a.appointment_time
@@ -144,8 +147,9 @@ export default function CallingCalendar() {
       return [];
     };
 
-    const todayStr = moment().format("DD-MM-YYYY");
-    const tomorrowStr = moment().add(1, "days").format("DD-MM-YYYY");
+    const targetDate = baseDate && moment(baseDate).isValid() ? moment(baseDate) : moment();
+    const todayStr = targetDate.format("DD-MM-YYYY");
+    const tomorrowStr = targetDate.clone().add(1, "days").format("DD-MM-YYYY");
 
     const [todayList, tomorrowList] = await Promise.all([
       fetchForDate(todayStr),
@@ -177,11 +181,22 @@ export default function CallingCalendar() {
 
   useEffect(() => {
     if (currentLocation !== "default") {
-      fetchPendingAppointments();
+      fetchPendingAppointments(toDate);
       fetchDropdownData();
-      fetchTodayCounts();
+      fetchTodayCounts(toDate);
     }
   }, [currentLocation]);
+
+  // Refetch when toDate changes
+  useEffect(() => {
+    if (currentLocation !== "default") {
+      fetchPendingAppointments(toDate);
+      fetchTodayCounts(toDate);
+      if (selectedView === "advised" && selectedType) {
+        fetchAdvisedData(selectedType, selectedDays, toDate);
+      }
+    }
+  }, [toDate]);
 
   const generateTimeSlots = () => {
     const slots = [];
@@ -728,7 +743,7 @@ export default function CallingCalendar() {
           textTransform: "uppercase",
         }}
       >
-        Diagnosis
+        Enquiry Note
       </div>
       <div
         style={{

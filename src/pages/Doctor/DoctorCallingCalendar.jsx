@@ -68,11 +68,12 @@ export default function DoctorCallingCalendar() {
     }
   }, []);
 
-  const fetchTodayCounts = async () => {
+  const fetchTodayCounts = async (dateStr = toDate) => {
     if (!currentLocation || currentLocation === "default") return;
     try {
+      const dateParam = dateStr ? `&date=${dateStr}` : "";
       const response = await fetch(
-        `${BASE_URL}/V1/doctor/calling-calendar/today-counts?_t=${Date.now()}`,
+        `${BASE_URL}/V1/doctor/calling-calendar/today-counts?_t=${Date.now()}${dateParam}`,
         {
           method: "GET",
           headers: {
@@ -93,9 +94,9 @@ export default function DoctorCallingCalendar() {
 
   useEffect(() => {
     if (currentLocation && currentLocation !== "default") {
-      fetchTodayCounts();
+      fetchTodayCounts(toDate);
     }
-  }, [currentLocation]);
+  }, [currentLocation, toDate]);
 
   // Refetch when toDate or currentLocation changes in advised view
   useEffect(() => {
