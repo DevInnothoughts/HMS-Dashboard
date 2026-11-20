@@ -970,17 +970,13 @@ const IpdCollection = () => {
   };
 
   const handlePrintReceipt = async (pay) => {
-    const isPdcCheque =
-      parseFloat(pay.pdcCheque || pay.PdcCheque || pay.pdc_cheque || 0) > 0;
-
-    const totalBillAmount = parseFloat(
-      summary.totalBill || pay.payableamt || pay.totalamt || 0,
+    const pdcChequeAmt = parseFloat(
+      pay.pdcCheque || pay.PdcCheque || pay.pdc_cheque || 0,
     );
+    const isPdcCheque = pdcChequeAmt > 0;
 
     const totalAmt = isPdcCheque
-      ? totalBillAmount > 0
-        ? totalBillAmount
-        : parseFloat(pay.pdcCheque || pay.PdcCheque || pay.pdc_cheque || 0)
+      ? pdcChequeAmt
       : Number(pay.cashamt || 0) +
       Number(pay.cardamt || 0) +
       Number(pay.chequeamt || 0) +
