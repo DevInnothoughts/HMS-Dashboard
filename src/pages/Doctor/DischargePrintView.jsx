@@ -10,8 +10,8 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors 
     'Ahmedabad', 'Lucknow', 'Secunderabad', 'Salunkhe-Vihar', 'Mohali', 'Katraj', 'Chakan',
     'Ludhiana', 'Sarjapura', 'Rajajinagar', 'Pimpri-Chinchwad', 'Mysore', 'Aurangabad',
     'Surat', 'Dighi', 'Baner', 'Bangalore', 'Nashik', 'Hadapsar', 'Indiranagar',
-    'Sahakarnagar', 'Thane', 'HSR', 'Vashi', 'Undri', 'Hyderabad', 'Gurgaon-14',
-    'Whitefield', 'Andheri', 'Navi-Mumbai', 'Kalyan'
+    'Sahakarnagar', 'Thane', 'HSR', 'Vashi', 'Undri', 'Hyderabad', 'Gurgaon-14','Adajan','Hinjewadi',
+    'Whitefield', 'Andheri', 'Navi-Mumbai', 'Kalyan','Electronic City','Raipur','Kalyannagar','Gachibowli'
   ];
   const isEvitalLocation = sitelocation && evitalLocations.map(loc => loc.toLowerCase().replace(/\s+/g, '')).includes(sitelocation.toLowerCase().replace(/\s+/g, ''));
   const consultantDoc = doctors.find(doc => String(doc.doctor_id) === String(d.consultant_doctor));
@@ -258,6 +258,15 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors 
       Helpline: "8123922650",
       Address: "<b>Healing Hands Clinic </b><br>B-3,C-4 1st floor, Mayfair Meridien HSG Society, Ceasar Rd, opp. St Blais Church, Amboli, Andheri West, Mumbai, Maharashtra 400058"
     },
+    "Kalyan": {
+      AssistantSurgeon: "",
+      Physiotherapist: "",
+      Insurance: "",
+      Nutritionist: "",
+      QueriesSMS: "9271041277",
+      Helpline: "9271041277",
+      Address: "<b>Healing Hands Clinic </b><br> Ballaleshwar Apartments Opposite Roshan petrol pump Murbad road Kalyan West, Maharashtra 421301."
+    },
     "Nashik": {
       AssistantSurgeon: "ASSISTANT SURGEON :",
       Insurance: "",
@@ -357,6 +366,15 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors 
       Helpline: "7996126669",
       Address: "<b>Healing Hands Clinic </b><br> 2nd floor, 9th Cross, Dr MC Modi Hospital Rd, above HDFC Bank, West of Chord Road, Rajajinagar, Bengaluru, Karnataka 560079."
     },
+    "Electronic City": {
+      AssistantSurgeon: "8884884526",
+      Physiotherapist: "8884884526",
+      Insurance: "8884884519",
+      Nutritionist: "8884884526",
+      QueriesSMS: "8884884500",
+      Helpline: "8884884500",
+      Address: "<b>Healing Hands Clinic </b><br> 2nd Floor, No 31,32 & 105, Bettadasanapura Main Road, Thogur Cross, Begur Hobli, Electronic City, Bengaluru, Karnataka 560100."
+    }, 
     "Hyderabad": {
       AssistantSurgeon: "",
       Physiotherapist: "",
@@ -375,6 +393,15 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors 
       Helpline: "8977520083",
       Address: "<b>Healing Hands Clinic </b><br> 1st floor, plot no 4, beside SBI Bank, Chandragiri Colony, Tirumalgiri, Secunderabad, Hyderabad, Telangana"
     },
+     "Gachibowli": {
+      AssistantSurgeon: "",
+      Physiotherapist: "",
+      Insurance: "",
+      Nutritionist: "",
+      QueriesSMS: "8956512402",
+      Helpline: "8956512402",
+      Address: "<b>Healing Hands Clinic </b><br>3rd floor, Survey No: 135, Anvi's Eco Grand 136, Nanakramguda Rd, beside Wipro Lake, Financial District, Gachibowli, Hyderabad, Telangana 500032"
+    },
     "Surat": {
       AssistantSurgeon: "",
       Physiotherapist: "",
@@ -383,6 +410,15 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors 
       QueriesSMS: "",
       Helpline: "7874134000",
       Address: "<b>Healing Hands Clinic </b><br> Healing Hands Clinic F1, Third Floor, VIP Plaza, VIP Road, Near Shyam Baba Mandir, Bharthana, Surat, Gujarat 395007"
+    },
+    "Adajan": {
+      AssistantSurgeon: "",
+      Physiotherapist: "",
+      Insurance: "",
+      Nutritionist: "",
+      QueriesSMS: "8956748764",
+      Helpline: "8956748764",
+      Address: "<b>Healing Hands Clinic </b><br> F-2, First Floor, Vasupujya Complex, Near Madhuvan Circle, LP Savani Road, Adajan Gam, Adajan, Surat - 395009"
     },
     "Aurangabad": {
       AssistantSurgeon: "",
@@ -511,6 +547,15 @@ const DischargePrintView = React.forwardRef(({ dischargeData, formData, doctors 
       QueriesSMS: "DR ATUL TAMBADE ON ",
       Helpline: "",
       Address: "<b>Healing Hands Clinic </b><br> Ground Floor, Atmosphere Building, Ambegaon Pathar, Ambegaon Budruk, Pune 411046"
+    },
+    "Raipur": {
+      AssistantSurgeon: "",
+      Physiotherapist: "",
+      Nutritionist: "",
+      Insurance: "",
+      QueriesSMS: "8956748767",
+      Helpline: "8956748767",
+      Address: "<b>Healing Hands Clinic </b><br>2nd Floor, Bajaj Tower, Opposite Tanishq, Ring Road No. 1, New Rajendra Nagar, Raipur, Chhattisgarh - 492001"
     },
     "Kothrud": {
       AssistantSurgeon: "",
