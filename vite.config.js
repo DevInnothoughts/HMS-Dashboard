@@ -17,4 +17,13 @@ export default defineConfig({
       },
     },
   },
+  server: {
+    hmr: {
+      overlay: false, // TEMPORARY: hides the error popup in browsers
+    },
+  },
+  preview: {
+    host: "0.0.0.0",
+    port: 3000, // used later when you switch to "vite preview"
+  },
 });
