@@ -552,6 +552,66 @@ const IpdBillList = () => {
     return () => clearTimeout(checkTimeout);
   }, [selectedInvoice?.invoice_id, currentLocation, originalInvoiceId]);
 
+  const processInvoiceRow = (invoice) => {
+    // Normalize values with fallbacks for different backend naming conventions
+    const totalamt =
+      parseFloat(invoice.totalamt || invoice.total_amt || 0) || 0;
+    const receivedamt =
+      parseFloat(invoice.receivedamt || invoice.received_amt || 0) || 0;
+    const discount = parseFloat(invoice.discount || 0) || 0;
+    const pdc =
+      parseFloat(
+        invoice.pdc || invoice.receivedamt || invoice.advance_amt || 0,
+      ) || 0;
+
+    const payable_amt =
+      invoice.payable_amt !== undefined && invoice.payable_amt !== null
+        ? parseFloat(invoice.payable_amt)
+        : parseFloat(
+          calculatePayableAmt({ ...invoice, totalamt, discount, pdc }),
+        );
+    const due_amt =
+      invoice.totaldue !== undefined
+        ? parseFloat(invoice.totaldue)
+        : invoice.status === "PDC" || invoice.bill_method === "PDC"
+          ? totalamt
+          : payable_amt - receivedamt;
+
+    return {
+      ...invoice,
+      totalamt,
+      receivedamt,
+      discount,
+      pdc,
+      due_amt,
+      payable_amt,
+      pay_mode:
+        invoice.status === "PDC" ||
+          invoice.bill_method === "PDC" ||
+          (invoice.chequeno && invoice.chequeno !== "NULL")
+          ? "PDC"
+          : invoice.status === "Cashless" ||
+            invoice.bill_method === "Cashless"
+            ? "Cashless"
+            : invoice.status === "Reimbursement" ||
+              invoice.bill_method === "Reimbursement"
+              ? "Reimbursement"
+              : invoice.status === "Interbranch" ||
+                invoice.status === "Interbranch-Bill" ||
+                invoice.bill_Type === "interbranch"
+                ? "Interbranch"
+                : invoice.bill_Type === "charity" ||
+                  invoice.status === "Charity"
+                  ? "Charity"
+                  : "NonInsurance",
+      patient_name: invoice.patient_name || invoice.name || "N/A",
+      patient_phone: invoice.patient_phone || invoice.phone || "N/A",
+      patient_uid:
+        invoice.patient_uid || invoice.Uid_no || invoice.uid || "N/A",
+      status: invoice.status || "",
+    };
+  };
+
   const fetchInvoices = useCallback(async () => {
     if (!currentLocation) return;
 
@@ -567,6 +627,7 @@ const IpdBillList = () => {
         location: currentLocation,
         from: formatToApiDateLocal(fromDate),
         to: formatToApiDateLocal(toDate),
+        limit: 1500,
       };
 
       // 3. Cleanly append parameters
@@ -592,66 +653,8 @@ const IpdBillList = () => {
           ? data.data[0]
           : data.data || [];
 
-        const processedInvoices = rawData.map((invoice) => {
-          // Normalize values with fallbacks for different backend naming conventions
-          const totalamt =
-            parseFloat(invoice.totalamt || invoice.total_amt || 0) || 0;
-          const receivedamt =
-            parseFloat(invoice.receivedamt || invoice.received_amt || 0) || 0;
-          const discount = parseFloat(invoice.discount || 0) || 0;
-          const pdc =
-            parseFloat(
-              invoice.pdc || invoice.receivedamt || invoice.advance_amt || 0,
-            ) || 0;
-
-          const payable_amt =
-            invoice.payable_amt !== undefined && invoice.payable_amt !== null
-              ? parseFloat(invoice.payable_amt)
-              : parseFloat(
-                calculatePayableAmt({ ...invoice, totalamt, discount, pdc }),
-              );
-          const due_amt =
-            invoice.totaldue !== undefined
-              ? parseFloat(invoice.totaldue)
-              : invoice.status === "PDC" || invoice.bill_method === "PDC"
-                ? totalamt
-                : payable_amt - receivedamt;
-
-          return {
-            ...invoice,
-            totalamt,
-            receivedamt,
-            discount,
-            pdc,
-            due_amt,
-            payable_amt,
-            pay_mode:
-              invoice.status === "PDC" ||
-                invoice.bill_method === "PDC" ||
-                (invoice.chequeno && invoice.chequeno !== "NULL")
-                ? "PDC"
-                : invoice.status === "Cashless" ||
-                  invoice.bill_method === "Cashless"
-                  ? "Cashless"
-                  : invoice.status === "Reimbursement" ||
-                    invoice.bill_method === "Reimbursement"
-                    ? "Reimbursement"
-                    : invoice.status === "Interbranch" ||
-                      invoice.status === "Interbranch-Bill" ||
-                      invoice.bill_Type === "interbranch"
-                      ? "Interbranch"
-                      : invoice.bill_Type === "charity" ||
-                        invoice.status === "Charity"
-                        ? "Charity"
-                        : "NonInsurance",
-            patient_name: invoice.patient_name || invoice.name || "N/A",
-            patient_phone: invoice.patient_phone || invoice.phone || "N/A",
-            patient_uid:
-              invoice.patient_uid || invoice.Uid_no || invoice.uid || "N/A",
-            status: invoice.status || "",
-          };
-        });
-
+        const limitedData = rawData.slice(0, 1500);
+        const processedInvoices = limitedData.map(processInvoiceRow);
         setInvoices(processedInvoices);
       } else {
         throw new Error(data.message || "Failed to fetch invoices.");
@@ -684,60 +687,10 @@ const IpdBillList = () => {
             );
             const newUniqueInvoices = data.data
               .filter((inv) => !existingIds.has(String(inv.invoice_id)))
-              .map((invoice) => {
-                const totalamt =
-                  parseFloat(invoice.totalamt || invoice.total_amt || 0) || 0;
-                const receivedamt =
-                  parseFloat(
-                    invoice.receivedamt || invoice.received_amt || 0,
-                  ) || 0;
-                const discount = parseFloat(invoice.discount || 0) || 0;
-                const pdc =
-                  parseFloat(
-                    invoice.pdc ||
-                    invoice.receivedamt ||
-                    invoice.advance_amt ||
-                    0,
-                  ) || 0;
-                const payable_amt =
-                  invoice.payable_amt !== undefined &&
-                    invoice.payable_amt !== null
-                    ? parseFloat(invoice.payable_amt)
-                    : parseFloat(
-                      calculatePayableAmt({
-                        ...invoice,
-                        totalamt,
-                        discount,
-                        pdc,
-                      }),
-                    );
-                const due_amt =
-                  invoice.totaldue !== undefined
-                    ? parseFloat(invoice.totaldue)
-                    : invoice.status === "PDC" || invoice.bill_method === "PDC"
-                      ? totalamt
-                      : payable_amt - receivedamt;
-
-                return {
-                  ...invoice,
-                  totalamt,
-                  receivedamt,
-                  discount,
-                  pdc,
-                  due_amt,
-                  payable_amt,
-                  patient_name: invoice.patient_name || invoice.name || "N/A",
-                  patient_phone:
-                    invoice.patient_phone || invoice.phone || "N/A",
-                  patient_uid:
-                    invoice.patient_uid ||
-                    invoice.Uid_no ||
-                    invoice.uid ||
-                    "N/A",
-                  status: invoice.status || "",
-                };
-              });
-            return [...prev, ...newUniqueInvoices];
+              .map(processInvoiceRow);
+            return newUniqueInvoices.length > 0
+              ? [...prev, ...newUniqueInvoices]
+              : prev;
           });
         }
       }
@@ -749,27 +702,18 @@ const IpdBillList = () => {
   };
 
   useEffect(() => {
-    const searchValue = filters1.global.value;
-    if (!searchValue || searchValue.length < 3) return;
+    const searchValue = filters1.global.value?.trim();
+    if (!searchValue) return;
 
-    const hasLocalMatches = invoices.some((inv) => {
-      const lowerSearch = searchValue.toLowerCase();
-      return (
-        (inv.invoice_id && String(inv.invoice_id).includes(searchValue)) ||
-        (inv.patient_name &&
-          inv.patient_name.toLowerCase().includes(lowerSearch)) ||
-        (inv.patient_phone && inv.patient_phone.includes(searchValue))
-      );
-    });
+    const isNumeric = /^\d+$/.test(searchValue);
+    if (!isNumeric && searchValue.length < 2) return;
 
-    if (!hasLocalMatches) {
-      const delayDebounceFn = setTimeout(() => {
-        searchFromDatabase(searchValue);
-      }, 800);
+    const delayDebounceFn = setTimeout(() => {
+      searchFromDatabase(searchValue);
+    }, 800);
 
-      return () => clearTimeout(delayDebounceFn);
-    }
-  }, [filters1.global.value, invoices]);
+    return () => clearTimeout(delayDebounceFn);
+  }, [filters1.global.value]);
 
   useEffect(() => {
     fetchInvoices();
@@ -2048,14 +1992,28 @@ const IpdBillList = () => {
 
   const filteredInvoices = invoices
     .filter((invoice) => {
-      const searchTerm = filters1.global.value?.toLowerCase() || "";
+      const rawSearch = (filters1.global.value || "").trim().toLowerCase();
+      const cleanSearch = rawSearch.replace(/^(bill\s*(no\.?|#)?\s*)/i, "").trim();
 
       let matchesSearch = true;
-      if (searchTerm) {
+      if (rawSearch) {
+        const invIdStr = String(invoice.invoice_id || "").toLowerCase();
+        const billNoStr = String(invoice.bill_no || invoice.billNo || "").toLowerCase();
+        const admissionNoStr = String(invoice.admission_no || "").toLowerCase();
+        const patientNameStr = String(invoice.patient_name || "").toLowerCase();
+        const patientPhoneStr = String(invoice.patient_phone || "").toLowerCase();
+        const patientUidStr = String(invoice.patient_uid || "").toLowerCase();
+
         matchesSearch =
-          invoice.patient_name?.toLowerCase().includes(searchTerm) ||
-          invoice.invoice_id?.toString().toLowerCase().includes(searchTerm) ||
-          invoice.patient_phone?.toLowerCase().includes(searchTerm);
+          invIdStr.includes(cleanSearch) ||
+          invIdStr.includes(rawSearch) ||
+          billNoStr.includes(cleanSearch) ||
+          billNoStr.includes(rawSearch) ||
+          patientNameStr.includes(rawSearch) ||
+          patientPhoneStr.includes(rawSearch) ||
+          patientUidStr.includes(rawSearch) ||
+          admissionNoStr.includes(cleanSearch) ||
+          admissionNoStr.includes(rawSearch);
       }
 
       let matchesCategory = true;
@@ -2159,14 +2117,15 @@ const IpdBillList = () => {
               <Form.Control
                 type="search"
                 value={filters1.global.value || ""}
-                onChange={(e) =>
+                onChange={(e) => {
+                  setFirst(0);
                   setFilters1({
                     global: {
                       value: e.target.value,
                       matchMode: FilterMatchMode.CONTAINS,
                     },
-                  })
-                }
+                  });
+                }}
                 placeholder="Global Search"
                 style={{
                   borderRadius: "6px",

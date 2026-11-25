@@ -340,10 +340,13 @@ export default function IpdDashboard() {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       };
 
+      const fromIpd = moment(selectedDate).clone().subtract(30, "days").format("YYYY-MM-DD");
+      const toIpd = moment(selectedDate).clone().add(30, "days").format("YYYY-MM-DD");
+
       const endpoints = [
-        `${BASE_URL}/V1/doctor/manage-admission/list?location=${encodeURIComponent(currentLocation)}`,
-        `${BASE_URL}/V1/doctor/admission/list-admissions?location=${encodeURIComponent(currentLocation)}`,
-        `${BASE_URL}/V1/ipd/admin/listVerifiedPatients?location=${encodeURIComponent(currentLocation)}&from=${moment().subtract(30, "days").format("YYYY-MM-DD")}&to=${moment().format("YYYY-MM-DD")}`,
+        `${BASE_URL}/V1/doctor/manage-admission/list?location=${encodeURIComponent(currentLocation)}&from=${fromIpd}&to=${toIpd}`,
+        `${BASE_URL}/V1/doctor/admission/list-admissions?location=${encodeURIComponent(currentLocation)}&from=${fromIpd}&to=${toIpd}`,
+        `${BASE_URL}/V1/ipd/admin/listVerifiedPatients?location=${encodeURIComponent(currentLocation)}&from=${fromIpd}&to=${toIpd}`,
       ];
 
       const responses = await Promise.allSettled(

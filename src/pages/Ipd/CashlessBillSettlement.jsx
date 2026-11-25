@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   Container,
   Row,
@@ -84,6 +84,7 @@ const CashlessBillSettlement = () => {
   const [first, setFirst] = useState(0);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isDbSearching, setIsDbSearching] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [currentLocation, setCurrentLocation] = useState(
     getLocationFromStorage(),
@@ -303,6 +304,195 @@ const CashlessBillSettlement = () => {
     return moment(date).format("YYYY-MM-DD");
   };
 
+  const processSettlementRow = useCallback(
+    async (item, loc) => {
+      const rawComp =
+        item.companyname &&
+          item.companyname !== "0" &&
+          item.companyname !== "NULL" &&
+          item.companyname !== "null"
+          ? item.companyname
+          : item.companyName &&
+            item.companyName !== "0" &&
+            item.companyName !== "NULL"
+            ? item.companyName
+            : item.insurance_company_name &&
+              item.insurance_company_name !== "0"
+              ? item.insurance_company_name
+              : item.invoice_insurancecompany &&
+                item.invoice_insurancecompany !== "0"
+                ? item.invoice_insurancecompany
+                : item.insurancecompany || item.insurance_name || "-";
+
+      const rawTpa =
+        item.tpaname &&
+          item.tpaname !== "0" &&
+          item.tpaname !== "NULL" &&
+          item.tpaname !== "null"
+          ? item.tpaname
+          : item.tpa_name &&
+            item.tpa_name !== "0" &&
+            item.tpa_name !== "NULL"
+            ? item.tpa_name
+            : item.invoice_tpa && item.invoice_tpa !== "0"
+              ? item.invoice_tpa
+              : item.tpa || "-";
+      const creationDate =
+        item.creationdate || item.creation_date || item.date || "";
+
+      let finalComp = rawComp;
+      let finalTpa = rawTpa;
+
+      const isPostCutoff =
+        creationDate &&
+        moment(creationDate).isValid() &&
+        moment(creationDate).isAfter(CUTOFF_DATE);
+
+      const isCompNumeric = /^\d+$/.test(String(rawComp).trim());
+      const isTpaNumeric = /^\d+$/.test(String(rawTpa).trim());
+
+      const dateDropdowns = await getDropdownsForDate(
+        loc,
+        creationDate,
+      );
+
+      if (isCompNumeric) {
+        const match = dateDropdowns.insurance.find(
+          (i) =>
+            String(i.comapny_id) === String(rawComp).trim() ||
+            String(i.company_id) === String(rawComp).trim() ||
+            String(i.id) === String(rawComp).trim(),
+        );
+        if (match) {
+          finalComp =
+            match.companyname ||
+            match.company_name ||
+            match.name ||
+            rawComp;
+        } else {
+          finalComp = resolveInsuranceName(rawComp, creationDate);
+        }
+      } else if (isPostCutoff && item.invoice_insurancecompany) {
+        const match = dateDropdowns.insurance.find(
+          (i) =>
+            String(i.comapny_id) === String(item.invoice_insurancecompany).trim() ||
+            String(i.company_id) === String(item.invoice_insurancecompany).trim() ||
+            String(i.id) === String(item.invoice_insurancecompany).trim(),
+        );
+        if (match) {
+          finalComp =
+            match.companyname ||
+            match.company_name ||
+            match.name ||
+            finalComp;
+        } else {
+          finalComp = resolveInsuranceName(rawComp, creationDate);
+        }
+      } else {
+        finalComp = resolveInsuranceName(rawComp, creationDate);
+      }
+
+      if (isTpaNumeric) {
+        const match = dateDropdowns.tpa.find(
+          (t) =>
+            String(t.comapny_id) === String(rawTpa).trim() ||
+            String(t.company_id) === String(rawTpa).trim() ||
+            String(t.id) === String(rawTpa).trim(),
+        );
+        if (match) {
+          finalTpa =
+            match.companyname ||
+            match.company_name ||
+            match.name ||
+            rawTpa;
+        } else {
+          finalTpa = resolveTpaName(rawTpa, creationDate);
+        }
+      } else if (isPostCutoff && item.invoice_tpa) {
+        const match = dateDropdowns.tpa.find(
+          (t) =>
+            String(t.comapny_id) === String(item.invoice_tpa).trim() ||
+            String(t.company_id) === String(item.invoice_tpa).trim() ||
+            String(t.id) === String(item.invoice_tpa).trim(),
+        );
+        if (match) {
+          finalTpa =
+            match.companyname ||
+            match.company_name ||
+            match.name ||
+            finalTpa;
+        } else {
+          finalTpa = resolveTpaName(rawTpa, creationDate);
+        }
+      } else {
+        finalTpa = resolveTpaName(rawTpa, creationDate);
+      }
+
+      const totalAmt = parseFloat(
+        item.totalamt || item.total_amt || item.totalAmt || 0,
+      );
+      const autoAmt = parseFloat(
+        item.autoamt !== undefined
+          ? item.autoamt
+          : item.authoamt || item.approvedAmt || 0,
+      );
+      const recAmt = parseFloat(
+        item.receivedamt || item.received_amt || item.receivedAmt || 0,
+      );
+      const tdsAmt = parseFloat(item.tdsamt || item.tds_amt || 0);
+
+      const totalDue = parseFloat(
+        item.invoice_totaldue !== undefined &&
+          item.invoice_totaldue !== null
+          ? item.invoice_totaldue
+          : item.totaldue !== undefined && item.totaldue !== null
+            ? item.totaldue
+            : item.total_due !== undefined && item.total_due !== null
+              ? item.total_due
+              : item.due_amt || 0,
+      );
+
+      const companyDue = parseFloat(
+        item.companydue !== undefined && item.companydue !== null
+          ? item.companydue
+          : item.company_due || 0,
+      );
+
+      return {
+        ...item,
+        invoiceid: String(
+          item.invoiceid || item.invoice_id || item.invoiceNo || item.id || "",
+        ),
+        creationdate: creationDate,
+        patientname:
+          item.patientname ||
+          (item.prefix && item.patient_name
+            ? `${item.prefix} ${item.patient_name}`
+            : item.patient_name) ||
+          item.patientName ||
+          item.name ||
+          "-",
+        phone: item.phone || item.patient_phone || "",
+        Uid_no: item.Uid_no || item.uid_no || item.patient_uid || "",
+        patient_location:
+          item.patient_location !== undefined &&
+            item.patient_location !== null &&
+            item.patient_location !== "NULL"
+            ? item.patient_location
+            : item.patientLocation || "",
+        companyname: finalComp,
+        tpaname: finalTpa,
+        totalamt: totalAmt,
+        autoamt: autoAmt,
+        receivedamt: recAmt,
+        tdsamt: tdsAmt,
+        totaldue: totalDue,
+        companydue: companyDue,
+      };
+    },
+    [getDropdownsForDate, resolveInsuranceName, resolveTpaName],
+  );
+
   const fetchInsuranceData = useCallback(async () => {
     const loc = currentLocation || getLocationFromStorage();
     setLoading(true);
@@ -424,193 +614,9 @@ const CashlessBillSettlement = () => {
       }
 
       if (fetchedData && Array.isArray(fetchedData)) {
+        const limitedRaw = fetchedData.slice(0, 1500);
         const processed = await Promise.all(
-          fetchedData.map(async (item) => {
-            const rawComp =
-              item.companyname &&
-                item.companyname !== "0" &&
-                item.companyname !== "NULL" &&
-                item.companyname !== "null"
-                ? item.companyname
-                : item.companyName &&
-                  item.companyName !== "0" &&
-                  item.companyName !== "NULL"
-                  ? item.companyName
-                  : item.insurance_company_name &&
-                    item.insurance_company_name !== "0"
-                    ? item.insurance_company_name
-                    : item.invoice_insurancecompany &&
-                      item.invoice_insurancecompany !== "0"
-                      ? item.invoice_insurancecompany
-                      : item.insurancecompany || item.insurance_name || "-";
-
-            const rawTpa =
-              item.tpaname &&
-                item.tpaname !== "0" &&
-                item.tpaname !== "NULL" &&
-                item.tpaname !== "null"
-                ? item.tpaname
-                : item.tpa_name &&
-                  item.tpa_name !== "0" &&
-                  item.tpa_name !== "NULL"
-                  ? item.tpa_name
-                  : item.invoice_tpa && item.invoice_tpa !== "0"
-                    ? item.invoice_tpa
-                    : item.tpa || "-";
-            const creationDate =
-              item.creationdate || item.creation_date || item.date || "";
-
-            let finalComp = rawComp;
-            let finalTpa = rawTpa;
-
-            const isPostCutoff =
-              creationDate &&
-              moment(creationDate).isValid() &&
-              moment(creationDate).isAfter(CUTOFF_DATE);
-
-            const isCompNumeric = /^\d+$/.test(String(rawComp).trim());
-            const isTpaNumeric = /^\d+$/.test(String(rawTpa).trim());
-
-            const dateDropdowns = await getDropdownsForDate(
-              loc,
-              creationDate,
-            );
-
-            if (isCompNumeric) {
-              const match = dateDropdowns.insurance.find(
-                (i) =>
-                  String(i.comapny_id) === String(rawComp).trim() ||
-                  String(i.company_id) === String(rawComp).trim() ||
-                  String(i.id) === String(rawComp).trim(),
-              );
-              if (match) {
-                finalComp =
-                  match.companyname ||
-                  match.company_name ||
-                  match.name ||
-                  rawComp;
-              } else {
-                finalComp = resolveInsuranceName(rawComp, creationDate);
-              }
-            } else if (isPostCutoff && item.invoice_insurancecompany) {
-              const match = dateDropdowns.insurance.find(
-                (i) =>
-                  String(i.comapny_id) === String(item.invoice_insurancecompany).trim() ||
-                  String(i.company_id) === String(item.invoice_insurancecompany).trim() ||
-                  String(i.id) === String(item.invoice_insurancecompany).trim(),
-              );
-              if (match) {
-                finalComp =
-                  match.companyname ||
-                  match.company_name ||
-                  match.name ||
-                  finalComp;
-              } else {
-                finalComp = resolveInsuranceName(rawComp, creationDate);
-              }
-            } else {
-              finalComp = resolveInsuranceName(rawComp, creationDate);
-            }
-
-            if (isTpaNumeric) {
-              const match = dateDropdowns.tpa.find(
-                (t) =>
-                  String(t.comapny_id) === String(rawTpa).trim() ||
-                  String(t.company_id) === String(rawTpa).trim() ||
-                  String(t.id) === String(rawTpa).trim() ||
-                  String(t.tpa_id) === String(rawTpa).trim(),
-              );
-              if (match) {
-                finalTpa =
-                  match.companyname ||
-                  match.company_name ||
-                  match.name ||
-                  match.tpaname ||
-                  rawTpa;
-              } else {
-                finalTpa = resolveTpaName(rawTpa, creationDate);
-              }
-            } else if (isPostCutoff && item.invoice_tpa) {
-              const match = dateDropdowns.tpa.find(
-                (t) =>
-                  String(t.comapny_id) === String(item.invoice_tpa).trim() ||
-                  String(t.company_id) === String(item.invoice_tpa).trim() ||
-                  String(t.id) === String(item.invoice_tpa).trim() ||
-                  String(t.tpa_id) === String(item.invoice_tpa).trim(),
-              );
-              if (match) {
-                finalTpa =
-                  match.companyname ||
-                  match.company_name ||
-                  match.name ||
-                  match.tpaname ||
-                  finalTpa;
-              } else {
-                finalTpa = resolveTpaName(rawTpa, creationDate);
-              }
-            } else {
-              finalTpa = resolveTpaName(rawTpa, creationDate);
-            }
-
-            const totalAmt = parseFloat(
-              item.totalamt || item.total_amt || item.totalAmt || 0,
-            );
-            const autoAmt = parseFloat(
-              item.autoamt !== undefined
-                ? item.autoamt
-                : item.authoamt || item.approvedAmt || 0,
-            );
-            const recAmt = parseFloat(
-              item.receivedamt || item.received_amt || item.receivedAmt || 0,
-            );
-            const tdsAmt = parseFloat(item.tdsamt || item.tds_amt || 0);
-
-            const totalDue = parseFloat(
-              item.invoice_totaldue !== undefined &&
-                item.invoice_totaldue !== null
-                ? item.invoice_totaldue
-                : item.totaldue !== undefined && item.totaldue !== null
-                  ? item.totaldue
-                  : item.total_due !== undefined && item.total_due !== null
-                    ? item.total_due
-                    : item.due_amt || 0,
-            );
-
-            const companyDue = parseFloat(
-              item.companydue !== undefined && item.companydue !== null
-                ? item.companydue
-                : item.company_due || 0,
-            );
-
-            return {
-              ...item,
-              invoiceid:
-                item.invoiceid || item.invoice_id || item.invoiceNo || item.id,
-              creationdate: creationDate,
-              patientname:
-                item.patientname ||
-                (item.prefix && item.patient_name
-                  ? `${item.prefix} ${item.patient_name}`
-                  : item.patient_name) ||
-                item.patientName ||
-                item.name ||
-                "-",
-              patient_location:
-                item.patient_location !== undefined &&
-                  item.patient_location !== null &&
-                  item.patient_location !== "NULL"
-                  ? item.patient_location
-                  : item.patientLocation || "",
-              companyname: finalComp,
-              tpaname: finalTpa,
-              totalamt: totalAmt,
-              autoamt: autoAmt,
-              receivedamt: recAmt,
-              tdsamt: tdsAmt,
-              totaldue: totalDue,
-              companydue: companyDue,
-            };
-          }),
+          limitedRaw.map((item) => processSettlementRow(item, loc)),
         );
         // Sort data: latest date first, and higher bill number at top
         processed.sort((a, b) => {
@@ -663,10 +669,130 @@ const CashlessBillSettlement = () => {
     currentLocation,
     fromDate,
     toDate,
-    getDropdownsForDate,
-    resolveInsuranceName,
-    resolveTpaName,
+    processSettlementRow,
   ]);
+
+  const searchFromDatabase = async (query) => {
+    const loc = currentLocation || getLocationFromStorage();
+    if (!loc || isDbSearching) return;
+
+    setIsDbSearching(true);
+    try {
+      const token = localStorage.getItem("token");
+      const headers = {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      };
+
+      let results = [];
+      try {
+        const url = `${BASE_URL}/V1/managereports/manageInsuranceData?location=${encodeURIComponent(
+          loc,
+        )}&search=${encodeURIComponent(query)}&limit=100`;
+        const res = await fetch(url, { method: "GET", headers });
+        if (res.ok) {
+          const json = await res.json();
+          results = Array.isArray(json) ? json : json.data || [];
+        }
+      } catch (err) {
+        console.warn("manageInsuranceData search notice:", err);
+      }
+
+      if (!results || results.length === 0) {
+        try {
+          const res = await fetch(
+            `${BASE_URL}/V1/invoice/searchInvoices?query=${encodeURIComponent(
+              query,
+            )}&location=${encodeURIComponent(loc)}`,
+            { headers },
+          );
+          if (res.ok) {
+            const json = await res.json();
+            const raw = Array.isArray(json.data) ? json.data : [];
+            results = raw.filter((inv) => {
+              const st = (inv.status || "").toLowerCase();
+              const bm = (inv.bill_method || "").toLowerCase();
+              const bt = (inv.bill_Type || inv.bill_type || "").toLowerCase();
+              return (
+                st === "cashless" ||
+                bm === "cashless" ||
+                bt === "insurance" ||
+                inv.insurancecompany ||
+                inv.companyname
+              );
+            });
+          }
+        } catch (err) {
+          console.warn("searchInvoices fallback notice:", err);
+        }
+      }
+
+      if (results && results.length > 0) {
+        const processed = await Promise.all(
+          results.map((item) => processSettlementRow(item, loc)),
+        );
+
+        setData((prev) => {
+          const existingIds = new Set(
+            prev.map((item) => String(item.invoiceid || item.invoice_id || "")),
+          );
+          const newUnique = processed.filter(
+            (item) =>
+              !existingIds.has(String(item.invoiceid || item.invoice_id || "")),
+          );
+          return newUnique.length > 0 ? [...prev, ...newUnique] : prev;
+        });
+      }
+    } catch (error) {
+      console.error("Error searching cashless bills from database:", error);
+    } finally {
+      setIsDbSearching(false);
+    }
+  };
+
+  useEffect(() => {
+    const rawSearch = searchTerm?.trim();
+    if (!rawSearch) return;
+
+    const isNumeric = /^\d+$/.test(rawSearch);
+    if (!isNumeric && rawSearch.length < 2) return;
+
+    const delayDebounceFn = setTimeout(() => {
+      searchFromDatabase(rawSearch);
+    }, 800);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm]);
+
+  const filteredData = useMemo(() => {
+    const rawSearch = searchTerm.trim().toLowerCase();
+    const cleanSearch = rawSearch.replace(/^(bill\s*(no\.?|#)?\s*)/i, "").trim();
+
+    return data.filter((item) => {
+      if (!rawSearch) return true;
+
+      const invId = String(item.invoiceid || item.invoice_id || "").toLowerCase();
+      const pName = String(item.patientname || item.patient_name || "").toLowerCase();
+      const phone = String(item.phone || item.patient_phone || "").toLowerCase();
+      const uid = String(item.Uid_no || item.uid_no || "").toLowerCase();
+      const comp = String(item.companyname || "").toLowerCase();
+      const tpa = String(item.tpaname || "").toLowerCase();
+      const loc = String(item.patient_location || "").toLowerCase();
+      const dateStr = String(item.creationdate || "").toLowerCase();
+
+      return (
+        invId.includes(cleanSearch) ||
+        invId.includes(rawSearch) ||
+        pName.includes(rawSearch) ||
+        phone.includes(rawSearch) ||
+        uid.includes(rawSearch) ||
+        comp.includes(rawSearch) ||
+        tpa.includes(rawSearch) ||
+        loc.includes(rawSearch) ||
+        dateStr.includes(rawSearch)
+      );
+    });
+  }, [data, searchTerm]);
 
   useEffect(() => {
     fetchInsuranceData();
@@ -674,6 +800,7 @@ const CashlessBillSettlement = () => {
 
   const handleGlobalSearchChange = (e) => {
     const value = e.target.value;
+    setFirst(0);
     setSearchTerm(value);
     setFilters({
       global: { value: value || null, matchMode: FilterMatchMode.CONTAINS },
@@ -681,6 +808,7 @@ const CashlessBillSettlement = () => {
   };
 
   const handleClearFilters = () => {
+    setFirst(0);
     setFromDate(null);
     setToDate(null);
     setSearchTerm("");
@@ -700,32 +828,7 @@ const CashlessBillSettlement = () => {
       return;
     }
 
-    let exportList = data;
-    if (searchTerm && searchTerm.trim() !== "") {
-      const term = searchTerm.toLowerCase();
-      exportList = data.filter((item) => {
-        const pName = String(item.patientname || "").toLowerCase();
-        const pLoc = String(item.patient_location || "").toLowerCase();
-        const comp = String(
-          resolveInsuranceName(item.companyname, item.creationdate) || "",
-        ).toLowerCase();
-        const tpa = String(
-          resolveTpaName(item.tpaname, item.creationdate) || "",
-        ).toLowerCase();
-        const dateStr = String(
-          formatDateForDisplay(item.creationdate) || "",
-        ).toLowerCase();
-        const invId = String(item.invoiceid || "").toLowerCase();
-        return (
-          pName.includes(term) ||
-          pLoc.includes(term) ||
-          comp.includes(term) ||
-          tpa.includes(term) ||
-          dateStr.includes(term) ||
-          invId.includes(term)
-        );
-      });
-    }
+    let exportList = filteredData;
 
     if (exportList.length === 0) {
       Swal.fire({
@@ -1049,6 +1152,25 @@ const CashlessBillSettlement = () => {
                   fontSize: "12px",
                 }}
               />
+              {isDbSearching && (
+                <div
+                  style={{
+                    position: "absolute",
+                    right: "10px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    zIndex: 5,
+                    pointerEvents: "none",
+                  }}
+                >
+                  <Spinner
+                    animation="border"
+                    size="sm"
+                    variant="info"
+                    style={{ width: "12px", height: "12px" }}
+                  />
+                </div>
+              )}
             </InputGroup>
           </Form.Group>
           <Button
@@ -1214,7 +1336,7 @@ const CashlessBillSettlement = () => {
                   </div>
                 ) : (
                   <DataTable
-                    value={data}
+                    value={filteredData}
                     paginator
                     rows={rows}
                     first={first}

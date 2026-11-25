@@ -66,6 +66,7 @@ const HospitalCertificates = () => {
     "NABH Certificate",
     "Pollution Control Certificate",
     "Rent Agreement",
+    "Rohini Certificate",
   ];
 
   useEffect(() => {

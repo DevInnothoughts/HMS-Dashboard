@@ -242,26 +242,33 @@ export default function DoctorDashboard() {
 
     const currNorm = normalizeLoc(currentLocation);
 
-    const newMap = {};
-    await Promise.all(
-      uniquePhones.map(async (phone) => {
-        try {
-          const res = await fetch(`${BASE_URL}/V1/appointment/checkMasterPatient?patient_phone=${phone}`);
-          if (res.ok) {
-            const data = await res.json();
-            if (data.statusCode === 200 && data.data && data.data.masterPatient) {
-              const mp = data.data.masterPatient;
-              if (mp.location && normalizeLoc(mp.location) !== currNorm) {
-                newMap[phone] = mp;
-              }
+    try {
+      const res = await fetch(
+        `${BASE_URL}/V1/appointment/checkMasterPatientsBatch`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({ phones: uniquePhones }),
+        },
+      );
+      if (res.ok) {
+        const json = await res.json();
+        if (json.statusCode === 200 && json.data) {
+          const newMap = {};
+          for (const [phone, mp] of Object.entries(json.data)) {
+            if (mp && mp.location && normalizeLoc(mp.location) !== currNorm) {
+              newMap[phone] = mp;
             }
           }
-        } catch (e) {
-          // ignore
+          setMasterVisitMap((prev) => ({ ...prev, ...newMap }));
         }
-      })
-    );
-    setMasterVisitMap((prev) => ({ ...prev, ...newMap }));
+      }
+    } catch (e) {
+      console.error("Error fetching master patient batch:", e);
+    }
   }, [currentLocation]);
 
   const triggerMasterPrint = useReactToPrint({
@@ -740,9 +747,8 @@ export default function DoctorDashboard() {
           };
 
           const ipdEndpoints = [
-            `${BASE_URL}/V1/doctor/admission/list-admissions?location=${encodeURIComponent(currentLocation)}`,
+            `${BASE_URL}/V1/doctor/admission/list-admissions?location=${encodeURIComponent(currentLocation)}&from=${fromIpd}&to=${toIpd}`,
             `${BASE_URL}/V1/doctor/manage-admission/list?location=${encodeURIComponent(currentLocation)}&from=${fromIpd}&to=${toIpd}`,
-            `${BASE_URL}/V1/doctor/manage-admission/list?location=${encodeURIComponent(currentLocation)}`,
             `${BASE_URL}/V1/ipd/admin/listVerifiedPatients?location=${encodeURIComponent(currentLocation)}&from=${fromIpd}&to=${toIpd}`,
           ];
 

@@ -53,6 +53,7 @@ const SuperAdminHC = () => {
     "NABH Certificate",
     "Pollution Control Certificate",
     "Rent Agreement",
+    "Rohini Certificate",
   ];
 
   // Process branches list from Login.jsx

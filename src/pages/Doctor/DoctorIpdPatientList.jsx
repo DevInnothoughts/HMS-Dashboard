@@ -13,6 +13,7 @@ import {
   InputGroup,
   Button,
   Modal,
+  Spinner,
 } from "react-bootstrap";
 import FeatherIcon from "feather-icons-react";
 import DatePicker from "react-datepicker";
@@ -100,6 +101,7 @@ export default function DoctorIpdPatientList() {
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isDbSearching, setIsDbSearching] = useState(false);
   const [currentLocation, setCurrentLocation] = useState("default");
   const [filters1] = useState({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -164,6 +166,27 @@ export default function DoctorIpdPatientList() {
     }
   }, []);
 
+  const normalizePatient = (patient) => ({
+    ...patient,
+    surgeryDate: buildSurgeryValue(
+      patient.surgery_date,
+      patient.surgery_time,
+    ),
+    admissionNo: patient.adm_no || "",
+    patientName: patient.patient_name || "",
+    name: patient.patient_name || "",
+    ageGender: formatAgeGender(patient.age, patient.sex),
+    roomType: patient.room_type || "N/A",
+    surgeonName: patient.surgeon_name || "N/A",
+    sxPlan: patient.sx_plan || "N/A",
+    Uid_no: patient.uid_no || "",
+    patient_type: patient.patient_type ?? 0,
+    phone: patient.phone || "",
+    age: patient.age || "",
+    sex: patient.sex || "",
+    address: patient.address || "",
+  });
+
   const loadPatients = useCallback(async () => {
     if (!currentLocation || currentLocation === "default") {
       return;
@@ -171,7 +194,7 @@ export default function DoctorIpdPatientList() {
     setLoading(true);
     try {
       const response = await fetch(
-        `${BASE_URL}/V1/doctor/admission/list-admissions?location=${encodeURIComponent(currentLocation)}`,
+        `${BASE_URL}/V1/doctor/admission/list-admissions?location=${encodeURIComponent(currentLocation)}&limit=1500`,
         {
           method: "GET",
           headers: {
@@ -186,28 +209,9 @@ export default function DoctorIpdPatientList() {
       }
 
       const result = await response.json();
-      const normalizedPatients = Array.isArray(result)
-        ? result.map((patient) => ({
-            ...patient,
-            surgeryDate: buildSurgeryValue(
-              patient.surgery_date,
-              patient.surgery_time,
-            ),
-            admissionNo: patient.adm_no || "",
-            patientName: patient.patient_name || "",
-            name: patient.patient_name || "",
-            ageGender: formatAgeGender(patient.age, patient.sex),
-            roomType: patient.room_type || "N/A",
-            surgeonName: patient.surgeon_name || "N/A",
-            sxPlan: patient.sx_plan || "N/A",
-            Uid_no: patient.uid_no || "",
-            patient_type: patient.patient_type ?? 0,
-            phone: patient.phone || "",
-            age: patient.age || "",
-            sex: patient.sex || "",
-            address: patient.address || "",
-          }))
-        : [];
+      const rawData = Array.isArray(result) ? result : result.data || [];
+      const limitedData = rawData.slice(0, 1500);
+      const normalizedPatients = limitedData.map(normalizePatient);
 
       setPatients(normalizedPatients);
       setFirst(0);
@@ -219,6 +223,65 @@ export default function DoctorIpdPatientList() {
     }
   }, [currentLocation]);
 
+  const searchFromDatabase = async (query) => {
+    if (!currentLocation || currentLocation === "default" || isDbSearching) return;
+
+    setIsDbSearching(true);
+    try {
+      const response = await fetch(
+        `${BASE_URL}/V1/doctor/admission/list-admissions?location=${encodeURIComponent(
+          currentLocation,
+        )}&search=${encodeURIComponent(query)}&limit=100`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        },
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        const data = Array.isArray(result) ? result : result.data || [];
+        if (data && data.length > 0) {
+          setPatients((prev) => {
+            const existingIds = new Set(
+              prev.map((p) => String(p.patient_id || p.adm_no || "")),
+            );
+            const newUniquePatients = data
+              .filter(
+                (p) =>
+                  !existingIds.has(String(p.patient_id || p.adm_no || "")),
+              )
+              .map(normalizePatient);
+            return newUniquePatients.length > 0
+              ? [...prev, ...newUniquePatients]
+              : prev;
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error searching IPD patients from database:", error);
+    } finally {
+      setIsDbSearching(false);
+    }
+  };
+
+  useEffect(() => {
+    const searchValue = searchTerm.trim();
+    if (!searchValue) return;
+
+    const isNumeric = /^\d+$/.test(searchValue);
+    if (!isNumeric && searchValue.length < 2) return;
+
+    const delayDebounceFn = setTimeout(() => {
+      searchFromDatabase(searchValue);
+    }, 800);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm]);
+
   useEffect(() => {
     if (currentLocation !== "default") {
       loadPatients();
@@ -226,26 +289,36 @@ export default function DoctorIpdPatientList() {
   }, [currentLocation, loadPatients]);
 
   const filteredPatients = useMemo(() => {
-    const searchValue = searchTerm.trim().toLowerCase();
+    const rawSearch = searchTerm.trim().toLowerCase();
+    const cleanSearch = rawSearch.replace(/^(ipd\s*(no\.?|#)?\s*)/i, "").trim();
 
     return patients.filter((patient) => {
-      const matchesSearch =
-        !searchValue ||
-        [
-          patient.surgeryDate,
-          patient.admissionNo,
-          patient.patientName,
-          patient.phone,
-          patient.ageGender,
-          patient.roomType,
-          patient.roomNo,
-          patient.surgeonName,
-          patient.sxPlan,
-          patient.Uid_no,
-        ]
-          .join(" ")
-          .toLowerCase()
-          .includes(searchValue);
+      let matchesSearch = true;
+      if (rawSearch) {
+        const admNoStr = String(patient.admissionNo || patient.adm_no || "").toLowerCase();
+        const patientNameStr = String(patient.patientName || patient.name || "").toLowerCase();
+        const phoneStr = String(patient.phone || "").toLowerCase();
+        const uidStr = String(patient.Uid_no || patient.uid_no || "").toLowerCase();
+        const surgeonStr = String(patient.surgeonName || "").toLowerCase();
+        const roomTypeStr = String(patient.roomType || "").toLowerCase();
+        const roomNoStr = String(patient.roomNo || "").toLowerCase();
+        const sxPlanStr = String(patient.sxPlan || "").toLowerCase();
+        const ageGenderStr = String(patient.ageGender || "").toLowerCase();
+        const surgeryDateStr = String(patient.surgeryDate || "").toLowerCase();
+
+        matchesSearch =
+          admNoStr.includes(cleanSearch) ||
+          admNoStr.includes(rawSearch) ||
+          patientNameStr.includes(rawSearch) ||
+          phoneStr.includes(rawSearch) ||
+          uidStr.includes(rawSearch) ||
+          surgeonStr.includes(rawSearch) ||
+          roomTypeStr.includes(rawSearch) ||
+          roomNoStr.includes(rawSearch) ||
+          sxPlanStr.includes(rawSearch) ||
+          ageGenderStr.includes(rawSearch) ||
+          surgeryDateStr.includes(rawSearch);
+      }
 
       const patientDate = normalizeDate(patient.surgeryDate);
 
@@ -362,7 +435,10 @@ export default function DoctorIpdPatientList() {
               <Form.Control
                 type="search"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setFirst(0);
+                  setSearchTerm(e.target.value);
+                }}
                 placeholder="Global Search"
                 style={{
                   borderRadius: "6px",
@@ -374,6 +450,25 @@ export default function DoctorIpdPatientList() {
                   transition: "all 0.3s ease",
                 }}
               />
+              {isDbSearching && (
+                <div
+                  style={{
+                    position: "absolute",
+                    right: "10px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    zIndex: 5,
+                    pointerEvents: "none",
+                  }}
+                >
+                  <Spinner
+                    animation="border"
+                    size="sm"
+                    variant="info"
+                    style={{ width: "12px", height: "12px" }}
+                  />
+                </div>
+              )}
             </InputGroup>
           </Form.Group>
 

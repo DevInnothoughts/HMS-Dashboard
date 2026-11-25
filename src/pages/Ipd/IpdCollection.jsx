@@ -23,6 +23,7 @@ import {
   FaInfoCircle,
   FaPlusCircle,
   FaSave,
+  FaCreditCard,
 } from "react-icons/fa";
 import { decodeJwt } from "../Utility/decode-jwt";
 import Swal from "sweetalert2";
@@ -240,14 +241,8 @@ const IpdCollection = () => {
     fetchIpdTerminals();
   }, [currentLocation]);
 
-  // Drop any selected terminal the moment the payment stops being digital,
-  // so a stale PosMachine is never submitted with a cash-only payment.
-  useEffect(() => {
-    const digital =
-      (Number(newPayment.card) || 0) > 0 ||
-      (Number(newPayment.online) || 0) > 0;
-    if (!digital && selectedTerminal) setSelectedTerminal("");
-  }, [newPayment.card, newPayment.online, selectedTerminal]);
+  // Note: Previously dropped selectedTerminal for non-digital payments,
+  // but now POS Terminal (Offline / Federal) is compulsory for all payments.
 
   useEffect(() => {
     if (
@@ -859,10 +854,10 @@ const IpdCollection = () => {
       return;
     }
 
-    if ((newPayment.card > 0 || newPayment.online > 0) && !selectedTerminal) {
+    if (!selectedTerminal) {
       return Swal.fire(
         "Terminal Required",
-        "Please select a PoS Terminal for payment.",
+        "Please select a POS Terminal (Offline or Federal) before saving the payment.",
         "warning",
       );
     }
@@ -1825,10 +1820,58 @@ const IpdCollection = () => {
                                 />
                               </InputGroup>
                             </td>
-                            <td className="text-center">
+                            <td className="text-center"></td>
+                          </tr>
+                          <tr>
+                            <td colSpan={9} style={{ padding: "4px 2px" }}>
+                              <div className="pos-terminal-box">
+                                <div className="d-flex align-items-center gap-2">
+                                  <FaCreditCard className="text-cyan-dark" size={14} />
+                                  <span
+                                    className="fw-bold text-cyan-dark"
+                                    style={{ fontSize: "12px", whiteSpace: "nowrap" }}
+                                  >
+                                    POS Terminal<span className="text-danger ms-1">*</span> :
+                                  </span>
+                                </div>
+                                <div className="d-flex align-items-center gap-2 flex-wrap">
+                                  {["Federal", "Offline"].map((opt) => {
+                                    const isChecked = selectedTerminal === opt;
+                                    return (
+                                      <label
+                                        key={opt}
+                                        htmlFor={`ipd-pos-${opt}`}
+                                        className={`pos-option-pill ${isChecked ? "active" : ""}`}
+                                      >
+                                        <input
+                                          type="radio"
+                                          name="ipdPosTerminal"
+                                          id={`ipd-pos-${opt}`}
+                                          value={opt}
+                                          checked={isChecked}
+                                          onChange={() => setSelectedTerminal(opt)}
+                                          className="pos-radio-input"
+                                        />
+                                        <span className="pos-option-label">{opt}</span>
+                                      </label>
+                                    );
+                                  })}
+                                </div>
+                                {!selectedTerminal && (
+                                  <span
+                                    className="text-danger ms-auto fw-semibold fst-italic"
+                                    style={{ fontSize: "11px", whiteSpace: "nowrap" }}
+                                  >
+                                    * Please select terminal
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="text-center" style={{ verticalAlign: "middle", padding: "4px 2px" }}>
                               <Button
                                 variant="primary"
-                                className="btn-save"
+                                className="btn-save w-100"
+                                style={{ height: "32px", borderRadius: "8px" }}
                                 onClick={handleSavePayment}
                                 disabled={
                                   loading ||
@@ -1849,7 +1892,7 @@ const IpdCollection = () => {
                                     : "Save Payment"
                                 }
                               >
-                                <FaSave size={16} />
+                                <FaSave size={15} />
                               </Button>
                             </td>
                           </tr>
@@ -1933,33 +1976,7 @@ const IpdCollection = () => {
                     </div>
                   )}
 
-                {/* Shown only when a Card or Online amount has been entered. */}
-                {isDigitalPayment && (
-                  <div className="mt-4 pt-4 border-top">
-                    <div className="pos-terminal-box">
-                      <span
-                        className="fw-bold text-cyan-dark"
-                        style={{ fontSize: "14px" }}
-                      >
-                        PoS Terminal<span className="text-danger">*</span> :
-                      </span>
-                      {terminalOptions.map((opt) => (
-                        <Form.Check
-                          key={opt}
-                          inline
-                          type="radio"
-                          name="ipdPosTerminal"
-                          id={`ipd-pos-${opt}`}
-                          label={opt}
-                          checked={selectedTerminal === opt}
-                          onChange={() => setSelectedTerminal(opt)}
-                          className="fw-bold text-secondary"
-                          style={{ cursor: "pointer", fontSize: "12px" }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
+
               </Card.Body>
             </Card>
           </Col>
@@ -2587,33 +2604,71 @@ const IpdCollection = () => {
     }
                 .text-cyan-dark { color: #00838f; }
                 .pos-terminal-box {
-                    background-color: #94e2eeff;
-                    border: 2px solid rgb(77, 208, 225) !important;
-                    padding: 8px 15px;
+                    background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
+                    border: 1.5px solid #4dd0e1 !important;
+                    padding: 3px 12px;
+                    min-height: 32px;
                     border-radius: 8px;
                     display: flex;
                     align-items: center;
-                    gap: 20px;
+                    flex-wrap: wrap;
+                    gap: 12px;
+                    box-shadow: 0 1px 4px rgba(0, 131, 143, 0.08);
                 }
-                .pos-terminal-box .form-check {
-                    display: flex;
+                .pos-option-pill {
+                    display: inline-flex;
                     align-items: center;
-                    margin-bottom: 0 !important;
-                    padding-left: 0;
-                    gap: 8px;
-                    margin-left: 5px;
-                }
-                .pos-terminal-box .form-check-input {
-                    margin-top: 0 !important;
+                    gap: 6px;
+                    background: #ffffff;
+                    border: 1.5px solid #b2ebf2;
+                    border-radius: 14px;
+                    padding: 2px 10px;
                     cursor: pointer;
-                    width: 16px;
-                    height: 16px;
+                    transition: all 0.2s ease-in-out;
+                    user-select: none;
+                    margin-bottom: 0;
+                    height: 24px;
+                    box-sizing: border-box;
                 }
-                .pos-terminal-box .form-check-label {
+                .pos-option-pill:hover {
+                    border-color: #00838f;
+                    background: #f9feff;
+                }
+                .pos-option-pill.active {
+                    background: #00838f;
+                    border-color: #006064;
+                    color: #ffffff;
+                    box-shadow: 0 2px 5px rgba(0, 131, 143, 0.2);
+                }
+                .pos-option-pill.active .pos-option-label {
+                    color: #ffffff;
+                    font-weight: 700;
+                }
+                .pos-radio-input {
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    width: 14px;
+                    height: 14px;
                     cursor: pointer;
+                    accent-color: #00838f;
+                    position: static !important;
+                    display: inline-block !important;
+                    vertical-align: middle !important;
+                    float: none !important;
+                    flex-shrink: 0;
+                }
+                .pos-option-pill.active .pos-radio-input {
+                    accent-color: #00838f;
+                }
+                .pos-option-label {
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: #37474f;
                     line-height: 1;
-                    padding-bottom: 2px;
-                    
+                    cursor: pointer;
+                    user-select: none;
+                    display: inline-block;
+                    vertical-align: middle;
                 }
                 .custom-list .list-group-item:hover { background-color: #e0f7fa; }
             `}</style>
