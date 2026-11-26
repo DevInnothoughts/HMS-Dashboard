@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useLocation, Link } from "react-router-dom";
 import {
   Container,
@@ -144,6 +144,10 @@ const IpdCollection = () => {
   // Terminals configured for IPD, loaded from pos_tid (machine_type='IPD').
   // OFFLINE is appended below so cash/cheque is always available.
   const [posTerminalList, setPosTerminalList] = useState([]);
+  // Configured IPD terminals + Offline (cash / cheque / PDC), de-duplicated.
+  const terminalOptions = useMemo(() => {
+    return [...new Set([...posTerminalList.filter(Boolean), "Offline"])];
+  }, [posTerminalList]);
   const [currentLocation, setCurrentLocation] = useState(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -241,8 +245,35 @@ const IpdCollection = () => {
     fetchIpdTerminals();
   }, [currentLocation]);
 
-  // Note: Previously dropped selectedTerminal for non-digital payments,
-  // but now POS Terminal (Offline / Federal) is compulsory for all payments.
+  // Auto-select "Offline" if it's the only available terminal for this branch
+  useEffect(() => {
+    if (terminalOptions.length === 1 && !selectedTerminal) {
+      setSelectedTerminal(terminalOptions[0]);
+    }
+  }, [terminalOptions, selectedTerminal]);
+
+  // If Cash is entered and no digital tender is chosen, default to "Offline" (mirrors OPD)
+  useEffect(() => {
+    const isCashOnly =
+      (Number(newPayment.cash) || 0) > 0 &&
+      (Number(newPayment.card) || 0) === 0 &&
+      (Number(newPayment.online) || 0) === 0;
+    if (isCashOnly && !selectedTerminal) {
+      setSelectedTerminal("Offline");
+    }
+  }, [newPayment.cash, newPayment.card, newPayment.online, selectedTerminal]);
+
+  // If Card or Online is entered and digital terminals exist, clear "Offline" prompt
+  useEffect(() => {
+    const hasDigitalTerminal = terminalOptions.some(
+      (t) => t.toUpperCase() !== "OFFLINE",
+    );
+    const isDigital =
+      (Number(newPayment.card) || 0) > 0 || (Number(newPayment.online) || 0) > 0;
+    if (isDigital && selectedTerminal.toUpperCase() === "OFFLINE" && hasDigitalTerminal) {
+      setSelectedTerminal("");
+    }
+  }, [newPayment.card, newPayment.online, selectedTerminal, terminalOptions]);
 
   useEffect(() => {
     if (
@@ -857,7 +888,7 @@ const IpdCollection = () => {
     if (!selectedTerminal) {
       return Swal.fire(
         "Terminal Required",
-        "Please select a POS Terminal (Offline or Federal) before saving the payment.",
+        `Please select a POS Terminal (${terminalOptions.join(" / ")}) before saving the payment.`,
         "warning",
       );
     }
@@ -881,7 +912,10 @@ const IpdCollection = () => {
         TdsAmt: newPayment.tds,
         PdcCheque: newPayment.pdcCheque,
         Totalinvoiceamt: summary.totalDue,
-        PosMachine: selectedTerminal,
+        PosMachine:
+          selectedTerminal.toUpperCase() === "OFFLINE"
+            ? "OFFLINE"
+            : selectedTerminal,
         location: currentLocation,
       };
 
@@ -938,8 +972,7 @@ const IpdCollection = () => {
     }
   };
 
-  // Configured IPD terminals + OFFLINE (cash / cheque / PDC), de-duplicated.
-  const terminalOptions = [...new Set([...posTerminalList, "OFFLINE"])];
+
 
   // A PoS terminal is only involved when the payment goes through the
   // machine — i.e. a Card or Online(UPI) amount has been entered. Cash,
@@ -1835,7 +1868,7 @@ const IpdCollection = () => {
                                   </span>
                                 </div>
                                 <div className="d-flex align-items-center gap-2 flex-wrap">
-                                  {["Federal", "Offline"].map((opt) => {
+                                  {terminalOptions.map((opt) => {
                                     const isChecked = selectedTerminal === opt;
                                     return (
                                       <label
